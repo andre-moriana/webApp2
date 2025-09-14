@@ -1,0 +1,402 @@
+<?php
+
+class ApiController {
+    private $apiService;
+    private $baseUrl;
+    
+    public function __construct() {
+        $this->apiService = new ApiService();
+        $this->baseUrl = $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000/api";
+    }
+    
+    public function userDocuments($userId) {
+        // Nettoyer la sortie au début
+        $this->cleanOutput();
+        
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            // Appel réel à l'API backend pour récupérer les documents
+            $response = $this->apiService->makeRequest("documents/user/{$userId}", "GET");
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode([
+                    "success" => true,
+                    "documents" => $response['data']['documents'] ?? [],
+                    "message" => "Documents récupérés avec succès"
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "documents" => [],
+                    "message" => "Erreur lors de la récupération des documents: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "documents" => [],
+                "message" => "Erreur lors de la récupération des documents: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function documents() {
+        // Nettoyer la sortie au début
+        $this->cleanOutput();
+        
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $response = $this->apiService->makeRequest("documents", "GET");
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode([
+                    "success" => true,
+                    "documents" => $response['data']['documents'] ?? [],
+                    "message" => "Documents récupérés avec succès"
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la récupération des documents: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la récupération des documents: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function uploadDocument($userId) {
+        // Nettoyer la sortie au début
+        $this->cleanOutput();
+        
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            // Vérifier qu'un fichier a été uploadé
+            if (!isset($_FILES['document']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Aucun fichier valide uploadé"
+                ]);
+                return;
+            }
+            
+            // Log de debug détaillé
+            error_log("=== DEBUG UPLOAD DOCUMENT ===");
+            error_log("URL complète: " . $_SERVER['REQUEST_URI']);
+            error_log("userId reçu: " . $userId);
+            error_log("Type de userId: " . gettype($userId));
+            error_log("userId converti en int: " . (int)$userId);
+            error_log("POST data: " . print_r($_POST, true));
+            error_log("FILES data: " . print_r($_FILES, true));
+            
+            // Préparer les données pour l'upload
+            // Ne pas envoyer user_id car ce champ n'existe pas dans la table
+            $documentData = [
+                'name' => $_POST['name'] ?? '',
+                'uploaded_by' => (int)$userId  // Seulement uploaded_by
+            ];
+            
+            error_log("Données finales envoyées: " . print_r($documentData, true));
+            error_log("URL de l'API: documents/{$userId}/upload");
+            
+            // Utiliser makeRequest avec les fichiers
+            $response = $this->apiService->makeRequestWithFile("documents/{$userId}/upload", "POST", $documentData, $_FILES['document']);
+            
+            error_log("Réponse API complète: " . print_r($response, true));
+            error_log("=== FIN DEBUG UPLOAD DOCUMENT ===");
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Document uploadé avec succès"
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de l'upload: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("Exception upload: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de l'upload: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function deleteDocument($userId) {
+        // Nettoyer la sortie au début
+        $this->cleanOutput();
+        
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $documentId = $input['id'] ?? null;
+            
+            if (!$documentId) {
+                http_response_code(400);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "ID du document manquant"
+                ]);
+                return;
+            }
+            
+            $response = $this->apiService->makeRequest("documents/{$userId}/delete", "DELETE", ['id' => $documentId]);
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Document supprimé avec succès"
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la suppression: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la suppression: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function downloadDocument($documentId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $response = $this->apiService->makeRequest("documents/{$documentId}/download", "GET");
+            
+            if ($response['success']) {
+                // L'API retourne directement le contenu du fichier
+                $rawResponse = $response['raw_response'] ?? '';
+                
+                // Vérifier si c'est du contenu binaire (PDF, image, etc.)
+                if (!empty($rawResponse) && !json_decode($rawResponse, true)) {
+                    // C'est du contenu binaire, le servir directement
+                    
+                    // Déterminer le type MIME basé sur le contenu
+                    $mimeType = 'application/octet-stream';
+                    if (strpos($rawResponse, '%PDF-') === 0) {
+                        $mimeType = 'application/pdf';
+                    } elseif (strpos($rawResponse, "\xFF\xD8\xFF") === 0) {
+                        $mimeType = 'image/jpeg';
+                    } elseif (strpos($rawResponse, "\x89PNG") === 0) {
+                        $mimeType = 'image/png';
+                    }
+                    
+                    // Nettoyer la sortie et définir les headers appropriés
+                    if (ob_get_level()) {
+                        ob_clean();
+                    }
+                    
+                    header('Content-Type: ' . $mimeType);
+                    header('Content-Disposition: attachment; filename="document_' . $documentId . '.pdf"');
+                    header('Content-Length: ' . strlen($rawResponse));
+                    header('Cache-Control: no-cache, must-revalidate');
+                    header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+                    
+                    echo $rawResponse;
+                    exit;
+                } else {
+                    // C'est du JSON, essayer de trouver une URL
+                    $data = $response['data'] ?? [];
+                    $downloadUrl = null;
+                    
+                    // Essayer différents chemins possibles pour l'URL
+                    if (isset($data['download_url'])) {
+                        $downloadUrl = $data['download_url'];
+                    } elseif (isset($data['url'])) {
+                        $downloadUrl = $data['url'];
+                    } elseif (isset($data['file_url'])) {
+                        $downloadUrl = $data['file_url'];
+                    } elseif (isset($data['path'])) {
+                        $downloadUrl = $data['path'];
+                    } elseif (isset($data['downloadUrl'])) {
+                        $downloadUrl = $data['downloadUrl'];
+                    }
+                    
+                    if ($downloadUrl) {
+                        // Si l'URL est relative, la rendre absolue
+                        if (strpos($downloadUrl, 'http') !== 0) {
+                            $baseUrl = rtrim($this->baseUrl, '/api');
+                            $downloadUrl = $baseUrl . '/' . ltrim($downloadUrl, '/');
+                        }
+                        
+                        header("Location: " . $downloadUrl);
+                        exit;
+                    } else {
+                        $this->cleanOutput();
+                        http_response_code(404);
+                        echo json_encode([
+                            "success" => false,
+                            "message" => "URL de téléchargement non trouvée dans la réponse API"
+                        ]);
+                    }
+                }
+            } else {
+                $this->cleanOutput();
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors du téléchargement: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            $this->cleanOutput();
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors du téléchargement: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    private function sendJsonResponse($data, $statusCode = 200) {
+        // Forcer le type de contenu et l'encodage
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code($statusCode);
+
+        // Nettoyer la sortie précédente
+        if (ob_get_length()) ob_clean();
+
+        // S'assurer qu'il n'y a pas de BOM
+        ob_start();
+        echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $output = ob_get_clean();
+        
+        // Supprimer tout BOM ou espace au début
+        $output = preg_replace('/^[\x{FEFF}\s]+/u', '', $output);
+        
+        echo $output;
+        exit;
+    }
+
+    public function getGroupMessages($groupId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            error_log("Récupération des messages pour le groupe " . $groupId);
+            $response = $this->apiService->makeRequest("messages/" . $groupId . "/history", "GET");
+            error_log("Réponse de l'API: " . json_encode($response));
+
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            error_log("Erreur lors de la récupération des messages: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des messages: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function sendGroupMessage($groupId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        $content = $_POST['content'] ?? '';
+        $file = $_FILES['attachment'] ?? null;
+
+        // Vérifier qu'il y a au moins un contenu ou un fichier
+        if (empty($content) && empty($file)) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Le message doit contenir du texte ou une pièce jointe'
+            ], 400);
+        }
+
+        try {
+            error_log("Envoi d'un message au groupe " . $groupId);
+            error_log("Contenu: " . $content);
+            if ($file) {
+                error_log("Fichier: " . print_r($file, true));
+            }
+
+            // Préparer les données pour l'API
+            $postData = [
+                'content' => $content
+            ];
+
+            // Si un fichier est présent, l'ajouter aux données
+            if ($file && $file['error'] === UPLOAD_ERR_OK) {
+                $postData['attachment'] = new CURLFile(
+                    $file['tmp_name'],
+                    $file['type'],
+                    $file['name']
+                );
+            }
+
+            $response = $this->apiService->makeRequestWithFile("messages/" . $groupId . "/send", "POST", $postData);
+            error_log("Réponse de l'API: " . json_encode($response));
+
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            error_log("Erreur lors de l'envoi du message: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'envoi du message: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Nettoie la sortie des caractères BOM et autres caractères invisibles
+     */
+    private function cleanOutput() {
+        // Nettoyer le buffer de sortie
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        // Définir les headers pour éviter les caractères BOM
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+    }
+
+    private function ensureAuthenticated() {
+        // Vérifier si on a déjà un token, sinon se connecter
+        $loginResult = $this->apiService->login("admin", "admin123");
+        if (!$loginResult["success"]) {
+            throw new Exception("Impossible de se connecter à l'API: " . $loginResult["message"]);
+        }
+    }
+}
+?>

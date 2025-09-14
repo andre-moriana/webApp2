@@ -1,0 +1,156 @@
+DOCUMENTATION DÉTAILLÉE - MISE À JOUR DES UTILISATEURS
+================================================
+
+1. PRÉSENTATION GÉNÉRALE
+-----------------------
+La mise à jour des utilisateurs est divisée en deux parties distinctes :
+- Mise à jour des informations d'identité (données personnelles)
+- Mise à jour des informations sportives (données spécifiques à l'archerie)
+
+2. FONCTION PRINCIPALE
+---------------------
+Nom : updateUser($userId, $userData)
+Localisation : ApiService.php
+Paramètres :
+- $userId : Identifiant unique de l'utilisateur
+- $userData : Tableau associatif contenant toutes les données à mettre à jour
+
+3. PROCESSUS DÉTAILLÉ
+--------------------
+
+3.1 Préparation de la requête
+    - Vérification de l'existence du token d'authentification
+    - Si pas de token → Connexion automatique (admin/admin123)
+    - Séparation des données en deux catégories (identité et sport)
+
+3.2 Mise à jour des informations d'identité
+    Endpoint : /users/$userId/update-identite
+    Méthode : PUT
+    
+    Données traitées :
+    {
+        "firstName": string,    // Prénom de l'utilisateur
+        "name": string,        // Nom de famille (ou lastName)
+        "email": string,       // Adresse email
+        "username": string,    // Nom d'utilisateur
+        "phone": string,       // Numéro de téléphone
+        "role": string        // Rôle (défaut: "Archer")
+    }
+
+    Validation :
+    - Tous les champs sont optionnels
+    - Si lastName est fourni, il est utilisé comme name
+    - Le rôle par défaut est "Archer" si non spécifié
+
+3.3 Mise à jour des informations sportives
+    Endpoint : /users/$userId/update-sport
+    Méthode : PUT
+    
+    Données traitées :
+    {
+        "licenceNumber": string,    // Numéro de licence
+        "ageCategory": string,      // Catégorie d'âge
+        "arrivalYear": string,      // Année d'arrivée au club
+        "bowType": string,          // Type d'arc
+        "birthDate": string,        // Date de naissance
+        "gender": string           // Genre
+    }
+
+    Validation :
+    - Tous les champs sont optionnels
+    - Format de date attendu pour birthDate : YYYY-MM-DD
+
+4. GESTION DES RÉPONSES
+----------------------
+
+4.1 Structure de la réponse
+    {
+        "success": boolean,    // true si au moins une mise à jour réussie
+        "message": string,     // Concaténation des messages de réussite/erreur
+        "data": null          // Toujours null pour les mises à jour
+    }
+
+4.2 Messages de retour
+    - Succès identité : "Informations d'identité mises à jour"
+    - Succès sport : "Informations sportives mises à jour"
+    - Erreur identité : "Erreur identité: {message}"
+    - Erreur sport : "Erreur sport: {message}"
+
+5. GESTION DES ERREURS
+---------------------
+
+5.1 Erreurs possibles
+    - Erreur de connexion à l'API
+    - Token invalide
+    - Utilisateur non trouvé
+    - Données invalides
+    - Timeout de la requête
+
+5.2 Traitement des erreurs
+    - Logging automatique de toutes les erreurs
+    - Tentative de reconnexion si token invalide
+    - Messages d'erreur explicites pour chaque cas
+    - Conservation des données valides même en cas d'erreur partielle
+
+6. EXEMPLES D'UTILISATION
+------------------------
+
+6.1 Mise à jour complète
+```php
+$userData = [
+    "firstName" => "Jean",
+    "lastName" => "Dupont",
+    "email" => "jean.dupont@example.com",
+    "phone" => "0612345678",
+    "role" => "Archer",
+    "licenceNumber" => "12345",
+    "bowType" => "Classique",
+    "birthDate" => "1990-01-01"
+];
+$result = $apiService->updateUser(1, $userData);
+```
+
+6.2 Mise à jour partielle
+```php
+$userData = [
+    "email" => "nouveau.email@example.com",
+    "phone" => "0687654321"
+];
+$result = $apiService->updateUser(1, $userData);
+```
+
+7. BONNES PRATIQUES
+------------------
+
+7.1 Sécurité
+    - Toujours vérifier les permissions avant la mise à jour
+    - Valider les données côté client avant l'envoi
+    - Ne pas envoyer de données sensibles non nécessaires
+    - Utiliser HTTPS pour toutes les communications
+
+7.2 Performance
+    - Regrouper les mises à jour quand possible
+    - Éviter les mises à jour inutiles (données identiques)
+    - Gérer les timeouts appropriés (15s par défaut)
+
+7.3 Maintenance
+    - Logger toutes les modifications importantes
+    - Conserver un historique des changements
+    - Documenter les cas spéciaux ou exceptions
+
+8. DÉPANNAGE
+------------
+
+8.1 Problèmes courants
+    - Token expiré → Reconnexion automatique
+    - Données mal formatées → Vérifier la structure
+    - Timeout → Vérifier la connexion réseau
+    - Erreur 404 → Vérifier l'ID utilisateur
+
+8.2 Solutions
+    - Vérifier les logs pour les messages d'erreur détaillés
+    - Tester avec des données minimales
+    - Valider le format des données
+    - Vérifier la connectivité avec l'API
+
+Note : Toutes les modifications sont tracées dans les logs système pour faciliter le débogage et l'audit. 

@@ -1,0 +1,126 @@
+GESTION DES UTILISATEURS - DOCUMENTATION TECHNIQUE
+==============================================
+
+1. RÉCUPÉRATION DES UTILISATEURS (getUsers)
+------------------------------------------
+Fonction : getUsers()
+Chemin API : /users
+Méthode : GET
+
+Processus :
+a) Vérification du token
+   - Un token valide est requis
+   - Si pas de token → Retourne une erreur avec message "Token d'authentification requis"
+
+b) Appel API
+   - Endpoint : GET /users
+   - Headers : 
+     * Content-Type: application/json
+     * Accept: application/json
+     * Authorization: Bearer {token}
+
+c) Traitement des réponses
+   Gère 3 formats de réponse possibles :
+   1. Format { "users": [...] }
+   2. Format { "data": [...] }
+   3. Format [...] (tableau direct)
+
+d) Structure de retour :
+   {
+     "success": bool,
+     "data": { "users": [...] },
+     "message": string
+   }
+
+2. MISE À JOUR DES UTILISATEURS (updateUser)
+-------------------------------------------
+Fonction : updateUser($userId, $userData)
+Chemins API : 
+- /users/$userId/update-identite
+- /users/$userId/update-sport
+Méthode : PUT
+
+Processus :
+a) Mise à jour des informations d'identité
+   Données envoyées :
+   - firstName
+   - name (ou lastName)
+   - email
+   - username
+   - phone
+   - role
+
+b) Mise à jour des informations sportives
+   Données envoyées :
+   - licenceNumber
+   - ageCategory
+   - arrivalYear
+   - bowType
+   - birthDate
+   - gender
+
+c) Structure de retour :
+   {
+     "success": bool,
+     "message": string (messages concaténés),
+     "data": null
+   }
+
+3. DOCUMENTS UTILISATEUR (getUserDocuments)
+-----------------------------------------
+Fonction : getUserDocuments($userId)
+Chemin API : /documents/user/{userId}
+Méthode : GET
+
+Processus :
+a) Vérification du token
+   - Si pas de token → Tentative de connexion automatique
+   - En cas d'échec → Retourne tableau vide
+
+b) Appel API
+   - Headers inclus :
+     * Accept: application/json
+     * Authorization: Bearer {token}
+
+c) Structure de retour :
+   {
+     "success": bool,
+     "data": { "documents": [...] },
+     "message": string
+   }
+
+4. GESTION DES ERREURS
+----------------------
+- Logging systématique des erreurs
+- Messages d'erreur détaillés
+- Gestion des timeouts (15s standard, 30s pour upload)
+- Retours standardisés avec codes HTTP
+
+5. SÉCURITÉ
+-----------
+- Authentification par token JWT
+- Renouvellement automatique du token
+- Validation des données avant envoi
+- Protection contre les injections (via json_encode)
+
+6. DONNÉES SIMULÉES (Mode Fallback)
+----------------------------------
+En cas d'indisponibilité de l'API, données de test disponibles :
+- 2 utilisateurs simulés (1 admin, 1 utilisateur standard)
+- Données complètes avec ID, noms, emails, rôles
+- Timestamps de création
+
+7. CONFIGURATION
+---------------
+URL de l'API : http://82.67.123.22:25000/api
+Configuration modifiable via fichier .env :
+- API_BASE_URL=http://82.67.123.22:25000/api
+
+8. LOGGING ET DÉBUG
+------------------
+- Logs détaillés de chaque appel API
+- Logs des réponses et codes HTTP
+- Logs des erreurs cURL
+- Traces de debugging pour les formats de données
+
+Note : Tous les appels API nécessitent une authentification valide. Le système gère automatiquement la connexion avec les identifiants par défaut si nécessaire. 
