@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Démarrer la session si elle n'est pas déjà démarrée
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -20,6 +20,11 @@ class ApiService {
         }
         $this->baseUrl = 'http://82.67.123.22:25000/api/';
         
+        // Démarrer la session si elle n'est pas déjà démarrée
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         // Récupérer le token depuis la session
         if (isset($_SESSION['token'])) {
             $this->token = $_SESSION['token'];
@@ -31,8 +36,12 @@ class ApiService {
     }
     
     public function makeRequest($endpoint, $method = 'GET', $data = null) {
-        $url = $this->baseUrl . $endpoint;
+        $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
         error_log("Requête API vers: " . $url);
+        error_log("Méthode: " . $method);
+        if ($data) {
+            error_log("Données à envoyer: " . print_r($data, true));
+        }
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -48,16 +57,14 @@ class ApiService {
         if ($this->token) {
             $headers[] = 'Authorization: Bearer ' . $this->token;
             error_log("Token ajouté aux en-têtes: " . substr($this->token, 0, 10) . "...");
-        } else {
-            error_log("Attention: Pas de token d'authentification");
         }
-        
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
             if ($data !== null) {
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                $jsonData = json_encode($data);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+                error_log("Données JSON envoyées: " . $jsonData);
             }
         } else if ($method === 'PUT') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
@@ -66,7 +73,12 @@ class ApiService {
             }
         } else if ($method === 'DELETE') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+            if ($data !== null) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            }
         }
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -84,19 +96,13 @@ class ApiService {
 
         // Nettoyer la réponse des caractères BOM et espaces
         if ($response !== false && is_string($response)) {
-            // Supprimer le BOM UTF-8 et les espaces au début
             $response = preg_replace('/^[\x{FEFF}\s]+/u', '', $response);
-            // Supprimer les caractères nuls
-            $response = str_replace("\0", '', $response);
-            // Supprimer les caractères de contrôle
-            $response = preg_replace('/[\x00-\x1F\x7F]/u', '', $response);
             error_log("Réponse nettoyée: " . $response);
         }
 
         $decodedResponse = json_decode($response, true);
         if ($decodedResponse === null && json_last_error() !== JSON_ERROR_NONE) {
             error_log("Erreur décodage JSON: " . json_last_error_msg());
-            error_log("Réponse problématique: " . bin2hex(substr($response, 0, 50)));
             throw new Exception("Erreur lors du décodage de la réponse JSON: " . json_last_error_msg());
         }
 
@@ -104,7 +110,8 @@ class ApiService {
             'success' => $httpCode >= 200 && $httpCode < 300,
             'data' => $decodedResponse,
             'status_code' => $httpCode,
-            'message' => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
+            'message' => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode,
+            'raw_response' => $response
         ];
     }
     
@@ -201,23 +208,37 @@ class ApiService {
             "password" => $password
         ];
         
-        $result = $this->makeRequest("auth/login", "POST", $loginData);
-        error_log("Réponse login: " . print_r($result, true));
+        error_log("Tentative de connexion à l'API avec username: " . $username);
         
-        if ($result["success"] && isset($result["data"]["token"])) {
-            $this->token = $result["data"]["token"];
+        try {
+            $result = $this->makeRequest("auth/login", "POST", $loginData);
+            error_log("Réponse login API: " . print_r($result, true));
+            
+            if ($result["success"] && isset($result["data"]["token"])) {
+                // Stocker le token pour les futures requêtes
+                $this->token = $result["data"]["token"];
+                error_log("Token obtenu et stocké: " . substr($this->token, 0, 10) . "...");
+                
+                return [
+                    "success" => true,
+                    "token" => $this->token,
+                    "user" => $result["data"]["user"] ?? null,
+                    "message" => $result["data"]["message"] ?? "Connexion réussie"
+                ];
+            }
+            
+            error_log("Échec de connexion à l'API: " . ($result["message"] ?? "Raison inconnue"));
             return [
-                "success" => true,
-                "token" => $result["data"]["token"],
-                "user" => $result["data"]["user"] ?? null,
-                "message" => $result["data"]["message"] ?? "Connexion réussie"
+                "success" => false,
+                "message" => $result["data"]["message"] ?? $result["message"] ?? "Erreur de connexion"
+            ];
+        } catch (Exception $e) {
+            error_log("Exception lors de la connexion à l'API: " . $e->getMessage());
+            return [
+                "success" => false,
+                "message" => "Erreur de connexion: " . $e->getMessage()
             ];
         }
-        
-        return [
-            "success" => false,
-            "message" => $result["data"]["message"] ?? $result["message"] ?? "Erreur de connexion"
-        ];
     }
 
     public function getUsers() {
@@ -520,9 +541,13 @@ class ApiService {
             "message" => "Impossible de récupérer les documents depuis l'API"
         ];
     }
-    public function makeRequestWithFile($endpoint, $method = "POST", $data = null, $file = null) {
-        $url = $this->baseUrl . "/" . ltrim($endpoint, "/");
+    public function makeRequestWithFile($endpoint, $method = "POST", $data = null) {
+        // Nettoyer l'endpoint pour éviter les doubles slashes
+        $endpoint = trim($endpoint, '/');
+        $url = rtrim($this->baseUrl, '/') . '/' . $endpoint;
+        
         error_log("Appel API avec fichier: " . $method . " " . $url);
+        error_log("Données à envoyer: " . print_r($data, true));
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -532,11 +557,12 @@ class ApiService {
         
         $headers = [
             "Accept: application/json"
+            // Ne pas définir Content-Type, cURL le fera automatiquement avec le bon boundary
         ];
         
         if ($this->token) {
             $headers[] = "Authorization: Bearer " . $this->token;
-            error_log("Ajout du token dans les headers: Bearer " . $this->token);
+            error_log("Ajout du token dans les headers: Bearer " . substr($this->token, 0, 10) . "...");
         }
         
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -544,21 +570,10 @@ class ApiService {
         if ($method === "POST") {
             curl_setopt($ch, CURLOPT_POST, true);
             
-            // Préparer les données multipart/form-data
-            $postData = [];
-            
-            // Ajouter les données textuelles
-            foreach ($data as $key => $value) {
-                $postData[$key] = $value;
+            if ($data !== null) {
+                error_log("Données multipart à envoyer: " . print_r($data, true));
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
             }
-            
-            // Ajouter le fichier
-            if ($file && isset($file['tmp_name']) && file_exists($file['tmp_name'])) {
-                $postData['document'] = new CURLFile($file['tmp_name'], $file['type'], $file['name']);
-                error_log("Fichier ajouté: " . $file['name'] . " (" . $file['type'] . ")");
-            }
-            
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
         }
         
         $response = curl_exec($ch);
@@ -581,14 +596,28 @@ class ApiService {
             ];
         }
         
+        // Nettoyer la réponse des caractères BOM et espaces
+        if ($response !== false && is_string($response)) {
+            $response = preg_replace('/^[\x{FEFF}\s]+/u', '', $response);
+            error_log("Réponse nettoyée: " . $response);
+        }
+        
         $decodedResponse = json_decode($response, true);
+        if ($decodedResponse === null && json_last_error() !== JSON_ERROR_NONE) {
+            error_log("Erreur décodage JSON: " . json_last_error_msg());
+            return [
+                "success" => false,
+                "message" => "Erreur lors du décodage de la réponse",
+                "status_code" => $httpCode
+            ];
+        }
         
         return [
             "success" => $httpCode >= 200 && $httpCode < 300,
             "data" => $decodedResponse,
-            "raw_response" => $response,
             "status_code" => $httpCode,
-            "message" => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
+            "message" => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode,
+            "raw_response" => $response
         ];
     }
     
@@ -673,6 +702,133 @@ class ApiService {
         return [
             "success" => false,
             "message" => "Erreur lors de l'envoi du message"
+        ];
+    }
+
+    public function uploadFile($file) {
+        // Utiliser l'endpoint d'upload de messages
+        $endpoint = 'messages/upload';
+        $url = rtrim($this->baseUrl, '/') . '/' . $endpoint;
+        
+        error_log("Upload de fichier vers: " . $url);
+        error_log("Fichier à uploader: " . print_r($file, true));
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Timeout plus long pour les uploads
+        
+        // Préparer les en-têtes avec le token d'authentification
+        $headers = [
+            "Accept: application/json"
+        ];
+        
+        if ($this->token) {
+            $headers[] = "Authorization: Bearer " . $this->token;
+            error_log("Ajout du token dans les headers: Bearer " . $this->token);
+        }
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        // Préparer le fichier pour l'upload
+        $postData = [
+            'attachment' => new CURLFile(
+                $file['tmp_name'],
+                $file['type'],
+                $file['name']
+            )
+        ];
+        
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        
+        error_log("Réponse HTTP: " . $httpCode);
+        error_log("Réponse brute: " . substr($response, 0, 500) . "...");
+        if ($error) {
+            error_log("Erreur cURL: " . $error);
+        }
+        
+        curl_close($ch);
+        
+        if ($error) {
+            return [
+                "success" => false,
+                "message" => "Erreur lors de l'upload: " . $error,
+                "status_code" => 0
+            ];
+        }
+        
+        $decodedResponse = json_decode($response, true);
+        
+        return [
+            "success" => $httpCode >= 200 && $httpCode < 300,
+            "data" => $decodedResponse,
+            "status_code" => $httpCode,
+            "message" => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
+        ];
+    }
+
+    private function uploadFileAlternative($file) {
+        // Utiliser l'endpoint alternatif pour l'upload de fichiers
+        $endpoint = 'attachments/upload';
+        $url = rtrim($this->baseUrl, '/') . '/' . $endpoint;
+        
+        error_log("Tentative d'upload avec l'endpoint alternatif: " . $url);
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        
+        $headers = [
+            "Accept: application/json"
+        ];
+        
+        if ($this->token) {
+            $headers[] = "Authorization: Bearer " . $this->token;
+        }
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        $postData = [
+            'attachment' => new CURLFile(
+                $file['tmp_name'],
+                $file['type'],
+                $file['name']
+            )
+        ];
+        
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        
+        error_log("Réponse HTTP (alternatif): " . $httpCode);
+        error_log("Réponse brute (alternatif): " . substr($response, 0, 500) . "...");
+        
+        curl_close($ch);
+        
+        if ($error) {
+            return [
+                "success" => false,
+                "message" => "Erreur lors de l'upload: " . $error,
+                "status_code" => 0
+            ];
+        }
+        
+        $decodedResponse = json_decode($response, true);
+        
+        return [
+            "success" => $httpCode >= 200 && $httpCode < 300,
+            "data" => $decodedResponse,
+            "status_code" => $httpCode,
+            "message" => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
         ];
     }
 }

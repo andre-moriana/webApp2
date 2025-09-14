@@ -79,6 +79,7 @@ class Router {
         // Routes API pour les messages des groupes
         $this->addRoute('GET', '/api/messages/{id}/history', 'ApiController@getGroupMessages');
         $this->addRoute('POST', '/api/messages/{id}/send', 'ApiController@sendGroupMessage');
+        $this->addRoute('GET', '/api/messages/{id}/attachment', 'ApiController@downloadMessageAttachment');
     }
     
     private function addRoute($method, $path, $handler) {

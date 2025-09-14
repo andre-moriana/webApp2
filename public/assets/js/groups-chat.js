@@ -101,11 +101,11 @@ function displayMessages(messages) {
         // Construire l'URL complète pour l'image
         let attachmentHtml = '';
         if (message.attachment) {
-            const imageUrl = `http://82.67.123.22:25000${message.attachment.path}`;
+            const attachmentUrl = `/api/messages/${message._id}/attachment`;
             attachmentHtml = `
                 <div class="message-attachment mt-2">
-                    <a href="${imageUrl}" target="_blank">
-                        <img src="${imageUrl}" alt="${message.attachment.originalName}" 
+                    <a href="${attachmentUrl}" target="_blank">
+                        <img src="${attachmentUrl}" alt="${message.attachment.originalName}" 
                              class="img-fluid rounded" style="max-width: 200px; max-height: 200px;">
                     </a>
                 </div>

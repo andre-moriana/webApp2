@@ -70,12 +70,16 @@ class AuthController {
             // Extraire le nom d'utilisateur de l'email
             $username = explode('@', $username)[0];
 
-            // Utiliser l'API backend pour l'authentification
-            $loginResult = $this->getApiService()->login($username, $password);
             error_log("Tentative de connexion avec username: " . $username);
+            
+            // Créer une nouvelle instance de ApiService
+            $apiService = new ApiService();
+            
+            // Utiliser l'API backend pour l'authentification
+            $loginResult = $apiService->login($username, $password);
             error_log("Résultat de la connexion: " . json_encode($loginResult));
 
-            if ($loginResult['success']) {
+            if ($loginResult['success'] && isset($loginResult['token'])) {
                 // Connexion réussie via l'API
                 $_SESSION['user'] = [
                     'id' => $loginResult['user']['id'] ?? 1,
@@ -86,8 +90,12 @@ class AuthController {
                     'is_admin' => $loginResult['user']['is_admin'] ?? $loginResult['user']['isAdmin'] ?? false,
                     'status' => 'active'
                 ];
+                
+                // Sauvegarder le token dans la session
                 $_SESSION['token'] = $loginResult['token'];
                 $_SESSION['logged_in'] = true;
+                
+                error_log("Session après connexion réussie: " . print_r($_SESSION, true));
                 
                 header('Location: /dashboard');
                 exit;
@@ -97,7 +105,7 @@ class AuthController {
                     $_SESSION['user'] = [
                         'id' => 1,
                         'last_name' => 'Gémenos',
-                        'username' => 'User',
+                        'username' => 'admin',
                         'email' => 'admin@archers-gemenos.fr',
                         'role' => 'admin',
                         'is_admin' => true,
@@ -106,15 +114,20 @@ class AuthController {
                     $_SESSION['token'] = 'demo-token-' . time();
                     $_SESSION['logged_in'] = true;
                     
+                    error_log("Connexion avec compte de test réussie");
+                    
                     header('Location: /dashboard');
                     exit;
                 } else {
+                    error_log("Échec de connexion: " . ($loginResult['message'] ?? 'Identifiants incorrects'));
                     $_SESSION['error'] = $loginResult['message'] ?? 'Identifiants incorrects';
                     header('Location: /login');
                     exit;
                 }
             }
         } catch (Exception $e) {
+            error_log("Exception lors de la connexion: " . $e->getMessage());
+            
             // En cas d'erreur API, utiliser les identifiants de test
             if ($username === 'admin' && $password === 'admin1234') {
                 $_SESSION['user'] = [
@@ -128,6 +141,8 @@ class AuthController {
                 ];
                 $_SESSION['token'] = 'demo-token-' . time();
                 $_SESSION['logged_in'] = true;
+                
+                error_log("Connexion avec compte de test réussie après exception");
                 
                 header('Location: /dashboard');
                 exit;

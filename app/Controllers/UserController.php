@@ -325,14 +325,19 @@ class UserController {
         }
         
         try {
-            // Ici vous pouvez ajouter la logique pour supprimer l'utilisateur via l'API
-            // Pour l'instant, on simule une suppression réussie
+            // Appel à l'API pour supprimer l'utilisateur
+            $response = $this->apiService->deleteUser($id);
             
-            $_SESSION['success'] = 'Utilisateur supprimé avec succès';
+            if ($response['success']) {
+                $_SESSION['success'] = 'Utilisateur supprimé avec succès';
+            } else {
+                $_SESSION['error'] = $response['message'] ?? 'Erreur lors de la suppression de l\'utilisateur';
+            }
+            
             header('Location: /users');
             exit;
         } catch (Exception $e) {
-            $_SESSION['error'] = 'Erreur lors de la suppression de l\'utilisateur';
+            $_SESSION['error'] = 'Erreur lors de la suppression de l\'utilisateur: ' . $e->getMessage();
             header('Location: /users');
             exit;
         }

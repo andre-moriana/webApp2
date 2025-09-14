@@ -345,17 +345,16 @@ class ApiController {
         try {
             error_log("Envoi d'un message au groupe " . $groupId);
             error_log("Contenu: " . $content);
-            if ($file) {
-                error_log("Fichier: " . print_r($file, true));
-            }
 
             // Préparer les données pour l'API
             $postData = [
-                'content' => $content
+                'content' => $content,
+                'group_id' => intval($groupId)
             ];
 
-            // Si un fichier est présent, l'ajouter aux données
+            // Si un fichier est présent, l'ajouter directement aux données
             if ($file && $file['error'] === UPLOAD_ERR_OK) {
+                error_log("Ajout du fichier: " . print_r($file, true));
                 $postData['attachment'] = new CURLFile(
                     $file['tmp_name'],
                     $file['type'],
@@ -363,10 +362,19 @@ class ApiController {
                 );
             }
 
-            $response = $this->apiService->makeRequestWithFile("messages/" . $groupId . "/send", "POST", $postData);
+            // Envoyer le message avec le fichier si présent
+            $response = $this->apiService->makeRequestWithFile("messages/{$groupId}/send", "POST", $postData);
+            error_log("Données envoyées à l'API: " . json_encode($postData));
             error_log("Réponse de l'API: " . json_encode($response));
 
-            $this->sendJsonResponse($response);
+            if ($response['success']) {
+                $this->sendJsonResponse($response);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de l\'envoi du message'
+                ], $response['status_code'] ?? 500);
+            }
         } catch (Exception $e) {
             error_log("Erreur lors de l'envoi du message: " . $e->getMessage());
             $this->sendJsonResponse([
@@ -392,10 +400,105 @@ class ApiController {
     }
 
     private function ensureAuthenticated() {
-        // Vérifier si on a déjà un token, sinon se connecter
-        $loginResult = $this->apiService->login("admin", "admin123");
-        if (!$loginResult["success"]) {
-            throw new Exception("Impossible de se connecter à l'API: " . $loginResult["message"]);
+        // Vérifier si l'utilisateur est connecté
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            throw new Exception("Non authentifié");
+        }
+
+        // Vérifier si nous avons un token API valide
+        if (!isset($_SESSION['token']) || empty($_SESSION['token'])) {
+            throw new Exception("Token API non trouvé");
+        }
+
+        // Le token est déjà géré par ApiService, pas besoin de le réinitialiser ici
+    }
+
+    public function downloadMessageAttachment($messageId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            // Appeler l'API pour récupérer le fichier
+            $response = $this->apiService->makeRequest("messages/{$messageId}/attachment", "GET");
+            
+            if ($response['success']) {
+                // L'API retourne directement le contenu du fichier
+                $rawResponse = $response['raw_response'] ?? '';
+                
+                // Vérifier si c'est du contenu binaire
+                if (!empty($rawResponse) && !json_decode($rawResponse, true)) {
+                    // C'est du contenu binaire, le servir directement
+                    
+                    // Déterminer le type MIME basé sur le contenu
+                    $mimeType = 'application/octet-stream';
+                    if (strpos($rawResponse, '%PDF-') === 0) {
+                        $mimeType = 'application/pdf';
+                    } elseif (strpos($rawResponse, "\xFF\xD8\xFF") === 0) {
+                        $mimeType = 'image/jpeg';
+                    } elseif (strpos($rawResponse, "\x89PNG") === 0) {
+                        $mimeType = 'image/png';
+                    }
+                    
+                    // Nettoyer la sortie et définir les headers appropriés
+                    if (ob_get_level()) {
+                        ob_clean();
+                    }
+                    
+                    header('Content-Type: ' . $mimeType);
+                    header('Content-Disposition: attachment; filename="attachment_' . $messageId . '"');
+                    header('Content-Length: ' . strlen($rawResponse));
+                    header('Cache-Control: no-cache, must-revalidate');
+                    header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+                    
+                    echo $rawResponse;
+                    exit;
+                } else {
+                    // C'est du JSON, essayer de trouver une URL
+                    $data = $response['data'] ?? [];
+                    $downloadUrl = null;
+                    
+                    // Essayer différents chemins possibles pour l'URL
+                    if (isset($data['attachment']['url'])) {
+                        $downloadUrl = $data['attachment']['url'];
+                    } elseif (isset($data['url'])) {
+                        $downloadUrl = $data['url'];
+                    } elseif (isset($data['path'])) {
+                        $downloadUrl = $data['path'];
+                    }
+                    
+                    if ($downloadUrl) {
+                        // Si l'URL est relative, la rendre absolue
+                        if (strpos($downloadUrl, 'http') !== 0) {
+                            $baseUrl = rtrim($this->baseUrl, '/api');
+                            $downloadUrl = $baseUrl . '/' . ltrim($downloadUrl, '/');
+                        }
+                        
+                        header("Location: " . $downloadUrl);
+                        exit;
+                    } else {
+                        $this->cleanOutput();
+                        http_response_code(404);
+                        echo json_encode([
+                            "success" => false,
+                            "message" => "URL de téléchargement non trouvée dans la réponse API"
+                        ]);
+                    }
+                }
+            } else {
+                $this->cleanOutput();
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors du téléchargement: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            $this->cleanOutput();
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors du téléchargement: " . $e->getMessage()
+            ]);
         }
     }
 }
