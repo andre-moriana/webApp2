@@ -14,6 +14,16 @@
     
     <!-- CSS personnalisé -->
     <link href="/public/assets/css/style.css" rel="stylesheet">
+    <link href="/public/assets/css/chat-messages.css" rel="stylesheet">
+    <style>
+        /* Debug visible */
+        .debug-visible {
+            background-color: yellow !important;
+            border: 2px solid orange !important;
+            padding: 10px !important;
+            margin: 5px 0 !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->

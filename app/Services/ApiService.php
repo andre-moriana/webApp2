@@ -18,7 +18,13 @@ class ApiService {
                 }
             }
         }
-        $this->baseUrl = 'http://82.67.123.22:25000/api/';
+        
+        // Utiliser l'URL de l'API depuis la configuration .env
+        if (!isset($_ENV["API_BASE_URL"])) {
+            throw new Exception("La variable API_BASE_URL n'est pas configurée dans le fichier .env");
+        }
+        $this->baseUrl = $_ENV["API_BASE_URL"];
+        error_log("URL de l'API configurée: " . $this->baseUrl);
         
         // Démarrer la session si elle n'est pas déjà démarrée
         if (session_status() === PHP_SESSION_NONE) {
@@ -39,79 +45,84 @@ class ApiService {
         $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
         error_log("Requête API vers: " . $url);
         error_log("Méthode: " . $method);
-        if ($data) {
-            error_log("Données à envoyer: " . print_r($data, true));
-        }
-
+        
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
         
-        // Préparer les en-têtes avec le token d'authentification
+        // Headers pour accepter tous les types de contenu
         $headers = [
-            'Accept: application/json',
-            'Content-Type: application/json'
+            'Accept: */*'
         ];
         
         if ($this->token) {
             $headers[] = 'Authorization: Bearer ' . $this->token;
-            error_log("Token ajouté aux en-têtes: " . substr($this->token, 0, 10) . "...");
         }
-
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
             if ($data !== null) {
-                $jsonData = json_encode($data);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
-                error_log("Données JSON envoyées: " . $jsonData);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
             }
         } else if ($method === 'PUT') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
             if ($data !== null) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
             }
         } else if ($method === 'DELETE') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
             if ($data !== null) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
             }
         }
         
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         
         error_log("Code HTTP: " . $httpCode);
-        error_log("Réponse brute: " . $response);
-
+        error_log("Type de contenu: " . $contentType);
+        error_log("Taille de la réponse: " . strlen($response));
+        
         if (curl_errno($ch)) {
             error_log("Erreur cURL: " . curl_error($ch));
             curl_close($ch);
             throw new Exception("Erreur lors de la requête API: " . curl_error($ch));
         }
-
+        
         curl_close($ch);
-
-        // Nettoyer la réponse des caractères BOM et espaces
-        if ($response !== false && is_string($response)) {
-            $response = preg_replace('/^[\x{FEFF}\s]+/u', '', $response);
-            error_log("Réponse nettoyée: " . $response);
+        
+        // Si ce n'est pas du JSON, retourner comme contenu binaire
+        if ($contentType && strpos($contentType, 'application/json') === false) {
+            return [
+                'success' => $httpCode >= 200 && $httpCode < 300,
+                'status_code' => $httpCode,
+                'raw_response' => $response,
+                'content_type' => $contentType
+            ];
         }
-
+        
+        // Pour les réponses JSON
         $decodedResponse = json_decode($response, true);
         if ($decodedResponse === null && json_last_error() !== JSON_ERROR_NONE) {
             error_log("Erreur décodage JSON: " . json_last_error_msg());
+            error_log("Début de la réponse: " . substr($response, 0, 1000));
             throw new Exception("Erreur lors du décodage de la réponse JSON: " . json_last_error_msg());
         }
-
+        
         return [
             'success' => $httpCode >= 200 && $httpCode < 300,
             'data' => $decodedResponse,
             'status_code' => $httpCode,
-            'message' => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode,
-            'raw_response' => $response
+            'message' => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
         ];
     }
     
@@ -541,54 +552,69 @@ class ApiService {
             "message" => "Impossible de récupérer les documents depuis l'API"
         ];
     }
-    public function makeRequestWithFile($endpoint, $method = "POST", $data = null) {
+    public function makeRequestWithFile($endpoint, $method = "GET", $data = null, $file = null) {
         // Nettoyer l'endpoint pour éviter les doubles slashes
         $endpoint = trim($endpoint, '/');
         $url = rtrim($this->baseUrl, '/') . '/' . $endpoint;
         
-        error_log("Appel API avec fichier: " . $method . " " . $url);
-        error_log("Données à envoyer: " . print_r($data, true));
+        error_log("=== Requête API avec fichier ===");
+        error_log("URL complète: " . $url);
+        error_log("Méthode: " . $method);
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Timeout plus long pour les uploads
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_HEADER, true); // Pour récupérer les headers
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Suivre les redirections
         
+        // Headers pour l'upload de fichier
         $headers = [
-            "Accept: application/json"
-            // Ne pas définir Content-Type, cURL le fera automatiquement avec le bon boundary
+            "Accept: */*"
         ];
         
         if ($this->token) {
             $headers[] = "Authorization: Bearer " . $this->token;
-            error_log("Ajout du token dans les headers: Bearer " . substr($this->token, 0, 10) . "...");
+            error_log("Token ajouté aux headers");
         }
         
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         
-        if ($method === "POST") {
-            curl_setopt($ch, CURLOPT_POST, true);
+        if ($method === "POST" || $method === "PUT") {
+            if ($method === "POST") {
+                curl_setopt($ch, CURLOPT_POST, true);
+            } else {
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+            }
             
-            if ($data !== null) {
-                error_log("Données multipart à envoyer: " . print_r($data, true));
+            if ($file && is_array($file) && isset($file['tmp_name'])) {
+                $postData = $data ?? [];
+                $postData['document'] = new CURLFile(
+                    $file['tmp_name'],
+                    $file['type'],
+                    $file['name']
+                );
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+                error_log("Fichier ajouté à la requête: " . $file['name']);
+            } elseif ($data !== null) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
             }
         }
         
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         $error = curl_error($ch);
         
-        error_log("Réponse HTTP: " . $httpCode);
-        error_log("Réponse brute: " . substr($response, 0, 500) . "...");
+        error_log("Code HTTP: " . $httpCode);
+        error_log("Type de contenu: " . $contentType);
+        error_log("Taille des headers: " . $headerSize);
+        
         if ($error) {
             error_log("Erreur cURL: " . $error);
-        }
-        
-        curl_close($ch);
-        
-        if ($error) {
+            curl_close($ch);
             return [
                 "success" => false,
                 "message" => "Erreur de connexion: " . $error,
@@ -596,19 +622,49 @@ class ApiService {
             ];
         }
         
-        // Nettoyer la réponse des caractères BOM et espaces
-        if ($response !== false && is_string($response)) {
-            $response = preg_replace('/^[\x{FEFF}\s]+/u', '', $response);
-            error_log("Réponse nettoyée: " . $response);
+        // Séparer les headers et le corps de la réponse
+        $headers = substr($response, 0, $headerSize);
+        $body = substr($response, $headerSize);
+        
+        error_log("Headers reçus: " . str_replace("\r\n", " | ", $headers));
+        error_log("Taille du corps: " . strlen($body));
+        
+        // Extraire le type de contenu des headers si non détecté par curl_getinfo
+        if (preg_match('/Content-Type: (.*?)(?:\r\n|\r|\n|$)/', $headers, $matches)) {
+            $contentType = trim($matches[1]);
         }
         
-        $decodedResponse = json_decode($response, true);
+        // Extraire le nom du fichier s'il est présent dans les headers
+        $filename = null;
+        if (preg_match('/Content-Disposition:.*filename="([^"]+)"/', $headers, $matches)) {
+            $filename = $matches[1];
+        }
+        
+        curl_close($ch);
+        
+        // Si le type de contenu n'est pas JSON, traiter comme binaire
+        if ($contentType && strpos($contentType, 'application/json') === false) {
+            error_log("Réponse traitée comme binaire");
+            return [
+                "success" => true,
+                "status_code" => $httpCode,
+                "raw_response" => $body,
+                "content_type" => $contentType,
+                "filename" => $filename,
+                "headers" => $headers
+            ];
+        }
+        
+        // Essayer de décoder comme JSON
+        $decodedResponse = json_decode($body, true);
         if ($decodedResponse === null && json_last_error() !== JSON_ERROR_NONE) {
             error_log("Erreur décodage JSON: " . json_last_error_msg());
+            error_log("Début de la réponse: " . substr($body, 0, 1000));
             return [
                 "success" => false,
-                "message" => "Erreur lors du décodage de la réponse",
-                "status_code" => $httpCode
+                "message" => "Erreur lors du décodage de la réponse JSON",
+                "status_code" => $httpCode,
+                "raw_response" => $body
             ];
         }
         
@@ -616,8 +672,7 @@ class ApiService {
             "success" => $httpCode >= 200 && $httpCode < 300,
             "data" => $decodedResponse,
             "status_code" => $httpCode,
-            "message" => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode,
-            "raw_response" => $response
+            "message" => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
         ];
     }
     

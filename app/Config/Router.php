@@ -77,9 +77,14 @@ class Router {
         $this->addRoute('GET', '/api/trainings', 'ApiController@trainings');
         
         // Routes API pour les messages des groupes
+        // Route des pièces jointes en premier (plus spécifique)
+        $this->addRoute('GET', '/api/messages/attachment/{id}', 'ApiController@downloadMessageAttachment');
+        // Routes génériques ensuite
         $this->addRoute('GET', '/api/messages/{id}/history', 'ApiController@getGroupMessages');
         $this->addRoute('POST', '/api/messages/{id}/send', 'ApiController@sendGroupMessage');
-        $this->addRoute('GET', '/api/messages/{id}/attachment', 'ApiController@downloadMessageAttachment');
+        // Nouvelles routes pour la modification et suppression des messages
+        $this->addRoute('PUT', '/api/messages/{id}/update', 'ApiController@updateMessage');
+        $this->addRoute('DELETE', '/api/messages/{id}/delete', 'ApiController@deleteMessage');
     }
     
     private function addRoute($method, $path, $handler) {
@@ -98,11 +103,12 @@ class Router {
         error_log("=== DEBUG ROUTAGE ===");
         error_log("REQUEST_URI: " . $requestUri);
         error_log("REQUEST_METHOD: " . $requestMethod);
-        error_log("SESSION: " . print_r($_SESSION, true));
+        error_log("BASE_PATH: " . $this->basePath);
         
         // Supprimer le basePath de l'URI
         if ($this->basePath && strpos($requestUri, $this->basePath) === 0) {
             $requestUri = substr($requestUri, strlen($this->basePath));
+            error_log("URI après suppression du basePath: " . $requestUri);
         }
         
         // Normaliser l'URI
@@ -128,14 +134,16 @@ class Router {
         }
         
         error_log("Aucune route trouvée pour: " . $requestUri);
+        error_log("Routes disponibles: " . print_r($this->routes, true));
         $this->handle404();
     }
     
     private function convertToRegex($path) {
         // Remplacer {id} par ([^/]+) AVANT d'échapper
-        $pattern = str_replace('{id}', '([^/]+)', $path);
+        $pattern = preg_replace('/\{([^}]+)\}/', '([^/]+)', $path);
         // Échapper seulement les slashes, pas les parenthèses
         $pattern = str_replace('/', '\/', $pattern);
+        error_log("Conversion route: " . $path . " -> " . $pattern);
         return '/^' . $pattern . '$/';
     }
     

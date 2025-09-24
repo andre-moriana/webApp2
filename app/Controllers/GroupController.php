@@ -1,22 +1,6 @@
 ﻿<?php
-// Charger les variables d'environnement
-if (file_exists('.env')) {
-    $lines = file('.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos($line, '=') !== false) {
-            $parts = explode('=', $line, 2);
-            if (count($parts) === 2) {
-                $key = trim($parts[0]);
-                $value = trim($parts[1]);
-                if (!empty($key)) {
-                    $_ENV[$key] = $value;
-                }
-            }
-        }
-    }
-}
-// Inclure ApiService
-require_once __DIR__ . '/../Services/ApiService.php';
+
+require_once 'app/Services/ApiService.php';
 
 class GroupController {
     private $apiService;
@@ -69,11 +53,39 @@ class GroupController {
             }
         }
         
+        // Charger les messages de chat pour le premier groupe (si disponible)
+        $chatMessages = [];
+        $chatError = null;
+        
+        if (!empty($groups)) {
+            $firstGroupId = $groups[0]['id'];
+            error_log("GroupController: Tentative de chargement des messages pour le groupe ID: " . $firstGroupId);
+            
+            try {
+                $messagesResponse = $this->apiService->makeRequest("messages/{$firstGroupId}/history", "GET");
+                error_log("GroupController: Réponse API messages: " . json_encode($messagesResponse));
+                
+                if ($messagesResponse['success']) {
+                    $chatMessages = $messagesResponse['data'];
+                    error_log("GroupController: Messages chargés: " . count($chatMessages) . " messages");
+                } else {
+                    $chatError = $messagesResponse['message'] ?? 'Erreur lors de la récupération des messages du premier groupe';
+                    error_log("GroupController: Erreur API messages: " . $chatError);
+                }
+            } catch (Exception $e) {
+                $chatError = 'Erreur lors de la récupération des messages du premier groupe: ' . $e->getMessage();
+                error_log("GroupController: Exception lors du chargement des messages: " . $e->getMessage());
+            }
+        } else {
+            error_log("GroupController: Aucun groupe disponible pour charger les messages");
+        }
+        
         $title = 'Gestion des groupes - Portail Archers de Gémenos';
         
         // DEBUG: Afficher les variables avant d'inclure la vue
         error_log("GroupController: Variables avant inclusion de la vue:");
         error_log("GroupController: groups = " . print_r($groups, true));
+        error_log("GroupController: chatMessages = " . print_r($chatMessages, true));
         error_log("GroupController: error = " . ($error ?? 'null'));
         
         include 'app/Views/layouts/header.php';
@@ -150,13 +162,11 @@ class GroupController {
             if ($isAdmin && $isDemoToken) {
                 // Utiliser des données de test pour l'admin
                 $testGroups = $this->getTestGroups();
-                $group = null;
-                foreach ($testGroups as $testGroup) {
-                    if ($testGroup['id'] == $id) {
-                        $group = $testGroup;
-                        break;
-                    }
-                }
+                $group = array_filter($testGroups, function($g) use ($id) {
+                    return $g['id'] == $id;
+                });
+                $group = reset($group);
+                
                 if (!$group) {
                     $error = 'Groupe non trouvé';
                 }
@@ -168,6 +178,21 @@ class GroupController {
                     $group = $response['data'];
                 } else {
                     $error = $response['message'] ?? 'Erreur lors de la récupération du groupe';
+                }
+            }
+            
+            // Charger les messages du chat pour ce groupe
+            if ($group && !$error) {
+                try {
+                    $messagesResponse = $this->apiService->makeRequest("messages/{$id}/history", "GET");
+                    
+                    if ($messagesResponse['success']) {
+                        $chatMessages = $messagesResponse['data'];
+                    } else {
+                        $chatError = $messagesResponse['message'] ?? 'Erreur lors de la récupération des messages';
+                    }
+                } catch (Exception $e) {
+                    $chatError = 'Erreur lors de la récupération des messages: ' . $e->getMessage();
                 }
             }
         } catch (Exception $e) {
@@ -182,78 +207,66 @@ class GroupController {
     }
     
     public function create() {
-        // Vérifier si l'utilisateur est connecté
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             header('Location: /login');
             exit;
         }
-
+        
+        $title = 'Créer un groupe - Portail Archers de Gémenos';
+        
+        include 'app/Views/layouts/header.php';
         include 'app/Views/groups/create.php';
+        include 'app/Views/layouts/footer.php';
     }
-
+    
     public function store() {
-        // Vérifier si l'utilisateur est connecté
-        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            header('Location: /login');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /groups');
             exit;
         }
-
-        // Récupérer et valider les données
+        
         $name = $_POST['name'] ?? '';
         $description = $_POST['description'] ?? '';
-        $isPrivate = isset($_POST['is_private']) ? true : false;
-
-        // Sauvegarder les données pour les réafficher en cas d'erreur
-        $_SESSION['old_input'] = [
-            'name' => $name,
-            'description' => $description,
-            'is_private' => $isPrivate
-        ];
-
-        // Valider les données
-        $errors = [];
+        $level = $_POST['level'] ?? 'débutant';
+        $isPrivate = isset($_POST['is_private']);
+        
         if (empty($name)) {
-            $errors['name'] = 'Le nom du groupe est requis';
-        } elseif (strlen($name) > 100) {
-            $errors['name'] = 'Le nom du groupe ne doit pas dépasser 100 caractères';
-        }
-
-        if (strlen($description) > 500) {
-            $errors['description'] = 'La description ne doit pas dépasser 500 caractères';
-        }
-
-        // S'il y a des erreurs, retourner au formulaire
-        if (!empty($errors)) {
-            $_SESSION['errors'] = $errors;
+            $_SESSION['error'] = 'Le nom du groupe est requis';
             header('Location: /groups/create');
             exit;
         }
-
+        
         try {
-            // Préparer les données pour l'API
-            $groupData = [
-                'name' => $name,
-                'description' => $description,
-                'is_private' => $isPrivate
-            ];
-
-            // Appeler l'API pour créer le groupe
-            $response = $this->apiService->makeRequest('groups/create', 'POST', $groupData);
-
-            if ($response['success']) {
-                // Rediriger vers la liste des groupes avec un message de succès
-                $_SESSION['success'] = 'Le groupe a été créé avec succès';
+            // Vérifier si l'utilisateur est admin et utiliser des données de test
+            $isAdmin = isset($_SESSION['user']['is_admin']) && $_SESSION['user']['is_admin'] === true;
+            $isDemoToken = isset($_SESSION['token']) && strpos($_SESSION['token'], 'demo-token-') === 0;
+            
+            if ($isAdmin && $isDemoToken) {
+                // Simulation de création pour l'admin
+                $_SESSION['success'] = 'Groupe créé avec succès (mode démonstration)';
                 header('Location: /groups');
                 exit;
             } else {
-                // En cas d'erreur de l'API
-                $_SESSION['errors'] = ['api' => $response['message'] ?? 'Erreur lors de la création du groupe'];
-                header('Location: /groups/create');
-                exit;
+                // Utiliser l'API pour créer le groupe
+                $response = $this->apiService->createGroup([
+                    'name' => $name,
+                    'description' => $description,
+                    'level' => $level,
+                    'is_private' => $isPrivate
+                ]);
+                
+                if ($response['success']) {
+                    $_SESSION['success'] = 'Groupe créé avec succès';
+                    header('Location: /groups');
+                    exit;
+                } else {
+                    $_SESSION['error'] = $response['message'] ?? 'Erreur lors de la création du groupe';
+                    header('Location: /groups/create');
+                    exit;
+                }
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de la création du groupe: " . $e->getMessage());
-            $_SESSION['errors'] = ['api' => 'Une erreur est survenue lors de la création du groupe'];
+            $_SESSION['error'] = 'Erreur lors de la création du groupe';
             header('Location: /groups/create');
             exit;
         }
@@ -276,13 +289,11 @@ class GroupController {
             if ($isAdmin && $isDemoToken) {
                 // Utiliser des données de test pour l'admin
                 $testGroups = $this->getTestGroups();
-                $group = null;
-                foreach ($testGroups as $testGroup) {
-                    if ($testGroup['id'] == $id) {
-                        $group = $testGroup;
-                        break;
-                    }
-                }
+                $group = array_filter($testGroups, function($g) use ($id) {
+                    return $g['id'] == $id;
+                });
+                $group = reset($group);
+                
                 if (!$group) {
                     $error = 'Groupe non trouvé';
                 }
@@ -330,20 +341,18 @@ class GroupController {
             $isDemoToken = isset($_SESSION['token']) && strpos($_SESSION['token'], 'demo-token-') === 0;
             
             if ($isAdmin && $isDemoToken) {
-                // Simulation de mise à jour pour l'admin
+                // Simulation de modification pour l'admin
                 $_SESSION['success'] = 'Groupe modifié avec succès (mode démonstration)';
                 header('Location: /groups');
                 exit;
             } else {
-                // Utiliser l'API pour mettre à jour le groupe
-                $groupData = [
+                // Utiliser l'API pour modifier le groupe
+                $response = $this->apiService->updateGroup($id, [
                     'name' => $name,
                     'description' => $description,
                     'level' => $level,
                     'is_private' => $isPrivate
-                ];
-                
-                $response = $this->apiService->updateGroup($id, $groupData);
+                ]);
                 
                 if ($response['success']) {
                     $_SESSION['success'] = 'Groupe modifié avec succès';

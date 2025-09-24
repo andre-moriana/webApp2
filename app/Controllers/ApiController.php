@@ -194,32 +194,75 @@ class ApiController {
             $this->ensureAuthenticated();
             
             $response = $this->apiService->makeRequest("documents/{$documentId}/download", "GET");
+            error_log("=== DEBUG DOWNLOAD DOCUMENT ===");
+            error_log("Réponse complète: " . print_r($response, true));
             
             if ($response['success']) {
-                // L'API retourne directement le contenu du fichier
+                // L'API retourne directement le contenu du fichier binaire
                 $rawResponse = $response['raw_response'] ?? '';
+                $contentType = $response['content_type'] ?? 'application/octet-stream';
+                
+                // Nettoyer le contenu binaire dès le début
+                if (!empty($rawResponse)) {
+                    // Supprimer les espaces et caractères de contrôle au début et à la fin
+                    $rawResponse = trim($rawResponse);
+                    
+                    // Pour les fichiers JPEG, s'assurer que la signature est correcte
+                    if ($contentType === 'image/jpeg') {
+                        // Chercher la vraie signature JPEG
+                        $jpegStart = strpos($rawResponse, "\xFF\xD8\xFF");
+                        if ($jpegStart !== false && $jpegStart > 0) {
+                            error_log("Signature JPEG trouvée à la position: " . $jpegStart . ", nettoyage...");
+                            $rawResponse = substr($rawResponse, $jpegStart);
+                        }
+                        
+                        // Chercher la vraie fin JPEG
+                        $jpegEnd = false;
+                        for ($i = strlen($rawResponse) - 1; $i >= 0; $i--) {
+                            if ($rawResponse[$i] === "\xD9" && $i > 0 && $rawResponse[$i-1] === "\xFF") {
+                                $jpegEnd = $i + 1;
+                                break;
+                            }
+                        }
+                        
+                        if ($jpegEnd !== false && $jpegEnd < strlen($rawResponse)) {
+                            error_log("Fin JPEG trouvée à la position: " . $jpegEnd . ", nettoyage...");
+                            $rawResponse = substr($rawResponse, 0, $jpegEnd);
+                        }
+                        
+                        error_log("Taille finale du JPEG: " . strlen($rawResponse));
+                    }
+                }
                 
                 // Vérifier si c'est du contenu binaire (PDF, image, etc.)
                 if (!empty($rawResponse) && !json_decode($rawResponse, true)) {
                     // C'est du contenu binaire, le servir directement
                     
-                    // Déterminer le type MIME basé sur le contenu
-                    $mimeType = 'application/octet-stream';
-                    if (strpos($rawResponse, '%PDF-') === 0) {
-                        $mimeType = 'application/pdf';
-                    } elseif (strpos($rawResponse, "\xFF\xD8\xFF") === 0) {
-                        $mimeType = 'image/jpeg';
-                    } elseif (strpos($rawResponse, "\x89PNG") === 0) {
-                        $mimeType = 'image/png';
-                    }
+                    // Générer un nom de fichier avec l'extension appropriée
+                    $fileName = "document_" . $documentId;
+                    
+                    // Ajouter l'extension appropriée basée sur le type MIME
+                    $mimeToExt = [
+                        'image/jpeg' => '.jpg',
+                        'image/jpg' => '.jpg',
+                        'image/png' => '.png',
+                        'image/gif' => '.gif',
+                        'application/pdf' => '.pdf',
+                        'text/plain' => '.txt'
+                    ];
+                    $extension = $mimeToExt[$contentType] ?? '.bin';
+                    $fileName .= $extension;
+                    
+                    error_log("Nom de fichier final: " . $fileName);
+                    error_log("Type MIME final: " . $contentType);
                     
                     // Nettoyer la sortie et définir les headers appropriés
                     if (ob_get_level()) {
                         ob_clean();
                     }
                     
-                    header('Content-Type: ' . $mimeType);
-                    header('Content-Disposition: attachment; filename="document_' . $documentId . '.pdf"');
+                    header('Content-Type: ' . $contentType);
+                    header('Content-Disposition: attachment; filename="' . $fileName . '"');
                     header('Content-Length: ' . strlen($rawResponse));
                     header('Cache-Control: no-cache, must-revalidate');
                     header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
@@ -381,6 +424,76 @@ class ApiController {
                 'success' => false,
                 'message' => 'Erreur lors de l\'envoi du message: ' . $e->getMessage()
             ], 500);
+        }
+    }
+    
+    public function updateMessage($messageId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $content = $input['content'] ?? '';
+            
+            if (empty($content)) {
+                http_response_code(400);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Le contenu du message ne peut pas être vide"
+                ]);
+                return;
+            }
+            
+            $response = $this->apiService->makeRequest("messages/{$messageId}/update", "PUT", ['content' => $content]);
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Message modifié avec succès"
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la modification: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la modification: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function deleteMessage($messageId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $response = $this->apiService->makeRequest("messages/{$messageId}/delete", "DELETE");
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Message supprimé avec succès"
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la suppression: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la suppression: " . $e->getMessage()
+            ]);
         }
     }
     
