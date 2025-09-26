@@ -4,6 +4,7 @@ $title = "Gestion des événements - Portail Archers de Gémenos";
 
 <!-- Inclusion des styles -->
 <link rel="stylesheet" href="/public/assets/css/groups-chat.css">
+<link rel="stylesheet" href="/public/assets/css/events.css">
 
 <div class="container-fluid">
     <div class="row">
@@ -37,7 +38,8 @@ $title = "Gestion des événements - Portail Archers de Gémenos";
                         error_log("Événement " . $index . ": " . json_encode($event));
                         ?>
                         <div class="list-group-item list-group-item-action event-item <?php echo $index === 0 ? "active" : ""; ?>" 
-                             data-event-id="<?php echo $event["_id"] ?? "null"; ?>">
+                             data-event-id="<?php echo $event["_id"] ?? "null"; ?>"
+                             style="cursor: pointer;">
                             <div class="d-flex">
                                 <div class="avatar-sm bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
                                     <i class="fas fa-calendar"></i>
@@ -67,23 +69,13 @@ $title = "Gestion des événements - Portail Archers de Gémenos";
                                     </p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted">
-
-
-                                        </small>
-                                        <small class="text-muted">
                                             <i class="fas fa-calendar me-1"></i>
                                             <?php 
                                             if (!empty($event["date"])) {
                                                 $eventDate = new DateTime($event["date"]);
-                                                echo $eventDate->format("d/m/Y ");
+                                                echo $eventDate->format("d/m/Y H:i");
                                             } else {
                                                 echo "Date inconnue";
-                                            }
-                                            if (!empty($event["time"])) {
-                                                $eventTime = new DateTime($event["time"]);
-                                                echo $eventTime->format("H:i");
-                                            } else {
-                                                echo "Heure non précisée";
                                             }
                                             ?>
                                         </small>
@@ -215,13 +207,20 @@ $title = "Gestion des événements - Portail Archers de Gémenos";
 <!-- Variables PHP pour JavaScript -->
 <script>
 const currentUserId = <?php echo $_SESSION["user"]["id"]; ?>;
-const initialEventId = <?php echo (!empty($events) && isset($events[0]) && isset($events[0]["_id"])) ? $events[0]["_id"] : "null"; ?>;
+const initialEventId = <?php echo (!empty($events) && isset($events[0]) && isset($events[0]["_id"])) ? json_encode($events[0]["_id"]) : "null"; ?>;
 const backendUrl = "<?php echo str_replace("/api", "", $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000"); ?>";
 const isAdmin = <?php echo $_SESSION["user"]["is_admin"] ? "true" : "false"; ?>;
 const authToken = "<?php echo $_SESSION["token"] ?? ""; ?>";
+
+// Debug
+console.log("Initial Event ID:", initialEventId);
+console.log("Current User ID:", currentUserId);
+console.log("Backend URL:", backendUrl);
+console.log("Auth Token:", authToken ? "Present" : "Missing");
 </script>
 
 <!-- Inclusion du JavaScript -->
+<script src="/public/assets/js/events-chat.js"></script>
 <script src="/public/assets/js/events.js"></script>
 
 

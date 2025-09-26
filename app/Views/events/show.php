@@ -90,27 +90,26 @@ $title = "Portail Archers de Gémenos - Détails de l'événement";
                         <h6 class="mb-0">Inscription</h6>
                     </div>
                     <div class="card-body">
-                        <?php if ($isRegistered): ?>
-                            <div class="alert alert-success">
-                                <i class="fas fa-check-circle me-2"></i>
-                                Vous êtes inscrit à cet événement
-                            </div>
-                            <form method="POST" action="/events/<?php echo $event["_id"] ?? "null"; ?>/unregister" class="d-inline">
-                                <button type="submit" class="btn btn-warning">
-                                    <i class="fas fa-user-minus me-1"></i>Se désinscrire
-                                </button>
-                            </form>
-                        <?php else: ?>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Vous n"êtes pas inscrit à cet événement
-                            </div>
-                            <form method="POST" action="/events/<?php echo $event["_id"] ?? "null"; ?>/register" class="d-inline">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-user-plus me-1"></i>S"inscrire
-                                </button>
-                            </form>
-                        <?php endif; ?>
+                        <div class="registration-status">
+                            <?php if ($isRegistered): ?>
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Vous êtes inscrit à cet événement
+                                </div>
+                            <?php else: ?>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Vous n'êtes pas inscrit à cet événement
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn <?php echo $isRegistered ? 'btn-warning' : 'btn-success'; ?> registration-button" 
+                                    onclick="<?php echo $isRegistered ? 'unregisterFromEvent' : 'registerToEvent'; ?>(<?php echo $event["_id"] ?? "null"; ?>)">
+                                <i class="fas fa-<?php echo $isRegistered ? 'user-minus' : 'user-plus'; ?> me-1"></i>
+                                <?php echo $isRegistered ? 'Se désinscrire' : 'S\'inscrire'; ?>
+                            </button>
+                        </div>
                     </div>
                 </div>
             <?php else: ?>
