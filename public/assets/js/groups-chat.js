@@ -7,34 +7,15 @@ const messageForm = document.getElementById("message-form");
 const messageInput = document.getElementById("message-input");
 const chatTitle = document.getElementById("chat-title");
 
-// Messages de test par groupe (fallback)
-const testMessages = {
-    "1": [
-        {
-            id: "1",
-            content: "Bonjour tout le monde ! Bienvenue dans le groupe du Conseil d'administration.",
-            author_id: "123",
-            author_name: "Admin",
-            created_at: new Date(Date.now() - 3600000).toISOString()
-        }
-    ],
-    "2": [
-        {
-            id: "2",
-            content: "Salut tout le monde ! Groupe principal du club.",
-            author_id: "123",
-            author_name: "Admin",
-            created_at: new Date(Date.now() - 3600000).toISOString()
-        }
-    ]
-};
-
 // Initialiser avec le premier groupe
 document.addEventListener("DOMContentLoaded", function() {
     if (typeof initialGroupId !== "undefined" && initialGroupId) {
         currentGroupId = initialGroupId.toString();
         console.log("Chat initialisé avec le groupe ID:", currentGroupId);
         console.log("ID utilisateur actuel:", currentUserId);
+        
+        // Charger automatiquement les messages du groupe initial
+        loadGroupMessages(currentGroupId);
     }
 });
 
@@ -223,6 +204,22 @@ async function loadGroupMessages(groupId) {
 // Gérer la sélection d'un groupe
 document.querySelectorAll(".group-item").forEach(item => {
     item.addEventListener("click", async (e) => {
+        // Ne pas intercepter les clics sur les boutons d'action
+        if (e.target.closest('.btn-group') || 
+            e.target.closest('a') || 
+            e.target.closest('button') ||
+            e.target.closest('.badge') ||
+            e.target.closest('form') ||
+            e.target.hasAttribute('data-ignore-chat') ||
+            e.target.closest('[data-ignore-chat]') ||
+            e.target.tagName === 'A' ||
+            e.target.tagName === 'BUTTON' ||
+            e.target.tagName === 'I' ||
+            e.target.tagName === 'FORM') {
+            console.log("Clic sur un bouton/lien/badge/form, laisser le navigateur gérer");
+            return; // Laisser le navigateur gérer le clic normalement
+        }
+        
         e.preventDefault();
         
         console.log("Clic sur le groupe:", item.dataset.groupId);
@@ -254,6 +251,7 @@ if (messageForm) {
         const content = messageInput.value.trim();
         if (!content) return;
         
+        // Créer le message temporaire pour l'affichage immédiat
         const newMessage = {
             id: Date.now().toString(),
             content: content,
@@ -262,13 +260,63 @@ if (messageForm) {
             created_at: new Date().toISOString()
         };
         
+        // Afficher le message immédiatement
         const messageElement = createMessageElement(newMessage);
         messagesContainer.insertAdjacentHTML("beforeend", messageElement);
         
+        // Vider le champ de saisie
         messageInput.value = "";
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
         
         console.log("Message envoyé:", content);
+        
+        // Envoyer le message au backend
+        try {
+            // Utiliser FormData comme l'app mobile
+            const formData = new FormData();
+            formData.append('content', content);
+            
+            // Ajouter le fichier s'il y en a un
+            const attachmentInput = document.getElementById('message-attachment');
+            if (attachmentInput && attachmentInput.files && attachmentInput.files[0]) {
+                const file = attachmentInput.files[0];
+                formData.append('attachment', file);
+                console.log("Fichier ajouté:", file.name, "Type:", file.type, "Taille:", file.size);
+            }
+            
+            const response = await fetch(`${backendUrl}/api/messages/${currentGroupId}/send`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
+                    // Ne pas définir Content-Type, laissez le navigateur le faire automatiquement pour FormData
+                },
+                body: formData
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Message sauvegardé avec succès:", data);
+                
+                // Optionnel: Mettre à jour l'ID du message avec celui du backend
+                const messageElement = document.querySelector(`[data-message-id="${newMessage.id}"]`);
+                if (messageElement && data._id) {
+                    messageElement.setAttribute('data-message-id', data._id);
+                }
+                
+                // Vider l'input de fichier après envoi réussi
+                if (attachmentInput) {
+                    attachmentInput.value = '';
+                }
+            } else {
+                console.error("Erreur lors de la sauvegarde du message:", response.status);
+                // Optionnel: Afficher un message d'erreur à l'utilisateur
+                alert("Erreur lors de l'envoi du message");
+            }
+        } catch (error) {
+            console.error("Erreur lors de l'envoi du message:", error);
+            // Optionnel: Afficher un message d'erreur à l'utilisateur
+            alert("Erreur de connexion lors de l'envoi du message");
+        }
     });
 }
 

@@ -1,104 +1,86 @@
 ﻿<?php
 $title = "Détails du groupe - Portail Archers de Gémenos";
 ?>
-
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-layer-group me-2"></i>
-            <?php echo htmlspecialchars($group["name"] ?? "Groupe non trouvé"); ?>
-        </h1>
-        <div>
-            <a href="/groups" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>
-                Retour à la liste
-            </a>
-        </div>
-    </div>
-
-    <?php if ($error): ?>
-        <div class="alert alert-danger" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <?php echo htmlspecialchars($error); ?>
-        </div>
-    <?php elseif ($group): ?>
-        <div class="row">
-            <div class="col-xl-8 col-lg-7">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Informations détaillées
-                        </h6>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-layer-group me-2"></i><?php echo htmlspecialchars($group['name']); ?>
+                    </h4>
+                    <div class="btn-group">
+                        <a href="/groups/<?php echo $group['id']; ?>/edit" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Modifier
+                        </a>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDelete(<?php echo $group['id']; ?>)">
+                            <i class="fas fa-trash me-1"></i>Supprimer
+                        </button>
+                    </div>
                     </div>
                     <div class="card-body">
-                        <div class="mb-4">
-                            <h5 class="font-weight-bold">Description</h5>
-                            <p><?php echo nl2br(htmlspecialchars($group["description"] ?? "Aucune description")); ?></p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Informations générales</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Nom :</strong></td>
+                                    <td><?php echo htmlspecialchars($group['name']); ?></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Description :</strong></td>
+                                    <td><?php echo htmlspecialchars($group['description']); ?></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Type :</strong></td>
+                                    <td>
+                                        <span class="badge <?php echo $group['is_private'] ? 'bg-warning' : 'bg-success'; ?>">
+                                            <?php echo $group['is_private'] ? 'Privé' : 'Public'; ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Admin :</strong></td>
+                                    <td><?php echo htmlspecialchars($group['admin_name']); ?></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Créé le :</strong></td>
+                                    <td><?php echo date('d/m/Y H:i', strtotime($group['created_at'])); ?></td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="col-xl-4 col-lg-5">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-comments me-2"></i>
-                            Chat du groupe
-                        </h6>
                     </div>
-                    <div class="card-body">
-                        <?php if ($chatError): ?>
-                            <div class="alert alert-warning" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <?php echo htmlspecialchars($chatError); ?>
                             </div>
-                        <?php else: ?>
-                            <div class="messages-container">
-                                <?php foreach ($chatMessages as $message): 
-                                    // Utiliser des clés flexibles pour l ID de l auteur
-                                    $authorId = $message["author_id"] ?? $message["userId"] ?? $message["user_id"] ?? $message["author"]["id"] ?? null;
-                                    
-                                    // Vérifier les permissions de l utilisateur pour ce message
-                                    $canEdit = ($_SESSION["user"]["id"] === $authorId) || $_SESSION["user"]["is_admin"];
-                                    $canDelete = $_SESSION["user"]["is_admin"] || 
-                                                ($_SESSION["user"]["id"] === $authorId && 
-                                                 (time() - strtotime($message["created_at"])) < 3600);
-                                    
-                                    // Inclure le template de message
-                                    include __DIR__ . "/../chat/message.php";
-                                endforeach; ?>
                             </div>
                             
-                            <div class="chat-input mt-3">
-                                <form action="/groups/<?php echo htmlspecialchars($group["id"] ?? ""); ?>/chat" method="POST" class="d-flex">
-                                    <input type="text" 
-                                           name="message" 
-                                           class="form-control me-2" 
-                                           placeholder="Votre message..." 
-                                           required>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane"></i>
-                                    </button>
-                                </form>
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
-                        <?php endif; ?>
+            <div class="modal-body">
+                Êtes-vous sûr de vouloir supprimer ce groupe ? Cette action est irréversible.
                     </div>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form method="POST" action="/groups" id="deleteForm" style="display: inline;">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <input type="hidden" name="group_id" id="deleteGroupId">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
             </div>
         </div>
-    <?php endif; ?>
+    </div>
 </div>
-
-<!-- Variables PHP pour JavaScript -->
 <script>
-const currentUserId = <?php echo $_SESSION["user"]["id"]; ?>;
-const initialGroupId = <?php echo !empty($groups) ? $groups[0]['id'] : 'null'; ?>;
-const backendUrl = "<?php echo str_replace('/api', '', $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000'); ?>";
-const isAdmin = <?php echo $_SESSION["user"]["is_admin"] ? 'true' : 'false'; ?>;
-const authToken = "<?php echo $_SESSION['token'] ?? ''; ?>";
+function confirmDelete(groupId) {
+    document.getElementById('deleteGroupId').value = groupId;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
 </script>
-
-<!-- Inclusion du JavaScript -->
-<script src="/public/assets/js/groups-chat.js"></script>

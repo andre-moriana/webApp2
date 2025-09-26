@@ -13,17 +13,19 @@ class UserController {
             exit;
         }
         
+        // Nettoyer les messages d'erreur de session
+        unset($_SESSION['error']);
+        unset($_SESSION['success']);
+        
         $users = [];
         $error = null;
         
         try {
             // Essayer de récupérer les utilisateurs depuis l'API
             $response = $this->apiService->getUsers();
-            if ($response['success'] && !empty($response['data']['users'])) {
+            if ($response['success'] && isset($response['data']['users']) && !empty($response['data']['users'])) {
                 $users = $response['data']['users'];
             } else {
-                // Si l'API ne fonctionne pas, utiliser des données simulées réalistes
-                $users = $this->getSimulatedUsers();
                 $error = 'API backend non accessible - Affichage de données simulées';
             }
         } catch (Exception $e) {
@@ -42,64 +44,8 @@ class UserController {
     /**
      * Retourne des utilisateurs simulés réalistes
      */
-    private function getSimulatedUsers() {
-        return [
-            [
-                'id' => 1,
-                'first_name' => 'Admin',
-                'last_name' => 'Gémenos',
-                'email' => 'admin@archers-gemenos.fr',
-                'role' => 'admin',
-                'status' => 'active',
-                'created_at' => '2024-01-01 10:00:00'
-            ],
-            [
-                'id' => 2,
-                'first_name' => 'Jean',
-                'last_name' => 'Dupont',
-                'email' => 'jean.dupont@archers-gemenos.fr',
-                'role' => 'user',
-                'status' => 'active',
-                'created_at' => '2024-01-15 14:30:00'
-            ],
-            [
-                'id' => 3,
-                'first_name' => 'Marie',
-                'last_name' => 'Martin',
-                'email' => 'marie.martin@archers-gemenos.fr',
-                'role' => 'user',
-                'status' => 'active',
-                'created_at' => '2024-02-01 09:15:00'
-            ],
-            [
-                'id' => 4,
-                'first_name' => 'Pierre',
-                'last_name' => 'Bernard',
-                'email' => 'pierre.bernard@archers-gemenos.fr',
-                'role' => 'user',
-                'status' => 'inactive',
-                'created_at' => '2024-02-10 16:45:00'
-            ],
-            [
-                'id' => 5,
-                'first_name' => 'Sophie',
-                'last_name' => 'Leroy',
-                'email' => 'sophie.leroy@archers-gemenos.fr',
-                'role' => 'user',
-                'status' => 'active',
-                'created_at' => '2024-02-20 11:20:00'
-            ],
-            [
-                'id' => 6,
-                'first_name' => 'Michel',
-                'last_name' => 'Moreau',
-                'email' => 'michel.moreau@archers-gemenos.fr',
-                'role' => 'coach',
-                'status' => 'active',
-                'created_at' => '2024-03-01 08:30:00'
-            ]
-        ];
-    }
+
+  
     
     public function show($id) {
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {

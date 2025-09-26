@@ -100,7 +100,24 @@ class ApiService {
         
         curl_close($ch);
         
-        // Si ce n'est pas du JSON, retourner comme contenu binaire
+        // Nettoyer le BOM (Byte Order Mark) qui peut causer des erreurs de décodage
+        $cleanResponse = preg_replace('/^\xEF\xBB\xBF/', '', $response);
+        $cleanResponse = trim($cleanResponse);
+        
+        // Essayer de parser comme JSON même si le Content-Type n'est pas application/json
+        $decodedResponse = json_decode($cleanResponse, true);
+        
+        // Si le décodage JSON a réussi, traiter comme JSON
+        if ($decodedResponse !== null && json_last_error() === JSON_ERROR_NONE) {
+            return [
+                'success' => $httpCode >= 200 && $httpCode < 300,
+                'data' => $decodedResponse,
+                'status_code' => $httpCode,
+                'message' => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
+            ];
+        }
+        
+        // Si ce n'est pas du JSON valide, retourner comme contenu binaire
         if ($contentType && strpos($contentType, 'application/json') === false) {
             return [
                 'success' => $httpCode >= 200 && $httpCode < 300,
@@ -110,19 +127,15 @@ class ApiService {
             ];
         }
         
-        // Pour les réponses JSON
-        $decodedResponse = json_decode($response, true);
-        if ($decodedResponse === null && json_last_error() !== JSON_ERROR_NONE) {
-            error_log("Erreur décodage JSON: " . json_last_error_msg());
-            error_log("Début de la réponse: " . substr($response, 0, 1000));
-            throw new Exception("Erreur lors du décodage de la réponse JSON: " . json_last_error_msg());
-        }
+        // Si on arrive ici, c'est que le Content-Type était application/json mais le décodage a échoué
+        error_log("Erreur décodage JSON: " . json_last_error_msg());
+        error_log("Début de la réponse: " . substr($cleanResponse, 0, 1000));
         
         return [
-            'success' => $httpCode >= 200 && $httpCode < 300,
-            'data' => $decodedResponse,
+            'success' => false,
+            'data' => null,
             'status_code' => $httpCode,
-            'message' => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
+            'message' => 'Erreur de décodage JSON: ' . json_last_error_msg()
         ];
     }
     
@@ -270,6 +283,16 @@ class ApiService {
         error_log("Réponse brute de l'API users: " . print_r($result, true));
         
         if ($result["success"] && $result["status_code"] == 200) {
+            // Vérifier que la clé "data" existe et n'est pas null
+            if (!isset($result["data"]) || $result["data"] === null) {
+                error_log("Erreur: Pas de données dans la réponse API");
+                return [
+                    "success" => false,
+                    "data" => ["users" => []],
+                    "message" => "Aucune donnée reçue de l'API"
+                ];
+            }
+            
             $data = $result["data"];
             error_log("[GET_USER] Données reçues de l'API: " . print_r($data, true));
             
@@ -340,6 +363,16 @@ class ApiService {
         error_log("Réponse brute de l'API group/list: " . print_r($result, true));
         
         if ($result["success"] && $result["status_code"] == 200) {
+            // Vérifier que la clé "data" existe et n'est pas null
+            if (!isset($result["data"]) || $result["data"] === null) {
+                error_log("Erreur: Pas de données dans la réponse API pour les groupes");
+                return [
+                    "success" => false,
+                    "data" => ["groups" => []],
+                    "message" => "Aucune donnée reçue de l'API pour les groupes"
+                ];
+            }
+            
             $data = $result["data"];
             error_log("[GETGROUP] Données reçues de l'API: " . print_r($data, true));
             
@@ -714,7 +747,8 @@ class ApiService {
             ];
         }
         
-        $result = $this->makeRequest("groups/" . $groupId . "/chat", "GET");
+        // Utiliser l'endpoint /history comme défini dans le backend
+        $result = $this->makeRequest("messages/" . $groupId . "/history", "GET");
         error_log("Réponse messages: " . json_encode($result));
         
         if ($result["success"] && $result["status_code"] == 200) {
@@ -743,7 +777,8 @@ class ApiService {
             ];
         }
         
-        $result = $this->makeRequest("groups/" . $groupId . "/chat", "POST", $messageData);
+        // Utiliser l'endpoint /send comme défini dans le backend
+        $result = $this->makeRequest("messages/" . $groupId . "/send", "POST", $messageData);
         error_log("Réponse envoi message: " . json_encode($result));
         
         if ($result["success"] && $result["status_code"] == 201) {
@@ -886,5 +921,428 @@ class ApiService {
             "message" => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
         ];
     }
+
+    public function createGroup($groupData) {
+        error_log("DEBUG createGroup - Création d'un nouveau groupe");
+        error_log("DEBUG createGroup - Données reçues: " . json_encode($groupData));
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Récupérer l'ID de l'utilisateur depuis le token
+        $userId = $this->getCurrentUserId();
+        if (!$userId) {
+            error_log("Impossible de récupérer l'ID utilisateur");
+            return [
+                "success" => false,
+                "message" => "Impossible de récupérer l'ID utilisateur"
+            ];
+        }
+        
+        // Préparation des données pour l'endpoint /groups/create (BackendPHP)
+        // Format attendu: {"name":"...","description":"...","admin_id":"1","is_private":0}
+        $createData = [
+            'name' => $groupData['name'],
+            'description' => $groupData['description'] ?? '',
+            'admin_id' => $userId, // Utiliser admin_id au lieu de admin
+            'is_private' => $groupData['is_private'] ? 1 : 0 // Convertir booléen en entier
+        ];
+        
+        error_log("DEBUG createGroup - Données formatées: " . json_encode($createData));
+        
+        // Utiliser l'endpoint /groups/create comme défini dans BackendPHP
+        $result = $this->makeRequest("groups/create", "POST", $createData);
+        error_log("DEBUG createGroup - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    
+    public function updateGroup($groupId, $groupData) {
+        error_log("DEBUG updateGroup - Mise à jour du groupe ID: " . $groupId);
+        error_log("DEBUG updateGroup - Données reçues: " . json_encode($groupData));
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Préparation des données pour l'endpoint PUT /groups/{id}
+        $updateData = [];
+        if (isset($groupData['name'])) {
+            $updateData['name'] = $groupData['name'];
+        }
+        if (isset($groupData['description'])) {
+            $updateData['description'] = $groupData['description'];
+        }
+        if (isset($groupData['is_private'])) {
+            $updateData['is_private'] = $groupData['is_private'] ? 1 : 0;
+        }
+        
+        error_log("DEBUG updateGroup - Données formatées: " . json_encode($updateData));
+        
+        // Utiliser l'endpoint PUT /groups/{id}
+        $result = $this->makeRequest("groups/{$groupId}", "PUT", $updateData);
+        error_log("DEBUG updateGroup - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    
+    public function deleteGroup($groupId) {
+        error_log("DEBUG deleteGroup - Suppression du groupe ID: " . $groupId);
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint DELETE /groups/{id}
+        $result = $this->makeRequest("groups/{$groupId}", "DELETE");
+        error_log("DEBUG deleteGroup - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    
+    private function getCurrentUserId() {
+        // Récupérer l'ID utilisateur depuis la session ou le token
+        if (isset($_SESSION['user']['id'])) {
+            return $_SESSION['user']['id'];
+        }
+        
+        // Si pas dans la session, essayer de décoder le token
+        if ($this->token) {
+            try {
+                // Décoder le token JWT pour récupérer l'ID utilisateur
+                $decoded = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], explode('.', $this->token)[1])), true);
+                return $decoded['user_id'] ?? null;
+            } catch (Exception $e) {
+                error_log("Erreur lors du décodage du token: " . $e->getMessage());
+                return null;
+            }
+        }
+        
+        return null;
+    }
+
+    public function getGroupMembers($groupId) {
+        error_log("DEBUG getGroupMembers - Récupération des membres du groupe: " . $groupId);
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint /groups/{id}/authorized-users
+        $result = $this->makeRequest("groups/" . $groupId . "/authorized-users", "GET");
+        error_log("DEBUG getGroupMembers - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+
+    public function addGroupMembers($groupId, $userIds) {
+        error_log("DEBUG addGroupMembers - Ajout de membres au groupe: " . $groupId);
+        error_log("DEBUG addGroupMembers - IDs utilisateurs: " . json_encode($userIds));
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint POST /groups/{id}/members
+        $result = $this->makeRequest("groups/" . $groupId . "/members", "POST", [
+            'user_ids' => $userIds
+        ]);
+        error_log("DEBUG addGroupMembers - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+
+    public function checkGroupAccess($groupId) {
+        error_log("DEBUG checkGroupAccess - Vérification d'accès au groupe: " . $groupId);
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint /groups/{id}/check-access
+        $result = $this->makeRequest("groups/" . $groupId . "/check-access", "GET");
+        error_log("DEBUG checkGroupAccess - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    // Méthodes pour les événements
+    public function getEvents() {
+        error_log("Début de getEvents()");
+        
+        // Les événements nécessitent une authentification
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "data" => ["events" => []],
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint /events/list pour les événements
+        $result = $this->makeRequest("events/list", "GET");
+        error_log("Réponse brute de l'API events/list: " . print_r($result, true));
+        
+        if ($result["success"] && $result["status_code"] == 200) {
+            // Vérifier que la clé "data" existe et n'est pas null
+            if (!isset($result["data"]) || $result["data"] === null) {
+                error_log("Erreur: Pas de données dans la réponse API pour les événements");
+                return [
+                    "success" => false,
+                    "data" => ["events" => []],
+                    "message" => "Aucune donnée reçue de l'API pour les événements"
+                ];
+            }
+            
+            $data = $result["data"];
+            error_log("[GETEVENTS] Données reçues de l'API: " . print_r($data, true));
+            
+            // La réponse devrait être un tableau direct d'événements
+            if (is_array($data)) {
+                return [
+                    "success" => true,
+                    "data" => ["events" => $data],
+                    "message" => "Événements récupérés avec succès"
+                ];
+            }
+            
+            error_log("Format de données non reconnu: " . print_r($data, true));
+        }
+        
+        error_log("Échec de récupération des événements. Code: " . ($result["status_code"] ?? "inconnu") . ", Message: " . ($result["message"] ?? "aucun"));
+        return [
+            "success" => false,
+            "data" => ["events" => []],
+            "message" => "Impossible de récupérer les événements depuis l'API"
+        ];
+    }
+    
+    public function getEventDetails($eventId) {
+        error_log("DEBUG getEventDetails - Récupération des détails de l'événement ID: " . $eventId);
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint GET /events/{id}
+        $result = $this->makeRequest("events/{$eventId}", "GET");
+        error_log("DEBUG getEventDetails - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    
+    public function createEvent($eventData) {
+        error_log("DEBUG createEvent - Création d'un nouvel événement");
+        error_log("DEBUG createEvent - Données reçues: " . json_encode($eventData));
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Récupérer l'ID de l'utilisateur depuis le token
+        $userId = $this->getCurrentUserId();
+        if (!$userId) {
+            error_log("Impossible de récupérer l'ID utilisateur");
+            return [
+                "success" => false,
+                "message" => "Impossible de récupérer l'ID utilisateur"
+            ];
+        }
+        
+        // Préparation des données pour l'endpoint /events/create
+        $createData = [
+            "name" => $eventData["name"],
+            "description" => $eventData["description"] ?? "",
+            "date" => $eventData["date"],
+            "time" => $eventData["time"],
+
+            // max_participants supprimé du formulaire
+            "organizer_id" => $userId
+        ];
+        
+        error_log("DEBUG createEvent - Données formatées: " . json_encode($createData));
+        
+        // Utiliser l'endpoint /events/create
+        $result = $this->makeRequest("events/create", "POST", $createData);
+        error_log("DEBUG createEvent - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    
+    public function updateEvent($eventId, $eventData) {
+        error_log("DEBUG updateEvent - Mise à jour de l'événement ID: " . $eventId);
+        error_log("DEBUG updateEvent - Données reçues: " . json_encode($eventData));
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Préparation des données pour l'endpoint PUT /events/{id}
+        $updateData = [];
+        if (isset($eventData["name"])) {
+            $updateData["name"] = $eventData["name"];
+        }
+        if (isset($eventData["description"])) {
+            $updateData["description"] = $eventData["description"];
+        }
+        if (isset($eventData["date"])) {
+            $updateData["date"] = $eventData["date"];
+        }
+        if (isset($eventData["time"])) {
+            $updateData["time"] = $eventData["time"];
+        }
+        if (isset($eventData["location"])) {
+            $updateData["date"] = $eventData["date"];
+        }
+        if (isset($eventData["location"])) {
+            $updateData["location"] = $eventData["location"];
+        }
+        if (isset($eventData["max_participants"])) {
+            $updateData["max_participants"] = $eventData["max_participants"];
+        }
+        
+        error_log("DEBUG updateEvent - Données formatées: " . json_encode($updateData));
+        
+        // Utiliser l'endpoint PUT /events/{id}
+        $result = $this->makeRequest("events/{$eventId}", "PUT", $updateData);
+        error_log("DEBUG updateEvent - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    
+    public function deleteEvent($eventId) {
+        error_log("DEBUG deleteEvent - Suppression de l'événement ID: " . $eventId);
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint DELETE /events/{id}
+        $result = $this->makeRequest("events/{$eventId}", "DELETE");
+        error_log("DEBUG deleteEvent - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    
+    public function registerToEvent($eventId) {
+        error_log("DEBUG registerToEvent - Inscription à l'événement ID: " . $eventId);
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint POST /events/{id}/register
+        $result = $this->makeRequest("events/{$eventId}/register", "POST");
+        error_log("DEBUG registerToEvent - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    
+    public function unregisterFromEvent($eventId) {
+        error_log("DEBUG unregisterFromEvent - Désinscription de l'événement ID: " . $eventId);
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint POST /events/{id}/unregister
+        $result = $this->makeRequest("events/{$eventId}/unregister", "POST");
+        error_log("DEBUG unregisterFromEvent - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    
+    public function checkEventRegistration($eventId) {
+        error_log("DEBUG checkEventRegistration - Vérification de l'inscription à l'événement ID: " . $eventId);
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint GET /events/{id}/registration
+        $result = $this->makeRequest("events/{$eventId}/registration", "GET");
+        error_log("DEBUG checkEventRegistration - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+    
+    public function getEventMessages($eventId) {
+        error_log("DEBUG getEventMessages - Récupération des messages de l'événement ID: " . $eventId);
+        
+        if (!$this->token) {
+            error_log("Pas de token valide");
+            return [
+                "success" => false,
+                "data" => [],
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint GET /events/{id}/messages
+        $result = $this->makeRequest("events/{$eventId}/messages", "GET");
+        error_log("DEBUG getEventMessages - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
 }
 ?>
+
+
+
+
+
+
+

@@ -1,18 +1,18 @@
 ﻿<?php
-$title = "Gestion des groupes - Portail Archers de Gémenos";
+$title = "Gestion des événements - Portail Archers de Gémenos";
 ?>
 
 <!-- Inclusion des styles -->
-<link rel="stylesheet" href="/public/assets/css/events.css">
+<link rel="stylesheet" href="/public/assets/css/groups-chat.css">
 
 <div class="container-fluid">
     <div class="row">
-        <!-- Liste des groupes -->
+        <!-- Liste des événements -->
         <div class="col-md-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0">Groupes</h1>
-                <a href="/groups/create" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus me-2"></i>Nouveau groupe
+                <h1 class="h3 mb-0">Événements</h1>
+                <a href="/events/create" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-2"></i>Nouvel événement
                 </a>
             </div>
             
@@ -25,48 +25,37 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
             <?php endif; ?>
             
             <div class="list-group">
-                <?php if (empty($groups)): ?>
+                <?php if (empty($events)): ?>
                     <div class="text-center py-4">
-                        <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Aucun groupe trouvé</p>
+                        <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Aucun événement à venir</p>
                     </div>
                 <?php else: ?>
-                    <?php foreach ($groups as $index => $group): ?>
+                    <?php foreach ($events as $index => $event): ?>
                         <?php 
-                        // Debug: vérifier les données du groupe
-                        error_log("Groupe " . $index . ": " . json_encode($group));
+                        // Debug: vérifier les données de l'événement
+                        error_log("Événement " . $index . ": " . json_encode($event));
                         ?>
-                        <div class="list-group-item list-group-item-action group-item <?php echo $index === 0 ? 'active' : ''; ?>" 
-                             data-group-id="<?php echo $group['id'] ?? 'null'; ?>">
+                        <div class="list-group-item list-group-item-action event-item <?php echo $index === 0 ? "active" : ""; ?>" 
+                             data-event-id="<?php echo $event["_id"] ?? "null"; ?>">
                             <div class="d-flex">
-                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
-                                    <?php echo strtoupper(substr($group['name'] ?? 'G', 0, 1)); ?>
+                                <div class="avatar-sm bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-calendar"></i>
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <h6 class="mb-0"><?php echo htmlspecialchars($group['name'] ?? 'Nom inconnu'); ?></h6>
+                                        <h6 class="mb-0"><?php echo htmlspecialchars($event["name"] ?? "Nom inconnu"); ?></h6>
                                         <div class="d-flex align-items-center gap-2">
-                                            <?php if ((bool)($group['is_private'] ?? false)): ?>
-                                                <a href="/groups/<?php echo $group['id'] ?? 'null'; ?>/members" 
-                                                   class="badge bg-warning text-decoration-none" 
-                                                   style="cursor: pointer;"
-                                                   data-ignore-chat="true"
-                                                   title="Gérer les membres du groupe privé">
-                                                    <i class="fas fa-users me-1"></i>
-                                                    Privé
-                                                </a>
-                                            <?php else: ?>
-                                                <span class="badge bg-success">
-                                                    <i class="fas fa-globe me-1"></i>
-                                                    Public
-                                                </span>
-                                            <?php endif; ?>
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-users me-1"></i>
+                                                <?php echo ($event["current_participants"] ?? 0) . "/" . ($event["max_participants"] ?? ""); ?>
+                                            </span>
                                             <div class="btn-group btn-group-sm">
-                                                <a href="/groups/<?php echo $group['id'] ?? 'null'; ?>/edit" class="btn btn-outline-primary btn-sm" title="Modifier">
+                                                <a href="/events/<?php echo $event["_id"] ?? "null"; ?>/edit" class="btn btn-outline-primary btn-sm" title="Modifier">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <button type="button" class="btn btn-outline-danger btn-sm" 
-                                                        onclick="confirmDelete(<?php echo $group['id'] ?? 'null'; ?>, '<?php echo htmlspecialchars($group['name'] ?? 'Groupe'); ?>')" 
+                                                        onclick="confirmDelete(<?php echo $event["_id"] ?? "null"; ?>, "<?php echo htmlspecialchars($event["name"] ?? "Événement"); ?>")" 
                                                         title="Supprimer">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -74,21 +63,27 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
                                         </div>
                                     </div>
                                     <p class="text-muted mb-1 small">
-                                        <?php echo htmlspecialchars($group['description'] ?? 'Aucune description'); ?>
+                                        <?php echo htmlspecialchars($event["description"] ?? "Aucune description"); ?>
                                     </p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted">
-                                            <i class="fas fa-user me-1"></i>
-                                            <?php echo htmlspecialchars($group['admin_name'] ?? 'Anonyme'); ?>
+
+
                                         </small>
                                         <small class="text-muted">
                                             <i class="fas fa-calendar me-1"></i>
                                             <?php 
-                                            if (!empty($group['created_at'])) {
-                                                $createdAt = new DateTime($group['created_at']);
-                                                echo $createdAt->format('d/m/Y');
+                                            if (!empty($event["date"])) {
+                                                $eventDate = new DateTime($event["date"]);
+                                                echo $eventDate->format("d/m/Y ");
                                             } else {
-                                                echo 'Date inconnue';
+                                                echo "Date inconnue";
+                                            }
+                                            if (!empty($event["time"])) {
+                                                $eventTime = new DateTime($event["time"]);
+                                                echo $eventTime->format("H:i");
+                                            } else {
+                                                echo "Heure non précisée";
                                             }
                                             ?>
                                         </small>
@@ -103,47 +98,49 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
 
         <!-- Section chat -->
         <div class="col-md-8">
-            <?php if (!empty($groups)): ?>
-                <!-- Chat du premier groupe (affiché par défaut) -->
+            <?php if (!empty($events) && isset($events[0]) && isset($events[0]["_id"])): ?>
+                <!-- Chat du premier événement (affiché par défaut) -->
                 <div id="chat-container" class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0" id="chat-title"><?php echo htmlspecialchars($groups[0]['name']); ?></h5>
+                        <h5 class="mb-0" id="chat-title"><?php echo htmlspecialchars($events[0]["name"]); ?></h5>
+                        <div class="d-flex gap-2">
+                            <a href="/events/<?php echo (isset($events[0]) && isset($events[0]["_id"])) ? $events[0]["_id"] : "null"; ?>" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>Voir détails
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body" style="height: 500px;">
                         <div class="chat-container">
                             <div id="messages-container" class="messages-container mb-3">
                                 <?php 
                                 // Charger les vrais messages depuis l'API si disponibles
-                                if (empty($chatMessages) && !empty($groups)) {
-                                    $firstGroupId = $groups[0]['id'];
+                                if (empty($chatMessages) && !empty($events) && isset($events[0]) && isset($events[0]["_id"])) {
+                                    $firstEventId = $events[0]["_id"];
                                     try {
                                         $apiService = new ApiService();
-                                        $messagesResponse = $apiService->makeRequest("messages/{$firstGroupId}/history", "GET");
-                                        if ($messagesResponse['success']) {
+                                        $messagesResponse = $apiService->makeRequest("events/{$firstEventId}/messages", "GET");
+                                        if ($messagesResponse["success"]) {
                                             // Vérifier que la clé "data" existe et n'est pas null
-                                            if (isset($messagesResponse['data']) && $messagesResponse['data'] !== null) {
-                                                $chatMessages = $messagesResponse['data'];
-                                                error_log("Messages chargés depuis l'API: " . count($chatMessages) . " messages");
+                                            if (isset($messagesResponse["data"]) && $messagesResponse["data"] !== null) 
+                                            {
+                                                $chatMessages = $messagesResponse["data"];
                                             } else {
-                                                error_log("Pas de données dans la réponse messages");
                                                 $chatMessages = [];
                                             }
                                         } else {
-                                            error_log("Erreur API messages: " . ($messagesResponse['message'] ?? 'Erreur inconnue'));
                                             $chatMessages = [];
                                         }
                                     } catch (Exception $e) {
-                                        error_log("Exception lors du chargement des messages: " . $e->getMessage());
                                         $chatMessages = [];
                                     }
                                 }
                                 ?>
                                 <?php if (isset($chatMessages) && !empty($chatMessages)): ?>
                                     <?php foreach ($chatMessages as $message): 
-                                        // Utiliser des clés flexibles pour l ID de l auteur
+                                        // Utiliser des clés flexibles pour l'ID de l'auteur
                                         $authorId = $message["author_id"] ?? $message["userId"] ?? $message["user_id"] ?? $message["author"]["id"] ?? $message["author"]["_id"] ?? null;
                                         
-                                        // Vérifier les permissions de l utilisateur pour ce message
+                                        // Vérifier les permissions de l'utilisateur pour ce message
                                         $canEdit = ($_SESSION["user"]["id"] === $authorId) || $_SESSION["user"]["is_admin"];
                                         $canDelete = $_SESSION["user"]["is_admin"] || 
                                                     ($_SESSION["user"]["id"] === $authorId && 
@@ -161,8 +158,8 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
                             </div>
                             <div class="message-input-container">
                                 <form id="message-form" class="d-flex gap-2">
-                                    <input type="hidden" id="current-user-id" value="<?php echo $_SESSION['user']['id']; ?>">
-                                    <input type="hidden" id="current-group-id" value="<?php echo $groups[0]['id']; ?>">
+                                    <input type="hidden" id="current-user-id" value="<?php echo $_SESSION["user"]["id"]; ?>">
+                                    <input type="hidden" id="current-event-id" value="<?php echo (isset($events[0]) && isset($events[0]["_id"])) ? $events[0]["_id"] : "null"; ?>">
                                     <div class="flex-grow-1">
                                         <input type="text" id="message-input" class="form-control" placeholder="Votre message...">
                                     </div>
@@ -181,11 +178,11 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
                     </div>
                 </div>
             <?php else: ?>
-                <!-- Aucun groupe disponible -->
+                <!-- Aucun événement disponible -->
                 <div class="text-center py-5">
                     <i class="fas fa-comments fa-3x text-muted mb-3"></i>
-                    <h4 class="text-muted">Aucun groupe disponible</h4>
-                    <p class="text-muted">Créez un groupe pour commencer à discuter</p>
+                    <h4 class="text-muted">Aucun événement disponible</h4>
+                    <p class="text-muted">Créez un événement pour commencer à discuter</p>
                 </div>
             <?php endif; ?>
         </div>
@@ -201,13 +198,13 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                Êtes-vous sûr de vouloir supprimer le groupe "<span id="groupName"></span>" ? Cette action est irréversible.
+                Êtes-vous sûr de vouloir supprimer l'événement "<span id="eventName"></span>" ? Cette action est irréversible.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                 <form method="POST" id="deleteForm" style="display: inline;">
                     <input type="hidden" name="_method" value="DELETE">
-                    <input type="hidden" name="group_id" id="deleteGroupId">
+                    <input type="hidden" name="event_id" id="deleteEventId">
                     <button type="submit" class="btn btn-danger">Supprimer</button>
                 </form>
             </div>
@@ -218,11 +215,24 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
 <!-- Variables PHP pour JavaScript -->
 <script>
 const currentUserId = <?php echo $_SESSION["user"]["id"]; ?>;
-const initialGroupId = <?php echo !empty($groups) ? $groups[0]['id'] : 'null'; ?>;
-const backendUrl = "<?php echo str_replace('/api', '', $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000'); ?>";
-const isAdmin = <?php echo $_SESSION["user"]["is_admin"] ? 'true' : 'false'; ?>;
-const authToken = "<?php echo $_SESSION['token'] ?? ''; ?>";
+const initialEventId = <?php echo (!empty($events) && isset($events[0]) && isset($events[0]["_id"])) ? $events[0]["_id"] : "null"; ?>;
+const backendUrl = "<?php echo str_replace("/api", "", $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000"); ?>";
+const isAdmin = <?php echo $_SESSION["user"]["is_admin"] ? "true" : "false"; ?>;
+const authToken = "<?php echo $_SESSION["token"] ?? ""; ?>";
 </script>
 
 <!-- Inclusion du JavaScript -->
 <script src="/public/assets/js/events.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
