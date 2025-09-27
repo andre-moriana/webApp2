@@ -1,707 +1,77 @@
 ﻿// JavaScript spécifique aux événements
 
 // Fonction de confirmation de suppression
-function confirmDelete(eventId, eventName) {
+window.confirmDelete = function(eventId, eventName) {
     document.getElementById("deleteEventId").value = eventId;
     document.getElementById("eventName").textContent = eventName;
-    
-    // Définir l'action du formulaire avec l'ID de l'événement
     const form = document.getElementById("deleteForm");
     form.action = "/events/" + eventId;
-    
     new bootstrap.Modal(document.getElementById("deleteModal")).show();
-}
+};
 
-// Gestion des événements de chat
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialiser le chat si un événement est sélectionné
-    if (typeof initialEventId !== 'undefined' && initialEventId !== null) {
-        initializeEventChat();
-        // Vérifier l'état d'inscription
-        checkRegistrationStatus(initialEventId);
+// Fonction pour supprimer un événement
+async function deleteEvent(eventId) {
+    if (!eventId) {
+        console.error('ID d\'événement manquant pour la suppression');
+        return;
     }
-    
-    // Gestion des clics sur les événements
-    const eventItems = document.querySelectorAll('.event-item');
-    eventItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const eventId = this.getAttribute('data-event-id');
-            if (eventId && eventId !== 'null') {
-                selectEvent(eventId);
-                // Vérifier l'état d'inscription pour le nouvel événement
-                checkRegistrationStatus(eventId);
-            }
-        });
-    });
-});
-
-// Sélectionner un événement
-function selectEvent(eventId) {
-    // Retirer la classe active de tous les événements
-    document.querySelectorAll('.event-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    // Ajouter la classe active à l'événement sélectionné
-    const selectedEvent = document.querySelector(`[data-event-id="${eventId}"]`);
-    if (selectedEvent) {
-        selectedEvent.classList.add('active');
-        
-        // Mettre à jour le chat
-        loadEventChat(eventId);
-    }
-}
-
-// Charger le chat d'un événement
-function loadEventChat(eventId) {
-    // Mettre à jour l'ID de l'événement courant
-    document.getElementById('current-event-id').value = eventId;
-    
-    // Mettre à jour le titre du chat
-    const selectedEvent = document.querySelector(`[data-event-id="${eventId}"]`);
-    if (selectedEvent) {
-        const eventName = selectedEvent.querySelector('h6').textContent;
-        document.getElementById('chat-title').textContent = eventName;
-    }
-    
-    // Charger les messages
-    loadMessages(eventId);
-}
-
-// Charger les messages d'un événement
-async function loadMessages(eventId) {
     try {
-        const response = await fetch(`${backendUrl}/api/events/${eventId}/messages`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data)) {
-                displayMessages(data);
-            } else {
-                displayMessages([]);
-            }
-        } else {
-            console.error('Erreur lors du chargement des messages');
-            displayMessages([]);
-        }
-    } catch (error) {
-        console.error('Erreur lors du chargement des messages:', error);
-        displayMessages([]);
-    }
-}
-
-// Afficher les messages
-function displayMessages(messages) {
-    const container = document.getElementById('messages-container');
-    container.innerHTML = '';
-    
-    if (messages.length === 0) {
-        container.innerHTML = `
-            <div class="text-center text-muted">
-                <i class="fas fa-comments fa-2x mb-2"></i>
-                <p>Aucun message dans le chat</p>
-            </div>
-        `;
-        return;
-    }
-    
-    messages.forEach(message => {
-        const messageElement = createMessageElement(message);
-        container.appendChild(messageElement);
-    });
-    
-    // Scroll vers le bas
-    container.scrollTop = container.scrollHeight;
-}
-
-// Créer un élément de message
-function createMessageElement(message) {
-    const authorId = message.author_id || message.userId || message.user_id || 
-                     (message.author ? (message.author.id || message.author._id) : null);
-    const isOwnMessage = authorId && currentUserId && authorId.toString() === currentUserId.toString();
-    
-    console.log("Creating message element:", {
-        message: message,
-        authorId: authorId,
-        currentUserId: currentUserId,
-        isOwnMessage: isOwnMessage
-    });
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message-item ${isOwnMessage ? 'message-sent' : 'message-received'}`;
-    messageDiv.setAttribute('data-message-id', message.id); // Ajouter l'ID du message
-    
-    const canEdit = (currentUserId === authorId) || isAdmin;
-    const canDelete = isAdmin || (currentUserId === authorId && 
-                     (Date.now() - new Date(message.created_at).getTime()) < 3600000);
-    
-    const editButton = canEdit ? 
-        `<button class="btn btn-sm btn-outline-light" onclick="editMessage('${message.id}')" title="Modifier">
-            <i class="fas fa-edit"></i>
-        </button>` : '';
-    
-    const deleteButton = canDelete ? 
-        `<button class="btn btn-sm btn-outline-light" onclick="deleteMessage('${message.id}')" title="Supprimer">
-            <i class="fas fa-trash"></i>
-        </button>` : '';
-    
-    // Gérer les pièces jointes
-    let attachmentHtml = '';
-    if (message.attachment && (message.attachment.filename || message.attachment.url || message.attachment.path)) {
-        const attachmentUrl = message.attachment.url || message.attachment.path || '';
-        const filename = message.attachment.filename || message.attachment.original_name || 'Pièce jointe';
-        const mimeType = message.attachment.mime_type || '';
-        
-        // Construire l'URL complète pour l'image
-        const fullUrl = attachmentUrl.startsWith('http') ? attachmentUrl : `${backendUrl}${attachmentUrl}`;
-        
-        // Détecter si c'est une image
-        const isImage = mimeType.startsWith('image/') || 
-                       /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(filename);
-        
-        if (isImage) {
-            // Afficher l'image directement dans le chat
-            attachmentHtml = `
-                <div class="message-attachment mt-2">
-                    <div class="image-container">
-                        <img src="${fullUrl}" 
-                             alt="${filename}" 
-                             class="message-image" 
-                             onclick="openImageModal('${fullUrl}', '${filename}')"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <div class="image-fallback" style="display: none;">
-                            <a href="${fullUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-image me-1"></i>
-                                ${filename}
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } else {
-            // Afficher un lien de téléchargement pour les autres fichiers
-            attachmentHtml = `
-                <div class="message-attachment mt-2">
-                    <a href="${fullUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-paperclip me-1"></i>
-                        ${filename}
-                    </a>
-                </div>
-            `;
-        }
-    }
-    
-    // Structure pour les bulles de chat
-    messageDiv.innerHTML = `
-        <div class="message-content">
-            <div class="message-header">
-                <span class="message-author">${isOwnMessage ? 'Vous' : (message.author_name || 'Utilisateur')}</span>
-                <span class="message-time">${formatDate(message.created_at)}</span>
-            </div>
-            <div class="message-text">${message.content || ''}</div>
-            ${attachmentHtml}
-            <div class="message-actions">
-                ${editButton}
-                ${deleteButton}
-            </div>
-        </div>
-    `;
-    
-    return messageDiv;
-}
-
-// Fonction pour ouvrir l'image en modal
-function openImageModal(imageUrl, filename) {
-    // Créer le modal s'il n'existe pas
-    let modal = document.getElementById('imageModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'imageModal';
-        modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">${filename}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body text-center">
-                        <img src="${imageUrl}" class="img-fluid" alt="${filename}">
-                    </div>
-                    <div class="modal-footer">
-                        <a href="${imageUrl}" target="_blank" class="btn btn-primary">
-                            <i class="fas fa-external-link-alt me-1"></i>
-                            Ouvrir dans un nouvel onglet
-                        </a>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-    
-    // Mettre à jour l'image et le titre
-    const modalImage = modal.querySelector('img');
-    const modalTitle = modal.querySelector('.modal-title');
-    const modalLink = modal.querySelector('a[target="_blank"]');
-    
-    modalImage.src = imageUrl;
-    modalImage.alt = filename;
-    modalTitle.textContent = filename;
-    modalLink.href = imageUrl;
-    
-    // Afficher le modal
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
-}
-
-// Formater une date
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now - date;
-    
-    if (diff < 60000) { // Moins d'une minute
-        return 'À l\'instant';
-    } else if (diff < 3600000) { // Moins d'une heure
-        return `${Math.floor(diff / 60000)} min`;
-    } else if (diff < 86400000) { // Moins d'un jour
-        return `${Math.floor(diff / 3600000)} h`;
-    } else {
-        return date.toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-}
-
-// Initialiser le chat d'événement
-function initializeEventChat() {
-    const messageForm = document.getElementById('message-form');
-    if (messageForm) {
-        messageForm.addEventListener('submit', handleMessageSubmit);
-    }
-    
-    // Gestion des pièces jointes
-    const attachmentInput = document.getElementById('message-attachment');
-    if (attachmentInput) {
-        attachmentInput.addEventListener('change', handleAttachmentChange);
-    }
-}
-
-// Gérer l'envoi de message avec pièces jointes
-async function handleMessageSubmit(e) {
-    e.preventDefault();
-    
-    const messageInput = document.getElementById('message-input');
-    const message = messageInput.value.trim();
-    const eventId = document.getElementById('current-event-id').value;
-    const attachmentInput = document.getElementById('message-attachment');
-    const attachment = attachmentInput.files[0] || null;
-    
-    if (!message || !eventId) return;
-    
-    try {
-        const formData = new FormData();
-        formData.append('content', message);
-        if (attachment) {
-            formData.append('attachment', attachment);
-        }
-        
-        const response = await fetch(`${backendUrl}/api/events/${eventId}/messages`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            },
-            body: formData
-        });
-        
-        if (response.ok) {
-            messageInput.value = '';
-            attachmentInput.value = ''; // Vider le champ de fichier
-            // Recharger les messages
-            loadMessages(eventId);
-        } else {
-            const errorData = await response.json();
-            console.error('Erreur lors de l\'envoi du message:', errorData);
-            alert('Erreur lors de l\'envoi du message: ' + (errorData.error || 'Erreur inconnue'));
-        }
-    } catch (error) {
-        console.error('Erreur lors de l\'envoi du message:', error);
-        alert('Erreur lors de l\'envoi du message: ' + error.message);
-    }
-}
-
-// Gérer le changement de pièce jointe
-function handleAttachmentChange(e) {
-    const file = e.target.files[0];
-    if (file) {
-        console.log('Fichier sélectionné:', file.name, 'Type:', file.type, 'Taille:', file.size);
-        
-        // Vérifier la taille du fichier (limite à 10MB)
-        const maxSize = 10 * 1024 * 1024; // 10MB
-        if (file.size > maxSize) {
-            alert('Le fichier est trop volumineux. Taille maximale: 10MB');
-            e.target.value = ''; // Vider le champ
-            return;
-        }
-        
-        // Vérifier le type de fichier
-        const allowedTypes = [
-            'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-            'application/pdf', 'text/plain', 'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        ];
-        
-        if (!allowedTypes.includes(file.type)) {
-            alert('Type de fichier non autorisé. Types acceptés: images, PDF, documents Word, texte');
-            e.target.value = ''; // Vider le champ
-            return;
-        }
-    }
-}
-
-// Modifier un message
-function editMessage(messageId) {
-    console.log('Modifier le message:', messageId);
-    
-    // Trouver l'élément du message
-    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-    if (!messageElement) {
-        console.error('Message non trouvé:', messageId);
-        return;
-    }
-    
-    // Trouver le contenu du message
-    const messageTextElement = messageElement.querySelector('.message-text');
-    if (!messageTextElement) {
-        console.error('Contenu du message non trouvé');
-        return;
-    }
-    
-    const currentContent = messageTextElement.textContent;
-    
-    // Masquer les actions (boutons d'édition et suppression)
-    const messageActions = messageElement.querySelector('.message-actions');
-    if (messageActions) {
-        messageActions.style.display = 'none';
-    }
-    
-    // Créer l'interface d'édition
-    const editForm = document.createElement('div');
-    editForm.className = 'message-edit-form';
-    editForm.innerHTML = `
-        <div class="edit-form-content">
-            <textarea class="form-control edit-textarea" rows="2">${currentContent}</textarea>
-            <div class="edit-actions mt-2">
-                <button class="btn btn-sm btn-success" onclick="saveMessageEdit('${messageId}')">
-                    <i class="fas fa-check"></i> Sauvegarder
-                </button>
-                <button class="btn btn-sm btn-secondary" onclick="cancelMessageEdit('${messageId}')">
-                    <i class="fas fa-times"></i> Annuler
-                </button>
-            </div>
-        </div>
-    `;
-    
-    // Remplacer le contenu du message par le formulaire d'édition
-    messageTextElement.style.display = 'none';
-    messageTextElement.parentNode.insertBefore(editForm, messageTextElement.nextSibling);
-    
-    // Focus sur le textarea
-    const textarea = editForm.querySelector('.edit-textarea');
-    textarea.focus();
-    textarea.select();
-}
-
-// Sauvegarder les modifications d'un message
-async function saveMessageEdit(messageId) {
-    console.log('Sauvegarder le message:', messageId);
-    
-    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-    if (!messageElement) {
-        console.error('Message non trouvé:', messageId);
-        return;
-    }
-    
-    const editForm = messageElement.querySelector('.message-edit-form');
-    const textarea = editForm.querySelector('.edit-textarea');
-    const newContent = textarea.value.trim();
-    
-    if (!newContent) {
-        alert('Le message ne peut pas être vide');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${backendUrl}/api/messages/${messageId}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                content: newContent
-            })
-        });
-        
-        if (response.ok) {
-            // Mettre à jour le contenu du message
-            const messageTextElement = messageElement.querySelector('.message-text');
-            messageTextElement.textContent = newContent;
-            messageTextElement.style.display = 'block';
-            
-            // Supprimer le formulaire d'édition
-            editForm.remove();
-            
-            // Réafficher les actions
-            const messageActions = messageElement.querySelector('.message-actions');
-            if (messageActions) {
-                messageActions.style.display = 'flex';
-            }
-            
-            console.log('Message modifié avec succès');
-        } else {
-            const errorData = await response.json();
-            console.error('Erreur lors de la modification:', errorData);
-            alert('Erreur lors de la modification du message: ' + (errorData.error || 'Erreur inconnue'));
-        }
-    } catch (error) {
-        console.error('Erreur lors de la modification du message:', error);
-        alert('Erreur lors de la modification du message: ' + error.message);
-    }
-}
-
-// Annuler l'édition d'un message
-function cancelMessageEdit(messageId) {
-    console.log('Annuler l\'édition du message:', messageId);
-    
-    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-    if (!messageElement) {
-        console.error('Message non trouvé:', messageId);
-        return;
-    }
-    
-    const editForm = messageElement.querySelector('.message-edit-form');
-    const messageTextElement = messageElement.querySelector('.message-text');
-    
-    // Restaurer l'affichage normal
-    messageTextElement.style.display = 'block';
-    editForm.remove();
-    
-    // Réafficher les actions
-    const messageActions = messageElement.querySelector('.message-actions');
-    if (messageActions) {
-        messageActions.style.display = 'flex';
-    }
-}
-
-// Supprimer un message
-async function deleteMessage(messageId) {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
-        return;
-    }
-    
-    console.log('Supprimer le message:', messageId);
-    
-    try {
-        const response = await fetch(`${backendUrl}/api/messages/${messageId}`, {
+        console.log('Suppression de l\'événement:', eventId);
+        const response = await fetch(backendUrl + '/api/events/' + eventId, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${authToken}`,
+                'Authorization': 'Bearer ' + authToken,
                 'Content-Type': 'application/json'
             }
         });
-        
         if (response.ok) {
-            // Supprimer l'élément du message du DOM
-            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-            if (messageElement) {
-                messageElement.remove();
+            console.log('Événement supprimé avec succès');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            if (modal) {
+                modal.hide();
             }
-            
-            // Recharger les messages pour s'assurer de la cohérence
-            const eventId = document.getElementById('current-event-id').value;
+            // Détecter si on est sur la page de détail ou de liste
+            if (window.location.pathname.includes("/events/") && !window.location.pathname.endsWith("/events")) {
+                // Page de détail - rediriger vers la liste
+                window.location.href = "/events";
+            } else {
+                // Page de liste - recharger la page
+                window.location.reload();
+            }
+        } else {
+            const error = await response.json();
+            console.error('Erreur lors de la suppression:', error);
+            alert('Erreur lors de la suppression: ' + (error.message || 'Erreur inconnue'));
+        }
+    } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        alert('Erreur lors de la suppression: ' + error.message);
+    }
+}
+
+// Gestion des événements
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des boutons de suppression
+    const deleteButtons = document.querySelectorAll('.delete-event-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const eventId = this.getAttribute('data-event-id');
+            const eventName = this.getAttribute('data-event-name');
+            confirmDelete(eventId, eventName);
+        });
+    });
+
+    // Gestion du formulaire de suppression
+    const deleteForm = document.getElementById('deleteForm');
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const eventId = document.getElementById('deleteEventId').value;
             if (eventId) {
-                loadMessages(eventId);
-            }
-            
-            console.log('Message supprimé avec succès');
-        } else {
-            const errorData = await response.json();
-            console.error('Erreur lors de la suppression:', errorData);
-            alert('Erreur lors de la suppression du message: ' + (errorData.error || 'Erreur inconnue'));
-        }
-    } catch (error) {
-        console.error('Erreur lors de la suppression du message:', error);
-        alert('Erreur lors de la suppression du message: ' + error.message);
-    }
-}
-
-// S'inscrire à un événement
-async function registerToEvent(eventId) {
-    console.log('Inscription à l\'événement:', eventId);
-    
-    try {
-        const response = await fetch(`${backendUrl}/api/events/${eventId}/register`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
+                deleteEvent(eventId);
             }
         });
-        
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Inscription réussie:', data);
-            
-            // Mettre à jour l'interface
-            updateRegistrationUI(eventId, true);
-            
-            // Afficher un message de succès
-            showNotification('Inscription réussie !', 'success');
-        } else {
-            const errorData = await response.json();
-            console.error('Erreur lors de l\'inscription:', errorData);
-            showNotification('Erreur lors de l\'inscription: ' + (errorData.error || 'Erreur inconnue'), 'error');
-        }
-    } catch (error) {
-        console.error('Erreur lors de l\'inscription:', error);
-        showNotification('Erreur lors de l\'inscription: ' + error.message, 'error');
     }
-}
+});
 
-// Se désinscrire d'un événement
-async function unregisterFromEvent(eventId) {
-    console.log('Désinscription de l\'événement:', eventId);
-    
-    if (!confirm('Êtes-vous sûr de vouloir vous désinscrire de cet événement ?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${backendUrl}/api/events/${eventId}/unregister`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Désinscription réussie:', data);
-            
-            // Mettre à jour l'interface
-            updateRegistrationUI(eventId, false);
-            
-            // Afficher un message de succès
-            showNotification('Désinscription réussie !', 'success');
-        } else {
-            const errorData = await response.json();
-            console.error('Erreur lors de la désinscription:', errorData);
-            showNotification('Erreur lors de la désinscription: ' + (errorData.error || 'Erreur inconnue'), 'error');
-        }
-    } catch (error) {
-        console.error('Erreur lors de la désinscription:', error);
-        showNotification('Erreur lors de la désinscription: ' + error.message, 'error');
-    }
-}
 
-// Mettre à jour l'interface d'inscription
-function updateRegistrationUI(eventId, isRegistered) {
-    const eventElement = document.querySelector(`[data-event-id="${eventId}"]`);
-    if (!eventElement) return;
-    
-    // Trouver le bouton d'inscription/désinscription
-    const registrationButton = eventElement.querySelector('.registration-button');
-    if (registrationButton) {
-        if (isRegistered) {
-            registrationButton.innerHTML = `
-                <i class="fas fa-user-minus me-1"></i>Se désinscrire
-            `;
-            registrationButton.className = 'btn btn-warning registration-button';
-            registrationButton.onclick = () => unregisterFromEvent(eventId);
-        } else {
-            registrationButton.innerHTML = `
-                <i class="fas fa-user-plus me-1"></i>S'inscrire
-            `;
-            registrationButton.className = 'btn btn-success registration-button';
-            registrationButton.onclick = () => registerToEvent(eventId);
-        }
-    }
-    
-    // Mettre à jour le statut d'inscription
-    const registrationStatus = eventElement.querySelector('.registration-status');
-    if (registrationStatus) {
-        if (isRegistered) {
-            registrationStatus.innerHTML = `
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>
-                    Vous êtes inscrit à cet événement
-                </div>
-            `;
-        } else {
-            registrationStatus.innerHTML = `
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Vous n'êtes pas inscrit à cet événement
-                </div>
-            `;
-        }
-    }
-}
-
-// Afficher une notification
-function showNotification(message, type = 'info') {
-    // Créer l'élément de notification
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    // Ajouter à la page
-    document.body.appendChild(notification);
-    
-    // Supprimer automatiquement après 5 secondes
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 5000);
-}
-
-// Vérifier l'état d'inscription au chargement de la page
-async function checkRegistrationStatus(eventId) {
-    try {
-        const response = await fetch(`${backendUrl}/api/events/${eventId}/registration`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.data) {
-                updateRegistrationUI(eventId, data.data.is_registered);
-            }
-        }
-    } catch (error) {
-        console.error('Erreur lors de la vérification de l\'inscription:', error);
-    }
-}

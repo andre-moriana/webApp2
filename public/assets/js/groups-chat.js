@@ -7,8 +7,26 @@ const messageForm = document.getElementById("message-form");
 const messageInput = document.getElementById("message-input");
 const chatTitle = document.getElementById("chat-title");
 
+// Logs de débogage
+console.log("Script groups-chat.js chargé");
+console.log("Variables disponibles:", {
+    currentUserId: typeof currentUserId !== 'undefined' ? currentUserId : 'undefined',
+    initialGroupId: typeof initialGroupId !== 'undefined' ? initialGroupId : 'undefined',
+    backendUrl: typeof backendUrl !== 'undefined' ? backendUrl : 'undefined',
+    isAdmin: typeof isAdmin !== 'undefined' ? isAdmin : 'undefined',
+    authToken: typeof authToken !== 'undefined' ? authToken : 'undefined'
+});
+
 // Initialiser avec le premier groupe
 document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOM chargé, initialisation du chat");
+    console.log("Éléments DOM trouvés:", {
+        messagesContainer: !!messagesContainer,
+        messageForm: !!messageForm,
+        messageInput: !!messageInput,
+        chatTitle: !!chatTitle
+    });
+    
     if (typeof initialGroupId !== "undefined" && initialGroupId) {
         currentGroupId = initialGroupId.toString();
         console.log("Chat initialisé avec le groupe ID:", currentGroupId);
@@ -16,6 +34,8 @@ document.addEventListener("DOMContentLoaded", function() {
         
         // Charger automatiquement les messages du groupe initial
         loadGroupMessages(currentGroupId);
+    } else {
+        console.log("Aucun groupe initial défini");
     }
 });
 
@@ -81,12 +101,12 @@ function createMessageElement(message) {
             <div class="message-actions">
                 ${isCurrentUser ? `
                     <button type="button" class="btn btn-edit" onclick="editMessage('${message._id || message.id}')">
-                        <i class="fas fa-edit"></i> Modifier
+                        <i class="fas fa-edit"></i>
                     </button>
                 ` : ""}
                 ${(isCurrentUser || (typeof isAdmin !== "undefined" && isAdmin)) ? `
                     <button type="button" class="btn btn-delete" onclick="deleteMessage('${message._id || message.id}')">
-                        <i class="fas fa-trash"></i> Supprimer
+                        <i class="fas fa-trash"></i>
                     </button>
                 ` : ""}
             </div>
@@ -297,10 +317,39 @@ if (messageForm) {
                 const data = await response.json();
                 console.log("Message sauvegardé avec succès:", data);
                 
-                // Optionnel: Mettre à jour l'ID du message avec celui du backend
-                const messageElement = document.querySelector(`[data-message-id="${newMessage.id}"]`);
-                if (messageElement && data._id) {
-                    messageElement.setAttribute('data-message-id', data._id);
+                // Mettre à jour l'ID du message avec celui du backend
+                const realMessageId = data._id || data.id || data.message_id;
+                if (realMessageId) {
+                    console.log("Mise à jour de l'ID du message:", newMessage.id, "->", realMessageId);
+                    
+                    // Mettre à jour l'attribut data-message-id dans le DOM
+                    const messageElement = document.querySelector(`[data-message-id="${newMessage.id}"]`);
+                    if (messageElement) {
+                        messageElement.setAttribute('data-message-id', realMessageId);
+                        console.log("ID mis à jour dans le DOM");
+                        
+                        // Mettre à jour aussi les boutons d'action dans ce message
+                        const editButton = messageElement.querySelector('button[onclick*="editMessage"]');
+                        const deleteButton = messageElement.querySelector('button[onclick*="deleteMessage"]');
+                        
+                        if (editButton) {
+                            editButton.setAttribute('onclick', `editMessage('${realMessageId}')`);
+                            console.log("Bouton d'édition mis à jour");
+                        }
+                        
+                        if (deleteButton) {
+                            deleteButton.setAttribute('onclick', `deleteMessage('${realMessageId}')`);
+                            console.log("Bouton de suppression mis à jour");
+                        }
+                    } else {
+                        console.error("Élément de message non trouvé pour mise à jour de l'ID");
+                    }
+                    
+                    // Mettre à jour l'ID dans l'objet newMessage pour les boutons d'action
+                    newMessage.id = realMessageId;
+                    newMessage._id = realMessageId;
+                } else {
+                    console.warn("Aucun ID de message reçu du backend");
                 }
                 
                 // Vider l'input de fichier après envoi réussi
@@ -314,8 +363,7 @@ if (messageForm) {
             }
         } catch (error) {
             console.error("Erreur lors de l'envoi du message:", error);
-            // Optionnel: Afficher un message d'erreur à l'utilisateur
-            alert("Erreur de connexion lors de l'envoi du message");
+            alert("Erreur lors de l'envoi du message");
         }
     });
 }

@@ -4,6 +4,7 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
 
 <!-- Inclusion des styles -->
 <link rel="stylesheet" href="/public/assets/css/events.css">
+<link rel="stylesheet" href="/public/assets/css/groups-chat.css">
 
 <div class="container-fluid">
     <div class="row">
@@ -65,8 +66,9 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
                                                 <a href="/groups/<?php echo $group['id'] ?? 'null'; ?>/edit" class="btn btn-outline-primary btn-sm" title="Modifier">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-outline-danger btn-sm" 
-                                                        onclick="confirmDelete(<?php echo $group['id'] ?? 'null'; ?>, '<?php echo htmlspecialchars($group['name'] ?? 'Groupe'); ?>')" 
+                                                <button type="button" class="btn btn-outline-danger btn-sm delete-group-btn" 
+                                                        data-group-id="<?php echo $group['id'] ?? 'null'; ?>"
+                                                        data-group-name="<?php echo htmlspecialchars($group['name'] ?? 'Groupe', ENT_QUOTES); ?>"
                                                         title="Supprimer">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -225,4 +227,67 @@ const authToken = "<?php echo $_SESSION['token'] ?? ''; ?>";
 </script>
 
 <!-- Inclusion du JavaScript -->
+<script src="/public/assets/js/groups-chat.js"></script>
 <script src="/public/assets/js/events.js"></script>
+
+<!-- Script pour la suppression des groupes -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Script de suppression chargé');
+    
+    // Gérer les clics sur les boutons de suppression
+    document.querySelectorAll('.delete-group-btn').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const groupId = this.getAttribute('data-group-id');
+            const groupName = this.getAttribute('data-group-name');
+            
+            console.log('Clic sur suppression du groupe:', groupId, groupName);
+            
+            // Mettre à jour le modal avec les informations du groupe
+            document.getElementById('groupName').textContent = groupName;
+            document.getElementById('deleteGroupId').value = groupId;
+            
+            // Afficher le modal
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        });
+    });
+    
+    // Gérer la soumission du formulaire de suppression
+    const deleteForm = document.getElementById('deleteForm');
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const groupId = document.getElementById('deleteGroupId').value;
+            console.log('Suppression du groupe:', groupId);
+            
+            // Créer un formulaire temporaire pour la suppression
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/groups/' + groupId;
+            
+            // Ajouter le champ _method pour simuler DELETE
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE';
+            form.appendChild(methodInput);
+            
+            // Ajouter le champ group_id
+            const groupIdInput = document.createElement('input');
+            groupIdInput.type = 'hidden';
+            groupIdInput.name = 'group_id';
+            groupIdInput.value = groupId;
+            form.appendChild(groupIdInput);
+            
+            // Soumettre le formulaire
+            document.body.appendChild(form);
+            form.submit();
+        });
+    }
+});
+</script>

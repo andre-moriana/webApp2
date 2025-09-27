@@ -2,16 +2,13 @@
 $title = "Portail Archers de Gémenos - Détails de l'événement";
 ?>
 <!-- Inclusion des styles -->
-<link rel="stylesheet" href="/public/assets/css/groups-chat.css">
+<link rel="stylesheet" href="/public/assets/css/events.css">
 <div class="container-fluid">
     <div class="row">
         <!-- Détails de l"événement -->
         <div class="col-md-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">Détails de l'événement</h1>
-                <a href="/events" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-arrow-left me-2"></i>Retour
-                </a>
             </div>
             
             <?php if (isset($error) && $error): ?>
@@ -62,12 +59,15 @@ $title = "Portail Archers de Gémenos - Détails de l'événement";
                         
                         <div class="mb-3">
                             <h6><i class="fas fa-users me-2"></i>Participants</h6>
-                            <p class="text-muted">
-                                <?php echo ($event["current_participants"] ?? 0); ?>
+                            <p class="text-muted" id="detail-members-count">
+                                <?php 
+                                $membersCount = count($event["members"] ?? []);
+                                echo $membersCount;
+                                ?>
                                 <?php if (isset($event["max_participants"]) && $event["max_participants"] > 0): ?>
                                     / <?php echo $event["max_participants"]; ?> places
                                 <?php else: ?>
-                                    participants
+                                    inscrit<?php echo $membersCount > 1 ? 's' : ''; ?>
                                 <?php endif; ?>
                             </p>
                         </div>
@@ -76,8 +76,9 @@ $title = "Portail Archers de Gémenos - Détails de l'événement";
                             <a href="/events/<?php echo $event["_id"] ?? "null"; ?>/edit" class="btn btn-outline-primary">
                                 <i class="fas fa-edit me-1"></i>Modifier
                             </a>
-                            <button type="button" class="btn btn-outline-danger" 
-                                    onclick="confirmDelete(<?php echo $event["_id"] ?? "null"; ?>, "<?php echo htmlspecialchars($event["name"] ?? "Événement"); ?>")">
+                            <button type="button" class="btn btn-outline-danger delete-event-btn" 
+                                    data-event-id="<?php echo $event["_id"] ?? "null"; ?>" 
+                                    data-event-name="<?php echo htmlspecialchars($event["name"] ?? "Événement", ENT_QUOTES); ?>">
                                 <i class="fas fa-trash me-1"></i>Supprimer
                             </button>
                         </div>
@@ -91,23 +92,27 @@ $title = "Portail Archers de Gémenos - Détails de l'événement";
                     </div>
                     <div class="card-body">
                         <div class="registration-status">
-                            <?php if ($isRegistered): ?>
-                                <div class="alert alert-success">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    Vous êtes inscrit à cet événement
-                                </div>
-                            <?php else: ?>
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    Vous n'êtes pas inscrit à cet événement
-                                </div>
-                            <?php endif; ?>
+                            <div class="alert alert-info" id="registration-status">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Cliquez sur "Rejoindre" pour vous inscrire à cet événement
+                            </div>
                         </div>
                         <div class="d-flex gap-2">
-                            <button class="btn <?php echo $isRegistered ? 'btn-warning' : 'btn-success'; ?> registration-button" 
-                                    onclick="<?php echo $isRegistered ? 'unregisterFromEvent' : 'registerToEvent'; ?>(<?php echo $event["_id"] ?? "null"; ?>)">
-                                <i class="fas fa-<?php echo $isRegistered ? 'user-minus' : 'user-plus'; ?> me-1"></i>
-                                <?php echo $isRegistered ? 'Se désinscrire' : 'S\'inscrire'; ?>
+                            <!-- Bouton pour s'inscrire -->
+                            <button class="btn btn-success registration-button" 
+                                    onclick="registerToEvent(<?php echo $event["_id"] ?? "null"; ?>)"
+                                    id="register-btn">
+                                <i class="fas fa-user-plus me-1"></i>
+                                Rejoindre
+                            </button>
+                            
+                            <!-- Bouton pour se désinscrire -->
+                            <button class="btn btn-warning registration-button" 
+                                    onclick="unregisterFromEvent(<?php echo $event["_id"] ?? "null"; ?>)"
+                                    id="unregister-btn"
+                                    style="display: none;">
+                                <i class="fas fa-user-minus me-1"></i>
+                                Quitter
                             </button>
                         </div>
                     </div>
@@ -123,34 +128,20 @@ $title = "Portail Archers de Gémenos - Détails de l'événement";
         <!-- Section chat -->
         <div class="col-md-8">
             <?php if ($event && !$error): ?>
-                <!-- Chat de l"événement -->
+                <!-- Chat de l'événement -->
                 <div id="chat-container" class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0" id="chat-title"><?php echo htmlspecialchars($event["name"]); ?></h5>
+                        <div class="d-flex gap-2">
+                            <a href="/events" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i>Retour à la liste
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body" style="height: 500px;">
                         <div class="chat-container">
                             <div id="messages-container" class="messages-container mb-3">
-                                <?php if (isset($chatMessages) && !empty($chatMessages)): ?>
-                                    <?php foreach ($chatMessages as $message): 
-                                        // Utiliser des clés flexibles pour l"ID de l"auteur
-                                        $authorId = $message["author_id"] ?? $message["userId"] ?? $message["user_id"] ?? $message["author"]["id"] ?? $message["author"]["_id"] ?? null;
-                                        
-                                        // Vérifier les permissions de l"utilisateur pour ce message
-                                        $canEdit = ($_SESSION["user"]["id"] === $authorId) || $_SESSION["user"]["is_admin"];
-                                        $canDelete = $_SESSION["user"]["is_admin"] || 
-                                                    ($_SESSION["user"]["id"] === $authorId && 
-                                                     (time() - strtotime($message["created_at"])) < 3600);
-                                        
-                                        // Inclure le template de message
-                                        include __DIR__ . "/../chat/group-message.php";
-                                    endforeach; ?>
-                                <?php else: ?>
-                                    <div class="text-center text-muted">
-                                        <i class="fas fa-comments fa-2x mb-2"></i>
-                                        <p>Aucun message dans le chat</p>
-                                    </div>
-                                <?php endif; ?>
+                                <!-- Messages seront chargés dynamiquement par JavaScript -->
                             </div>
                             <div class="message-input-container">
                                 <form id="message-form" class="d-flex gap-2">
@@ -219,18 +210,12 @@ const authToken = "<?php echo $_SESSION["token"] ?? ""; ?>";
 
 <!-- Inclusion du JavaScript -->
 <script src="/public/assets/js/events-chat.js"></script>
+<script src="/public/assets/js/events.js"></script>
 
-<script>
-function confirmDelete(eventId, eventName) {
-    document.getElementById("deleteEventId").value = eventId;
-    document.getElementById("eventName").textContent = eventName;
-    
-    // Définir l"action du formulaire avec l"ID de l"événement
-    const form = document.getElementById("deleteForm");
-    form.action = "/events/" + eventId;
-    
-    new bootstrap.Modal(document.getElementById("deleteModal")).show();
-}
-</script>
+
+
+
+
+
 
 

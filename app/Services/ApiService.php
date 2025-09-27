@@ -754,14 +754,14 @@ class ApiService {
         if ($result["success"] && $result["status_code"] == 200) {
             return [
                 "success" => true,
-                "messages" => $result["data"] ?? []
+                "data" => $result["data"] ?? []
             ];
         }
         
         return [
             "success" => false,
             "message" => "Erreur lors de la récupération des messages",
-            "messages" => []
+            "data" => []
         ];
     }
 
