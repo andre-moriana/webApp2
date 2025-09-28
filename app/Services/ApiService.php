@@ -1484,6 +1484,91 @@ class ApiService {
             'message' => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
         ];
     }
+
+    /**
+     * Récupère la liste des entraînements pour un utilisateur
+     * @param int $userId ID de l'utilisateur
+     * @return array Réponse de l'API
+     */
+    public function getTrainings($userId) {
+        // Utiliser l'endpoint des progrès d'entraînement qui contient les sessions
+        $endpoint = "/training/progress/user/" . $userId;
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
+     * Récupère les sessions d'entraînement pour un exercice spécifique
+     * @param int $exerciseId ID de l'exercice
+     * @return array Réponse de l'API
+     */
+    public function getTrainingSessions($exerciseId) {
+        $endpoint = "/training?action=dashboard&exercise_id=" . $exerciseId;
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
+     * Récupère les détails d'un entraînement spécifique
+     * @param int $trainingId ID de l'entraînement
+     * @return array Réponse de l'API
+     */
+    public function getTrainingById($trainingId) {
+        $endpoint = "/training/" . $trainingId;
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
+     * Récupère les statistiques d'entraînement pour un utilisateur
+     * @param int $userId ID de l'utilisateur
+     * @return array Réponse de l'API
+     */
+    public function getTrainingStats($userId) {
+        // Utiliser l'endpoint des stats utilisateur
+        $endpoint = "/training/stats/user/" . $userId;
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
+     * Récupère le dashboard des entraînements comptés
+     * @param int|null $exerciseId ID de l'exercice (optionnel)
+     * @param string|null $shootingType Type de tir (optionnel)
+     * @return array Réponse de l'API
+     */
+    public function getScoredTrainingDashboard($exerciseId = null, $shootingType = null) {
+        $endpoint = "/scored-training?action=dashboard";
+        
+        $params = [];
+        if ($exerciseId) {
+            $params[] = "exercise_id=" . $exerciseId;
+        }
+        if ($shootingType && $shootingType !== 'Tous') {
+            $params[] = "shooting_type=" . urlencode($shootingType);
+        }
+        
+        if (!empty($params)) {
+            $endpoint .= "&" . implode("&", $params);
+        }
+        
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
+     * Récupère le progrès d'entraînement
+     * @return array Réponse de l'API
+     */
+    public function getTrainingProgress() {
+        $endpoint = "/training/progress";
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
+     * Récupère le dashboard d'entraînement pour un exercice
+     * @param int $exerciseId ID de l'exercice
+     * @return array Réponse de l'API
+     */
+    public function getTrainingDashboard($exerciseId) {
+        $endpoint = "/training/dashboard/" . $exerciseId;
+        return $this->makeRequest($endpoint, 'GET');
+    }
 }
 ?>
 
