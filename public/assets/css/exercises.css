@@ -1,0 +1,157 @@
+/* Styles pour les exercices */
+.exercise-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid #e9ecef;
+}
+
+.exercise-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.exercise-badge {
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.exercise-details {
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.exercise-pdf-preview {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+    padding: 2rem;
+    text-align: center;
+    background-color: #f8f9fa;
+}
+
+.exercise-pdf-preview:hover {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+}
+
+.exercise-form-section {
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.exercise-form-section h5 {
+    color: #495057;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.5rem;
+}
+
+.exercise-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.exercise-stat {
+    flex: 1;
+}
+
+.exercise-stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.exercise-stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.exercise-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.exercise-actions .btn {
+    flex: 1;
+    min-width: 120px;
+}
+
+@media (max-width: 768px) {
+    .exercise-actions .btn {
+        flex: 1 1 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .exercise-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+.exercise-category-filter {
+    margin-bottom: 1.5rem;
+}
+
+.exercise-category-filter .btn-group {
+    width: 100%;
+}
+
+.exercise-category-filter .btn {
+    flex: 1;
+}
+
+.exercise-search {
+    margin-bottom: 1.5rem;
+}
+
+.exercise-search .input-group {
+    max-width: 400px;
+}
+
+.exercise-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.exercise-empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #dee2e6;
+}
+
+.exercise-loading {
+    text-align: center;
+    padding: 2rem;
+}
+
+.exercise-loading .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+.exercise-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.exercise-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+} 
