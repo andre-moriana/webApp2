@@ -15,6 +15,14 @@
     <!-- CSS personnalisé -->
     <link href="/public/assets/css/style.css" rel="stylesheet">
     <link href="/public/assets/css/chat-messages.css" rel="stylesheet">
+    
+    <!-- Scripts spécifiques aux pages -->
+    <?php if (isset($page_scripts) && is_array($page_scripts)): ?>
+        <?php foreach ($page_scripts as $script): ?>
+            <script src="<?php echo htmlspecialchars($script); ?>"></script>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    
     <style>
         /* Debug visible */
         .debug-visible {

@@ -37,7 +37,8 @@ class DashboardController {
             'users' => 0,
             'groups' => 0,
             'trainings' => 0,
-            'events' => 0
+            'events' => 0,
+            'exercises' => 0
         ];
         
         try {
@@ -61,6 +62,12 @@ class DashboardController {
                 }
             } else {
                 error_log("Erreur lors de la récupération des groupes: " . ($groupsResponse['message'] ?? 'Erreur inconnue'));
+            }
+            
+            // Récupérer le nombre d'exercices
+            $exercisesResponse = $this->apiService->getExercises();
+            if ($exercisesResponse['success'] && !empty($exercisesResponse['data'])) {
+                $stats['exercises'] = count($exercisesResponse['data']);
             }
             
             // Pour les autres statistiques, on utilise des valeurs par défaut

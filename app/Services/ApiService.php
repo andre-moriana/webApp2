@@ -1337,22 +1337,159 @@ class ApiService {
         
         return $result;
     }
-}
-?>
-
-
-
-
-
-
-
-
-}
-
     
     // Méthodes pour les exercices
     public function getExercises() {
-        return $this->makeRequest("exercise-sheets");
+        return $this->makeRequest('exercise_sheets', 'GET');
+    }
+    
+    public function getExerciseDetails($id) {
+        return $this->makeRequest("exercise_sheets?action=get&id={$id}", 'GET');
+    }
+    
+    public function createExercise($data) {
+        return $this->makeRequest('exercise_sheets?action=create', 'POST', $data);
+    }
+    
+    public function updateExercise($id, $data) {
+        return $this->makeRequest("exercise_sheets?action=update&id={$id}", 'POST', $data);
+    }
+    
+    public function deleteExercise($id) {
+        return $this->makeRequest("exercise_sheets?action=delete&id={$id}", 'DELETE');
+    }
+    
+    public function getExerciseCategories() {
+        return $this->makeRequest('exercise_sheets?action=categories', 'GET');
+    }
+
+    public function createExerciseWithFile($data, $file = null) {
+        $url = rtrim($this->baseUrl, '/') . '/exercise_sheets?action=create';
+        error_log("Requête API vers: " . $url);
+        error_log("Méthode: POST avec FormData");
+        error_log("Fichier reçu: " . json_encode($file));
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_POST, true);
+        
+        // Headers
+        $headers = [
+            'Accept: */*'
+        ];
+        
+        if ($this->token) {
+            $headers[] = 'Authorization: Bearer ' . $this->token;
+        }
+        
+        // Préparer les données POST
+        $postFields = $data;
+        
+        // Ajouter le fichier si présent
+        if ($file && isset($file['tmp_name']) && !empty($file['tmp_name'])) {
+            error_log("Ajout du fichier au FormData: " . $file['name']);
+            $postFields['attachment'] = new CURLFile(
+                $file['tmp_name'],
+                $file['type'],
+                $file['name']
+            );
+        } else {
+            error_log("Aucun fichier à ajouter");
+        }
+        
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        if (curl_errno($ch)) {
+            error_log("Erreur cURL: " . curl_error($ch));
+            curl_close($ch);
+            throw new Exception("Erreur lors de la requête API: " . curl_error($ch));
+        }
+        
+        curl_close($ch);
+        
+        $decodedResponse = json_decode($response, true);
+        
+        return [
+            'success' => $httpCode >= 200 && $httpCode < 300,
+            'data' => $decodedResponse,
+            'status_code' => $httpCode,
+            'message' => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
+        ];
+    }
+
+    public function makePostRequestWithFormData($endpoint, $data, $file = null) {
+        $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
+        error_log("Requête API vers: " . $url);
+        error_log("Méthode: POST");
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_POST, true);
+        
+        // Headers
+        $headers = [
+            'Accept: */*'
+        ];
+        
+        if ($this->token) {
+            $headers[] = 'Authorization: Bearer ' . $this->token;
+        }
+        
+        // Préparer les données POST
+        $postFields = $data;
+        
+        // Ajouter le fichier si présent
+        if ($file && isset($file['tmp_name']) && !empty($file['tmp_name'])) {
+            $postFields['attachment'] = new CURLFile(
+                $file['tmp_name'],
+                $file['type'],
+                $file['name']
+            );
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+        } else {
+            // Données form-encoded
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postFields));
+            $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        }
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        if (curl_errno($ch)) {
+            error_log("Erreur cURL: " . curl_error($ch));
+            curl_close($ch);
+            throw new Exception("Erreur lors de la requête API: " . curl_error($ch));
+        }
+        
+        curl_close($ch);
+        
+        $decodedResponse = json_decode($response, true);
+        
+        return [
+            'success' => $httpCode >= 200 && $httpCode < 300,
+            'data' => $decodedResponse,
+            'status_code' => $httpCode,
+            'message' => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
+        ];
     }
 }
 ?>
+
+
+
+
+
+
+
