@@ -1346,3 +1346,13 @@ class ApiService {
 
 
 
+
+}
+
+    
+    // Méthodes pour les exercices
+    public function getExercises() {
+        return $this->makeRequest("exercise-sheets");
+    }
+}
+?>
