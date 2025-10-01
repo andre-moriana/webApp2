@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Template pour afficher un message du chat
  * @param array $message Les données du message

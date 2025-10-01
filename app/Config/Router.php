@@ -55,9 +55,12 @@ class Router {
         
         // Routes des entraînements (protégées)
         $this->addRoute("GET", "/trainings", "TrainingController@index");
+        $this->addRoute("POST", "/trainings/update-progression", "TrainingController@updateProgression");
+        $this->addRoute("POST", "/trainings/update-notes", "TrainingController@updateNotes");
+        $this->addRoute("POST", "/trainings/save-session", "TrainingController@saveSession");
         $this->addRoute("GET", "/trainings/{id}", "TrainingController@show");
         $this->addRoute("GET", "/trainings/{id}/stats", "TrainingController@stats");
-        
+
         // Routes des événements (protégées) - ORDRE IMPORTANT : plus spécifique en premier
         $this->addRoute("GET", "/events", "EventController@index");
         $this->addRoute("GET", "/events/create", "EventController@create");
@@ -102,7 +105,7 @@ class Router {
         if (strpos($path, "{") !== false) {
             array_unshift($this->routes, $route);
         } else {
-            $this->routes[] = $route;
+            array_unshift($this->routes, $route);
         }
     }
     
@@ -116,11 +119,11 @@ class Router {
             error_log("Méthode HTTP personnalisée détectée: " . $requestMethod);
         }
         
-        // Debug temporaire
-//        error_log("=== DEBUG ROUTAGE ===");
-//        error_log("REQUEST_URI: " . $requestUri);
-//        error_log("REQUEST_METHOD: " . $requestMethod);
-//        error_log("BASE_PATH: " . $this->basePath);
+        // Debug temporaire - RÉACTIVÉ pour debug
+        error_log("=== DEBUG ROUTAGE ===");
+        error_log("REQUEST_URI: " . $requestUri);
+        error_log("REQUEST_METHOD: " . $requestMethod);
+        error_log("BASE_PATH: " . $this->basePath);
         
         // Supprimer le basePath de l"URI
         if ($this->basePath && strpos($requestUri, $this->basePath) === 0) {
@@ -137,14 +140,14 @@ class Router {
       //error_log("URI normalisée: " . $requestUri);
         
         foreach ($this->routes as $route) {
-            //error_log("Test route: " . $route["method"] . " " . $route["path"]);
+            error_log("Test route: " . $route["method"] . " " . $route["path"]);
             if ($route["method"] === $requestMethod) {
                 $pattern = $this->convertToRegex($route["path"]);
-                //error_log("Pattern: " . $pattern);
-                //error_log("Test regex: " . $pattern . " contre " . $requestUri);
+                error_log("Pattern: " . $pattern);
+                error_log("Test regex: " . $pattern . " contre " . $requestUri);
                 if (preg_match($pattern, $requestUri, $matches)) {
-                    //error_log("Route trouvée! Handler: " . $route["handler"]);
-                    //error_log("Matches: " . print_r($matches, true));
+                    error_log("Route trouvée! Handler: " . $route["handler"]);
+                    error_log("Matches: " . print_r($matches, true));
                     $this->executeHandler($route["handler"], $matches);
                     return;
                 } else {
@@ -217,3 +220,5 @@ class Router {
         echo "Page non trouvée";
     }
 }
+
+

@@ -23,5 +23,5 @@ session_start();
 // Inclusion du routeur principal
 require_once 'app/Config/Router.php';
 // Initialisation et exécution du routeur
-$router = new Router();
+$router = new Router("/webapp");
 $router->run();

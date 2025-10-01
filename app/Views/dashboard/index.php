@@ -1,4 +1,4 @@
-﻿<!-- Page d'accueil du tableau de bord -->
+<!-- Page d'accueil du tableau de bord -->
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -148,12 +148,14 @@
             </div>
             <div class="card-body">
                 <div class="row">
+                    <?php if (($_SESSION['user']['is_admin'] ?? false) || ($_SESSION['user']['role'] ?? '') === 'Admin'): ?>
                     <div class="col-md-3 mb-3">
                         <a href="/users" class="btn btn-primary btn-block">
                             <i class="fas fa-users me-2"></i>
                             Gérer les utilisateurs
                         </a>
                     </div>
+                    <?php endif; ?>
                     <div class="col-md-3 mb-3">
                         <a href="/groups" class="btn btn-success btn-block">
                             <i class="fas fa-layer-group me-2"></i>

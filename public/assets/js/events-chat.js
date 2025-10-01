@@ -1,4 +1,4 @@
-﻿// Configuration pour les événements
+// Configuration pour les événements
 let currentEventId = null;
 
 // Sélecteurs DOM

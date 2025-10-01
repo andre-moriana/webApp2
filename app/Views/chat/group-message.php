@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Template pour afficher un message dans la liste des groupes
  * @param array $message Les données du message

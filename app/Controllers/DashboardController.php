@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 // Inclure ApiService
 require_once __DIR__ . '/../Services/ApiService.php';

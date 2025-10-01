@@ -1,4 +1,4 @@
-// JavaScript personnalisé pour le portail Archers de Gémenos
+// JavaScript personnalisï¿½ pour le portail Archers de Gï¿½menos
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialisation des tooltips Bootstrap
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteButtons.forEach(function(button) {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            const message = this.dataset.confirmDelete || 'Êtes-vous sûr de vouloir supprimer cet élément ?';
+            const message = this.dataset.confirmDelete || 'Ãªtes-vous sur de vouloir supprimer cet Ã©lÃ©ment ?';
             
             if (confirm(message)) {
                 // Si c'est un formulaire, le soumettre
@@ -157,10 +157,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
-                // Réorganiser les lignes dans le DOM
+                // Rï¿½organiser les lignes dans le DOM
                 rows.forEach(row => tbody.appendChild(row));
                 
-                // Ajouter la classe de tri appropriée
+                // Ajouter la classe de tri appropriï¿½e
                 this.classList.add(isAscending ? 'sort-desc' : 'sort-asc');
             });
         });

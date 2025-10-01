@@ -1,4 +1,4 @@
-﻿// JavaScript spécifique aux événements
+// JavaScript spécifique aux événements
 
 // Fonction de confirmation de suppression
 window.confirmDelete = function(eventId, eventName) {

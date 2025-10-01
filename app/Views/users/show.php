@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $title = "Détails de l'utilisateur - Portail Archers de Gémenos";
 ?>
 

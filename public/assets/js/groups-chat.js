@@ -1,4 +1,4 @@
-﻿// Configuration
+// Configuration
 let currentGroupId = null;
 
 // Sélecteurs DOM

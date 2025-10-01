@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 class UserController {
     private $apiService;
@@ -234,7 +234,9 @@ class UserController {
             'ageCategory' => $_POST['ageCategory'] ?? '',
             'arrivalYear' => $_POST['arrivalYear'] ?? '',
             'bowType' => $_POST['bowType'] ?? '',
-            'role' => $_POST['role'] ?? ''
+            'role' => $_POST['role'] ?? '',
+            'is_admin' => $_POST['is_admin'] ?? '0',
+            'is_banned' => $_POST['is_banned'] ?? '0'
         ];
         
         // Validation basique
@@ -248,16 +250,21 @@ class UserController {
             // Appel à l'API pour mettre à jour l'utilisateur
             $response = $this->apiService->updateUser($id, $userData);
             
+            // Log de débogage
+            error_log("DEBUG UserController update - Response: " . json_encode($response));
+            
             if ($response['success']) {
                 $_SESSION['success'] = 'Utilisateur mis à jour avec succès';
                 header('Location: /users/' . $id);
                 exit;
             } else {
                 $_SESSION['error'] = $response['message'] ?? 'Erreur lors de la mise à jour de l\'utilisateur';
+                error_log("DEBUG UserController update - Error: " . ($response['message'] ?? 'Unknown error'));
                 header('Location: /users/' . $id . '/edit');
                 exit;
             }
         } catch (Exception $e) {
+            error_log("DEBUG UserController update - Exception: " . $e->getMessage());
             $_SESSION['error'] = 'Erreur lors de la mise à jour de l\'utilisateur';
             header('Location: /users/' . $id . '/edit');
             exit;

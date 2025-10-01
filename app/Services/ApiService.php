@@ -82,6 +82,12 @@ class ApiService {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
                 curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
             }
+        } else if ($method === 'PATCH') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+            if ($data !== null) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
+            }
         }
         
         $response = curl_exec($ch);
@@ -180,8 +186,8 @@ class ApiService {
         $currentUserResponse = $this->makeRequest("users/{$userId}", "GET");
         if ($currentUserResponse && $currentUserResponse['success']) {
             $currentData = $currentUserResponse['data'];
-            $currentIsAdmin = $currentData['is_admin'] ?? $currentData['isAdmin'] ?? false;
-            $currentIsBanned = $currentData['is_banned'] ?? $currentData['isBanned'] ?? false;
+            $currentIsAdmin = (bool)($currentData['is_admin'] ?? $currentData['isAdmin'] ?? false);
+            $currentIsBanned = (bool)($currentData['is_banned'] ?? $currentData['isBanned'] ?? false);
             
             // Vérifier is_admin
             if (isset($userData['is_admin'])) {
@@ -191,6 +197,8 @@ class ApiService {
                     $result = $this->makeRequest($endpoint, "POST");
                     $results[] = $result;
                     error_log("DEBUG updateUser - Réponse is_admin: " . json_encode($result));
+                } else {
+                    error_log("DEBUG updateUser - is_admin inchangé: current=$currentIsAdmin, new=$newIsAdmin");
                 }
             }
             
@@ -202,6 +210,8 @@ class ApiService {
                     $result = $this->makeRequest($endpoint, "POST");
                     $results[] = $result;
                     error_log("DEBUG updateUser - Réponse is_banned: " . json_encode($result));
+                } else {
+                    error_log("DEBUG updateUser - is_banned inchangé: current=$currentIsBanned, new=$newIsBanned");
                 }
             }
         }
@@ -266,21 +276,10 @@ class ApiService {
     }
 
     public function getUsers() {
-        // Vérifier si nous avons un token valide
-        if (!$this->token) {
-            error_log("Pas de token valide");
-            return [
-                "success" => false,
-                "data" => ["users" => []],
-                "message" => "Token d'authentification requis"
-            ];
-        }
-
-        error_log("Token actuel: " . ($this->token ?? "aucun"));
-        
         // Ajouter le token dans les headers
         $result = $this->makeRequest("users", "GET");
-        error_log("Réponse brute de l'API users: " . print_r($result, true));
+        // Supprimer le log verbeux
+        // error_log("Réponse brute de l'API users: " . print_r($result, true));
         
         if ($result["success"] && $result["status_code"] == 200) {
             // Vérifier que la clé "data" existe et n'est pas null
@@ -294,12 +293,14 @@ class ApiService {
             }
             
             $data = $result["data"];
-            error_log("[GET_USER] Données reçues de l'API: " . print_r($data, true));
+            // Supprimer le log qui affiche les données des utilisateurs
+            // error_log("[GET_USER] Données reçues de l'API: " . print_r($data, true));
             
             if (is_array($data)) {
                 // Format 1: { "users": [...] }
                 if (isset($data["users"]) && is_array($data["users"])) {
-                    error_log("Format 1 détecté");
+                    // Supprimer le log de debug
+                    // error_log("Format 1 détecté");
                     return [
                         "success" => true,
                         "data" => $data,
@@ -308,7 +309,8 @@ class ApiService {
                 }
                 // Format 2: { "data": [...] }
                 elseif (isset($data["data"]) && is_array($data["data"])) {
-                    error_log("Format 2 détecté");
+                    // Supprimer le log de debug
+                    // error_log("Format 2 détecté");
                     return [
                         "success" => true,
                         "data" => ["users" => $data["data"]],
@@ -317,31 +319,23 @@ class ApiService {
                 }
                 // Format 3: [...] (tableau direct)
                 elseif (is_array($data) && !empty($data)) {
-                    error_log("Format 3 détecté");
-                    // Vérifier si c'est un tableau d'utilisateurs
-                    $firstItem = reset($data);
-                    if (is_array($firstItem) && (
-                        isset($firstItem["name"]) || 
-                        isset($firstItem["email"]) ||
-                        isset($firstItem["id"])
-                    )) {
-                        return [
-                            "success" => true,
-                            "data" => ["users" => $data],
-                            "message" => "Utilisateurs récupérés avec succès"
-                        ];
-                    }
+                    // Supprimer le log de debug
+                    // error_log("Format 3 détecté");
+                    return [
+                        "success" => true,
+                        "data" => ["users" => $data],
+                        "message" => "Utilisateurs récupérés avec succès"
+                    ];
                 }
             }
-            
-            error_log("Format de données non reconnu");
         }
         
-        error_log("Échec de récupération des utilisateurs. Code: " . ($result["status_code"] ?? "inconnu") . ", Message: " . ($result["message"] ?? "aucun"));
+        // En cas d'erreur, retourner un tableau vide
+        error_log("Erreur lors de la récupération des utilisateurs: " . ($result["message"] ?? "Erreur inconnue"));
         return [
             "success" => false,
             "data" => ["users" => []],
-            "message" => "Impossible de récupérer les utilisateurs"
+            "message" => "Erreur lors de la récupération des utilisateurs"
         ];
     }
 
@@ -1567,6 +1561,49 @@ class ApiService {
      */
     public function getTrainingDashboard($exerciseId) {
         $endpoint = "/training/dashboard/" . $exerciseId;
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    public function updateTrainingNotes($sessionId, $notes) {
+        $endpoint = "/training/sessions/notes";
+        return $this->makeRequest($endpoint, 'PATCH', [
+            'session_id' => $sessionId,
+            'notes' => $notes
+        ]);
+    }
+
+    /**
+     * Sauvegarde une session d'entraînement
+     * @param int $exerciseSheetId ID de la fiche d'exercice
+     * @param array $sessionData Données de la session
+     * @param int|null $userId ID de l'utilisateur (optionnel)
+     * @return array Réponse de l'API
+     */
+    public function saveTrainingSession($exerciseSheetId, $sessionData, $userId = null) {
+        $endpoint = "/training/save-session";
+        
+        $data = [
+            'exercise_sheet_id' => $exerciseSheetId,
+            'session_data' => $sessionData
+        ];
+        
+        // Ajouter l'user_id si fourni
+        if ($userId !== null) {
+            $data['user_id'] = $userId;
+        }
+        
+        error_log("🔍 [API_SERVICE] Données envoyées à l'API: " . json_encode($data));
+        
+        return $this->makeRequest($endpoint, 'POST', $data);
+    }
+
+    /**
+     * Récupère les informations d'un utilisateur par son ID
+     * @param int $userId ID de l'utilisateur
+     * @return array Réponse de l'API
+     */
+    public function getUserById($userId) {
+        $endpoint = "/users/" . $userId;
         return $this->makeRequest($endpoint, 'GET');
     }
 }

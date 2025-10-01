@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $title = "Gestion des utilisateurs - Portail Archers de Gémenos";
 
 // Débogage temporaire

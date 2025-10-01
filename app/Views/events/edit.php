@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $title = "Modifier l'événement - Portail Archers de Gémenos";
 ?>
 

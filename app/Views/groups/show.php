@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $title = "Détails du groupe - Portail Archers de Gémenos";
 ?>
 <div class="container-fluid">

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $title = "Gestion des groupes - Portail Archers de Gémenos";
 ?>
 

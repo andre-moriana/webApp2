@@ -1,4 +1,4 @@
-﻿<?php if (isset($_SESSION['errors'])): ?>
+<?php if (isset($_SESSION['errors'])): ?>
     <div class="alert alert-danger">
         <ul>
             <?php foreach ($_SESSION['errors'] as $error): ?>

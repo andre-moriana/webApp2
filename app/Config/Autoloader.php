@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 class Autoloader {
     private static $directories = [
         'app/Controllers/',

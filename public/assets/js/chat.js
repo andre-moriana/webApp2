@@ -1,4 +1,4 @@
-﻿// Configuration globale
+// Configuration globale
 let currentEditMessageId = null;
 let currentDeleteMessageId = null;
 
