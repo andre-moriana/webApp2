@@ -58,6 +58,7 @@ class Router {
         $this->addRoute("POST", "/trainings/update-progression", "TrainingController@updateProgression");
         $this->addRoute("POST", "/trainings/update-notes", "TrainingController@updateNotes");
         $this->addRoute("POST", "/trainings/save-session", "TrainingController@saveSession");
+        $this->addRoute("POST", "/trainings/update-status", "TrainingController@updateStatus");
         $this->addRoute("GET", "/trainings/{id}", "TrainingController@show");
         $this->addRoute("GET", "/trainings/{id}/stats", "TrainingController@stats");
 

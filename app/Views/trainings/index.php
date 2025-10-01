@@ -202,10 +202,17 @@
                                                     <i class="fas fa-dumbbell me-2"></i>
                                                     <?php echo htmlspecialchars($exerciseData['exercise_title']); ?>
                                                 </h6>
-                                                <button type="button" class="btn btn-success btn-sm start-session-btn" 
-                                                        onclick="startTrainingSession(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')">
-                                                    <i class="fas fa-play me-1"></i>Commencer une session
-                                                </button>
+                                                <div class="btn-group" role="group">
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                                            onclick="updateExerciseStatus(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')"
+                                                            title="Modifier le statut">
+                                                        <i class="fas fa-edit me-1"></i>Statut
+                                                    </button>
+                                                    <button type="button" class="btn btn-success btn-sm start-session-btn" 
+                                                            onclick="startTrainingSession(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')">
+                                                        <i class="fas fa-play me-1"></i>Commencer une session
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="card-body">
@@ -438,6 +445,44 @@
                 <button type="button" class="btn btn-danger" id="endSessionBtn" style="display: none;">
                     <i class="fas fa-stop"></i> Terminer la session
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour modifier le statut d'un exercice -->
+<div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statusModalLabel">Modifier le statut de l'exercice</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="statusForm">
+                    <input type="hidden" id="statusExerciseId" name="exercise_id">
+                    <input type="hidden" id="statusUserId" name="user_id" value="<?php echo $selectedUserId ?? $actualUserId; ?>">
+                    
+                    <div class="mb-3">
+                        <label for="statusSelect" class="form-label">Statut de l'exercice :</label>
+                        <select class="form-select" id="statusSelect" name="status" required>
+                            <option value="">-- Sélectionner un statut --</option>
+                            <option value="en_cours">En cours</option>
+                            <option value="termine">Terminé</option>
+                            <option value="masque">Masqué</option>
+                            <option value="abandonne">Abandonné</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="statusNotes" class="form-label">Notes (optionnel) :</label>
+                        <textarea class="form-control" id="statusNotes" name="notes" rows="3" placeholder="Ajoutez des notes sur le statut..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="saveExerciseStatus()">Sauvegarder</button>
             </div>
         </div>
     </div>

@@ -939,5 +939,62 @@ class TrainingController {
         }
     }
 
+    /**
+     * Met à jour le statut d'un exercice pour un utilisateur
+     */
+    public function updateStatus() {
+        try {
+            // Vérifier que la requête est en POST
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
+                return;
+            }
+
+            // Récupérer les données
+            $exerciseId = $_POST['exercise_id'] ?? null;
+            $userId = $_POST['user_id'] ?? null;
+            $status = $_POST['status'] ?? null;
+            $notes = $_POST['notes'] ?? '';
+
+            // Validation
+            if (!$exerciseId || !$userId || !$status) {
+                echo json_encode(['success' => false, 'message' => 'Paramètres manquants']);
+                return;
+            }
+
+            // Vérifier les permissions
+            $actualUserId = $this->getUserIdFromToken();
+            $isAdmin = $this->isAdmin();
+            $isCoach = $this->isCoach();
+
+            if (!$isAdmin && !$isCoach && (int)$userId !== (int)$actualUserId) {
+                echo json_encode(['success' => false, 'message' => 'Accès refusé']);
+                return;
+            }
+
+            // Appeler l'API pour mettre à jour le statut
+            $endpoint = "/training/progress/update";
+            $data = [
+                'exercise_sheet_id' => (int)$exerciseId,
+                'user_id' => (int)$userId,
+                'progression' => $status,
+                'notes' => $notes
+            ];
+
+            $response = $this->apiService->makeRequest($endpoint, 'POST', $data);
+
+            if ($response['success']) {
+                echo json_encode(['success' => true, 'message' => 'Statut mis à jour avec succès']);
+            } else {
+                echo json_encode(['success' => false, 'message' => $response['message'] ?? 'Erreur lors de la mise à jour']);
+            }
+
+        } catch (Exception $e) {
+            error_log('Erreur lors de la mise à jour du statut : ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Erreur interne du serveur']);
+        }
+    }
+
 }
 
