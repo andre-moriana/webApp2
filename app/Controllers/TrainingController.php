@@ -965,8 +965,9 @@ class TrainingController {
 
             // Vérifier les permissions
             $actualUserId = $this->getUserIdFromToken();
-            $isAdmin = $this->isAdmin();
-            $isCoach = $this->isCoach();
+            $currentUser = $this->getCurrentUser();
+            $isAdmin = $currentUser['is_admin'] ?? false;
+            $isCoach = ($currentUser['role'] ?? '') === 'Coach';
 
             if (!$isAdmin && !$isCoach && (int)$userId !== (int)$actualUserId) {
                 echo json_encode(['success' => false, 'message' => 'Accès refusé']);
