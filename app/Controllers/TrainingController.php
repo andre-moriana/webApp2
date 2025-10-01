@@ -21,7 +21,7 @@ class TrainingController {
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
         
-        // Récupérer l'ID utilisateur depuis le token JWT pour éviter l'incohérence
+        // Récupérer l'ID utilisateur depuis le token pour éviter l'incohérence
         $actualUserId = $this->getUserIdFromToken();
         if (!$actualUserId) {
             header('Location: /login?error=' . urlencode('Session invalide'));
@@ -112,11 +112,25 @@ class TrainingController {
             exit;
         }
         
+        // Récupérer l'ID de l'utilisateur sélectionné
+        $selectedUserId = $actualUserId; // Utiliser l'ID du token par défaut
+        
+        // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
+        if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+            $selectedUserId = (int)$_GET['user_id'];
+        }
+        
         // Récupérer les détails de l'entraînement
         $training = $this->getTrainingById($id);
         
         if (!$training) {
             header('Location: /trainings?error=' . urlencode('Entraînement non trouvé'));
+            exit;
+        }
+        
+        // Vérifier que l'entraînement appartient à l'utilisateur sélectionné
+        if ($training['user_id'] != $selectedUserId) {
+            header('Location: /trainings?error=' . urlencode('Entraînement non trouvé pour cet utilisateur'));
             exit;
         }
         
@@ -128,7 +142,19 @@ class TrainingController {
         
         // Récupérer toutes les sessions de l'exercice pour la navigation entre sessions
         $exerciseId = $training['exercise_sheet_id'];
-        $sessions = $this->getSessionsForExercise($exerciseId);
+        
+        // Debug: Log des informations
+        error_log("DEBUG show() - selectedUserId: " . $selectedUserId);
+        error_log("DEBUG show() - exerciseId: " . $exerciseId);
+        error_log("DEBUG show() - training user_id: " . $training['user_id']);
+        
+        $sessions = $this->getSessionsForExercise($exerciseId, $selectedUserId);
+        
+        // Debug: Log du nombre de sessions récupérées
+        error_log("DEBUG show() - sessions count: " . count($sessions));
+        if (!empty($sessions)) {
+            error_log("DEBUG show() - first session: " . json_encode($sessions[0]));
+        }
         
         // S'assurer que $sessions est un tableau
         if (!is_array($sessions)) {
@@ -164,7 +190,7 @@ class TrainingController {
         // Pour chaque exercice, récupérer la première session pour la navigation
         $categoryExercisesWithSessions = [];
         foreach ($categoryExercises as $exercise) {
-            $exerciseSessions = $this->getSessionsForExercise($exercise['id']);
+            $exerciseSessions = $this->getSessionsForExercise($exercise['id'], $training['user_id']);
             if (!empty($exerciseSessions)) {
                 // Prendre la première session de l'exercice
                 $exercise['session_id'] = $exerciseSessions[0]['id'];
@@ -214,6 +240,10 @@ class TrainingController {
         }
         
         $title = 'Détails de l\'entraînement - Portail Archers de Gémenos';
+        
+        // Passer les variables nécessaires à la vue
+        $currentUser = $_SESSION['user'];
+        $selectedUserId = $actualUserId; // Ajouter $selectedUserId
         
         // Inclure le header
         include 'app/Views/layouts/header.php';
@@ -332,10 +362,20 @@ class TrainingController {
      * @param int $exerciseId ID de l'exercice
      * @return array Liste des sessions
      */
-    private function getSessionsForExercise($exerciseId) {
+    private function getSessionsForExercise($exerciseId, $userId = null) {
         try {
             $endpoint = "/training?action=sessions&exercise_id=" . $exerciseId;
+            
+            // Ajouter l'user_id si fourni
+            if ($userId !== null) {
+                $endpoint .= "&user_id=" . $userId;
+            }
             $response = $this->apiService->makeRequest($endpoint, 'GET');
+            
+            // Debug: Log de la réponse
+            error_log("DEBUG getSessionsForExercise - exerciseId: $exerciseId, userId: $userId");
+            error_log("DEBUG getSessionsForExercise - endpoint: $endpoint");
+            error_log("DEBUG getSessionsForExercise - response: " . json_encode($response));
             
             if ($response['success'] && !empty($response['data'])) {
                 // Vérifier si c'est le message de test
@@ -343,20 +383,34 @@ class TrainingController {
                     return [];
                 }
                 
+                $sessions = [];
+                
                 // Si les données sont dans une structure imbriquée
                 if (isset($response['data']['success']) && isset($response['data']['data'])) {
-                    return $response['data']['data'];
+                    $sessions = $response['data']['data'];
                 }
-                
                 // Vérifier si c'est un array de sessions
-                if (is_array($response['data']) && !isset($response['data']['message'])) {
-                    return $response['data'];
+                else if (is_array($response['data']) && !isset($response['data']['message'])) {
+                    $sessions = $response['data'];
+                }
+                // Si c'est un objet avec des sessions
+                else if (isset($response['data']['sessions']) && is_array($response['data']['sessions'])) {
+                    $sessions = $response['data']['sessions'];
                 }
                 
-                // Si c'est un objet avec des sessions
-                if (isset($response['data']['sessions']) && is_array($response['data']['sessions'])) {
-                    return $response['data']['sessions'];
+                // FILTRER les sessions par utilisateur côté frontend
+                if ($userId !== null && !empty($sessions)) {
+                    $filteredSessions = [];
+                    foreach ($sessions as $session) {
+                        // Vérifier si la session appartient à l'utilisateur sélectionné
+                        if (isset($session['user_id']) && (int)$session['user_id'] === (int)$userId) {
+                            $filteredSessions[] = $session;
+                        }
+                    }
+                    return $filteredSessions;
                 }
+                
+                return $sessions;
             }
             
             return [];
@@ -437,7 +491,14 @@ class TrainingController {
             $grouped[$category]['total_time_minutes'] += $totalTime;
             
             // Récupérer les vraies sessions pour cet exercice
-            $realSessions = $this->getSessionsForExercise($exerciseId);
+            $realSessions = $this->getSessionsForExercise($exerciseId, $selectedUserId);
+            
+            // Debug: Log des sessions récupérées
+            error_log("DEBUG groupTrainingsByCategory - exerciseId: $exerciseId, selectedUserId: $selectedUserId");
+            error_log("DEBUG groupTrainingsByCategory - realSessions count: " . count($realSessions));
+            if (!empty($realSessions)) {
+                error_log("DEBUG groupTrainingsByCategory - first session: " . json_encode($realSessions[0]));
+            }
             
             // Ajouter les vraies sessions si elles existent
             if (!empty($realSessions)) {

@@ -13,7 +13,7 @@ error_log("group-message.php - Structure du message: " . print_r($message, true)
 $messageId = $message["id"] ?? $message["_id"] ?? $message["message_id"] ?? null;
 
 // Utiliser des clés flexibles pour l'ID de l'auteur
-$authorId = $message["author_id"] ?? $message["userId"] ?? $message["user_id"] ?? $message["author"]["id"] ?? $message["author"]["_id"] ?? null;
+$authorId = $message["author"]["_id"] ?? $message["author"]["id"] ?? $message["author_id"] ?? $message["userId"] ?? $message["user_id"] ?? null;
 
 // DEBUG: Afficher les valeurs
 error_log("group-message.php: authorId = " . ($authorId ?? "null"));

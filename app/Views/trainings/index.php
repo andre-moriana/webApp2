@@ -327,7 +327,7 @@
                                                                         <small>Données de progrès</small>
                                                                     </span>
                                                                     <?php else: ?>
-                                                                    <a href="/trainings/<?php echo $session['id'] ?? ''; ?>" 
+                                                                    <a href="/trainings/<?php echo $session['id'] ?? ''; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
                                                                        class="btn btn-sm btn-outline-primary">
                                                                         <i class="fas fa-eye"></i> Voir
                                                                     </a>

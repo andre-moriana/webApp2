@@ -142,15 +142,6 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
                                 ?>
                                 <?php if (isset($chatMessages) && !empty($chatMessages)): ?>
                                     <?php foreach ($chatMessages as $message): 
-                                        // Utiliser des clés flexibles pour l ID de l auteur
-                                        $authorId = $message["author_id"] ?? $message["userId"] ?? $message["user_id"] ?? $message["author"]["id"] ?? $message["author"]["_id"] ?? null;
-                                        
-                                        // Vérifier les permissions de l utilisateur pour ce message
-                                        $canEdit = ($_SESSION["user"]["id"] === $authorId) || $_SESSION["user"]["is_admin"];
-                                        $canDelete = $_SESSION["user"]["is_admin"] || 
-                                                    ($_SESSION["user"]["id"] === $authorId && 
-                                                     (time() - strtotime($message["created_at"])) < 3600);
-                                        
                                         // Inclure le template de message
                                         include __DIR__ . "/../chat/group-message.php";
                                     endforeach; ?>

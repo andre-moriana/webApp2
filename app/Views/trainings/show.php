@@ -53,7 +53,7 @@
                             <?php if (count($categoryExercisesWithSessions) > 1): ?>
                             <div class="me-3">
                                 <?php if ($previousExercise): ?>
-                                <a href="/trainings/<?php echo $previousExercise['session_id'] ?? ''; ?>" 
+                                <a href="/trainings/<?php echo $previousExercise['session_id'] ?? ''; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
                                    class="btn btn-outline-primary btn-sm me-2">
                                     <i class="fas fa-chevron-left"></i> Exercice précédent
                                 </a>
@@ -64,7 +64,7 @@
                                 <?php endif; ?>
                                 
                                 <?php if ($nextExercise): ?>
-                                <a href="/trainings/<?php echo $nextExercise['session_id'] ?? ''; ?>" 
+                                <a href="/trainings/<?php echo $nextExercise['session_id'] ?? ''; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
                                    class="btn btn-outline-primary btn-sm">
                                     Exercice suivant <i class="fas fa-chevron-right"></i>
                                 </a>
@@ -245,7 +245,7 @@
                                 <?php if (count($sessions) > 1): ?>
                                 <div class="d-flex align-items-center">
                                     <?php if ($previousSession): ?>
-                                    <a href="/trainings/<?php echo $previousSession['id']; ?>" 
+                                    <a href="/trainings/<?php echo $previousSession['id']; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
                                        class="btn btn-outline-secondary btn-sm me-2">
                                         <i class="fas fa-chevron-left"></i> Session précédente
                                     </a>
@@ -256,7 +256,7 @@
                                     <?php endif; ?>
                                     
                                     <?php if ($nextSession): ?>
-                                    <a href="/trainings/<?php echo $nextSession['id']; ?>" 
+                                    <a href="/trainings/<?php echo $nextSession['id']; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
                                        class="btn btn-outline-secondary btn-sm">
                                         Session suivante <i class="fas fa-chevron-right"></i>
                                     </a>
