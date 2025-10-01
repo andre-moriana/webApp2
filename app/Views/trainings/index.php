@@ -203,11 +203,13 @@
                                                     <?php echo htmlspecialchars($exerciseData['exercise_title']); ?>
                                                 </h6>
                                                 <div class="btn-group" role="group">
+                                                    <?php if ($isAdmin || $isCoach): ?>
                                                     <button type="button" class="btn btn-outline-secondary btn-sm" 
                                                             onclick="updateExerciseStatus(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')"
                                                             title="Modifier le statut">
                                                         <i class="fas fa-edit me-1"></i>Statut
                                                     </button>
+                                                    <?php endif; ?>
                                                     <button type="button" class="btn btn-success btn-sm start-session-btn" 
                                                             onclick="startTrainingSession(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')">
                                                         <i class="fas fa-play me-1"></i>Commencer une session

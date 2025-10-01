@@ -303,6 +303,104 @@ function stopSessionTimer() {
     }
 }
 
+// Fonction pour ouvrir le modal de modification de statut
+function updateExerciseStatus(exerciseId, exerciseTitle) {
+    document.getElementById('statusExerciseId').value = exerciseId;
+    document.getElementById('statusModalLabel').textContent = 'Modifier le statut de : ' + exerciseTitle;
+    
+    // Charger le statut actuel de l'exercice
+    loadCurrentStatus(exerciseId);
+    
+    // Afficher le modal
+    const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+    modal.show();
+}
+
+// Fonction pour charger le statut actuel
+function loadCurrentStatus(exerciseId) {
+    // Ici vous pouvez faire un appel API pour récupérer le statut actuel
+    // Pour l'instant, on laisse vide
+    document.getElementById('statusSelect').value = '';
+    document.getElementById('statusNotes').value = '';
+}
+
+// Fonction pour sauvegarder le statut
+function saveExerciseStatus() {
+    const form = document.getElementById('statusForm');
+    const formData = new FormData(form);
+    
+    // Validation
+    if (!formData.get('status')) {
+        alert('Veuillez sélectionner un statut');
+        return;
+    }
+    
+    // Afficher un indicateur de chargement
+    const saveBtn = document.querySelector('#statusModal .btn-primary');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sauvegarde...';
+    saveBtn.disabled = true;
+    
+    // Envoyer la requête
+    fetch('/trainings/update-status', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Fermer le modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
+            modal.hide();
+            
+            // Afficher un message de succès
+            showAlert('Statut mis à jour avec succès', 'success');
+            
+            // Recharger la page pour voir les changements
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showAlert('Erreur lors de la mise à jour : ' + (data.message || 'Erreur inconnue'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        showAlert('Erreur lors de la sauvegarde', 'danger');
+    })
+    .finally(() => {
+        // Restaurer le bouton
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+// Fonction pour afficher des alertes
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insérer l'alerte en haut de la page
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Supprimer l'alerte après 5 secondes
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
 // Rendre les fonctions globales
 window.startTrainingSession = startTrainingSession;
-window.removeVolley = removeVolley; 
+window.removeVolley = removeVolley;
+window.updateExerciseStatus = updateExerciseStatus;
+window.saveExerciseStatus = saveExerciseStatus; 
