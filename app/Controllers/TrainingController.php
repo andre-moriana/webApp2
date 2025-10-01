@@ -372,10 +372,8 @@ class TrainingController {
             }
             $response = $this->apiService->makeRequest($endpoint, 'GET');
             
-            // Debug: Log de la réponse
-            error_log("DEBUG getSessionsForExercise - exerciseId: $exerciseId, userId: $userId");
-            error_log("DEBUG getSessionsForExercise - endpoint: $endpoint");
-            error_log("DEBUG getSessionsForExercise - response: " . json_encode($response));
+            // Debug: Log simplifié
+            error_log("DEBUG getSessionsForExercise - exerciseId: $exerciseId, userId: $userId, sessions: " . (isset($response['data']['data']) ? count($response['data']['data']) : 0));
             
             if ($response['success'] && !empty($response['data'])) {
                 // Vérifier si c'est le message de test
