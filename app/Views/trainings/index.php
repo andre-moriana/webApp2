@@ -280,6 +280,11 @@
                                                             <?php if (empty($exerciseData['sessions'])): ?>
                                                             <div class="text-center py-2">
                                                                 <small class="text-muted">Aucune séance trouvée</small>
+                                                                <br>
+                                                                <a href="/trainings/create?exercise_id=<?php echo $exerciseId; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '&user_id=' . $selectedUserId : ''; ?>" 
+                                                                   class="btn btn-sm btn-primary mt-2">
+                                                                    <i class="fas fa-plus"></i> Créer une séance
+                                                                </a>
                                                             </div>
                                                             <?php else: ?>
                                                             <?php foreach ($exerciseData['sessions'] as $session): ?>
@@ -335,6 +340,14 @@
                                                                 </div>
                                                             </div>
                                                             <?php endforeach; ?>
+                                                            
+                                                            <!-- Bouton pour créer une nouvelle séance même s'il y a déjà des séances -->
+                                                            <div class="text-center py-2 mt-2">
+                                                                <a href="/trainings/create?exercise_id=<?php echo $exerciseId; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '&user_id=' . $selectedUserId : ''; ?>" 
+                                                                   class="btn btn-sm btn-success">
+                                                                    <i class="fas fa-plus"></i> Nouvelle séance
+                                                                </a>
+                                                            </div>
                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
