@@ -1,0 +1,22 @@
+﻿            if (!isset($grouped[$category]['exercises'][$exerciseId])) {
+                $grouped[$category]['exercises'][$exerciseId] = [
+                    'exercise_title' => $exerciseTitle,
+                    'exercise_id' => $exerciseId,
+                    'description' => $exercise['description'] ?? '',
+                    'creator_name' => $exercise['creator_name'] ?? 'Inconnu',
+                    'created_at' => $exercise['created_at'] ?? '',
+                    'progression' => $exercise['progression'] ?? 'non_actif',
+                    'attachment_filename' => $exercise['attachment_filename'] ?? '',
+                    'attachment_original_name' => $exercise['attachment_original_name'] ?? '',
+                    'attachment_mime_type' => $exercise['attachment_mime_type'] ?? '',
+                    'attachment_size' => $exercise['attachment_size'] ?? 0,
+                    'sessions' => [],
+                    'stats' => [
+                        'total_sessions' => 0,
+                        'total_arrows' => 0,
+                        'total_time_minutes' => 0,
+                        'first_session' => null,
+                        'last_session' => null
+                    ]
+                ];
+            }

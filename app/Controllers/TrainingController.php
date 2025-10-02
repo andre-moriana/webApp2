@@ -21,6 +21,11 @@ class TrainingController {
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
         
+        error_log("=== DEBUG TrainingController::index ===");
+        error_log("Session user: " . json_encode($_SESSION['user']));
+        error_log("isAdmin: " . ($isAdmin ? "true" : "false"));
+        error_log("isCoach: " . ($isCoach ? "true" : "false"));
+        
         // Récupérer l'ID utilisateur depuis le token pour éviter l'incohérence
         $actualUserId = $this->getUserIdFromToken();
         if (!$actualUserId) {
@@ -36,6 +41,9 @@ class TrainingController {
                 $currentUser = $_SESSION['user'];
                 $isAdmin = $currentUser['is_admin'] ?? false;
                 $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+                error_log("Session user updated: " . json_encode($_SESSION['user']));
+                error_log("isAdmin (after update): " . ($isAdmin ? "true" : "false"));
+                error_log("isCoach (after update): " . ($isCoach ? "true" : "false"));
             }
         }
         
@@ -47,18 +55,20 @@ class TrainingController {
             $selectedUserId = (int)$_GET['user_id'];
         }
         
+        error_log("actualUserId: " . $actualUserId);
+        error_log("selectedUserId: " . $selectedUserId);
+        
         // Récupérer les informations de l'utilisateur sélectionné
         $selectedUser = $this->getUserInfo($selectedUserId);
+        
+        // Récupérer TOUS les exercices disponibles (y compris les masqués pour les admins/coachs)
+        $allExercises = $this->getAllExercisesForUser($isAdmin, $isCoach);
         
         // Récupérer les entraînements de l'utilisateur sélectionné
         $trainings = $this->getTrainings($selectedUserId);
         
-        // Grouper les entraînements par catégorie d'exercice
-        $groupedTrainings = $this->groupTrainingsByCategory($trainings, $selectedUserId, $selectedUser);
-        
-        // TODO: Filtrer les exercices masqués pour les archers
-        // Le filtrage doit se faire au niveau de la récupération des exercices
-        // et non au niveau du groupement des sessions
+        // Grouper les exercices par catégorie (pas seulement ceux qui ont des sessions)
+        $groupedTrainings = $this->groupAllExercisesByCategory($allExercises, $trainings, $selectedUserId, $selectedUser);
         
         // Récupérer la liste des utilisateurs pour les modals (seulement pour les coaches/admins)
         $users = [];
@@ -243,7 +253,7 @@ class TrainingController {
         
         // Passer les variables nécessaires à la vue
         $currentUser = $_SESSION['user'];
-        $selectedUserId = $actualUserId; // Ajouter $selectedUserId
+        //$selectedUserId = $actualUserId; // Ajouter $selectedUserId
         
         // Inclure le header
         include 'app/Views/layouts/header.php';
@@ -460,6 +470,14 @@ class TrainingController {
                 $grouped[$category]['exercises'][$exerciseId] = [
                     'exercise_title' => $exerciseTitle,
                     'exercise_id' => $exerciseId,
+                    'description' => $exercise['description'] ?? '',
+                    'creator_name' => $exercise['creator_name'] ?? 'Inconnu',
+                    'created_at' => $exercise['created_at'] ?? '',
+                    'progression' => $exercise['progression'] ?? 'non_actif',
+                    'attachment_filename' => $exercise['attachment_filename'] ?? '',
+                    'attachment_original_name' => $exercise['attachment_original_name'] ?? '',
+                    'attachment_mime_type' => $exercise['attachment_mime_type'] ?? '',
+                    'attachment_size' => $exercise['attachment_size'] ?? 0,
                     'sessions' => [],
                     'stats' => [
                         'total_sessions' => 0,
@@ -634,8 +652,20 @@ class TrainingController {
 
     private function getExercisesByCategory($category) {
         try {
-            // Récupérer tous les exercices
+            // Récupérer l'utilisateur connecté depuis la session
+            $loggedInUser = $_SESSION['user'];
+            $isAdmin = $loggedInUser['is_admin'] ?? false;
+            $isCoach = ($loggedInUser['role'] ?? '') === 'Coach';
+            
+            error_log("=== DEBUG getExercisesByCategory ===");
+            error_log("Catégorie: " . $category);
+            error_log("Utilisateur connecté: " . json_encode($loggedInUser));
+            error_log("isAdmin: " . ($isAdmin ? "true" : "false"));
+            error_log("isCoach: " . ($isCoach ? "true" : "false"));
+            
+            // Récupérer tous les exercices (pas de filtrage car admin/coach)
             $response = $this->apiService->getExercises();
+            error_log("Réponse API: " . json_encode($response));
             
             if ($response['success'] && !empty($response['data'])) {
                 // Extraire les données de la structure imbriquée
@@ -645,20 +675,29 @@ class TrainingController {
                     $exercises = $exercises['data'];
                 }
                 
+                error_log("Nombre d'exercices reçus: " . count($exercises));
+                
                 $categoryExercises = [];
-                $currentUser = $_SESSION['user'];
-                $isAdmin = $currentUser['is_admin'] ?? false;
-                $isCoach = ($currentUser['role'] ?? '') === 'Coach';
                 
                 foreach ($exercises as $exercise) {
+                    error_log("Traitement exercice: " . json_encode($exercise));
+                    
                     if (isset($exercise['category']) && $exercise['category'] === $category) {
-                        if (!($isAdmin || $isCoach) && ($exercise['progression'] ?? 'non_actif') === 'masqué') {
-                            continue;
+                        error_log("Exercice de la bonne catégorie");
+                        error_log("Progression: " . ($exercise['progression'] ?? 'non_actif'));
+                        
+                        // Pour les admins et coachs, afficher tous les exercices
+                        // Pour les autres, ne pas afficher les exercices masqués
+                        if ($isAdmin || $isCoach || ($exercise['progression'] ?? 'non_actif') !== 'masqué') {
+                            error_log("Exercice ajouté à la liste");
+                            $categoryExercises[] = $exercise;
+                        } else {
+                            error_log("Exercice masqué non ajouté");
                         }
-                        $categoryExercises[] = $exercise;
                     }
                 }
                 
+                error_log("Nombre d'exercices filtrés: " . count($categoryExercises));
                 return $categoryExercises;
             }
             return [];
@@ -670,8 +709,21 @@ class TrainingController {
 
     private function getVisibleExercisesByCategory($category, $userId) {
         try {
-            // Récupérer tous les exercices
+            // Récupérer l'utilisateur connecté depuis la session
+            $loggedInUser = $_SESSION['user'];
+            $isAdmin = $loggedInUser['is_admin'] ?? false;
+            $isCoach = ($loggedInUser['role'] ?? '') === 'Coach';
+            
+            error_log("=== DEBUG getVisibleExercisesByCategory ===");
+            error_log("Catégorie: " . $category);
+            error_log("userId: " . $userId);
+            error_log("Utilisateur connecté: " . json_encode($loggedInUser));
+            error_log("isAdmin: " . ($isAdmin ? "true" : "false"));
+            error_log("isCoach: " . ($isCoach ? "true" : "false"));
+            
+            // Récupérer tous les exercices (pas de filtrage car admin/coach)
             $response = $this->apiService->getExercises();
+            error_log("Réponse API: " . json_encode($response));
             
             if ($response['success'] && !empty($response['data'])) {
                 // Extraire les données de la structure imbriquée
@@ -682,22 +734,30 @@ class TrainingController {
                     $exercises = $exercises['data'];
                 }
                 
-                $visibleExercises = [];
-                $currentUser = $_SESSION['user'];
-                $isAdmin = $currentUser['is_admin'] ?? false;
-                $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+                error_log("Nombre d'exercices reçus: " . count($exercises));
                 
-                // Filtrer par catégorie et par statut (masquer les exercices "masqués" pour les archers)
+                $visibleExercises = [];
+                
+                // Filtrer par catégorie et par statut
                 foreach ($exercises as $exercise) {
+                    error_log("Traitement exercice: " . json_encode($exercise));
+                    
                     if (isset($exercise['category']) && $exercise['category'] === $category) {
-                        // Si l'utilisateur est archer et l'exercice est masqué, ne pas l'inclure
-                        if (!($isAdmin || $isCoach) && ($exercise['progression'] ?? 'non_actif') === 'masqué') {
-                            continue;
+                        error_log("Exercice de la bonne catégorie");
+                        error_log("Progression: " . ($exercise['progression'] ?? 'non_actif'));
+                        
+                        // Pour les admins et coachs, afficher tous les exercices
+                        // Pour les autres, ne pas afficher les exercices masqués
+                        if ($isAdmin || $isCoach || ($exercise['progression'] ?? 'non_actif') !== 'masqué') {
+                            error_log("Exercice ajouté à la liste");
+                            $visibleExercises[] = $exercise;
+                        } else {
+                            error_log("Exercice masqué non ajouté");
                         }
-                        $visibleExercises[] = $exercise;
                     }
                 }
                 
+                error_log("Nombre d'exercices filtrés: " . count($visibleExercises));
                 return $visibleExercises;
             }
             
@@ -955,10 +1015,15 @@ class TrainingController {
             $exerciseId = $_POST['exercise_id'] ?? null;
             $userId = $_POST['user_id'] ?? null;
             $status = $_POST['status'] ?? null;
-            $notes = $_POST['notes'] ?? '';
-
+            // Logs de débogage
+            error_log("=== DEBUG updateStatus ===");
+            error_log("POST data: " . json_encode($_POST));
+            error_log("exerciseId: " . $exerciseId);
+            error_log("userId: " . $userId);
+            error_log("status: " . $status);
             // Validation
             if (!$exerciseId || !$userId || !$status) {
+                error_log("Validation failed - missing parameters");
                 echo json_encode(['success' => false, 'message' => 'Paramètres manquants']);
                 return;
             }
@@ -979,15 +1044,17 @@ class TrainingController {
             $data = [
                 'exercise_sheet_id' => (int)$exerciseId,
                 'user_id' => (int)$userId,
-                'progression' => $status,
-                'notes' => $notes
+                'progression' => $status
             ];
 
             $response = $this->apiService->makeRequest($endpoint, 'POST', $data);
+            error_log("API Response: " . json_encode($response));
 
             if ($response['success']) {
+                error_log("Status update successful");
                 echo json_encode(['success' => true, 'message' => 'Statut mis à jour avec succès']);
             } else {
+                error_log("Status update failed: " . ($response['message'] ?? 'Unknown error'));
                 echo json_encode(['success' => false, 'message' => $response['message'] ?? 'Erreur lors de la mise à jour']);
             }
 
@@ -997,5 +1064,260 @@ class TrainingController {
         }
     }
 
+    /**
+     * Récupère tous les exercices disponibles pour l'utilisateur
+     * @param bool $isAdmin Si l'utilisateur est admin
+     * @param bool $isCoach Si l'utilisateur est coach
+     * @return array Liste des exercices
+     */
+    private function getAllExercisesForUser($isAdmin, $isCoach) {
+        try {
+            error_log("=== DEBUG getAllExercisesForUser ===");
+            error_log("isAdmin: " . ($isAdmin ? "true" : "false"));
+            error_log("isCoach: " . ($isCoach ? "true" : "false"));
+            
+            // Récupérer l'ID de l'utilisateur sélectionné
+            $selectedUserId = $_GET['user_id'] ?? null;
+            if (!$selectedUserId) {
+                $selectedUserId = $this->getUserIdFromToken();
+            }
+            
+            // Récupérer tous les exercices
+            $response = $this->apiService->getExercises();
+            error_log("Réponse API getExercises: " . json_encode($response));
+            
+            if ($response['success'] && !empty($response['data'])) {
+                // Extraire les données de la structure imbriquée
+                $exercises = $response['data'];
+                
+                if (isset($exercises['success']) && isset($exercises['data'])) {
+                    $exercises = $exercises['data'];
+                }
+                
+                error_log("Nombre d'exercices reçus: " . count($exercises));
+                
+                // Récupérer les statuts spécifiques à l'utilisateur
+                $userProgressResponse = $this->apiService->getTrainings($selectedUserId);
+                $userProgress = [];
+                
+                if ($userProgressResponse['success'] && !empty($userProgressResponse['data'])) {
+                    $progressData = $userProgressResponse['data'];
+                    if (isset($progressData['success']) && isset($progressData['data'])) {
+                        $progressData = $progressData['data'];
+                    }
+                    
+                    // Créer un tableau indexé par exercise_sheet_id
+                    foreach ($progressData as $progress) {
+                        $userProgress[$progress['exercise_sheet_id']] = $progress['progression'];
+                    }
+                }
+                
+                error_log("Statuts utilisateur: " . json_encode($userProgress));
+                
+                // Filtrer les exercices selon les permissions et appliquer les statuts utilisateur
+                $filteredExercises = [];
+                foreach ($exercises as $exercise) {
+                    error_log("Traitement exercice: " . json_encode($exercise));
+                    
+                    // Utiliser le statut spécifique à l'utilisateur s'il existe, sinon le statut global
+                    $exerciseProgression = $userProgress[$exercise['id']] ?? ($exercise['progression'] ?? 'non_actif');
+                    $exercise['progression'] = $exerciseProgression;
+                    
+                    error_log("Progression finale: " . $exerciseProgression);
+                    
+                    // Pour les admins et coachs, afficher tous les exercices
+                    // Pour les autres, ne pas afficher les exercices masqués
+                    if ($isAdmin || $isCoach || $exerciseProgression !== 'masqué') {
+                        error_log("Exercice ajouté à la liste");
+                        $filteredExercises[] = $exercise;
+                    } else {
+                        error_log("Exercice masqué non ajouté");
+                    }
+                }
+                
+                error_log("Nombre d'exercices filtrés: " . count($filteredExercises));
+                return $filteredExercises;
+            }
+            
+            return [];
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des exercices: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Groupe tous les exercices par catégorie, en incluant ceux sans sessions
+     * @param array $allExercises Tous les exercices disponibles
+     * @param array $trainings Sessions d'entraînement existantes
+     * @param int $selectedUserId ID de l'utilisateur sélectionné
+     * @param array $selectedUser Informations de l'utilisateur sélectionné
+     * @return array Exercices groupés par catégorie
+     */
+    private function groupAllExercisesByCategory($allExercises, $trainings, $selectedUserId, $selectedUser) {
+        $grouped = [];
+        
+        // Si $trainings est une réponse API, extraire les données
+        if (isset($trainings['data']) && is_array($trainings['data'])) {
+            $trainings = $trainings['data'];
+        }
+        
+        if (!is_array($trainings)) {
+            $trainings = [];
+        }
+        
+        // Créer un index des sessions par exercice pour un accès rapide
+        $sessionsByExercise = [];
+        foreach ($trainings as $training) {
+            if (!is_array($training)) {
+                continue;
+            }
+            
+            $exerciseId = $training['exercise_sheet_id'] ?? 'no_exercise';
+            if (!isset($sessionsByExercise[$exerciseId])) {
+                $sessionsByExercise[$exerciseId] = [];
+            }
+            $sessionsByExercise[$exerciseId][] = $training;
+        }
+        
+        // Grouper tous les exercices par catégorie
+        foreach ($allExercises as $exercise) {
+            if (!is_array($exercise)) {
+                continue;
+            }
+            
+            $category = $exercise['category'] ?? 'Sans catégorie';
+            $exerciseTitle = $exercise['title'] ?? 'Sans exercice';
+            $exerciseId = $exercise['id'] ?? $exercise['_id'] ?? 'no_exercise';
+            
+            if (!isset($grouped[$category])) {
+                $grouped[$category] = [
+                    'category_name' => $category,
+                    'exercises' => [],
+                    'total_sessions' => 0,
+                    'total_arrows' => 0,
+                    'total_time_minutes' => 0
+                ];
+            }
+            
+            if (!isset($grouped[$category]['exercises'][$exerciseId])) {
+                $grouped[$category]['exercises'][$exerciseId] = [
+                    'exercise_title' => $exerciseTitle,
+                    'exercise_id' => $exerciseId,
+                    'description' => $exercise['description'] ?? '',
+                    'creator_name' => $exercise['creator_name'] ?? 'Inconnu',
+                    'created_at' => $exercise['created_at'] ?? '',
+                    'progression' => $exercise['progression'] ?? 'non_actif',
+                    'attachment_filename' => $exercise['attachment_filename'] ?? '',
+                    'attachment_original_name' => $exercise['attachment_original_name'] ?? '',
+                    'attachment_mime_type' => $exercise['attachment_mime_type'] ?? '',
+                    'attachment_size' => $exercise['attachment_size'] ?? 0,                    'sessions' => [],
+                    'stats' => [
+                        'total_sessions' => 0,
+                        'total_arrows' => 0,
+                        'total_time_minutes' => 0,
+                        'first_session' => null,
+                        'last_session' => null
+                    ]
+                ];
+            }
+            
+            // Récupérer les sessions pour cet exercice
+            $exerciseSessions = $sessionsByExercise[$exerciseId] ?? [];
+            
+            if (!empty($exerciseSessions)) {
+                // Calculer les statistiques à partir des sessions
+                $totalSessions = 0;
+                $totalArrows = 0;
+                $totalTime = 0;
+                $lastSessionDate = null;
+                
+                foreach ($exerciseSessions as $session) {
+                    $totalSessions += $session['total_sessions'] ?? 0;
+                    $totalArrows += $session['total_arrows'] ?? 0;
+                    $totalTime += $session['total_duration_minutes'] ?? 0;
+                    
+                    $sessionDate = $session['last_session_date'] ?? $session['start_date'] ?? null;
+                    if ($sessionDate && (!$lastSessionDate || $sessionDate > $lastSessionDate)) {
+                        $lastSessionDate = $sessionDate;
+                    }
+                }
+                
+                // Mettre à jour les statistiques de l'exercice
+                $grouped[$category]['exercises'][$exerciseId]['stats']['total_sessions'] = $totalSessions;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['total_arrows'] = $totalArrows;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['total_time_minutes'] = $totalTime;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['last_session'] = $lastSessionDate;
+                
+                // Mettre à jour les totaux de la catégorie
+                $grouped[$category]['total_sessions'] += $totalSessions;
+                $grouped[$category]['total_arrows'] += $totalArrows;
+                $grouped[$category]['total_time_minutes'] += $totalTime;
+                
+                // Récupérer les vraies sessions pour cet exercice
+                $realSessions = $this->getSessionsForExercise($exerciseId, $selectedUserId);
+                
+                // Ajouter les vraies sessions si elles existent
+                if (!empty($realSessions)) {
+                    foreach ($realSessions as $session) {
+                        $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
+                            'id' => $session['id'],
+                            'start_date' => $session['start_date'] ?? $session['created_at'] ?? null,
+                            'created_at' => $session['created_at'] ?? null,
+                            'end_date' => $session['end_date'] ?? null,
+                            'arrows_shot' => $session['total_arrows'] ?? 0,
+                            'total_arrows' => $session['total_arrows'] ?? 0,
+                            'duration_minutes' => $session['duration_minutes'] ?? 0,
+                            'total_sessions' => 1,
+                            'score' => $session['score'] ?? 0,
+                            'is_aggregated' => false,
+                            'user_name' => $selectedUser['name'] ?? 'Utilisateur',
+                            'user_id' => $selectedUserId
+                        ];
+                    }
+                } else {
+                    // Si pas de vraies sessions, créer une session représentative avec les données de progrès
+                    if ($totalSessions > 0) {
+                        $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
+                            'id' => null,
+                            'start_date' => $exerciseSessions[0]['start_date'] ?? null,
+                            'created_at' => $exerciseSessions[0]['start_date'] ?? null,
+                            'end_date' => $lastSessionDate,
+                            'arrows_shot' => $totalArrows,
+                            'total_arrows' => $totalArrows,
+                            'duration_minutes' => $totalTime,
+                            'total_sessions' => $totalSessions,
+                            'score' => 0,
+                            'is_aggregated' => true,
+                            'is_progress_data' => true,
+                            'user_name' => $selectedUser['name'] ?? 'Utilisateur',
+                            'user_id' => $selectedUserId
+                        ];
+                    }
+                }
+            } else {
+                // Exercice sans sessions - afficher quand même pour les admins/coachs
+                $grouped[$category]['exercises'][$exerciseId]['stats'] = [
+                    'total_sessions' => 0,
+                    'total_arrows' => 0,
+                    'total_time_minutes' => 0,
+                    'first_session' => null,
+                    'last_session' => null
+                ];
+            }
+        }
+        
+        return $grouped;
+    }
+
 }
+
+
+
+
+
+
+
+
+
 

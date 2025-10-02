@@ -1,4 +1,15 @@
 ﻿<div class="container-fluid">
+    <!-- DEBUG - À supprimer après correction -->
+    <?php 
+    error_log("=== DEBUG show.php ===");
+    error_log("selectedUserId: " . ($selectedUserId ?? 'NON DÉFINI'));
+    error_log("actualUserId: " . ($actualUserId ?? 'NON DÉFINI'));
+    error_log("isAdmin: " . ($isAdmin ? 'true' : 'false'));
+    error_log("isCoach: " . ($isCoach ? 'true' : 'false'));
+    error_log("GET user_id: " . ($_GET['user_id'] ?? 'NON DÉFINI'));
+    error_log("Condition: " . (($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? 'TRUE' : 'FALSE'));
+    ?>
+    
     <div class="row">
         <div class="col-12">
             <!-- Messages d'erreur/succès -->
@@ -53,7 +64,7 @@
                             <?php if (count($categoryExercisesWithSessions) > 1): ?>
                             <div class="me-3">
                                 <?php if ($previousExercise): ?>
-                                <a href="/trainings/<?php echo $previousExercise['session_id'] ?? ''; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
+                                <a href="/trainings/<?php echo $previousExercise['session_id'] ?? ''; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) ? '?user_id=' . $selectedUserId : ''; ?>" 
                                    class="btn btn-outline-primary btn-sm me-2">
                                     <i class="fas fa-chevron-left"></i> Exercice précédent
                                 </a>
@@ -64,7 +75,7 @@
                                 <?php endif; ?>
                                 
                                 <?php if ($nextExercise): ?>
-                                <a href="/trainings/<?php echo $nextExercise['session_id'] ?? ''; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
+                                <a href="/trainings/<?php echo $nextExercise['session_id'] ?? ''; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) ? '?user_id=' . $selectedUserId : ''; ?>" 
                                    class="btn btn-outline-primary btn-sm">
                                     Exercice suivant <i class="fas fa-chevron-right"></i>
                                 </a>
@@ -95,146 +106,6 @@
 
             <div class="row">
                 <div class="col-12">
-                    <!-- Informations de l'exercice -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Exercice</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <p><strong>Nom :</strong> <?php echo htmlspecialchars($training['title'] ?? 'Non défini'); ?></p>
-                                    <p><strong>Catégorie :</strong> 
-                                        <span class="badge bg-primary"><?php echo htmlspecialchars($training['category'] ?? 'Non définie'); ?></span>
-                                    </p>
-                                    
-                                    <!-- Statut de l'exercice -->
-                                    <p><strong>Statut :</strong> 
-                                        <?php
-                                        $progression = $training['progression'] ?? 'non_actif';
-                                        $progressionClass = '';
-                                        $progressionText = '';
-                                        
-                                        switch($progression) {
-                                            case 'en_cours':
-                                                $progressionClass = 'bg-warning';
-                                                $progressionText = 'En cours';
-                                                break;
-                                            case 'acquis':
-                                                $progressionClass = 'bg-success';
-                                                $progressionText = 'Acquis';
-                                                break;
-                                            case 'masqué':
-                                                $progressionClass = 'bg-danger';
-                                                $progressionText = 'Masqué';
-                                                break;
-                                            default:
-                                                $progressionClass = 'bg-secondary';
-                                                $progressionText = 'Non actif';
-                                                break;
-                                        }
-                                        ?>
-                                        <span class="badge <?php echo $progressionClass; ?>"><?php echo $progressionText; ?></span>
-                                        
-                                        <!-- Bouton de modification du statut pour les coaches/admins -->
-                                        <?php if (($currentUser['role'] ?? '') === 'Coach' || ($currentUser['is_admin'] ?? false)): ?>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" 
-                                                data-bs-toggle="modal" data-bs-target="#editProgressionModal">
-                                            <i class="fas fa-edit"></i> Modifier
-                                        </button>
-                                        <?php endif; ?>
-                                    </p>
-                                    
-                                    <!-- Bouton pour commencer une session - Plus visible -->
-                                    <div class="alert alert-info mt-3">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <i class="fas fa-info-circle me-2"></i>
-                                                <strong>Prêt à s'entraîner ?</strong>
-                                                <br><small>Commencez une nouvelle session d'entraînement</small>
-                                            </div>
-                                            <button type="button" class="btn btn-success btn-lg" id="startSessionBtn">
-                                                <i class="fas fa-play me-2"></i>Commencer une session
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Description de l'exercice -->
-                                    <?php if (!empty($training['description'])): ?>
-                                    <div class="mt-3">
-                                        <strong>Description :</strong>
-                                        <p class="mt-1"><?php echo nl2br(htmlspecialchars($training['description'])); ?></p>
-                                    </div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="col-md-4">
-                                    <!-- Aperçu de la pièce jointe -->
-                                    <?php if (!empty($training['attachment_filename'])): ?>
-                                    <div class="text-center">
-                                        <strong>Pièce jointe :</strong>
-                                        <div class="mt-2">
-                                            <div class="d-flex flex-column align-items-center">
-                                                <div class="mb-2">
-                                                    <?php
-                                                    $mimeType = $training['attachment_mime_type'] ?? '';
-                                                    $fileExtension = strtolower(pathinfo($training['attachment_filename'], PATHINFO_EXTENSION));
-                                                    
-                                                    // Icône selon le type de fichier
-                                                    if (strpos($mimeType, 'pdf') !== false || $fileExtension === 'pdf') {
-                                                        echo '<i class="fas fa-file-pdf fa-3x text-danger"></i>';
-                                                    } elseif (strpos($mimeType, 'image') !== false || in_array($fileExtension, ['jpg', 'jpeg', 'png', 'gif', 'bmp'])) {
-                                                        echo '<i class="fas fa-file-image fa-3x text-primary"></i>';
-                                                    } elseif (strpos($mimeType, 'word') !== false || in_array($fileExtension, ['doc', 'docx'])) {
-                                                        echo '<i class="fas fa-file-word fa-3x text-primary"></i>';
-                                                    } elseif (strpos($mimeType, 'excel') !== false || in_array($fileExtension, ['xls', 'xlsx'])) {
-                                                        echo '<i class="fas fa-file-excel fa-3x text-success"></i>';
-                                                    } else {
-                                                        echo '<i class="fas fa-file fa-3x text-secondary"></i>';
-                                                    }
-                                                    ?>
-                                                </div>
-                                                <div class="text-center">
-                                                    <div class="small">
-                                                        <strong><?php echo htmlspecialchars($training['attachment_original_name'] ?? $training['attachment_filename']); ?></strong>
-                                                    </div>
-                                                    <div class="text-muted small">
-                                                        <?php if (!empty($training['attachment_size'])): ?>
-                                                            <?php echo number_format($training['attachment_size'] / 1024, 1); ?> KB
-                                                        <?php endif; ?>
-                                                        <?php if (!empty($mimeType)): ?>
-                                                            • <?php echo htmlspecialchars($mimeType); ?>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </div>
-                                                <div class="mt-2">
-                                                    <?php
-                                                    $backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
-                                                    $fileUrl = $backendUrl . '/uploads/exercise_sheets/' . $training['attachment_filename'];
-                                                    ?>
-                                                    <a href="<?php echo htmlspecialchars($fileUrl); ?>" 
-                                                       class="btn btn-outline-primary btn-sm" 
-                                                       target="_blank">
-                                                        <i class="fas fa-download me-1"></i>Télécharger
-                                                    </a>
-                                                </div>
-                                                
-                                                <!-- Aperçu pour les images -->
-                                                <?php if (strpos($mimeType, 'image') !== false || in_array($fileExtension, ['jpg', 'jpeg', 'png', 'gif', 'bmp'])): ?>
-                                                <div class="mt-2">
-                                                    <img src="<?php echo htmlspecialchars($fileUrl); ?>" 
-                                                         class="img-fluid rounded" 
-                                                         style="max-height: 150px; max-width: 100%;" 
-                                                         alt="Aperçu de l'image">
-                                                </div>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     
                     <!-- Informations de la session avec boutons de navigation -->
                     <div class="card">
@@ -245,7 +116,7 @@
                                 <?php if (count($sessions) > 1): ?>
                                 <div class="d-flex align-items-center">
                                     <?php if ($previousSession): ?>
-                                    <a href="/trainings/<?php echo $previousSession['id']; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
+                                    <a href="/trainings/<?php echo $previousSession['id']; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) ? '?user_id=' . $selectedUserId : ''; ?>" 
                                        class="btn btn-outline-secondary btn-sm me-2">
                                         <i class="fas fa-chevron-left"></i> Session précédente
                                     </a>
@@ -256,7 +127,7 @@
                                     <?php endif; ?>
                                     
                                     <?php if ($nextSession): ?>
-                                    <a href="/trainings/<?php echo $nextSession['id']; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
+                                    <a href="/trainings/<?php echo $nextSession['id']; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) ? '?user_id=' . $selectedUserId : ''; ?>" 
                                        class="btn btn-outline-secondary btn-sm">
                                         Session suivante <i class="fas fa-chevron-right"></i>
                                     </a>
@@ -386,48 +257,25 @@
                 <h5 class="modal-title" id="editProgressionModalLabel">Modifier le statut de l'exercice</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="/trainings/update-progression" method="POST">
-                <div class="modal-body">
-                    <!-- Champs cachés -->
-                    <input type="hidden" name="exercise_sheet_id" value="<?php echo $training['exercise_sheet_id']; ?>">
-                    <input type="hidden" name="session_id" value="<?php echo $training['id']; ?>">
-                    
-                    <!-- Sélection de l'utilisateur -->
-                    <div class="mb-3">
-                        <label for="userSelect" class="form-label">Archer</label>
-                        <select class="form-select" id="userSelect" name="user_id" required>
-                            <option value="">Sélectionner un archer...</option>
-                            <?php if (!empty($users)): ?>
-                            <?php foreach ($users as $user): ?>
-                            <option value="<?php echo $user['id']; ?>" <?php echo ($user['id'] == $training['user_id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars(($user['name'] ?? '') . ' ' . ($user['first_name'] ?? '')); ?>
-                            </option>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="progressionSelect" class="form-label">Statut de l'exercice</label>
-                        <select class="form-select" id="progressionSelect" name="progression" required>
-                            <option value="non_actif" <?php echo ($progression === 'non_actif') ? 'selected' : ''; ?>>Non actif</option>
-                            <option value="en_cours" <?php echo ($progression === 'en_cours') ? 'selected' : ''; ?>>En cours</option>
-                            <option value="acquis" <?php echo ($progression === 'acquis') ? 'selected' : ''; ?>>Acquis</option>
-                            <option value="masqué" <?php echo ($progression === 'masqué') ? 'selected' : ''; ?>>Masqué</option>
-                        </select>
-                        <div class="form-text">
-                            <strong>Masqué :</strong> L'exercice ne sera pas visible pour les archers.<br>
-                            <strong>Non actif :</strong> L'exercice est visible mais pas encore commencé.<br>
-                            <strong>En cours :</strong> L'exercice est en cours d'apprentissage.<br>
-                            <strong>Acquis :</strong> L'exercice est maîtrisé.
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Sauvegarder</button>
+            <form id="statusForm">
+                <input type="hidden" id="statusExerciseId" name="exercise_id">
+                <input type="hidden" id="statusUserId" name="user_id" value="<?php echo $selectedUserId ?? $actualUserId; ?>">
+                
+                <div class="mb-3">
+                    <label for="statusSelect" class="form-label">Statut de l'exercice :</label>
+                    <select class="form-select" id="statusSelect" name="status" required>
+                        <option value="">-- Sélectionner un statut --</option>
+                        <option value="non_actif">Non actif</option>
+                        <option value="en_cours">En cours</option>
+                        <option value="acquis">Acquis</option>
+                        <option value="masqué">Masqué</option>
+                    </select>
                 </div>
             </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="saveExerciseStatus()">Sauvegarder</button>
+            </div>
         </div>
     </div>
 </div>

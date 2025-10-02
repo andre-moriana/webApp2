@@ -303,17 +303,70 @@ function stopSessionTimer() {
     }
 }
 
+// Fonction pour ouvrir le modal de modification de statut depuis un bouton
+function updateExerciseStatusFromButton(button) {
+    console.log('Bouton cliqué:', button);
+    console.log('Attributs du bouton:', button.attributes);
+    
+    const exerciseId = button.getAttribute('data-exercise-id');
+    const exerciseTitle = button.getAttribute('data-exercise-title');
+    
+    console.log('ID récupéré:', exerciseId);
+    console.log('Titre récupéré:', exerciseTitle);
+    
+    if (!exerciseId || exerciseId === '') {
+        console.error('ID d\'exercice manquant ou vide');
+        console.log('Tous les attributs data:', {
+            'data-exercise-id': button.getAttribute('data-exercise-id'),
+            'data-exercise-title': button.getAttribute('data-exercise-title')
+        });
+        alert('Erreur: ID de l\'exercice manquant ou vide');
+        return;
+    }
+    
+    updateExerciseStatus(exerciseId, exerciseTitle);
+}
+
 // Fonction pour ouvrir le modal de modification de statut
 function updateExerciseStatus(exerciseId, exerciseTitle) {
-    document.getElementById('statusExerciseId').value = exerciseId;
-    document.getElementById('statusModalLabel').textContent = 'Modifier le statut de : ' + exerciseTitle;
+    console.log('updateExerciseStatus appelée avec:', exerciseId, exerciseTitle);
+    console.log('Type de exerciseId:', typeof exerciseId);
+    console.log('Valeur de exerciseId:', exerciseId);
+    
+    if (!exerciseId || exerciseId === '' || exerciseId === 'null') {
+        console.error('ID d\'exercice invalide:', exerciseId);
+        alert('Erreur: ID de l\'exercice invalide');
+        return;
+    }
+    
+    const exerciseIdField = document.getElementById('statusExerciseId');
+    console.log('Champ statusExerciseId trouvé:', exerciseIdField);
+    
+    if (!exerciseIdField) {
+        console.error('Champ statusExerciseId non trouvé');
+        alert('Erreur: Champ exercice non trouvé');
+        return;
+    }
+    
+    exerciseIdField.value = exerciseId;
+    console.log('Valeur définie pour statusExerciseId:', exerciseIdField.value);
+    
+    const modalLabel = document.getElementById('statusModalLabel');
+    if (modalLabel) {
+        modalLabel.textContent = 'Modifier le statut de : ' + exerciseTitle;
+    }
     
     // Charger le statut actuel de l'exercice
     loadCurrentStatus(exerciseId);
     
     // Afficher le modal
-    const modal = new bootstrap.Modal(document.getElementById('statusModal'));
-    modal.show();
+    const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
+    if (modal) {
+        modal.show();
+    } else {
+        const newModal = new bootstrap.Modal(document.getElementById('statusModal'));
+        newModal.show();
+    }
 }
 
 // Fonction pour charger le statut actuel
@@ -321,13 +374,24 @@ function loadCurrentStatus(exerciseId) {
     // Ici vous pouvez faire un appel API pour récupérer le statut actuel
     // Pour l'instant, on laisse vide
     document.getElementById('statusSelect').value = '';
-    document.getElementById('statusNotes').value = '';
 }
 
 // Fonction pour sauvegarder le statut
 function saveExerciseStatus() {
     const form = document.getElementById('statusForm');
+    if (!form) {
+        console.error('Formulaire statusForm non trouvé');
+        alert('Erreur: Formulaire non trouvé');
+        return;
+    }
+    
     const formData = new FormData(form);
+    
+    // Logs de débogage
+    console.log('Données du formulaire:');
+    for (let [key, value] of formData.entries()) {
+        console.log(key + ':', value);
+    }
     
     // Validation
     if (!formData.get('status')) {
@@ -335,8 +399,26 @@ function saveExerciseStatus() {
         return;
     }
     
-    // Afficher un indicateur de chargement
-    const saveBtn = document.querySelector('#statusModal .btn-primary');
+    if (!formData.get('exercise_id')) {
+        alert('Erreur: ID de l\'exercice manquant');
+        return;
+    }
+    
+    // Trouver le bouton de sauvegarde de plusieurs façons
+    let saveBtn = document.querySelector('#statusModal .btn-primary');
+    if (!saveBtn) {
+        saveBtn = document.querySelector('button[onclick="saveExerciseStatus()"]');
+    }
+    if (!saveBtn) {
+        saveBtn = document.querySelector('#statusModal button[type="button"]:last-child');
+    }
+    
+    if (!saveBtn) {
+        console.error('Bouton de sauvegarde non trouvé');
+        alert('Erreur: Bouton de sauvegarde non trouvé');
+        return;
+    }
+    
     const originalText = saveBtn.innerHTML;
     saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sauvegarde...';
     saveBtn.disabled = true;
@@ -349,12 +431,21 @@ function saveExerciseStatus() {
             'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        // Nettoyer la réponse avant de parser le JSON
+        return response.text().then(text => {
+            // Supprimer les caractères BOM et espaces en début/fin
+            const cleanText = text.trim().replace(/^\uFEFF/, '');
+            return JSON.parse(cleanText);
+        });
+    })
     .then(data => {
         if (data.success) {
             // Fermer le modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
-            modal.hide();
+            if (modal) {
+                modal.hide();
+            }
             
             // Afficher un message de succès
             showAlert('Statut mis à jour avec succès', 'success');
@@ -372,9 +463,11 @@ function saveExerciseStatus() {
         showAlert('Erreur lors de la sauvegarde', 'danger');
     })
     .finally(() => {
-        // Restaurer le bouton
-        saveBtn.innerHTML = originalText;
-        saveBtn.disabled = false;
+        // Restaurer le bouton seulement s'il existe
+        if (saveBtn) {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
     });
 }
 

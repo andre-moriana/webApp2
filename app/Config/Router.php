@@ -14,7 +14,7 @@ class Router {
     }
     
     private function defineRoutes() {
-        // Routes d"authentification
+        // Routes d'authentification
         $this->addRoute("GET", "/login", "AuthController@login");
         $this->addRoute("POST", "/auth/authenticate", "AuthController@authenticate");
         $this->addRoute("GET", "/logout", "AuthController@logout");
@@ -22,27 +22,6 @@ class Router {
         // Routes principales (protégées)
         $this->addRoute("GET", "/", "DashboardController@index");
         $this->addRoute("GET", "/dashboard", "DashboardController@index");
-        
-        // Routes des utilisateurs (protégées)
-        $this->addRoute("GET", "/users", "UserController@index");
-        $this->addRoute("GET", "/users/create", "UserController@create");
-        $this->addRoute("POST", "/users", "UserController@store");
-        $this->addRoute("GET", "/users/{id}", "UserController@show");
-        $this->addRoute("GET", "/users/{id}/edit", "UserController@edit");
-        $this->addRoute("PUT", "/users/{id}", "UserController@update");
-        $this->addRoute("POST", "/users/{id}/update", "UserController@update");
-        $this->addRoute("DELETE", "/users/{id}", "UserController@destroy");
-        $this->addRoute("POST", "/users/{id}/delete", "UserController@destroy");
-        
-        // Routes des groupes (protégées) - ORDRE IMPORTANT : plus spécifique en premier
-        $this->addRoute("GET", "/groups", "GroupController@index");           // Liste des groupes
-        $this->addRoute("GET", "/groups/create", "GroupController@create");
-        $this->addRoute("GET", "/groups/{id}/members", "GroupController@members");  // Plus spécifique - DOIT être avant
-        $this->addRoute("GET", "/groups/{id}/edit", "GroupController@edit");  // Plus spécifique - DOIT être avant
-        $this->addRoute("GET", "/groups/{id}", "GroupController@show");       // Plus générique - DOIT être après
-        $this->addRoute("POST", "/groups", "GroupController@store");
-        $this->addRoute("PUT", "/groups/{id}", "GroupController@update");
-        $this->addRoute("DELETE", "/groups/{id}", "GroupController@destroy");
         
         // Routes des exercices (protégées)
         $this->addRoute("GET", "/exercises", "ExerciseController@index");
@@ -61,15 +40,36 @@ class Router {
         $this->addRoute("POST", "/trainings/update-status", "TrainingController@updateStatus");
         $this->addRoute("GET", "/trainings/{id}", "TrainingController@show");
         $this->addRoute("GET", "/trainings/{id}/stats", "TrainingController@stats");
-
-        // Routes des événements (protégées) - ORDRE IMPORTANT : plus spécifique en premier
+        
+        // Routes des utilisateurs (protégées)
+        $this->addRoute("GET", "/users", "UserController@index");
+        $this->addRoute("GET", "/users/create", "UserController@create");
+        $this->addRoute("POST", "/users", "UserController@store");
+        $this->addRoute("GET", "/users/{id}", "UserController@show");
+        $this->addRoute("GET", "/users/{id}/edit", "UserController@edit");
+        $this->addRoute("PUT", "/users/{id}", "UserController@update");
+        $this->addRoute("POST", "/users/{id}/update", "UserController@update");
+        $this->addRoute("DELETE", "/users/{id}", "UserController@destroy");
+        $this->addRoute("POST", "/users/{id}/delete", "UserController@destroy");
+        
+        // Routes des groupes (protégées)
+        $this->addRoute("GET", "/groups", "GroupController@index");
+        $this->addRoute("GET", "/groups/create", "GroupController@create");
+        $this->addRoute("GET", "/groups/{id}/members", "GroupController@members");
+        $this->addRoute("GET", "/groups/{id}/edit", "GroupController@edit");
+        $this->addRoute("GET", "/groups/{id}", "GroupController@show");
+        $this->addRoute("POST", "/groups", "GroupController@store");
+        $this->addRoute("PUT", "/groups/{id}", "GroupController@update");
+        $this->addRoute("DELETE", "/groups/{id}", "GroupController@destroy");
+        
+        // Routes des événements (protégées)
         $this->addRoute("GET", "/events", "EventController@index");
         $this->addRoute("GET", "/events/create", "EventController@create");
         $this->addRoute("POST", "/events", "EventController@store");
-        $this->addRoute("GET", "/events/{id}/edit", "EventController@edit");  // Plus spécifique - DOIT être avant
-        $this->addRoute("POST", "/events/{id}/register", "EventController@register");  // Plus spécifique - DOIT être avant
-        $this->addRoute("POST", "/events/{id}/unregister", "EventController@unregister");  // Plus spécifique - DOIT être avant
-        $this->addRoute("GET", "/events/{id}", "EventController@show");       // Plus générique - DOIT être après
+        $this->addRoute("GET", "/events/{id}/edit", "EventController@edit");
+        $this->addRoute("POST", "/events/{id}/register", "EventController@register");
+        $this->addRoute("POST", "/events/{id}/unregister", "EventController@unregister");
+        $this->addRoute("GET", "/events/{id}", "EventController@show");
         $this->addRoute("PUT", "/events/{id}", "EventController@update");
         $this->addRoute("DELETE", "/events/{id}", "EventController@destroy");
         
@@ -84,12 +84,9 @@ class Router {
         $this->addRoute("GET", "/api/trainings", "ApiController@trainings");
         
         // Routes API pour les messages des groupes
-        // Route des pièces jointes en premier (plus spécifique)
         $this->addRoute("GET", "/api/messages/attachment/{id}", "ApiController@downloadMessageAttachment");
-        // Routes génériques ensuite
         $this->addRoute("GET", "/api/messages/{id}/history", "ApiController@getGroupMessages");
         $this->addRoute("POST", "/api/messages/{id}/send", "ApiController@sendGroupMessage");
-        // Nouvelles routes pour la modification et suppression des messages
         $this->addRoute("PUT", "/api/messages/{id}/update", "ApiController@updateMessage");
         $this->addRoute("DELETE", "/api/messages/{id}/delete", "ApiController@deleteMessage");
     }
@@ -99,15 +96,56 @@ class Router {
         $route = [
             "method" => $method,
             "path" => $path,
-            "handler" => $handler
+            "handler" => $handler,
+            // Calculer la spécificité de la route
+            "specificity" => $this->calculateRouteSpecificity($path)
         ];
         
-        // Si c"est une route avec des paramètres, l"ajouter en premier
-        if (strpos($path, "{") !== false) {
-            array_unshift($this->routes, $route);
-        } else {
-            array_unshift($this->routes, $route);
+        // Ajouter la route au tableau
+        $this->routes[] = $route;
+        
+        // Trier les routes par spécificité (plus spécifique en premier)
+        usort($this->routes, function($a, $b) {
+            return $b['specificity'] - $a['specificity'];
+        });
+        
+   //     error_log("Route ajoutée: " . $method . " " . $path . " -> " . $handler . " (spécificité: " . $route['specificity'] . ")");
+    }
+    
+    private function calculateRouteSpecificity($path) {
+        $specificity = 0;
+        
+        // Les routes avec paramètres sont beaucoup moins spécifiques
+        if (strpos($path, '{') !== false) {
+            $specificity -= 50;
         }
+        
+        // Plus il y a de segments, plus la route est spécifique
+        $segments = explode('/', trim($path, '/'));
+        $specificity += count($segments) * 10;
+        
+        // Les routes avec des segments fixes sont plus spécifiques
+        foreach ($segments as $segment) {
+            if (strpos($segment, '{') === false) {
+                $specificity += 5;
+            }
+        }
+        
+        // Les routes API sont plus spécifiques
+        if (strpos($path, '/api/') === 0) {
+            $specificity += 20;
+        }
+        
+        // Les routes avec des actions spécifiques sont plus spécifiques
+        if (strpos($path, '/create') !== false || 
+            strpos($path, '/edit') !== false ||
+            strpos($path, '/delete') !== false ||
+            strpos($path, '/update') !== false) {
+            $specificity += 15;
+        }
+        
+        error_log("Spécificité calculée pour " . $path . ": " . $specificity);
+        return $specificity;
     }
     
     public function run() {
@@ -129,37 +167,58 @@ class Router {
         // Supprimer le basePath de l'URI
         if ($this->basePath && strpos($requestUri, $this->basePath) === 0) {
             $requestUri = substr($requestUri, strlen($this->basePath));
-            error_log("URI après suppression du basePath: " . $requestUri);
-        }
-        
-        // Normaliser l'URI
-        $requestUri = rtrim($requestUri, "/");
-        if (empty($requestUri)) {
-            $requestUri = "/";
         }
         
         error_log("URI normalisée: " . $requestUri);
+        error_log("Nombre total de routes: " . count($this->routes));
+        error_log("Routes disponibles dans l'ordre de test:");
+        foreach ($this->routes as $index => $route) {
+            error_log(($index + 1) . ". " . $route["method"] . " " . $route["path"] . " -> " . $route["handler"]);
+        }
         
+        // Tester chaque route
         foreach ($this->routes as $route) {
+            if ($route["method"] !== $requestMethod) {
+                continue;
+            }
+            
             error_log("Test route: " . $route["method"] . " " . $route["path"]);
-            if ($route["method"] === $requestMethod) {
-                $pattern = $this->convertToRegex($route["path"]);
-                error_log("Pattern: " . $pattern);
-                error_log("Test regex: " . $pattern . " contre " . $requestUri);
-                if (preg_match($pattern, $requestUri, $matches)) {
-                    error_log("Route trouvée! Handler: " . $route["handler"]);
-                    error_log("Matches: " . print_r($matches, true));
-                    $this->executeHandler($route["handler"], $matches);
-                    return;
-                } else {
-                    error_log("Pas de match pour cette route");
-                }
+            
+            // Utiliser la méthode convertToRegex existante
+            $pattern = $this->convertToRegex($route["path"]);
+            
+            error_log("Pattern: " . $pattern);
+            error_log("Test regex: " . $pattern . " contre " . $requestUri);
+            
+            if (preg_match($pattern, $requestUri, $matches)) {
+                error_log("Route trouvée! Handler: " . $route["handler"]);
+                error_log("Matches: " . print_r($matches, true));
+                
+                // Extraire le contrôleur et la méthode
+                list($controller, $method) = explode("@", $route["handler"]);
+                
+                // Instancier le contrôleur
+                require_once "app/Controllers/" . $controller . ".php";
+                $controllerInstance = new $controller();
+                
+                // Appeler la méthode avec les paramètres capturés
+                array_shift($matches); // Retirer la correspondance complète
+                call_user_func_array([$controllerInstance, $method], $matches);
+                return;
+            } else {
+                error_log("Pas de match pour cette route");
             }
         }
         
+        // Si aucune route ne correspond
         error_log("Aucune route trouvée pour: " . $requestUri);
         error_log("Routes disponibles: " . print_r($this->routes, true));
-        $this->handle404();
+        
+        // Gérer l'erreur 404
+        header("HTTP/1.0 404 Not Found");
+        include "app/Views/layouts/header.php";
+        include "app/Views/errors/404.php";
+        include "app/Views/layouts/footer.php";
     }
     
     private function convertToRegex($path) {
@@ -221,5 +280,6 @@ class Router {
         echo "Page non trouvée";
     }
 }
+
 
 
