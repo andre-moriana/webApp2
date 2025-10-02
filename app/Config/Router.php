@@ -126,19 +126,19 @@ class Router {
         error_log("REQUEST_METHOD: " . $requestMethod);
         error_log("BASE_PATH: " . $this->basePath);
         
-        // Supprimer le basePath de l"URI
+        // Supprimer le basePath de l'URI
         if ($this->basePath && strpos($requestUri, $this->basePath) === 0) {
             $requestUri = substr($requestUri, strlen($this->basePath));
             error_log("URI après suppression du basePath: " . $requestUri);
         }
         
-        // Normaliser l"URI
+        // Normaliser l'URI
         $requestUri = rtrim($requestUri, "/");
         if (empty($requestUri)) {
             $requestUri = "/";
         }
         
-      //error_log("URI normalisée: " . $requestUri);
+        error_log("URI normalisée: " . $requestUri);
         
         foreach ($this->routes as $route) {
             error_log("Test route: " . $route["method"] . " " . $route["path"]);
@@ -157,8 +157,8 @@ class Router {
             }
         }
         
-        //error_log("Aucune route trouvée pour: " . $requestUri);
-        //error_log("Routes disponibles: " . print_r($this->routes, true));
+        error_log("Aucune route trouvée pour: " . $requestUri);
+        error_log("Routes disponibles: " . print_r($this->routes, true));
         $this->handle404();
     }
     

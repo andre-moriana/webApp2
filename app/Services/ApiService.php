@@ -1333,8 +1333,16 @@ class ApiService {
     }
     
     // Méthodes pour les exercices
-    public function getExercises() {
-        return $this->makeRequest('exercise_sheets', 'GET');
+    public function getExercises($showHidden = false) {
+        error_log("DEBUG ApiService::getExercises - showHidden=" . ($showHidden ? "true" : "false"));
+        $endpoint = 'exercise_sheets';
+        if ($showHidden) {
+            $endpoint .= '?show_hidden=1';
+        }
+        error_log("DEBUG ApiService::getExercises - endpoint=" . $endpoint);
+        $result = $this->makeRequest($endpoint, 'GET');
+        error_log("DEBUG ApiService::getExercises - result=" . json_encode($result));
+        return $result;
     }
     
     public function getExerciseDetails($id) {
