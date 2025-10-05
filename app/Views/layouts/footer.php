@@ -24,5 +24,15 @@
     
     <!-- JavaScript personnalisé -->
     <script src="/public/assets/js/app.js"></script>
+    
+    <!-- JavaScript spécifique à la page (si défini) -->
+    <?php if (isset($additionalJS)): ?>
+        <!-- DEBUG: additionalJS défini -->
+        <?php foreach ($additionalJS as $js): ?>
+            <script src="<?php echo $js; ?>"></script>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <!-- DEBUG: additionalJS non défini -->
+    <?php endif; ?>
 </body>
 </html>

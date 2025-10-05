@@ -19,11 +19,14 @@ class ApiService {
             }
         }
         
-        // Utiliser l'URL de l'API depuis la configuration .env
+        // Utiliser l'URL de l'API depuis la configuration .env ou une valeur par défaut
         if (!isset($_ENV["API_BASE_URL"])) {
-            throw new Exception("La variable API_BASE_URL n'est pas configurée dans le fichier .env");
+            // URL par défaut si pas de configuration .env
+            $this->baseUrl = "http://82.67.123.22:25000/api";
+            error_log("Avertissement: API_BASE_URL non configurée, utilisation de l'URL par défaut: " . $this->baseUrl);
+        } else {
+            $this->baseUrl = $_ENV["API_BASE_URL"];
         }
-        $this->baseUrl = $_ENV["API_BASE_URL"];
         error_log("URL de l'API configurée: " . $this->baseUrl);
         
         // Démarrer la session si elle n'est pas déjà démarrée
@@ -1551,6 +1554,180 @@ class ApiService {
         }
         
         return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
+     * Récupère les tirs comptés
+     * @param int|null $userId ID de l'utilisateur (optionnel)
+     * @param int|null $exerciseId ID de l'exercice (optionnel)
+     * @return array Réponse de l'API
+     */
+    public function getScoredTrainings($userId = null, $exerciseId = null) {
+        $endpoint = "/scored-training";
+        
+        $params = [];
+        if ($userId) {
+            $params[] = "user_id=" . $userId;
+        }
+        if ($exerciseId) {
+            $params[] = "exercise_id=" . $exerciseId;
+        }
+        
+        if (!empty($params)) {
+            $endpoint .= "?" . implode("&", $params);
+        }
+        
+        error_log('DEBUG ApiService::getScoredTrainings - endpoint: ' . $endpoint);
+        error_log('DEBUG ApiService::getScoredTrainings - userId: ' . $userId);
+        
+        $result = $this->makeRequest($endpoint, 'GET');
+        
+        error_log('DEBUG ApiService::getScoredTrainings - result: ' . json_encode($result));
+        
+        // Gérer la structure imbriquée de l'API
+        if (isset($result['success']) && $result['success'] && isset($result['data'])) {
+            $data = $result['data'];
+            
+            // Si les données sont encore imbriquées
+            if (is_array($data) && isset($data['success']) && $data['success'] && isset($data['data'])) {
+                error_log('DEBUG ApiService::getScoredTrainings - nested structure detected, unwrapping');
+                return [
+                    'success' => true,
+                    'data' => $data['data'],
+                    'status_code' => $result['status_code'] ?? 200,
+                    'message' => $result['message'] ?? 'Succès'
+                ];
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Récupère un tir compté par ID
+     * @param int $trainingId ID du tir compté
+     * @return array Réponse de l'API
+     */
+    public function getScoredTrainingById($trainingId) {
+        $endpoint = "/scored-training/" . $trainingId;
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
+     * Crée un nouveau tir compté
+     * @param array $data Données du tir compté
+     * @return array Réponse de l'API
+     */
+    public function createScoredTraining($data) {
+        $endpoint = "/scored-training";
+        error_log("DEBUG CREATE SCORED TRAINING: " . json_encode($data));
+        return $this->makeRequest($endpoint, 'POST', $data);
+    }
+
+    /**
+     * Finalise un tir compté
+     * @param int $trainingId ID du tir compté
+     * @param array $data Données de finalisation
+     * @return array Réponse de l'API
+     */
+    public function endScoredTraining($trainingId, $data) {
+        $endpoint = "/scored-training/" . $trainingId . "/end";
+        return $this->makeRequest($endpoint, 'POST', $data);
+    }
+
+    /**
+     * Ajoute une volée à un tir compté
+     * @param int $trainingId ID du tir compté
+     * @param array $endData Données de la volée
+     * @return array Réponse de l'API
+     */
+    public function addScoredEnd($trainingId, $endData) {
+        // Utiliser l'API externe comme toutes les autres pages
+        $endpoint = $this->apiUrl . "/scored-training?training_id=" . $trainingId . "&action=ends";
+        
+        // Récupérer le token depuis la session
+        $token = $_SESSION['token'] ?? '';
+        
+        if (empty($token)) {
+            return [
+                "success" => false,
+                "message" => "Token manquant",
+                "status_code" => 401
+            ];
+        }
+        
+        // Appel à l'API externe
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $endpoint);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($endData));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $token
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        
+        if ($error) {
+            return [
+                "success" => false,
+                "message" => "Erreur cURL: " . $error,
+                "status_code" => 0
+            ];
+        }
+        
+        $data = json_decode($response, true);
+        return [
+            "success" => $data['success'] ?? false,
+            "data" => $data,
+            "status_code" => $httpCode,
+            "message" => $data['message'] ?? 'Réponse reçue'
+        ];
+    }
+
+    /**
+     * Supprime un tir compté
+     * @param int $trainingId ID du tir compté
+     * @return array Réponse de l'API
+     */
+    public function deleteScoredTraining($trainingId) {
+        $endpoint = "/scored-training/" . $trainingId;
+        return $this->makeRequest($endpoint, 'DELETE');
+    }
+
+    /**
+     * Récupère les configurations des types de tir
+     * @return array Réponse de l'API
+     */
+    public function getScoredTrainingConfigurations() {
+        $endpoint = "/scored-training?action=configurations";
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
+     * Met à jour les notes d'un tir compté
+     * @param int $trainingId ID du tir compté
+     * @param string $note Note
+     * @return array Réponse de l'API
+     */
+    public function updateScoredTrainingNote($trainingId, $note) {
+        $endpoint = "/scored-training/" . $trainingId . "/note";
+        return $this->makeRequest($endpoint, 'PATCH', ['note' => $note]);
+    }
+
+    /**
+     * Supprime une volée d'un tir compté
+     * @param int $endId ID de la volée
+     * @return array Réponse de l'API
+     */
+    public function deleteScoredEnd($endId) {
+        $endpoint = "/scored-training/end/" . $endId;
+        return $this->makeRequest($endpoint, 'DELETE');
     }
 
     /**

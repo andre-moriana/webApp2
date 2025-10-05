@@ -58,6 +58,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/scored-trainings">
+                            <i class="fas fa-bullseye me-1"></i> Tirs comptés
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/exercises">
                             <i class="fas fa-clipboard-list me-1"></i> Exercices
                         </a>
