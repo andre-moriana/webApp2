@@ -295,22 +295,35 @@ $additionalJS = [
                                 <select class="form-select" id="target_category" name="target_category">
                                     <option value="">Sélectionner</option>
                                     <?php if ($scoredTraining['shooting_type'] === 'TAE'): ?>
-                                        <option value="122cm">122cm</option>
-                                        <option value="80cm">80cm</option>
+                                        <option value="blason_80">Blason 80cm</option>
+                                        <option value="blason_122">Blason 122cm</option>
                                     <?php elseif ($scoredTraining['shooting_type'] === 'Salle'): ?>
-                                        <option value="60cm">60cm</option>
-                                        <option value="40cm">40cm</option>
+                                        <option value="trispot">Trispot</option>
+                                        <option value="blason_40">Blason 40cm</option>
+                                        <option value="blason_60">Blason 60cm</option>
+                                        <option value="blason_80">Blason 80cm</option>
+                                        <option value="blason_122">Blason 122cm</option>
                                     <?php elseif ($scoredTraining['shooting_type'] === '3D'): ?>
-                                        <option value="3D">Cible 3D</option>
+                                        <option value="1">Categorie 1</option>
+                                        <option value="2">Categorie 2</option>
+                                        <option value="3">Categorie 3</option>
+                                        <option value="4">Categorie 4</option>
                                     <?php elseif ($scoredTraining['shooting_type'] === 'Nature'): ?>
-                                        <option value="Nature">Cible nature</option>
+                                        <option value="grands_gibiers">Grands gibiers</option>
+                                        <option value="moyens_gibiers">Moyens gibiers</option>
+                                        <option value="petits_gibiers">Petits gibiers</option>
+                                        <option value="petits_animaux">Petits animaux</option>
                                     <?php elseif ($scoredTraining['shooting_type'] === 'Campagne'): ?>
-                                        <option value="Campagne">Cible campagne</option>
+                                        <option value="birdie_20">Birdie 20cm</option>
+                                        <option value="gaziniere_40">Gazinière 40cm</option>
+                                        <option value="blason_60">Blason 60cm</option>
+                                        <option value="blason_80">Blason 80cm</option>
                                     <?php else: ?>
-                                        <option value="122cm">122cm</option>
-                                        <option value="80cm">80cm</option>
-                                        <option value="60cm">60cm</option>
-                                        <option value="40cm">40cm</option>
+                                        <option value="trispot">Trispot</option>
+                                        <option value="blason_40">Blason 40cm</option>
+                                        <option value="blason_60">Blason 60cm</option>
+                                        <option value="blason_80">Blason 80cm</option>
+                                        <option value="blason_122">Blason 122cm</option>
                                     <?php endif; ?>
                                 </select>
                             </div>
@@ -325,21 +338,23 @@ $additionalJS = [
                                 <select class="form-select" id="shooting_position" name="shooting_position">
                                     <option value="">Sélectionner</option>
                                     <?php if ($scoredTraining['shooting_type'] === '3D'): ?>
-                                        <option value="Debout">Debout</option>
-                                        <option value="Assis">Assis</option>
-                                        <option value="À genoux">À genoux</option>
+                                        <option value="montant">Montant</option>
+                                        <option value="descendant">Descendant</option>
+                                        <option value="droit">Droit</option>
+                                        <option value="pret_du_sol">Prêt du sol</option>
                                     <?php elseif ($scoredTraining['shooting_type'] === 'Nature'): ?>
-                                        <option value="Debout">Debout</option>
-                                        <option value="Assis">Assis</option>
-                                        <option value="À genoux">À genoux</option>
+                                        <option value="montant">Montant</option>
+                                        <option value="descendant">Descendant</option>
+                                        <option value="droit">Droit</option>
+                                        <option value="pret_du_sol">Prêt du sol</option>
                                     <?php elseif ($scoredTraining['shooting_type'] === 'Campagne'): ?>
-                                        <option value="Debout">Debout</option>
-                                        <option value="Assis">Assis</option>
-                                        <option value="À genoux">À genoux</option>
-                                    <?php else: ?>
-                                        <option value="Debout">Debout</option>
-                                        <option value="Assis">Assis</option>
-                                        <option value="À genoux">À genoux</option>
+                                        <option value="montant">Montant</option>
+                                        <option value="descendant">Descendant</option>
+                                        <option value="droit">Droit</option>
+                                        <option value="pret_du_sol">Prêt du sol</option>
+                                    <?php elseif ($scoredTraining['shooting_type'] === 'TAE'): ?>
+                                        <option value="FITA">FITA</option>
+                                        <option value="Federal">Fédéral</option>
                                     <?php endif; ?>
                                 </select>
                             </div>

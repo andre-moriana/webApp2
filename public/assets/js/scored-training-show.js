@@ -59,6 +59,30 @@ function openModal() {
     }
 }
 
+// Fonction pour obtenir les scores possibles selon le type de tir
+function getPossibleScores(shootingType, arrowNumber = 1) {
+    switch (shootingType) {
+        case 'TAE':
+        case 'Salle':
+            return [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+        case '3D':
+            return [11, 10, 8, 5, 0];
+        case 'Nature':
+            // Pour le tir Nature, les scores varient selon la flèche
+            if (arrowNumber === 1) {
+                return [20, 15, 0];
+            } else {
+                return [15, 10, 0];
+            }
+        case 'Campagne':
+            return [6, 5, 4, 3, 2, 1, 0];
+        case 'Libre':
+            return [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+        default:
+            return [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+    }
+}
+
 // Initialiser les champs de score
 function initializeScoreFields() {
     const container = document.getElementById('scoresContainer');
@@ -70,12 +94,23 @@ function initializeScoreFields() {
     
     container.innerHTML = '';
     
+    const shootingType = window.scoredTrainingData?.shooting_type || 'Libre';
+    
     for (let i = 1; i <= arrowsPerEnd; i++) {
         const col = document.createElement('div');
         col.className = 'col-md-2 mb-2';
+        
+        const possibleScores = getPossibleScores(shootingType, i);
+        const options = possibleScores.map(score => 
+            `<option value="${score}">${score}</option>`
+        ).join('');
+        
         col.innerHTML = `
             <label class="form-label">Flèche ${i}</label>
-            <input type="number" class="form-control" name="scores[]" min="0" max="10" required>
+            <select class="form-select" name="scores[]" required>
+                <option value="0">Sélectionner</option>
+                ${options}
+            </select>
         `;
         container.appendChild(col);
     }
@@ -84,10 +119,20 @@ function initializeScoreFields() {
 // Fonction pour ajouter une volée au tableau localement
 function addEndToTable(endData) {
     console.log('📊 Ajout de la volée au tableau:', endData);
+    console.log('📊 Structure des shots:', endData.shots);
+    console.log('📊 Détail des scores:', endData.shots.map(shot => ({ arrow: shot.arrow_number, score: shot.score })));
     
     // Calculer le total et la moyenne
     const totalScore = endData.shots.reduce((sum, shot) => sum + shot.score, 0);
     const average = endData.shots.length > 0 ? (totalScore / endData.shots.length).toFixed(1) : 0;
+    
+    console.log('📊 Calculs:', { totalScore, average, shotsCount: endData.shots.length });
+    
+    // Test de débogage pour voir si les scores sont corrects
+    console.log('🔍 Test de débogage - Scores individuels:');
+    endData.shots.forEach((shot, index) => {
+        console.log(`  Flèche ${shot.arrow_number}: ${shot.score} (type: ${typeof shot.score})`);
+    });
     
     // Vérifier si le tableau existe, sinon le créer
     let tbody = document.querySelector('.table-ends tbody');
@@ -261,12 +306,14 @@ function saveEnd() {
     const formData = new FormData(form);
     
     const scores = [];
-    const scoreInputs = form.querySelectorAll('input[name="scores[]"]');
+    const scoreInputs = form.querySelectorAll('select[name="scores[]"]');
     console.log('🔍 Nombre de champs de score trouvés:', scoreInputs.length);
-    scoreInputs.forEach((input, index) => {
-        const value = parseInt(input.value) || 0;
+    console.log('🔍 Détail des sélecteurs:', Array.from(scoreInputs).map(s => ({ value: s.value, options: Array.from(s.options).map(o => o.value) })));
+    
+    scoreInputs.forEach((select, index) => {
+        const value = parseInt(select.value) || 0;
         scores.push(value);
-        console.log(`📊 Score ${index + 1}:`, input.value, '→', value);
+        console.log(`📊 Score ${index + 1}:`, select.value, '→', value, '(sélecteur:', select, ')');
     });
     
     // Calculer le total des scores
@@ -296,6 +343,8 @@ function saveEnd() {
     
     console.log('📊 Données à envoyer:', endData);
     console.log('📊 trainingId:', trainingId);
+    console.log('📊 Scores bruts:', scores);
+    console.log('📊 Shots structure:', shots);
     
     // Afficher un indicateur de chargement
     const submitBtn = form.querySelector('button[onclick="saveEnd()"]');
@@ -322,9 +371,21 @@ function saveEnd() {
         console.log('📊 Résultat de la sauvegarde:', result);
         if (result.success) {
             console.log('✅ Volée sauvegardée avec succès, préparation pour la volée suivante...');
+            console.log('📊 Données retournées par le serveur:', result);
+            console.log('📊 Structure complète de la réponse:', JSON.stringify(result, null, 2));
             
-            // Ajouter la volée au tableau localement
-            addEndToTable(endData);
+            // Ajouter la volée au tableau localement en utilisant les données du serveur
+            if (result.data && result.data.end) {
+                console.log('📊 Utilisation des données du serveur:', result.data.end);
+                addEndToTable(result.data.end);
+            } else if (result.end) {
+                console.log('📊 Utilisation des données du serveur (structure alternative):', result.end);
+                addEndToTable(result.end);
+            } else {
+                console.log('📊 Utilisation des données locales (fallback):', endData);
+                // Fallback sur les données locales si le serveur ne retourne pas les données
+                addEndToTable(endData);
+            }
             
             // Mémoriser les valeurs dans les variables globales
             const targetCategorySelect = form.querySelector('select[name="target_category"]');
@@ -412,11 +473,11 @@ function saveEndAndClose() {
     const formData = new FormData(form);
     
     const scores = [];
-    const scoreInputs = form.querySelectorAll('input[name="scores[]"]');
+    const scoreInputs = form.querySelectorAll('select[name="scores[]"]');
     let hasValidScores = false;
     
-    scoreInputs.forEach(input => {
-        const value = parseInt(input.value) || 0;
+    scoreInputs.forEach(select => {
+        const value = parseInt(select.value) || 0;
         scores.push(value);
         if (value > 0) {
             hasValidScores = true;

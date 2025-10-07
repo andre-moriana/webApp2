@@ -167,8 +167,7 @@ class ScoredTrainingController {
         // Extraire les données du tir compté
         $scoredTraining = $apiResponse['data'];
         
-        // CORRECTION: Corriger les scores malformés de l'API externe
-        $scoredTraining = $this->fixScoredTrainingData($scoredTraining);
+        // Les données de l'API externe sont maintenant correctes
         
         // Ajouter l'ID du tir compté s'il n'est pas présent
         if (!isset($scoredTraining['id'])) {
@@ -782,55 +781,6 @@ class ScoredTrainingController {
         }
     }
     
-    /**
-     * Corrige les données malformées de l'API externe
-     * L'API externe a un bug qui fait que les scores affichent "2025" au lieu des vrais scores
-     */
-    private function fixScoredTrainingData($scoredTraining) {
-        if (!isset($scoredTraining['ends']) || !is_array($scoredTraining['ends'])) {
-            return $scoredTraining;
-        }
-        
-        foreach ($scoredTraining['ends'] as &$end) {
-            if (!isset($end['shots']) || !is_array($end['shots'])) {
-                continue;
-            }
-            
-            foreach ($end['shots'] as &$shot) {
-                // Si le score est "2025", c'est probablement l'ID de la volée
-                // Dans ce cas, on va utiliser l'arrow_number comme score temporaire
-                if (isset($shot['score']) && $shot['score'] == 2025) {
-                    // Pour l'instant, on va générer des scores aléatoires réalistes
-                    // ou utiliser l'arrow_number comme base
-                    if (isset($shot['arrow_number']) && is_numeric($shot['arrow_number'])) {
-                        // Générer un score réaliste basé sur l'arrow_number
-                        $arrowNumber = (int)$shot['arrow_number'];
-                        if ($arrowNumber >= 1 && $arrowNumber <= 10) {
-                            // Score réaliste pour le tir à l'arc (0-10)
-                            $shot['score'] = $arrowNumber;
-                        } else {
-                            // Score par défaut si l'arrow_number n'est pas dans la plage normale
-                            $shot['score'] = 5; // Score moyen
-                        }
-                    } else {
-                        $shot['score'] = 5; // Score par défaut
-                    }
-                }
-            }
-            
-            // Recalculer le total_score de la volée
-            if (isset($end['shots']) && is_array($end['shots'])) {
-                $totalScore = 0;
-                foreach ($end['shots'] as $shot) {
-                    if (isset($shot['score']) && is_numeric($shot['score'])) {
-                        $totalScore += (int)$shot['score'];
-                    }
-                }
-                $end['total_score'] = $totalScore;
-            }
-        }
-        
-        return $scoredTraining;
-    }
+    
 }
 ?>
