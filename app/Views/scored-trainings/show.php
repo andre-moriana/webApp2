@@ -7,6 +7,9 @@ $additionalCSS = ['/public/assets/css/scored-trainings.css'];
 $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
 ?>
 
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <!-- Données du tir compté pour JavaScript -->
 <script>
     window.scoredTrainingData = {
@@ -18,6 +21,9 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
         total_arrows: <?= $scoredTraining['total_arrows'] ?>,
         status: '<?= addslashes($scoredTraining['status']) ?>'
     };
+    
+    // Données des volées pour le graphique
+    window.endsData = <?= json_encode($scoredTraining['ends'] ?? []) ?>;
 </script>
 
 <div class="container-fluid">
@@ -112,7 +118,6 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
                                             <th>Total</th>
                                             <th>Moyenne</th>
                                             <th>Commentaire</th>
-                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -144,11 +149,6 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
                                                 <span class="text-muted">-</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteEnd(<?= $end['id'] ?>)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -164,6 +164,18 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
                             <?php endif; ?>
                         </div>
                     </div>
+                    
+                    <!-- Graphique des scores par volée -->
+                    <?php if (!empty($scoredTraining['ends'])): ?>
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Graphique des scores par volée</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="scoresChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="col-md-4">
@@ -465,25 +477,6 @@ function saveEnd() {
     });
 }
 
-function deleteEnd(endId) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette volée ?')) {
-        fetch(`/scored-trainings/end/${endId}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                location.reload();
-            } else {
-                alert('Erreur: ' + (result.message || 'Erreur inconnue'));
-            }
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-            alert('Erreur lors de la suppression');
-        });
-    }
-}
 
 function endTraining() {
     const modal = new bootstrap.Modal(document.getElementById('endTrainingModal'));
@@ -544,4 +537,111 @@ function deleteTraining() {
         });
     }
 }
+
+// Créer le graphique des scores par volée
+function createScoresChart() {
+    const ctx = document.getElementById('scoresChart');
+    if (!ctx || !window.endsData || window.endsData.length === 0) {
+        return;
+    }
+    
+    // Préparer les données
+    const labels = window.endsData.map(end => `Volée ${end.end_number}`);
+    const scores = window.endsData.map(end => end.total_score);
+    const averages = window.endsData.map(end => (end.total_score / end.shots.length).toFixed(1));
+    
+    // Calculer la moyenne générale
+    const overallAverage = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Score total par volée',
+                data: scores,
+                borderColor: '#14532d',
+                backgroundColor: 'rgba(20, 83, 45, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#14532d',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }, {
+                label: 'Moyenne générale',
+                data: new Array(scores.length).fill(overallAverage),
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                pointRadius: 0,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Évolution des scores par volée',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            if (context.datasetIndex === 0) {
+                                const endIndex = context.dataIndex;
+                                const average = averages[endIndex];
+                                return `Moyenne: ${average}`;
+                            }
+                            return '';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: Math.max(...scores) + 5,
+                    title: {
+                        display: true,
+                        text: 'Score total'
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Volées'
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+}
+
+// Initialiser le graphique quand la page est chargée
+document.addEventListener('DOMContentLoaded', function() {
+    createScoresChart();
+});
 </script>

@@ -1642,52 +1642,9 @@ class ApiService {
      * @return array Réponse de l'API
      */
     public function addScoredEnd($trainingId, $endData) {
-        // Utiliser l'API externe comme toutes les autres pages
-        $endpoint = $this->apiUrl . "/scored-training?training_id=" . $trainingId . "&action=ends";
-        
-        // Récupérer le token depuis la session
-        $token = $_SESSION['token'] ?? '';
-        
-        if (empty($token)) {
-            return [
-                "success" => false,
-                "message" => "Token manquant",
-                "status_code" => 401
-            ];
-        }
-        
-        // Appel à l'API externe
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $endpoint);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($endData));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $token
-        ]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
-        
-        if ($error) {
-            return [
-                "success" => false,
-                "message" => "Erreur cURL: " . $error,
-                "status_code" => 0
-            ];
-        }
-        
-        $data = json_decode($response, true);
-        return [
-            "success" => $data['success'] ?? false,
-            "data" => $data,
-            "status_code" => $httpCode,
-            "message" => $data['message'] ?? 'Réponse reçue'
-        ];
+        // Utiliser l'API locale comme toutes les autres pages
+        $endpoint = "/scored-training/" . $trainingId . "/ends";
+        return $this->makeRequest($endpoint, 'POST', $endData);
     }
 
     /**
