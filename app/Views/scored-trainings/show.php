@@ -288,6 +288,7 @@ $additionalJS = [
                                        value="<?= count($scoredTraining['ends']) + 1 ?>" min="1" required>
                             </div>
                         </div>
+                        <?php if ($scoredTraining['shooting_type'] !== 'Libre'): ?>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="target_category" class="form-label">Catégorie de cible</label>
@@ -314,17 +315,16 @@ $additionalJS = [
                                 </select>
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
                     <div class="row">
-                        <?php if ($scoredTraining['shooting_type'] !== 'Salle'): ?>
+                        <?php if ($scoredTraining['shooting_type'] !== 'Salle' && $scoredTraining['shooting_type'] !== 'TAE' && $scoredTraining['shooting_type'] !== 'Libre'): ?>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="shooting_position" class="form-label">Position de tir</label>
                                 <select class="form-select" id="shooting_position" name="shooting_position">
                                     <option value="">Sélectionner</option>
-                                    <?php if ($scoredTraining['shooting_type'] === 'TAE'): ?>
-                                        <option value="Debout">Debout</option>
-                                    <?php elseif ($scoredTraining['shooting_type'] === '3D'): ?>
+                                    <?php if ($scoredTraining['shooting_type'] === '3D'): ?>
                                         <option value="Debout">Debout</option>
                                         <option value="Assis">Assis</option>
                                         <option value="À genoux">À genoux</option>
