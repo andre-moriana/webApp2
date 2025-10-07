@@ -6,7 +6,7 @@
 // scored-training-show.js chargé
 
 // Variables globales
-let trainingId, arrowsPerEnd, currentEnds;
+let trainingId, arrowsPerEnd, currentEnds, totalEnds;
 
 // Variables pour mémoriser les valeurs du formulaire
 let savedTargetCategory = '';
@@ -21,41 +21,60 @@ function initializeTrainingData() {
     
     arrowsPerEnd = window.scoredTrainingData?.arrows_per_end || 3;
     currentEnds = window.endsData?.length || 0;
-    
-    console.log('📊 Initialisation des données:');
-    console.log('  - ID depuis URL:', idFromUrl, '→', trainingId);
-    console.log('  - ID depuis window.scoredTrainingData:', window.scoredTrainingData?.id);
-    console.log('  - arrowsPerEnd:', arrowsPerEnd);
-    console.log('  - currentEnds:', currentEnds);
+    totalEnds = window.scoredTrainingData?.total_ends || 0;
+ 
 }
 
 // Fonction pour ouvrir la modale
 function openModal() {
-    console.log('🎯 openModal() appelée');
     const modal = document.getElementById('addEndModal');
-    console.log('Modal trouvée:', modal);
     
     if (modal) {
         // Méthode 1: Bootstrap 5
         if (typeof bootstrap !== 'undefined') {
-            console.log('Utilisation de Bootstrap 5');
             const bsModal = new bootstrap.Modal(modal);
             bsModal.show();
         } else {
             // Méthode 2: jQuery si disponible
             if (typeof $ !== 'undefined') {
-                console.log('Utilisation de jQuery');
                 $(modal).modal('show');
             } else {
                 // Méthode 3: JavaScript pur
-                console.log('Utilisation de JavaScript pur');
                 modal.style.display = 'block';
                 modal.classList.add('show');
                 document.body.classList.add('modal-open');
             }
         }
+    }
+}
+
+// Fonction pour vérifier si le numéro de volée dépasse le maximum
+function isEndNumberExceedingMax(endNumber) {
+    return totalEnds > 0 && endNumber > totalEnds;
+}
+
+// Fonction pour gérer la visibilité des boutons selon le numéro de volée
+function updateButtonVisibility(endNumber) {
+    const continueButton = document.querySelector('button[onclick="saveEnd()"]');
+    const finishButton = document.querySelector('button[onclick="saveEndAndClose()"]');
+    
+    if (isEndNumberExceedingMax(endNumber)) {
+        // Masquer le bouton "Enregistrer et continuer" si on dépasse le maximum
+        if (continueButton) {
+            continueButton.style.display = 'none';
+        }
+        // S'assurer que le bouton "Terminer" est visible
+        if (finishButton) {
+            finishButton.style.display = 'inline-block';
+        }
     } else {
-        console.error('Modal non trouvée');
+        // Afficher les deux boutons si on est dans la limite
+        if (continueButton) {
+            continueButton.style.display = 'inline-block';
+        }
+        if (finishButton) {
+            finishButton.style.display = 'inline-block';
+        }
     }
 }
 
@@ -118,28 +137,15 @@ function initializeScoreFields() {
 
 // Fonction pour ajouter une volée au tableau localement
 function addEndToTable(endData) {
-    console.log('📊 Ajout de la volée au tableau:', endData);
-    console.log('📊 Structure des shots:', endData.shots);
-    console.log('📊 Détail des scores:', endData.shots.map(shot => ({ arrow: shot.arrow_number, score: shot.score })));
-    
     // Calculer le total et la moyenne
     const totalScore = endData.shots.reduce((sum, shot) => sum + shot.score, 0);
     const average = endData.shots.length > 0 ? (totalScore / endData.shots.length).toFixed(1) : 0;
     
-    console.log('📊 Calculs:', { totalScore, average, shotsCount: endData.shots.length });
-    
-    // Test de débogage pour voir si les scores sont corrects
-    console.log('🔍 Test de débogage - Scores individuels:');
-    endData.shots.forEach((shot, index) => {
-        console.log(`  Flèche ${shot.arrow_number}: ${shot.score} (type: ${typeof shot.score})`);
-    });
     
     // Vérifier si le tableau existe, sinon le créer
     let tbody = document.querySelector('.table-ends tbody');
-    console.log('🔍 Tableau trouvé:', tbody ? 'OUI' : 'NON');
     
     if (!tbody) {
-        console.log('🔧 Création du tableau...');
         // Remplacer le message "Aucune volée enregistrée" par le tableau
         const emptyState = document.querySelector('.empty-state');
         if (emptyState) {
@@ -188,9 +194,6 @@ function addEndToTable(endData) {
             </td>
         `;
         tbody.appendChild(row);
-        console.log('✅ Ligne ajoutée au tableau');
-    } else {
-        console.error('❌ Impossible de créer ou trouver le tableau');
     }
     
     // Mettre à jour les statistiques
@@ -217,8 +220,6 @@ function updateStats() {
     
     const average = totalArrows > 0 ? (totalScore / totalArrows).toFixed(1) : 0;
     
-    console.log('📊 Statistiques mises à jour:', { totalEnds, totalScore, totalArrows, average });
-    
     // Mettre à jour l'affichage des statistiques si les éléments existent
     const totalEndsElement = document.querySelector('.total-ends');
     const totalScoreElement = document.querySelector('.total-score');
@@ -226,15 +227,12 @@ function updateStats() {
     
     if (totalEndsElement) {
         totalEndsElement.textContent = totalEnds;
-        console.log('✅ Total volées mis à jour:', totalEnds);
     }
     if (totalScoreElement) {
         totalScoreElement.textContent = totalScore;
-        console.log('✅ Total score mis à jour:', totalScore);
     }
     if (averageElement) {
         averageElement.textContent = average;
-        console.log('✅ Moyenne mise à jour:', average);
     }
 }
 
@@ -276,6 +274,21 @@ function addEnd() {
             const existingRows = document.querySelectorAll('.table-ends tbody tr').length;
             endNumberInput.value = existingRows + 1;
         }
+        
+        // Mettre à jour la visibilité des boutons selon le numéro de volée
+        if (endNumberInput) {
+            const endNumber = parseInt(endNumberInput.value) || 1;
+            updateButtonVisibility(endNumber);
+        }
+    }
+    
+    // Ajouter un événement pour écouter les changements du numéro de volée
+    const endNumberInput = document.getElementById('end_number');
+    if (endNumberInput) {
+        endNumberInput.addEventListener('input', function() {
+            const endNumber = parseInt(this.value) || 1;
+            updateButtonVisibility(endNumber);
+        });
     }
     
     // Vérifier si Bootstrap est disponible
@@ -295,25 +308,19 @@ function addEnd() {
 }
 
 function saveEnd() {
-    console.log('🎯 saveEnd() appelée');
     const form = document.getElementById('addEndForm');
     if (!form) {
-        console.error('❌ Formulaire addEndForm non trouvé');
         return;
     }
-    console.log('✅ Formulaire trouvé');
     
     const formData = new FormData(form);
     
     const scores = [];
     const scoreInputs = form.querySelectorAll('select[name="scores[]"]');
-    console.log('🔍 Nombre de champs de score trouvés:', scoreInputs.length);
-    console.log('🔍 Détail des sélecteurs:', Array.from(scoreInputs).map(s => ({ value: s.value, options: Array.from(s.options).map(o => o.value) })));
     
     scoreInputs.forEach((select, index) => {
         const value = parseInt(select.value) || 0;
         scores.push(value);
-        console.log(`📊 Score ${index + 1}:`, select.value, '→', value, '(sélecteur:', select, ')');
     });
     
     // Calculer le total des scores
@@ -321,7 +328,6 @@ function saveEnd() {
     
     // Vérifier si des scores valides ont été saisis
     if (totalScore === 0) {
-        console.log('ℹ️ Aucun score saisi, veuillez remplir au moins un score');
         alert('Veuillez saisir au moins un score avant d\'enregistrer');
         return;
     }
@@ -340,12 +346,6 @@ function saveEnd() {
         shots: shots,  // Structure correcte avec arrow_number et score
         total_score: totalScore  // Ajouter le total calculé
     };
-    
-    console.log('📊 Données à envoyer:', endData);
-    console.log('📊 trainingId:', trainingId);
-    console.log('📊 Scores bruts:', scores);
-    console.log('📊 Shots structure:', shots);
-    
     // Afficher un indicateur de chargement
     const submitBtn = form.querySelector('button[onclick="saveEnd()"]');
     let originalText = '';
@@ -364,25 +364,18 @@ function saveEnd() {
         body: JSON.stringify(endData)
     })
     .then(response => {
-        console.log('📡 Réponse HTTP:', response.status, response.statusText);
         return response.json();
     })
     .then(result => {
         console.log('📊 Résultat de la sauvegarde:', result);
         if (result.success) {
-            console.log('✅ Volée sauvegardée avec succès, préparation pour la volée suivante...');
-            console.log('📊 Données retournées par le serveur:', result);
-            console.log('📊 Structure complète de la réponse:', JSON.stringify(result, null, 2));
             
             // Ajouter la volée au tableau localement en utilisant les données du serveur
             if (result.data && result.data.end) {
-                console.log('📊 Utilisation des données du serveur:', result.data.end);
                 addEndToTable(result.data.end);
             } else if (result.end) {
-                console.log('📊 Utilisation des données du serveur (structure alternative):', result.end);
                 addEndToTable(result.end);
             } else {
-                console.log('📊 Utilisation des données locales (fallback):', endData);
                 // Fallback sur les données locales si le serveur ne retourne pas les données
                 addEndToTable(endData);
             }
@@ -423,6 +416,9 @@ function saveEnd() {
             // Réinitialiser les champs de score
             initializeScoreFields();
             
+            // Mettre à jour la visibilité des boutons pour la prochaine volée
+            updateButtonVisibility(nextEndNumber);
+            
             // Afficher un message de succès
             if (submitBtn) {
                 const successText = submitBtn.innerHTML;
@@ -462,7 +458,6 @@ function saveEnd() {
 }
 
 function saveEndAndClose() {
-    console.log('🎯 saveEndAndClose() appelée');
     const form = document.getElementById('addEndForm');
     if (!form) {
         console.error('❌ Formulaire addEndForm non trouvé');
@@ -489,7 +484,6 @@ function saveEndAndClose() {
     
     // Si aucun score valide n'a été saisi, fermer la modal et ouvrir la finalisation
     if (!hasValidScores || totalScore === 0) {
-        console.log('ℹ️ Aucun score valide saisi (total:', totalScore, '), finalisation du tir');
         const modal = bootstrap.Modal.getInstance(document.getElementById('addEndModal'));
         if (modal) {
             modal.hide();
@@ -530,16 +524,12 @@ function saveEndAndClose() {
         return response.json();
     })
     .then(result => {
-        console.log('📊 Résultat de la sauvegarde:', result);
         if (result.success) {
-            console.log('✅ Volée sauvegardée avec succès, finalisation du tir...');
-            
             // Fermer la modale d'ajout de volée
             const addEndModal = bootstrap.Modal.getInstance(document.getElementById('addEndModal'));
             if (addEndModal) {
                 addEndModal.hide();
             }
-            
             // Ouvrir la modal de finalisation du tir
             setTimeout(() => {
                 endTraining();
@@ -557,26 +547,16 @@ function saveEndAndClose() {
 
 // Fonctions de gestion du tir compté
 function endTraining() {
-    console.log('🎯 endTraining() appelée');
-    console.log('📊 trainingId actuel:', trainingId);
-    console.log('📊 URL actuelle:', window.location.href);
-    
     // S'assurer que les données sont initialisées
     if (!trainingId || trainingId === 0) {
-        console.log('🔄 Réinitialisation des données...');
         initializeTrainingData();
     }
-    
-    console.log('📊 trainingId pour finalisation:', trainingId);
     
     const modal = new bootstrap.Modal(document.getElementById('endTrainingModal'));
     modal.show();
 }
 
 function confirmEndTraining() {
-    console.log('🎯 confirmEndTraining() appelée');
-    console.log('📊 trainingId actuel:', trainingId);
-    
     const form = document.getElementById('endTrainingForm');
     if (!form) {
         console.error('❌ Formulaire de finalisation non trouvé');
@@ -597,8 +577,6 @@ function confirmEndTraining() {
         notes: formData.get('final_notes') || ''
     };
     
-    console.log('📊 Données à envoyer:', data);
-    
     // Récupérer le user_id depuis l'URL si présent
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
@@ -606,8 +584,6 @@ function confirmEndTraining() {
     if (userId) {
         url += `?user_id=${userId}`;
     }
-    
-    console.log('📡 URL de finalisation:', url);
     
     fetch(url, {
         method: 'POST',
@@ -617,18 +593,10 @@ function confirmEndTraining() {
         body: JSON.stringify(data)
     })
     .then(response => {
-        console.log('📡 Réponse HTTP:', response.status, response.statusText);
         return response.json();
     })
     .then(result => {
-        console.log('📊 Résultat de la finalisation:', result);
-        console.log('📊 Type de résultat:', typeof result);
-        console.log('📊 Success:', result.success);
-        console.log('📊 Message:', result.message);
-        
         if (result.success) {
-            console.log('✅ Tir compté finalisé avec succès');
-            console.log('🔄 Rechargement de la page dans 3 secondes...');
             alert('Tir compté finalisé avec succès ! La page va se recharger.');
             setTimeout(() => {
                 location.reload();

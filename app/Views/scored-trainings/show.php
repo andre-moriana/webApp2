@@ -31,21 +31,8 @@ $additionalJS = [
     window.endsData = <?= json_encode($scoredTraining['ends'] ?? []) ?>;
     
     // Token d'authentification pour l'API
-    window.token = '<?= $_SESSION['token'] ?? '' ?>';
-    
-    // Test de la fonction saveEnd
-    setTimeout(() => {
-        console.log('🔍 Test de la fonction saveEnd:');
-        console.log('📊 typeof saveEnd:', typeof saveEnd);
-        console.log('📊 typeof window.saveEnd:', typeof window.saveEnd);
-        
-        if (typeof saveEnd === 'function') {
-            console.log('✅ Fonction saveEnd disponible');
-        } else {
-            console.error('❌ Fonction saveEnd non disponible');
-        }
-    }, 1000);
-    
+    //window.token = '<?= $_SESSION['token'] ?? '' ?>';
+   
 </script>
 
 <div class="container-fluid">
@@ -55,7 +42,7 @@ $additionalJS = [
                 <div>
                     <h1 class="h3 mb-0"><?= htmlspecialchars($scoredTraining['title']) ?></h1>
                     <p class="text-muted mb-0">
-                        <?= $scoredTraining['exercise_sheet_id'] ? 'Exercice associé' : 'Tir libre' ?>
+                        <?= $scoredTraining['exercise_sheet_id'] ? 'Exercice associé' : '' ?>
                         <?php if ($scoredTraining['shooting_type']): ?>
                         • <?= htmlspecialchars($scoredTraining['shooting_type']) ?>
                         <?php endif; ?>
