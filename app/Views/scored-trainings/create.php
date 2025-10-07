@@ -2,7 +2,15 @@
 // Variables disponibles depuis le contrôleur :
 // $exercises, $shootingConfigurations, $selectedUser, $isAdmin, $isCoach
 
-// Les fichiers CSS et JS sont définis dans le contrôleur
+// Inclure les fichiers CSS et JS spécifiques
+$additionalCSS = [
+    '/public/assets/css/scored-trainings.css',
+    '/public/assets/css/scored-training-create.css'
+];
+$additionalJS = [
+    '/public/assets/js/scored-trainings-simple.js?v=' . time(),
+    '/public/assets/js/scored-training-create.js?v=' . time()
+];
 ?>
 
 <div class="container-fluid">
@@ -10,40 +18,43 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">Nouveau tir compté</h1>
-                <a href="/scored-trainings" class="btn btn-outline-secondary">
+                <a href="/scored-trainings" class="btn btn-outline-secondary btn-back">
                     <i class="fas fa-arrow-left"></i> Retour
                 </a>
             </div>
 
             <div class="row justify-content-center">
                 <div class="col-md-8">
-                    <div class="card">
+                    <div class="card create-card">
                         <div class="card-header">
                             <h5 class="mb-0">Configuration du tir compté</h5>
                         </div>
                         <div class="card-body">
-                            <form id="createForm">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="title" class="form-label">Titre du tir compté *</label>
-                                            <input type="text" class="form-control" id="title" name="title" 
-                                                   placeholder="Ex: Entraînement TAE du 15/10/2024" required>
-                                            <div class="form-text">Donnez un nom descriptif à votre tir compté</div>
+                            <form id="createForm" class="create-form">
+                                <div class="form-section">
+                                    <h6>Informations générales</h6>
+                                    <div class="row field-group">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="title" class="form-label required-field">Titre du tir compté</label>
+                                                <input type="text" class="form-control" id="title" name="title" 
+                                                       placeholder="Ex: Entraînement TAE du 15/10/2024" required>
+                                                <div class="form-text">Donnez un nom descriptif à votre tir compté</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="exercise_sheet_id" class="form-label">Exercice associé</label>
-                                            <select class="form-select" id="exercise_sheet_id" name="exercise_sheet_id">
-                                                <option value="">Aucun exercice (tir libre)</option>
-                                                <?php foreach ($exercises as $exercise): ?>
-                                                <option value="<?= $exercise['id'] ?>">
-                                                    <?= htmlspecialchars($exercise['title']) ?>
-                                                </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                            <div class="form-text">Optionnel - associer à un exercice existant</div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="exercise_sheet_id" class="form-label">Exercice associé</label>
+                                                <select class="form-select" id="exercise_sheet_id" name="exercise_sheet_id">
+                                                    <option value="">Aucun exercice (tir libre)</option>
+                                                    <?php foreach ($exercises as $exercise): ?>
+                                                    <option value="<?= $exercise['id'] ?>">
+                                                        <?= htmlspecialchars($exercise['title']) ?>
+                                                    </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <div class="form-text">Optionnel - associer à un exercice existant</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -129,88 +140,3 @@
     </div>
 </div>
 
-<script>
-// Mise à jour de l'aperçu en temps réel
-function updatePreview() {
-    const totalEnds = parseInt(document.getElementById('total_ends').value) || 0;
-    const arrowsPerEnd = parseInt(document.getElementById('arrows_per_end').value) || 0;
-    const totalArrows = totalEnds * arrowsPerEnd;
-    const maxScore = totalArrows * 10;
-    
-    document.getElementById('preview_ends').textContent = totalEnds;
-    document.getElementById('preview_arrows').textContent = arrowsPerEnd;
-    document.getElementById('preview_total').textContent = totalArrows;
-    document.getElementById('preview_max').textContent = maxScore;
-}
-
-// Écouter les changements dans les champs
-document.getElementById('total_ends').addEventListener('input', updatePreview);
-document.getElementById('arrows_per_end').addEventListener('input', updatePreview);
-
-// Gestion de la soumission du formulaire
-document.getElementById('createForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    const data = {
-        title: formData.get('title'),
-        total_ends: parseInt(formData.get('total_ends')),
-        arrows_per_end: parseInt(formData.get('arrows_per_end')),
-        exercise_sheet_id: formData.get('exercise_sheet_id') || null,
-        notes: formData.get('notes'),
-        shooting_type: formData.get('shooting_type') || null
-    };
-    
-    // Validation
-    if (!data.title.trim()) {
-        alert('Le titre est requis');
-        return;
-    }
-    
-    if (data.total_ends < 1 || data.total_ends > 50) {
-        alert('Le nombre de volées doit être entre 1 et 50');
-        return;
-    }
-    
-    if (data.arrows_per_end < 1 || data.arrows_per_end > 12) {
-        alert('Le nombre de flèches par volée doit être entre 1 et 12');
-        return;
-    }
-    
-    // Désactiver le bouton de soumission
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
-    
-    // Envoyer la requête
-    fetch('/scored-trainings', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            // Rediriger vers la page de détail du tir compté créé
-            window.location.href = '/scored-trainings/' + result.data.id;
-        } else {
-            alert('Erreur: ' + (result.message || 'Erreur inconnue'));
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors de la création du tir compté');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    });
-});
-
-// Initialiser l'aperçu
-updatePreview();
-</script>

@@ -1,0 +1,244 @@
+/**
+ * CSS pour la page de création des tirs comptés
+ * Styles spécifiques au formulaire de création
+ */
+
+/* Styles pour le formulaire de création */
+.create-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-section {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.form-section h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #007bff;
+}
+
+/* Styles pour les champs de formulaire */
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+/* Styles pour l'aperçu en temps réel */
+.preview-card {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border: 2px dashed #007bff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.preview-title {
+    color: #007bff;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.preview-item {
+    text-align: center;
+    padding: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(0, 123, 255, 0.2);
+}
+
+.preview-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #007bff;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.preview-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Styles pour les boutons */
+.btn-create {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
+}
+
+.btn-create:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(40, 167, 69, 0.4);
+    color: white;
+}
+
+.btn-create:disabled {
+    background: #6c757d;
+    transform: none;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.btn-back {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.375rem;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+    color: white;
+}
+
+/* Styles pour les cartes */
+.create-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.create-card .card-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border: none;
+    padding: 1.5rem;
+}
+
+.create-card .card-header h5 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.create-card .card-body {
+    padding: 2rem;
+}
+
+/* Styles pour les alertes de validation */
+.validation-alert {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+/* Styles pour les champs obligatoires */
+.required-field::after {
+    content: " *";
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Styles pour les groupes de champs */
+.field-group {
+    margin-bottom: 1.5rem;
+}
+
+.field-group .row {
+    margin: 0;
+}
+
+.field-group .col-md-6 {
+    padding: 0 0.5rem;
+}
+
+/* Styles pour les sélecteurs */
+.form-select option {
+    padding: 0.5rem;
+}
+
+/* Styles pour les textarea */
+.form-control[rows] {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Styles pour les icônes */
+.btn i {
+    margin-right: 0.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .create-card .card-body {
+        padding: 1rem;
+    }
+    
+    .preview-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .preview-item {
+        padding: 0.5rem;
+    }
+    
+    .preview-value {
+        font-size: 1.25rem;
+    }
+    
+    .btn-create {
+        padding: 0.625rem 1.5rem;
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .preview-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .field-group .col-md-6 {
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+}

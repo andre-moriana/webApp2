@@ -8,8 +8,14 @@ if (!is_array($scoredTrainings)) {
 }
 
 // Inclure les fichiers CSS et JS spécifiques
-$additionalCSS = ['/public/assets/css/scored-trainings.css'];
-$additionalJS = ['/public/assets/js/scored-trainings.js?v=' . time() . '&debug=2'];
+$additionalCSS = [
+    '/public/assets/css/scored-trainings.css',
+    '/public/assets/css/scored-training-index.css'
+];
+$additionalJS = [
+    '/public/assets/js/scored-trainings.js?v=' . time() . '&debug=2',
+    '/public/assets/js/scored-training-index.js?v=' . time()
+];
 ?>
 
 <div class="container-fluid">
@@ -18,7 +24,7 @@ $additionalJS = ['/public/assets/js/scored-trainings.js?v=' . time() . '&debug=2
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">Tirs comptés</h1>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-primary" onclick="openCreateModal()">
+                    <button class="btn btn-primary-main" onclick="openCreateModal()">
                         <i class="fas fa-plus"></i> Nouveau tir compté
                     </button>
                     <?php if ($isAdmin || $isCoach): ?>
@@ -43,12 +49,12 @@ $additionalJS = ['/public/assets/js/scored-trainings.js?v=' . time() . '&debug=2
             <!-- Statistiques -->
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <div class="card bg-primary text-white">
+                    <div class="card bg-primary text-white stats-card">
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <h4 class="card-title"><?= $stats['total_trainings'] ?></h4>
-                                    <p class="card-text">Tirs comptés</p>
+                                    <h4 class="card-title stats-value"><?= $stats['total_trainings'] ?></h4>
+                                    <p class="card-text stats-label">Tirs comptés</p>
                                 </div>
                                 <div class="align-self-center">
                                     <i class="fas fa-bullseye fa-2x"></i>
@@ -332,176 +338,10 @@ $additionalJS = ['/public/assets/js/scored-trainings.js?v=' . time() . '&debug=2
     </div>
 </div>
 
+<!-- Données pour JavaScript -->
 <script>
-// Variables globales
-const scoredTrainings = <?= json_encode($scoredTrainings) ?>;
-const exercises = <?= json_encode($exercises) ?>;
-
-// Fonctions de filtrage
-function filterTrainings() {
-    const exerciseFilter = document.getElementById('exerciseFilter').value;
-    const shootingTypeFilter = document.getElementById('shootingTypeFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
-    
-    const rows = document.querySelectorAll('#scoredTrainingsTable tbody tr');
-    
-    rows.forEach(row => {
-        const exerciseId = row.dataset.exerciseId;
-        const shootingType = row.dataset.shootingType;
-        const status = row.dataset.status;
-        
-        let show = true;
-        
-        if (exerciseFilter && exerciseId !== exerciseFilter) {
-            show = false;
-        }
-        
-        if (shootingTypeFilter && shootingType !== shootingTypeFilter) {
-            show = false;
-        }
-        
-        if (statusFilter && status !== statusFilter) {
-            show = false;
-        }
-        
-        row.style.display = show ? '' : 'none';
-    });
-}
-
-// Fonctions de gestion des tirs comptés
-function openCreateModal() {
-    const modal = new bootstrap.Modal(document.getElementById('createModal'));
-    modal.show();
-}
-
-function createTraining() {
-    const form = document.getElementById('createForm');
-    const formData = new FormData(form);
-    
-    const data = {
-        title: formData.get('title'),
-        total_ends: parseInt(formData.get('total_ends')),
-        arrows_per_end: parseInt(formData.get('arrows_per_end')),
-        exercise_sheet_id: formData.get('exercise_sheet_id') || null,
-        notes: formData.get('notes'),
-        shooting_type: formData.get('shooting_type') || null
-    };
-    
-    fetch('/scored-trainings', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            location.reload();
-        } else {
-            alert('Erreur: ' + (result.message || 'Erreur inconnue'));
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors de la création du tir compté');
-    });
-}
-
-function continueTraining(trainingId) {
-    window.location.href = '/scored-trainings/' + trainingId;
-}
-
-function deleteTraining(trainingId) {
-    console.log('🗑️ Tentative de suppression du tir compté ID:', trainingId);
-    
-    // Vérifier si l'utilisateur est connecté
-    <?php if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true): ?>
-        alert('Vous devez être connecté pour effectuer cette action.\n\nVeuillez vous reconnecter.');
-        window.location.href = '/login';
-        return;
-    <?php endif; ?>
-    
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce tir compté ?')) {
-        console.log('✅ Confirmation reçue, envoi de la requête...');
-        
-        // Faire la requête vers le contrôleur frontend
-        fetch('/scored-trainings/delete/' + trainingId, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            console.log('📡 Réponse reçue:', response.status, response.statusText);
-            console.log('📡 Headers:', [...response.headers.entries()]);
-            
-            if (!response.ok) {
-                console.error('❌ Erreur HTTP:', response.status, response.statusText);
-                throw new Error('Erreur HTTP: ' + response.status + ' ' + response.statusText);
-            }
-            return response.text();
-        })
-        .then(text => {
-            console.log('📄 Réponse brute reçue:', text);
-            
-            // Nettoyer la réponse des caractères BOM et autres caractères invisibles
-            let cleanText = text.replace(/^\uFEFF/, '').replace(/^\s+/, '').replace(/\s+$/, '');
-            
-            // Supprimer les warnings PHP qui peuvent apparaître avant le JSON
-            cleanText = cleanText.replace(/^.*?(Warning:.*?\n)*/g, '');
-            
-            // Extraire seulement le JSON si il y a du contenu avant
-            const jsonMatch = cleanText.match(/\{.*\}/s);
-            if (jsonMatch) {
-                cleanText = jsonMatch[0];
-            }
-            
-            console.log('🧹 Texte nettoyé:', cleanText);
-            
-            try {
-                const result = JSON.parse(cleanText);
-                console.log('📊 JSON parsé:', result);
-                
-                if (result.success) {
-                    console.log('✅ Suppression réussie, rechargement de la page...');
-                    // Préserver les paramètres de l'URL lors du rechargement
-                    const currentUrl = new URL(window.location);
-                    window.location.href = currentUrl.toString();
-                } else {
-                    console.error('❌ Suppression échouée:', result.message);
-                    
-                    // Vérifier si c'est un problème d'authentification
-                    if (result.message && (
-                        result.message.includes('connecté') || 
-                        result.message.includes('Token') ||
-                        result.message.includes('authentification') ||
-                        result.status_code === 401
-                    )) {
-                        alert('Erreur d\'authentification: ' + result.message + '\n\nVeuillez vous reconnecter.');
-                        console.log('🔄 Redirection vers la page de connexion...');
-                        window.location.href = '/login';
-                    } else if (result.status_code === 400) {
-                        alert('Erreur de requête (400): ' + (result.message || 'Données invalides'));
-                    } else {
-                        alert('Erreur: ' + (result.message || 'Erreur inconnue'));
-                    }
-                }
-            } catch (parseError) {
-                console.error('❌ Erreur de parsing JSON:', parseError);
-                console.error('❌ Texte reçu:', cleanText);
-                console.error('❌ Longueur du texte:', cleanText.length);
-                console.error('❌ Premiers caractères:', cleanText.substring(0, 100));
-                alert('Erreur de décodage de la réponse du serveur:\n' + parseError.message + '\n\nTexte reçu: ' + cleanText.substring(0, 200));
-            }
-        })
-        .catch(error => {
-            console.error('❌ Erreur dans la requête:', error);
-            alert('Erreur lors de la suppression: ' + error.message);
-        });
-    } else {
-        console.log('❌ Suppression annulée par l\'utilisateur');
-    }
-}
+    // Passer les données PHP au JavaScript
+    window.scoredTrainingsData = <?= json_encode($scoredTrainings) ?>;
+    window.exercisesData = <?= json_encode($exercises) ?>;
+    window.isLoggedIn = <?= isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true ? 'true' : 'false' ?>;
 </script>

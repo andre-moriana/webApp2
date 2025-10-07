@@ -548,7 +548,15 @@ function viewTraining(trainingId) {
     const id = parseInt(trainingId);
     
     if (id && id > 0) {
-        const url = '/scored-trainings/' + id;
+        // Récupérer l'user_id sélectionné depuis l'URL actuelle
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedUserId = urlParams.get('user_id');
+        
+        let url = '/scored-trainings/' + id;
+        if (selectedUserId) {
+            url += '?user_id=' + selectedUserId;
+        }
+        
         console.log('👁️ Redirection vers:', url);
         window.location.href = url;
     } else {

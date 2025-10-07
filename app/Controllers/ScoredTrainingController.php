@@ -152,19 +152,15 @@ class ScoredTrainingController {
         error_log('DEBUG show() - actualUserId: ' . $actualUserId);
         error_log('DEBUG show() - selectedUserId: ' . $selectedUserId);
         
-        // Récupérer les détails du tir compté
-        $apiResponse = $this->getScoredTrainingById($id);
+        // Récupérer les détails du tir compté via l'API externe avec le user_id sélectionné
+        $apiResponse = $this->getScoredTrainingByIdWithUserId($id, $selectedUserId);
         
         // Debug: afficher la réponse API
         error_log('DEBUG show() - API Response: ' . var_export($apiResponse, true));
         
-        // Debug: afficher le token utilisé
-        $token = $_SESSION['token'] ?? 'NULL';
-        error_log('DEBUG show() - Token utilisé: ' . substr($token, 0, 20) . '...');
-        
         if (!$apiResponse || !$apiResponse['success'] || empty($apiResponse['data'])) {
-            error_log('DEBUG show() - Tir compté non trouvé pour ID: ' . $id);
-            header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé'));
+            error_log('DEBUG show() - Tir compté non trouvé pour ID: ' . $id . ' et user_id: ' . $selectedUserId);
+            header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé pour cet utilisateur'));
             exit;
         }
         
@@ -185,14 +181,8 @@ class ScoredTrainingController {
         // Debug: afficher les IDs pour comparaison
         $scoredTrainingUserId = $scoredTraining['user_id'] ?? null;
         error_log('DEBUG show() - scoredTraining user_id: ' . ($scoredTrainingUserId ?? 'NULL'));
-        error_log('DEBUG show() - Comparaison: ' . $scoredTrainingUserId . ' != ' . $selectedUserId . ' = ' . ($scoredTrainingUserId != $selectedUserId ? 'true' : 'false'));
-        
-        // Vérifier que le tir compté appartient à l'utilisateur sélectionné
-        if ($scoredTrainingUserId != $selectedUserId) {
-            error_log('DEBUG show() - Accès refusé: user_id du tir (' . $scoredTrainingUserId . ') != selectedUserId (' . $selectedUserId . ')');
-            header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé pour cet utilisateur'));
-            exit;
-        }
+        error_log('DEBUG show() - selectedUserId: ' . $selectedUserId);
+        error_log('DEBUG show() - actualUserId: ' . $actualUserId);
         
         // Vérifier les permissions
         if (!$isAdmin && !$isCoach && $scoredTraining['user_id'] != $actualUserId) {
@@ -329,20 +319,86 @@ class ScoredTrainingController {
         
         $trainingId = $data['training_id'] ?? '';
         $notes = $data['notes'] ?? '';
-        $shootingType = $data['shooting_type'] ?? null;
         
         if (empty($trainingId)) {
             $this->sendJsonResponse(['success' => false, 'message' => 'ID du tir compté requis']);
         }
         
+        // Récupérer l'utilisateur connecté
+        $currentUser = $_SESSION['user'] ?? null;
+        if (!$currentUser) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Non connecté']);
+        }
+        
+        $actualUserId = $currentUser['id'] ?? null;
+        if (!$actualUserId) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Utilisateur non identifié']);
+        }
+        
+        // Vérifier les permissions (comme dans show())
+        $isAdmin = $currentUser['is_admin'] ?? false;
+        $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        
+        // Récupérer l'ID de l'utilisateur sélectionné (par défaut l'utilisateur connecté)
+        $selectedUserId = $actualUserId;
+        
+        // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
+        if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+            $selectedUserId = (int)$_GET['user_id'];
+        }
+        
+        error_log('DEBUG endTraining() - trainingId: ' . $trainingId);
+        error_log('DEBUG endTraining() - $_GET[user_id]: ' . ($_GET['user_id'] ?? 'NON DÉFINI'));
+        error_log('DEBUG endTraining() - actualUserId: ' . $actualUserId);
+        error_log('DEBUG endTraining() - isAdmin: ' . ($isAdmin ? 'OUI' : 'NON'));
+        error_log('DEBUG endTraining() - isCoach: ' . ($isCoach ? 'OUI' : 'NON'));
+        error_log('DEBUG endTraining() - selectedUserId: ' . $selectedUserId);
+        error_log('DEBUG endTraining() - notes: ' . $notes);
+        
+        if (!$selectedUserId) {
+            error_log('DEBUG endTraining() - selectedUserId non trouvé');
+            $this->sendJsonResponse(['success' => false, 'message' => 'Utilisateur non identifié']);
+        }
+        
         try {
-            // Appeler l'API backend
-            $response = $this->apiService->endScoredTraining((int)$trainingId, [
-                'notes' => $notes,
-                'shooting_type' => $shootingType
-            ]);
+            // Appeler l'API backend avec le selectedUserId en paramètre URL
+            error_log('DEBUG endTraining() - Appel API avec trainingId: ' . $trainingId . ', selectedUserId: ' . $selectedUserId);
             
-            $this->sendJsonResponse($response);
+            // Construire l'URL avec le user_id en paramètre
+            $url = "http://82.67.123.22:25000/api/scored-training/" . $trainingId . "/end?user_id=" . $selectedUserId;
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            
+            $token = $_SESSION['token'] ?? '';
+            error_log('DEBUG endTraining() - Token: ' . ($token ? 'PRÉSENT' : 'ABSENT'));
+            error_log('DEBUG endTraining() - Token length: ' . strlen($token));
+            
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $token,
+                'Content-Type: application/json'
+            ]);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                'notes' => $notes
+            ]));
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            error_log('DEBUG endTraining() - URL: ' . $url);
+            error_log('DEBUG endTraining() - HTTP Code: ' . $httpCode);
+            error_log('DEBUG endTraining() - Response: ' . substr($response, 0, 500));
+            
+            if ($httpCode === 200) {
+                $data = json_decode($response, true);
+                $this->sendJsonResponse($data);
+            } else {
+                error_log('Erreur API externe - Code: ' . $httpCode . ', Response: ' . substr($response, 0, 500));
+                $this->sendJsonResponse(['success' => false, 'message' => 'Erreur API externe']);
+            }
             
         } catch (Exception $e) {
             error_log('Erreur lors de la finalisation du tir compté: ' . $e->getMessage());
@@ -370,6 +426,10 @@ class ScoredTrainingController {
         // Récupérer les données JSON
         $input = file_get_contents('php://input');
         $endData = json_decode($input, true);
+        
+        error_log('DEBUG addEnd() - Input brut: ' . $input);
+        error_log('DEBUG addEnd() - endData décodé: ' . json_encode($endData));
+        error_log('DEBUG addEnd() - trainingId: ' . $trainingId);
         
         if (empty($trainingId) || empty($endData)) {
             error_log('DEBUG addEnd() - Données manquantes - trainingId: ' . $trainingId . ', endData: ' . json_encode($endData));
@@ -444,6 +504,36 @@ class ScoredTrainingController {
             return null;
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération du tir compté: ' . $e->getMessage());
+            return null;
+        }
+    }
+    
+    private function getScoredTrainingByIdWithUserId($trainingId, $selectedUserId) {
+        try {
+            // Utiliser l'API externe avec le user_id sélectionné
+            $url = "http://82.67.123.22:25000/api/scored-training/" . $trainingId . "?user_id=" . $selectedUserId;
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . ($_SESSION['token'] ?? ''),
+                'Content-Type: application/json'
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+           if ($httpCode === 200) {
+                $data = json_decode($response, true);
+                return $data;
+            }
+            
+            error_log('Erreur API externe - Code: ' . $httpCode . ', Response: ' . substr($response, 0, 500));
+            return null;
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération du tir compté via API externe: ' . $e->getMessage());
             return null;
         }
     }
@@ -592,42 +682,75 @@ class ScoredTrainingController {
     }
     
     public function delete($id) {
-        error_log('DEBUG delete() - Méthode appelée avec ID: ' . $id);
-        error_log('DEBUG delete() - REQUEST_METHOD: ' . $_SERVER['REQUEST_METHOD']);
-        error_log('DEBUG delete() - Utilisateur session: ' . json_encode($_SESSION['user'] ?? 'non défini'));
-        
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            error_log('DEBUG delete() - Utilisateur non connecté');
             $this->sendJsonResponse(['success' => false, 'message' => 'Vous devez être connecté pour effectuer cette action']);
         }
         
         if (!isset($_SESSION['token']) || empty($_SESSION['token'])) {
-            error_log('DEBUG delete() - Token manquant dans la session');
-            $this->sendJsonResponse(['success' => false, 'message' => 'Token d\'authentification manquant. Veuillez vous reconnecter.']);
+             $this->sendJsonResponse(['success' => false, 'message' => 'Token d\'authentification manquant. Veuillez vous reconnecter.']);
         }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'DELETE') {
-            error_log('DEBUG delete() - Méthode non autorisée: ' . $_SERVER['REQUEST_METHOD']);
             $this->sendJsonResponse(['success' => false, 'message' => 'Méthode non autorisée']);
         }
         
         if (empty($id)) {
-            error_log('DEBUG delete() - ID vide');
             $this->sendJsonResponse(['success' => false, 'message' => 'ID du tir compté requis']);
         }
         
+        // Récupérer l'utilisateur connecté
+        $currentUser = $_SESSION['user'] ?? null;
+        if (!$currentUser) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Non connecté']);
+        }
+        
+        $actualUserId = $currentUser['id'] ?? null;
+        if (!$actualUserId) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Utilisateur non identifié']);
+        }
+        
+        // Vérifier les permissions (comme dans show() et endTraining())
+        $isAdmin = $currentUser['is_admin'] ?? false;
+        $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        
+        // Récupérer l'ID de l'utilisateur sélectionné (par défaut l'utilisateur connecté)
+        $selectedUserId = $actualUserId;
+        
+        // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
+        if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+            $selectedUserId = (int)$_GET['user_id'];
+        }
+       
         try {
-            error_log('DEBUG delete() - Appel API pour supprimer ID: ' . $id);
-            $response = $this->apiService->deleteScoredTraining((int)$id);
-            error_log('DEBUG delete() - Réponse API: ' . json_encode($response));
+           
+            // Ne pas passer user_id - l'API backend doit utiliser l'utilisateur connecté pour vérifier les permissions
+            $url = "http://82.67.123.22:25000/api/scored-training/" . $id;
             
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+            
+            $token = $_SESSION['token'] ?? '';
+            $currentUser = $_SESSION['user'] ?? null;
+            
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $token,
+                'Content-Type: application/json'
+            ]);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($httpCode === 200) {
+                $response = json_decode($response, true);
+            } else {
+                $response = ['success' => false, 'message' => 'Erreur API externe'];
+            }
             // S'assurer que la réponse est un tableau
             if (!is_array($response)) {
-                error_log('DEBUG delete() - Réponse API invalide (pas un tableau): ' . gettype($response));
                 $response = ['success' => false, 'message' => 'Réponse API invalide'];
             }
-            
-            // S'assurer que les clés requises existent
+             // S'assurer que les clés requises existent
             if (!isset($response['success'])) {
                 $response['success'] = false;
             }
@@ -638,9 +761,6 @@ class ScoredTrainingController {
             $this->sendJsonResponse($response);
             
         } catch (Exception $e) {
-            error_log('Erreur lors de la suppression du tir compté: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
-            
             $this->sendJsonResponse([
                 'success' => false, 
                 'message' => 'Erreur serveur: ' . $e->getMessage()
@@ -658,8 +778,7 @@ class ScoredTrainingController {
             $decoded = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], explode('.', $token)[1])), true);
             return $decoded['user_id'] ?? null;
         } catch (Exception $e) {
-            error_log('Erreur lors du décodage du token: ' . $e->getMessage());
-            return null;
+           return null;
         }
     }
     

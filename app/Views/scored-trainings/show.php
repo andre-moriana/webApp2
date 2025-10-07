@@ -3,8 +3,13 @@
 // $scoredTraining, $selectedUser, $isAdmin, $isCoach
 
 // Inclure les fichiers CSS et JS spécifiques
-$additionalCSS = ['/public/assets/css/scored-trainings.css'];
-$additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
+$additionalCSS = [
+    '/public/assets/css/scored-trainings.css',
+    '/public/assets/css/scored-training-show.css'
+];
+$additionalJS = [
+    '/public/assets/js/scored-training-show.js?v=' . time()
+];
 ?>
 
 <!-- Chart.js CDN -->
@@ -24,6 +29,23 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
     
     // Données des volées pour le graphique
     window.endsData = <?= json_encode($scoredTraining['ends'] ?? []) ?>;
+    
+    // Token d'authentification pour l'API
+    window.token = '<?= $_SESSION['token'] ?? '' ?>';
+    
+    // Test de la fonction saveEnd
+    setTimeout(() => {
+        console.log('🔍 Test de la fonction saveEnd:');
+        console.log('📊 typeof saveEnd:', typeof saveEnd);
+        console.log('📊 typeof window.saveEnd:', typeof window.saveEnd);
+        
+        if (typeof saveEnd === 'function') {
+            console.log('✅ Fonction saveEnd disponible');
+        } else {
+            console.error('❌ Fonction saveEnd non disponible');
+        }
+    }, 1000);
+    
 </script>
 
 <div class="container-fluid">
@@ -40,15 +62,15 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
                     </p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="/scored-trainings" class="btn btn-outline-secondary">
+                    <a href="/scored-trainings" class="btn btn-outline-secondary nav-button">
                         <i class="fas fa-arrow-left"></i> Retour
                     </a>
                     <?php if ($scoredTraining['status'] === 'en_cours'): ?>
-                    <button class="btn btn-success" onclick="openAddEndModal()">
+                    <button class="btn btn-success btn-action" onclick="addEnd()">
                         <i class="fas fa-plus"></i> Ajouter une volée
                     </button>
                     <?php endif; ?>
-                    <button class="btn btn-danger" onclick="deleteTraining()">
+                    <button class="btn btn-danger btn-action" onclick="deleteTraining()">
                         <i class="fas fa-trash"></i> Supprimer
                     </button>
                 </div>
@@ -57,23 +79,23 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
             <!-- Informations générales -->
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <div class="card">
+                    <div class="card stats-card">
                         <div class="card-body text-center">
-                            <h5 class="card-title text-primary"><?= $scoredTraining['total_score'] ?? 0 ?></h5>
+                            <h5 class="card-title text-primary total-score"><?= $scoredTraining['total_score'] ?? 0 ?></h5>
                             <p class="card-text">Score total</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card">
+                    <div class="card stats-card">
                         <div class="card-body text-center">
-                            <h5 class="card-title text-success"><?= $scoredTraining['average_score'] ?? 0 ?></h5>
+                            <h5 class="card-title text-success average-score"><?= $scoredTraining['average_score'] ?? 0 ?></h5>
                             <p class="card-text">Score moyen</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card">
+                    <div class="card stats-card">
                         <div class="card-body text-center">
                             <h5 class="card-title text-info"><?= $scoredTraining['total_arrows'] ?? 0 ?></h5>
                             <p class="card-text">Flèches tirées</p>
@@ -81,7 +103,7 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card">
+                    <div class="card stats-card">
                         <div class="card-body text-center">
                             <h5 class="card-title text-warning"><?= $scoredTraining['total_ends'] ?? 0 ?></h5>
                             <p class="card-text">Volées</p>
@@ -93,58 +115,60 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
             <!-- Détails du tir compté -->
             <div class="row">
                 <div class="col-md-8">
-                    <div class="card">
+                    <div class="card detail-card">
                         <div class="card-header">
                             <h5 class="mb-0">Détails des volées</h5>
                         </div>
                         <div class="card-body">
                             <?php if (empty($scoredTraining['ends'])): ?>
-                            <div class="text-center text-muted py-4">
+                            <div class="empty-state">
                                 <i class="fas fa-bullseye fa-3x mb-3"></i>
                                 <p>Aucune volée enregistrée</p>
                                 <?php if ($scoredTraining['status'] === 'en_cours'): ?>
-                                <button class="btn btn-primary" onclick="addEnd()">
+                                <button class="btn btn-primary btn-action" onclick="addEnd()">
                                     <i class="fas fa-plus"></i> Ajouter une volée
                                 </button>
                                 <?php endif; ?>
                             </div>
                             <?php else: ?>
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Volée</th>
-                                            <th>Scores</th>
-                                            <th>Total</th>
-                                            <th>Moyenne</th>
-                                            <th>Commentaire</th>
-                                        </tr>
-                                    </thead>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-ends">
+                            <thead>
+                                <tr>
+                                    <th>Volée</th>
+                                    <th>Scores</th>
+                                    <th>Total</th>
+                                    <th>Moyenne</th>
+                                    <th>Commentaire</th>
+                                </tr>
+                            </thead>
                                     <tbody>
                                         <?php foreach ($scoredTraining['ends'] as $end): ?>
                                         <tr>
                                             <td>
-                                                <strong>Volée <?= $end['end_number'] ?></strong>
-                                                <br><small class="text-muted">
-                                                    <?= date('d/m/Y H:i', strtotime($end['created_at'])) ?>
-                                                </small>
+                                                <div class="end-info">
+                                                    <div class="end-number">Volée <?= $end['end_number'] ?></div>
+                                                    <div class="end-date">
+                                                        <?= date('d/m/Y H:i', strtotime($end['created_at'])) ?>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
                                                     <?php foreach ($end['shots'] as $shot): ?>
-                                                    <span class="badge bg-primary"><?= $shot['score'] ?></span>
+                                                    <span class="badge bg-primary score-badge"><?= $shot['score'] ?></span>
                                                     <?php endforeach; ?>
                                                 </div>
                                             </td>
                                             <td>
-                                                <strong><?= $end['total_score'] ?></strong>
+                                                <strong class="total-score"><?= $end['total_score'] ?></strong>
                                             </td>
                                             <td>
-                                                <?= number_format($end['total_score'] / count($end['shots']), 1) ?>
+                                                <span class="average-score"><?= count($end['shots']) > 0 ? number_format($end['total_score'] / count($end['shots']), 1) : '0.0' ?></span>
                                             </td>
                                             <td>
                                                 <?php if ($end['comment']): ?>
-                                                <small class="text-muted"><?= htmlspecialchars($end['comment']) ?></small>
+                                                <small class="comment-text"><?= htmlspecialchars($end['comment']) ?></small>
                                                 <?php else: ?>
                                                 <span class="text-muted">-</span>
                                                 <?php endif; ?>
@@ -156,7 +180,7 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
                             </div>
                             <?php if ($scoredTraining['status'] === 'en_cours'): ?>
                             <div class="text-center mt-3">
-                                <button class="btn btn-primary" onclick="addEnd()">
+                                <button class="btn btn-primary btn-action" onclick="addEnd()">
                                     <i class="fas fa-plus"></i> Ajouter une volée
                                 </button>
                             </div>
@@ -165,21 +189,23 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
                         </div>
                     </div>
                     
-                    <!-- Graphique des scores par volée -->
-                    <?php if (!empty($scoredTraining['ends'])): ?>
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">Graphique des scores par volée</h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="scoresChart" width="400" height="200"></canvas>
-                        </div>
+            <!-- Graphique des scores par volée -->
+            <?php if (!empty($scoredTraining['ends'])): ?>
+            <div class="card mt-4 detail-card">
+                <div class="card-header">
+                    <h5 class="mb-0 chart-title">Graphique des scores par volée</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="scoresChart" width="400" height="200"></canvas>
                     </div>
-                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
                 </div>
 
                 <div class="col-md-4">
-                    <div class="card">
+                    <div class="card detail-card">
                         <div class="card-header">
                             <h5 class="mb-0">Informations</h5>
                         </div>
@@ -188,9 +214,9 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
                                 <dt class="col-sm-4">Statut:</dt>
                                 <dd class="col-sm-8">
                                     <?php if ($scoredTraining['status'] === 'en_cours'): ?>
-                                    <span class="badge bg-warning">En cours</span>
+                                    <span class="badge bg-warning status-badge status-en-cours">En cours</span>
                                     <?php else: ?>
-                                    <span class="badge bg-success">Terminé</span>
+                                    <span class="badge bg-success status-badge status-termine">Terminé</span>
                                     <?php endif; ?>
                                 </dd>
                                 
@@ -354,20 +380,8 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
             <div class="modal-body">
                 <form id="endTrainingForm">
                     <div class="mb-3">
-                        <label for="final_notes" class="form-label">Notes finales</label>
-                        <textarea class="form-control" id="final_notes" name="final_notes" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="final_shooting_type" class="form-label">Type de tir final</label>
-                        <select class="form-select" id="final_shooting_type" name="final_shooting_type">
-                            <option value="">Sélectionner un type</option>
-                            <option value="TAE">TAE</option>
-                            <option value="Salle">Salle</option>
-                            <option value="3D">3D</option>
-                            <option value="Nature">Nature</option>
-                            <option value="Campagne">Campagne</option>
-                            <option value="Libre">Libre</option>
-                        </select>
+                        <label for="final_notes" class="form-label">Notes finales <small class="text-muted">(optionnel)</small></label>
+                        <textarea class="form-control" id="final_notes" name="final_notes" rows="3" placeholder="Ajoutez des notes sur votre performance..."></textarea>
                     </div>
                 </form>
             </div>
@@ -379,269 +393,3 @@ $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
     </div>
 </div>
 
-<script>
-// Fonction pour ouvrir la modale
-function openModal() {
-    console.log('🎯 openModal() appelée');
-    const modal = document.getElementById('addEndModal');
-    console.log('Modal trouvée:', modal);
-    
-    if (modal) {
-        // Méthode 1: Bootstrap 5
-        if (typeof bootstrap !== 'undefined') {
-            console.log('Utilisation de Bootstrap 5');
-            const bsModal = new bootstrap.Modal(modal);
-            bsModal.show();
-        } else {
-            // Méthode 2: jQuery si disponible
-            if (typeof $ !== 'undefined') {
-                console.log('Utilisation de jQuery');
-                $(modal).modal('show');
-            } else {
-                // Méthode 3: JavaScript pur
-                console.log('Utilisation de JavaScript pur');
-                modal.style.display = 'block';
-                modal.classList.add('show');
-                document.body.classList.add('modal-open');
-            }
-        }
-    } else {
-        console.error('Modal non trouvée');
-    }
-}
-
-// Variables globales
-const trainingId = <?= $scoredTraining['id'] ?>;
-const arrowsPerEnd = <?= $scoredTraining['arrows_per_end'] ?>;
-const currentEnds = <?= count($scoredTraining['ends']) ?>;
-
-// Initialiser les champs de score
-function initializeScoreFields() {
-    const container = document.getElementById('scoresContainer');
-    container.innerHTML = '';
-    
-    for (let i = 1; i <= arrowsPerEnd; i++) {
-        const col = document.createElement('div');
-        col.className = 'col-md-2 mb-2';
-        col.innerHTML = `
-            <label class="form-label">Flèche ${i}</label>
-            <input type="number" class="form-control" name="scores[]" min="0" max="10" required>
-        `;
-        container.appendChild(col);
-    }
-}
-
-// Fonctions de gestion
-function addEnd() {
-    initializeScoreFields();
-    const modal = new bootstrap.Modal(document.getElementById('addEndModal'));
-    modal.show();
-}
-
-function saveEnd() {
-    const form = document.getElementById('addEndForm');
-    const formData = new FormData(form);
-    
-    const scores = [];
-    const scoreInputs = form.querySelectorAll('input[name="scores[]"]');
-    scoreInputs.forEach(input => {
-        scores.push(parseInt(input.value) || 0);
-    });
-    
-    const endData = {
-        end_number: parseInt(formData.get('end_number')),
-        target_category: formData.get('target_category'),
-        shooting_position: formData.get('shooting_position'),
-        comment: formData.get('comment'),
-        scores: scores
-    };
-    
-    fetch(`/scored-trainings/${trainingId}/ends`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ end_data: endData })
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            location.reload();
-        } else {
-            alert('Erreur: ' + (result.message || 'Erreur inconnue'));
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors de l\'ajout de la volée');
-    });
-}
-
-
-function endTraining() {
-    const modal = new bootstrap.Modal(document.getElementById('endTrainingModal'));
-    modal.show();
-}
-
-function confirmEndTraining() {
-    const form = document.getElementById('endTrainingForm');
-    const formData = new FormData(form);
-    
-    const data = {
-        notes: formData.get('final_notes'),
-        shooting_type: formData.get('final_shooting_type')
-    };
-    
-    fetch(`/scored-trainings/${trainingId}/end`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            location.reload();
-        } else {
-            alert('Erreur: ' + (result.message || 'Erreur inconnue'));
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors de la finalisation');
-    });
-}
-
-function continueTraining() {
-    // Rediriger vers la page de continuation (même page pour l'instant)
-    location.reload();
-}
-
-function deleteTraining() {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce tir compté ?')) {
-        fetch(`/scored-trainings/${trainingId}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                window.location.href = '/scored-trainings';
-            } else {
-                alert('Erreur: ' + (result.message || 'Erreur inconnue'));
-            }
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-            alert('Erreur lors de la suppression');
-        });
-    }
-}
-
-// Créer le graphique des scores par volée
-function createScoresChart() {
-    const ctx = document.getElementById('scoresChart');
-    if (!ctx || !window.endsData || window.endsData.length === 0) {
-        return;
-    }
-    
-    // Préparer les données
-    const labels = window.endsData.map(end => `Volée ${end.end_number}`);
-    const scores = window.endsData.map(end => end.total_score);
-    const averages = window.endsData.map(end => (end.total_score / end.shots.length).toFixed(1));
-    
-    // Calculer la moyenne générale
-    const overallAverage = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Score total par volée',
-                data: scores,
-                borderColor: '#14532d',
-                backgroundColor: 'rgba(20, 83, 45, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#14532d',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8
-            }, {
-                label: 'Moyenne générale',
-                data: new Array(scores.length).fill(overallAverage),
-                borderColor: '#dc3545',
-                backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                borderWidth: 2,
-                borderDash: [5, 5],
-                pointRadius: 0,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Évolution des scores par volée',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
-                },
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                tooltip: {
-                    callbacks: {
-                        afterLabel: function(context) {
-                            if (context.datasetIndex === 0) {
-                                const endIndex = context.dataIndex;
-                                const average = averages[endIndex];
-                                return `Moyenne: ${average}`;
-                            }
-                            return '';
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: Math.max(...scores) + 5,
-                    title: {
-                        display: true,
-                        text: 'Score total'
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.1)'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Volées'
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.1)'
-                    }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            }
-        }
-    });
-}
-
-// Initialiser le graphique quand la page est chargée
-document.addEventListener('DOMContentLoaded', function() {
-    createScoresChart();
-});
-</script>
