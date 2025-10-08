@@ -114,6 +114,11 @@ class Router {
         $this->addRoute("GET", "/user-validation", "UserValidationController@index");
         $this->addRoute("POST", "/user-validation/approve", "UserValidationController@approve");
         $this->addRoute("POST", "/user-validation/reject", "UserValidationController@reject");
+        
+        // Routes des paramètres utilisateur (protégées)
+        $this->addRoute("GET", "/user-settings", "UserSettingsController@index");
+        $this->addRoute("POST", "/user-settings/update-profile-image", "UserSettingsController@updateProfileImage");
+        $this->addRoute("POST", "/user-settings/change-password", "UserSettingsController@changePassword");
     }
     
     public function addRoute($method, $path, $handler) {

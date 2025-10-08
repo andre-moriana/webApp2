@@ -1,4 +1,4 @@
-/* Styles personnalisés pour le portail Archers de Gémenos */
+/* Styles personnalisï¿½s pour le portail Archers de Gï¿½menos */
 
 :root {
     --primary-color: #14532d;
@@ -20,6 +20,24 @@ body {
 .navbar-brand {
     font-weight: bold;
     font-size: 1.5rem;
+}
+
+/* Correction du menu utilisateur */
+.navbar-nav .dropdown-menu {
+    min-width: 200px;
+    right: 0;
+    left: auto;
+    margin-top: 0.5rem;
+}
+
+.navbar-nav .dropdown-menu .dropdown-item {
+    white-space: nowrap;
+    padding: 0.5rem 1rem;
+}
+
+.navbar-nav .dropdown-menu .dropdown-item i {
+    width: 16px;
+    text-align: center;
 }
 
 .card {

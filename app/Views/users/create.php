@@ -27,7 +27,7 @@
                                    value="<?php echo htmlspecialchars($_SESSION['old_input']['name'] ?? ''); ?>" 
                                    required>
                         </div>
-                        
+
                         <div class="form-group mb-3">
                             <label for="name">Prenom *</label>
                             <input type="text" 
@@ -66,7 +66,7 @@
                                    id="password" 
                                    name="password" 
                                    required>
-                            <small class="form-text text-muted">Le mot de passe doit contenir au moins 8 caractères.</small>
+                            <small class="form-text text-muted">Le mot de passe doit contenir au moins 6 caractères.</small>
                         </div>
 
                         <div class="form-group">

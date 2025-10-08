@@ -141,7 +141,7 @@ class UserController {
         if (empty($email)) $errors[] = "L'email est obligatoire";
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "L'email n'est pas valide";
         if (empty($password)) $errors[] = "Le mot de passe est obligatoire";
-        if (strlen($password) < 8) $errors[] = "Le mot de passe doit contenir au moins 8 caractères";
+        if (strlen($password) < 6) $errors[] = "Le mot de passe doit contenir au moins 8 caractères";
         
         if (!empty($errors)) {
             $_SESSION['errors'] = $errors;

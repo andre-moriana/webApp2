@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Démarrer la session si elle n'est pas déjà démarrée
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -27,7 +27,11 @@ class ApiService {
         } else {
             $this->baseUrl = $_ENV["API_BASE_URL"];
         }
+        
+        // Initialiser le token depuis la session
+        $this->token = $_SESSION['token'] ?? null;
         error_log("URL de l'API configurée: " . $this->baseUrl);
+        error_log("Token récupéré depuis la session: " . ($this->token ? substr($this->token, 0, 20) . '...' : 'Aucun token'));
         
         // Démarrer la session si elle n'est pas déjà démarrée
         if (session_status() === PHP_SESSION_NONE) {
@@ -111,7 +115,25 @@ class ApiService {
         
         // Nettoyer le BOM (Byte Order Mark) qui peut causer des erreurs de décodage
         $cleanResponse = preg_replace('/^\xEF\xBB\xBF/', '', $response);
+        $cleanResponse = preg_replace('/^[\x00-\x1F\x7F]+/', '', $cleanResponse); // Supprimer tous les caractères de contrôle
         $cleanResponse = trim($cleanResponse);
+        
+        // Nettoyage supplémentaire pour les caractères BOM multiples
+        while (substr($cleanResponse, 0, 3) === "\xEF\xBB\xBF") {
+            $cleanResponse = substr($cleanResponse, 3);
+        }
+        
+        // Supprimer tous les caractères de contrôle restants au début
+        $cleanResponse = ltrim($cleanResponse, "\x00-\x1F\x7F");
+        
+        // Debug: afficher les premiers caractères en hexadécimal
+        if (strlen($cleanResponse) > 0) {
+            $firstBytes = '';
+            for ($i = 0; $i < min(10, strlen($cleanResponse)); $i++) {
+                $firstBytes .= sprintf('%02X ', ord($cleanResponse[$i]));
+            }
+            error_log("Premiers octets de la réponse nettoyée: " . $firstBytes);
+        }
         
         // Essayer de parser comme JSON même si le Content-Type n'est pas application/json
         $decodedResponse = json_decode($cleanResponse, true);
@@ -1838,6 +1860,132 @@ class ApiService {
     public function getUserById($userId) {
         $endpoint = "/users/" . $userId;
         return $this->makeRequest($endpoint, 'GET');
+    }
+    
+    /**
+     * Met à jour la photo de profil d'un utilisateur
+     * @param int $userId ID de l'utilisateur
+     * @param string $profileImagePath Chemin vers la nouvelle image
+     * @return array Réponse de l'API
+     */
+    public function updateUserProfileImage($userId, $profileImagePath) {
+        $endpoint = "/users/" . $userId . "/profile-image";
+        $data = ['profile_image' => $profileImagePath];
+        return $this->makeRequest($endpoint, 'PUT', $data);
+    }
+    
+    /**
+     * Upload une photo de profil vers le backend
+     * @param int $userId ID de l'utilisateur
+     * @param array $file Fichier uploadé
+     * @return array Réponse de l'API
+     */
+    public function uploadProfileImage($userId, $file) {
+        $endpoint = $this->baseUrl . "/users/" . $userId . "/upload-profile-image";
+        
+        // Utiliser cURL pour l'upload de fichier
+        $ch = curl_init();
+        
+        // Préparer les données pour l'upload multipart
+        $postData = [
+            'profileImage' => new CURLFile($file['tmp_name'], $file['type'], $file['name'])
+        ];
+        
+        // Debug: afficher les détails de l'upload
+        error_log("DEBUG uploadProfileImage - Endpoint: " . $endpoint);
+        error_log("DEBUG uploadProfileImage - Fichier: " . $file['name'] . " (" . $file['type'] . ", " . $file['size'] . " bytes)");
+        error_log("DEBUG uploadProfileImage - Token: " . substr($this->token, 0, 20) . "...");
+        error_log("DEBUG uploadProfileImage - User ID: " . $userId);
+        
+        // Debug: décoder le token JWT pour voir son contenu
+        try {
+            $tokenParts = explode('.', $this->token);
+            if (count($tokenParts) === 3) {
+                $payload = json_decode(base64_decode($tokenParts[1]), true);
+                error_log("DEBUG uploadProfileImage - Token payload: " . json_encode($payload));
+            }
+        } catch (Exception $e) {
+            error_log("DEBUG uploadProfileImage - Erreur décodage token: " . $e->getMessage());
+        }
+        
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $endpoint,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $postData,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $this->token
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        
+        if ($error) {
+            error_log("Erreur cURL uploadProfileImage: " . $error);
+            return ['success' => false, 'message' => 'Erreur de connexion: ' . $error];
+        }
+        
+        // Traiter la réponse
+        $responseData = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log("Erreur JSON uploadProfileImage: " . json_last_error_msg());
+            return ['success' => false, 'message' => 'Réponse invalide du serveur'];
+        }
+        
+        $response = [
+            'success' => $httpCode >= 200 && $httpCode < 300,
+            'data' => $responseData,
+            'status_code' => $httpCode,
+            'message' => $httpCode >= 200 && $httpCode < 300 ? 'Succès' : 'Erreur HTTP ' . $httpCode
+        ];
+        
+        // Debug: afficher la réponse complète
+        error_log("DEBUG uploadProfileImage - Réponse complète: " . json_encode($response));
+        
+        // Adapter la réponse pour correspondre à ce que le contrôleur attend
+        if ($response['success'] && isset($response['data']['user']['profileImage'])) {
+            return [
+                'success' => true,
+                'profile_image_path' => $response['data']['user']['profileImage'],
+                'image_url' => 'http://82.67.123.22:25000' . $response['data']['user']['profileImage']
+            ];
+        }
+        
+        // Si la réponse n'a pas la structure attendue, vérifier d'autres formats
+        if ($response['success'] && isset($response['data']['user'])) {
+            $user = $response['data']['user'];
+            if (isset($user['profileImage'])) {
+                return [
+                    'success' => true,
+                    'profile_image_path' => $user['profileImage'],
+                    'image_url' => 'http://82.67.123.22:25000' . $user['profileImage']
+                ];
+            }
+        }
+        
+        return $response;
+    }
+    
+    /**
+     * Change le mot de passe d'un utilisateur
+     * @param int $userId ID de l'utilisateur
+     * @param string $currentPassword Mot de passe actuel
+     * @param string $newPassword Nouveau mot de passe
+     * @return array Réponse de l'API
+     */
+    public function changeUserPassword($userId, $currentPassword, $newPassword) {
+        // Utiliser l'endpoint de mise à jour d'identité qui existe
+        $endpoint = "/users/" . $userId . "/update-identite";
+        $data = [
+            'current_password' => $currentPassword,
+            'new_password' => $newPassword
+        ];
+        return $this->makeRequest($endpoint, 'PUT', $data);
     }
     
     /**
