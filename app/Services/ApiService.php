@@ -217,6 +217,33 @@ class ApiService {
                     error_log("DEBUG updateUser - is_banned inchangé: current=$currentIsBanned, new=$newIsBanned");
                 }
             }
+            
+            // Vérifier status
+            if (isset($userData['status'])) {
+                $currentStatus = $currentData['status'] ?? 'active';
+                $newStatus = $userData['status'];
+                if ($newStatus !== $currentStatus) {
+                    if ($newStatus === 'active') {
+                        // Utiliser l'endpoint d'approbation existant
+                        $result = $this->makeRequest("users/{$userId}/approve", "POST");
+                    } elseif ($newStatus === 'rejected') {
+                        // Utiliser l'endpoint de rejet existant
+                        $result = $this->makeRequest("users/{$userId}/reject", "POST", ['reason' => 'Statut modifié par un administrateur']);
+                    } elseif ($newStatus === 'pending') {
+                        // Pour remettre en attente, on ne peut pas utiliser les endpoints existants
+                        // On pourrait créer un endpoint spécifique ou utiliser une méthode directe
+                        error_log("DEBUG updateUser - Remise en attente non gérée par les endpoints existants");
+                        $result = ['success' => true, 'message' => 'Remise en attente non implémentée'];
+                    } else {
+                        error_log("DEBUG updateUser - Statut non géré: $newStatus");
+                        $result = ['success' => true, 'message' => 'Statut non modifié'];
+                    }
+                    $results[] = $result;
+                    error_log("DEBUG updateUser - Réponse status: " . json_encode($result));
+                } else {
+                    error_log("DEBUG updateUser - status inchangé: current=$currentStatus, new=$newStatus");
+                }
+            }
         }
         
         // Compiler les résultats
@@ -721,14 +748,78 @@ class ApiService {
         
         // Préparation des données pour l'endpoint auth/register
         $registerData = [
-            'name' => $userData['name'],
+            'first_name' => $userData['first_name'] ?? '',
+            'name' => $userData['name'] ?? '',
             'username' => $userData['username'],
             'email' => $userData['email'],
-            'password' => $userData['password']
+            'password' => $userData['password'],
+            'role' => $userData['role'] ?? 'Archer',
+            'status' => 'pending', // Statut en attente de validation
+            'requires_approval' => true
         ];
         
         $result = $this->makeRequest("auth/register", "POST", $registerData);
         error_log("DEBUG createUser - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+
+    /**
+     * Récupère tous les utilisateurs
+     * @return array Liste de tous les utilisateurs
+     */
+    public function getAllUsers() {
+        error_log("DEBUG getAllUsers - Récupération de tous les utilisateurs");
+        
+        $result = $this->makeRequest("users", "GET");
+        error_log("DEBUG getAllUsers - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+
+    /**
+     * Récupère les utilisateurs en attente de validation
+     * @return array Liste des utilisateurs en attente
+     */
+    public function getPendingUsers() {
+        error_log("DEBUG getPendingUsers - Récupération des utilisateurs en attente");
+        
+        $result = $this->makeRequest("users/pending", "GET");
+        error_log("DEBUG getPendingUsers - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+
+    /**
+     * Valide un utilisateur en attente
+     * @param int $userId ID de l'utilisateur à valider
+     * @return array Résultat de la validation
+     */
+    public function approveUser($userId) {
+        error_log("DEBUG approveUser - Validation de l'utilisateur ID: " . $userId);
+        
+        $result = $this->makeRequest("users/{$userId}/approve", "POST");
+        error_log("DEBUG approveUser - Réponse: " . json_encode($result));
+        
+        return $result;
+    }
+
+    /**
+     * Rejette un utilisateur en attente
+     * @param int $userId ID de l'utilisateur à rejeter
+     * @param string $reason Raison du rejet
+     * @return array Résultat du rejet
+     */
+    public function rejectUser($userId, $reason = '') {
+        error_log("DEBUG rejectUser - Rejet de l'utilisateur ID: " . $userId);
+        
+        $data = [];
+        if (!empty($reason)) {
+            $data['reason'] = $reason;
+        }
+        
+        $result = $this->makeRequest("users/{$userId}/reject", "POST", $data);
+        error_log("DEBUG rejectUser - Réponse: " . json_encode($result));
         
         return $result;
     }
@@ -1747,6 +1838,16 @@ class ApiService {
     public function getUserById($userId) {
         $endpoint = "/users/" . $userId;
         return $this->makeRequest($endpoint, 'GET');
+    }
+    
+    /**
+     * Supprimer une session d'entraînement
+     * @param int $sessionId ID de la session
+     * @return array Réponse de l'API
+     */
+    public function deleteTrainingSession($sessionId) {
+        $endpoint = "/training/session/" . $sessionId;
+        return $this->makeRequest($endpoint, 'DELETE');
     }
 }
 ?>

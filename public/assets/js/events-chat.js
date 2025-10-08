@@ -632,6 +632,145 @@ document.addEventListener('DOMContentLoaded', function() {
     // Les event listeners sont déjà configurés dans le code existant
 });
 
+// Fonctions pour l'édition et suppression des messages
+window.editMessage = async function(messageId) {
+    console.log("editMessage appelé avec ID:", messageId);
+    
+    if (!messageId || messageId === "") {
+        alert("Erreur: ID du message manquant");
+        return;
+    }
+    
+    // Trouver le message dans le DOM pour récupérer le contenu actuel
+    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    let currentContent = "";
+    
+    if (messageElement) {
+        // Récupérer seulement le texte du message, pas les métadonnées
+        const messageTextElement = messageElement.querySelector('.message-text');
+        if (messageTextElement) {
+            currentContent = messageTextElement.textContent || messageTextElement.innerText || "";
+        }
+    }
+    
+    // Créer la modal d'édition
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h5>Modifier le message</h5>
+                <span class="edit-modal-close">&times;</span>
+            </div>
+            <textarea id="edit-message-content" placeholder="Saisissez votre message...">${currentContent}</textarea>
+            <div class="edit-modal-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="saveMessageEdit('${messageId}')">Enregistrer</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+    modal.style.zIndex = '9999';
+    modal.querySelector('.edit-modal-content').style.zIndex = '10000';
+    document.body.style.overflow = 'hidden';
+    
+    // Focus sur le textarea
+    const textarea = modal.querySelector('#edit-message-content');
+    textarea.focus();
+    textarea.select();
+    
+    // Fermer la modal en cliquant sur X ou en dehors
+    modal.querySelector('.edit-modal-close').onclick = closeEditModal;
+    modal.onclick = function(event) {
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    };
+};
+
+function closeEditModal() {
+    const modal = document.querySelector('.edit-modal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = 'auto';
+    }
+}
+
+async function saveMessageEdit(messageId) {
+    const textarea = document.querySelector('#edit-message-content');
+    const newContent = textarea.value.trim();
+    
+    if (!newContent) {
+        alert('Le message ne peut pas être vide');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${backendUrl}/api/messages/${messageId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                content: newContent
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Message modifié avec succès:', data);
+            closeEditModal();
+            // Recharger les messages de l'événement actuel
+            if (currentEventId) {
+                loadEventMessages(currentEventId);
+            }
+        } else {
+            const errorData = await response.json();
+            if (response.status === 403) {
+                alert('Erreur: Vous ne pouvez modifier que vos propres messages');
+            } else {
+                alert('Erreur: ' + (errorData.error || 'Erreur lors de la modification'));
+            }
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la modification du message');
+    }
+}
+
+window.deleteMessage = async function(messageId) {
+    console.log("deleteMessage appelé avec ID:", messageId);
+    
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+        try {
+            const response = await fetch(`${backendUrl}/api/messages/${messageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Message supprimé avec succès:', data);
+                // Recharger les messages de l'événement actuel
+                if (currentEventId) {
+                    loadEventMessages(currentEventId);
+                }
+            } else {
+                const errorData = await response.json();
+                alert('Erreur: ' + (errorData.error || 'Erreur lors de la suppression'));
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la suppression du message');
+        }
+    }
+};
+
 // Test ultra-simple
 async function testPing(eventId) {
     try {

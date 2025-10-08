@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeElements();
     initializeEventListeners();
     initializeUserSelection();
+    initializeNotesEditing();
 });
 
 // Initialiser les éléments DOM
@@ -51,6 +52,12 @@ function initializeEventListeners() {
     const cancelSessionBtn = document.getElementById('cancelSessionBtn');
     if (cancelSessionBtn) {
         cancelSessionBtn.addEventListener('click', cancelSession);
+    }
+
+    // Bouton supprimer session
+    const deleteSessionBtn = document.getElementById('deleteSessionBtn');
+    if (deleteSessionBtn) {
+        deleteSessionBtn.addEventListener('click', confirmDeleteSession);
     }
 
     // Protection contre la fermeture accidentelle
@@ -147,7 +154,8 @@ function saveSession() {
     console.log('Selected User ID:', selectedUserId);
     console.log('Current Exercise ID:', currentExerciseId);
     
-    fetch('/webapp/trainings/save-session', {
+    // Utiliser l'endpoint local de l'application web
+    fetch('/trainings/save-session', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -160,14 +168,24 @@ function saveSession() {
     })
     .then(response => {
         console.log('Réponse reçue:', response);
+        console.log('Status:', response.status);
+        console.log('Headers:', response.headers);
+        
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+        }
+        
         return response.text().then(text => {
+            console.log('Texte brut reçu:', text);
             const cleanText = text.replace(/^[\s\x00-\x1F\x7F]*/, '').trim();
+            console.log('Texte nettoyé:', cleanText);
+            
             try {
                 return JSON.parse(cleanText);
             } catch (e) {
                 console.error('Erreur de parsing JSON:', e);
                 console.error('Réponse reçue:', cleanText);
-                return { success: false, message: 'Réponse invalide du serveur' };
+                return { success: false, message: 'Réponse invalide du serveur: ' + cleanText.substring(0, 200) };
             }
         });
     })
@@ -177,16 +195,29 @@ function saveSession() {
             alert('Session sauvegardée avec succès !');
             sessionActive = false;
             trainingSessionModal.hide();
+            
+            // Recharger la page pour afficher les nouvelles données
+            console.log('Rechargement de la page dans 1 seconde...');
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } else {
             alert('Erreur: ' + (data.message || 'Erreur lors de la sauvegarde'));
+            console.error('Erreur de sauvegarde:', data);
         }
     })
     .catch(error => {
         console.error('Erreur:', error);
-        alert('Erreur de connexion au serveur');
+        console.error('Type d\'erreur:', error.name);
+        console.error('Message d\'erreur:', error.message);
+        
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            alert('Erreur de connexion: Impossible de joindre le serveur API. Vérifiez que le backend est démarré.');
+        } else if (error.message.includes('HTTP:')) {
+            alert('Erreur HTTP: ' + error.message);
+        } else {
+            alert('Erreur de connexion au serveur: ' + error.message);
+        }
     });
 }
 
@@ -490,6 +521,198 @@ function showAlert(message, type) {
             alertDiv.remove();
         }
     }, 5000);
+}
+
+// Gestion de l'édition des notes
+function initializeNotesEditing() {
+    const editNotesBtn = document.getElementById('editNotesBtn');
+    const saveNotesBtn = document.getElementById('saveNotesBtn');
+    const cancelNotesBtn = document.getElementById('cancelNotesBtn');
+    const notesDisplay = document.getElementById('notesDisplay');
+    const notesEdit = document.getElementById('notesEdit');
+    const notesTextarea = document.getElementById('notesTextarea');
+    
+    if (!editNotesBtn || !saveNotesBtn || !cancelNotesBtn || !notesDisplay || !notesEdit || !notesTextarea) {
+        return; // Éléments non trouvés, probablement pas sur la bonne page
+    }
+    
+    // Récupérer l'ID de session depuis un attribut data ou une variable globale
+    const sessionId = window.sessionId || document.querySelector('[data-session-id]')?.getAttribute('data-session-id');
+    
+    if (editNotesBtn) {
+        editNotesBtn.addEventListener('click', function() {
+            notesDisplay.style.display = 'none';
+            notesEdit.style.display = 'block';
+            notesTextarea.focus();
+        });
+    }
+    
+    if (cancelNotesBtn) {
+        cancelNotesBtn.addEventListener('click', function() {
+            notesDisplay.style.display = 'block';
+            notesEdit.style.display = 'none';
+            // Restaurer le contenu original
+            notesTextarea.value = notesTextarea.defaultValue;
+        });
+    }
+    
+    if (saveNotesBtn) {
+        saveNotesBtn.addEventListener('click', function() {
+            const notes = notesTextarea.value;
+            
+            // Afficher un indicateur de chargement
+            saveNotesBtn.disabled = true;
+            saveNotesBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Enregistrement...';
+            
+            // Envoyer la requête AJAX
+            fetch('/trainings/update-notes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    notes: notes
+                })
+            })
+            .then(response => {
+                // Nettoyer la réponse des caractères BOM
+                return response.text().then(text => {
+                    // Supprimer les caractères BOM et espaces invisibles
+                    const cleanText = text.replace(/^[\s\x00-\x1F\x7F]*/, '').trim();
+                    
+                    // Essayer de parser comme JSON
+                    try {
+                        return JSON.parse(cleanText);
+                    } catch (e) {
+                        console.error('Erreur de parsing JSON:', e);
+                        console.error('Réponse reçue:', cleanText);
+                        
+                        // Si ce n'est pas du JSON valide, retourner une erreur
+                        return { 
+                            success: false, 
+                            message: 'Réponse invalide du serveur: ' + cleanText.substring(0, 100) 
+                        };
+                    }
+                });
+            })
+            .then(data => {
+                if (data.success) {
+                    // Mettre à jour l'affichage
+                    if (notes.trim() === '') {
+                        notesDisplay.innerHTML = '<p class="text-muted mt-1">Aucune note</p>';
+                        editNotesBtn.innerHTML = '<i class="fas fa-plus"></i> Ajouter des notes';
+                    } else {
+                        notesDisplay.innerHTML = '<p class="mt-1">' + notes.replace(/\n/g, '<br>').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>';
+                        editNotesBtn.innerHTML = '<i class="fas fa-edit"></i> Modifier';
+                    }
+                    
+                    // Revenir à l'affichage normal
+                    notesDisplay.style.display = 'block';
+                    notesEdit.style.display = 'none';
+                    
+                    // Afficher un message de succès
+                    showAlert('Notes mises à jour avec succès', 'success');
+                } else {
+                    showAlert(data.message || 'Erreur lors de la mise à jour des notes', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showAlert('Erreur de connexion au serveur', 'danger');
+            })
+            .finally(() => {
+                saveNotesBtn.disabled = false;
+                saveNotesBtn.innerHTML = '<i class="fas fa-save"></i> Enregistrer';
+            });
+        });
+    }
+}
+
+// Confirmer la suppression d'une session
+function confirmDeleteSession() {
+    const sessionId = this.getAttribute('data-session-id');
+    
+    if (!sessionId) {
+        showAlert('Erreur: ID de session manquant', 'danger');
+        return;
+    }
+    
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette session d\'entraînement ? Cette action est irréversible.')) {
+        deleteSession(sessionId);
+    }
+}
+
+// Supprimer une session
+function deleteSession(sessionId) {
+    const deleteBtn = document.getElementById('deleteSessionBtn');
+    const originalText = deleteBtn.innerHTML;
+    
+    // Afficher un indicateur de chargement
+    deleteBtn.disabled = true;
+    deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Suppression...';
+    
+    fetch('/trainings/delete-session', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            session_id: sessionId
+        })
+    })
+    .then(response => {
+        console.log('Réponse reçue:', response);
+        console.log('Status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+        }
+        
+        return response.text().then(text => {
+            console.log('Texte brut reçu:', text);
+            const cleanText = text.replace(/^[\s\x00-\x1F\x7F]*/, '').trim();
+            console.log('Texte nettoyé:', cleanText);
+            
+            try {
+                return JSON.parse(cleanText);
+            } catch (e) {
+                console.error('Erreur de parsing JSON:', e);
+                console.error('Réponse reçue:', cleanText);
+                return { success: false, message: 'Réponse invalide du serveur: ' + cleanText.substring(0, 200) };
+            }
+        });
+    })
+    .then(data => {
+        console.log('Données reçues:', data);
+        if (data.success) {
+            showAlert('Session supprimée avec succès', 'success');
+            // Rediriger vers la liste des entraînements après un délai
+            setTimeout(() => {
+                window.location.href = '/trainings';
+            }, 1500);
+        } else {
+            showAlert('Erreur: ' + (data.message || 'Erreur lors de la suppression'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        console.error('Type d\'erreur:', error.name);
+        console.error('Message d\'erreur:', error.message);
+        
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            showAlert('Erreur de connexion: Impossible de joindre le serveur', 'danger');
+        } else if (error.message.includes('HTTP:')) {
+            showAlert('Erreur HTTP: ' + error.message, 'danger');
+        } else {
+            showAlert('Erreur de connexion au serveur: ' + error.message, 'danger');
+        }
+    })
+    .finally(() => {
+        // Restaurer le bouton
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = originalText;
+    });
 }
 
 // Rendre les fonctions globales

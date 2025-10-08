@@ -127,6 +127,7 @@ class UserController {
         }
 
         // Récupération et validation des données
+        $first_name = trim($_POST['first_name'] ?? '');
         $name = trim($_POST['name'] ?? '');
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -134,6 +135,7 @@ class UserController {
 
         // Validation basique
         $errors = [];
+        if (empty($first_name)) $errors[] = "Le prénom est obligatoire";
         if (empty($name)) $errors[] = "Le nom est obligatoire";
         if (empty($username)) $errors[] = "Le nom d'utilisateur est obligatoire";
         if (empty($email)) $errors[] = "L'email est obligatoire";
@@ -151,6 +153,7 @@ class UserController {
         try {
             // Appel à l'API pour créer l'utilisateur
             $response = $this->apiService->createUser([
+                'first_name' => $first_name,
                 'name' => $name,
                 'username' => $username,
                 'email' => $email,
@@ -236,7 +239,8 @@ class UserController {
             'bowType' => $_POST['bowType'] ?? '',
             'role' => $_POST['role'] ?? '',
             'is_admin' => $_POST['is_admin'] ?? '0',
-            'is_banned' => $_POST['is_banned'] ?? '0'
+            'is_banned' => $_POST['is_banned'] ?? '0',
+            'status' => $_POST['status'] ?? 'active'
         ];
         
         // Validation basique

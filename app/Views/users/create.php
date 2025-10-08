@@ -27,6 +27,16 @@
                                    value="<?php echo htmlspecialchars($_SESSION['old_input']['name'] ?? ''); ?>" 
                                    required>
                         </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="name">Prenom *</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="first_name" 
+                                   name="first_name" 
+                                   value="<?php echo htmlspecialchars($_SESSION['old_input']['first_name'] ?? ''); ?>" 
+                                   required>
+                        </div>
 
                         <div class="form-group mb-3">
                             <label for="username">Nom d'utilisateur *</label>

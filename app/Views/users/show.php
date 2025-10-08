@@ -96,7 +96,30 @@ $title = "Détails de l'utilisateur - Portail Archers de Gémenos";
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold">Statut :</label>
+                                        <label class="form-label fw-bold">Validation :</label>
+                                        <?php 
+                                        $status = $user['status'] ?? 'active';
+                                        $statusLabels = [
+                                            'pending' => 'En attente de validation',
+                                            'active' => 'Validé',
+                                            'rejected' => 'Rejeté'
+                                        ];
+                                        $statusColors = [
+                                            'pending' => 'warning',
+                                            'active' => 'success',
+                                            'rejected' => 'danger'
+                                        ];
+                                        $label = $statusLabels[$status] ?? 'Inconnu';
+                                        $color = $statusColors[$status] ?? 'secondary';
+                                        ?>
+                                        <span class="badge bg-<?php echo $color; ?> fs-6">
+                                            <?php echo $label; ?>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Bannissement :</label>
                                         <span class="badge bg-<?php echo ($user['is_banned'] ?? $user['isBanned'] ?? false) ? 'danger' : 'success'; ?> fs-6">
                                             <?php echo ($user['is_banned'] ?? $user['isBanned'] ?? false) ? 'Banni' : 'Actif'; ?>
                                         </span>

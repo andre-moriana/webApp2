@@ -98,9 +98,23 @@
                         </div>
                         
                         <div class="text-center mt-2">
+                            <a href="/auth/register" class="btn btn-link text-success">
+                                <i class="fas fa-user-plus me-1"></i>
+                                Ajouter un utilisateur
+                            </a>
+                        </div>
+                        
+                        <div class="text-center mt-2">
                             <small class="text-warning">
                                 <i class="fas fa-info-circle me-1"></i>
                                 Seuls les administrateurs peuvent accéder à ce portail
+                            </small>
+                        </div>
+                        
+                        <div class="text-center mt-2">
+                            <small class="text-info">
+                                <i class="fas fa-clock me-1"></i>
+                                Votre compte est en attente ? Contactez un administrateur
                             </small>
                         </div>
                     </div>

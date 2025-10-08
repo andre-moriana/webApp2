@@ -59,7 +59,10 @@ error_log("Session: " . print_r($_SESSION, true));
                                         Rôle <i class="fas fa-sort ms-1"></i>
                                     </th>
                                     <th class="sortable" data-column="status">
-                                        Statut <i class="fas fa-sort ms-1"></i>
+                                        Validation <i class="fas fa-sort ms-1"></i>
+                                    </th>
+                                    <th class="sortable" data-column="banned">
+                                        Bannissement <i class="fas fa-sort ms-1"></i>
                                     </th>
                                     <th class="sortable" data-column="lastLogin">
                                         Dernière connexion <i class="fas fa-sort ms-1"></i>
@@ -70,7 +73,7 @@ error_log("Session: " . print_r($_SESSION, true));
                             <tbody>
                                 <?php if (empty($users)): ?>
                                     <tr>
-                                        <td colspan="7" class="text-center py-4">
+                                        <td colspan="8" class="text-center py-4">
                                             <i class="fas fa-users fa-3x text-muted mb-3"></i>
                                             <p class="text-muted">Aucun utilisateur trouvé</p>
                                         </td>
@@ -131,8 +134,28 @@ error_log("Session: " . print_r($_SESSION, true));
                                                 </span>
                                             </td>
                                             <td class="text-nowrap">
-                                                <span class="badge bg-<?php echo ($user['banned'] ?? $user['isBanned'] ?? false) ? 'danger' : 'success'; ?>">
-                                                    <?php echo ($user['banned'] ?? $user['isBanned'] ?? false) ? 'Banni' : 'Actif'; ?>
+                                                <?php 
+                                                $status = $user['status'] ?? 'active';
+                                                $statusLabels = [
+                                                    'pending' => 'En attente',
+                                                    'active' => 'Validé',
+                                                    'rejected' => 'Rejeté'
+                                                ];
+                                                $statusColors = [
+                                                    'pending' => 'warning',
+                                                    'active' => 'success',
+                                                    'rejected' => 'danger'
+                                                ];
+                                                $label = $statusLabels[$status] ?? 'Inconnu';
+                                                $color = $statusColors[$status] ?? 'secondary';
+                                                ?>
+                                                <span class="badge bg-<?php echo $color; ?>">
+                                                    <?php echo $label; ?>
+                                                </span>
+                                            </td>
+                                            <td class="text-nowrap">
+                                                <span class="badge bg-<?php echo ($user['is_banned'] ?? $user['isBanned'] ?? false) ? 'danger' : 'success'; ?>">
+                                                    <?php echo ($user['is_banned'] ?? $user['isBanned'] ?? false) ? 'Banni' : 'Actif'; ?>
                                                 </span>
                                             </td>
                                             <td class="text-nowrap">

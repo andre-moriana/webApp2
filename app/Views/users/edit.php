@@ -94,10 +94,19 @@ $title = "Modifier l'utilisateur - Portail Archers de Gémenos";
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="is_banned" class="form-label">Banni</label>
+                                            <label for="is_banned" class="form-label">Bannissement</label>
                                             <select class="form-select" id="is_banned" name="is_banned">
-                                                <option value="0" <?php echo !($user['is_banned'] ?? false) ? 'selected' : ''; ?>>Non</option>
-                                                <option value="1" <?php echo ($user['is_banned'] ?? false) ? 'selected' : ''; ?>>Oui</option>
+                                                <option value="0" <?php echo !($user['is_banned'] ?? false) ? 'selected' : ''; ?>>Actif</option>
+                                                <option value="1" <?php echo ($user['is_banned'] ?? false) ? 'selected' : ''; ?>>Banni</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="status" class="form-label">Validation</label>
+                                            <select class="form-select" id="status" name="status">
+                                                <option value="active" <?php echo ($user['status'] ?? '') === 'active' ? 'selected' : ''; ?>>Validé</option>
+                                                <option value="rejected" <?php echo ($user['status'] ?? '') === 'rejected' ? 'selected' : ''; ?>>Rejeté</option>
                                             </select>
                                         </div>
                                     </div>

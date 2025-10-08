@@ -37,6 +37,7 @@ class Router {
         $this->addRoute("POST", "/trainings/update-progression", "TrainingController@updateProgression");
         $this->addRoute("POST", "/trainings/update-notes", "TrainingController@updateNotes");
         $this->addRoute("POST", "/trainings/save-session", "TrainingController@saveSession");
+        $this->addRoute("POST", "/trainings/delete-session", "TrainingController@deleteSession");
         $this->addRoute("POST", "/trainings/update-status", "TrainingController@updateStatus");
         $this->addRoute("GET", "/trainings/{id}", "TrainingController@show");
         $this->addRoute("GET", "/trainings/{id}/stats", "TrainingController@stats");
@@ -99,6 +100,20 @@ class Router {
         $this->addRoute("POST", "/api/messages/{id}/send", "ApiController@sendGroupMessage");
         $this->addRoute("PUT", "/api/messages/{id}/update", "ApiController@updateMessage");
         $this->addRoute("DELETE", "/api/messages/{id}/delete", "ApiController@deleteMessage");
+        
+        // Routes d'authentification
+        $this->addRoute("GET", "/login", "AuthController@login");
+        $this->addRoute("POST", "/auth/authenticate", "AuthController@authenticate");
+        $this->addRoute("GET", "/logout", "AuthController@logout");
+        $this->addRoute("GET", "/auth/reset-password", "AuthController@resetPassword");
+        $this->addRoute("POST", "/auth/update-password", "AuthController@updatePassword");
+        $this->addRoute("GET", "/auth/register", "AuthController@register");
+        $this->addRoute("POST", "/auth/create-user", "AuthController@createUser");
+        
+        // Routes de validation des utilisateurs (protégées - admin seulement)
+        $this->addRoute("GET", "/user-validation", "UserValidationController@index");
+        $this->addRoute("POST", "/user-validation/approve", "UserValidationController@approve");
+        $this->addRoute("POST", "/user-validation/reject", "UserValidationController@reject");
     }
     
     public function addRoute($method, $path, $handler) {

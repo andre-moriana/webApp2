@@ -80,6 +80,20 @@ class AuthController {
             error_log("Résultat de la connexion: " . json_encode($loginResult));
 
             if ($loginResult['success'] && isset($loginResult['token'])) {
+                // Vérifier le statut de l'utilisateur
+                $userStatus = $loginResult['user']['status'] ?? $loginResult['user']['user_status'] ?? 'active';
+                $isApproved = $loginResult['user']['is_approved'] ?? $loginResult['user']['approved'] ?? true;
+                
+                error_log("Statut utilisateur: " . $userStatus . ", Approuvé: " . ($isApproved ? 'Oui' : 'Non'));
+                
+                // Vérifier si l'utilisateur est approuvé
+                if ($userStatus === 'pending' || !$isApproved) {
+                    error_log("Tentative de connexion d'un utilisateur non approuvé");
+                    $_SESSION['error'] = 'Votre compte est en attente de validation par un administrateur. Vous recevrez un email une fois votre compte activé.';
+                    header('Location: /login');
+                    exit;
+                }
+                
                 // Connexion réussie via l'API
                 $_SESSION['user'] = [
                     'id' => $loginResult['user']['id'] ?? 1,
@@ -88,7 +102,7 @@ class AuthController {
                     'email' => $username . '@archers-gemenos.fr',
                     'role' => $loginResult['user']['role'] ?? 'user',
                     'is_admin' => $loginResult['user']['is_admin'] ?? $loginResult['user']['isAdmin'] ?? false,
-                    'status' => 'active'
+                    'status' => $userStatus
                 ];
                 
                 // Sauvegarder le token dans la session
@@ -216,11 +230,140 @@ class AuthController {
     }
 
     public function isLoggedIn() {
-        return isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            return false;
+        }
+        
+        // Vérifier que l'utilisateur est approuvé
+        $user = $_SESSION['user'] ?? null;
+        if (!$user) {
+            return false;
+        }
+        
+        $userStatus = $user['status'] ?? 'active';
+        $isApproved = $user['is_approved'] ?? true;
+        
+        // Si l'utilisateur est en attente ou non approuvé, le déconnecter
+        if ($userStatus === 'pending' || !$isApproved) {
+            error_log("Utilisateur non approuvé détecté, déconnexion automatique");
+            $this->logout();
+            return false;
+        }
+        
+        return true;
     }
 
     public function getCurrentUser() {
         return $_SESSION['user'] ?? null;
+    }
+
+    /**
+     * Vérifie si l'utilisateur actuel est approuvé
+     */
+    public function isUserApproved() {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            return false;
+        }
+        
+        $userStatus = $user['status'] ?? 'active';
+        $isApproved = $user['is_approved'] ?? true;
+        
+        return $userStatus !== 'pending' && $isApproved;
+    }
+
+    /**
+     * Vérifie l'authentification et l'approbation de l'utilisateur
+     * Redirige vers la page de connexion si non authentifié ou non approuvé
+     */
+    public function requireAuth() {
+        if (!$this->isLoggedIn()) {
+            $_SESSION['error'] = 'Vous devez être connecté pour accéder à cette page.';
+            header('Location: /login');
+            exit;
+        }
+        
+        if (!$this->isUserApproved()) {
+            $_SESSION['error'] = 'Votre compte est en attente de validation par un administrateur.';
+            $this->logout();
+            exit;
+        }
+    }
+
+    public function register() {
+        // Afficher le formulaire d'inscription
+        include 'app/Views/auth/register.php';
+    }
+
+    public function createUser() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /auth/register');
+            exit;
+        }
+
+        $first_name = $_POST['first_name'] ?? '';
+        $name = $_POST['name'] ?? '';
+        $username = $_POST['username'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $role = $_POST['role'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
+
+        // Validation des champs
+        if (empty($first_name) || empty($name) || empty($username) || empty($email) || empty($role) || empty($password)) {
+            $_SESSION['error'] = 'Veuillez remplir tous les champs obligatoires';
+            header('Location: /auth/register');
+            exit;
+        }
+
+        if ($password !== $confirm_password) {
+            $_SESSION['error'] = 'Les mots de passe ne correspondent pas';
+            header('Location: /auth/register');
+            exit;
+        }
+
+        if (strlen($password) < 6) {
+            $_SESSION['error'] = 'Le mot de passe doit contenir au moins 6 caractères';
+            header('Location: /auth/register');
+            exit;
+        }
+
+        try {
+            // Créer une nouvelle instance de ApiService
+            $apiService = new ApiService();
+            
+            // Préparer les données pour l'API backend
+            $userData = [
+                'first_name' => $first_name,
+                'name' => $name,
+                'username' => $username,
+                'email' => $email,
+                'password' => $password,
+                'role' => $role,
+                'status' => 'pending'
+            ];
+
+            error_log("Tentative de création d'utilisateur: " . json_encode($userData));
+            
+            // Appeler l'API backend pour créer l'utilisateur
+            $result = $apiService->createUser($userData);
+            error_log("Résultat de la création d'utilisateur: " . json_encode($result));
+
+            if ($result['success']) {
+                $_SESSION['success'] = 'Demande d\'inscription envoyée avec succès ! Votre compte sera activé après validation par un administrateur.';
+                header('Location: /login');
+                exit;
+            } else {
+                $_SESSION['error'] = $result['message'] ?? 'Erreur lors de la création de l\'utilisateur';
+                header('Location: /auth/register');
+                exit;
+            }
+        } catch (Exception $e) {
+            error_log("Exception lors de la création d'utilisateur: " . $e->getMessage());
+            $_SESSION['error'] = 'Erreur lors de la création de l\'utilisateur: ' . $e->getMessage();
+            header('Location: /auth/register');
+            exit;
+        }
     }
 }
 ?>

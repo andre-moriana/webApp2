@@ -619,10 +619,6 @@
 <link href="/public/assets/css/trainings.css" rel="stylesheet">
 
 <!-- JavaScript personnalisé -->
-<script>
-// Passer les variables PHP au JavaScript
-window.selectedUserId = <?php echo isset($selectedUserId) ? $selectedUserId : 'null'; ?>;
-</script>
 <script src="/public/assets/js/trainings.js"></script>
 
 
