@@ -614,5 +614,95 @@ class ApiController {
             ]);
         }
     }
+
+    public function getMessageImage($messageId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            // Appeler l'API pour récupérer l'image
+            $response = $this->apiService->makeRequest("messages/{$messageId}/attachment", "GET");
+            
+            if ($response['success']) {
+                // L'API retourne directement le contenu du fichier
+                $rawResponse = $response['raw_response'] ?? '';
+                
+                // Vérifier si c'est du contenu binaire
+                if (!empty($rawResponse) && !json_decode($rawResponse, true)) {
+                    // C'est du contenu binaire, le servir directement comme image
+                    
+                    // Déterminer le type MIME basé sur le contenu
+                    $mimeType = 'image/jpeg'; // Par défaut
+                    if (strpos($rawResponse, "\xFF\xD8\xFF") === 0) {
+                        $mimeType = 'image/jpeg';
+                    } elseif (strpos($rawResponse, "\x89PNG") === 0) {
+                        $mimeType = 'image/png';
+                    } elseif (strpos($rawResponse, "GIF8") === 0) {
+                        $mimeType = 'image/gif';
+                    } elseif (strpos($rawResponse, "BM") === 0) {
+                        $mimeType = 'image/bmp';
+                    }
+                    
+                    // Nettoyer la sortie et définir les headers appropriés pour l'affichage
+                    if (ob_get_level()) {
+                        ob_clean();
+                    }
+                    
+                    header('Content-Type: ' . $mimeType);
+                    header('Content-Length: ' . strlen($rawResponse));
+                    header('Cache-Control: public, max-age=3600'); // Cache pour 1 heure
+                    header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
+                    
+                    echo $rawResponse;
+                    exit;
+                } else {
+                    // C'est du JSON, essayer de trouver une URL
+                    $data = $response['data'] ?? [];
+                    $imageUrl = null;
+                    
+                    // Essayer différents chemins possibles pour l'URL
+                    if (isset($data['attachment']['url'])) {
+                        $imageUrl = $data['attachment']['url'];
+                    } elseif (isset($data['url'])) {
+                        $imageUrl = $data['url'];
+                    } elseif (isset($data['path'])) {
+                        $imageUrl = $data['path'];
+                    }
+                    
+                    if ($imageUrl) {
+                        // Si l'URL est relative, la rendre absolue
+                        if (strpos($imageUrl, 'http') !== 0) {
+                            $baseUrl = rtrim($this->baseUrl, '/api');
+                            $imageUrl = $baseUrl . '/' . ltrim($imageUrl, '/');
+                        }
+                        
+                        header("Location: " . $imageUrl);
+                        exit;
+                    } else {
+                        $this->cleanOutput();
+                        http_response_code(404);
+                        echo json_encode([
+                            "success" => false,
+                            "message" => "URL de l'image non trouvée dans la réponse API"
+                        ]);
+                    }
+                }
+            } else {
+                $this->cleanOutput();
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la récupération de l'image: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            $this->cleanOutput();
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la récupération de l'image: " . $e->getMessage()
+            ]);
+        }
+    }
 }
 ?>

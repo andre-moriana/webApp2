@@ -72,11 +72,11 @@ function createMessageElement(message) {
         const isImage = message.attachment.mimeType && message.attachment.mimeType.startsWith("image/");
         const originalName = message.attachment.originalName || message.attachment.filename || "Pièce jointe";
         
-        // Pour les images, garder l'URL originale si elle est absolue, sinon utiliser l'URL de base
+        // Pour les images, utiliser la route d'images du backend WebApp2
         if (attachmentUrl && !attachmentUrl.startsWith("http")) {
             if (isImage) {
-                // Pour les images, construire l'URL complète avec l'URL de base
-                attachmentUrl = (typeof backendUrl !== 'undefined' ? backendUrl : '') + "/" + attachmentUrl.replace(/^\//, "");
+                // Pour les images, utiliser la route d'images du backend WebApp2
+                attachmentUrl = "/api/messages/image/" + (message._id || message.id);
             } else {
                 // Pour les autres fichiers, utiliser la route de téléchargement
                 attachmentUrl = "/api/messages/attachment/" + (message._id || message.id);
