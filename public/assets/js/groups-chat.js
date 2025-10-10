@@ -71,7 +71,7 @@ function createMessageElement(message) {
         let attachmentUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
         
         if (attachmentUrl && !attachmentUrl.startsWith("http")) {
-            attachmentUrl = backendUrl + "/" + attachmentUrl.replace(/^\//, "");
+            attachmentUrl = "/api/messages/attachment/" + (message._id || message.id);
         }
         
         const isImage = message.attachment.mimeType && message.attachment.mimeType.startsWith("image/");
@@ -152,7 +152,7 @@ async function loadGroupMessages(groupId) {
     `;
     
     try {
-        const response = await fetch(`${backendUrl}/api/messages/${groupId}/history`, {
+        const response = await fetch(`/api/messages/${groupId}/history`, {
             headers: {
                 'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
             }
@@ -304,7 +304,7 @@ if (messageForm) {
                 console.log("Fichier ajouté:", file.name, "Type:", file.type, "Taille:", file.size);
             }
             
-            const response = await fetch(`${backendUrl}/api/messages/${currentGroupId}/send`, {
+            const response = await fetch(`/api/messages/${currentGroupId}/send`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
@@ -444,7 +444,7 @@ async function saveMessageEdit(messageId) {
     }
     
     try {
-        const response = await fetch(`${backendUrl}/api/messages/${messageId}`, {
+        const response = await fetch(`/api/messages/${messageId}/update`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -480,7 +480,7 @@ window.deleteMessage = async function(messageId) {
     
     if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
         try {
-            const response = await fetch(`${backendUrl}/api/messages/${messageId}`, {
+            const response = await fetch(`/api/messages/${messageId}/delete`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
