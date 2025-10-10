@@ -420,10 +420,10 @@
                                                             <div class="text-center py-2">
                                                                 <small class="text-muted">Aucune séance trouvée</small>
                                                                 <br>
-                                                                <a href="/trainings/create?exercise_id=<?php echo $exerciseId; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '&user_id=' . $selectedUserId : ''; ?>" 
-                                                                   class="btn btn-sm btn-primary mt-2">
+                                                                <button type="button" class="btn btn-sm btn-primary mt-2" 
+                                                                        onclick="startTrainingSession(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')">
                                                                     <i class="fas fa-plus"></i> Créer une séance
-                                                                </a>
+                                                                </button>
                                                             </div>
                                                             <?php else: ?>
                                                             <?php foreach ($exerciseData['sessions'] as $session): ?>
@@ -482,10 +482,10 @@
                                                             
                                                             <!-- Bouton pour créer une nouvelle séance même s'il y a déjà des séances -->
                                                             <div class="text-center py-2 mt-2">
-                                                                <a href="/trainings/create?exercise_id=<?php echo $exerciseId; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '&user_id=' . $selectedUserId : ''; ?>" 
-                                                                   class="btn btn-sm btn-success">
+                                                                <button type="button" class="btn btn-sm btn-success" 
+                                                                        onclick="startTrainingSession(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')">
                                                                     <i class="fas fa-plus"></i> Nouvelle séance
-                                                                </a>
+                                                                </button>
                                                             </div>
                                                             <?php endif; ?>
                                                         </div>
