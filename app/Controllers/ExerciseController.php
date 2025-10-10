@@ -19,85 +19,28 @@ class ExerciseController {
         $exercises = [];
         $categories = [];
         $error = null;
-        $selectedUserId = null;
-        $users = [];
 
-        // Déterminer l'utilisateur pour lequel afficher les exercices
-        $currentUser = $_SESSION['user'] ?? null;
-        $isAdmin = isset($currentUser['is_admin']) && $currentUser['is_admin'];
-        $isCoach = isset($currentUser['role']) && $currentUser['role'] === 'Coach';
-        
         try {
-            // Récupérer la liste des utilisateurs pour le sélecteur (admin/coach seulement)
-            if ($isAdmin || $isCoach) {
-                $usersResponse = $this->apiService->getUsers();
-                if (isset($usersResponse["success"]) && $usersResponse["success"] && isset($usersResponse["data"]["users"])) {
-                    $users = $usersResponse["data"]["users"];
-                }
-            }
-
-            // Si c'est un admin ou coach, vérifier s'il y a un utilisateur sélectionné
-            if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
-                $selectedUserId = (int)$_GET['user_id'];
-                // Vérifier que l'utilisateur sélectionné existe
-                if ($selectedUserId !== $currentUser['id']) {
-                    $userExists = false;
-                    if (isset($users)) {
-                        foreach ($users as $user) {
-                            if ($user['id'] == $selectedUserId) {
-                                $userExists = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!$userExists) {
-                        $error = "Utilisateur sélectionné non trouvé";
-                        $selectedUserId = $currentUser['id'];
-                    }
-                }
-            } else {
-                // Pour les archers ou si aucun utilisateur sélectionné, utiliser l'utilisateur connecté
-                $selectedUserId = $currentUser['id'] ?? null;
-            }
-
-            // Récupérer les exercices pour l'utilisateur sélectionné
-            error_log("DEBUG ExerciseController::index - selectedUserId: " . $selectedUserId);
-            $response = $this->apiService->getExercisesByUser($selectedUserId);
+            // Récupérer tous les exercices disponibles (pas seulement ceux avec progression)
+            $response = $this->apiService->getExercises();
             
             if (isset($response["success"]) && $response["success"] && isset($response["data"])) {
-                // Les données viennent de training/progress/user/{user_id} qui retourne des objets de progression
-                $progressData = $response["data"];
+                $data = $response["data"];
                 
-                // Vérifier que $progressData est un tableau
-                if (!is_array($progressData)) {
-                    error_log("DEBUG ExerciseController - progressData is not an array: " . gettype($progressData));
-                    $exercises = [];
+                // Gérer la structure imbriquée de l'API
+                if (isset($data["success"]) && $data["success"] && isset($data["data"])) {
+                    $exercises = $data["data"];
                 } else {
-                    // Convertir les données de progression en format exercice
-                    // Filtrer pour ne garder que les exercices qui ont une progression réelle (pas 'non_actif')
-                    $exercises = [];
-                    foreach ($progressData as $progress) {
-                        // Vérifier que $progress est un tableau et contient les clés nécessaires
-                        if (is_array($progress) && isset($progress['progression'])) {
-                            // Ne garder que les exercices qui ont une progression réelle
-                            if ($progress['progression'] !== 'non_actif' && $progress['progression'] !== null) {
-                                $exercises[] = [
-                                    'id' => $progress['exercise_sheet_id'] ?? null,
-                                    'title' => $progress['exercise_sheet_title'] ?? '',
-                                    'description' => $progress['description'] ?? '',
-                                    'category' => $progress['category'] ?? '',
-                                    'creator_name' => $progress['user_name'] ?? '',
-                                    'progression' => $progress['progression'],
-                                    'start_date' => $progress['start_date'] ?? null,
-                                    'last_session_date' => $progress['last_session_date'] ?? null,
-                                    'updated_at' => $progress['updated_at'] ?? null
-                                ];
-                            }
-                        }
-                    }
-                    
-                    error_log("DEBUG ExerciseController - Nombre d'exercices avec progression: " . count($exercises));
+                    $exercises = $data;
                 }
+                
+                // Vérifier que $exercises est un tableau
+                if (!is_array($exercises)) {
+                    error_log("DEBUG ExerciseController - exercises is not an array: " . gettype($exercises));
+                    $exercises = [];
+                }
+                
+                error_log("DEBUG ExerciseController - Nombre d'exercices: " . count($exercises));
             } else {
                 $error = "Impossible de charger les exercices: " . ($response["message"] ?? "Erreur inconnue");
                 $exercises = [];
