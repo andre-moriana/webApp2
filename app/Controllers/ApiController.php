@@ -356,7 +356,23 @@ class ApiController {
             $response = $this->apiService->makeRequest("messages/" . $groupId . "/history", "GET");
             error_log("Réponse de l'API: " . json_encode($response));
 
-            $this->sendJsonResponse($response);
+            // Traiter la réponse pour retourner directement un tableau de messages
+            if ($response['success']) {
+                // L'API retourne directement un tableau de messages
+                $messages = [];
+                if (is_array($response['data'])) {
+                    $messages = $response['data'];
+                } elseif (is_array($response)) {
+                    $messages = $response;
+                }
+                
+                $this->sendJsonResponse($messages);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de la récupération des messages'
+                ], $response['status_code'] ?? 500);
+            }
         } catch (Exception $e) {
             error_log("Erreur lors de la récupération des messages: " . $e->getMessage());
             $this->sendJsonResponse([
@@ -717,7 +733,23 @@ class ApiController {
             $response = $this->apiService->makeRequest("events/" . $eventId . "/messages", "GET");
             error_log("Réponse de l'API: " . json_encode($response));
 
-            $this->sendJsonResponse($response);
+            // Traiter la réponse comme pour les groupes
+            if ($response['success']) {
+                // L'API retourne directement un tableau de messages
+                $messages = [];
+                if (is_array($response['data'])) {
+                    $messages = $response['data'];
+                } elseif (is_array($response)) {
+                    $messages = $response;
+                }
+                
+                $this->sendJsonResponse($messages);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de la récupération des messages'
+                ], $response['status_code'] ?? 500);
+            }
         } catch (Exception $e) {
             error_log("Erreur lors de la récupération des messages: " . $e->getMessage());
             $this->sendJsonResponse([

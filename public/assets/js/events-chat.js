@@ -213,8 +213,11 @@ async function loadEventMessages(eventId) {
         if (Array.isArray(data)) {
             console.log("Affichage de", data.length, "messages");
             displayMessages(data);
-        } else if (data.error) {
+        } else if (data && data.error) {
             console.error("Erreur du serveur:", data.error);
+            displayMessages([]);
+        } else if (data && data.success === false) {
+            console.error("Erreur du serveur:", data.message || data.error);
             displayMessages([]);
         } else {
             console.warn("Format de données inattendu:", data);
