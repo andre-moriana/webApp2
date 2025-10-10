@@ -203,7 +203,7 @@ $title = "Portail Archers de Gémenos - Détails de l'événement";
 <script>
 const currentUserId = <?php echo $_SESSION["user"]["id"]; ?>;
 const initialEventId = <?php echo $event ? $event["_id"] : "null"; ?>;
-const backendUrl = "<?php echo str_replace("/api", "", $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000"); ?>";
+// backendUrl supprimé - tous les appels passent maintenant par le backend WebApp2
 const isAdmin = <?php echo $_SESSION["user"]["is_admin"] ? "true" : "false"; ?>;
 const authToken = "<?php echo $_SESSION["token"] ?? ""; ?>";
 </script>

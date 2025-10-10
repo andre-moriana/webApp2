@@ -172,14 +172,14 @@ $title = "Gestion des événements - Portail Archers de Gémenos";
 <script>
 const currentUserId = <?php echo $_SESSION["user"]["id"]; ?>;
 const initialEventId = <?php echo (!empty($events) && isset($events[0]) && isset($events[0]["_id"])) ? json_encode($events[0]["_id"]) : "null"; ?>;
-const backendUrl = "<?php echo str_replace("/api", "", $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000"); ?>";
+// backendUrl supprimé - tous les appels passent maintenant par le backend WebApp2
 const isAdmin = <?php echo $_SESSION["user"]["is_admin"] ? "true" : "false"; ?>;
 const authToken = "<?php echo $_SESSION["token"] ?? ""; ?>";
 
 // Debug
 console.log("Initial Event ID:", initialEventId);
 console.log("Current User ID:", currentUserId);
-console.log("Backend URL:", backendUrl);
+// Backend URL supprimé - tous les appels passent maintenant par le backend WebApp2
 console.log("Auth Token:", authToken ? "Present" : "Missing");
 </script>
 
