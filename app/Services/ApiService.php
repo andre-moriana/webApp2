@@ -327,6 +327,62 @@ class ApiService {
         }
     }
 
+    private function makeInternalRequest($endpoint, $method = "GET", $data = null) {
+        try {
+            $url = "http://webapp" . $endpoint;
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            
+            $headers = [
+                'Content-Type: application/json',
+                'Accept: application/json'
+            ];
+            
+            // Ajouter le token d'authentification si disponible
+            if (isset($_SESSION['token'])) {
+                $headers[] = 'Authorization: Bearer ' . $_SESSION['token'];
+            }
+            
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            
+            if ($data && in_array($method, ['POST', 'PUT', 'PATCH'])) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            }
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+            
+            if ($error) {
+                return [
+                    "success" => false,
+                    "message" => "Erreur cURL: " . $error
+                ];
+            }
+            
+            $decodedResponse = json_decode($response, true);
+            
+            return [
+                "success" => $httpCode >= 200 && $httpCode < 300,
+                "data" => $decodedResponse,
+                "status_code" => $httpCode,
+                "message" => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
+            ];
+            
+        } catch (Exception $e) {
+            return [
+                "success" => false,
+                "message" => "Erreur de connexion interne: " . $e->getMessage()
+            ];
+        }
+    }
+
     public function getUsers() {
         // Ajouter le token dans les headers
         $result = $this->makeRequest("users", "GET");
@@ -483,25 +539,39 @@ class ApiService {
         ];
     }
     
-    private function getSimulatedUsers() {
+    public function getSimulatedUsers() {
         return [
             [
                 "id" => 1,
                 "first_name" => "Admin",
                 "last_name" => "Gémenos",
+                "name" => "Gémenos",
                 "email" => "admin@archers-gemenos.fr",
                 "role" => "admin",
                 "status" => "active",
+                "profileImage" => "/uploads/profiles/admin.jpg",
                 "created_at" => "2024-01-01 10:00:00"
             ],
             [
                 "id" => 2,
                 "first_name" => "Jean",
                 "last_name" => "Dupont",
+                "name" => "Dupont",
                 "email" => "jean.dupont@archers-gemenos.fr",
                 "role" => "user",
                 "status" => "active",
+                "profileImage" => "/uploads/profiles/jean.jpg",
                 "created_at" => "2024-01-15 14:30:00"
+            ],
+            [
+                "id" => 3,
+                "first_name" => "Marie",
+                "last_name" => "Martin",
+                "name" => "Martin",
+                "email" => "marie.martin@archers-gemenos.fr",
+                "role" => "user",
+                "status" => "active",
+                "created_at" => "2024-02-01 09:15:00"
             ]
         ];
     }

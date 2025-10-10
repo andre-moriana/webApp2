@@ -44,8 +44,40 @@ class UserController {
     /**
      * Retourne des utilisateurs simulés réalistes
      */
-
-  
+    private function getSimulatedUsers() {
+        return [
+            [
+                "id" => 1,
+                "first_name" => "Admin",
+                "last_name" => "Gémenos",
+                "name" => "Gémenos",
+                "email" => "admin@archers-gemenos.fr",
+                "role" => "admin",
+                "status" => "active",
+                "created_at" => "2024-01-01 10:00:00"
+            ],
+            [
+                "id" => 2,
+                "first_name" => "Jean",
+                "last_name" => "Dupont",
+                "name" => "Dupont",
+                "email" => "jean.dupont@archers-gemenos.fr",
+                "role" => "user",
+                "status" => "active",
+                "created_at" => "2024-01-15 14:30:00"
+            ],
+            [
+                "id" => 3,
+                "first_name" => "Marie",
+                "last_name" => "Martin",
+                "name" => "Martin",
+                "email" => "marie.martin@archers-gemenos.fr",
+                "role" => "user",
+                "status" => "active",
+                "created_at" => "2024-02-01 09:15:00"
+            ]
+        ];
+    }
     
     public function show($id) {
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {

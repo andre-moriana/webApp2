@@ -140,31 +140,39 @@ class ApiController {
     }
     
     public function getUserAvatar($userId) {
-        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            http_response_code(401);
-            exit('Non authentifié');
-        }
-
         try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
             // Récupérer le chemin de l'image depuis les paramètres GET
             $imagePath = $_GET['path'] ?? '';
             if (empty($imagePath)) {
+                $this->cleanOutput();
                 http_response_code(400);
-                exit('Chemin de l\'image manquant');
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Chemin de l'image manquant"
+                ]);
+                return;
             }
 
             // Construire l'URL complète vers l'API externe
             $externalUrl = 'http://82.67.123.22:25000' . $imagePath;
             
-            // Récupérer l'image depuis l'API externe
+            // Faire une requête pour récupérer l'image avec authentification
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $externalUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Authorization: Bearer ' . ($_SESSION['token'] ?? '')
-            ]);
+            
+            // Ajouter le token d'authentification si disponible
+            if (isset($_SESSION['token'])) {
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Authorization: Bearer ' . $_SESSION['token']
+                ]);
+            }
             
             $imageData = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -172,7 +180,8 @@ class ApiController {
             curl_close($ch);
             
             if ($httpCode === 200 && $imageData !== false) {
-                // Définir les headers appropriés
+                // Nettoyer la sortie et définir les headers appropriés
+                $this->cleanOutput();
                 header('Content-Type: ' . $contentType);
                 header('Content-Length: ' . strlen($imageData));
                 header('Cache-Control: public, max-age=3600'); // Cache pendant 1 heure
@@ -180,14 +189,26 @@ class ApiController {
                 // Afficher l'image
                 echo $imageData;
             } else {
-                http_response_code(404);
-                exit('Image non trouvée');
+                // Si l'image n'est pas trouvée, retourner une image par défaut
+                $this->returnDefaultAvatar();
             }
         } catch (Exception $e) {
             error_log("Erreur lors de la récupération de l'avatar: " . $e->getMessage());
-            http_response_code(500);
-            exit('Erreur serveur');
+            $this->returnDefaultAvatar();
         }
+    }
+    
+    private function returnDefaultAvatar() {
+        // Créer une image SVG par défaut
+        $svg = '<?xml version="1.0" encoding="UTF-8"?>
+        <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="16" fill="#6c757d"/>
+            <text x="16" y="20" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">?</text>
+        </svg>';
+        
+        header('Content-Type: image/svg+xml');
+        header('Cache-Control: public, max-age=3600');
+        echo $svg;
     }
     
     

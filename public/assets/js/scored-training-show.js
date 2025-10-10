@@ -367,8 +367,7 @@ function saveEnd() {
         return response.json();
     })
     .then(result => {
-        console.log('📊 Résultat de la sauvegarde:', result);
-        if (result.success) {
+       if (result.success) {
             
             // Ajouter la volée au tableau localement en utilisant les données du serveur
             if (result.data && result.data.end) {
@@ -463,8 +462,6 @@ function saveEndAndClose() {
         console.error('❌ Formulaire addEndForm non trouvé');
         return;
     }
-    console.log('✅ Formulaire trouvé pour saveEndAndClose');
-    
     const formData = new FormData(form);
     
     const scores = [];
@@ -520,7 +517,6 @@ function saveEndAndClose() {
         body: JSON.stringify(endData)
     })
     .then(response => {
-        console.log('📡 Réponse HTTP:', response.status, response.statusText);
         return response.json();
     })
     .then(result => {

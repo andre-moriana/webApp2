@@ -74,7 +74,7 @@ class Router {
         $this->addRoute("DELETE", "/groups/{id}", "GroupController@destroy");
         
         // Routes internes pour les groupes (proxy vers API externe)
-        $this->addRoute("GET", "/users", "ApiController@users");
+        $this->addRoute("GET", "/api/users", "ApiController@users");
         $this->addRoute("GET", "/users/{id}/avatar", "ApiController@getUserAvatar");
         $this->addRoute("POST", "/groups/{id}/members", "ApiController@addGroupMembers");
         $this->addRoute("DELETE", "/groups/{id}/remove-member/{memberId}", "ApiController@removeGroupMember");
