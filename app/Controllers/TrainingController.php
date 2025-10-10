@@ -21,11 +21,6 @@ class TrainingController {
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
         
-        error_log("=== DEBUG TrainingController::index ===");
-        error_log("Session user: " . json_encode($_SESSION['user']));
-        error_log("isAdmin: " . ($isAdmin ? "true" : "false"));
-        error_log("isCoach: " . ($isCoach ? "true" : "false"));
-        
         // Récupérer l'ID utilisateur depuis le token pour éviter l'incohérence
         $actualUserId = $this->getUserIdFromToken();
         if (!$actualUserId) {
@@ -41,9 +36,6 @@ class TrainingController {
                 $currentUser = $_SESSION['user'];
                 $isAdmin = $currentUser['is_admin'] ?? false;
                 $isCoach = ($currentUser['role'] ?? '') === 'Coach';
-                error_log("Session user updated: " . json_encode($_SESSION['user']));
-                error_log("isAdmin (after update): " . ($isAdmin ? "true" : "false"));
-                error_log("isCoach (after update): " . ($isCoach ? "true" : "false"));
             }
         }
         
@@ -54,10 +46,6 @@ class TrainingController {
         if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
-        
-        error_log("actualUserId: " . $actualUserId);
-        error_log("selectedUserId: " . $selectedUserId);
-        
         // Récupérer les informations de l'utilisateur sélectionné
         $selectedUser = $this->getUserInfo($selectedUserId);
         
@@ -67,15 +55,9 @@ class TrainingController {
         // Récupérer les entraînements de l'utilisateur sélectionné
         $trainings = $this->getTrainings($selectedUserId);
         
-        // Debug: Log des données récupérées
-        error_log("DEBUG index() - trainings count: " . count($trainings));
-        if (!empty($trainings)) {
-            error_log("DEBUG index() - first training structure: " . json_encode($trainings[0] ?? 'no first training'));
-        }
         
         // Récupérer les vraies sessions d'entraînement depuis l'API
         $realSessions = $this->fetchAllTrainingSessions($selectedUserId);
-        error_log("DEBUG index() - real sessions count: " . count($realSessions));
         
         // Alternative: récupérer les sessions depuis les données de progression
         $sessionsFromProgress = [];
@@ -99,7 +81,6 @@ class TrainingController {
                 ];
             }
         }
-        error_log("DEBUG index() - sessions from progress: " . json_encode($sessionsFromProgress));
         
         // Grouper les exercices par catégorie (pas seulement ceux qui ont des sessions)
         $groupedTrainings = $this->groupAllExercisesByCategory($allExercises, $trainings, $selectedUserId, $selectedUser, $realSessions);
@@ -204,20 +185,8 @@ class TrainingController {
                 }
             }
         }
-        
-        // Debug: Log des informations
-        error_log("DEBUG show() - selectedUserId: " . $selectedUserId);
-        error_log("DEBUG show() - exerciseId: " . $exerciseId);
-        error_log("DEBUG show() - training user_id: " . $training['user_id']);
-        
         // Récupérer les sessions pour cet exercice depuis les données déjà récupérées
         $sessions = $sessionsByExercise[$exerciseId] ?? [];
-        
-        // Debug: Log du nombre de sessions récupérées
-        error_log("DEBUG show() - sessions count: " . count($sessions));
-        if (!empty($sessions)) {
-            error_log("DEBUG show() - first session: " . json_encode($sessions[0]));
-        }
         
         // S'assurer que $sessions est un tableau
         if (!is_array($sessions)) {
@@ -359,7 +328,6 @@ class TrainingController {
             // Si pas de données, retourner un array vide
             return [];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des entraînements: ' . $e->getMessage());
             return [];
         }
     }
@@ -383,7 +351,6 @@ class TrainingController {
             
             return null;
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération de l\'entraînement: ' . $e->getMessage());
             return null;
         }
     }
@@ -407,7 +374,6 @@ class TrainingController {
                 'last_training_date' => null
             ];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des statistiques: ' . $e->getMessage());
             return [
                 'total_trainings' => 0,
                 'total_arrows' => 0,
@@ -435,8 +401,6 @@ class TrainingController {
             }
             $response = $this->apiService->makeRequest($endpoint, 'GET');
             
-            // Debug: Log simplifié
-            error_log("DEBUG getSessionsForExercise - exerciseId: $exerciseId, userId: $userId, sessions: " . (isset($response['data']['data']) ? count($response['data']['data']) : 0));
             
             if ($response['success'] && !empty($response['data'])) {
                 // Vérifier si c'est le message de test
@@ -476,7 +440,6 @@ class TrainingController {
             
             return [];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des sessions pour l\'exercice ' . $exerciseId . ': ' . $e->getMessage());
             return [];
         }
     }
@@ -561,13 +524,6 @@ class TrainingController {
             
             // Récupérer les sessions pour cet exercice depuis les données déjà récupérées
             $realSessions = $sessionsByExercise[$exerciseId] ?? [];
-            
-            // Debug: Log des sessions récupérées
-            error_log("DEBUG groupTrainingsByCategory - exerciseId: $exerciseId, selectedUserId: $selectedUserId");
-            error_log("DEBUG groupTrainingsByCategory - realSessions count: " . count($realSessions));
-            if (!empty($realSessions)) {
-                error_log("DEBUG groupTrainingsByCategory - first session: " . json_encode($realSessions[0]));
-            }
             
             // Ajouter les vraies sessions si elles existent
             if (!empty($realSessions)) {
@@ -786,15 +742,8 @@ class TrainingController {
             $isAdmin = $loggedInUser['is_admin'] ?? false;
             $isCoach = ($loggedInUser['role'] ?? '') === 'Coach';
             
-            error_log("=== DEBUG getExercisesByCategory ===");
-            error_log("Catégorie: " . $category);
-            error_log("Utilisateur connecté: " . json_encode($loggedInUser));
-            error_log("isAdmin: " . ($isAdmin ? "true" : "false"));
-            error_log("isCoach: " . ($isCoach ? "true" : "false"));
-            
             // Récupérer tous les exercices (pas de filtrage car admin/coach)
             $response = $this->apiService->getExercises();
-            error_log("Réponse API: " . json_encode($response));
             
             if ($response['success'] && !empty($response['data'])) {
                 // Extraire les données de la structure imbriquée
@@ -804,34 +753,24 @@ class TrainingController {
                     $exercises = $exercises['data'];
                 }
                 
-                error_log("Nombre d'exercices reçus: " . count($exercises));
-                
                 $categoryExercises = [];
                 
                 foreach ($exercises as $exercise) {
-                    error_log("Traitement exercice: " . json_encode($exercise));
                     
                     if (isset($exercise['category']) && $exercise['category'] === $category) {
-                        error_log("Exercice de la bonne catégorie");
-                        error_log("Progression: " . ($exercise['progression'] ?? 'non_actif'));
                         
                         // Pour les admins et coachs, afficher tous les exercices
                         // Pour les autres, ne pas afficher les exercices masqués
                         if ($isAdmin || $isCoach || ($exercise['progression'] ?? 'non_actif') !== 'masqué') {
-                            error_log("Exercice ajouté à la liste");
                             $categoryExercises[] = $exercise;
-                        } else {
-                            error_log("Exercice masqué non ajouté");
                         }
                     }
                 }
                 
-                error_log("Nombre d'exercices filtrés: " . count($categoryExercises));
                 return $categoryExercises;
             }
             return [];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des exercices par catégorie: ' . $e->getMessage());
             return [];
         }
     }
@@ -842,17 +781,8 @@ class TrainingController {
             $loggedInUser = $_SESSION['user'];
             $isAdmin = $loggedInUser['is_admin'] ?? false;
             $isCoach = ($loggedInUser['role'] ?? '') === 'Coach';
-            
-            error_log("=== DEBUG getVisibleExercisesByCategory ===");
-            error_log("Catégorie: " . $category);
-            error_log("userId: " . $userId);
-            error_log("Utilisateur connecté: " . json_encode($loggedInUser));
-            error_log("isAdmin: " . ($isAdmin ? "true" : "false"));
-            error_log("isCoach: " . ($isCoach ? "true" : "false"));
-            
             // Récupérer tous les exercices (pas de filtrage car admin/coach)
             $response = $this->apiService->getExercises();
-            error_log("Réponse API: " . json_encode($response));
             
             if ($response['success'] && !empty($response['data'])) {
                 // Extraire les données de la structure imbriquée
@@ -863,36 +793,25 @@ class TrainingController {
                     $exercises = $exercises['data'];
                 }
                 
-                error_log("Nombre d'exercices reçus: " . count($exercises));
-                
                 $visibleExercises = [];
                 
                 // Filtrer par catégorie et par statut
                 foreach ($exercises as $exercise) {
-                    error_log("Traitement exercice: " . json_encode($exercise));
                     
                     if (isset($exercise['category']) && $exercise['category'] === $category) {
-                        error_log("Exercice de la bonne catégorie");
-                        error_log("Progression: " . ($exercise['progression'] ?? 'non_actif'));
-                        
                         // Pour les admins et coachs, afficher tous les exercices
                         // Pour les autres, ne pas afficher les exercices masqués
                         if ($isAdmin || $isCoach || ($exercise['progression'] ?? 'non_actif') !== 'masqué') {
-                            error_log("Exercice ajouté à la liste");
                             $visibleExercises[] = $exercise;
-                        } else {
-                            error_log("Exercice masqué non ajouté");
                         }
                     }
                 }
                 
-                error_log("Nombre d'exercices filtrés: " . count($visibleExercises));
                 return $visibleExercises;
             }
             
             return [];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des exercices visibles par catégorie: ' . $e->getMessage());
             return [];
         }
     }
@@ -953,7 +872,6 @@ class TrainingController {
                 }
             }
         } catch (Exception $e) {
-            error_log('Erreur lors de la mise à jour de la progression: ' . $e->getMessage());
             // Rediriger vers la page show actuelle si on a l'ID de session, sinon vers l'index
             if (!empty($sessionId)) {
                 header('Location: /trainings/' . $sessionId . '?error=' . urlencode('Erreur serveur'));
@@ -1003,7 +921,6 @@ class TrainingController {
             echo json_encode($response);
             
         } catch (Exception $e) {
-            error_log('Erreur lors de la mise à jour des notes: ' . $e->getMessage());
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Erreur serveur']);
         }
@@ -1048,7 +965,6 @@ class TrainingController {
             echo json_encode($response);
             
         } catch (Exception $e) {
-            error_log('Erreur lors de la sauvegarde de la session: ' . $e->getMessage());
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Erreur serveur']);
         }
@@ -1097,7 +1013,6 @@ class TrainingController {
                 'lastName' => $userId
             ];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des informations utilisateur: ' . $e->getMessage());
             return [
                 'id' => $userId,
                 'name' => 'Utilisateur ' . $userId,
@@ -1123,7 +1038,6 @@ class TrainingController {
             $decoded = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], explode('.', $token)[1])), true);
             return $decoded['user_id'] ?? null;
         } catch (Exception $e) {
-            error_log('Erreur lors du décodage du token: ' . $e->getMessage());
             return null;
         }
     }
@@ -1144,15 +1058,8 @@ class TrainingController {
             $exerciseId = $_POST['exercise_id'] ?? null;
             $userId = $_POST['user_id'] ?? null;
             $status = $_POST['status'] ?? null;
-            // Logs de débogage
-            error_log("=== DEBUG updateStatus ===");
-            error_log("POST data: " . json_encode($_POST));
-            error_log("exerciseId: " . $exerciseId);
-            error_log("userId: " . $userId);
-            error_log("status: " . $status);
             // Validation
             if (!$exerciseId || !$userId || !$status) {
-                error_log("Validation failed - missing parameters");
                 echo json_encode(['success' => false, 'message' => 'Paramètres manquants']);
                 return;
             }
@@ -1177,18 +1084,14 @@ class TrainingController {
             ];
 
             $response = $this->apiService->makeRequest($endpoint, 'POST', $data);
-            error_log("API Response: " . json_encode($response));
 
             if ($response['success']) {
-                error_log("Status update successful");
                 echo json_encode(['success' => true, 'message' => 'Statut mis à jour avec succès']);
             } else {
-                error_log("Status update failed: " . ($response['message'] ?? 'Unknown error'));
                 echo json_encode(['success' => false, 'message' => $response['message'] ?? 'Erreur lors de la mise à jour']);
             }
 
         } catch (Exception $e) {
-            error_log('Erreur lors de la mise à jour du statut : ' . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Erreur interne du serveur']);
         }
     }
@@ -1201,9 +1104,6 @@ class TrainingController {
      */
     private function getAllExercisesForUser($isAdmin, $isCoach) {
         try {
-            error_log("=== DEBUG getAllExercisesForUser ===");
-            error_log("isAdmin: " . ($isAdmin ? "true" : "false"));
-            error_log("isCoach: " . ($isCoach ? "true" : "false"));
             
             // Récupérer l'ID de l'utilisateur sélectionné
             $selectedUserId = $_GET['user_id'] ?? null;
@@ -1213,7 +1113,6 @@ class TrainingController {
             
             // Récupérer tous les exercices
             $response = $this->apiService->getExercises();
-            error_log("Réponse API getExercises: " . json_encode($response));
             
             if ($response['success'] && !empty($response['data'])) {
                 // Extraire les données de la structure imbriquée
@@ -1222,8 +1121,6 @@ class TrainingController {
                 if (isset($exercises['success']) && isset($exercises['data'])) {
                     $exercises = $exercises['data'];
                 }
-                
-                error_log("Nombre d'exercices reçus: " . count($exercises));
                 
                 // Récupérer les statuts spécifiques à l'utilisateur
                 $userProgressResponse = $this->apiService->getTrainings($selectedUserId);
@@ -1241,36 +1138,28 @@ class TrainingController {
                     }
                 }
                 
-                error_log("Statuts utilisateur: " . json_encode($userProgress));
                 
                 // Filtrer les exercices selon les permissions et appliquer les statuts utilisateur
                 $filteredExercises = [];
                 foreach ($exercises as $exercise) {
-                    error_log("Traitement exercice: " . json_encode($exercise));
                     
                     // Utiliser le statut spécifique à l'utilisateur s'il existe, sinon le statut global
                     $exerciseProgression = $userProgress[$exercise['id']] ?? ($exercise['progression'] ?? 'non_actif');
                     $exercise['progression'] = $exerciseProgression;
                     
-                    error_log("Progression finale: " . $exerciseProgression);
                     
                     // Pour les admins et coachs, afficher tous les exercices
                     // Pour les autres, ne pas afficher les exercices masqués
                     if ($isAdmin || $isCoach || $exerciseProgression !== 'masqué') {
-                        error_log("Exercice ajouté à la liste");
                         $filteredExercises[] = $exercise;
-                    } else {
-                        error_log("Exercice masqué non ajouté");
                     }
                 }
                 
-                error_log("Nombre d'exercices filtrés: " . count($filteredExercises));
                 return $filteredExercises;
             }
             
             return [];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des exercices: ' . $e->getMessage());
             return [];
         }
     }
@@ -1301,10 +1190,8 @@ class TrainingController {
         
         // Utiliser les vraies sessions d'entraînement si disponibles
         if (!empty($realSessions)) {
-            error_log("DEBUG groupAllExercisesByCategory - using real sessions: " . count($realSessions));
             foreach ($realSessions as $session) {
                 if (!is_array($session)) {
-                    error_log("DEBUG groupAllExercisesByCategory - session is not array: " . gettype($session));
                     continue;
                 }
                 
@@ -1315,14 +1202,11 @@ class TrainingController {
                 $sessionsByExercise[$exerciseId][] = $session;
                 
                 // Log de la structure de chaque session
-                error_log("DEBUG groupAllExercisesByCategory - real session for exercise $exerciseId: " . json_encode($session));
             }
         } else {
             // Fallback: utiliser les données de progression
-            error_log("DEBUG groupAllExercisesByCategory - using training progress data");
         foreach ($trainings as $training) {
             if (!is_array($training)) {
-                    error_log("DEBUG groupAllExercisesByCategory - training is not array: " . gettype($training));
                 continue;
             }
             
@@ -1332,12 +1216,8 @@ class TrainingController {
             }
             $sessionsByExercise[$exerciseId][] = $training;
                 
-                // Log de la structure de chaque training
-                error_log("DEBUG groupAllExercisesByCategory - training for exercise $exerciseId: " . json_encode($training));
             }
         }
-        
-        error_log("DEBUG groupAllExercisesByCategory - sessionsByExercise keys: " . implode(', ', array_keys($sessionsByExercise)));
         
         // Grouper seulement les exercices qui ont des sessions ou des données de progression
         $exercisesWithData = [];
@@ -1356,8 +1236,6 @@ class TrainingController {
         // Combiner les deux listes
         $exerciseIdsToShow = array_unique(array_merge($exerciseIdsWithSessions, $exerciseIdsWithProgress));
         
-        error_log("DEBUG groupAllExercisesByCategory - exerciseIdsToShow: " . implode(', ', $exerciseIdsToShow));
-        
         // Filtrer les exercices pour ne garder que ceux qui ont des données
         foreach ($allExercises as $exercise) {
             if (!is_array($exercise)) {
@@ -1371,8 +1249,6 @@ class TrainingController {
                 $exercisesWithData[] = $exercise;
             }
         }
-        
-        error_log("DEBUG groupAllExercisesByCategory - exercisesWithData count: " . count($exercisesWithData));
         
         // Grouper les exercices filtrés par catégorie
         foreach ($exercisesWithData as $exercise) {
@@ -1433,15 +1309,10 @@ class TrainingController {
                 
                 if (!empty($validSessions)) {
                     $realSessions = $validSessions;
-                    error_log("DEBUG groupAllExercisesByCategory - using valid API sessions for exercise $exerciseId: " . count($validSessions));
                 } else {
-                    error_log("DEBUG groupAllExercisesByCategory - API sessions don't match selected user $selectedUserId, using empty sessions");
                     $realSessions = [];
                 }
             }
-            
-            // Debug: Log des statistiques de l'API
-            error_log("DEBUG groupAllExercisesByCategory - exerciseId: $exerciseId, globalStats: " . json_encode($globalStats));
             
             // Utiliser les statistiques de l'API backend seulement si l'utilisateur a des sessions
             if ($globalStats && isset($globalStats['total_sessions']) && !empty($realSessions)) {
@@ -1452,7 +1323,6 @@ class TrainingController {
                 $lastSessionDate = $globalStats['last_session_date'] ?? $globalStats['last_training_date'] ?? null;
                 $firstSessionDate = $globalStats['first_session_date'] ?? $globalStats['first_training_date'] ?? null;
                 
-                error_log("DEBUG groupAllExercisesByCategory - exerciseId: $exerciseId, API stats: sessions=$totalSessions, arrows=$totalArrows, time=$totalTime");
             } else {
                 // Fallback: utiliser les données de progression si pas de statistiques API
                 $totalSessions = 0;
@@ -1470,51 +1340,41 @@ class TrainingController {
                         break;
                     }
                 }
+            }
                 
-                error_log("DEBUG groupAllExercisesByCategory - exerciseId: $exerciseId, fallback stats: sessions=$totalSessions, arrows=$totalArrows, time=$totalTime");
+            // Mettre à jour les statistiques de l'exercice
+            $grouped[$category]['exercises'][$exerciseId]['stats']['total_sessions'] = $totalSessions;
+            $grouped[$category]['exercises'][$exerciseId]['stats']['total_arrows'] = $totalArrows;
+            $grouped[$category]['exercises'][$exerciseId]['stats']['total_time_minutes'] = $totalTime;
+            $grouped[$category]['exercises'][$exerciseId]['stats']['first_session'] = $firstSessionDate;
+            $grouped[$category]['exercises'][$exerciseId]['stats']['last_session'] = $lastSessionDate;
+            
+            // Mettre à jour les totaux de la catégorie
+            $grouped[$category]['total_sessions'] += $totalSessions;
+            $grouped[$category]['total_arrows'] += $totalArrows;
+            $grouped[$category]['total_time_minutes'] += $totalTime;
+            
+            // Ajouter les sessions
+            foreach ($realSessions as $session) {
+                if (!is_array($session)) {
+                    continue; // Ignorer les éléments non-tableaux
                 }
-                
-                // Mettre à jour les statistiques de l'exercice
-                $grouped[$category]['exercises'][$exerciseId]['stats']['total_sessions'] = $totalSessions;
-                $grouped[$category]['exercises'][$exerciseId]['stats']['total_arrows'] = $totalArrows;
-                $grouped[$category]['exercises'][$exerciseId]['stats']['total_time_minutes'] = $totalTime;
-                $grouped[$category]['exercises'][$exerciseId]['stats']['first_session'] = $firstSessionDate;
-                $grouped[$category]['exercises'][$exerciseId]['stats']['last_session'] = $lastSessionDate;
-                
-                error_log("DEBUG groupAllExercisesByCategory - exerciseId: $exerciseId, final stats: " . json_encode($grouped[$category]['exercises'][$exerciseId]['stats']));
-                
-                // Mettre à jour les totaux de la catégorie
-                $grouped[$category]['total_sessions'] += $totalSessions;
-                $grouped[$category]['total_arrows'] += $totalArrows;
-                $grouped[$category]['total_time_minutes'] += $totalTime;
-                
-                // Ajouter les sessions
-                error_log("DEBUG groupAllExercisesByCategory - exerciseId: $exerciseId, realSessions count: " . count($realSessions));
-                    foreach ($realSessions as $session) {
-                    if (!is_array($session)) {
-                        error_log("DEBUG groupAllExercisesByCategory - session is not array: " . gettype($session));
-                        continue; // Ignorer les éléments non-tableaux
-                    }
-                    
-                    error_log("DEBUG groupAllExercisesByCategory - adding session: " . json_encode($session));
-                    
-                        $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
-                        'id' => $session['id'] ?? $session['_id'] ?? 'unknown',
-                            'start_date' => $session['start_date'] ?? $session['created_at'] ?? null,
-                            'created_at' => $session['created_at'] ?? null,
-                            'end_date' => $session['end_date'] ?? null,
-                        'arrows_shot' => $session['total_arrows'] ?? $session['arrows_shot'] ?? 0,
-                        'total_arrows' => $session['total_arrows'] ?? $session['arrows_shot'] ?? 0,
-                        'duration_minutes' => $session['duration_minutes'] ?? $session['duration'] ?? 0,
-                            'total_sessions' => 1,
-                        'score' => $session['score'] ?? $session['total_score'] ?? 0,
-                            'is_aggregated' => false,
-                            'user_name' => $selectedUser['name'] ?? 'Utilisateur',
-                            'user_id' => $selectedUserId
-                        ];
-                    }
-                
-                error_log("DEBUG groupAllExercisesByCategory - exerciseId: $exerciseId, final sessions count: " . count($grouped[$category]['exercises'][$exerciseId]['sessions']));
+            
+                $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
+                'id' => $session['id'] ?? $session['_id'] ?? 'unknown',
+                    'start_date' => $session['start_date'] ?? $session['created_at'] ?? null,
+                    'created_at' => $session['created_at'] ?? null,
+                    'end_date' => $session['end_date'] ?? null,
+                'arrows_shot' => $session['total_arrows'] ?? $session['arrows_shot'] ?? 0,
+                'total_arrows' => $session['total_arrows'] ?? $session['arrows_shot'] ?? 0,
+                'duration_minutes' => $session['duration_minutes'] ?? $session['duration'] ?? 0,
+                    'total_sessions' => 1,
+                'score' => $session['score'] ?? $session['total_score'] ?? 0,
+                    'is_aggregated' => false,
+                    'user_name' => $selectedUser['name'] ?? 'Utilisateur',
+                    'user_id' => $selectedUserId
+                ];
+            }
         }
         
         return $grouped;
@@ -1531,8 +1391,6 @@ class TrainingController {
             // Utiliser l'endpoint pour récupérer les détails d'une session
             $response = $this->apiService->getTrainingById($id);
             
-            error_log("getSessionById - session $id response: " . json_encode($response));
-            
             if ($response['success'] && !empty($response['data'])) {
                 $session = $response['data'];
                 
@@ -1541,14 +1399,11 @@ class TrainingController {
                     $session = $session['data'];
                 }
                 
-                error_log("getSessionById - session $id found: " . json_encode($session));
                 return $session;
             }
             
-            error_log("getSessionById - session $id not found");
             return null;
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération de la session: ' . $e->getMessage());
             return null;
         }
     }
@@ -1563,7 +1418,6 @@ class TrainingController {
             $response = $this->apiService->makeRequest("/training/sessions/user/$userId", 'GET');
             
             // Debug: Log de la réponse complète
-            error_log("fetchAllTrainingSessions - response: " . json_encode($response));
             
             if ($response['success'] && isset($response['data'])) {
                 $sessions = $response['data'];
@@ -1575,18 +1429,13 @@ class TrainingController {
                 
                 // Vérifier que c'est bien un tableau
                 if (is_array($sessions)) {
-                    error_log("fetchAllTrainingSessions - found " . count($sessions) . " sessions");
                     return $sessions;
             } else {
-                    error_log("fetchAllTrainingSessions - sessions is not array: " . gettype($sessions));
                     return [];
                 }
             }
-            
-            error_log("fetchAllTrainingSessions - no sessions found for user $userId");
             return [];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des sessions: ' . $e->getMessage());
             return [];
         }
     }
@@ -1612,8 +1461,6 @@ class TrainingController {
                 // Extraire les sessions récentes
                 $sessions = $data['recent_sessions'] ?? [];
                 
-                error_log("getExerciseDashboardData - exerciseId: $exerciseId, userId: $userId, stats: " . json_encode($stats) . ", sessions: " . count($sessions));
-                
                 return [
                     'stats' => $stats,
                     'sessions' => $sessions
@@ -1622,7 +1469,6 @@ class TrainingController {
             
             return ['stats' => null, 'sessions' => []];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des données dashboard: ' . $e->getMessage());
             return ['stats' => null, 'sessions' => []];
         }
     }
@@ -1639,27 +1485,20 @@ class TrainingController {
             $endpoint = "/training/dashboard/$exerciseId?user_id=$userId";
             $response = $this->apiService->makeRequest($endpoint, 'GET');
             
-            // Debug: Log de la réponse complète
-            error_log("getExerciseStats - response: " . json_encode($response));
-            
             if ($response['success'] && isset($response['data']['global_stats'])) {
-                error_log("getExerciseStats - global_stats trouvées: " . json_encode($response['data']['global_stats']));
                 return $response['data']['global_stats'];
             }
             
             // Essayer d'autres structures possibles
             if ($response['success'] && isset($response['data'])) {
-                error_log("getExerciseStats - data structure: " . json_encode($response['data']));
                 
                 // Vérifier si les statistiques sont dans data.data.global_stats
                 if (isset($response['data']['data']['global_stats'])) {
-                    error_log("getExerciseStats - global_stats trouvées dans data.data: " . json_encode($response['data']['data']['global_stats']));
                     return $response['data']['data']['global_stats'];
                 }
                 
                 // Vérifier si les statistiques sont dans data.data directement
                 if (isset($response['data']['data']['total_sessions'])) {
-                    error_log("getExerciseStats - stats trouvées directement dans data.data: " . json_encode($response['data']['data']));
                     return $response['data']['data'];
                 }
                 
@@ -1668,11 +1507,8 @@ class TrainingController {
                     return $response['data'];
                 }
             }
-            
-            error_log("getExerciseStats: Aucune statistique trouvée pour l'exercice $exerciseId");
             return null;
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des statistiques: ' . $e->getMessage());
             return null;
         }
     }
@@ -1690,7 +1526,6 @@ class TrainingController {
             
             // Vérifier que la réponse est valide
             if (!is_array($response)) {
-                error_log('fetchSessionsForExercise: Réponse API invalide (pas un tableau)');
                 return [];
             }
             
@@ -1704,11 +1539,8 @@ class TrainingController {
                     return $data;
                 }
             }
-            
-            error_log('fetchSessionsForExercise: Aucune session trouvée pour l\'exercice ' . $exerciseId);
             return [];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des sessions: ' . $e->getMessage());
             return [];
         }
     }
@@ -1770,7 +1602,6 @@ class TrainingController {
             }
             
         } catch (Exception $e) {
-            error_log('Erreur TrainingController::deleteSession: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode([
                 'success' => false,

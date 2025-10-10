@@ -18,15 +18,6 @@ class UserValidationController {
         $authController = new AuthController();
         $authController->requireAuth();
 
-        // Vérifier les droits d'administrateur
-        /*
-        if (!$this->isAdmin()) {
-            $_SESSION['error'] = 'Accès refusé. Seuls les administrateurs peuvent valider les utilisateurs.';
-            header('Location: /dashboard');
-            exit;
-        }
-        */
-
         try {
             $result = $this->apiService->getPendingUsers();
             
@@ -42,7 +33,6 @@ class UserValidationController {
                 $_SESSION['error'] = 'Erreur lors de la récupération des utilisateurs en attente: ' . ($result['message'] ?? 'Erreur inconnue');
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de la récupération des utilisateurs en attente: " . $e->getMessage());
             $pendingUsers = [];
             $_SESSION['error'] = 'Erreur lors de la récupération des utilisateurs en attente: ' . $e->getMessage();
         }
@@ -94,7 +84,6 @@ class UserValidationController {
                 $_SESSION['error'] = $result['message'] ?? 'Erreur lors de la validation de l\'utilisateur';
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de la validation de l'utilisateur: " . $e->getMessage());
             $_SESSION['error'] = 'Erreur lors de la validation de l\'utilisateur';
         }
 
@@ -133,7 +122,6 @@ class UserValidationController {
                 $_SESSION['error'] = $result['message'] ?? 'Erreur lors du rejet de l\'utilisateur';
             }
         } catch (Exception $e) {
-            error_log("Erreur lors du rejet de l'utilisateur: " . $e->getMessage());
             $_SESSION['error'] = 'Erreur lors du rejet de l\'utilisateur';
         }
 

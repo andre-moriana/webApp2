@@ -54,22 +54,11 @@ class ScoredTrainingController {
         // Récupérer les exercices disponibles
         $exercises = $this->getAllExercisesForUser($isAdmin, $isCoach);
         
-        // Debug: afficher l'utilisateur sélectionné
-        error_log('DEBUG index() - selectedUserId: ' . $selectedUserId);
-        error_log('DEBUG index() - actualUserId: ' . $actualUserId);
-        error_log('DEBUG index() - isAdmin: ' . ($isAdmin ? 'true' : 'false'));
-        error_log('DEBUG index() - isCoach: ' . ($isCoach ? 'true' : 'false'));
-        
         // Récupérer les tirs comptés de l'utilisateur
         $scoredTrainings = $this->getScoredTrainings($selectedUserId);
         
-        // Debug: vérifier le type de données retourné
-        error_log('DEBUG index() - scoredTrainings type: ' . gettype($scoredTrainings));
-        error_log('DEBUG index() - scoredTrainings value: ' . json_encode($scoredTrainings));
-        
         // Forcer $scoredTrainings à être un array pour éviter les erreurs
         if (!is_array($scoredTrainings)) {
-            error_log('DEBUG index() - scoredTrainings is not an array, forcing to empty array');
             $scoredTrainings = [];
         }
         
@@ -119,10 +108,6 @@ class ScoredTrainingController {
     }
     
     public function show($id) {
-        // Debug: afficher l'ID reçu
-        error_log('DEBUG show() - ID reçu: ' . $id);
-        error_log('DEBUG show() - Type ID: ' . gettype($id));
-        
         // Vérifier si l'utilisateur est connecté
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             header('Location: /login');
@@ -147,19 +132,10 @@ class ScoredTrainingController {
         if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
-        
-        // Debug: afficher les IDs
-        error_log('DEBUG show() - actualUserId: ' . $actualUserId);
-        error_log('DEBUG show() - selectedUserId: ' . $selectedUserId);
-        
         // Récupérer les détails du tir compté via l'API externe avec le user_id sélectionné
         $apiResponse = $this->getScoredTrainingByIdWithUserId($id, $selectedUserId);
         
-        // Debug: afficher la réponse API
-        error_log('DEBUG show() - API Response: ' . var_export($apiResponse, true));
-        
         if (!$apiResponse || !$apiResponse['success'] || empty($apiResponse['data'])) {
-            error_log('DEBUG show() - Tir compté non trouvé pour ID: ' . $id . ' et user_id: ' . $selectedUserId);
             header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé pour cet utilisateur'));
             exit;
         }
@@ -174,15 +150,9 @@ class ScoredTrainingController {
             $scoredTraining['id'] = $id;
         }
         
-        // Debug: afficher l'ID du tir compté
-        error_log('DEBUG show() - scoredTraining id: ' . $scoredTraining['id']);
         
         // Debug: afficher les IDs pour comparaison
         $scoredTrainingUserId = $scoredTraining['user_id'] ?? null;
-        error_log('DEBUG show() - scoredTraining user_id: ' . ($scoredTrainingUserId ?? 'NULL'));
-        error_log('DEBUG show() - selectedUserId: ' . $selectedUserId);
-        error_log('DEBUG show() - actualUserId: ' . $actualUserId);
-        
         // Vérifier les permissions
         if (!$isAdmin && !$isCoach && $scoredTraining['user_id'] != $actualUserId) {
             header('Location: /scored-trainings?error=' . urlencode('Accès refusé'));
@@ -242,9 +212,6 @@ class ScoredTrainingController {
         $additionalCSS = ['/public/assets/css/scored-trainings.css'];
         $additionalJS = ['/public/assets/js/scored-trainings-simple.js?v=' . time()];
         
-        // Debug: Vérifier si les scripts sont inclus
-        error_log("DEBUG CREATE: additionalJS = " . implode(', ', $additionalJS));
-        
         // Inclure le header
         include 'app/Views/layouts/header.php';
         
@@ -291,13 +258,9 @@ class ScoredTrainingController {
                 'shooting_type' => $shootingType
             ]);
             
-            // Debug: afficher la réponse de l'API
-            error_log('DEBUG store() - Réponse API: ' . json_encode($response));
-            
             $this->sendJsonResponse($response);
 
         } catch (Exception $e) {
-            error_log('Erreur lors de la création du tir compté: ' . $e->getMessage());
             $this->sendJsonResponse(['success' => false, 'message' => 'Erreur serveur']);
         }
     }
@@ -345,26 +308,16 @@ class ScoredTrainingController {
         if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
-        
-        error_log('DEBUG endTraining() - trainingId: ' . $trainingId);
-        error_log('DEBUG endTraining() - $_GET[user_id]: ' . ($_GET['user_id'] ?? 'NON DÉFINI'));
-        error_log('DEBUG endTraining() - actualUserId: ' . $actualUserId);
-        error_log('DEBUG endTraining() - isAdmin: ' . ($isAdmin ? 'OUI' : 'NON'));
-        error_log('DEBUG endTraining() - isCoach: ' . ($isCoach ? 'OUI' : 'NON'));
-        error_log('DEBUG endTraining() - selectedUserId: ' . $selectedUserId);
-        error_log('DEBUG endTraining() - notes: ' . $notes);
-        
+
         if (!$selectedUserId) {
-            error_log('DEBUG endTraining() - selectedUserId non trouvé');
             $this->sendJsonResponse(['success' => false, 'message' => 'Utilisateur non identifié']);
         }
         
         try {
-            // Appeler l'API backend avec le selectedUserId en paramètre URL
-            error_log('DEBUG endTraining() - Appel API avec trainingId: ' . $trainingId . ', selectedUserId: ' . $selectedUserId);
             
             // Construire l'URL avec le user_id en paramètre
-            $url = "http://82.67.123.22:25000/api/scored-training/" . $trainingId . "/end?user_id=" . $selectedUserId;
+            $baseUrl = $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000/api";
+            $url = $baseUrl . "/scored-training/" . $trainingId . "/end?user_id=" . $selectedUserId;
             
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -372,8 +325,6 @@ class ScoredTrainingController {
             curl_setopt($ch, CURLOPT_POST, true);
             
             $token = $_SESSION['token'] ?? '';
-            error_log('DEBUG endTraining() - Token: ' . ($token ? 'PRÉSENT' : 'ABSENT'));
-            error_log('DEBUG endTraining() - Token length: ' . strlen($token));
             
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Authorization: Bearer ' . $token,
@@ -387,20 +338,14 @@ class ScoredTrainingController {
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
             
-            error_log('DEBUG endTraining() - URL: ' . $url);
-            error_log('DEBUG endTraining() - HTTP Code: ' . $httpCode);
-            error_log('DEBUG endTraining() - Response: ' . substr($response, 0, 500));
-            
             if ($httpCode === 200) {
                 $data = json_decode($response, true);
                 $this->sendJsonResponse($data);
             } else {
-                error_log('Erreur API externe - Code: ' . $httpCode . ', Response: ' . substr($response, 0, 500));
                 $this->sendJsonResponse(['success' => false, 'message' => 'Erreur API externe']);
             }
             
         } catch (Exception $e) {
-            error_log('Erreur lors de la finalisation du tir compté: ' . $e->getMessage());
             $this->sendJsonResponse(['success' => false, 'message' => 'Erreur serveur']);
         }
     }
@@ -418,20 +363,11 @@ class ScoredTrainingController {
         // Récupérer l'ID du tir compté depuis le paramètre de route
         $trainingId = $id;
         
-        // Debug: afficher l'ID récupéré
-        error_log('DEBUG addEnd() - ID reçu: ' . $trainingId);
-        error_log('DEBUG addEnd() - Token: ' . substr($_SESSION['token'] ?? 'NULL', 0, 20) . '...');
-        
         // Récupérer les données JSON
         $input = file_get_contents('php://input');
         $endData = json_decode($input, true);
         
-        error_log('DEBUG addEnd() - Input brut: ' . $input);
-        error_log('DEBUG addEnd() - endData décodé: ' . json_encode($endData));
-        error_log('DEBUG addEnd() - trainingId: ' . $trainingId);
-        
         if (empty($trainingId) || empty($endData)) {
-            error_log('DEBUG addEnd() - Données manquantes - trainingId: ' . $trainingId . ', endData: ' . json_encode($endData));
             $this->sendJsonResponse(['success' => false, 'message' => 'Données manquantes']);
         }
         
@@ -442,7 +378,6 @@ class ScoredTrainingController {
             $this->sendJsonResponse($response);
             
         } catch (Exception $e) {
-            error_log('Erreur lors de l\'ajout de la volée: ' . $e->getMessage());
             $this->sendJsonResponse(['success' => false, 'message' => 'Erreur serveur']);
         }
     }
@@ -451,14 +386,8 @@ class ScoredTrainingController {
         try {
             $response = $this->apiService->getScoredTrainings($userId);
             
-            // Debug: log de la réponse
-            error_log('DEBUG getScoredTrainings - userId: ' . $userId);
-            error_log('DEBUG getScoredTrainings - response type: ' . gettype($response));
-            error_log('DEBUG getScoredTrainings - response: ' . json_encode($response));
-            
             // Vérifier si la réponse est valide
             if (!is_array($response)) {
-                error_log('DEBUG getScoredTrainings - response is not an array: ' . gettype($response));
                 return [];
             }
             
@@ -468,26 +397,17 @@ class ScoredTrainingController {
                 
                 // Vérifier si les données sont imbriquées (API retourne {success: true, data: {success: true, data: [...]}})
                 if (is_array($data) && isset($data['success']) && $data['success'] && isset($data['data']) && is_array($data['data'])) {
-                    error_log('DEBUG getScoredTrainings - nested structure detected, returning inner data');
                     return $data['data'];
                 }
                 
                 // Si les données sont directement un tableau
                 if (is_array($data)) {
-                    error_log('DEBUG getScoredTrainings - direct array structure detected, returning data');
                     return $data;
                 }
             }
             
-            // Si l'API retourne une erreur ou des données vides
-            if (isset($response['success']) && !$response['success']) {
-                error_log('DEBUG getScoredTrainings - API returned error: ' . ($response['message'] ?? 'Unknown error'));
-            }
-            
-            error_log('DEBUG getScoredTrainings - no valid data found, returning empty array');
             return [];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des tirs comptés: ' . $e->getMessage());
             return [];
         }
     }
@@ -502,7 +422,6 @@ class ScoredTrainingController {
             
             return null;
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération du tir compté: ' . $e->getMessage());
             return null;
         }
     }
@@ -510,7 +429,7 @@ class ScoredTrainingController {
     private function getScoredTrainingByIdWithUserId($trainingId, $selectedUserId) {
         try {
             // Utiliser l'API externe avec le user_id sélectionné
-            $url = "http://82.67.123.22:25000/api/scored-training/" . $trainingId . "?user_id=" . $selectedUserId;
+            $url = $baseUrl . "/scored-training/" . $trainingId . "?user_id=" . $selectedUserId;
             
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -529,10 +448,8 @@ class ScoredTrainingController {
                 return $data;
             }
             
-            error_log('Erreur API externe - Code: ' . $httpCode . ', Response: ' . substr($response, 0, 500));
             return null;
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération du tir compté via API externe: ' . $e->getMessage());
             return null;
         }
     }
@@ -547,7 +464,6 @@ class ScoredTrainingController {
             
             return [];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des configurations: ' . $e->getMessage());
             return [];
         }
     }
@@ -575,7 +491,6 @@ class ScoredTrainingController {
         foreach ($scoredTrainings as $training) {
             // Vérifier que chaque élément est un tableau
             if (!is_array($training)) {
-                error_log('DEBUG calculateScoredTrainingStats - skipping non-array training: ' . gettype($training));
                 continue;
             }
             
@@ -631,7 +546,6 @@ class ScoredTrainingController {
             
             return [];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des exercices: ' . $e->getMessage());
             return [];
         }
     }
@@ -669,7 +583,6 @@ class ScoredTrainingController {
                 'lastName' => $userId
             ];
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des informations utilisateur: ' . $e->getMessage());
             return [
                 'id' => $userId,
                 'name' => 'Utilisateur ' . $userId,
@@ -696,7 +609,6 @@ class ScoredTrainingController {
         if (empty($id)) {
             $this->sendJsonResponse(['success' => false, 'message' => 'ID du tir compté requis']);
         }
-        
         // Récupérer l'utilisateur connecté
         $currentUser = $_SESSION['user'] ?? null;
         if (!$currentUser) {
@@ -723,7 +635,7 @@ class ScoredTrainingController {
         try {
            
             // Ne pas passer user_id - l'API backend doit utiliser l'utilisateur connecté pour vérifier les permissions
-            $url = "http://82.67.123.22:25000/api/scored-training/" . $id;
+            $url = $baseUrl . "/scored-training/" . $id;
             
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -780,7 +692,5 @@ class ScoredTrainingController {
            return null;
         }
     }
-    
-    
 }
 ?>

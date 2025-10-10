@@ -47,7 +47,6 @@ class ApiController {
                 ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de l'ajout des membres: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de l\'ajout des membres: ' . $e->getMessage()
@@ -75,7 +74,6 @@ class ApiController {
                 ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de la suppression du membre: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la suppression du membre: ' . $e->getMessage()
@@ -103,7 +101,6 @@ class ApiController {
                 ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de la récupération des utilisateurs: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des utilisateurs: ' . $e->getMessage()
@@ -131,7 +128,6 @@ class ApiController {
                 ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de la suppression de l'événement: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la suppression de l\'événement: ' . $e->getMessage()
@@ -157,7 +153,7 @@ class ApiController {
             }
 
             // Construire l'URL complète vers l'API externe
-            $externalUrl = 'http://82.67.123.22:25000' . $imagePath;
+            $externalUrl = $this->baseUrl.$imagePath;
             
             // Faire une requête pour récupérer l'image avec authentification
             $ch = curl_init();
@@ -193,7 +189,6 @@ class ApiController {
                 $this->returnDefaultAvatar();
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de la récupération de l'avatar: " . $e->getMessage());
             $this->returnDefaultAvatar();
         }
     }
@@ -299,32 +294,15 @@ class ApiController {
                 ]);
                 return;
             }
-            
-            // Log de debug détaillé
-            error_log("=== DEBUG UPLOAD DOCUMENT ===");
-            error_log("URL complète: " . $_SERVER['REQUEST_URI']);
-            error_log("userId reçu: " . $userId);
-            error_log("Type de userId: " . gettype($userId));
-            error_log("userId converti en int: " . (int)$userId);
-            error_log("POST data: " . print_r($_POST, true));
-            error_log("FILES data: " . print_r($_FILES, true));
-            
+
             // Préparer les données pour l'upload
             // Ne pas envoyer user_id car ce champ n'existe pas dans la table
             $documentData = [
                 'name' => $_POST['name'] ?? '',
                 'uploaded_by' => (int)$userId  // Seulement uploaded_by
             ];
-            
-            error_log("Données finales envoyées: " . print_r($documentData, true));
-            error_log("URL de l'API: documents/{$userId}/upload");
-            
             // Utiliser makeRequest avec les fichiers
             $response = $this->apiService->makeRequestWithFile("documents/{$userId}/upload", "POST", $documentData, $_FILES['document']);
-            
-            error_log("Réponse API complète: " . print_r($response, true));
-            error_log("=== FIN DEBUG UPLOAD DOCUMENT ===");
-            
             if ($response['success']) {
                 http_response_code(200);
                 echo json_encode([
@@ -339,7 +317,6 @@ class ApiController {
                 ]);
             }
         } catch (Exception $e) {
-            error_log("Exception upload: " . $e->getMessage());
             http_response_code(500);
             echo json_encode([
                 "success" => false,
@@ -398,9 +375,6 @@ class ApiController {
             $this->ensureAuthenticated();
             
             $response = $this->apiService->makeRequest("documents/{$documentId}/download", "GET");
-            error_log("=== DEBUG DOWNLOAD DOCUMENT ===");
-            error_log("Réponse complète: " . print_r($response, true));
-            
             if ($response['success']) {
                 // L'API retourne directement le contenu du fichier binaire
                 $rawResponse = $response['raw_response'] ?? '';
@@ -416,7 +390,6 @@ class ApiController {
                         // Chercher la vraie signature JPEG
                         $jpegStart = strpos($rawResponse, "\xFF\xD8\xFF");
                         if ($jpegStart !== false && $jpegStart > 0) {
-                            error_log("Signature JPEG trouvée à la position: " . $jpegStart . ", nettoyage...");
                             $rawResponse = substr($rawResponse, $jpegStart);
                         }
                         
@@ -430,11 +403,8 @@ class ApiController {
                         }
                         
                         if ($jpegEnd !== false && $jpegEnd < strlen($rawResponse)) {
-                            error_log("Fin JPEG trouvée à la position: " . $jpegEnd . ", nettoyage...");
                             $rawResponse = substr($rawResponse, 0, $jpegEnd);
                         }
-                        
-                        error_log("Taille finale du JPEG: " . strlen($rawResponse));
                     }
                 }
                 
@@ -456,15 +426,11 @@ class ApiController {
                     ];
                     $extension = $mimeToExt[$contentType] ?? '.bin';
                     $fileName .= $extension;
-                    
-                    error_log("Nom de fichier final: " . $fileName);
-                    error_log("Type MIME final: " . $contentType);
-                    
                     // Nettoyer la sortie et définir les headers appropriés
                     if (ob_get_level()) {
                         ob_clean();
                     }
-                    
+                   
                     header('Content-Type: ' . $contentType);
                     header('Content-Disposition: attachment; filename="' . $fileName . '"');
                     header('Content-Length: ' . strlen($rawResponse));
@@ -556,10 +522,7 @@ class ApiController {
         }
 
         try {
-            error_log("Récupération des messages pour le groupe " . $groupId);
             $response = $this->apiService->makeRequest("messages/" . $groupId . "/history", "GET");
-            error_log("Réponse de l'API: " . json_encode($response));
-
             // Traiter la réponse pour retourner directement un tableau de messages
             if ($response['success']) {
                 // L'API retourne directement un tableau de messages
@@ -578,7 +541,6 @@ class ApiController {
                 ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de la récupération des messages: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des messages: ' . $e->getMessage()
@@ -606,9 +568,6 @@ class ApiController {
         }
 
         try {
-            error_log("Envoi d'un message au groupe " . $groupId);
-            error_log("Contenu: " . $content);
-
             // Préparer les données pour l'API
             $postData = [
                 'content' => $content,
@@ -617,7 +576,6 @@ class ApiController {
 
             // Si un fichier est présent, l'ajouter directement aux données
             if ($file && $file['error'] === UPLOAD_ERR_OK) {
-                error_log("Ajout du fichier: " . print_r($file, true));
                 $postData['attachment'] = new CURLFile(
                     $file['tmp_name'],
                     $file['type'],
@@ -627,9 +585,6 @@ class ApiController {
 
             // Envoyer le message avec le fichier si présent
             $response = $this->apiService->makeRequestWithFile("messages/{$groupId}/send", "POST", $postData);
-//            error_log("Données envoyées à l'API: " . json_encode($postData));
-//            error_log("Réponse de l'API: " . json_encode($response));
-
             if ($response['success']) {
                 $this->sendJsonResponse($response);
             } else {
@@ -639,7 +594,6 @@ class ApiController {
                 ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de l'envoi du message: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de l\'envoi du message: ' . $e->getMessage()
@@ -651,10 +605,8 @@ class ApiController {
         try {
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
-            
             $input = json_decode(file_get_contents('php://input'), true);
             $content = $input['content'] ?? '';
-            
             if (empty($content)) {
                 http_response_code(400);
                 echo json_encode([
@@ -842,14 +794,7 @@ class ApiController {
             
             // Récupérer l'URL de l'image depuis les paramètres GET
             $imageUrl = $_GET['url'] ?? '';
-            
-            error_log("=== DEBUG MESSAGE IMAGE ===");
-            error_log("Message ID: " . $messageId);
-            error_log("URL reçue: " . $imageUrl);
-            error_log("Base URL: " . $this->baseUrl);
-            
             if (empty($imageUrl)) {
-                error_log("URL de l'image manquante");
                 $this->cleanOutput();
                 http_response_code(400);
                 echo json_encode([
@@ -866,9 +811,6 @@ class ApiController {
                     $imageUrl = rtrim($this->baseUrl, '/api') . '/' . ltrim($imageUrl, '/');
                 }
             }
-            
-            error_log("URL finale: " . $imageUrl);
-            
             // Faire une requête pour récupérer l'image
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $imageUrl);
@@ -888,11 +830,7 @@ class ApiController {
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
             curl_close($ch);
-            
-            error_log("Code HTTP: " . $httpCode);
-            error_log("Content-Type: " . $contentType);
-            error_log("Taille des données: " . strlen($imageData));
-            
+
             if ($httpCode === 200 && !empty($imageData)) {
                 // Nettoyer la sortie et définir les headers appropriés pour l'affichage
                 if (ob_get_level()) {
@@ -933,10 +871,7 @@ class ApiController {
         }
 
         try {
-            error_log("Récupération des messages pour l'événement " . $eventId);
             $response = $this->apiService->makeRequest("events/" . $eventId . "/messages", "GET");
-            error_log("Réponse de l'API: " . json_encode($response));
-
             // Traiter la réponse comme pour les groupes
             if ($response['success']) {
                 // L'API retourne directement un tableau de messages
@@ -955,7 +890,6 @@ class ApiController {
                 ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de la récupération des messages: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des messages: ' . $e->getMessage()
@@ -983,9 +917,6 @@ class ApiController {
         }
 
         try {
-//            error_log("Envoi d'un message à l'événement " . $eventId);
-//            error_log("Contenu: " . $content);
-
             // Préparer les données pour l'API
             // Utiliser group_id car l'API externe traite les événements comme des groupes
             $postData = [
@@ -995,7 +926,6 @@ class ApiController {
 
             // Si un fichier est présent, l'ajouter directement aux données
             if ($file && $file['error'] === UPLOAD_ERR_OK) {
-                error_log("Ajout du fichier: " . print_r($file, true));
                 $postData['attachment'] = new CURLFile(
                     $file['tmp_name'],
                     $file['type'],
@@ -1006,9 +936,6 @@ class ApiController {
             // Envoyer le message avec le fichier si présent
             // Utiliser l'endpoint spécifique aux événements
             $response = $this->apiService->makeRequestWithFile("messages/event/{$eventId}/send", "POST", $postData);
-//            error_log("Données envoyées à l'API: " . json_encode($postData));
-//            error_log("Réponse de l'API: " . json_encode($response));
-
             if ($response['success']) {
                 $this->sendJsonResponse($response);
             } else {
@@ -1018,7 +945,6 @@ class ApiController {
                 ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            error_log("Erreur lors de l'envoi du message: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de l\'envoi du message: ' . $e->getMessage()
@@ -1035,13 +961,10 @@ class ApiController {
         }
 
         try {
-            error_log("Récupération de l'événement " . $eventId);
             $response = $this->apiService->makeRequest("events/" . $eventId, "GET");
-            error_log("Réponse de l'API: " . json_encode($response));
 
             $this->sendJsonResponse($response);
         } catch (Exception $e) {
-            error_log("Erreur lors de la récupération de l'événement: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération de l\'événement: ' . $e->getMessage()
@@ -1058,13 +981,10 @@ class ApiController {
         }
 
         try {
-            error_log("Inscription à l'événement " . $eventId);
             $response = $this->apiService->makeRequest("events/" . $eventId . "/join", "POST");
-            error_log("Réponse de l'API: " . json_encode($response));
 
             $this->sendJsonResponse($response);
         } catch (Exception $e) {
-            error_log("Erreur lors de l'inscription à l'événement: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de l\'inscription à l\'événement: ' . $e->getMessage()
@@ -1081,13 +1001,10 @@ class ApiController {
         }
 
         try {
-            error_log("Désinscription de l'événement " . $eventId);
             $response = $this->apiService->makeRequest("events/" . $eventId . "/leave", "POST");
-            error_log("Réponse de l'API: " . json_encode($response));
 
             $this->sendJsonResponse($response);
         } catch (Exception $e) {
-            error_log("Erreur lors de la désinscription de l'événement: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la désinscription de l\'événement: ' . $e->getMessage()
@@ -1097,21 +1014,13 @@ class ApiController {
 
     public function updateEventMessage($messageId) {
         try {
-//            error_log("=== UPDATE EVENT MESSAGE DEBUG ===");
-//            error_log("Message ID: " . $messageId);
-//            error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
-//            error_log("Request URI: " . $_SERVER['REQUEST_URI']);
-            
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
             
             $input = json_decode(file_get_contents('php://input'), true);
             $content = $input['content'] ?? '';
             
-            error_log("Content received: " . $content);
-            
             if (empty($content)) {
-                error_log("Content is empty");
                 http_response_code(400);
                 echo json_encode([
                     "success" => false,
@@ -1120,9 +1029,7 @@ class ApiController {
                 return;
             }
             
-//            error_log("Calling API: messages/{$messageId}/update with PUT");
             $response = $this->apiService->makeRequest("messages/{$messageId}", "PUT", ['content' => $content]);
-//            error_log("API Response: " . json_encode($response));
             
             if ($response['success']) {
                 http_response_code(200);
@@ -1138,7 +1045,6 @@ class ApiController {
                 ]);
             }
         } catch (Exception $e) {
-            error_log("Exception in updateEventMessage: " . $e->getMessage());
             http_response_code(500);
             echo json_encode([
                 "success" => false,

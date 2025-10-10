@@ -115,24 +115,19 @@ class UserController {
     }
     
     public function create() {
-        error_log("=== DEBUG UserController::create ===");
-        error_log("Session: " . print_r($_SESSION, true));
         
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            error_log("Non connecté, redirection vers login");
             header('Location: /login');
             exit;
         }
         
         // Vérification des droits administrateur
         if (!isset($_SESSION['user']['is_admin']) || !(bool)$_SESSION['user']['is_admin']) {
-            error_log("Non admin, redirection vers users");
             $_SESSION['error'] = 'Accès refusé. Seuls les administrateurs peuvent créer des utilisateurs.';
             header('Location: /users');
             exit;
         }
         
-        error_log("Accès autorisé, affichage du formulaire");
         $title = 'Créer un utilisateur - Portail Archers de Gémenos';
         
         include 'app/Views/layouts/header.php';
@@ -286,21 +281,16 @@ class UserController {
             // Appel à l'API pour mettre à jour l'utilisateur
             $response = $this->apiService->updateUser($id, $userData);
             
-            // Log de débogage
-            error_log("DEBUG UserController update - Response: " . json_encode($response));
-            
             if ($response['success']) {
                 $_SESSION['success'] = 'Utilisateur mis à jour avec succès';
                 header('Location: /users/' . $id);
                 exit;
             } else {
                 $_SESSION['error'] = $response['message'] ?? 'Erreur lors de la mise à jour de l\'utilisateur';
-                error_log("DEBUG UserController update - Error: " . ($response['message'] ?? 'Unknown error'));
                 header('Location: /users/' . $id . '/edit');
                 exit;
             }
         } catch (Exception $e) {
-            error_log("DEBUG UserController update - Exception: " . $e->getMessage());
             $_SESSION['error'] = 'Erreur lors de la mise à jour de l\'utilisateur';
             header('Location: /users/' . $id . '/edit');
             exit;

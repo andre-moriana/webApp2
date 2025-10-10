@@ -29,13 +29,11 @@ class UserSettingsController {
             } else {
                 // Utiliser les données de session comme fallback
                 $user = $_SESSION['user'];
-                error_log("API non accessible, utilisation des données de session");
             }
             
             // Inclure la vue
             include __DIR__ . '/../Views/users/settings.php';
         } catch (Exception $e) {
-            error_log("Erreur lors de la récupération des paramètres utilisateur: " . $e->getMessage());
             // Utiliser les données de session comme fallback
             $user = $_SESSION['user'];
             include __DIR__ . '/../Views/users/settings.php';
@@ -95,7 +93,6 @@ class UserSettingsController {
             }
             
         } catch (Exception $e) {
-            error_log("Erreur mise à jour photo profil: " . $e->getMessage());
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -151,7 +148,6 @@ class UserSettingsController {
             }
             
         } catch (Exception $e) {
-            error_log("Erreur changement mot de passe: " . $e->getMessage());
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }

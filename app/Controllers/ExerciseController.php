@@ -36,11 +36,9 @@ class ExerciseController {
                 
                 // Vérifier que $exercises est un tableau
                 if (!is_array($exercises)) {
-                    error_log("DEBUG ExerciseController - exercises is not an array: " . gettype($exercises));
                     $exercises = [];
                 }
-                
-                error_log("DEBUG ExerciseController - Nombre d'exercices: " . count($exercises));
+ 
             } else {
                 $error = "Impossible de charger les exercices: " . ($response["message"] ?? "Erreur inconnue");
                 $exercises = [];
@@ -76,7 +74,6 @@ class ExerciseController {
         $categories = [];
         try {
             $categoriesResponse = $this->apiService->getExerciseCategories();
-            error_log("Réponse catégories brute: " . print_r($categoriesResponse, true));
             
             if (isset($categoriesResponse["success"]) && $categoriesResponse["success"] && isset($categoriesResponse["data"])) {
                 $data = $categoriesResponse["data"];
@@ -87,10 +84,6 @@ class ExerciseController {
                 } else {
                     $categories = $data;
                 }
-                
-                error_log("Catégories finales: " . print_r($categories, true));
-            } else {
-                error_log("Réponse API invalide pour les catégories: " . print_r($categoriesResponse, true));
             }
         } catch (Exception $e) {
             error_log("ExerciseController: Erreur lors du chargement des catégories: " . $e->getMessage());
@@ -116,10 +109,6 @@ class ExerciseController {
         $isAdmin = isset($_SESSION['user']['is_admin']) && $_SESSION['user']['is_admin'];
         $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach'; // Supprimé strtolower et gardé 'Coach' avec C majuscule
         
-        // Debug des informations utilisateur
-        error_log("ExerciseController: Informations utilisateur - " . json_encode($_SESSION['user'] ?? 'Non défini'));
-        error_log("ExerciseController: isAdmin = " . ($isAdmin ? 'true' : 'false') . ", isCoach = " . ($isCoach ? 'true' : 'false'));
-        
         if (!$isAdmin && !$isCoach) {
             header("Location: /exercises?error=" . urlencode("Accès refusé. Seuls les administrateurs et les coachs peuvent créer des exercices."));
             exit;
@@ -134,38 +123,25 @@ class ExerciseController {
                 'description' => $_POST['description'] ?? '',
                 'category' => $this->getCategoryNameById($_POST['category'] ?? '')
             ];
-
-            error_log("ExerciseController: Tentative de création d'exercice");
-            error_log("ExerciseController: Données à envoyer: " . json_encode($postData));
-            error_log("ExerciseController: Fichier reçu: " . json_encode($_FILES['attachment'] ?? 'Aucun fichier'));
-
             // Test si la méthode existe
             if (method_exists($this->apiService, 'createExerciseWithFile')) {
-                error_log("ExerciseController: Méthode createExerciseWithFile trouvée");
                 $response = $this->apiService->createExerciseWithFile($postData, $_FILES['attachment'] ?? null);
             } else {
-                error_log("ExerciseController: Méthode createExerciseWithFile NON TROUVÉE");
                 $response = ['success' => false, 'message' => 'Méthode non trouvée'];
             }
             
-            error_log("ExerciseController: Réponse de l'API: " . json_encode($response));
-            
             if (isset($response["success"]) && $response["success"]) {
-                error_log("ExerciseController: Création réussie, redirection vers /exercises");
                 header("Location: /exercises?created=1");
                 exit;
             } else {
                 $error = "Erreur lors de la création: " . ($response["message"] ?? "Erreur inconnue");
-                error_log("ExerciseController: Erreur lors de la création: " . $error);
             }
         } catch (Exception $e) {
             $error = "Erreur lors de la création: " . $e->getMessage();
-            error_log("ExerciseController: Exception lors de la création: " . $e->getMessage());
         }
 
         // Si erreur, rediriger vers la page de création avec l'erreur
         if ($error) {
-            error_log("ExerciseController: Redirection vers la page de création avec erreur");
             header("Location: /exercises/create?error=" . urlencode($error));
             exit;
         }

@@ -29,13 +29,11 @@ class UserSettingsController {
             } else {
                 // Utiliser les données de session comme fallback
                 $user = $_SESSION['user'];
-                error_log("API non accessible, utilisation des données de session");
             }
             
             // Inclure la vue
             include __DIR__ . '/../Views/users/settings.php';
         } catch (Exception $e) {
-            error_log("Erreur lors de la récupération des paramètres utilisateur: " . $e->getMessage());
             // Utiliser les données de session comme fallback
             $user = $_SESSION['user'];
             include __DIR__ . '/../Views/users/settings.php';
@@ -67,7 +65,6 @@ class UserSettingsController {
                 if (count($tokenParts) === 3) {
                     $payload = json_decode(base64_decode($tokenParts[1]), true);
                     $userId = $payload['user_id'] ?? null;
-                    error_log("DEBUG updateProfileImage - User ID from token: " . $userId);
                 }
             } catch (Exception $e) {
                 error_log("DEBUG updateProfileImage - Erreur décodage token: " . $e->getMessage());
@@ -77,12 +74,9 @@ class UserSettingsController {
         // Fallback sur la session si le token ne fonctionne pas
         if (!$userId) {
             $userId = $_SESSION['user']['id'] ?? null;
-            error_log("DEBUG updateProfileImage - Fallback to session ID: " . $userId);
         }
         
         // Debug: afficher les données de session
-        error_log("DEBUG updateProfileImage - Session user: " . json_encode($_SESSION['user']));
-        error_log("DEBUG updateProfileImage - Final User ID: " . $userId);
         
         if (!$userId) {
             http_response_code(401);
@@ -91,21 +85,15 @@ class UserSettingsController {
         }
         
         try {
-            // Debug: afficher les fichiers reçus
-            error_log("DEBUG updateProfileImage - FILES reçus: " . json_encode($_FILES));
-            
             // Vérifier qu'un fichier a été uploadé (gérer les deux noms possibles)
             $file = null;
             if (isset($_FILES['profileImage']) && $_FILES['profileImage']['error'] === UPLOAD_ERR_OK) {
                 $file = $_FILES['profileImage'];
-                error_log("DEBUG updateProfileImage - Utilisation de profileImage");
             } elseif (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
                 $file = $_FILES['profile_image'];
-                error_log("DEBUG updateProfileImage - Utilisation de profile_image (fallback)");
             } else {
                 throw new Exception('Aucun fichier uploadé ou erreur d\'upload');
             }
-            error_log("DEBUG updateProfileImage - Fichier: " . json_encode($file));
             
             // Vérifications de sécurité
             $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -135,7 +123,6 @@ class UserSettingsController {
             }
             
         } catch (Exception $e) {
-            error_log("Erreur mise à jour photo profil: " . $e->getMessage());
             http_response_code(400);
             $this->sendCleanJson(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -166,7 +153,6 @@ class UserSettingsController {
                 if (count($tokenParts) === 3) {
                     $payload = json_decode(base64_decode($tokenParts[1]), true);
                     $userId = $payload['user_id'] ?? null;
-                    error_log("DEBUG changePassword - User ID from token: " . $userId);
                 }
             } catch (Exception $e) {
                 error_log("DEBUG changePassword - Erreur décodage token: " . $e->getMessage());
@@ -176,7 +162,6 @@ class UserSettingsController {
         // Fallback sur la session si le token ne fonctionne pas
         if (!$userId) {
             $userId = $_SESSION['user']['id'] ?? null;
-            error_log("DEBUG changePassword - Fallback to session ID: " . $userId);
         }
         
         if (!$userId) {
@@ -213,18 +198,9 @@ class UserSettingsController {
                     'success' => true, 
                     'message' => 'Mot de passe modifié avec succès'
                 ]);
-            } else {
-                // Solution temporaire : simuler un succès pour l'instant
-                // TODO: Corriger le problème dans l'API externe
-                error_log("API externe retourne une erreur, simulation du succès: " . json_encode($result));
-                $this->sendCleanJson([
-                    'success' => true, 
-                    'message' => 'Mot de passe modifié avec succès (simulation)'
-                ]);
             }
             
         } catch (Exception $e) {
-            error_log("Erreur changement mot de passe: " . $e->getMessage());
             http_response_code(400);
             $this->sendCleanJson(['success' => false, 'message' => $e->getMessage()]);
         }

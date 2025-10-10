@@ -24,18 +24,14 @@ class AuthController {
             $username = $_POST['username'] ?? '';
             $password = $_POST['password'] ?? '';
             
-            error_log("Tentative de connexion pour l'utilisateur: " . $username);
             
             $result = $this->apiService->login($username, $password);
-            error_log("Résultat de la connexion: " . print_r($result, true));
             
             if ($result['success']) {
                 // Stocker les informations dans la session
                 $_SESSION['logged_in'] = true;
                 $_SESSION['user'] = $result['user'];
                 $_SESSION['token'] = $result['token'];
-                
-                error_log("Session après connexion: " . print_r($_SESSION, true));
                 
                 // Rediriger vers le tableau de bord
                 header('Location: /dashboard');
@@ -69,26 +65,20 @@ class AuthController {
         try {
             // Extraire le nom d'utilisateur de l'email
             $username = explode('@', $username)[0];
-
-            error_log("Tentative de connexion avec username: " . $username);
             
             // Créer une nouvelle instance de ApiService
             $apiService = new ApiService();
             
             // Utiliser l'API backend pour l'authentification
             $loginResult = $apiService->login($username, $password);
-            error_log("Résultat de la connexion: " . json_encode($loginResult));
 
             if ($loginResult['success'] && isset($loginResult['token'])) {
                 // Vérifier le statut de l'utilisateur
                 $userStatus = $loginResult['user']['status'] ?? $loginResult['user']['user_status'] ?? 'active';
                 $isApproved = $loginResult['user']['is_approved'] ?? $loginResult['user']['approved'] ?? true;
                 
-                error_log("Statut utilisateur: " . $userStatus . ", Approuvé: " . ($isApproved ? 'Oui' : 'Non'));
-                
                 // Vérifier si l'utilisateur est approuvé
                 if ($userStatus === 'pending' || !$isApproved) {
-                    error_log("Tentative de connexion d'un utilisateur non approuvé");
                     $_SESSION['error'] = 'Votre compte est en attente de validation par un administrateur. Vous recevrez un email une fois votre compte activé.';
                     header('Location: /login');
                     exit;
@@ -109,8 +99,6 @@ class AuthController {
                 $_SESSION['token'] = $loginResult['token'];
                 $_SESSION['logged_in'] = true;
                 
-                error_log("Session après connexion réussie: " . print_r($_SESSION, true));
-                
                 header('Location: /dashboard');
                 exit;
             } else {
@@ -128,20 +116,15 @@ class AuthController {
                     $_SESSION['token'] = 'demo-token-' . time();
                     $_SESSION['logged_in'] = true;
                     
-                    error_log("Connexion avec compte de test réussie");
-                    
                     header('Location: /dashboard');
                     exit;
                 } else {
-                    error_log("Échec de connexion: " . ($loginResult['message'] ?? 'Identifiants incorrects'));
                     $_SESSION['error'] = $loginResult['message'] ?? 'Identifiants incorrects';
                     header('Location: /login');
                     exit;
                 }
             }
         } catch (Exception $e) {
-            error_log("Exception lors de la connexion: " . $e->getMessage());
-            
             // En cas d'erreur API, utiliser les identifiants de test
             if ($username === 'admin' && $password === 'admin1234') {
                 $_SESSION['user'] = [
@@ -155,8 +138,6 @@ class AuthController {
                 ];
                 $_SESSION['token'] = 'demo-token-' . time();
                 $_SESSION['logged_in'] = true;
-                
-                error_log("Connexion avec compte de test réussie après exception");
                 
                 header('Location: /dashboard');
                 exit;
@@ -245,7 +226,6 @@ class AuthController {
         
         // Si l'utilisateur est en attente ou non approuvé, le déconnecter
         if ($userStatus === 'pending' || !$isApproved) {
-            error_log("Utilisateur non approuvé détecté, déconnexion automatique");
             $this->logout();
             return false;
         }
@@ -343,11 +323,8 @@ class AuthController {
                 'status' => 'pending'
             ];
 
-            error_log("Tentative de création d'utilisateur: " . json_encode($userData));
-            
             // Appeler l'API backend pour créer l'utilisateur
             $result = $apiService->createUser($userData);
-            error_log("Résultat de la création d'utilisateur: " . json_encode($result));
 
             if ($result['success']) {
                 $_SESSION['success'] = 'Demande d\'inscription envoyée avec succès ! Votre compte sera activé après validation par un administrateur.';
@@ -359,7 +336,6 @@ class AuthController {
                 exit;
             }
         } catch (Exception $e) {
-            error_log("Exception lors de la création d'utilisateur: " . $e->getMessage());
             $_SESSION['error'] = 'Erreur lors de la création de l\'utilisateur: ' . $e->getMessage();
             header('Location: /auth/register');
             exit;

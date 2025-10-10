@@ -1,9 +1,4 @@
 ﻿<?php
-// Debug temporaire
-//error_log("=== DEBUG ROUTAGE ===");
-//error_log("REQUEST_URI: " . ($_SERVER["REQUEST_URI"] ?? "Non défini"));
-//error_log("REQUEST_METHOD: " . ($_SERVER["REQUEST_METHOD"] ?? "Non défini"));
-
 class Router {
     private $routes = [];
     private $basePath = "";
@@ -168,8 +163,6 @@ class Router {
         usort($this->routes, function($a, $b) {
             return $b['specificity'] - $a['specificity'];
         });
-        
-   //     error_log("Route ajoutée: " . $method . " " . $path . " -> " . $handler . " (spécificité: " . $route['specificity'] . ")");
     }
     
     private function calculateRouteSpecificity($path) {
@@ -203,8 +196,6 @@ class Router {
             strpos($path, '/update') !== false) {
             $specificity += 15;
         }
-        
-//        error_log("Spécificité calculée pour " . $path . ": " . $specificity);
         return $specificity;
     }
     
@@ -215,26 +206,12 @@ class Router {
         // Gérer les méthodes HTTP personnalisées via _method
         if ($requestMethod === "POST" && isset($_POST["_method"])) {
             $requestMethod = strtoupper($_POST["_method"]);
-            error_log("Méthode HTTP personnalisée détectée: " . $requestMethod);
         }
-        
-        // Debug temporaire - DÉSACTIVÉ
-//        error_log("=== DEBUG ROUTAGE ===");
-//        error_log("REQUEST_URI: " . $requestUri);
-//        error_log("REQUEST_METHOD: " . $requestMethod);
-//        error_log("BASE_PATH: " . $this->basePath);
-        
+
         // Supprimer le basePath de l'URI
         if ($this->basePath && strpos($requestUri, $this->basePath) === 0) {
             $requestUri = substr($requestUri, strlen($this->basePath));
         }
-        
-//        error_log("URI normalisée: " . $requestUri);
-//        error_log("Nombre total de routes: " . count($this->routes));
-//        error_log("Routes disponibles dans l'ordre de test:");
-//        foreach ($this->routes as $index => $route) {
-//            error_log(($index + 1) . ". " . $route["method"] . " " . $route["path"] . " -> " . $route["handler"]);
-//        }
         
         // Tester chaque route
         foreach ($this->routes as $route) {
@@ -242,18 +219,10 @@ class Router {
                 continue;
             }
             
-//            error_log("Test route: " . $route["method"] . " " . $route["path"]);
-            
             // Utiliser la méthode convertToRegex existante
             $pattern = $this->convertToRegex($route["path"]);
-            
-//            error_log("DEBUG Router - Pattern: " . $pattern);
-//            error_log("DEBUG Router - Test regex: " . $pattern . " contre " . $requestUri);
-            
+           
             if (preg_match($pattern, $requestUri, $matches)) {
-//                error_log("DEBUG Router - Route trouvée! Handler: " . $route["handler"]);
-//                error_log("DEBUG Router - Matches: " . print_r($matches, true));
-                
                 // Extraire le contrôleur et la méthode
                 list($controller, $method) = explode("@", $route["handler"]);
                 
@@ -265,15 +234,8 @@ class Router {
                 array_shift($matches); // Retirer la correspondance complète
                 call_user_func_array([$controllerInstance, $method], $matches);
                 return;
-            } else {
-//                error_log("Pas de match pour cette route");
-            }
+             }
         }
-        
-        // Si aucune route ne correspond
-//        error_log("Aucune route trouvée pour: " . $requestUri);
-//        error_log("Routes disponibles: " . print_r($this->routes, true));
-        
         // Gérer l'erreur 404
         header("HTTP/1.0 404 Not Found");
         include "app/Views/layouts/header.php";
@@ -286,7 +248,6 @@ class Router {
         $pattern = preg_replace("/\{([^}]+)\}/", "([^/]+)", $path);
         // Échapper seulement les slashes, pas les parenthèses
         $pattern = str_replace("/", "\/", $pattern);
-        //error_log("Conversion route: " . $path . " -> " . $pattern);
         return "/^" . $pattern . "$/";
     }
     

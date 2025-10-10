@@ -23,15 +23,12 @@ class ApiService {
         if (!isset($_ENV["API_BASE_URL"])) {
             // URL par défaut si pas de configuration .env
             $this->baseUrl = "http://82.67.123.22:25000/api";
-            error_log("Avertissement: API_BASE_URL non configurée, utilisation de l'URL par défaut: " . $this->baseUrl);
         } else {
             $this->baseUrl = $_ENV["API_BASE_URL"];
         }
         
         // Initialiser le token depuis la session
         $this->token = $_SESSION['token'] ?? null;
-        error_log("URL de l'API configurée: " . $this->baseUrl);
-        error_log("Token récupéré depuis la session: " . ($this->token ? substr($this->token, 0, 20) . '...' : 'Aucun token'));
         
         // Démarrer la session si elle n'est pas déjà démarrée
         if (session_status() === PHP_SESSION_NONE) {
@@ -41,18 +38,13 @@ class ApiService {
         // Récupérer le token depuis la session
         if (isset($_SESSION['token'])) {
             $this->token = $_SESSION['token'];
-            error_log("Token récupéré depuis la session: " . substr($this->token, 0, 10) . "...");
         } else {
             $this->token = null;
-            error_log("Aucun token trouvé dans la session");
         }
     }
     
     public function makeRequest($endpoint, $method = 'GET', $data = null) {
         $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
-        error_log("Requête API vers: " . $url);
-        error_log("Méthode: " . $method);
-        
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -101,12 +93,7 @@ class ApiService {
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         
-        error_log("Code HTTP: " . $httpCode);
-        error_log("Type de contenu: " . $contentType);
-        error_log("Taille de la réponse: " . strlen($response));
-        
         if (curl_errno($ch)) {
-            error_log("Erreur cURL: " . curl_error($ch));
             curl_close($ch);
             throw new Exception("Erreur lors de la requête API: " . curl_error($ch));
         }
@@ -132,7 +119,6 @@ class ApiService {
             for ($i = 0; $i < min(10, strlen($cleanResponse)); $i++) {
                 $firstBytes .= sprintf('%02X ', ord($cleanResponse[$i]));
             }
-            error_log("Premiers octets de la réponse nettoyée: " . $firstBytes);
         }
         
         // Essayer de parser comme JSON même si le Content-Type n'est pas application/json
@@ -158,10 +144,6 @@ class ApiService {
             ];
         }
         
-        // Si on arrive ici, c'est que le Content-Type était application/json mais le décodage a échoué
-        error_log("Erreur décodage JSON: " . json_last_error_msg());
-        error_log("Début de la réponse: " . substr($cleanResponse, 0, 1000));
-        
         return [
             'success' => false,
             'data' => null,
@@ -171,7 +153,6 @@ class ApiService {
     }
     
     public function updateUser($userId, $userData) {
-        error_log("DEBUG updateUser - Données reçues: " . json_encode($userData));
         
         $results = [];
         
@@ -185,10 +166,8 @@ class ApiService {
         if (!empty($userData['birthDate'])) $identiteData['birthDate'] = $userData['birthDate'];
         
         if (!empty($identiteData)) {
-            error_log("DEBUG updateUser - Données d'identité à envoyer: " . json_encode($identiteData));
             $result = $this->makeRequest("users/{$userId}/update-identite", "PUT", $identiteData);
             $results[] = $result;
-            error_log("DEBUG updateUser - Réponse identité: " . json_encode($result));
         }
         
         // 2. Mise à jour des informations sportives
@@ -200,10 +179,8 @@ class ApiService {
         if (!empty($userData['role'])) $sportData['role'] = $userData['role'];
         
         if (!empty($sportData)) {
-            error_log("DEBUG updateUser - Données sport à envoyer: " . json_encode($sportData));
             $result = $this->makeRequest("users/{$userId}/update-sport", "PUT", $sportData);
             $results[] = $result;
-            error_log("DEBUG updateUser - Réponse sport: " . json_encode($result));
         }
         
         // 3. Mise à jour des droits (is_admin, is_banned)
@@ -221,9 +198,6 @@ class ApiService {
                     $endpoint = $newIsAdmin ? "users/{$userId}/make-admin" : "users/{$userId}/remove-admin";
                     $result = $this->makeRequest($endpoint, "POST");
                     $results[] = $result;
-                    error_log("DEBUG updateUser - Réponse is_admin: " . json_encode($result));
-                } else {
-                    error_log("DEBUG updateUser - is_admin inchangé: current=$currentIsAdmin, new=$newIsAdmin");
                 }
             }
             
@@ -234,9 +208,6 @@ class ApiService {
                     $endpoint = $newIsBanned ? "users/{$userId}/ban" : "users/{$userId}/unban";
                     $result = $this->makeRequest($endpoint, "POST");
                     $results[] = $result;
-                    error_log("DEBUG updateUser - Réponse is_banned: " . json_encode($result));
-                } else {
-                    error_log("DEBUG updateUser - is_banned inchangé: current=$currentIsBanned, new=$newIsBanned");
                 }
             }
             
@@ -254,16 +225,11 @@ class ApiService {
                     } elseif ($newStatus === 'pending') {
                         // Pour remettre en attente, on ne peut pas utiliser les endpoints existants
                         // On pourrait créer un endpoint spécifique ou utiliser une méthode directe
-                        error_log("DEBUG updateUser - Remise en attente non gérée par les endpoints existants");
                         $result = ['success' => true, 'message' => 'Remise en attente non implémentée'];
                     } else {
-                        error_log("DEBUG updateUser - Statut non géré: $newStatus");
                         $result = ['success' => true, 'message' => 'Statut non modifié'];
                     }
                     $results[] = $result;
-                    error_log("DEBUG updateUser - Réponse status: " . json_encode($result));
-                } else {
-                    error_log("DEBUG updateUser - status inchangé: current=$currentStatus, new=$newStatus");
                 }
             }
         }
@@ -294,16 +260,13 @@ class ApiService {
             "password" => $password
         ];
         
-        error_log("Tentative de connexion à l'API avec username: " . $username);
         
         try {
             $result = $this->makeRequest("auth/login", "POST", $loginData);
-            error_log("Réponse login API: " . print_r($result, true));
             
             if ($result["success"] && isset($result["data"]["token"])) {
                 // Stocker le token pour les futures requêtes
                 $this->token = $result["data"]["token"];
-                error_log("Token obtenu et stocké: " . substr($this->token, 0, 10) . "...");
                 
                 return [
                     "success" => true,
@@ -313,13 +276,11 @@ class ApiService {
                 ];
             }
             
-            error_log("Échec de connexion à l'API: " . ($result["message"] ?? "Raison inconnue"));
             return [
                 "success" => false,
                 "message" => $result["data"]["message"] ?? $result["message"] ?? "Erreur de connexion"
             ];
         } catch (Exception $e) {
-            error_log("Exception lors de la connexion à l'API: " . $e->getMessage());
             return [
                 "success" => false,
                 "message" => "Erreur de connexion: " . $e->getMessage()
@@ -329,8 +290,9 @@ class ApiService {
 
     private function makeInternalRequest($endpoint, $method = "GET", $data = null) {
         try {
-            $url = "http://webapp" . $endpoint;
-            
+            $url =  $endpoint;
+//                 "http://webapp" .
+
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -386,13 +348,10 @@ class ApiService {
     public function getUsers() {
         // Ajouter le token dans les headers
         $result = $this->makeRequest("users", "GET");
-        // Supprimer le log verbeux
-        // error_log("Réponse brute de l'API users: " . print_r($result, true));
         
         if ($result["success"] && $result["status_code"] == 200) {
             // Vérifier que la clé "data" existe et n'est pas null
             if (!isset($result["data"]) || $result["data"] === null) {
-                error_log("Erreur: Pas de données dans la réponse API");
                 return [
                     "success" => false,
                     "data" => ["users" => []],
@@ -401,14 +360,10 @@ class ApiService {
             }
             
             $data = $result["data"];
-            // Supprimer le log qui affiche les données des utilisateurs
-            // error_log("[GET_USER] Données reçues de l'API: " . print_r($data, true));
             
             if (is_array($data)) {
                 // Format 1: { "users": [...] }
                 if (isset($data["users"]) && is_array($data["users"])) {
-                    // Supprimer le log de debug
-                    // error_log("Format 1 détecté");
                     return [
                         "success" => true,
                         "data" => $data,
@@ -417,8 +372,6 @@ class ApiService {
                 }
                 // Format 2: { "data": [...] }
                 elseif (isset($data["data"]) && is_array($data["data"])) {
-                    // Supprimer le log de debug
-                    // error_log("Format 2 détecté");
                     return [
                         "success" => true,
                         "data" => ["users" => $data["data"]],
@@ -427,8 +380,6 @@ class ApiService {
                 }
                 // Format 3: [...] (tableau direct)
                 elseif (is_array($data) && !empty($data)) {
-                    // Supprimer le log de debug
-                    // error_log("Format 3 détecté");
                     return [
                         "success" => true,
                         "data" => ["users" => $data],
@@ -438,8 +389,6 @@ class ApiService {
             }
         }
         
-        // En cas d'erreur, retourner un tableau vide
-        error_log("Erreur lors de la récupération des utilisateurs: " . ($result["message"] ?? "Erreur inconnue"));
         return [
             "success" => false,
             "data" => ["users" => []],
@@ -448,11 +397,9 @@ class ApiService {
     }
 
     public function getGroups() {
-        error_log("Début de getGroups()");
         
         // Les groupes nécessitent une authentification
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "data" => ["groups" => []],
@@ -462,12 +409,10 @@ class ApiService {
         
         // Utiliser l'endpoint /group/list pour les groupes
         $result = $this->makeRequest("groups/list", "GET");
-        error_log("Réponse brute de l'API group/list: " . print_r($result, true));
         
         if ($result["success"] && $result["status_code"] == 200) {
             // Vérifier que la clé "data" existe et n'est pas null
             if (!isset($result["data"]) || $result["data"] === null) {
-                error_log("Erreur: Pas de données dans la réponse API pour les groupes");
                 return [
                     "success" => false,
                     "data" => ["groups" => []],
@@ -476,7 +421,6 @@ class ApiService {
             }
             
             $data = $result["data"];
-            error_log("[GETGROUP] Données reçues de l'API: " . print_r($data, true));
             
             // La réponse devrait être un tableau direct de groupes
             if (is_array($data)) {
@@ -487,10 +431,8 @@ class ApiService {
                 ];
             }
             
-            error_log("Format de données non reconnu: " . print_r($data, true));
         }
         
-        error_log("Échec de récupération des groupes. Code: " . ($result["status_code"] ?? "inconnu") . ", Message: " . ($result["message"] ?? "aucun"));
         return [
             "success" => false,
             "data" => ["groups" => []],
@@ -577,11 +519,9 @@ class ApiService {
     }
 
     public function getGroupDetails($groupId) {
-        error_log("Début de getGroupDetails($groupId)");
         
         // Les groupes nécessitent une authentification
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "data" => null,
@@ -591,11 +531,9 @@ class ApiService {
         
         // Utiliser l'endpoint /groups/{id} pour les détails d'un groupe
         $result = $this->makeRequest("groups/" . $groupId, "GET");
-        error_log("[MAKEREQUEST] Réponse brute de l'API groups/$groupId: " . print_r($result, true));
         
         if ($result["success"] && $result["status_code"] == 200) {
             $data = $result["data"];
-            error_log("Données reçues de l'API: " . print_r($data, true));
             
             if (is_array($data)) {
                 // Ajouter des statistiques simulées pour l'exemple
@@ -612,10 +550,8 @@ class ApiService {
                 ];
             }
             
-            error_log("Format de données non reconnu: " . print_r($data, true));
         }
         
-        error_log("Échec de récupération des détails du groupe. Code: " . ($result["status_code"] ?? "inconnu") . ", Message: " . ($result["message"] ?? "aucun"));
         return [
             "success" => false,
             "data" => null,
@@ -624,11 +560,9 @@ class ApiService {
     }
 
     public function getGroupChat($groupId) {
-        error_log("Début de getGroupChat($groupId)");
         
         // Les chats nécessitent une authentification
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "data" => null,
@@ -638,11 +572,9 @@ class ApiService {
         
         // Utiliser l'endpoint /groups/{id}/chat pour les messages du chat
         $result = $this->makeRequest("groups/" . $groupId . "/chat", "GET");
-        error_log("Réponse brute de l'API groups/$groupId/chat: " . print_r($result, true));
         
         if ($result["success"] && $result["status_code"] == 200) {
             $data = $result["data"];
-            error_log("Données reçues de l'API: " . print_r($data, true));
             
             if (is_array($data)) {
                 return [
@@ -652,10 +584,8 @@ class ApiService {
                 ];
             }
             
-            error_log("Format de données non reconnu: " . print_r($data, true));
         }
         
-        error_log("Échec de récupération des messages du chat. Code: " . ($result["status_code"] ?? "inconnu") . ", Message: " . ($result["message"] ?? "aucun"));
         return [
             "success" => false,
             "data" => null,
@@ -665,7 +595,6 @@ class ApiService {
     public function getUserDocuments($userId) {
         // Vérifier si nous avons un token valide
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "data" => ["documents" => []],
@@ -673,15 +602,12 @@ class ApiService {
             ];
         }
 
-        error_log("Token actuel: " . ($this->token ?? "aucun"));
         
         // Appel à l'API pour récupérer les documents
         $result = $this->makeRequest("documents/user/{$userId}", "GET");
-        error_log("Réponse brute de l'API documents/user/{$userId}: " . print_r($result, true));
         
         if ($result["success"] && $result["status_code"] == 200) {
             $data = $result["data"];
-            error_log("Données reçues de l'API: " . print_r($data, true));
             
             if (is_array($data)) {
                 return [
@@ -691,10 +617,8 @@ class ApiService {
                 ];
             }
             
-            error_log("Format de données non reconnu: " . print_r($data, true));
         }
         
-        error_log("Échec de récupération des documents. Code: " . ($result["status_code"] ?? "inconnu") . ", Message: " . ($result["message"] ?? "aucun"));
         return [
             "success" => false,
             "data" => ["documents" => []],
@@ -705,10 +629,6 @@ class ApiService {
         // Nettoyer l'endpoint pour éviter les doubles slashes
         $endpoint = trim($endpoint, '/');
         $url = rtrim($this->baseUrl, '/') . '/' . $endpoint;
-        
-        error_log("=== Requête API avec fichier ===");
-        error_log("URL complète: " . $url);
-        error_log("Méthode: " . $method);
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -725,7 +645,6 @@ class ApiService {
         
         if ($this->token) {
             $headers[] = "Authorization: Bearer " . $this->token;
-            error_log("Token ajouté aux headers");
         }
         
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -745,7 +664,6 @@ class ApiService {
                     $file['name']
                 );
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-                error_log("Fichier ajouté à la requête: " . $file['name']);
             } elseif ($data !== null) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
             }
@@ -757,12 +675,7 @@ class ApiService {
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         $error = curl_error($ch);
         
-        error_log("Code HTTP: " . $httpCode);
-        error_log("Type de contenu: " . $contentType);
-        error_log("Taille des headers: " . $headerSize);
-        
         if ($error) {
-            error_log("Erreur cURL: " . $error);
             curl_close($ch);
             return [
                 "success" => false,
@@ -775,8 +688,6 @@ class ApiService {
         $headers = substr($response, 0, $headerSize);
         $body = substr($response, $headerSize);
         
-        error_log("Headers reçus: " . str_replace("\r\n", " | ", $headers));
-        error_log("Taille du corps: " . strlen($body));
         
         // Extraire le type de contenu des headers si non détecté par curl_getinfo
         if (preg_match('/Content-Type: (.*?)(?:\r\n|\r|\n|$)/', $headers, $matches)) {
@@ -793,7 +704,6 @@ class ApiService {
         
         // Si le type de contenu n'est pas JSON, traiter comme binaire
         if ($contentType && strpos($contentType, 'application/json') === false) {
-            error_log("Réponse traitée comme binaire");
             return [
                 "success" => true,
                 "status_code" => $httpCode,
@@ -807,13 +717,8 @@ class ApiService {
         // Essayer de décoder comme JSON
         $decodedResponse = json_decode($body, true);
         if ($decodedResponse === null && json_last_error() !== JSON_ERROR_NONE) {
-            error_log("Erreur décodage JSON: " . json_last_error_msg());
-            error_log("Début de la réponse: " . substr($body, 0, 1000));
-            error_log("Type de contenu détecté: " . $contentType);
-            
             // Si c'est un code 200, considérer comme succès même si ce n'est pas du JSON
             if ($httpCode === 200) {
-                error_log("Code 200 détecté, considérer comme succès");
                 return [
                     "success" => true,
                     "message" => "Message envoyé avec succès",
@@ -839,17 +744,13 @@ class ApiService {
     }
     
     public function deleteUser($userId) {
-        error_log("DEBUG deleteUser - Suppression de l'utilisateur ID: " . $userId);
         
         $result = $this->makeRequest("/users/{$userId}", "DELETE");
-        error_log("DEBUG deleteUser - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     public function createUser($userData) {
-        error_log("DEBUG createUser - Création d'un nouvel utilisateur");
-        error_log("DEBUG createUser - Données: " . json_encode($userData));
         
         // Préparation des données pour l'endpoint auth/register
         $registerData = [
@@ -864,7 +765,6 @@ class ApiService {
         ];
         
         $result = $this->makeRequest("auth/register", "POST", $registerData);
-        error_log("DEBUG createUser - Réponse: " . json_encode($result));
         
         return $result;
     }
@@ -874,10 +774,8 @@ class ApiService {
      * @return array Liste de tous les utilisateurs
      */
     public function getAllUsers() {
-        error_log("DEBUG getAllUsers - Récupération de tous les utilisateurs");
         
         $result = $this->makeRequest("users", "GET");
-        error_log("DEBUG getAllUsers - Réponse: " . json_encode($result));
         
         return $result;
     }
@@ -887,10 +785,8 @@ class ApiService {
      * @return array Liste des utilisateurs en attente
      */
     public function getPendingUsers() {
-        error_log("DEBUG getPendingUsers - Récupération des utilisateurs en attente");
         
         $result = $this->makeRequest("users/pending", "GET");
-        error_log("DEBUG getPendingUsers - Réponse: " . json_encode($result));
         
         return $result;
     }
@@ -901,10 +797,8 @@ class ApiService {
      * @return array Résultat de la validation
      */
     public function approveUser($userId) {
-        error_log("DEBUG approveUser - Validation de l'utilisateur ID: " . $userId);
         
         $result = $this->makeRequest("users/{$userId}/approve", "POST");
-        error_log("DEBUG approveUser - Réponse: " . json_encode($result));
         
         return $result;
     }
@@ -916,7 +810,6 @@ class ApiService {
      * @return array Résultat du rejet
      */
     public function rejectUser($userId, $reason = '') {
-        error_log("DEBUG rejectUser - Rejet de l'utilisateur ID: " . $userId);
         
         $data = [];
         if (!empty($reason)) {
@@ -924,16 +817,13 @@ class ApiService {
         }
         
         $result = $this->makeRequest("users/{$userId}/reject", "POST", $data);
-        error_log("DEBUG rejectUser - Réponse: " . json_encode($result));
         
         return $result;
     }
 
     public function getGroupMessages($groupId) {
-        error_log("Récupération des messages du groupe " . $groupId);
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -942,7 +832,6 @@ class ApiService {
         
         // Utiliser l'endpoint /history comme défini dans le backend
         $result = $this->makeRequest("messages/" . $groupId . "/history", "GET");
-        error_log("Réponse messages: " . json_encode($result));
         
         if ($result["success"] && $result["status_code"] == 200) {
             return [
@@ -959,11 +848,8 @@ class ApiService {
     }
 
     public function sendGroupMessage($groupId, $messageData) {
-        error_log("Envoi d'un message au groupe " . $groupId);
-        error_log("Données du message: " . json_encode($messageData));
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -972,7 +858,6 @@ class ApiService {
         
         // Utiliser l'endpoint /send comme défini dans le backend
         $result = $this->makeRequest("messages/" . $groupId . "/send", "POST", $messageData);
-        error_log("Réponse envoi message: " . json_encode($result));
         
         if ($result["success"] && $result["status_code"] == 201) {
             return [
@@ -993,9 +878,6 @@ class ApiService {
         $endpoint = 'messages/upload';
         $url = rtrim($this->baseUrl, '/') . '/' . $endpoint;
         
-        error_log("Upload de fichier vers: " . $url);
-        error_log("Fichier à uploader: " . print_r($file, true));
-        
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -1009,7 +891,6 @@ class ApiService {
         
         if ($this->token) {
             $headers[] = "Authorization: Bearer " . $this->token;
-            error_log("Ajout du token dans les headers: Bearer " . $this->token);
         }
         
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -1028,12 +909,6 @@ class ApiService {
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
-        
-        error_log("Réponse HTTP: " . $httpCode);
-        error_log("Réponse brute: " . substr($response, 0, 500) . "...");
-        if ($error) {
-            error_log("Erreur cURL: " . $error);
-        }
         
         curl_close($ch);
         
@@ -1060,8 +935,6 @@ class ApiService {
         $endpoint = 'attachments/upload';
         $url = rtrim($this->baseUrl, '/') . '/' . $endpoint;
         
-        error_log("Tentative d'upload avec l'endpoint alternatif: " . $url);
-        
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -1092,9 +965,6 @@ class ApiService {
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
         
-        error_log("Réponse HTTP (alternatif): " . $httpCode);
-        error_log("Réponse brute (alternatif): " . substr($response, 0, 500) . "...");
-        
         curl_close($ch);
         
         if ($error) {
@@ -1116,11 +986,8 @@ class ApiService {
     }
 
     public function createGroup($groupData) {
-        error_log("DEBUG createGroup - Création d'un nouveau groupe");
-        error_log("DEBUG createGroup - Données reçues: " . json_encode($groupData));
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1130,7 +997,6 @@ class ApiService {
         // Récupérer l'ID de l'utilisateur depuis le token
         $userId = $this->getCurrentUserId();
         if (!$userId) {
-            error_log("Impossible de récupérer l'ID utilisateur");
             return [
                 "success" => false,
                 "message" => "Impossible de récupérer l'ID utilisateur"
@@ -1146,21 +1012,15 @@ class ApiService {
             'is_private' => $groupData['is_private'] ? 1 : 0 // Convertir booléen en entier
         ];
         
-        error_log("DEBUG createGroup - Données formatées: " . json_encode($createData));
-        
         // Utiliser l'endpoint /groups/create comme défini dans BackendPHP
         $result = $this->makeRequest("groups/create", "POST", $createData);
-        error_log("DEBUG createGroup - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     public function updateGroup($groupId, $groupData) {
-        error_log("DEBUG updateGroup - Mise à jour du groupe ID: " . $groupId);
-        error_log("DEBUG updateGroup - Données reçues: " . json_encode($groupData));
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1179,20 +1039,15 @@ class ApiService {
             $updateData['is_private'] = $groupData['is_private'] ? 1 : 0;
         }
         
-        error_log("DEBUG updateGroup - Données formatées: " . json_encode($updateData));
-        
         // Utiliser l'endpoint PUT /groups/{id}
         $result = $this->makeRequest("groups/{$groupId}", "PUT", $updateData);
-        error_log("DEBUG updateGroup - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     public function deleteGroup($groupId) {
-        error_log("DEBUG deleteGroup - Suppression du groupe ID: " . $groupId);
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1201,7 +1056,6 @@ class ApiService {
         
         // Utiliser l'endpoint DELETE /groups/{id}
         $result = $this->makeRequest("groups/{$groupId}", "DELETE");
-        error_log("DEBUG deleteGroup - Réponse: " . json_encode($result));
         
         return $result;
     }
@@ -1219,7 +1073,6 @@ class ApiService {
                 $decoded = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], explode('.', $this->token)[1])), true);
                 return $decoded['user_id'] ?? null;
             } catch (Exception $e) {
-                error_log("Erreur lors du décodage du token: " . $e->getMessage());
                 return null;
             }
         }
@@ -1228,10 +1081,8 @@ class ApiService {
     }
 
     public function getGroupMembers($groupId) {
-        error_log("DEBUG getGroupMembers - Récupération des membres du groupe: " . $groupId);
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1240,17 +1091,13 @@ class ApiService {
         
         // Utiliser l'endpoint /groups/{id}/authorized-users
         $result = $this->makeRequest("groups/" . $groupId . "/authorized-users", "GET");
-        error_log("DEBUG getGroupMembers - Réponse: " . json_encode($result));
         
         return $result;
     }
 
     public function addGroupMembers($groupId, $userIds) {
-        error_log("DEBUG addGroupMembers - Ajout de membres au groupe: " . $groupId);
-        error_log("DEBUG addGroupMembers - IDs utilisateurs: " . json_encode($userIds));
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1261,16 +1108,13 @@ class ApiService {
         $result = $this->makeRequest("groups/" . $groupId . "/members", "POST", [
             'user_ids' => $userIds
         ]);
-        error_log("DEBUG addGroupMembers - Réponse: " . json_encode($result));
         
         return $result;
     }
 
     public function checkGroupAccess($groupId) {
-        error_log("DEBUG checkGroupAccess - Vérification d'accès au groupe: " . $groupId);
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1279,17 +1123,14 @@ class ApiService {
         
         // Utiliser l'endpoint /groups/{id}/check-access
         $result = $this->makeRequest("groups/" . $groupId . "/check-access", "GET");
-        error_log("DEBUG checkGroupAccess - Réponse: " . json_encode($result));
         
         return $result;
     }
     // Méthodes pour les événements
     public function getEvents() {
-        error_log("Début de getEvents()");
         
         // Les événements nécessitent une authentification
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "data" => ["events" => []],
@@ -1299,12 +1140,10 @@ class ApiService {
         
         // Utiliser l'endpoint /events/list pour les événements
         $result = $this->makeRequest("events/list", "GET");
-        error_log("Réponse brute de l'API events/list: " . print_r($result, true));
         
         if ($result["success"] && $result["status_code"] == 200) {
             // Vérifier que la clé "data" existe et n'est pas null
             if (!isset($result["data"]) || $result["data"] === null) {
-                error_log("Erreur: Pas de données dans la réponse API pour les événements");
                 return [
                     "success" => false,
                     "data" => ["events" => []],
@@ -1313,7 +1152,6 @@ class ApiService {
             }
             
             $data = $result["data"];
-            error_log("[GETEVENTS] Données reçues de l'API: " . print_r($data, true));
             
             // La réponse devrait être un tableau direct d'événements
             if (is_array($data)) {
@@ -1324,10 +1162,8 @@ class ApiService {
                 ];
             }
             
-            error_log("Format de données non reconnu: " . print_r($data, true));
         }
         
-        error_log("Échec de récupération des événements. Code: " . ($result["status_code"] ?? "inconnu") . ", Message: " . ($result["message"] ?? "aucun"));
         return [
             "success" => false,
             "data" => ["events" => []],
@@ -1336,10 +1172,8 @@ class ApiService {
     }
     
     public function getEventDetails($eventId) {
-        error_log("DEBUG getEventDetails - Récupération des détails de l'événement ID: " . $eventId);
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1348,17 +1182,13 @@ class ApiService {
         
         // Utiliser l'endpoint GET /events/{id}
         $result = $this->makeRequest("events/{$eventId}", "GET");
-        error_log("DEBUG getEventDetails - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     public function createEvent($eventData) {
-        error_log("DEBUG createEvent - Création d'un nouvel événement");
-        error_log("DEBUG createEvent - Données reçues: " . json_encode($eventData));
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1368,7 +1198,6 @@ class ApiService {
         // Récupérer l'ID de l'utilisateur depuis le token
         $userId = $this->getCurrentUserId();
         if (!$userId) {
-            error_log("Impossible de récupérer l'ID utilisateur");
             return [
                 "success" => false,
                 "message" => "Impossible de récupérer l'ID utilisateur"
@@ -1386,21 +1215,15 @@ class ApiService {
             "organizer_id" => $userId
         ];
         
-        error_log("DEBUG createEvent - Données formatées: " . json_encode($createData));
-        
         // Utiliser l'endpoint /events/create
         $result = $this->makeRequest("events/create", "POST", $createData);
-        error_log("DEBUG createEvent - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     public function updateEvent($eventId, $eventData) {
-        error_log("DEBUG updateEvent - Mise à jour de l'événement ID: " . $eventId);
-        error_log("DEBUG updateEvent - Données reçues: " . json_encode($eventData));
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1431,20 +1254,15 @@ class ApiService {
             $updateData["max_participants"] = $eventData["max_participants"];
         }
         
-        error_log("DEBUG updateEvent - Données formatées: " . json_encode($updateData));
-        
         // Utiliser l'endpoint PUT /events/{id}
         $result = $this->makeRequest("events/{$eventId}", "PUT", $updateData);
-        error_log("DEBUG updateEvent - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     public function deleteEvent($eventId) {
-        error_log("DEBUG deleteEvent - Suppression de l'événement ID: " . $eventId);
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1453,16 +1271,13 @@ class ApiService {
         
         // Utiliser l'endpoint DELETE /events/{id}
         $result = $this->makeRequest("events/{$eventId}", "DELETE");
-        error_log("DEBUG deleteEvent - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     public function registerToEvent($eventId) {
-        error_log("DEBUG registerToEvent - Inscription à l'événement ID: " . $eventId);
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1471,16 +1286,13 @@ class ApiService {
         
         // Utiliser l'endpoint POST /events/{id}/register
         $result = $this->makeRequest("events/{$eventId}/register", "POST");
-        error_log("DEBUG registerToEvent - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     public function unregisterFromEvent($eventId) {
-        error_log("DEBUG unregisterFromEvent - Désinscription de l'événement ID: " . $eventId);
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1489,16 +1301,13 @@ class ApiService {
         
         // Utiliser l'endpoint POST /events/{id}/unregister
         $result = $this->makeRequest("events/{$eventId}/unregister", "POST");
-        error_log("DEBUG unregisterFromEvent - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     public function checkEventRegistration($eventId) {
-        error_log("DEBUG checkEventRegistration - Vérification de l'inscription à l'événement ID: " . $eventId);
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "message" => "Token d'authentification requis"
@@ -1507,16 +1316,13 @@ class ApiService {
         
         // Utiliser l'endpoint GET /events/{id}/registration
         $result = $this->makeRequest("events/{$eventId}/registration", "GET");
-        error_log("DEBUG checkEventRegistration - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     public function getEventMessages($eventId) {
-        error_log("DEBUG getEventMessages - Récupération des messages de l'événement ID: " . $eventId);
         
         if (!$this->token) {
-            error_log("Pas de token valide");
             return [
                 "success" => false,
                 "data" => [],
@@ -1526,31 +1332,24 @@ class ApiService {
         
         // Utiliser l'endpoint GET /events/{id}/messages
         $result = $this->makeRequest("events/{$eventId}/messages", "GET");
-        error_log("DEBUG getEventMessages - Réponse: " . json_encode($result));
         
         return $result;
     }
     
     // Méthodes pour les exercices
     public function getExercises($showHidden = false) {
-        error_log("DEBUG ApiService::getExercises - showHidden=" . ($showHidden ? "true" : "false"));
         $endpoint = 'exercise_sheets';
         if ($showHidden) {
             $endpoint .= '?show_hidden=1';
         }
-        error_log("DEBUG ApiService::getExercises - endpoint=" . $endpoint);
         $result = $this->makeRequest($endpoint, 'GET');
-        error_log("DEBUG ApiService::getExercises - result=" . json_encode($result));
         return $result;
     }
     
     public function getExercisesByUser($userId) {
-        error_log("DEBUG ApiService::getExercisesByUser - userId=" . $userId);
         // Utiliser l'endpoint training/progress/user/{user_id} pour récupérer les exercices avec progression
         $endpoint = 'training/progress/user/' . $userId;
-        error_log("DEBUG ApiService::getExercisesByUser - endpoint=" . $endpoint);
         $result = $this->makeRequest($endpoint, 'GET');
-        error_log("DEBUG ApiService::getExercisesByUser - result=" . json_encode($result));
         return $result;
     }
     
@@ -1576,9 +1375,6 @@ class ApiService {
 
     public function createExerciseWithFile($data, $file = null) {
         $url = rtrim($this->baseUrl, '/') . '/exercise_sheets?action=create';
-        error_log("Requête API vers: " . $url);
-        error_log("Méthode: POST avec FormData");
-        error_log("Fichier reçu: " . json_encode($file));
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -1601,14 +1397,12 @@ class ApiService {
         
         // Ajouter le fichier si présent
         if ($file && isset($file['tmp_name']) && !empty($file['tmp_name'])) {
-            error_log("Ajout du fichier au FormData: " . $file['name']);
             $postFields['attachment'] = new CURLFile(
                 $file['tmp_name'],
                 $file['type'],
                 $file['name']
             );
         } else {
-            error_log("Aucun fichier à ajouter");
         }
         
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
@@ -1618,7 +1412,6 @@ class ApiService {
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         
         if (curl_errno($ch)) {
-            error_log("Erreur cURL: " . curl_error($ch));
             curl_close($ch);
             throw new Exception("Erreur lors de la requête API: " . curl_error($ch));
         }
@@ -1637,8 +1430,6 @@ class ApiService {
 
     public function makePostRequestWithFormData($endpoint, $data, $file = null) {
         $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
-        error_log("Requête API vers: " . $url);
-        error_log("Méthode: POST");
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -1679,7 +1470,6 @@ class ApiService {
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         
         if (curl_errno($ch)) {
-            error_log("Erreur cURL: " . curl_error($ch));
             curl_close($ch);
             throw new Exception("Erreur lors de la requête API: " . curl_error($ch));
         }
@@ -1783,12 +1573,7 @@ class ApiService {
             $endpoint .= "?" . implode("&", $params);
         }
         
-        error_log('DEBUG ApiService::getScoredTrainings - endpoint: ' . $endpoint);
-        error_log('DEBUG ApiService::getScoredTrainings - userId: ' . $userId);
-        
         $result = $this->makeRequest($endpoint, 'GET');
-        
-        error_log('DEBUG ApiService::getScoredTrainings - result: ' . json_encode($result));
         
         // Gérer la structure imbriquée de l'API
         if (isset($result['success']) && $result['success'] && isset($result['data'])) {
@@ -1796,7 +1581,6 @@ class ApiService {
             
             // Si les données sont encore imbriquées
             if (is_array($data) && isset($data['success']) && $data['success'] && isset($data['data'])) {
-                error_log('DEBUG ApiService::getScoredTrainings - nested structure detected, unwrapping');
                 return [
                     'success' => true,
                     'data' => $data['data'],
@@ -1826,7 +1610,6 @@ class ApiService {
      */
     public function createScoredTraining($data) {
         $endpoint = "/scored-training";
-        error_log("DEBUG CREATE SCORED TRAINING: " . json_encode($data));
         return $this->makeRequest($endpoint, 'POST', $data);
     }
 
@@ -1940,7 +1723,6 @@ class ApiService {
             $data['user_id'] = $userId;
         }
         
-        error_log("🔍 [API_SERVICE] Données envoyées à l'API: " . json_encode($data));
         
         return $this->makeRequest($endpoint, 'POST', $data);
     }
@@ -1984,18 +1766,11 @@ class ApiService {
             'profileImage' => new CURLFile($file['tmp_name'], $file['type'], $file['name'])
         ];
         
-        // Debug: afficher les détails de l'upload
-        error_log("DEBUG uploadProfileImage - Endpoint: " . $endpoint);
-        error_log("DEBUG uploadProfileImage - Fichier: " . $file['name'] . " (" . $file['type'] . ", " . $file['size'] . " bytes)");
-        error_log("DEBUG uploadProfileImage - Token: " . substr($this->token, 0, 20) . "...");
-        error_log("DEBUG uploadProfileImage - User ID: " . $userId);
-        
         // Debug: décoder le token JWT pour voir son contenu
         try {
             $tokenParts = explode('.', $this->token);
             if (count($tokenParts) === 3) {
                 $payload = json_decode(base64_decode($tokenParts[1]), true);
-                error_log("DEBUG uploadProfileImage - Token payload: " . json_encode($payload));
             }
         } catch (Exception $e) {
             error_log("DEBUG uploadProfileImage - Erreur décodage token: " . $e->getMessage());
@@ -2019,14 +1794,12 @@ class ApiService {
         curl_close($ch);
         
         if ($error) {
-            error_log("Erreur cURL uploadProfileImage: " . $error);
             return ['success' => false, 'message' => 'Erreur de connexion: ' . $error];
         }
         
         // Traiter la réponse
         $responseData = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log("Erreur JSON uploadProfileImage: " . json_last_error_msg());
             return ['success' => false, 'message' => 'Réponse invalide du serveur'];
         }
         
@@ -2037,15 +1810,12 @@ class ApiService {
             'message' => $httpCode >= 200 && $httpCode < 300 ? 'Succès' : 'Erreur HTTP ' . $httpCode
         ];
         
-        // Debug: afficher la réponse complète
-        error_log("DEBUG uploadProfileImage - Réponse complète: " . json_encode($response));
-        
         // Adapter la réponse pour correspondre à ce que le contrôleur attend
         if ($response['success'] && isset($response['data']['user']['profileImage'])) {
             return [
                 'success' => true,
                 'profile_image_path' => $response['data']['user']['profileImage'],
-                'image_url' => 'http://82.67.123.22:25000' . $response['data']['user']['profileImage']
+                'image_url' => $this->getBaseUrlWithoutApi() . $response['data']['user']['profileImage']
             ];
         }
         
@@ -2056,7 +1826,7 @@ class ApiService {
                 return [
                     'success' => true,
                     'profile_image_path' => $user['profileImage'],
-                    'image_url' => 'http://82.67.123.22:25000' . $user['profileImage']
+                    'image_url' => $this->getBaseUrlWithoutApi() . $user['profileImage']
                 ];
             }
         }
@@ -2089,6 +1859,22 @@ class ApiService {
     public function deleteTrainingSession($sessionId) {
         $endpoint = "/training/session/" . $sessionId;
         return $this->makeRequest($endpoint, 'DELETE');
+    }
+    
+    /**
+     * Récupère l'URL de base de l'API sans le suffixe /api
+     * @return string URL de base
+     */
+    private function getBaseUrlWithoutApi() {
+        // Récupérer l'URL de base depuis la configuration
+        $baseUrl = $this->baseUrl;
+        
+        // Si l'URL se termine par /api, la retirer
+        if (substr($baseUrl, -4) === '/api') {
+            return substr($baseUrl, 0, -4);
+        }
+        
+        return $baseUrl;
     }
 }
 ?>

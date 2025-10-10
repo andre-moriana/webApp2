@@ -24,22 +24,17 @@ class EventController {
             $isDemoToken = isset($_SESSION["token"]) && strpos($_SESSION["token"], "demo-token-") === 0;
             
             if ($isAdmin && $isDemoToken) {
-                error_log("EventController: Utilisation des données de test");
                 $events = $this->getTestEvents();
             } else {
-                error_log("EventController: Tentative de récupération des événements via API");
                 $response = $this->apiService->getEvents();
                 
                 if ($response["success"] && isset($response["data"]["events"])) {
                     $events = $response["data"]["events"];
-                    error_log("EventController: " . count($events) . " événements reçus de l'API");
                 } else {
-                    error_log("EventController: Échec de récupération des événements: " . ($response["message"] ?? "Erreur inconnue"));
                     $error = "Impossible de charger les événements: " . ($response["message"] ?? "Erreur inconnue");
                 }
             }
         } catch (Exception $e) {
-            error_log("EventController: Exception lors de la récupération des événements: " . $e->getMessage());
             $error = "Erreur lors du chargement des événements: " . $e->getMessage();
         }
 

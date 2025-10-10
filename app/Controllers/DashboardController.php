@@ -1,5 +1,4 @@
 <?php
-
 // Inclure ApiService
 require_once __DIR__ . '/../Services/ApiService.php';
 
@@ -44,24 +43,17 @@ class DashboardController {
         try {
             // Récupérer le nombre d'utilisateurs
             $usersResponse = $this->apiService->getUsers();
-            error_log("Réponse users dans DashboardController: " . print_r($usersResponse, true));
             if ($usersResponse['success'] && !empty($usersResponse['data']['users'])) {
                 $stats['users'] = count($usersResponse['data']['users']);
             }
             
             // Récupérer le nombre de groupes
             $groupsResponse = $this->apiService->getGroups();
-            error_log("Réponse groupes dans DashboardController: " . print_r($groupsResponse, true));
             
             if ($groupsResponse['success']) {
                 if (!empty($groupsResponse['data']['groups'])) {
                     $stats['groups'] = count($groupsResponse['data']['groups']);
-                    error_log("Nombre de groupes trouvés: " . $stats['groups']);
-                } else {
-                    error_log("Aucun groupe trouvé dans la réponse");
                 }
-            } else {
-                error_log("Erreur lors de la récupération des groupes: " . ($groupsResponse['message'] ?? 'Erreur inconnue'));
             }
             
             // Récupérer le nombre d'exercices
@@ -78,8 +70,6 @@ class DashboardController {
             // En cas d'erreur, on garde les valeurs par défaut
             error_log('Erreur lors de la récupération des statistiques: ' . $e->getMessage());
         }
-        
-        error_log("Statistiques finales: " . print_r($stats, true));
         return $stats;
     }
 }
