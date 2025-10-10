@@ -620,79 +620,78 @@ class ApiController {
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
             
-            // Appeler l'API pour récupérer l'image
-            $response = $this->apiService->makeRequest("messages/{$messageId}/attachment", "GET");
+            // Récupérer l'URL de l'image depuis les paramètres GET
+            $imageUrl = $_GET['url'] ?? '';
             
-            if ($response['success']) {
-                // L'API retourne directement le contenu du fichier
-                $rawResponse = $response['raw_response'] ?? '';
-                
-                // Vérifier si c'est du contenu binaire
-                if (!empty($rawResponse) && !json_decode($rawResponse, true)) {
-                    // C'est du contenu binaire, le servir directement comme image
-                    
-                    // Déterminer le type MIME basé sur le contenu
-                    $mimeType = 'image/jpeg'; // Par défaut
-                    if (strpos($rawResponse, "\xFF\xD8\xFF") === 0) {
-                        $mimeType = 'image/jpeg';
-                    } elseif (strpos($rawResponse, "\x89PNG") === 0) {
-                        $mimeType = 'image/png';
-                    } elseif (strpos($rawResponse, "GIF8") === 0) {
-                        $mimeType = 'image/gif';
-                    } elseif (strpos($rawResponse, "BM") === 0) {
-                        $mimeType = 'image/bmp';
-                    }
-                    
-                    // Nettoyer la sortie et définir les headers appropriés pour l'affichage
-                    if (ob_get_level()) {
-                        ob_clean();
-                    }
-                    
-                    header('Content-Type: ' . $mimeType);
-                    header('Content-Length: ' . strlen($rawResponse));
-                    header('Cache-Control: public, max-age=3600'); // Cache pour 1 heure
-                    header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
-                    
-                    echo $rawResponse;
-                    exit;
-                } else {
-                    // C'est du JSON, essayer de trouver une URL
-                    $data = $response['data'] ?? [];
-                    $imageUrl = null;
-                    
-                    // Essayer différents chemins possibles pour l'URL
-                    if (isset($data['attachment']['url'])) {
-                        $imageUrl = $data['attachment']['url'];
-                    } elseif (isset($data['url'])) {
-                        $imageUrl = $data['url'];
-                    } elseif (isset($data['path'])) {
-                        $imageUrl = $data['path'];
-                    }
-                    
-                    if ($imageUrl) {
-                        // Si l'URL est relative, la rendre absolue
-                        if (strpos($imageUrl, 'http') !== 0) {
-                            $baseUrl = rtrim($this->baseUrl, '/api');
-                            $imageUrl = $baseUrl . '/' . ltrim($imageUrl, '/');
-                        }
-                        
-                        header("Location: " . $imageUrl);
-                        exit;
-                    } else {
-                        $this->cleanOutput();
-                        http_response_code(404);
-                        echo json_encode([
-                            "success" => false,
-                            "message" => "URL de l'image non trouvée dans la réponse API"
-                        ]);
-                    }
-                }
-            } else {
+            error_log("=== DEBUG MESSAGE IMAGE ===");
+            error_log("Message ID: " . $messageId);
+            error_log("URL reçue: " . $imageUrl);
+            error_log("Base URL: " . $this->baseUrl);
+            
+            if (empty($imageUrl)) {
+                error_log("URL de l'image manquante");
                 $this->cleanOutput();
-                http_response_code($response['status_code'] ?? 500);
+                http_response_code(400);
                 echo json_encode([
                     "success" => false,
-                    "message" => "Erreur lors de la récupération de l'image: " . ($response['message'] ?? 'Erreur inconnue')
+                    "message" => "URL de l'image manquante"
+                ]);
+                return;
+            }
+            
+            // S'assurer que l'URL pointe vers l'API externe
+            if (strpos($imageUrl, $this->baseUrl) !== 0) {
+                // Si l'URL est relative, la rendre absolue
+                if (strpos($imageUrl, 'http') !== 0) {
+                    $imageUrl = rtrim($this->baseUrl, '/api') . '/' . ltrim($imageUrl, '/');
+                }
+            }
+            
+            error_log("URL finale: " . $imageUrl);
+            
+            // Faire une requête pour récupérer l'image
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $imageUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            
+            // Ajouter le token d'authentification si disponible
+            if (isset($_SESSION['token'])) {
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Authorization: Bearer ' . $_SESSION['token']
+                ]);
+            }
+            
+            $imageData = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+            curl_close($ch);
+            
+            error_log("Code HTTP: " . $httpCode);
+            error_log("Content-Type: " . $contentType);
+            error_log("Taille des données: " . strlen($imageData));
+            
+            if ($httpCode === 200 && !empty($imageData)) {
+                // Nettoyer la sortie et définir les headers appropriés pour l'affichage
+                if (ob_get_level()) {
+                    ob_clean();
+                }
+                
+                header('Content-Type: ' . ($contentType ?: 'image/jpeg'));
+                header('Content-Length: ' . strlen($imageData));
+                header('Cache-Control: public, max-age=3600'); // Cache pour 1 heure
+                header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
+                
+                echo $imageData;
+                exit;
+            } else {
+                $this->cleanOutput();
+                http_response_code(404);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Image non trouvée"
                 ]);
             }
         } catch (Exception $e) {

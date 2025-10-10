@@ -75,8 +75,9 @@ function createMessageElement(message) {
         // Pour les images, utiliser la route d'images du backend WebApp2
         if (attachmentUrl && !attachmentUrl.startsWith("http")) {
             if (isImage) {
-                // Pour les images, utiliser la route d'images du backend WebApp2
-                attachmentUrl = "/api/messages/image/" + (message._id || message.id);
+                // Pour les images, utiliser la route d'images du backend WebApp2 avec l'URL en paramètre
+                const originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
+                attachmentUrl = "/api/messages/image/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
             } else {
                 // Pour les autres fichiers, utiliser la route de téléchargement
                 attachmentUrl = "/api/messages/attachment/" + (message._id || message.id);
