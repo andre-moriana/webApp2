@@ -7,49 +7,22 @@ const messageForm = document.getElementById("message-form");
 const messageInput = document.getElementById("message-input");
 const chatTitle = document.getElementById("chat-title");
 
-// Logs de débogage
-console.log("Script groups-chat.js chargé");
-console.log("Variables disponibles:", {
-    currentUserId: typeof currentUserId !== 'undefined' ? currentUserId : 'undefined',
-    initialGroupId: typeof initialGroupId !== 'undefined' ? initialGroupId : 'undefined',
-    backendUrl: typeof backendUrl !== 'undefined' ? backendUrl : 'undefined',
-    isAdmin: typeof isAdmin !== 'undefined' ? isAdmin : 'undefined',
-    authToken: typeof authToken !== 'undefined' ? authToken : 'undefined'
-});
-
 // Initialiser avec le premier groupe
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("DOM chargé, initialisation du chat");
-    console.log("Éléments DOM trouvés:", {
-        messagesContainer: !!messagesContainer,
-        messageForm: !!messageForm,
-        messageInput: !!messageInput,
-        chatTitle: !!chatTitle
-    });
-    
+   
     if (typeof initialGroupId !== "undefined" && initialGroupId) {
         currentGroupId = initialGroupId.toString();
-        console.log("Chat initialisé avec le groupe ID:", currentGroupId);
-        console.log("ID utilisateur actuel:", currentUserId);
-        
         // Charger automatiquement les messages du groupe initial
         loadGroupMessages(currentGroupId);
-    } else {
-        console.log("Aucun groupe initial défini");
     }
 });
 
 // Créer un élément de message
 function createMessageElement(message) {
-    console.log("Création d'un élément de message:", message);
-    
     // Gérer les différentes structures de données du backend
     const authorId = message.author_id || message.author?._id || message.author?.id || message.userId || message.user_id;
     const authorName = message.author_name || message.author?.name || message.userName || "Utilisateur";
     const messageTime = message.created_at || message.createdAt || message.timestamp;
-    
-    console.log("Author ID:", authorId, "Current User ID:", currentUserId);
-    
     const isCurrentUser = authorId && currentUserId && authorId.toString() === currentUserId.toString();
     const messageClass = isCurrentUser ? "message-sent" : "message-received";
     const alignClass = isCurrentUser ? "justify-content-end" : "justify-content-start";
@@ -145,10 +118,6 @@ function createMessageElement(message) {
 
 // Charger les messages d'un groupe
 async function loadGroupMessages(groupId) {
-    console.log("Chargement des messages pour le groupe:", groupId);
-    console.log("URL de l'API:", `${backendUrl}/api/messages/${groupId}/history`);
-    console.log("Token d'auth:", authToken || localStorage.getItem('token') || sessionStorage.getItem('token'));
-    
     messagesContainer.innerHTML = `
         <div class="text-center">
             <div class="spinner-border text-primary" role="status">
@@ -165,12 +134,9 @@ async function loadGroupMessages(groupId) {
             }
         });
         
-        console.log("Réponse de l'API:", response.status, response.statusText);
         
         if (response.ok) {
             const data = await response.json();
-            console.log("Données reçues:", data);
-            
             // L'API retourne directement un tableau de messages
             let messages = [];
             if (Array.isArray(data)) {
@@ -179,15 +145,12 @@ async function loadGroupMessages(groupId) {
                 messages = data.data;
             }
             
-            console.log("Messages trouvés:", messages.length);
-            
             if (messages.length > 0) {
                 const messageElements = messages.map(message => createMessageElement(message)).filter(html => html !== "");
                 
                 if (messageElements.length > 0) {
                     messagesContainer.innerHTML = messageElements.join("");
-                    console.log("Messages affichés:", messageElements.length);
-                } else {
+               } else {
                     messagesContainer.innerHTML = `
                         <div class="text-center text-muted">
                             <i class="fas fa-comments fa-2x mb-2"></i>
@@ -196,8 +159,7 @@ async function loadGroupMessages(groupId) {
                     `;
                 }
             } else {
-                console.log("Aucun message dans la réponse API");
-                messagesContainer.innerHTML = `
+               messagesContainer.innerHTML = `
                     <div class="text-center text-muted">
                         <i class="fas fa-comments fa-2x mb-2"></i>
                         <p>Aucun message dans le chat</p>
@@ -206,7 +168,6 @@ async function loadGroupMessages(groupId) {
             }
         } else {
             const errorText = await response.text();
-            console.error("Erreur API:", response.status, errorText);
             messagesContainer.innerHTML = `
                 <div class="text-center text-danger">
                     <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
@@ -216,7 +177,6 @@ async function loadGroupMessages(groupId) {
         }
         
     } catch (error) {
-        console.error("Erreur lors du chargement:", error);
         messagesContainer.innerHTML = `
             <div class="text-center text-danger">
                 <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
@@ -243,13 +203,10 @@ document.querySelectorAll(".group-item").forEach(item => {
             e.target.tagName === 'BUTTON' ||
             e.target.tagName === 'I' ||
             e.target.tagName === 'FORM') {
-            console.log("Clic sur un bouton/lien/badge/form, laisser le navigateur gérer");
             return; // Laisser le navigateur gérer le clic normalement
         }
         
         e.preventDefault();
-        
-        console.log("Clic sur le groupe:", item.dataset.groupId);
         
         document.querySelectorAll(".group-item").forEach(i => i.classList.remove("active"));
         item.classList.add("active");
@@ -294,9 +251,7 @@ if (messageForm) {
         // Vider le champ de saisie
         messageInput.value = "";
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        console.log("Message envoyé:", content);
-        
+     
         // Envoyer le message au backend
         try {
             // Utiliser FormData comme l'app mobile
@@ -308,7 +263,6 @@ if (messageForm) {
             if (attachmentInput && attachmentInput.files && attachmentInput.files[0]) {
                 const file = attachmentInput.files[0];
                 formData.append('attachment', file);
-                console.log("Fichier ajouté:", file.name, "Type:", file.type, "Taille:", file.size);
             }
             
             const response = await fetch(`/api/messages/${currentGroupId}/send`, {
@@ -322,41 +276,30 @@ if (messageForm) {
             
             if (response.ok) {
                 const data = await response.json();
-                console.log("Message sauvegardé avec succès:", data);
-                
                 // Mettre à jour l'ID du message avec celui du backend
                 const realMessageId = data._id || data.id || data.message_id;
                 if (realMessageId) {
-                    console.log("Mise à jour de l'ID du message:", newMessage.id, "->", realMessageId);
-                    
-                    // Mettre à jour l'attribut data-message-id dans le DOM
+                     // Mettre à jour l'attribut data-message-id dans le DOM
                     const messageElement = document.querySelector(`[data-message-id="${newMessage.id}"]`);
                     if (messageElement) {
                         messageElement.setAttribute('data-message-id', realMessageId);
-                        console.log("ID mis à jour dans le DOM");
-                        
+                       
                         // Mettre à jour aussi les boutons d'action dans ce message
                         const editButton = messageElement.querySelector('button[onclick*="editMessage"]');
                         const deleteButton = messageElement.querySelector('button[onclick*="deleteMessage"]');
                         
                         if (editButton) {
                             editButton.setAttribute('onclick', `editMessage('${realMessageId}')`);
-                            console.log("Bouton d'édition mis à jour");
-                        }
+                         }
                         
                         if (deleteButton) {
                             deleteButton.setAttribute('onclick', `deleteMessage('${realMessageId}')`);
-                            console.log("Bouton de suppression mis à jour");
-                        }
-                    } else {
-                        console.error("Élément de message non trouvé pour mise à jour de l'ID");
+                         }
                     }
                     
                     // Mettre à jour l'ID dans l'objet newMessage pour les boutons d'action
                     newMessage.id = realMessageId;
                     newMessage._id = realMessageId;
-                } else {
-                    console.warn("Aucun ID de message reçu du backend");
                 }
                 
                 // Vider l'input de fichier après envoi réussi
@@ -364,12 +307,10 @@ if (messageForm) {
                     attachmentInput.value = '';
                 }
             } else {
-                console.error("Erreur lors de la sauvegarde du message:", response.status);
-                // Optionnel: Afficher un message d'erreur à l'utilisateur
+                 // Optionnel: Afficher un message d'erreur à l'utilisateur
                 alert("Erreur lors de l'envoi du message");
             }
         } catch (error) {
-            console.error("Erreur lors de l'envoi du message:", error);
             alert("Erreur lors de l'envoi du message");
         }
     });
@@ -377,7 +318,6 @@ if (messageForm) {
 
 // Rendez les fonctions globales
 window.editMessage = async function(messageId) {
-    console.log("editMessage appelé avec ID:", messageId);
     
     if (!messageId || messageId === "") {
         alert("Erreur: ID du message manquant");
@@ -464,7 +404,6 @@ async function saveMessageEdit(messageId) {
         
         if (response.ok) {
             const data = await response.json();
-            console.log('Message modifié avec succès:', data);
             closeEditModal();
             // Recharger la page pour voir les changements
             window.location.reload();
@@ -483,8 +422,7 @@ async function saveMessageEdit(messageId) {
 }
 
 window.deleteMessage = async function(messageId) {
-    console.log("deleteMessage appelé avec ID:", messageId);
-    
+     
     if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
         try {
             const response = await fetch(`/api/messages/${messageId}/delete`, {
@@ -496,7 +434,6 @@ window.deleteMessage = async function(messageId) {
             
             if (response.ok) {
                 const data = await response.json();
-                console.log('Message supprimé avec succès:', data);
                 // Recharger la page pour voir les changements
                 window.location.reload();
             } else {
@@ -509,11 +446,3 @@ window.deleteMessage = async function(messageId) {
         }
     }
 };
-
-// Ajoutez ceci au début du fichier, après les sélecteurs DOM
-console.log("Script groups-chat.js chargé");
-console.log("Fonctions disponibles:", {
-    editMessage: typeof editMessage,
-    deleteMessage: typeof deleteMessage,
-    loadGroupMessages: typeof loadGroupMessages
-});
