@@ -139,6 +139,57 @@ class ApiController {
         }
     }
     
+    public function getUserAvatar($userId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            http_response_code(401);
+            exit('Non authentifié');
+        }
+
+        try {
+            // Récupérer le chemin de l'image depuis les paramètres GET
+            $imagePath = $_GET['path'] ?? '';
+            if (empty($imagePath)) {
+                http_response_code(400);
+                exit('Chemin de l\'image manquant');
+            }
+
+            // Construire l'URL complète vers l'API externe
+            $externalUrl = 'http://82.67.123.22:25000' . $imagePath;
+            
+            // Récupérer l'image depuis l'API externe
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $externalUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . ($_SESSION['token'] ?? '')
+            ]);
+            
+            $imageData = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+            curl_close($ch);
+            
+            if ($httpCode === 200 && $imageData !== false) {
+                // Définir les headers appropriés
+                header('Content-Type: ' . $contentType);
+                header('Content-Length: ' . strlen($imageData));
+                header('Cache-Control: public, max-age=3600'); // Cache pendant 1 heure
+                
+                // Afficher l'image
+                echo $imageData;
+            } else {
+                http_response_code(404);
+                exit('Image non trouvée');
+            }
+        } catch (Exception $e) {
+            error_log("Erreur lors de la récupération de l'avatar: " . $e->getMessage());
+            http_response_code(500);
+            exit('Erreur serveur');
+        }
+    }
+    
     
     
     public function userDocuments($userId) {

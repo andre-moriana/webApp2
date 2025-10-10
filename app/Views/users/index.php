@@ -89,8 +89,8 @@ error_log("Session: " . print_r($_SESSION, true));
                                                         // Vérifier si une photo de profil existe
                                                         $profileImage = $user['profileImage'] ?? $user['profile_image'] ?? null;
                                                         if (!empty($profileImage)): 
-                                                            // Construire l'URL complète vers le backend
-                                                            $imageUrl = 'http://82.67.123.22:25000' . $profileImage;
+                                                            // Utiliser la route proxy du backend WebApp2
+                                                            $imageUrl = '/users/' . $user['id'] . '/avatar?path=' . urlencode($profileImage);
                                                         ?>
                                                             <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                                                  alt="Photo de profil" 
