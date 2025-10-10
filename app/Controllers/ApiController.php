@@ -888,5 +888,75 @@ class ApiController {
             ], 500);
         }
     }
+
+    public function updateEventMessage($messageId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $content = $input['content'] ?? '';
+            
+            if (empty($content)) {
+                http_response_code(400);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Le contenu du message ne peut pas être vide"
+                ]);
+                return;
+            }
+            
+            $response = $this->apiService->makeRequest("events/messages/{$messageId}/update", "PUT", ['content' => $content]);
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Message modifié avec succès"
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la modification: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la modification: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function deleteEventMessage($messageId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $response = $this->apiService->makeRequest("events/messages/{$messageId}/delete", "DELETE");
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Message supprimé avec succès"
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la suppression: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la suppression: " . $e->getMessage()
+            ]);
+        }
+    }
 }
 ?>

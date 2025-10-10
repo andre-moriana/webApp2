@@ -717,7 +717,7 @@ async function saveMessageEdit(messageId) {
     }
     
     try {
-        const response = await fetch(`/api/messages/${messageId}/update`, {
+        const response = await fetch(`/api/events/messages/${messageId}/update`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -755,7 +755,7 @@ window.deleteMessage = async function(messageId) {
     
     if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
         try {
-            const response = await fetch(`/api/messages/${messageId}/delete`, {
+            const response = await fetch(`/api/events/messages/${messageId}/delete`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
