@@ -31,7 +31,7 @@ function createMessageElement(message) {
     
     const messageDiv = document.createElement('div');
     messageDiv.className = `message-item ${isOwnMessage ? 'message-sent' : 'message-received'}`;
-    messageDiv.setAttribute('data-message-id', message.id);
+    messageDiv.setAttribute('data-message-id', message._id || message.id);
     
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
@@ -72,7 +72,7 @@ function createMessageElement(message) {
             fullUrl = attachmentUrl;
         } else {
             // Pour les images, utiliser la route d'images du backend WebApp2
-            const messageId = message.id || message._id;
+            const messageId = message._id || message.id;
             fullUrl = `/api/messages/image/${messageId}?url=${encodeURIComponent(attachmentUrl)}`;
         }
         
@@ -119,10 +119,10 @@ function createMessageElement(message) {
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'message-actions';
         actionsDiv.innerHTML = `
-            <button type="button" class="btn btn-edit" onclick="editMessage(${message.id})" title="Modifier">
+            <button type="button" class="btn btn-edit" onclick="editMessage('${message._id || message.id}')" title="Modifier">
                 <i class="fas fa-edit"></i>
             </button>
-            <button type="button" class="btn btn-delete" onclick="deleteMessage(${message.id})" title="Supprimer">
+            <button type="button" class="btn btn-delete" onclick="deleteMessage('${message._id || message.id}')" title="Supprimer">
                 <i class="fas fa-trash"></i>
             </button>
         `;
