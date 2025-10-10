@@ -102,6 +102,13 @@ class Router {
         $this->addRoute("PUT", "/api/messages/{id}/update", "ApiController@updateMessage");
         $this->addRoute("DELETE", "/api/messages/{id}/delete", "ApiController@deleteMessage");
         
+        // Routes API pour les messages des événements
+        $this->addRoute("GET", "/api/events/{id}/messages", "ApiController@getEventMessages");
+        $this->addRoute("POST", "/api/events/{id}/messages", "ApiController@sendEventMessage");
+        $this->addRoute("GET", "/api/events/{id}", "ApiController@getEvent");
+        $this->addRoute("POST", "/api/events/{id}/join", "ApiController@joinEvent");
+        $this->addRoute("POST", "/api/events/{id}/leave", "ApiController@leaveEvent");
+        
         // Routes d'authentification
         $this->addRoute("GET", "/login", "AuthController@login");
         $this->addRoute("POST", "/auth/authenticate", "AuthController@authenticate");

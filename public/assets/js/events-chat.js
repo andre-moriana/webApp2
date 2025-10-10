@@ -66,8 +66,15 @@ function createMessageElement(message) {
         const filename = message.attachment.filename || message.attachment.original_name || 'Pièce jointe';
         const mimeType = message.attachment.mime_type || '';
         
-        // Construire l'URL complète pour l'image
-        const fullUrl = attachmentUrl.startsWith('http') ? attachmentUrl : `${backendUrl}${attachmentUrl}`;
+        // Construire l'URL complète pour l'image via le backend WebApp2
+        let fullUrl;
+        if (attachmentUrl.startsWith('http')) {
+            fullUrl = attachmentUrl;
+        } else {
+            // Pour les images, utiliser la route d'images du backend WebApp2
+            const messageId = message.id || message._id;
+            fullUrl = `/api/messages/image/${messageId}?url=${encodeURIComponent(attachmentUrl)}`;
+        }
         
         // Détecter si c'est une image
         const isImage = mimeType.startsWith('image/') || 
@@ -178,10 +185,10 @@ function openImageModal(imageUrl, filename) {
 async function loadEventMessages(eventId) {
     console.log("=== LOAD MESSAGES DEBUG ===");
     console.log("Chargement des messages pour l'événement:", eventId);
-    console.log("URL:", `${backendUrl}/api/events/${eventId}/messages`);
+    console.log("URL:", `/api/events/${eventId}/messages`);
     
     try {
-        const response = await fetch(`${backendUrl}/api/events/${eventId}/messages`, {
+        const response = await fetch(`/api/events/${eventId}/messages`, {
             method: "GET",
             headers: {
                 "Authorization": `Bearer ${authToken}`,
@@ -262,7 +269,6 @@ async function sendMessage(content, attachment = null) {
     console.log("=== SEND MESSAGE DEBUG ===");
     console.log("Content:", content);
     console.log("Current Event ID:", currentEventId);
-    console.log("Backend URL:", backendUrl);
     console.log("Auth Token:", authToken ? "Présent" : "Manquant");
     
     if (!currentEventId || currentEventId === "null") {
@@ -284,9 +290,9 @@ async function sendMessage(content, attachment = null) {
             console.log(key, value);
         }
         
-        console.log("Envoi de la requête vers:", `${backendUrl}/api/events/${currentEventId}/messages`);
+        console.log("Envoi de la requête vers:", `/api/events/${currentEventId}/messages`);
         
-        const response = await fetch(`${backendUrl}/api/events/${currentEventId}/messages`, {
+        const response = await fetch(`/api/events/${currentEventId}/messages`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${authToken}`
@@ -382,7 +388,7 @@ document.addEventListener("click", function(e) {
 async function checkEventRegistrationStatus(eventId) {
     try {
         // Utiliser l'endpoint GET pour vérifier l'état sans s'inscrire
-        const response = await fetch(`${backendUrl}/api/events/${eventId}`, {
+        const response = await fetch(`/api/events/${eventId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -431,7 +437,7 @@ window.registerToEvent = async function(eventId) {
     }
     
     try {
-        const response = await fetch(`${backendUrl}/api/events/${eventId}/join`, {
+        const response = await fetch(`/api/events/${eventId}/join`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -472,7 +478,7 @@ window.unregisterFromEvent = async function(eventId) {
     }
     
     try {
-        const response = await fetch(`${backendUrl}/api/events/${eventId}/leave`, {
+        const response = await fetch(`/api/events/${eventId}/leave`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -708,7 +714,7 @@ async function saveMessageEdit(messageId) {
     }
     
     try {
-        const response = await fetch(`${backendUrl}/api/messages/${messageId}`, {
+        const response = await fetch(`/api/messages/${messageId}/update`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -746,7 +752,7 @@ window.deleteMessage = async function(messageId) {
     
     if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
         try {
-            const response = await fetch(`${backendUrl}/api/messages/${messageId}`, {
+            const response = await fetch(`/api/messages/${messageId}/delete`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
@@ -771,54 +777,5 @@ window.deleteMessage = async function(messageId) {
     }
 };
 
-// Test ultra-simple
-async function testPing(eventId) {
-    try {
-        const response = await fetch(`${backendUrl}/api/events/${eventId}/ping`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        console.log('Ping response:', data);
-        return data;
-    } catch (error) {
-        console.error('Ping error:', error);
-        return { error: error.message };
-    }
-}
-
-// Modifier la fonction de test pour commencer par le ping
-async function testRegistration(eventId) {
-    console.log('=== TEST REGISTRATION DEBUG ===');
-    
-    // Test 1: Ping simple
-    console.log('Test 1: Ping simple');
-    const pingResult = await testPing(eventId);
-    if (pingResult.error) {
-        console.error('Ping failed:', pingResult.error);
-        return pingResult;
-    }
-    
-    // Test 2: Test complet
-    console.log('Test 2: Test complet');
-    try {
-        const response = await fetch(`${backendUrl}/api/events/${eventId}/test-register`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        console.log('Test registration response:', data);
-        return data;
-    } catch (error) {
-        console.error('Erreur lors du test:', error);
-        return { error: error.message };
-    }
-}
+// Fonctions de test supprimées - elles utilisaient l'API externe directement
+// Ces fonctions ne sont plus nécessaires car toutes les requêtes passent maintenant par le backend WebApp2

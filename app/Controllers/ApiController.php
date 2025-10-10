@@ -703,5 +703,158 @@ class ApiController {
             ]);
         }
     }
+
+    public function getEventMessages($eventId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            error_log("Récupération des messages pour l'événement " . $eventId);
+            $response = $this->apiService->makeRequest("events/" . $eventId . "/messages", "GET");
+            error_log("Réponse de l'API: " . json_encode($response));
+
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            error_log("Erreur lors de la récupération des messages: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des messages: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function sendEventMessage($eventId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        $content = $_POST['content'] ?? '';
+        $file = $_FILES['attachment'] ?? null;
+
+        // Vérifier qu'il y a au moins un contenu ou un fichier
+        if (empty($content) && empty($file)) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Le message doit contenir du texte ou une pièce jointe'
+            ], 400);
+        }
+
+        try {
+            error_log("Envoi d'un message à l'événement " . $eventId);
+            error_log("Contenu: " . $content);
+
+            // Préparer les données pour l'API
+            $postData = [
+                'content' => $content,
+                'event_id' => intval($eventId)
+            ];
+
+            // Si un fichier est présent, l'ajouter directement aux données
+            if ($file && $file['error'] === UPLOAD_ERR_OK) {
+                error_log("Ajout du fichier: " . print_r($file, true));
+                $postData['attachment'] = new CURLFile(
+                    $file['tmp_name'],
+                    $file['type'],
+                    $file['name']
+                );
+            }
+
+            // Envoyer le message avec le fichier si présent
+            $response = $this->apiService->makeRequestWithFile("events/{$eventId}/messages", "POST", $postData);
+            error_log("Données envoyées à l'API: " . json_encode($postData));
+            error_log("Réponse de l'API: " . json_encode($response));
+
+            if ($response['success']) {
+                $this->sendJsonResponse($response);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de l\'envoi du message'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            error_log("Erreur lors de l'envoi du message: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'envoi du message: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getEvent($eventId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            error_log("Récupération de l'événement " . $eventId);
+            $response = $this->apiService->makeRequest("events/" . $eventId, "GET");
+            error_log("Réponse de l'API: " . json_encode($response));
+
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            error_log("Erreur lors de la récupération de l'événement: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération de l\'événement: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function joinEvent($eventId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            error_log("Inscription à l'événement " . $eventId);
+            $response = $this->apiService->makeRequest("events/" . $eventId . "/join", "POST");
+            error_log("Réponse de l'API: " . json_encode($response));
+
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            error_log("Erreur lors de l'inscription à l'événement: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'inscription à l\'événement: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function leaveEvent($eventId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            error_log("Désinscription de l'événement " . $eventId);
+            $response = $this->apiService->makeRequest("events/" . $eventId . "/leave", "POST");
+            error_log("Réponse de l'API: " . json_encode($response));
+
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            error_log("Erreur lors de la désinscription de l'événement: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la désinscription de l\'événement: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 ?>
