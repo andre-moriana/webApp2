@@ -914,8 +914,8 @@ class ApiController {
                 return;
             }
             
-            error_log("Calling API: events/messages/{$messageId}/update with POST");
-            $response = $this->apiService->makeRequest("events/messages/{$messageId}/update", "POST", ['content' => $content]);
+            error_log("Calling API: messages/{$messageId}/update with PUT");
+            $response = $this->apiService->makeRequest("messages/{$messageId}/update", "PUT", ['content' => $content]);
             error_log("API Response: " . json_encode($response));
             
             if ($response['success']) {
@@ -946,7 +946,7 @@ class ApiController {
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
             
-            $response = $this->apiService->makeRequest("events/messages/{$messageId}/delete", "POST");
+            $response = $this->apiService->makeRequest("messages/{$messageId}/delete", "DELETE");
             
             if ($response['success']) {
                 http_response_code(200);
