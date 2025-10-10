@@ -12,12 +12,10 @@ window.confirmDelete = function(eventId, eventName) {
 // Fonction pour supprimer un événement
 async function deleteEvent(eventId) {
     if (!eventId) {
-        console.error('ID d\'événement manquant pour la suppression');
         return;
     }
     try {
-        console.log('Suppression de l\'événement:', eventId);
-        const response = await fetch('/api/events/' + eventId, {
+        const response = await fetch('/events/' + eventId + '/delete', {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + authToken,
@@ -25,7 +23,6 @@ async function deleteEvent(eventId) {
             }
         });
         if (response.ok) {
-            console.log('Événement supprimé avec succès');
             const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
             if (modal) {
                 modal.hide();
@@ -40,11 +37,9 @@ async function deleteEvent(eventId) {
             }
         } else {
             const error = await response.json();
-            console.error('Erreur lors de la suppression:', error);
             alert('Erreur lors de la suppression: ' + (error.message || 'Erreur inconnue'));
         }
     } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
         alert('Erreur lors de la suppression: ' + error.message);
     }
 }

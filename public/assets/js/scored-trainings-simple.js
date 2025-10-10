@@ -1,19 +1,11 @@
 // JavaScript simple pour les tirs comptés
-console.log('🚀 scored-trainings-simple.js chargé');
-
 // Configuration automatique selon le type de tir
 function updateShootingConfiguration() {
-    console.log('🎯 updateShootingConfiguration appelée');
-    
     const shootingType = document.getElementById('shooting_type').value;
     const totalEndsInput = document.getElementById('total_ends');
     const arrowsPerEndInput = document.getElementById('arrows_per_end');
     
-    console.log('Type de tir sélectionné:', shootingType);
-    console.log('Champs trouvés:', { totalEndsInput, arrowsPerEndInput });
-    
     if (!totalEndsInput || !arrowsPerEndInput) {
-        console.error('❌ Champs non trouvés');
         return;
     }
     
@@ -30,36 +22,29 @@ function updateShootingConfiguration() {
         const config = configurations[shootingType];
         totalEndsInput.value = config.totalEnds;
         arrowsPerEndInput.value = config.arrowsPerEnd;
-        
-        console.log(`✅ Configuration appliquée: ${config.totalEnds} volées, ${config.arrowsPerEnd} flèches`);
     }
 }
 
 // Fonctions pour les boutons
 function viewTraining(trainingId) {
-    console.log('👁️ viewTraining appelée avec ID:', trainingId);
     if (trainingId && trainingId > 0) {
         window.location.href = '/scored-trainings/' + trainingId;
     }
 }
 
 function continueTraining(trainingId) {
-    console.log('▶️ continueTraining appelée avec ID:', trainingId);
     if (trainingId && trainingId > 0) {
         window.location.href = '/scored-trainings/' + trainingId;
     }
 }
 
 function deleteTraining(trainingId) {
-    console.log('🗑️ deleteTraining appelée avec ID:', trainingId);
     if (confirm('Êtes-vous sûr de vouloir supprimer ce tir compté ?')) {
         // Logique de suppression
-        console.log('Suppression confirmée pour ID:', trainingId);
     }
 }
 
 function openAddEndModal() {
-    console.log('📝 openAddEndModal appelée');
     
     // Initialiser le numéro de volée (nombre d'ends existants + 1)
     if (window.scoredTrainingData && window.scoredTrainingData.ends) {
@@ -87,11 +72,8 @@ function openAddEndModal() {
 }
 
 function initializeScoreFields() {
-    console.log('🎯 initializeScoreFields appelée');
-    
     const container = document.getElementById('scoresContainer');
     if (!container) {
-        console.error('❌ Container scoresContainer non trouvé');
         return;
     }
     
@@ -101,9 +83,6 @@ function initializeScoreFields() {
     if (window.scoredTrainingData && window.scoredTrainingData.arrows_per_end) {
         arrowsPerEnd = parseInt(window.scoredTrainingData.arrows_per_end);
     }
-    
-    console.log('Nombre de flèches par volée:', arrowsPerEnd);
-    
     // Nettoyer le conteneur
     container.innerHTML = '';
     
@@ -120,8 +99,6 @@ function initializeScoreFields() {
         
         container.appendChild(col);
     }
-    
-    console.log(`✅ ${arrowsPerEnd} champs de score générés`);
 }
 
 // Variables globales pour la gestion de la modale
@@ -198,11 +175,8 @@ function showValidationMessage(message, type = 'info') {
 }
 
 function saveEnd() {
-    console.log('💾 saveEnd appelée');
-    
     const form = document.getElementById('addEndForm');
     if (!form) {
-        console.error('❌ Formulaire addEndForm non trouvé');
         return;
     }
     
@@ -218,8 +192,6 @@ function saveEnd() {
             scores.push(value);
         }
     });
-    
-    console.log('Scores récupérés:', scores);
     
     // Préparer les données
     const endData = {
@@ -267,9 +239,6 @@ function saveEnd() {
         showValidationMessage(scoreValidation.message, 'error');
         return;
     }
-    
-    console.log('Données de la volée:', endData);
-    
     // Calculer le score total de la volée
     const totalScore = scores.reduce((sum, score) => sum + score, 0);
     
@@ -285,10 +254,6 @@ function saveEnd() {
             score: score
         }))
     };
-    
-    console.log('Données API:', apiData);
-    console.log('ID du tir compté:', window.scoredTrainingData?.id);
-    
     // Vérifier que l'ID est valide
     if (!window.scoredTrainingData?.id || window.scoredTrainingData.id === 0) {
         showValidationMessage('Erreur: ID du tir compté invalide', 'error');
@@ -305,11 +270,9 @@ function saveEnd() {
         body: JSON.stringify(apiData)
     })
     .then(response => {
-        console.log('Réponse HTTP:', response.status, response.statusText);
         return response.json();
     })
     .then(data => {
-        console.log('Données reçues:', data);
         if (data.success) {
             // Afficher un message de succès discret
             showValidationMessage(`Volée ${endData.end_number} enregistrée avec succès`, 'success');
@@ -325,14 +288,11 @@ function saveEnd() {
         }
     })
     .catch(error => {
-        console.error('Erreur lors de l\'enregistrement:', error);
         showValidationMessage('Erreur lors de l\'enregistrement de la volée', 'error');
     });
 }
 
 function prepareNextEnd() {
-    console.log('🔄 Préparation de la volée suivante');
-    
     // Vérifier si on a atteint le nombre maximum de volées
     const maxEnds = window.scoredTrainingData?.total_ends || 0;
     if (currentEndNumber >= maxEnds) {
@@ -377,13 +337,9 @@ function prepareNextEnd() {
     if (scoreInputs.length > 0) {
         scoreInputs[0].focus();
     }
-    
-    console.log('✅ Volée ' + currentEndNumber + ' prête');
 }
 
 function saveEndAndClose() {
-    console.log('💾 saveEndAndClose appelée');
-    
     // Sauvegarder la volée actuelle
     saveEnd();
     
@@ -398,15 +354,9 @@ function saveEndAndClose() {
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ DOM chargé, initialisation des événements');
-    console.log('🔍 window.scoredTrainingData:', window.scoredTrainingData);
-    
     // Attacher l'événement de changement de type de tir
     const shootingTypeSelect = document.getElementById('shooting_type');
     if (shootingTypeSelect) {
         shootingTypeSelect.addEventListener('change', updateShootingConfiguration);
-        console.log('✅ Event listener attaché au select shooting_type');
-    } else {
-        console.warn('⚠️ Select shooting_type non trouvé');
     }
 });

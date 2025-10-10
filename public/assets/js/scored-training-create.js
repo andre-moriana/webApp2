@@ -3,8 +3,6 @@
  * Gestion du formulaire et de l'aperçu en temps réel
  */
 
-console.log('🚀 scored-training-create.js chargé');
-
 // Mise à jour de l'aperçu en temps réel
 function updatePreview() {
     const totalEnds = parseInt(document.getElementById('total_ends').value) || 0;
@@ -65,10 +63,8 @@ function handleFormSubmit(e) {
     })
     .then(response => response.json())
     .then(result => {
-        console.log('🎯 Résultat de la création:', result);
         if (result.success) {
             const redirectUrl = '/scored-trainings/' + result.data.id + '?add_end=true';
-            console.log('✅ Redirection vers:', redirectUrl);
             // Rediriger vers la page de détail du tir compté créé avec paramètre pour ouvrir la modale
             window.location.href = redirectUrl;
         } else {
@@ -88,16 +84,10 @@ function handleFormSubmit(e) {
 
 // Initialiser l'application quand la page est chargée
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎯 DOMContentLoaded - Initialisation de la page de création');
     
     // Écouter les changements dans les champs
     const totalEndsField = document.getElementById('total_ends');
     const arrowsPerEndField = document.getElementById('arrows_per_end');
-    
-    console.log('🔍 Champs trouvés:', {
-        totalEnds: totalEndsField ? 'OUI' : 'NON',
-        arrowsPerEnd: arrowsPerEndField ? 'OUI' : 'NON'
-    });
     
     if (totalEndsField) {
         totalEndsField.addEventListener('input', updatePreview);
@@ -109,16 +99,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gestion de la soumission du formulaire
     const createForm = document.getElementById('createForm');
-    console.log('🔍 Formulaire trouvé:', createForm ? 'OUI' : 'NON');
-    
     if (createForm) {
         createForm.addEventListener('submit', handleFormSubmit);
-        console.log('✅ Event listener ajouté au formulaire');
-    } else {
-        console.error('❌ Formulaire createForm non trouvé');
     }
     
     // Initialiser l'aperçu
     updatePreview();
-    console.log('✅ Initialisation terminée');
 });

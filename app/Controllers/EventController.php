@@ -129,6 +129,31 @@ class EventController {
         }
     }
     
+    public function participants($id) {
+        if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
+            header("Location: /login");
+            exit;
+        }
+
+        $event = null;
+        $error = null;
+
+        try {
+            $response = $this->apiService->getEventDetails($id);
+            
+            if ($response["success"] && isset($response["data"])) {
+                $event = $response["data"];
+            } else {
+                $error = "Événement non trouvé: " . ($response["message"] ?? "Erreur inconnue");
+            }
+        } catch (Exception $e) {
+            $error = "Erreur lors du chargement de l'événement: " . $e->getMessage();
+        }
+
+        // Charger la vue des participants
+        include __DIR__ . "/../Views/events/participants.php";
+    }
+
     public function show($id) {
         if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
             header("Location: /login");

@@ -4,8 +4,6 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Script de validation des utilisateurs chargé');
-    
     // Initialiser les fonctionnalités
     initializeApprovalButtons();
     initializeRejectModals();

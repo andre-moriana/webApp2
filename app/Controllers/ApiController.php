@@ -9,6 +9,138 @@ class ApiController {
         $this->baseUrl = $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000/api";
     }
     
+    public function testMessages() {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Route messages fonctionne',
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
+    
+    public function addGroupMembers($groupId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $userIds = $input['user_ids'] ?? [];
+
+            if (empty($userIds)) {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => 'Aucun utilisateur sélectionné'
+                ], 400);
+            }
+
+            $response = $this->apiService->makeRequest("groups/{$groupId}/members", "POST", ['user_ids' => $userIds]);
+            
+            if ($response['success']) {
+                $this->sendJsonResponse($response);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de l\'ajout des membres'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            error_log("Erreur lors de l'ajout des membres: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'ajout des membres: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    public function removeGroupMember($groupId, $memberId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $response = $this->apiService->makeRequest("groups/{$groupId}/remove-member/{$memberId}", "DELETE");
+            
+            if ($response['success']) {
+                $this->sendJsonResponse($response);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de la suppression du membre'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            error_log("Erreur lors de la suppression du membre: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression du membre: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    public function users() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $response = $this->apiService->makeRequest("users", "GET");
+            
+            if ($response['success']) {
+                $this->sendJsonResponse($response);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de la récupération des utilisateurs'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            error_log("Erreur lors de la récupération des utilisateurs: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des utilisateurs: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    public function deleteEvent($eventId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $response = $this->apiService->makeRequest("events/{$eventId}", "DELETE");
+            
+            if ($response['success']) {
+                $this->sendJsonResponse($response);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de la suppression de l\'événement'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            error_log("Erreur lors de la suppression de l'événement: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression de l\'événement: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    
+    
     public function userDocuments($userId) {
         // Nettoyer la sortie au début
         $this->cleanOutput();
@@ -423,8 +555,8 @@ class ApiController {
 
             // Envoyer le message avec le fichier si présent
             $response = $this->apiService->makeRequestWithFile("messages/{$groupId}/send", "POST", $postData);
-            error_log("Données envoyées à l'API: " . json_encode($postData));
-            error_log("Réponse de l'API: " . json_encode($response));
+//            error_log("Données envoyées à l'API: " . json_encode($postData));
+//            error_log("Réponse de l'API: " . json_encode($response));
 
             if ($response['success']) {
                 $this->sendJsonResponse($response);
@@ -460,7 +592,7 @@ class ApiController {
                 return;
             }
             
-            $response = $this->apiService->makeRequest("messages/{$messageId}/update", "PUT", ['content' => $content]);
+            $response = $this->apiService->makeRequest("messages/{$messageId}", "PUT", ['content' => $content]);
             
             if ($response['success']) {
                 http_response_code(200);
@@ -489,7 +621,7 @@ class ApiController {
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
             
-            $response = $this->apiService->makeRequest("messages/{$messageId}/delete", "DELETE");
+            $response = $this->apiService->makeRequest("messages/{$messageId}", "DELETE");
             
             if ($response['success']) {
                 http_response_code(200);
@@ -779,13 +911,14 @@ class ApiController {
         }
 
         try {
-            error_log("Envoi d'un message à l'événement " . $eventId);
-            error_log("Contenu: " . $content);
+//            error_log("Envoi d'un message à l'événement " . $eventId);
+//            error_log("Contenu: " . $content);
 
             // Préparer les données pour l'API
+            // Utiliser group_id car l'API externe traite les événements comme des groupes
             $postData = [
                 'content' => $content,
-                'event_id' => intval($eventId)
+                'group_id' => intval($eventId)
             ];
 
             // Si un fichier est présent, l'ajouter directement aux données
@@ -799,9 +932,10 @@ class ApiController {
             }
 
             // Envoyer le message avec le fichier si présent
-            $response = $this->apiService->makeRequestWithFile("events/{$eventId}/messages", "POST", $postData);
-            error_log("Données envoyées à l'API: " . json_encode($postData));
-            error_log("Réponse de l'API: " . json_encode($response));
+            // Utiliser l'endpoint spécifique aux événements
+            $response = $this->apiService->makeRequestWithFile("messages/event/{$eventId}/send", "POST", $postData);
+//            error_log("Données envoyées à l'API: " . json_encode($postData));
+//            error_log("Réponse de l'API: " . json_encode($response));
 
             if ($response['success']) {
                 $this->sendJsonResponse($response);
@@ -891,10 +1025,10 @@ class ApiController {
 
     public function updateEventMessage($messageId) {
         try {
-            error_log("=== UPDATE EVENT MESSAGE DEBUG ===");
-            error_log("Message ID: " . $messageId);
-            error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
-            error_log("Request URI: " . $_SERVER['REQUEST_URI']);
+//            error_log("=== UPDATE EVENT MESSAGE DEBUG ===");
+//            error_log("Message ID: " . $messageId);
+//            error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+//            error_log("Request URI: " . $_SERVER['REQUEST_URI']);
             
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
@@ -914,9 +1048,9 @@ class ApiController {
                 return;
             }
             
-            error_log("Calling API: messages/{$messageId}/update with PUT");
-            $response = $this->apiService->makeRequest("messages/{$messageId}/update", "PUT", ['content' => $content]);
-            error_log("API Response: " . json_encode($response));
+//            error_log("Calling API: messages/{$messageId}/update with PUT");
+            $response = $this->apiService->makeRequest("messages/{$messageId}", "PUT", ['content' => $content]);
+//            error_log("API Response: " . json_encode($response));
             
             if ($response['success']) {
                 http_response_code(200);
@@ -946,7 +1080,7 @@ class ApiController {
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
             
-            $response = $this->apiService->makeRequest("messages/{$messageId}/delete", "DELETE");
+            $response = $this->apiService->makeRequest("messages/{$messageId}", "DELETE");
             
             if ($response['success']) {
                 http_response_code(200);

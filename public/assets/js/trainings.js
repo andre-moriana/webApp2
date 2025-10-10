@@ -146,14 +146,7 @@ function showEndSessionForm() {
 function saveSession() {
     sessionData.endTime = new Date();
     sessionData.notes = document.getElementById('sessionNotes').value;
-    
-    console.log('Données à sauvegarder:', sessionData);
-    
     const selectedUserId = window.selectedUserId || null;
-    
-    console.log('Selected User ID:', selectedUserId);
-    console.log('Current Exercise ID:', currentExerciseId);
-    
     // Utiliser l'endpoint local de l'application web
     fetch('/trainings/save-session', {
         method: 'POST',
@@ -167,50 +160,34 @@ function saveSession() {
         })
     })
     .then(response => {
-        console.log('Réponse reçue:', response);
-        console.log('Status:', response.status);
-        console.log('Headers:', response.headers);
-        
         if (!response.ok) {
             throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
         }
         
         return response.text().then(text => {
-            console.log('Texte brut reçu:', text);
             const cleanText = text.replace(/^[\s\x00-\x1F\x7F]*/, '').trim();
-            console.log('Texte nettoyé:', cleanText);
-            
             try {
                 return JSON.parse(cleanText);
             } catch (e) {
-                console.error('Erreur de parsing JSON:', e);
-                console.error('Réponse reçue:', cleanText);
                 return { success: false, message: 'Réponse invalide du serveur: ' + cleanText.substring(0, 200) };
             }
         });
     })
     .then(data => {
-        console.log('Données reçues:', data);
         if (data.success) {
             alert('Session sauvegardée avec succès !');
             sessionActive = false;
             trainingSessionModal.hide();
             
             // Recharger la page pour afficher les nouvelles données
-            console.log('Rechargement de la page dans 1 seconde...');
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } else {
             alert('Erreur: ' + (data.message || 'Erreur lors de la sauvegarde'));
-            console.error('Erreur de sauvegarde:', data);
         }
     })
     .catch(error => {
-        console.error('Erreur:', error);
-        console.error('Type d\'erreur:', error.name);
-        console.error('Message d\'erreur:', error.message);
-        
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
             alert('Erreur de connexion: Impossible de joindre le serveur API. Vérifiez que le backend est démarré.');
         } else if (error.message.includes('HTTP:')) {
@@ -336,21 +313,9 @@ function stopSessionTimer() {
 
 // Fonction pour ouvrir le modal de modification de statut depuis un bouton
 function updateExerciseStatusFromButton(button) {
-    console.log('Bouton cliqué:', button);
-    console.log('Attributs du bouton:', button.attributes);
-    
     const exerciseId = button.getAttribute('data-exercise-id');
     const exerciseTitle = button.getAttribute('data-exercise-title');
-    
-    console.log('ID récupéré:', exerciseId);
-    console.log('Titre récupéré:', exerciseTitle);
-    
     if (!exerciseId || exerciseId === '') {
-        console.error('ID d\'exercice manquant ou vide');
-        console.log('Tous les attributs data:', {
-            'data-exercise-id': button.getAttribute('data-exercise-id'),
-            'data-exercise-title': button.getAttribute('data-exercise-title')
-        });
         alert('Erreur: ID de l\'exercice manquant ou vide');
         return;
     }
@@ -360,36 +325,24 @@ function updateExerciseStatusFromButton(button) {
 
 // Fonction pour ouvrir le modal de modification de statut
 function updateExerciseStatus(exerciseId, exerciseTitle) {
-    console.log('updateExerciseStatus appelée avec:', exerciseId, exerciseTitle);
-    console.log('Type de exerciseId:', typeof exerciseId);
-    console.log('Valeur de exerciseId:', exerciseId);
-    
     if (!exerciseId || exerciseId === '' || exerciseId === 'null') {
-        console.error('ID d\'exercice invalide:', exerciseId);
         alert('Erreur: ID de l\'exercice invalide');
         return;
     }
     
     const exerciseIdField = document.getElementById('statusExerciseId');
-    console.log('Champ statusExerciseId trouvé:', exerciseIdField);
     
     if (!exerciseIdField) {
-        console.error('Champ statusExerciseId non trouvé');
         alert('Erreur: Champ exercice non trouvé');
         return;
     }
-    
     exerciseIdField.value = exerciseId;
-    console.log('Valeur définie pour statusExerciseId:', exerciseIdField.value);
-    
     const modalLabel = document.getElementById('statusModalLabel');
     if (modalLabel) {
         modalLabel.textContent = 'Modifier le statut de : ' + exerciseTitle;
     }
-    
     // Charger le statut actuel de l'exercice
     loadCurrentStatus(exerciseId);
-    
     // Afficher le modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
     if (modal) {
@@ -411,18 +364,11 @@ function loadCurrentStatus(exerciseId) {
 function saveExerciseStatus() {
     const form = document.getElementById('statusForm');
     if (!form) {
-        console.error('Formulaire statusForm non trouvé');
         alert('Erreur: Formulaire non trouvé');
         return;
     }
     
     const formData = new FormData(form);
-    
-    // Logs de débogage
-    console.log('Données du formulaire:');
-    for (let [key, value] of formData.entries()) {
-        console.log(key + ':', value);
-    }
     
     // Validation
     if (!formData.get('status')) {
@@ -445,7 +391,6 @@ function saveExerciseStatus() {
     }
     
     if (!saveBtn) {
-        console.error('Bouton de sauvegarde non trouvé');
         alert('Erreur: Bouton de sauvegarde non trouvé');
         return;
     }
@@ -477,10 +422,8 @@ function saveExerciseStatus() {
             if (modal) {
                 modal.hide();
             }
-            
             // Afficher un message de succès
             showAlert('Statut mis à jour avec succès', 'success');
-            
             // Recharger la page pour voir les changements
             setTimeout(() => {
                 window.location.reload();
@@ -490,7 +433,6 @@ function saveExerciseStatus() {
         }
     })
     .catch(error => {
-        console.error('Erreur:', error);
         showAlert('Erreur lors de la sauvegarde', 'danger');
     })
     .finally(() => {
@@ -585,9 +527,6 @@ function initializeNotesEditing() {
                     try {
                         return JSON.parse(cleanText);
                     } catch (e) {
-                        console.error('Erreur de parsing JSON:', e);
-                        console.error('Réponse reçue:', cleanText);
-                        
                         // Si ce n'est pas du JSON valide, retourner une erreur
                         return { 
                             success: false, 
@@ -618,7 +557,6 @@ function initializeNotesEditing() {
                 }
             })
             .catch(error => {
-                console.error('Erreur:', error);
                 showAlert('Erreur de connexion au serveur', 'danger');
             })
             .finally(() => {
@@ -662,29 +600,20 @@ function deleteSession(sessionId) {
         })
     })
     .then(response => {
-        console.log('Réponse reçue:', response);
-        console.log('Status:', response.status);
-        
         if (!response.ok) {
             throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
         }
         
         return response.text().then(text => {
-            console.log('Texte brut reçu:', text);
             const cleanText = text.replace(/^[\s\x00-\x1F\x7F]*/, '').trim();
-            console.log('Texte nettoyé:', cleanText);
-            
             try {
                 return JSON.parse(cleanText);
             } catch (e) {
-                console.error('Erreur de parsing JSON:', e);
-                console.error('Réponse reçue:', cleanText);
                 return { success: false, message: 'Réponse invalide du serveur: ' + cleanText.substring(0, 200) };
             }
         });
     })
     .then(data => {
-        console.log('Données reçues:', data);
         if (data.success) {
             showAlert('Session supprimée avec succès', 'success');
             // Rediriger vers la liste des entraînements après un délai
@@ -696,10 +625,6 @@ function deleteSession(sessionId) {
         }
     })
     .catch(error => {
-        console.error('Erreur:', error);
-        console.error('Type d\'erreur:', error.name);
-        console.error('Message d\'erreur:', error.message);
-        
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
             showAlert('Erreur de connexion: Impossible de joindre le serveur', 'danger');
         } else if (error.message.includes('HTTP:')) {
@@ -719,4 +644,4 @@ function deleteSession(sessionId) {
 window.startTrainingSession = startTrainingSession;
 window.removeVolley = removeVolley;
 window.updateExerciseStatus = updateExerciseStatus;
-window.saveExerciseStatus = saveExerciseStatus; 
+window.saveExerciseStatus = saveExerciseStatus;

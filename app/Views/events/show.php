@@ -59,17 +59,22 @@ $title = "Portail Archers de Gémenos - Détails de l'événement";
                         
                         <div class="mb-3">
                             <h6><i class="fas fa-users me-2"></i>Participants</h6>
-                            <p class="text-muted" id="detail-members-count">
-                                <?php 
-                                $membersCount = count($event["members"] ?? []);
-                                echo $membersCount;
-                                ?>
-                                <?php if (isset($event["max_participants"]) && $event["max_participants"] > 0): ?>
-                                    / <?php echo $event["max_participants"]; ?> places
-                                <?php else: ?>
-                                    inscrit<?php echo $membersCount > 1 ? 's' : ''; ?>
-                                <?php endif; ?>
-                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <p class="text-muted mb-0" id="detail-members-count">
+                                    <?php 
+                                    $membersCount = count($event["members"] ?? []);
+                                    echo $membersCount;
+                                    ?>
+                                    <?php if (isset($event["max_participants"]) && $event["max_participants"] > 0): ?>
+                                        / <?php echo $event["max_participants"]; ?> places
+                                    <?php else: ?>
+                                        inscrit<?php echo $membersCount > 1 ? 's' : ''; ?>
+                                    <?php endif; ?>
+                                </p>
+                                <button onclick="fetchParticipants(<?php echo $event["_id"] ?? "null"; ?>)" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>Voir la liste
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="d-flex gap-2">

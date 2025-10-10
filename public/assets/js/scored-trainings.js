@@ -63,7 +63,6 @@ class ScoredTrainingManager {
 
     // Gestion des tirs comptés
     async createTraining() {
-        console.log('🚀 createTraining() appelée');
         if (this.isLoading) return;
 
         const form = document.getElementById('createForm');
@@ -95,14 +94,6 @@ class ScoredTrainingManager {
             });
 
             const result = await response.json();
-            
-            // Debug: afficher la réponse complète
-            console.log('Réponse complète:', result);
-            console.log('result.success:', result.success);
-            console.log('result.data:', result.data);
-            console.log('result.data.data:', result.data?.data);
-            console.log('result.data.data.id:', result.data?.data?.id);
-
             if (result.success) {
                 this.showSuccess('Tir compté créé avec succès');
                 
@@ -119,14 +110,12 @@ class ScoredTrainingManager {
                 if (trainingId) {
                     window.location.href = '/scored-trainings/' + trainingId;
                 } else {
-                    console.error('ID manquant dans la réponse:', result);
                     this.showError('Erreur: ID du tir compté manquant dans la réponse');
                 }
             } else {
                 this.showError('Erreur: ' + (result.message || 'Erreur inconnue'));
             }
         } catch (error) {
-            console.error('Erreur:', error);
             this.showError('Erreur lors de la création du tir compté');
         } finally {
             this.setLoading(false);
@@ -178,7 +167,6 @@ class ScoredTrainingManager {
                 this.showError('Erreur: ' + (result.message || 'Erreur inconnue'));
             }
         } catch (error) {
-            console.error('Erreur:', error);
             this.showError('Erreur lors de l\'ajout de la volée');
         } finally {
             this.setLoading(false);
@@ -216,7 +204,6 @@ class ScoredTrainingManager {
                 this.showError('Erreur: ' + (result.message || 'Erreur inconnue'));
             }
         } catch (error) {
-            console.error('Erreur:', error);
             this.showError('Erreur lors de la finalisation');
         } finally {
             this.setLoading(false);
@@ -244,7 +231,6 @@ class ScoredTrainingManager {
                 this.showError('Erreur: ' + (result.message || 'Erreur inconnue'));
             }
         } catch (error) {
-            console.error('Erreur:', error);
             this.showError('Erreur lors de la suppression');
         } finally {
             this.setLoading(false);
@@ -272,7 +258,6 @@ class ScoredTrainingManager {
                 this.showError('Erreur: ' + (result.message || 'Erreur inconnue'));
             }
         } catch (error) {
-            console.error('Erreur:', error);
             this.showError('Erreur lors de la suppression');
         } finally {
             this.setLoading(false);
@@ -482,9 +467,7 @@ let scoredTrainingManager;
 
 // Initialiser le gestionnaire
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 DOMContentLoaded - Initialisation du gestionnaire');
     scoredTrainingManager = new ScoredTrainingManager();
-    console.log('✅ Gestionnaire initialisé:', scoredTrainingManager);
 });
 
 // Fonctions globales
@@ -501,13 +484,8 @@ function createTraining() {
 }
 
 function addEnd() {
-    console.log('🎯 addEnd() appelée');
-    console.log('scoredTrainingManager:', scoredTrainingManager);
     if (scoredTrainingManager) {
-        console.log('✅ Gestionnaire trouvé, ouverture de la modale');
         scoredTrainingManager.openAddEndModal();
-    } else {
-        console.error('❌ Gestionnaire non trouvé');
     }
 }
 
@@ -542,8 +520,6 @@ function deleteEnd(endId) {
 }
 
 function viewTraining(trainingId) {
-    console.log('👁️ viewTraining() appelée avec ID:', trainingId);
-    
     // Convertir en nombre si c'est une chaîne
     const id = parseInt(trainingId);
     
@@ -556,27 +532,20 @@ function viewTraining(trainingId) {
         if (selectedUserId) {
             url += '?user_id=' + selectedUserId;
         }
-        
-        console.log('👁️ Redirection vers:', url);
         window.location.href = url;
     } else {
-        console.error('❌ ID du tir compté invalide:', trainingId, '→', id);
         alert('Erreur: ID du tir compté invalide');
     }
 }
 
 function continueTraining(trainingId) {
-    console.log('▶️ continueTraining() appelée avec ID:', trainingId);
-    
     // Convertir en nombre si c'est une chaîne
     const id = parseInt(trainingId);
     
     if (id && id > 0) {
         const url = '/scored-trainings/' + id;
-        console.log('▶️ Redirection vers:', url);
         window.location.href = url;
     } else {
-        console.error('❌ ID du tir compté invalide:', trainingId, '→', id);
         alert('Erreur: ID du tir compté invalide');
     }
 }
@@ -592,9 +561,6 @@ function updateShootingConfiguration() {
     const shootingType = document.getElementById('shooting_type').value;
     const totalEndsInput = document.getElementById('total_ends');
     const arrowsPerEndInput = document.getElementById('arrows_per_end');
-    
-    console.log('🎯 updateShootingConfiguration appelée pour:', shootingType);
-    
     const configurations = {
         'TAE': { totalEnds: 12, arrowsPerEnd: 6 },
         'Salle': { totalEnds: 20, arrowsPerEnd: 3 },
@@ -612,8 +578,6 @@ function updateShootingConfiguration() {
         // Déclencher l'événement input pour mettre à jour l'aperçu
         totalEndsInput.dispatchEvent(new Event('input', { bubbles: true }));
         arrowsPerEndInput.dispatchEvent(new Event('input', { bubbles: true }));
-        
-        console.log(`✅ Configuration automatique pour ${shootingType}: ${config.totalEnds} volées, ${config.arrowsPerEnd} flèches par volée`);
     }
 }
 

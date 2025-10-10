@@ -50,10 +50,10 @@ function createMessageElement(message) {
             if (isImage) {
                 // Pour les images, utiliser la route d'images du backend WebApp2 avec l'URL en paramètre
                 const originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
-                attachmentUrl = "/api/messages/image/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
+                attachmentUrl = "/messages/image/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
             } else {
                 // Pour les autres fichiers, utiliser la route de téléchargement
-                attachmentUrl = "/api/messages/attachment/" + (message._id || message.id);
+                attachmentUrl = "/messages/attachment/" + (message._id || message.id);
             }
         }
         
@@ -128,7 +128,7 @@ async function loadGroupMessages(groupId) {
     `;
     
     try {
-        const response = await fetch(`/api/messages/${groupId}/history`, {
+        const response = await fetch(`/messages/${groupId}/history`, {
             headers: {
                 'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
             }
@@ -265,7 +265,7 @@ if (messageForm) {
                 formData.append('attachment', file);
             }
             
-            const response = await fetch(`/api/messages/${currentGroupId}/send`, {
+            const response = await fetch(`/messages/${currentGroupId}/send`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
@@ -306,6 +306,12 @@ if (messageForm) {
                 if (attachmentInput) {
                     attachmentInput.value = '';
                 }
+                
+                // Recharger les messages pour s'assurer que tout est à jour
+                console.log("Message envoyé avec succès, rechargement des messages...");
+                setTimeout(() => {
+                    loadGroupMessages(currentGroupId);
+                }, 500);
             } else {
                  // Optionnel: Afficher un message d'erreur à l'utilisateur
                 alert("Erreur lors de l'envoi du message");
@@ -391,7 +397,7 @@ async function saveMessageEdit(messageId) {
     }
     
     try {
-        const response = await fetch(`/api/messages/${messageId}/update`, {
+        const response = await fetch(`/messages/${messageId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -403,16 +409,35 @@ async function saveMessageEdit(messageId) {
         });
         
         if (response.ok) {
-            const data = await response.json();
+            // Essayer de parser la réponse JSON, mais ne pas échouer si ce n'est pas du JSON
+            try {
+                const data = await response.json();
+                console.log('Message modifié:', data);
+            } catch (jsonError) {
+                console.log('Réponse non-JSON reçue (normal pour la modification)');
+            }
+            
             closeEditModal();
-            // Recharger la page pour voir les changements
-            window.location.reload();
+            
+            // Mettre à jour l'affichage du message sans recharger la page
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageElement) {
+                const contentElement = messageElement.querySelector('.message-content');
+                if (contentElement) {
+                    contentElement.textContent = newContent;
+                    contentElement.innerHTML = newContent.replace(/\n/g, "<br>");
+                }
+            }
         } else {
-            const errorData = await response.json();
-            if (response.status === 403) {
-                alert('Erreur: Vous ne pouvez modifier que vos propres messages');
-            } else {
-                alert('Erreur: ' + (errorData.error || 'Erreur lors de la modification'));
+            try {
+                const errorData = await response.json();
+                if (response.status === 403) {
+                    alert('Erreur: Vous ne pouvez modifier que vos propres messages');
+                } else {
+                    alert('Erreur: ' + (errorData.error || 'Erreur lors de la modification'));
+                }
+            } catch (jsonError) {
+                alert('Erreur lors de la modification du message (code: ' + response.status + ')');
             }
         }
     } catch (error) {
@@ -425,7 +450,7 @@ window.deleteMessage = async function(messageId) {
      
     if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
         try {
-            const response = await fetch(`/api/messages/${messageId}/delete`, {
+            const response = await fetch(`/messages/${messageId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
@@ -433,12 +458,26 @@ window.deleteMessage = async function(messageId) {
             });
             
             if (response.ok) {
-                const data = await response.json();
-                // Recharger la page pour voir les changements
-                window.location.reload();
+                // Essayer de parser la réponse JSON, mais ne pas échouer si ce n'est pas du JSON
+                try {
+                    const data = await response.json();
+                    console.log('Message supprimé:', data);
+                } catch (jsonError) {
+                    console.log('Réponse non-JSON reçue (normal pour la suppression)');
+                }
+                
+                // Supprimer visuellement le message du DOM
+                const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+                if (messageElement) {
+                    messageElement.remove();
+                }
             } else {
-                const errorData = await response.json();
-                alert('Erreur: ' + (errorData.error || 'Erreur lors de la suppression'));
+                try {
+                    const errorData = await response.json();
+                    alert('Erreur: ' + (errorData.error || 'Erreur lors de la suppression'));
+                } catch (jsonError) {
+                    alert('Erreur lors de la suppression du message (code: ' + response.status + ')');
+                }
             }
         } catch (error) {
             console.error('Erreur:', error);

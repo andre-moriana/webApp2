@@ -219,7 +219,6 @@ const authToken = "<?php echo $_SESSION['token'] ?? ''; ?>";
 
 <!-- Inclusion du JavaScript -->
 <script src="/public/assets/js/groups-chat.js"></script>
-<script src="/public/assets/js/events.js"></script>
 
 <!-- Script pour la suppression des groupes -->
 <script>

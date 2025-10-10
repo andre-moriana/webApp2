@@ -73,13 +73,36 @@ class Router {
         $this->addRoute("PUT", "/groups/{id}", "GroupController@update");
         $this->addRoute("DELETE", "/groups/{id}", "GroupController@destroy");
         
+        // Routes internes pour les groupes (proxy vers API externe)
+        $this->addRoute("GET", "/users", "ApiController@users");
+        $this->addRoute("POST", "/groups/{id}/members", "ApiController@addGroupMembers");
+        $this->addRoute("DELETE", "/groups/{id}/remove-member/{memberId}", "ApiController@removeGroupMember");
+        
+        // Routes API pour les groupes (proxy vers API externe)
+        $this->addRoute("GET", "/api/users", "ApiController@users");
+        $this->addRoute("POST", "/api/groups/{id}/members", "ApiController@addGroupMembers");
+        $this->addRoute("DELETE", "/api/groups/{id}/remove-member/{memberId}", "ApiController@removeGroupMember");
+        
         // Routes des événements (protégées)
         $this->addRoute("GET", "/events", "EventController@index");
         $this->addRoute("GET", "/events/create", "EventController@create");
         $this->addRoute("POST", "/events", "EventController@store");
         $this->addRoute("GET", "/events/{id}/edit", "EventController@edit");
+        $this->addRoute("GET", "/events/{id}/participants", "EventController@participants");
         $this->addRoute("POST", "/events/{id}/register", "EventController@register");
         $this->addRoute("POST", "/events/{id}/unregister", "EventController@unregister");
+        
+        // Routes des messages d'événements (AVANT les routes générales)
+        $this->addRoute("GET", "/events/{id}/messages", "ApiController@getEventMessages");
+        $this->addRoute("POST", "/events/{id}/messages", "ApiController@sendEventMessage");
+        $this->addRoute("PUT", "/events/messages/{id}", "ApiController@updateEventMessage");
+        $this->addRoute("DELETE", "/events/messages/{id}", "ApiController@deleteEventMessage");
+        $this->addRoute("GET", "/events/{id}/data", "ApiController@getEvent");
+        $this->addRoute("DELETE", "/events/{id}/delete", "ApiController@deleteEvent");
+        $this->addRoute("POST", "/events/{id}/join", "ApiController@joinEvent");
+        $this->addRoute("POST", "/events/{id}/leave", "ApiController@leaveEvent");
+        
+        // Routes générales des événements (APRÈS les routes spécifiques)
         $this->addRoute("GET", "/events/{id}", "EventController@show");
         $this->addRoute("PUT", "/events/{id}", "EventController@update");
         $this->addRoute("DELETE", "/events/{id}", "EventController@destroy");
@@ -94,22 +117,17 @@ class Router {
         $this->addRoute("GET", "/api/users", "ApiController@users");
         $this->addRoute("GET", "/api/trainings", "ApiController@trainings");
         
-        // Routes API pour les messages des groupes
-        $this->addRoute("GET", "/api/messages/attachment/{id}", "ApiController@downloadMessageAttachment");
-        $this->addRoute("GET", "/api/messages/image/{id}", "ApiController@getMessageImage");
-        $this->addRoute("GET", "/api/messages/{id}/history", "ApiController@getGroupMessages");
-        $this->addRoute("POST", "/api/messages/{id}/send", "ApiController@sendGroupMessage");
-        $this->addRoute("PUT", "/api/messages/{id}/update", "ApiController@updateMessage");
-        $this->addRoute("DELETE", "/api/messages/{id}/delete", "ApiController@deleteMessage");
+        // Route de test simple
+        $this->addRoute("GET", "/test-messages", "ApiController@testMessages");
         
-        // Routes API pour les messages des événements (les plus spécifiques en premier)
-        $this->addRoute("PUT", "/api/events/messages/{id}/update", "ApiController@updateEventMessage");
-        $this->addRoute("DELETE", "/api/events/messages/{id}/delete", "ApiController@deleteEventMessage");
-        $this->addRoute("GET", "/api/events/{id}/messages", "ApiController@getEventMessages");
-        $this->addRoute("POST", "/api/events/{id}/messages", "ApiController@sendEventMessage");
-        $this->addRoute("GET", "/api/events/{id}", "ApiController@getEvent");
-        $this->addRoute("POST", "/api/events/{id}/join", "ApiController@joinEvent");
-        $this->addRoute("POST", "/api/events/{id}/leave", "ApiController@leaveEvent");
+        // Routes internes pour les messages des groupes (proxy vers API externe)
+        $this->addRoute("GET", "/messages/attachment/{id}", "ApiController@downloadMessageAttachment");
+        $this->addRoute("GET", "/messages/image/{id}", "ApiController@getMessageImage");
+        $this->addRoute("GET", "/messages/{id}/history", "ApiController@getGroupMessages");
+        $this->addRoute("POST", "/messages/{id}/send", "ApiController@sendGroupMessage");
+        $this->addRoute("PUT", "/messages/{id}", "ApiController@updateMessage");
+        $this->addRoute("DELETE", "/messages/{id}", "ApiController@deleteMessage");
+        
         
         // Routes d'authentification
         $this->addRoute("GET", "/login", "AuthController@login");
@@ -129,6 +147,7 @@ class Router {
         $this->addRoute("GET", "/user-settings", "UserSettingsController@index");
         $this->addRoute("POST", "/user-settings/update-profile-image", "UserSettingsController@updateProfileImage");
         $this->addRoute("POST", "/user-settings/change-password", "UserSettingsController@changePassword");
+        
     }
     
     public function addRoute($method, $path, $handler) {
@@ -198,7 +217,7 @@ class Router {
             error_log("Méthode HTTP personnalisée détectée: " . $requestMethod);
         }
         
-        // Debug temporaire - RÉACTIVÉ pour debug
+        // Debug temporaire - DÉSACTIVÉ
 //        error_log("=== DEBUG ROUTAGE ===");
 //        error_log("REQUEST_URI: " . $requestUri);
 //        error_log("REQUEST_METHOD: " . $requestMethod);
@@ -262,8 +281,8 @@ class Router {
     }
     
     private function convertToRegex($path) {
-        // Remplacer {id} par ([0-9]+) pour capturer seulement les IDs numériques
-        $pattern = preg_replace("/\{([^}]+)\}/", "([0-9]+)", $path);
+        // Remplacer {id} par ([^/]+) pour capturer les IDs (numériques ou chaînes)
+        $pattern = preg_replace("/\{([^}]+)\}/", "([^/]+)", $path);
         // Échapper seulement les slashes, pas les parenthèses
         $pattern = str_replace("/", "\/", $pattern);
         //error_log("Conversion route: " . $path . " -> " . $pattern);

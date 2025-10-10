@@ -12,12 +12,12 @@ document.addEventListener("DOMContentLoaded", function() {
     
     if (typeof initialEventId !== "undefined" && initialEventId && initialEventId !== "null") {
         currentEventId = initialEventId.toString();
-        console.log("Chat initialisé avec l'événement ID:", currentEventId);
         
         // Charger automatiquement les messages de l'événement initial
         loadEventMessages(currentEventId);
-    } else {
-        console.warn("Aucun événement initial trouvé");
+        
+        // Vérifier l'état d'inscription de l'utilisateur
+        checkEventRegistrationStatus(currentEventId);
     }
 });
 
@@ -73,7 +73,7 @@ function createMessageElement(message) {
         } else {
             // Pour les images, utiliser la route d'images du backend WebApp2
             const messageId = message._id || message.id;
-            fullUrl = `/api/messages/image/${messageId}?url=${encodeURIComponent(attachmentUrl)}`;
+            fullUrl = `/messages/image/${messageId}?url=${encodeURIComponent(attachmentUrl)}`;
         }
         
         // Détecter si c'est une image
@@ -131,7 +131,6 @@ function createMessageElement(message) {
     
     messageDiv.appendChild(messageContent);
     
-    console.log("Élément de message créé:", messageDiv);
     return messageDiv;
 }
 
@@ -183,12 +182,8 @@ function openImageModal(imageUrl, filename) {
 
 // Charger les messages d'un événement
 async function loadEventMessages(eventId) {
-    console.log("=== LOAD MESSAGES DEBUG ===");
-    console.log("Chargement des messages pour l'événement:", eventId);
-    console.log("URL:", `/api/events/${eventId}/messages`);
-    
     try {
-        const response = await fetch(`/api/events/${eventId}/messages`, {
+        const response = await fetch(`/events/${eventId}/messages`, {
             method: "GET",
             headers: {
                 "Authorization": `Bearer ${authToken}`,
@@ -196,47 +191,31 @@ async function loadEventMessages(eventId) {
             }
         });
         
-        console.log("Réponse GET reçue, status:", response.status);
-        
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Erreur HTTP GET:", response.status, errorText);
             throw new Error(`Erreur HTTP: ${response.status} - ${errorText}`);
         }
         
         const data = await response.json();
-        console.log("Messages reçus:", data);
-        console.log("Type de données:", typeof data);
-        console.log("Est un tableau:", Array.isArray(data));
         
         // L'endpoint retourne directement un tableau de messages
         if (Array.isArray(data)) {
-            console.log("Affichage de", data.length, "messages");
             displayMessages(data);
         } else if (data && data.error) {
-            console.error("Erreur du serveur:", data.error);
             displayMessages([]);
         } else if (data && data.success === false) {
-            console.error("Erreur du serveur:", data.message || data.error);
             displayMessages([]);
         } else {
-            console.warn("Format de données inattendu:", data);
             displayMessages([]);
         }
     } catch (error) {
-        console.error("Erreur lors du chargement des messages:", error);
         displayMessages([]);
     }
 }
 
 // Afficher les messages
 function displayMessages(messages) {
-    console.log("=== DISPLAY MESSAGES DEBUG ===");
-    console.log("Container des messages:", messagesContainer);
-    console.log("Messages à afficher:", messages);
-    
     if (!messagesContainer) {
-        console.error("Container des messages non trouvé");
         return;
     }
     
@@ -244,7 +223,6 @@ function displayMessages(messages) {
     messagesContainer.innerHTML = '';
     
     if (!messages || messages.length === 0) {
-        console.log("Aucun message, affichage du message par défaut");
         const noMessagesDiv = document.createElement('div');
         noMessagesDiv.className = 'text-center text-muted';
         noMessagesDiv.innerHTML = `
@@ -254,8 +232,6 @@ function displayMessages(messages) {
         messagesContainer.appendChild(noMessagesDiv);
         return;
     }
-    
-    console.log("Affichage de", messages.length, "messages");
     
     // Créer et ajouter chaque message
     messages.forEach(message => {
@@ -269,13 +245,7 @@ function displayMessages(messages) {
 
 // Envoyer un message
 async function sendMessage(content, attachment = null) {
-    console.log("=== SEND MESSAGE DEBUG ===");
-    console.log("Content:", content);
-    console.log("Current Event ID:", currentEventId);
-    console.log("Auth Token:", authToken ? "Présent" : "Manquant");
-    
     if (!currentEventId || currentEventId === "null") {
-        console.error("Aucun événement sélectionné ou ID invalide:", currentEventId);
         alert("Veuillez sélectionner un événement avant d'envoyer un message");
         return;
     }
@@ -287,15 +257,7 @@ async function sendMessage(content, attachment = null) {
             formData.append("attachment", attachment);
         }
         
-        // Debug: vérifier le contenu de FormData
-        console.log("FormData contents:");
-        for (let [key, value] of formData.entries()) {
-            console.log(key, value);
-        }
-        
-        console.log("Envoi de la requête vers:", `/api/events/${currentEventId}/messages`);
-        
-        const response = await fetch(`/api/events/${currentEventId}/messages`, {
+        const response = await fetch(`/events/${currentEventId}/messages`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${authToken}`
@@ -303,76 +265,53 @@ async function sendMessage(content, attachment = null) {
             body: formData
         });
         
-        console.log("Réponse reçue, status:", response.status);
-        
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Erreur HTTP:", response.status, errorText);
             throw new Error(`Erreur HTTP: ${response.status} - ${errorText}`);
         }
         
         const data = await response.json();
-        console.log("Réponse d'envoi:", data);
         
         if (data.success) {
-            console.log("Message envoyé avec succès, rechargement des messages...");
             // Attendre un peu avant de recharger pour s'assurer que le message est sauvegardé
             setTimeout(() => {
                 loadEventMessages(currentEventId);
             }, 500);
         } else {
-            console.error("Erreur lors de l'envoi:", data.message || data.error);
             alert("Erreur lors de l'envoi du message: " + (data.message || data.error || "Erreur inconnue"));
         }
     } catch (error) {
-        console.error("Erreur lors de l'envoi du message:", error);
         alert("Erreur lors de l'envoi du message: " + error.message);
     }
 }
 
 // Gestion du formulaire de message
 if (messageForm) {
-    console.log("Formulaire de message trouvé, ajout de l'event listener");
-    
     messageForm.addEventListener("submit", function(e) {
         e.preventDefault();
-        console.log("=== FORM SUBMIT DEBUG ===");
         
         const content = messageInput.value.trim();
-        console.log("Contenu du message:", content);
         
         if (!content) {
-            console.warn("Contenu vide, envoi annulé");
             return;
         }
         
         const attachmentInput = document.getElementById("message-attachment");
         const attachment = attachmentInput.files[0] || null;
-        console.log("Attachment:", attachment);
         
         sendMessage(content, attachment);
         messageInput.value = "";
         attachmentInput.value = "";
     });
-} else {
-    console.error("Formulaire de message non trouvé !");
 }
 
 // Gestion des clics sur les événements
 document.addEventListener("click", function(e) {
-    console.log("=== CLICK EVENT ===");
-    console.log("Target:", e.target);
-    console.log("Closest event-item:", e.target.closest(".event-item"));
-    
     const eventItem = e.target.closest(".event-item");
     if (eventItem) {
         const eventId = eventItem.getAttribute("data-event-id");
-        console.log("Event ID from data attribute:", eventId);
-        console.log("Current Event ID:", currentEventId);
         
         if (eventId && eventId !== currentEventId && eventId !== "null") {
-            console.log("Changement d'événement vers:", eventId);
-            
             // Mettre à jour currentEventId AVANT updateEventSelection
             currentEventId = eventId;
             
@@ -381,8 +320,6 @@ document.addEventListener("click", function(e) {
             
             // Charger les messages du nouvel événement
             loadEventMessages(eventId);
-        } else {
-            console.log("Même événement ou ID invalide, pas de changement");
         }
     }
 });
@@ -390,8 +327,8 @@ document.addEventListener("click", function(e) {
 // Fonction pour vérifier l'état d'inscription d'un événement SANS s'inscrire automatiquement
 async function checkEventRegistrationStatus(eventId) {
     try {
-        // Utiliser l'endpoint GET pour vérifier l'état sans s'inscrire
-        const response = await fetch(`/api/events/${eventId}`, {
+        // Utiliser l'endpoint API pour vérifier l'état sans s'inscrire
+        const response = await fetch(`/events/${eventId}/data`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -401,29 +338,26 @@ async function checkEventRegistrationStatus(eventId) {
         
         if (response.ok) {
             const data = await response.json();
-            console.log('Event data:', data);
             
             // Vérifier si l'utilisateur actuel est dans la liste des membres
-            const isRegistered = data.members && data.members.some(member => 
+            const eventData = data.data || data;
+            const isRegistered = eventData.members && eventData.members.some(member => 
                 member._id == currentUserId || member.id == currentUserId
             );
             
-            console.log('Is registered:', isRegistered);
             updateRegistrationButton(eventId, isRegistered);
             
             // Mettre à jour le nombre d'inscrits
-            if (data.members && Array.isArray(data.members)) {
-                updateMembersCount(eventId, data.members.length);
+            if (eventData.members && Array.isArray(eventData.members)) {
+                updateMembersCount(eventId, eventData.members.length);
             }
             
             return isRegistered;
         } else {
-            console.error('Erreur lors de la vérification de l\'événement:', response.status);
             updateRegistrationButton(eventId, false);
             return false;
         }
     } catch (error) {
-        console.error('Erreur lors de la vérification de l\'inscription:', error);
         updateRegistrationButton(eventId, false);
         return false;
     }
@@ -431,16 +365,12 @@ async function checkEventRegistrationStatus(eventId) {
 
 // Fonction pour s'inscrire à un événement (utilise l'endpoint /join)
 window.registerToEvent = async function(eventId) {
-    console.log('=== REGISTER TO EVENT ===');
-    console.log('Event ID:', eventId);
-    
     if (!eventId) {
-        console.error('Event ID manquant');
         return;
     }
     
     try {
-        const response = await fetch(`/api/events/${eventId}/join`, {
+        const response = await fetch(`/events/${eventId}/join`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -451,7 +381,6 @@ window.registerToEvent = async function(eventId) {
         const data = await response.json();
         
         if (response.ok) {
-            console.log('Inscription réussie:', data);
             updateRegistrationButton(eventId, true);
             
             // Mettre à jour le nombre d'inscrits
@@ -460,28 +389,21 @@ window.registerToEvent = async function(eventId) {
             }
         } else if (response.status === 400 && data.error && data.error.includes('déjà inscrit')) {
             // L'utilisateur est déjà inscrit, mettre à jour l'interface
-            console.log('Utilisateur déjà inscrit, mise à jour de l\'interface');
             updateRegistrationButton(eventId, true);
-        } else {
-            console.error('Erreur inscription:', data);
         }
     } catch (error) {
-        console.error('Erreur lors de l\'inscription:', error);
+        // Erreur silencieuse
     }
 };
 
 // Fonction pour se désinscrire d'un événement (utilise l'endpoint /leave)
 window.unregisterFromEvent = async function(eventId) {
-    console.log('=== UNREGISTER FROM EVENT ===');
-    console.log('Event ID:', eventId);
-    
     if (!eventId) {
-        console.error('Event ID manquant');
         return;
     }
     
     try {
-        const response = await fetch(`/api/events/${eventId}/leave`, {
+        const response = await fetch(`/events/${eventId}/leave`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -492,7 +414,6 @@ window.unregisterFromEvent = async function(eventId) {
         const data = await response.json();
         
         if (response.ok) {
-            console.log('Désinscription réussie:', data);
             updateRegistrationButton(eventId, false);
             
             // Mettre à jour le nombre d'inscrits
@@ -501,13 +422,10 @@ window.unregisterFromEvent = async function(eventId) {
             }
         } else if (response.status === 400 && data.error && data.error.includes('pas inscrit')) {
             // L'utilisateur n'est pas inscrit, mettre à jour l'interface
-            console.log('Utilisateur pas inscrit, mise à jour de l\'interface');
             updateRegistrationButton(eventId, false);
-        } else {
-            console.error('Erreur désinscription:', data);
         }
     } catch (error) {
-        console.error('Erreur lors de la désinscription:', error);
+        // Erreur silencieuse
     }
 };
 
@@ -516,12 +434,6 @@ function updateRegistrationButton(eventId, isRegistered) {
     const registerBtn = document.getElementById('register-btn');
     const unregisterBtn = document.getElementById('unregister-btn');
     const statusDiv = document.getElementById('registration-status');
-    
-    console.log('=== UPDATE REGISTRATION BUTTON ===');
-    console.log('Event ID:', eventId);
-    console.log('Is Registered:', isRegistered);
-    console.log('Register button found:', registerBtn);
-    console.log('Unregister button found:', unregisterBtn);
     
     // Vérifier si les boutons existent (ils n'existent que dans la page de détail)
     if (registerBtn || unregisterBtn || statusDiv) {
@@ -540,8 +452,6 @@ function updateRegistrationButton(eventId, isRegistered) {
                 statusDiv.innerHTML = '<i class="fas fa-info-circle me-2"></i>Cliquez sur "Rejoindre" pour vous inscrire à cet événement';
             }
         }
-    } else {
-        console.log('Boutons d\'inscription non trouvés - probablement dans la page de liste');
     }
 }
 
@@ -564,14 +474,132 @@ function updateMembersCount(eventId, membersCount) {
     }
 }
 
+// Variables pour le modal des participants
+let participantsModalVisible = false;
+let participants = [];
+let participantsLoading = false;
+let participantsError = null;
+
+// Fonction pour charger les participants d'un événement
+async function fetchParticipants(eventId) {
+    participantsLoading = true;
+    participantsError = null;
+    
+    try {
+        const response = await fetch(`/events/${eventId}/data`, {
+            headers: {
+                'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Erreur lors du chargement des participants');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.members) {
+            participants = data.data.members.map(member => member.name || 'Nom inconnu');
+            participantsLoading = false;
+            participantsModalVisible = true;
+            showParticipantsModal();
+        } else {
+            throw new Error('Données de participants invalides');
+        }
+    } catch (error) {
+        participantsError = error.message;
+        participantsLoading = false;
+        participantsModalVisible = true;
+        showParticipantsModal();
+    }
+}
+
+// Fonction pour afficher le modal des participants
+function showParticipantsModal() {
+    // Créer le modal s'il n'existe pas
+    let modal = document.getElementById('participantsModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'participantsModal';
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Participants</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="participantsModalBody">
+                        <!-- Contenu sera rempli dynamiquement -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Remplir le contenu du modal
+    const modalBody = modal.querySelector('#participantsModalBody');
+    
+    if (participantsLoading) {
+        modalBody.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p class="mt-2">Chargement des participants...</p>
+            </div>
+        `;
+    } else if (participantsError) {
+        modalBody.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${participantsError}
+            </div>
+        `;
+    } else if (participants.length === 0) {
+        modalBody.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucun participant</h5>
+                <p class="text-muted">Personne ne s'est encore inscrit à cet événement.</p>
+            </div>
+        `;
+    } else {
+        let participantsHtml = '<div class="list-group">';
+        participants.forEach((name, index) => {
+            participantsHtml += `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                            ${name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <h6 class="mb-0">${name}</h6>
+                        </div>
+                    </div>
+                    <span class="badge bg-success">Inscrit</span>
+                </div>
+            `;
+        });
+        participantsHtml += '</div>';
+        modalBody.innerHTML = participantsHtml;
+    }
+    
+    // Afficher le modal
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
 // Mettre à jour la sélection d'événement
 function updateEventSelection(selectedItem) {
-    console.log("=== UPDATE EVENT SELECTION ===");
-    console.log("Selected item:", selectedItem);
-    
     // Retirer la classe active de tous les éléments
     const allEventItems = document.querySelectorAll(".event-item");
-    console.log("Tous les éléments événement:", allEventItems);
     
     allEventItems.forEach(item => {
         item.classList.remove("active");
@@ -579,32 +607,27 @@ function updateEventSelection(selectedItem) {
     
     // Ajouter la classe active à l'élément sélectionné
     selectedItem.classList.add("active");
-    console.log("Classe active ajoutée à:", selectedItem);
     
     // Mettre à jour l'ID de l'événement actuel
     const eventId = selectedItem.getAttribute("data-event-id");
     currentEventId = eventId;
-    console.log("Event ID mis à jour:", currentEventId);
     
     // Mettre à jour le titre du chat
     const eventTitle = selectedItem.querySelector(".event-title")?.textContent || "Événement";
     if (chatTitle) {
         chatTitle.textContent = eventTitle;
-        console.log("Titre du chat mis à jour:", eventTitle);
     }
     
     // Mettre à jour l'input caché pour l'envoi de messages
     const eventIdInput = document.getElementById("current-event-id");
     if (eventIdInput) {
         eventIdInput.value = eventId;
-        console.log("Input current-event-id mis à jour:", eventId);
     }
     
     // Mettre à jour le lien "Voir détails"
     const viewDetailsBtn = document.getElementById("view-details-btn");
     if (viewDetailsBtn && eventId) {
         viewDetailsBtn.href = `/events/${eventId}`;
-        console.log("Lien 'Voir détails' mis à jour:", viewDetailsBtn.href);
     }
     
     // Charger les messages de l'événement sélectionné
@@ -617,14 +640,9 @@ function updateEventSelection(selectedItem) {
 
 // Initialisation au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== DOM LOADED ===');
-    console.log('Initial Event ID:', initialEventId);
-    console.log('Current User ID:', currentUserId);
-    
     // Initialiser le chat avec l'événement par défaut
     if (initialEventId && initialEventId !== "null") {
         currentEventId = initialEventId;
-        console.log('Chat initialisé avec l\'événement ID:', currentEventId);
         loadEventMessages(currentEventId);
         
         // Vérifier l'état d'inscription SANS s'inscrire automatiquement
@@ -634,7 +652,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const viewDetailsBtn = document.getElementById("view-details-btn");
         if (viewDetailsBtn) {
             viewDetailsBtn.href = `/events/${currentEventId}`;
-            console.log("Lien 'Voir détails' initial mis à jour:", viewDetailsBtn.href);
         }
     }
     
@@ -643,8 +660,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Fonctions pour l'édition et suppression des messages
 window.editMessage = async function(messageId) {
-    console.log("editMessage appelé avec ID:", messageId);
-    
     if (!messageId || messageId === "") {
         alert("Erreur: ID du message manquant");
         return;
@@ -717,7 +732,7 @@ async function saveMessageEdit(messageId) {
     }
     
     try {
-        const response = await fetch(`/api/events/messages/${messageId}/update`, {
+        const response = await fetch(`/events/messages/${messageId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -729,33 +744,45 @@ async function saveMessageEdit(messageId) {
         });
         
         if (response.ok) {
-            const data = await response.json();
-            console.log('Message modifié avec succès:', data);
+            // Essayer de parser la réponse JSON, mais ne pas échouer si ce n'est pas du JSON
+            try {
+                const data = await response.json();
+            } catch (jsonError) {
+                // Réponse non-JSON reçue (normal pour la modification)
+            }
+            
             closeEditModal();
-            // Recharger les messages de l'événement actuel
-            if (currentEventId) {
-                loadEventMessages(currentEventId);
+            
+            // Mettre à jour l'affichage du message sans recharger
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageElement) {
+                const contentElement = messageElement.querySelector('.message-content');
+                if (contentElement) {
+                    contentElement.textContent = newContent;
+                    contentElement.innerHTML = newContent.replace(/\n/g, "<br>");
+                }
             }
         } else {
-            const errorData = await response.json();
-            if (response.status === 403) {
-                alert('Erreur: Vous ne pouvez modifier que vos propres messages');
-            } else {
-                alert('Erreur: ' + (errorData.error || 'Erreur lors de la modification'));
+            try {
+                const errorData = await response.json();
+                if (response.status === 403) {
+                    alert('Erreur: Vous ne pouvez modifier que vos propres messages');
+                } else {
+                    alert('Erreur: ' + (errorData.error || 'Erreur lors de la modification'));
+                }
+            } catch (jsonError) {
+                alert('Erreur lors de la modification du message (code: ' + response.status + ')');
             }
         }
     } catch (error) {
-        console.error('Erreur:', error);
         alert('Erreur lors de la modification du message');
     }
 }
 
 window.deleteMessage = async function(messageId) {
-    console.log("deleteMessage appelé avec ID:", messageId);
-    
     if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
         try {
-            const response = await fetch(`/api/events/messages/${messageId}/delete`, {
+            const response = await fetch(`/events/messages/${messageId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
@@ -763,18 +790,27 @@ window.deleteMessage = async function(messageId) {
             });
             
             if (response.ok) {
-                const data = await response.json();
-                console.log('Message supprimé avec succès:', data);
-                // Recharger les messages de l'événement actuel
-                if (currentEventId) {
-                    loadEventMessages(currentEventId);
+                // Essayer de parser la réponse JSON, mais ne pas échouer si ce n'est pas du JSON
+                try {
+                    const data = await response.json();
+                } catch (jsonError) {
+                    // Réponse non-JSON reçue (normal pour la suppression)
+                }
+                
+                // Supprimer visuellement le message du DOM
+                const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+                if (messageElement) {
+                    messageElement.remove();
                 }
             } else {
-                const errorData = await response.json();
-                alert('Erreur: ' + (errorData.error || 'Erreur lors de la suppression'));
+                try {
+                    const errorData = await response.json();
+                    alert('Erreur: ' + (errorData.error || 'Erreur lors de la suppression'));
+                } catch (jsonError) {
+                    alert('Erreur lors de la suppression du message (code: ' + response.status + ')');
+                }
             }
         } catch (error) {
-            console.error('Erreur:', error);
             alert('Erreur lors de la suppression du message');
         }
     }

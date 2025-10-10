@@ -739,6 +739,19 @@ class ApiService {
         if ($decodedResponse === null && json_last_error() !== JSON_ERROR_NONE) {
             error_log("Erreur décodage JSON: " . json_last_error_msg());
             error_log("Début de la réponse: " . substr($body, 0, 1000));
+            error_log("Type de contenu détecté: " . $contentType);
+            
+            // Si c'est un code 200, considérer comme succès même si ce n'est pas du JSON
+            if ($httpCode === 200) {
+                error_log("Code 200 détecté, considérer comme succès");
+                return [
+                    "success" => true,
+                    "message" => "Message envoyé avec succès",
+                    "status_code" => $httpCode,
+                    "raw_response" => $body
+                ];
+            }
+            
             return [
                 "success" => false,
                 "message" => "Erreur lors du décodage de la réponse JSON",

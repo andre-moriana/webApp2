@@ -87,16 +87,13 @@ function createTraining() {
                 // Rediriger vers la page de détail du tir compté créé avec paramètre pour ouvrir la modale
                 window.location.href = redirectUrl;
             } else {
-                console.error('ID du tir compté non trouvé dans la réponse');
                 alert('Erreur: ID du tir compté non trouvé dans la réponse du serveur');
             }
         } else {
-            console.error('Erreur lors de la création:', result);
             alert('Erreur: ' + (result.message || 'Erreur inconnue'));
         }
     })
     .catch(error => {
-        console.error('Erreur:', error);
         alert('Erreur lors de la création du tir compté');
     });
 }
@@ -106,8 +103,6 @@ function continueTraining(trainingId) {
 }
 
 function deleteTraining(trainingId) {
-    console.log('🗑️ Tentative de suppression du tir compté ID:', trainingId);
-    
     // Vérifier si l'utilisateur est connecté
     if (typeof window.isLoggedIn !== 'undefined' && !window.isLoggedIn) {
         alert('Vous devez être connecté pour effectuer cette action.\n\nVeuillez vous reconnecter.');
@@ -116,8 +111,6 @@ function deleteTraining(trainingId) {
     }
     
     if (confirm('Êtes-vous sûr de vouloir supprimer ce tir compté ?')) {
-        console.log('✅ Confirmation reçue, envoi de la requête...');
-        
         // Faire la requête vers le contrôleur frontend
         fetch('/scored-trainings/delete/' + trainingId, {
             method: 'POST',
@@ -127,9 +120,6 @@ function deleteTraining(trainingId) {
             }
         })
         .then(response => {
-            console.log('📡 Réponse reçue:', response.status, response.statusText);
-            console.log('📡 Headers:', [...response.headers.entries()]);
-            
             if (!response.ok) {
                 console.error('❌ Erreur HTTP:', response.status, response.statusText);
                 throw new Error('Erreur HTTP: ' + response.status + ' ' + response.statusText);
@@ -137,8 +127,6 @@ function deleteTraining(trainingId) {
             return response.text();
         })
         .then(text => {
-            console.log('📄 Réponse brute reçue:', text);
-            
             // Nettoyer la réponse des caractères BOM et autres caractères invisibles
             let cleanText = text.replace(/^\uFEFF/, '').replace(/^\s+/, '').replace(/\s+$/, '');
             
@@ -151,19 +139,14 @@ function deleteTraining(trainingId) {
                 cleanText = jsonMatch[0];
             }
             
-            console.log('🧹 Texte nettoyé:', cleanText);
-            
             try {
                 const result = JSON.parse(cleanText);
-                console.log('📊 JSON parsé:', result);
-                
+               
                 if (result.success) {
-                    console.log('✅ Suppression réussie, rechargement de la page...');
                     // Préserver les paramètres de l'URL lors du rechargement
                     const currentUrl = new URL(window.location);
                     window.location.href = currentUrl.toString();
                 } else {
-                    console.error('❌ Suppression échouée:', result.message);
                     
                     // Vérifier si c'est un problème d'authentification
                     if (result.message && (
@@ -173,7 +156,6 @@ function deleteTraining(trainingId) {
                         result.status_code === 401
                     )) {
                         alert('Erreur d\'authentification: ' + result.message + '\n\nVeuillez vous reconnecter.');
-                        console.log('🔄 Redirection vers la page de connexion...');
                         window.location.href = '/login';
                     } else if (result.status_code === 400) {
                         alert('Erreur de requête (400): ' + (result.message || 'Données invalides'));
@@ -182,19 +164,12 @@ function deleteTraining(trainingId) {
                     }
                 }
             } catch (parseError) {
-                console.error('❌ Erreur de parsing JSON:', parseError);
-                console.error('❌ Texte reçu:', cleanText);
-                console.error('❌ Longueur du texte:', cleanText.length);
-                console.error('❌ Premiers caractères:', cleanText.substring(0, 100));
                 alert('Erreur de décodage de la réponse du serveur:\n' + parseError.message + '\n\nTexte reçu: ' + cleanText.substring(0, 200));
             }
         })
         .catch(error => {
-            console.error('❌ Erreur dans la requête:', error);
             alert('Erreur lors de la suppression: ' + error.message);
         });
-    } else {
-        console.log('❌ Suppression annulée par l\'utilisateur');
     }
 }
 
