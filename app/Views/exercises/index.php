@@ -3,9 +3,25 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>Fiches d'Exercices</h1>
-                <a href="/exercises/create" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nouvel Exercice
-                </a>
+                <div class="d-flex align-items-center gap-3">
+                    <?php if (isset($users) && !empty($users) && (isset($_SESSION['user']['is_admin']) && $_SESSION['user']['is_admin'] || isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach')): ?>
+                        <div class="user-selector">
+                            <label for="userSelect" class="form-label mb-0 me-2">Utilisateur :</label>
+                            <select id="userSelect" class="form-select" style="width: auto;">
+                                <option value="">Sélectionner un utilisateur</option>
+                                <?php foreach ($users as $user): ?>
+                                    <option value="<?php echo $user['id']; ?>" 
+                                            <?php echo (isset($_GET['user_id']) && $_GET['user_id'] == $user['id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($user['first_name'] . ' ' . $user['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php endif; ?>
+                    <a href="/exercises/create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nouvel Exercice
+                    </a>
+                </div>
             </div>
 
             <?php if (isset($error)): ?>
@@ -24,6 +40,27 @@
                 <div class="alert alert-success" role="alert">
                     <?php echo htmlspecialchars($_GET['success']); ?>
                 </div>
+            <?php endif; ?>
+
+            <?php if (isset($selectedUserId) && isset($users) && !empty($users)): ?>
+                <?php 
+                $selectedUser = null;
+                foreach ($users as $user) {
+                    if ($user['id'] == $selectedUserId) {
+                        $selectedUser = $user;
+                        break;
+                    }
+                }
+                ?>
+                <?php if ($selectedUser): ?>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-user"></i> 
+                        Exercices avec progression pour : <strong><?php echo htmlspecialchars($selectedUser['first_name'] . ' ' . $selectedUser['name']); ?></strong>
+                        <?php if (empty($exercises)): ?>
+                            <br><small class="text-muted">Aucun exercice avec progression trouvé pour cet utilisateur.</small>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <div class="row">
@@ -218,4 +255,23 @@
                     form.submit();
                 }
             }
+            
+            // Gérer le changement d'utilisateur
+            document.addEventListener('DOMContentLoaded', function() {
+                const userSelect = document.getElementById('userSelect');
+                if (userSelect) {
+                    userSelect.addEventListener('change', function() {
+                        const userId = this.value;
+                        const currentUrl = new URL(window.location);
+                        
+                        if (userId) {
+                            currentUrl.searchParams.set('user_id', userId);
+                        } else {
+                            currentUrl.searchParams.delete('user_id');
+                        }
+                        
+                        window.location.href = currentUrl.toString();
+                    });
+                }
+            });
             </script>

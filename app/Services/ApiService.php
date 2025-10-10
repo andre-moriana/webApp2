@@ -1461,6 +1461,16 @@ class ApiService {
         return $result;
     }
     
+    public function getExercisesByUser($userId) {
+        error_log("DEBUG ApiService::getExercisesByUser - userId=" . $userId);
+        // Utiliser l'endpoint training/progress/user/{user_id} pour récupérer les exercices avec progression
+        $endpoint = 'training/progress/user/' . $userId;
+        error_log("DEBUG ApiService::getExercisesByUser - endpoint=" . $endpoint);
+        $result = $this->makeRequest($endpoint, 'GET');
+        error_log("DEBUG ApiService::getExercisesByUser - result=" . json_encode($result));
+        return $result;
+    }
+    
     public function getExerciseDetails($id) {
         return $this->makeRequest("exercise_sheets?action=get&id={$id}", 'GET');
     }

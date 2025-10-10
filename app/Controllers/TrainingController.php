@@ -1421,17 +1421,30 @@ class TrainingController {
             $globalStats = $dashboardData['stats'] ?? null;
             $apiSessions = $dashboardData['sessions'] ?? [];
             
-            // Utiliser les sessions de l'API si disponibles, sinon les sessions locales
+            // Utiliser les sessions de l'API si disponibles et qu'elles correspondent à l'utilisateur sélectionné
             if (!empty($apiSessions)) {
-                $realSessions = $apiSessions;
-                error_log("DEBUG groupAllExercisesByCategory - using API sessions for exercise $exerciseId: " . count($apiSessions));
+                // Vérifier que les sessions correspondent à l'utilisateur sélectionné
+                $validSessions = [];
+                foreach ($apiSessions as $session) {
+                    if (isset($session['user_id']) && $session['user_id'] == $selectedUserId) {
+                        $validSessions[] = $session;
+                    }
+                }
+                
+                if (!empty($validSessions)) {
+                    $realSessions = $validSessions;
+                    error_log("DEBUG groupAllExercisesByCategory - using valid API sessions for exercise $exerciseId: " . count($validSessions));
+                } else {
+                    error_log("DEBUG groupAllExercisesByCategory - API sessions don't match selected user $selectedUserId, using empty sessions");
+                    $realSessions = [];
+                }
             }
             
             // Debug: Log des statistiques de l'API
             error_log("DEBUG groupAllExercisesByCategory - exerciseId: $exerciseId, globalStats: " . json_encode($globalStats));
             
-            // Toujours utiliser les statistiques de l'API backend si disponibles
-            if ($globalStats && isset($globalStats['total_sessions'])) {
+            // Utiliser les statistiques de l'API backend seulement si l'utilisateur a des sessions
+            if ($globalStats && isset($globalStats['total_sessions']) && !empty($realSessions)) {
                 // Utiliser les statistiques calculées par l'API backend
                 $totalSessions = (int)$globalStats['total_sessions'];
                 $totalArrows = (int)($globalStats['total_arrows'] ?? $globalStats['total_arrows_shot'] ?? 0);
@@ -1586,7 +1599,9 @@ class TrainingController {
      */
     private function getExerciseDashboardData($exerciseId, $userId) {
         try {
-            $response = $this->apiService->makeRequest("/training/dashboard/$exerciseId", 'GET');
+            // Inclure l'userId dans l'endpoint pour récupérer les données spécifiques à l'utilisateur
+            $endpoint = "/training/dashboard/$exerciseId?user_id=$userId";
+            $response = $this->apiService->makeRequest($endpoint, 'GET');
             
             if ($response['success'] && isset($response['data']['data'])) {
                 $data = $response['data']['data'];
@@ -1597,7 +1612,7 @@ class TrainingController {
                 // Extraire les sessions récentes
                 $sessions = $data['recent_sessions'] ?? [];
                 
-                error_log("getExerciseDashboardData - exerciseId: $exerciseId, stats: " . json_encode($stats) . ", sessions: " . count($sessions));
+                error_log("getExerciseDashboardData - exerciseId: $exerciseId, userId: $userId, stats: " . json_encode($stats) . ", sessions: " . count($sessions));
                 
                 return [
                     'stats' => $stats,
@@ -1621,7 +1636,8 @@ class TrainingController {
     private function getExerciseStats($exerciseId, $userId) {
         try {
             // Utiliser l'endpoint dashboard qui calcule les statistiques dynamiquement
-            $response = $this->apiService->makeRequest("/training/dashboard/$exerciseId", 'GET');
+            $endpoint = "/training/dashboard/$exerciseId?user_id=$userId";
+            $response = $this->apiService->makeRequest($endpoint, 'GET');
             
             // Debug: Log de la réponse complète
             error_log("getExerciseStats - response: " . json_encode($response));
