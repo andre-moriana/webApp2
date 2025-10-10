@@ -891,13 +891,21 @@ class ApiController {
 
     public function updateEventMessage($messageId) {
         try {
+            error_log("=== UPDATE EVENT MESSAGE DEBUG ===");
+            error_log("Message ID: " . $messageId);
+            error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+            error_log("Request URI: " . $_SERVER['REQUEST_URI']);
+            
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
             
             $input = json_decode(file_get_contents('php://input'), true);
             $content = $input['content'] ?? '';
             
+            error_log("Content received: " . $content);
+            
             if (empty($content)) {
+                error_log("Content is empty");
                 http_response_code(400);
                 echo json_encode([
                     "success" => false,
@@ -906,7 +914,9 @@ class ApiController {
                 return;
             }
             
-            $response = $this->apiService->makeRequest("events/messages/{$messageId}/update", "PUT", ['content' => $content]);
+            error_log("Calling API: messages/{$messageId}/update");
+            $response = $this->apiService->makeRequest("messages/{$messageId}/update", "PUT", ['content' => $content]);
+            error_log("API Response: " . json_encode($response));
             
             if ($response['success']) {
                 http_response_code(200);
@@ -922,6 +932,7 @@ class ApiController {
                 ]);
             }
         } catch (Exception $e) {
+            error_log("Exception in updateEventMessage: " . $e->getMessage());
             http_response_code(500);
             echo json_encode([
                 "success" => false,
@@ -935,7 +946,7 @@ class ApiController {
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
             
-            $response = $this->apiService->makeRequest("events/messages/{$messageId}/delete", "DELETE");
+            $response = $this->apiService->makeRequest("messages/{$messageId}/delete", "DELETE");
             
             if ($response['success']) {
                 http_response_code(200);
