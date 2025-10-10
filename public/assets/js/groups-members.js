@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadAllUsers() {
     try {
         // Utiliser l'endpoint du backend PHP
-        const response = await fetch('http://82.67.123.22:25000/api/users', {
+        const response = await fetch('/api/users', {
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
@@ -244,7 +244,7 @@ document.getElementById('addSelectedUsers').addEventListener('click', async func
     try {
         const userIds = selectedUsers.map(u => u.id);
         
-        const response = await fetch(`http://82.67.123.22:25000/api/groups/${groupId}/members`, {
+        const response = await fetch(`/api/groups/${groupId}/members`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -269,7 +269,7 @@ document.getElementById('addSelectedUsers').addEventListener('click', async func
 function removeMember(memberId, memberName) {
     if (confirm('Retirer ' + memberName + ' du groupe ?')) {
         // Appel API pour retirer le membre
-        fetch(`http://82.67.123.22:25000/api/groups/${groupId}/remove-member/${memberId}`, {
+        fetch(`/api/groups/${groupId}/remove-member/${memberId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${authToken}`,

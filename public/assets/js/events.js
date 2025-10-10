@@ -17,7 +17,7 @@ async function deleteEvent(eventId) {
     }
     try {
         console.log('Suppression de l\'événement:', eventId);
-        const response = await fetch(backendUrl + '/api/events/' + eventId, {
+        const response = await fetch('/api/events/' + eventId, {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + authToken,
