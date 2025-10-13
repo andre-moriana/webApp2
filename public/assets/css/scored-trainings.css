@@ -1,5 +1,41 @@
 /* Styles pour les tirs comptés */
 
+/* Forcer la largeur complète pour les cadres d'informations */
+.target-image-container,
+.chart-container-with-target {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box;
+}
+
+.target-image-container .card,
+.chart-container-with-target .card {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Forcer la largeur des rangées */
+.row {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Conteneur principal */
+.container-fluid,
+.container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 /* Cartes de statistiques */
 .stats-card {
     transition: transform 0.2s ease-in-out;
@@ -331,6 +367,287 @@
     height: 100%;
     background-color: #28a745;
     transition: width 0.3s ease;
+}
+
+/* Cible interactive */
+.target-interactive-container {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.target-wrapper {
+    flex: 1;
+    max-width: 400px;
+}
+
+.target-zoom-container {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    cursor: crosshair;
+    transition: all 0.3s ease;
+}
+
+.target-zoom-container.zoomed {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80vw;
+    height: 80vh;
+    max-width: 600px;
+    max-height: 600px;
+    z-index: 1050;
+    background-color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border-radius: 12px;
+}
+
+.target-svg {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.3s ease;
+}
+
+.target-svg:hover {
+    transform: scale(1.02);
+}
+
+.target-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    justify-content: center;
+}
+
+.target-scores-display {
+    flex: 1;
+    min-width: 200px;
+}
+
+.scores-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.score-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.score-item .score-value {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.score-item .remove-score {
+    color: #dc3545;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+}
+
+.score-item .remove-score:hover {
+    background-color: #f8d7da;
+}
+
+/* Flèches sur la cible */
+.arrow-marker {
+    fill: #dc3545;
+    stroke: #fff;
+    stroke-width: 0.1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.8));
+}
+
+.arrow-marker:hover {
+    fill: #c82333;
+    transform: scale(2);
+    stroke-width: 0.2;
+}
+
+.arrow-marker.selected {
+    fill: #28a745;
+    stroke: #fff;
+    stroke-width: 0.15;
+}
+
+/* Animation de zoom */
+@keyframes zoomIn {
+    from {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    to {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+.target-zoom-container.zooming {
+    animation: zoomIn 0.3s ease-out;
+}
+
+/* Overlay pour le mode zoom */
+.zoom-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1040;
+    display: none;
+}
+
+.zoom-overlay.active {
+    display: block;
+}
+
+/* Indicateur de score en temps réel */
+.target-score-indicator {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    z-index: 2000;
+    pointer-events: none;
+    animation: fadeIn 0.2s ease-in-out;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 2px solid #007bff;
+}
+
+.score-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.score-value {
+    color: #ffd700;
+    font-size: 1.3rem;
+}
+
+.score-instructions {
+    margin-top: 4px;
+    opacity: 0.8;
+    font-size: 0.8rem;
+}
+
+/* Loupe autour du curseur */
+#magnifyingGlass {
+    position: fixed !important;
+    width: 120px;
+    height: 120px;
+    border: 3px solid #007bff;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 20px rgba(0, 123, 255, 0.8);
+    z-index: 9999 !important;
+    pointer-events: none;
+    overflow: hidden;
+    transform: translate(-50%, -50%);
+}
+
+/* Animation de la loupe */
+#magnifyingGlass {
+    animation: magnifyPulse 0.3s ease-out;
+}
+
+@keyframes magnifyPulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Overlay pour le mode zoom drag */
+.zoom-drag-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    pointer-events: none;
+    display: none;
+}
+
+.zoom-drag-overlay.active {
+    display: block;
+}
+
+/* Cercle de zoom */
+.zoom-circle {
+    position: absolute;
+    border: 2px solid #007bff;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 5;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
+}
+
+/* Responsive pour la cible */
+@media (max-width: 768px) {
+    .target-interactive-container {
+        flex-direction: column;
+    }
+    
+    .target-wrapper {
+        max-width: 100%;
+    }
+    
+    .target-zoom-container {
+        height: 200px;
+    }
+    
+    .target-zoom-container.zoomed {
+        width: 95vw;
+        height: 70vh;
+    }
+    
+    .target-score-indicator {
+        top: 5px;
+        right: 5px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
 }
 
 /* Tooltips personnalisés */

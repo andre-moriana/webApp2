@@ -4,26 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle ?? 'Portail Archers de Gémenos'; ?></title>
-    
-    <!-- Bootstrap CSS -->
+<!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
+<!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Chart.js -->
+<!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- CSS personnalisé -->
+<!-- CSS personnalisé -->
     <link href="/public/assets/css/style.css" rel="stylesheet">
     <link href="/public/assets/css/chat-messages.css" rel="stylesheet">
-    
     <!-- CSS spécifique à la page (si défini) -->
-    <?php if (isset($additionalCSS)): ?>
-        <?php foreach ($additionalCSS as $css): ?>
+    <?php if (isset($additionalCSS)): 
+        foreach ($additionalCSS as $css): ?>
             <link href="<?php echo $css; ?>" rel="stylesheet">
-        <?php endforeach; ?>
-    <?php endif; ?>
+        <?php endforeach; 
+    endif; ?>
 </head>
 <body>
     <!-- Navigation -->
@@ -97,6 +92,5 @@
             </div>
         </div>
     </nav>
-
-    <!-- Contenu principal -->
+<!-- Contenu principal -->
     <main class="container-fluid py-4">

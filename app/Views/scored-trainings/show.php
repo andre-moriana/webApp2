@@ -1,7 +1,6 @@
 <?php
 // Variables disponibles depuis le contrôleur :
 // $scoredTraining, $selectedUser, $isAdmin, $isCoach
-
 // Inclure les fichiers CSS et JS spécifiques
 $additionalCSS = [
     '/public/assets/css/scored-trainings.css',
@@ -11,10 +10,8 @@ $additionalJS = [
     '/public/assets/js/scored-training-show.js?v=' . time()
 ];
 ?>
-
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <!-- Données du tir compté pour JavaScript -->
 <script>
     window.scoredTrainingData = {
@@ -24,17 +21,14 @@ $additionalJS = [
         total_ends: <?= $scoredTraining['total_ends'] ?>,
         arrows_per_end: <?= $scoredTraining['arrows_per_end'] ?>,
         total_arrows: <?= $scoredTraining['total_arrows'] ?>,
-        status: '<?= addslashes($scoredTraining['status']) ?>'
+        status: '<?= addslashes($scoredTraining['status']) ?>',
+        target_image: <?= isset($scoredTraining['target_image']) && !empty($scoredTraining['target_image']) ? json_encode($scoredTraining['target_image']) : 'null' ?>
     };
-    
     // Données des volées pour le graphique
     window.endsData = <?= json_encode($scoredTraining['ends'] ?? []) ?>;
-    
     // Token d'authentification pour l'API
     //window.token = '<?= $_SESSION['token'] ?? '' ?>';
-   
 </script>
-
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -62,7 +56,6 @@ $additionalJS = [
                     </button>
                 </div>
             </div>
-
             <!-- Informations générales -->
             <div class="row mb-4">
                 <div class="col-md-3">
@@ -98,7 +91,6 @@ $additionalJS = [
                     </div>
                 </div>
             </div>
-
             <!-- Détails du tir compté -->
             <div class="row">
                 <div class="col-md-8">
@@ -118,17 +110,17 @@ $additionalJS = [
                                 <?php endif; ?>
                             </div>
                             <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-hover table-ends">
-                            <thead>
-                                <tr>
-                                    <th>Volée</th>
-                                    <th>Scores</th>
-                                    <th>Total</th>
-                                    <th>Moyenne</th>
-                                    <th>Commentaire</th>
-                                </tr>
-                            </thead>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-ends">
+                                    <thead>
+                                        <tr>
+                                            <th>Volée</th>
+                                            <th>Scores</th>
+                                            <th>Total</th>
+                                            <th>Moyenne</th>
+                                            <th>Commentaire</th>
+                                        </tr>
+                                    </thead>
                                     <tbody>
                                         <?php foreach ($scoredTraining['ends'] as $end): ?>
                                         <tr>
@@ -172,25 +164,23 @@ $additionalJS = [
                                 </button>
                             </div>
                             <?php endif; ?>
-                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <!-- Graphique des scores par volée -->
+                <?php if (!empty($scoredTraining['ends'])): ?>
+                <div class="card mt-4 detail-card">
+                    <div class="card-header">
+                        <h5 class="mb-0 chart-title">Graphique des scores par volée</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="scoresChart" width="400" height="200"></canvas>
                         </div>
                     </div>
-                    
-            <!-- Graphique des scores par volée -->
-            <?php if (!empty($scoredTraining['ends'])): ?>
-            <div class="card mt-4 detail-card">
-                <div class="card-header">
-                    <h5 class="mb-0 chart-title">Graphique des scores par volée</h5>
                 </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="scoresChart" width="400" height="200"></canvas>
-                    </div>
+                <?php endif; ?>
                 </div>
-            </div>
-            <?php endif; ?>
-                </div>
-
                 <div class="col-md-4">
                     <div class="card detail-card">
                         <div class="card-header">
@@ -206,31 +196,25 @@ $additionalJS = [
                                     <span class="badge bg-success status-badge status-termine">Terminé</span>
                                     <?php endif; ?>
                                 </dd>
-                                
                                 <dt class="col-sm-4">Début:</dt>
                                 <dd class="col-sm-8">
                                     <?= date('d/m/Y H:i', strtotime($scoredTraining['start_date'])) ?>
                                 </dd>
-                                
                                 <?php if ($scoredTraining['end_date']): ?>
                                 <dt class="col-sm-4">Fin:</dt>
                                 <dd class="col-sm-8">
                                     <?= date('d/m/Y H:i', strtotime($scoredTraining['end_date'])) ?>
                                 </dd>
                                 <?php endif; ?>
-                                
                                 <dt class="col-sm-4">Type de tir:</dt>
                                 <dd class="col-sm-8">
                                     <?= $scoredTraining['shooting_type'] ? htmlspecialchars($scoredTraining['shooting_type']) : '-' ?>
                                 </dd>
-                                
                                 <dt class="col-sm-4">Flèches/volée:</dt>
                                 <dd class="col-sm-8"><?= $scoredTraining['arrows_per_end'] ?></dd>
-                                
                                 <dt class="col-sm-4">Volées prévues:</dt>
                                 <dd class="col-sm-8"><?= $scoredTraining['total_ends'] ?></dd>
                             </dl>
-                            
                             <?php if ($scoredTraining['notes']): ?>
                             <hr>
                             <h6>Notes:</h6>
@@ -238,7 +222,6 @@ $additionalJS = [
                             <?php endif; ?>
                         </div>
                     </div>
-
                     <?php if ($scoredTraining['status'] === 'en_cours'): ?>
                     <div class="card mt-3">
                         <div class="card-header">
@@ -256,7 +239,6 @@ $additionalJS = [
         </div>
     </div>
 </div>
-
 <!-- Modal d'ajout de volée -->
 <div class="modal fade" id="addEndModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -355,22 +337,94 @@ $additionalJS = [
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Mode de saisie des scores</label>
+                        <div class="btn-group w-100" role="group" aria-label="Mode de saisie">
+                            <input type="radio" class="btn-check" name="scoreMode" id="tableMode" value="table" checked>
+                            <label class="btn btn-outline-primary" for="tableMode">
+                                <i class="fas fa-table"></i> Tableau
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="scoreMode" id="targetMode" value="target">
+                            <label class="btn btn-outline-primary" for="targetMode">
+                                <i class="fas fa-bullseye"></i> Cible interactive
+                            </label>
+                        </div>
+                    </div>
+<!-- Mode tableau -->
+                    <div class="mb-3" id="tableModeContainer">
                         <label class="form-label">Scores des flèches</label>
                         <div class="row" id="scoresContainer">
                             <!-- Les champs de score seront générés dynamiquement -->
                         </div>
                     </div>
+<!-- Mode cible interactive -->
+                    <div class="mb-3" id="targetModeContainer" style="display: none;">
+                        <label class="form-label">Sélection sur cible</label>
+                        <div class="target-interactive-container">
+                            <div class="target-wrapper" id="targetWrapper">
+                                <div class="target-zoom-container" id="targetZoomContainer">
+                                    <svg class="target-svg" id="targetSvg" viewBox="0 0 120 120">
+                                        <!-- Cercle extérieur (zone 1 - blanc) -->
+                                        <circle cx="60" cy="60" r="57" fill="white" stroke="black" stroke-width="1.2"/>
+                                        <!-- Zone 2 (blanc) -->
+                                        <circle cx="60" cy="60" r="51" fill="white" stroke="black" stroke-width="0.6"/>
+                                        <!-- Zone 3 (noir) -->
+                                        <circle cx="60" cy="60" r="45" fill="black" stroke="black" stroke-width="0.6"/>
+                                        <!-- Zone 4 (noir) -->
+                                        <circle cx="60" cy="60" r="39" fill="black" stroke="black" stroke-width="0.6"/>
+                                        <!-- Zone 5 (bleu) -->
+                                        <circle cx="60" cy="60" r="33" fill="blue" stroke="black" stroke-width="0.6"/>
+                                        <!-- Zone 6 (bleu) -->
+                                        <circle cx="60" cy="60" r="27" fill="blue" stroke="black" stroke-width="0.6"/>
+                                        <!-- Zone 7 (rouge) -->
+                                        <circle cx="60" cy="60" r="21" fill="red" stroke="black" stroke-width="0.6"/>
+                                        <!-- Zone 8 (rouge) -->
+                                        <circle cx="60" cy="60" r="15" fill="red" stroke="black" stroke-width="0.6"/>
+                                        <!-- Zone 9 (jaune) -->
+                                        <circle cx="60" cy="60" r="9" fill="yellow" stroke="black" stroke-width="0.6"/>
+                                        <!-- Zone 10 (jaune - centre) -->
+                                        <circle cx="60" cy="60" r="3" fill="yellow" stroke="black" stroke-width="0.6"/>
+<!-- Flèches placées -->
+                                        <g id="arrowsGroup"></g>
+                                    </svg>
+                                </div>
+                                <div class="target-controls">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="resetTarget">
+                                        <i class="fas fa-undo"></i> Réinitialiser
+                                    </button>
+                                </div>
+                                <div class="target-score-indicator" id="targetScoreIndicator" style="display: none;">
+                                    <div class="score-preview">
+                                        <span class="score-label">Score:</span>
+                                        <span class="score-value" id="currentScore">0</span>
+                                    </div>
+                                    <div class="score-instructions">
+                                        <small>Relâchez pour confirmer</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="target-scores-display" id="targetScoresDisplay">
+                                <h6>Scores sélectionnés :</h6>
+                                <div class="scores-list" id="scoresList">
+                                    <!-- Les scores seront affichés ici -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                    <button type="button" class="btn btn-success" onclick="saveEnd()">Enregistrer et continuer</button>
-                                    <button type="button" class="btn btn-primary" onclick="saveEndAndClose()">Terminer</button>
-                                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" onclick="saveEnd()">Enregistrer et continuer</button>
+                <button type="button" class="btn btn-primary" onclick="saveEndAndClose()">Terminer</button>
+            </div>
         </div>
     </div>
 </div>
-
+<!-- Overlay pour le mode zoom de la cible -->
+<div class="zoom-overlay" id="zoomOverlay"></div>
+<!-- Overlay pour le mode zoom drag -->
+<div class="zoom-drag-overlay" id="zoomDragOverlay"></div>
 <!-- Modal de finalisation -->
 <div class="modal fade" id="endTrainingModal" tabindex="-1">
     <div class="modal-dialog">

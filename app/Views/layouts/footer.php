@@ -1,6 +1,5 @@
     </main>
-
-    <!-- Footer -->
+<!-- Footer -->
     <footer class="bg-dark text-light py-4 mt-5">
         <div class="container-fluid">
             <div class="row">
@@ -18,14 +17,11 @@
             </div>
         </div>
     </footer>
-
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- JavaScript personnalisé -->
+<!-- JavaScript personnalisé -->
     <script src="/public/assets/js/app.js"></script>
-    
-    <!-- JavaScript spécifique à la page (si défini) -->
+<!-- JavaScript spécifique à la page (si défini) -->
     <?php if (isset($additionalJS)): ?>
         <!-- DEBUG: additionalJS défini -->
         <?php foreach ($additionalJS as $js): ?>

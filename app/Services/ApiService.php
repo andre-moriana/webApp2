@@ -1362,7 +1362,7 @@ class ApiService {
     }
     
     public function updateExercise($id, $data) {
-        return $this->makeRequest("exercise_sheets?action=update&id={$id}", 'POST', $data);
+        return $this->makeRequest("exercise_sheets?action=update&id={$id}", 'PUT', $data);
     }
     
     public function deleteExercise($id) {

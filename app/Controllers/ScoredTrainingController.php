@@ -143,6 +143,13 @@ class ScoredTrainingController {
         // Extraire les données du tir compté
         $scoredTraining = $apiResponse['data'];
         
+        // Log de débogage pour l'image
+        error_log('ScoredTrainingController->show - Données du tir: ' . json_encode([
+            'id' => $scoredTraining['id'] ?? 'non défini',
+            'target_image_present' => isset($scoredTraining['target_image']),
+            'target_image_length' => isset($scoredTraining['target_image']) ? strlen($scoredTraining['target_image']) : 0
+        ]));
+        
         // Les données de l'API externe sont maintenant correctes
         
         // Ajouter l'ID du tir compté s'il n'est pas présent
@@ -281,6 +288,15 @@ class ScoredTrainingController {
         
         $trainingId = $data['training_id'] ?? '';
         $notes = $data['notes'] ?? '';
+        $targetImage = $data['target_image'] ?? '';
+        
+        // Log de débogage
+        error_log('endTraining - Données reçues: ' . json_encode([
+            'training_id' => $trainingId,
+            'notes_length' => strlen($notes),
+            'target_image_length' => strlen($targetImage),
+            'target_image_present' => !empty($targetImage)
+        ]));
         
         if (empty($trainingId)) {
             $this->sendJsonResponse(['success' => false, 'message' => 'ID du tir compté requis']);
@@ -330,9 +346,19 @@ class ScoredTrainingController {
                 'Authorization: Bearer ' . $token,
                 'Content-Type: application/json'
             ]);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-                'notes' => $notes
+            $postData = [
+                'notes' => $notes,
+                'target_image' => $targetImage
+            ];
+            
+            // Log de débogage
+            error_log('endTraining - Données envoyées à l\'API: ' . json_encode([
+                'notes_length' => strlen($notes),
+                'target_image_length' => strlen($targetImage),
+                'target_image_present' => !empty($targetImage)
             ]));
+            
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
             
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -429,6 +455,7 @@ class ScoredTrainingController {
     private function getScoredTrainingByIdWithUserId($trainingId, $selectedUserId) {
         try {
             // Utiliser l'API externe avec le user_id sélectionné
+            $baseUrl = $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000/api";
             $url = $baseUrl . "/scored-training/" . $trainingId . "?user_id=" . $selectedUserId;
             
             $ch = curl_init();
@@ -633,8 +660,8 @@ class ScoredTrainingController {
         }
        
         try {
-           
             // Ne pas passer user_id - l'API backend doit utiliser l'utilisateur connecté pour vérifier les permissions
+            $baseUrl = $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000/api";
             $url = $baseUrl . "/scored-training/" . $id;
             
             $ch = curl_init();

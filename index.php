@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Portail Web - Archers de Gémenos
  * Point d'entrée principal de l'application
@@ -25,5 +25,4 @@ require_once 'app/Config/Router.php';
 // Initialisation et exécution du routeur
 //$router = new Router("/webapp");
 $router = new Router("");
-
 $router->run();

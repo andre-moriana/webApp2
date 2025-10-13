@@ -274,16 +274,20 @@ class ExerciseController {
             $hasFile = isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK;
             
             if ($hasFile) {
-                $response = $this->makePostRequestWithFiles('exercise_sheets?action=update&id=' . $id, $postData, $_FILES['attachment']);
+                $response = $this->makePutRequestWithFiles('exercise_sheets?action=update&id=' . $id, $postData, $_FILES['attachment']);
             } else {
                 $response = $this->apiService->updateExercise($id, $postData);
             }
+            
+            // Debug: Afficher la réponse de l'API
+            error_log("ExerciseController update - Réponse API: " . json_encode($response));
             
             if (isset($response["success"]) && $response["success"]) {
                 header("Location: /exercises?updated=1");
                 exit;
             } else {
                 $error = "Erreur lors de la mise à jour: " . ($response["message"] ?? "Erreur inconnue");
+                error_log("ExerciseController update - Erreur: " . $error);
             }
         } catch (Exception $e) {
             $error = "Erreur lors de la mise à jour: " . $e->getMessage();
@@ -319,7 +323,7 @@ class ExerciseController {
         return '';
     }
 
-    private function makePostRequestWithFiles($endpoint, $data, $fileData) {
+    private function makePutRequestWithFiles($endpoint, $data, $fileData) {
         $apiUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000/api';
         $url = $apiUrl . '/' . $endpoint;
         
@@ -334,7 +338,7 @@ class ExerciseController {
         // Configuration de base
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Authorization: Bearer ' . $token
         ]);

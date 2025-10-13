@@ -16,6 +16,7 @@
                     <?php endif; ?>
 
                     <form action="/exercises/<?php echo $exercise['id'] ?? $exercise['_id'] ?? ''; ?>" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="_method" value="PUT">
                         <div class="form-group">
                             <label for="title">Titre de l'exercice *</label>
                             <input type="text" class="form-control" id="title" name="title" required
