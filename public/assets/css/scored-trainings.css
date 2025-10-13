@@ -487,6 +487,23 @@
     stroke-width: 0.15;
 }
 
+/* Flèches dans les zones noires (scores 3 et 4) */
+.arrow-marker[data-score="3"],
+.arrow-marker[data-score="4"] {
+    fill: white !important;
+    stroke: black !important;
+    stroke-width: 0.1 !important;
+    filter: drop-shadow(0 0 2px rgba(255,255,255,0.8));
+}
+
+.arrow-marker[data-score="3"]:hover,
+.arrow-marker[data-score="4"]:hover {
+    fill: #f8f9fa !important;
+    stroke: #000 !important;
+    stroke-width: 0.2 !important;
+    transform: scale(2);
+}
+
 /* Animation de zoom */
 @keyframes zoomIn {
     from {

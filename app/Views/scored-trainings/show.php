@@ -368,10 +368,12 @@ $additionalJS = [
                                         <circle cx="60" cy="60" r="57" fill="white" stroke="black" stroke-width="1.2"/>
                                         <!-- Zone 2 (blanc) -->
                                         <circle cx="60" cy="60" r="51" fill="white" stroke="black" stroke-width="0.6"/>
-                                        <!-- Zone 3 (noir) -->
-                                        <circle cx="60" cy="60" r="45" fill="black" stroke="black" stroke-width="0.6"/>
-                                        <!-- Zone 4 (noir) -->
-                                        <circle cx="60" cy="60" r="39" fill="black" stroke="black" stroke-width="0.6"/>
+                                        <!-- Zone 3 (noir) - anneau de 45 à 39 -->
+                                        <circle cx="60" cy="60" r="45" fill="black" stroke="white" stroke-width="0.6"/>
+                                        <circle cx="60" cy="60" r="39" fill="white" stroke="none"/>
+                                        <!-- Zone 4 (noir) - anneau de 39 à 33 -->
+                                        <circle cx="60" cy="60" r="39" fill="black" stroke="white" stroke-width="0.6"/>
+                                        <circle cx="60" cy="60" r="33" fill="white" stroke="none"/>
                                         <!-- Zone 5 (bleu) -->
                                         <circle cx="60" cy="60" r="33" fill="blue" stroke="black" stroke-width="0.6"/>
                                         <!-- Zone 6 (bleu) -->

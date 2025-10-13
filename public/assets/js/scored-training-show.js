@@ -1069,6 +1069,18 @@ function addArrowToTarget(x, y, score, arrowIndex) {
     circle.setAttribute('data-score', score);
     circle.setAttribute('data-arrow-index', arrowIndex);
     
+    // Déterminer la couleur de la flèche en fonction de la zone
+    // Les zones noires (scores 3 et 4) doivent avoir des flèches blanches
+    if (score === 3 || score === 4) {
+        circle.setAttribute('fill', 'white');
+        circle.setAttribute('stroke', 'black');
+        circle.setAttribute('stroke-width', '0.1');
+    } else {
+        circle.setAttribute('fill', '#dc3545');
+        circle.setAttribute('stroke', '#fff');
+        circle.setAttribute('stroke-width', '0.1');
+    }
+    
     // Ajouter un événement de clic pour supprimer la flèche
     circle.addEventListener('click', function(e) {
         e.stopPropagation();

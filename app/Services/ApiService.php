@@ -45,12 +45,15 @@ class ApiService {
     
     public function makeRequest($endpoint, $method = 'GET', $data = null) {
         $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
+        error_log("DEBUG ApiService makeRequest: URL: " . $url . ", Méthode: " . $method);
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_HEADER, false);
         curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Timeout de 30 secondes
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // Timeout de connexion de 10 secondes
         
         // Headers pour accepter tous les types de contenu
         $headers = [
@@ -89,9 +92,11 @@ class ApiService {
             }
         }
         
+        error_log("DEBUG ApiService makeRequest: Exécution de cURL...");
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        error_log("DEBUG ApiService makeRequest: cURL terminé - HTTP Code: " . $httpCode . ", Content-Type: " . $contentType);
         
         if (curl_errno($ch)) {
             curl_close($ch);
@@ -1361,8 +1366,65 @@ class ApiService {
         return $this->makeRequest('exercise_sheets?action=create', 'POST', $data);
     }
     
+    public function makeRequestToUrl($url, $method = 'GET', $data = null) {
+        error_log("DEBUG ApiService makeRequestToUrl: URL: " . $url . ", Méthode: " . $method);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        
+        $headers = ['Accept: */*'];
+        
+        if ($this->token) {
+            $headers[] = 'Authorization: Bearer ' . $this->token;
+        }
+        
+        if ($method === 'POST' || $method === 'PUT') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            if ($data) {
+                $jsonData = json_encode($data);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+                $headers[] = 'Content-Type: application/json';
+                $headers[] = 'Content-Length: ' . strlen($jsonData);
+            }
+        }
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        error_log("DEBUG ApiService makeRequestToUrl: Exécution de cURL...");
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        
+        error_log("DEBUG ApiService makeRequestToUrl: cURL terminé - HTTP Code: " . $httpCode . ", Content-Type: " . $contentType);
+        
+        if (curl_error($ch)) {
+            error_log("DEBUG ApiService makeRequestToUrl: Erreur cURL: " . curl_error($ch));
+            curl_close($ch);
+            return ['error' => 'Erreur de connexion: ' . curl_error($ch)];
+        }
+        
+        curl_close($ch);
+        
+        $decodedResponse = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log("DEBUG ApiService makeRequestToUrl: Erreur de décodage JSON: " . json_last_error_msg());
+            return ['error' => 'Réponse invalide du serveur'];
+        }
+        
+        return $decodedResponse;
+    }
+
     public function updateExercise($id, $data) {
-        return $this->makeRequest("exercise_sheets?action=update&id={$id}", 'PUT', $data);
+        error_log("DEBUG ApiService updateExercise: Début avec ID: " . $id . ", données: " . json_encode($data));
+        // Utiliser le serveur externe comme prévu
+        $result = $this->makeRequest("exercise_sheets?action=update&id=" . urlencode($id), 'POST', $data);
+        error_log("DEBUG ApiService updateExercise: Réponse: " . json_encode($result));
+        return $result;
     }
     
     public function deleteExercise($id) {

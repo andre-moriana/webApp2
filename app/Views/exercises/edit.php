@@ -14,8 +14,23 @@
                             <?php echo htmlspecialchars($error); ?>
                         </div>
                     <?php endif; ?>
+                    
+                    <?php if (isset($_GET['success']) && $_GET['success'] == '1'): ?>
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle"></i> Exercice mis à jour avec succès !
+                        </div>
+                    <?php endif; ?>
 
-                    <form action="/exercises/<?php echo $exercise['id'] ?? $exercise['_id'] ?? ''; ?>" method="POST" enctype="multipart/form-data">
+                    <?php if (!$exercise): ?>
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Erreur :</strong> Impossible de charger les données de l'exercice. L'API backend ne répond pas.
+                        </div>
+                        <a href="/exercises" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Retour à la liste
+                        </a>
+                    <?php else: ?>
+                    <form method="POST" action="/exercises/<?php echo $exercise['id']; ?>" enctype="multipart/form-data">
                         <input type="hidden" name="_method" value="PUT">
                         <div class="form-group">
                             <label for="title">Titre de l'exercice *</label>
@@ -62,6 +77,7 @@
                             </a>
                         </div>
                     </form>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

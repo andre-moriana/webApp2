@@ -205,8 +205,11 @@ class Router {
         
         // Gérer les méthodes HTTP personnalisées via _method
         if ($requestMethod === "POST" && isset($_POST["_method"])) {
+            error_log("DEBUG ROUTER: Méthode changée de POST vers " . strtoupper($_POST["_method"]));
             $requestMethod = strtoupper($_POST["_method"]);
         }
+        
+        error_log("DEBUG ROUTER: Méthode: " . $requestMethod . ", URI: " . $requestUri);
 
         // Supprimer le basePath de l'URI
         if ($this->basePath && strpos($requestUri, $this->basePath) === 0) {
@@ -223,6 +226,8 @@ class Router {
             $pattern = $this->convertToRegex($route["path"]);
            
             if (preg_match($pattern, $requestUri, $matches)) {
+                error_log("DEBUG ROUTER: Route trouvée - " . $route["method"] . " " . $route["path"] . " -> " . $route["handler"]);
+                
                 // Extraire le contrôleur et la méthode
                 list($controller, $method) = explode("@", $route["handler"]);
                 

@@ -230,6 +230,8 @@ class ExerciseController {
                 } else {
                     $categories = $data;
                 }
+                // Mettre en cache dans la session pour éviter les appels répétés
+                $_SESSION['exercise_categories'] = $categories;
             }
         } catch (Exception $e) {
             $error = "Erreur lors du chargement de l'exercice: " . $e->getMessage();
@@ -245,9 +247,22 @@ class ExerciseController {
         include "app/Views/layouts/footer.php";
     }
     
-    public function update($id) {
+    public function update($id = null) {
+        error_log("DEBUG UPDATE: Début de la fonction update avec ID: " . $id);
+        
         if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
+            error_log("DEBUG UPDATE: Utilisateur non connecté, redirection vers login");
             header("Location: /login");
+            exit;
+        }
+
+        // Récupérer l'ID depuis $_POST si pas fourni en paramètre
+        if ($id === null) {
+            $id = $_POST['id'] ?? null;
+        }
+        
+        if (!$id) {
+            header("Location: /exercises?error=" . urlencode("ID d'exercice manquant"));
             exit;
         }
 
@@ -256,34 +271,44 @@ class ExerciseController {
         $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach'; // Supprimé strtolower()
         
         if (!$isAdmin && !$isCoach) {
+            error_log("DEBUG UPDATE: Accès refusé - utilisateur n'est ni admin ni coach");
             header("Location: /exercises?error=" . urlencode("Accès refusé. Seuls les administrateurs et les coachs peuvent modifier les exercices."));
             exit;
         }
 
+        error_log("DEBUG UPDATE: Permissions OK, début du traitement");
         $error = null;
 
         try {
+            error_log("DEBUG UPDATE: Début du try, préparation des données");
+            
             // Préparer les données pour l'API backend
             $postData = [
                 'title' => $_POST['title'] ?? '',
                 'description' => $_POST['description'] ?? '',
-                'category' => $this->getCategoryNameById($_POST['category'] ?? '') // Changé de category_id à category et supprimé progression
+                'category' => $this->getCategoryNameById($_POST['category'] ?? '') // L'API backend attend le nom de la catégorie
             ];
+            
+            error_log("DEBUG UPDATE: Données préparées: " . json_encode($postData));
 
             // Vérifier s'il y a un fichier à uploader
             $hasFile = isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK;
+            error_log("DEBUG UPDATE: Fichier à uploader: " . ($hasFile ? 'OUI' : 'NON'));
             
             if ($hasFile) {
+                error_log("DEBUG UPDATE: Appel API avec fichier");
                 $response = $this->makePutRequestWithFiles('exercise_sheets?action=update&id=' . $id, $postData, $_FILES['attachment']);
             } else {
+                error_log("DEBUG UPDATE: Appel API sans fichier");
                 $response = $this->apiService->updateExercise($id, $postData);
             }
             
             // Debug: Afficher la réponse de l'API
-            error_log("ExerciseController update - Réponse API: " . json_encode($response));
+            error_log("ExerciseController update - NOUVEAU CODE ACTIF - Réponse API: " . json_encode($response));
             
             if (isset($response["success"]) && $response["success"]) {
-                header("Location: /exercises?updated=1");
+                // Succès - recharger la page d'édition avec un message de succès
+                header("Location: /exercises/" . $id . "/edit?success=1");
                 exit;
             } else {
                 $error = "Erreur lors de la mise à jour: " . ($response["message"] ?? "Erreur inconnue");
@@ -301,25 +326,42 @@ class ExerciseController {
     }
 
     private function getCategoryNameById($categoryId) {
-        try {
-            $categoriesResponse = $this->apiService->getExerciseCategories();
-            if (isset($categoriesResponse["success"]) && $categoriesResponse["success"] && isset($categoriesResponse["data"])) {
-                $data = $categoriesResponse["data"];
-                if (isset($data["success"]) && $data["success"] && isset($data["data"])) {
-                    $categories = $data["data"];
-                } else {
-                    $categories = $data;
-                }
-                
-                foreach ($categories as $category) {
-                    if ($category['id'] == $categoryId) {
-                        return $category['name'];
+        error_log("DEBUG getCategoryNameById: Début avec categoryId: " . $categoryId);
+        
+        // Utiliser les catégories déjà chargées dans la session ou les données de la page
+        if (isset($_SESSION['exercise_categories'])) {
+            error_log("DEBUG getCategoryNameById: Utilisation du cache de session");
+            $categories = $_SESSION['exercise_categories'];
+        } else {
+            error_log("DEBUG getCategoryNameById: Appel API pour récupérer les catégories");
+            // Fallback : récupérer depuis l'API (une seule fois)
+            try {
+                $categoriesResponse = $this->apiService->getExerciseCategories();
+                if (isset($categoriesResponse["success"]) && $categoriesResponse["success"] && isset($categoriesResponse["data"])) {
+                    $data = $categoriesResponse["data"];
+                    if (isset($data["success"]) && $data["success"] && isset($data["data"])) {
+                        $categories = $data["data"];
+                    } else {
+                        $categories = $data;
                     }
+                    // Mettre en cache dans la session
+                    $_SESSION['exercise_categories'] = $categories;
+                } else {
+                    return '';
                 }
+            } catch (Exception $e) {
+                error_log("Erreur lors de la récupération des catégories: " . $e->getMessage());
+                return '';
             }
-        } catch (Exception $e) {
-            error_log("Erreur lors de la récupération des catégories: " . $e->getMessage());
         }
+        
+        foreach ($categories as $category) {
+            if ($category['id'] == $categoryId) {
+                error_log("DEBUG getCategoryNameById: Catégorie trouvée: " . $category['name']);
+                return $category['name'];
+            }
+        }
+        error_log("DEBUG getCategoryNameById: Catégorie non trouvée pour ID: " . $categoryId);
         return '';
     }
 
