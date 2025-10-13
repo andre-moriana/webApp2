@@ -175,12 +175,6 @@ const initialEventId = <?php echo (!empty($events) && isset($events[0]) && isset
 // backendUrl supprimé - tous les appels passent maintenant par le backend WebApp2
 const isAdmin = <?php echo $_SESSION["user"]["is_admin"] ? "true" : "false"; ?>;
 const authToken = "<?php echo $_SESSION["token"] ?? ""; ?>";
-
-// Debug
-console.log("Initial Event ID:", initialEventId);
-console.log("Current User ID:", currentUserId);
-// Backend URL supprimé - tous les appels passent maintenant par le backend WebApp2
-console.log("Auth Token:", authToken ? "Present" : "Missing");
 </script>
 
 <!-- Inclusion du JavaScript -->
