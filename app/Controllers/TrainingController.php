@@ -1324,22 +1324,12 @@ class TrainingController {
                 $firstSessionDate = $globalStats['first_session_date'] ?? $globalStats['first_training_date'] ?? null;
                 
             } else {
-                // Fallback: utiliser les données de progression si pas de statistiques API
+                // Pas de statistiques API disponibles - l'utilisateur n'a pas de vraies séances
                 $totalSessions = 0;
                 $totalArrows = 0;
                 $totalTime = 0;
                 $lastSessionDate = null;
                 $firstSessionDate = null;
-                
-                // Chercher dans les données de progression
-                foreach ($trainings as $training) {
-                    if (is_array($training) && isset($training['exercise_sheet_id']) && $training['exercise_sheet_id'] == $exerciseId) {
-                        $totalSessions = 1; // Au moins une progression
-                        $lastSessionDate = $training['last_session_date'] ?? null;
-                        $firstSessionDate = $training['start_date'] ?? null;
-                        break;
-                    }
-                }
             }
                 
             // Mettre à jour les statistiques de l'exercice
