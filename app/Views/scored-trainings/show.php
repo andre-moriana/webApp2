@@ -4,10 +4,12 @@
 // Inclure les fichiers CSS et JS spécifiques
 $additionalCSS = [
     '/public/assets/css/scored-trainings.css',
-    '/public/assets/css/scored-training-show.css'
+    '/public/assets/css/scored-training-show.css',
+    '/public/assets/css/svg-target.css'
 ];
 $additionalJS = [
-    '/public/assets/js/scored-training-show.js?v=' . time()
+    '/public/assets/js/scored-training-show.js?v=' . time(),
+    '/public/assets/js/svg-target.js?v=' . time()
 ];
 ?>
 <!-- Chart.js CDN -->
@@ -91,6 +93,55 @@ $additionalJS = [
                     </div>
                 </div>
             </div>
+            <!-- Cible SVG interactive -->
+            <?php if (!empty($scoredTraining['ends'])): ?>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card detail-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Cible interactive</h5>
+                            <small class="text-muted">Visualisation des impacts de toutes les volées</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div id="svgTargetContainer" class="d-flex justify-content-center">
+                                        <div class="target-loading">Chargement de la cible...</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="target-controls">
+                                        <div class="mb-3">
+                                            <label for="targetCategorySelect" class="form-label">Type de cible</label>
+                                            <select class="form-select" id="targetCategorySelect">
+                                                <option value="blason_80">Blason 80cm</option>
+                                                <option value="blason_122">Blason 122cm</option>
+                                                <option value="blason_60">Blason 60cm</option>
+                                                <option value="blason_40">Blason 40cm</option>
+                                                <option value="trispot">Trispot</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="targetSizeSelect" class="form-label">Taille d'affichage</label>
+                                            <select class="form-select" id="targetSizeSelect">
+                                                <option value="200">Petite (200px)</option>
+                                                <option value="300" selected>Moyenne (300px)</option>
+                                                <option value="400">Grande (400px)</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <button class="btn btn-outline-primary btn-sm" onclick="refreshTarget()">
+                                                <i class="fas fa-sync-alt"></i> Actualiser
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
             <!-- Détails du tir compté -->
             <div class="row">
                 <div class="col-md-8">
@@ -119,6 +170,7 @@ $additionalJS = [
                                             <th>Total</th>
                                             <th>Moyenne</th>
                                             <th>Commentaire</th>
+                                            <th>Cible</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -148,6 +200,26 @@ $additionalJS = [
                                             <td>
                                                 <?php if ($end['comment']): ?>
                                                 <small class="comment-text"><?= htmlspecialchars($end['comment']) ?></small>
+                                                <?php else: ?>
+                                                <span class="text-muted">-</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php 
+                                                $hasCoordinates = false;
+                                                if (isset($end['shots'])) {
+                                                    foreach ($end['shots'] as $shot) {
+                                                        if ($shot['hit_x'] !== null && $shot['hit_y'] !== null) {
+                                                            $hasCoordinates = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                ?>
+                                                <?php if ($hasCoordinates): ?>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="showEndTarget(<?= $end['end_number'] ?>)" title="Voir la cible de cette volée">
+                                                    <i class="fas fa-bullseye"></i>
+                                                </button>
                                                 <?php else: ?>
                                                 <span class="text-muted">-</span>
                                                 <?php endif; ?>
@@ -450,4 +522,82 @@ $additionalJS = [
         </div>
     </div>
 </div>
+
+<!-- Script pour l'initialisation de la cible SVG -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser la cible SVG si des volées existent
+    if (window.endsData && window.endsData.length > 0) {
+        initializeSVGTarget();
+    }
+});
+
+function initializeSVGTarget() {
+    // Collecter tous les impacts de toutes les volées
+    const allHits = [];
+    
+    window.endsData.forEach(end => {
+        if (end.shots && end.shots.length > 0) {
+            end.shots.forEach(shot => {
+                if (shot.hit_x !== null && shot.hit_y !== null) {
+                    allHits.push({
+                        hit_x: shot.hit_x,
+                        hit_y: shot.hit_y,
+                        score: shot.score,
+                        arrow_number: shot.arrow_number,
+                        endNumber: end.end_number
+                    });
+                }
+            });
+        }
+    });
+    
+    // Créer la cible SVG
+    const target = createSVGTarget('svgTargetContainer', allHits, {
+        size: 300,
+        targetCategory: 'blason_40'
+    });
+    
+    // Gérer le changement de catégorie de cible
+    const categorySelect = document.getElementById('targetCategorySelect');
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            target.setTargetCategory(this.value);
+        });
+    }
+    
+    // Gérer le changement de taille
+    const sizeSelect = document.getElementById('targetSizeSelect');
+    if (sizeSelect) {
+        sizeSelect.addEventListener('change', function() {
+            target.resize(parseInt(this.value));
+        });
+    }
+    
+    // Fonction de rafraîchissement
+    window.refreshTarget = function() {
+        target.render();
+    };
+}
+
+// Fonction pour afficher une cible spécifique à une volée
+function showEndTarget(endNumber) {
+    const end = window.endsData.find(e => e.end_number === endNumber);
+    if (!end || !end.shots) return;
+    
+    const endHits = end.shots
+        .filter(shot => shot.hit_x !== null && shot.hit_y !== null)
+        .map(shot => ({
+            hit_x: shot.hit_x,
+            hit_y: shot.hit_y,
+            score: shot.score,
+            endNumber: endNumber
+        }));
+    
+    const target = createSVGTarget('svgTargetContainer', endHits, {
+        size: 300,
+        targetCategory: document.getElementById('targetCategorySelect')?.value || 'blason_40'
+    });
+}
+</script>
 
