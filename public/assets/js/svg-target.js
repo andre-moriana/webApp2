@@ -48,11 +48,15 @@ class SVGTarget {
      */
     calculateScore(x, y, targetRadius) {
         const distance = Math.sqrt(x * x + y * y);
-        const ringWidth = targetRadius / this.options.rings;
+        // Pour le blason campagne, détecter par le type de tir, pas par la catégorie
+        const shootingType = window.scoredTrainingData?.shooting_type || '';
+        const isBlasonCampagne = shootingType === 'Campagne';
+        const numRings = isBlasonCampagne ? 6 : this.options.rings;
+        const ringWidth = targetRadius / numRings;
         
         // Calcul du score basé sur la distance
         let score = 0;
-        for (let i = this.options.rings - 1; i >= 0; i--) {
+        for (let i = numRings - 1; i >= 0; i--) {
             const ringOuterRadius = targetRadius - i * ringWidth;
             const ringInnerRadius = ringOuterRadius - ringWidth;
             
@@ -75,6 +79,22 @@ class SVGTarget {
      */
     getColorPalette() {
         const isTrispot = this.options.targetCategory.toLowerCase() === 'trispot';
+        // Pour le blason campagne, détecter par le type de tir, pas par la catégorie
+        const shootingType = window.scoredTrainingData?.shooting_type || '';
+        const isBlasonCampagne = shootingType === 'Campagne';
+        
+        if (isBlasonCampagne) {
+            // Palette spécifique au blason campagne : 6 zones
+            return [
+                '#212121', // Zone 1 (extérieur) - Noir
+                '#212121', // Zone 2 - Noir
+                '#212121', // Zone 3 - Noir
+                '#212121', // Zone 4 - Noir
+                '#FFD700', // Zone 5 - Jaune
+                '#FFD700'  // Zone 6 (centre) - Jaune
+            ];
+        }
+        
         const basePalette = [
             '#FFFFFF', '#FFFFFF', '#212121', '#212121', 
             '#1976D2', '#1976D2', '#D32F2F', '#D32F2F', 
@@ -111,26 +131,38 @@ class SVGTarget {
         const size = this.options.size;
         const centerX = size / 2;
         const centerY = size / 2;
-        const targetScale = this.options.rings / (this.options.rings + 1);
+        // Pour le blason campagne, détecter par le type de tir, pas par la catégorie
+        const shootingType = window.scoredTrainingData?.shooting_type || '';
+        const isBlasonCampagne = shootingType === 'Campagne';
+        const numRings = isBlasonCampagne ? 6 : this.options.rings;
+        const targetScale = numRings / (numRings + 1);
         const targetRadius = (size / 2) * targetScale;
-        const ringWidth = targetRadius / this.options.rings;
+        const ringWidth = targetRadius / numRings;
         
         const palette = this.getColorPalette();
         
         let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="target-svg">`;
         
         // Génération des anneaux
-        for (let i = 0; i < this.options.rings; i++) {
+        for (let i = 0; i < numRings; i++) {
             const radius = targetRadius - i * ringWidth;
             const color = palette[i];
+            
+            // Gestion des couleurs de trait pour le blason campagne
+            let strokeColor = 'black';
+            let strokeWidth = 1;
+            
+            if (isBlasonCampagne) {
+                strokeColor = (i === 5) ? 'black' : 'white'; // Ligne de la zone 6 (centre) = noire, autres = blanches
+            }
             
             svg += `<circle 
                 cx="${centerX}" 
                 cy="${centerY}" 
                 r="${radius}" 
                 fill="${color}" 
-                stroke="black" 
-                stroke-width="1"
+                stroke="${strokeColor}" 
+                stroke-width="${strokeWidth}"
             />`;
         }
         
@@ -155,7 +187,7 @@ class SVGTarget {
                     r="${radius}" 
                     fill="${fillColor}" 
                     stroke="${strokeColor}"
-                    stroke-width="1"
+                    stroke-width="0.5"
                     class="hit-point"
                     data-score="${hit.score}"
                     data-arrow="${hit.arrow_number || index + 1}"

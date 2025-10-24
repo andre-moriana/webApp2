@@ -10,27 +10,134 @@ let trainingId, arrowsPerEnd, currentEnds, totalEnds;
 
 // Fonction pour masquer les zones 1-5 en mode trispot
 function updateTargetVisualStyle(targetCategory) {
+    // Pour le tir campagne, NE RIEN FAIRE - le blason est fixe côté serveur
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    if (shootingType === 'Campagne') {
+        console.log('🚫 Tir campagne : updateTargetVisualStyle BLOQUÉ - aucun redessinage');
+        return; // NE RIEN FAIRE
+    }
+    
     const isTrispot = targetCategory.toLowerCase() === 'trispot';
     const targetSvg = document.getElementById('targetSvg');
     
     if (targetSvg) {
-        for (let i = 1; i <= 5; i++) {
-            const zone = targetSvg.querySelector(`.zone-${i}`);
-            if (zone) {
-                if (isTrispot) {
+        // Restaurer le SVG standard (10 zones)
+        generateStandardSVG(targetSvg);
+        
+        // Appliquer les modifications trispot si nécessaire
+        if (isTrispot) {
+            for (let i = 1; i <= 5; i++) {
+                const zone = targetSvg.querySelector(`.zone-${i}`);
+                if (zone) {
                     zone.setAttribute('fill', '#EEEEEE');
                     zone.setAttribute('stroke', 'none');
                     zone.setAttribute('stroke-width', '0');
-                } else {
-                    // Restaurer les couleurs normales
-                    const colors = ['white', 'white', 'black', 'black', 'blue'];
-                    zone.setAttribute('fill', colors[i-1]);
-                    zone.setAttribute('stroke', 'black');
-                    zone.setAttribute('stroke-width', '1');
                 }
             }
         }
     }
+}
+
+function generateBlasonCampagneSVG(svgElement) {
+    // Pour le tir campagne, NE RIEN FAIRE - le blason est fixe côté serveur
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    if (shootingType === 'Campagne') {
+        console.log('🚫 Tir campagne : generateBlasonCampagneSVG BLOQUÉ - aucun redessinage');
+        return; // NE RIEN FAIRE
+    }
+    
+    console.log('🔥 generateBlasonCampagneSVG appelé');
+    console.log('🔥 SVG avant vidage:', svgElement.innerHTML);
+    
+    // Vider complètement le SVG
+    svgElement.innerHTML = '';
+    console.log('🔥 SVG après vidage:', svgElement.innerHTML);
+    
+    // Générer les 6 zones du blason campagne
+    const centerX = 150;
+    const centerY = 150;
+    const numRings = 6;
+    const targetScale = numRings / (numRings + 1); // 6/7
+    const outerRadius = 150 * targetScale; // 128.571428...
+    const ringWidth = outerRadius / numRings; // 21.428571...
+    
+    console.log('🔥 Paramètres:', { centerX, centerY, numRings, outerRadius, ringWidth });
+    
+    // Palette blason campagne : zones 1-4 (noir), zones 5-6 (jaune)
+    const colors = ['#212121', '#212121', '#212121', '#212121', '#FFD700', '#FFD700'];
+    
+    for (let i = 0; i < numRings; i++) {
+        const radius = outerRadius - i * ringWidth;
+        const color = colors[i];
+        const strokeColor = 'white'; // Tous les traits sont blancs pour le blason campagne
+        const zoneNumber = numRings - i; // Zone 6 (centre) à zone 1 (extérieur)
+        
+        console.log(`🔥 Création zone ${zoneNumber}: radius=${radius}, color=${color}`);
+        
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', centerX);
+        circle.setAttribute('cy', centerY);
+        circle.setAttribute('r', radius);
+        circle.setAttribute('fill', color);
+        circle.setAttribute('stroke', strokeColor);
+        circle.setAttribute('stroke-width', '0.5');
+        circle.setAttribute('class', `zone-${zoneNumber}`);
+        
+        svgElement.appendChild(circle);
+    }
+    
+    // Ajouter le groupe pour les flèches
+    const arrowsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    arrowsGroup.setAttribute('id', 'arrowsGroup');
+    svgElement.appendChild(arrowsGroup);
+    
+    console.log('🔥 SVG final:', svgElement.innerHTML);
+    console.log('🔥 Nombre d\'éléments créés:', svgElement.children.length);
+}
+
+function generateStandardSVG(svgElement) {
+    // Pour le tir campagne, NE RIEN FAIRE - le blason est fixe côté serveur
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    if (shootingType === 'Campagne') {
+        console.log('🚫 Tir campagne : generateStandardSVG BLOQUÉ - aucun redessinage');
+        return; // NE RIEN FAIRE
+    }
+    
+    // Vider le SVG
+    svgElement.innerHTML = '';
+    
+    // Générer les 10 zones standard
+    const centerX = 150;
+    const centerY = 150;
+    const numRings = 10;
+    const targetScale = numRings / (numRings + 1); // 10/11
+    const outerRadius = 150 * targetScale; // 136.363636...
+    const ringWidth = outerRadius / numRings; // 13.6363636...
+    
+    // Palette standard
+    const colors = ['white', 'white', 'black', 'black', 'blue', 'blue', 'red', 'red', 'yellow', 'yellow'];
+    
+    for (let i = 0; i < numRings; i++) {
+        const radius = outerRadius - i * ringWidth;
+        const color = colors[i];
+        const zoneNumber = numRings - i; // Zone 10 (centre) à zone 1 (extérieur)
+        
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', centerX);
+        circle.setAttribute('cy', centerY);
+        circle.setAttribute('r', radius);
+        circle.setAttribute('fill', color);
+        circle.setAttribute('stroke', 'black');
+        circle.setAttribute('stroke-width', '1');
+        circle.setAttribute('class', `zone-${zoneNumber}`);
+        
+        svgElement.appendChild(circle);
+    }
+    
+    // Ajouter le groupe pour les flèches
+    const arrowsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    arrowsGroup.setAttribute('id', 'arrowsGroup');
+    svgElement.appendChild(arrowsGroup);
 }
 
 // Variables pour mémoriser les valeurs du formulaire
@@ -308,13 +415,33 @@ function addEnd() {
             targetCategorySelect.value = savedTargetCategory;
         }
         
+        // Positionnement automatique pour le tir campagne
+        if (targetCategorySelect && window.scoredTrainingData?.shooting_type === 'Campagne' && !savedTargetCategory) {
+            targetCategorySelect.value = 'blason_campagne';
+        }
+        
         // Ajouter l'événement de changement pour masquer les zones en mode trispot
         if (targetCategorySelect) {
             targetCategorySelect.addEventListener('change', function() {
+                const shootingType = window.scoredTrainingData?.shooting_type || '';
+                
+                // Pour le tir campagne, NE RIEN FAIRE (le blason est fixe côté serveur)
+                if (shootingType === 'Campagne') {
+                    console.log('🎯 Tir campagne : AUCUNE modification du blason, catégorie sélectionnée:', this.value);
+                    return; // NE RIEN FAIRE
+                }
+                
+                // Pour les autres types de tir, régénérer le blason
                 updateTargetVisualStyle(this.value);
             });
-            // Appliquer le style initial
-            updateTargetVisualStyle(targetCategorySelect.value);
+            
+            // NE PAS appliquer le style initial pour le tir campagne (le SVG est déjà généré côté serveur)
+            const shootingType = window.scoredTrainingData?.shooting_type || '';
+            if (shootingType !== 'Campagne') {
+                updateTargetVisualStyle(targetCategorySelect.value);
+            } else {
+                console.log('🎯 Tir campagne : SVG déjà généré côté serveur, pas de régénération JavaScript');
+            }
         }
         
         if (shootingPositionSelect && savedShootingPosition) {
@@ -1032,22 +1159,49 @@ function calculateScoreFromPosition(x, y) {
     const centerY = 150;
     const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
     
-    // Rayons des zones (en unités SVG) - EXACTES calculs de l'app mobile
-    // RINGS = 10, targetScale = 10/11, outerRadius = 150 * (10/11) = 136.363636...
-    // ringWidth = outerRadius / RINGS = 136.363636 / 10 = 13.6363636...
-    const zones = [
-        { radius: 13.636364, score: 10 },    // Zone 10 (centre jaune)
-        { radius: 27.272727, score: 9 },     // Zone 9 (jaune)
-        { radius: 40.909091, score: 8 },     // Zone 8 (rouge)
-        { radius: 54.545455, score: 7 },     // Zone 7 (rouge)
-        { radius: 68.181818, score: 6 },    // Zone 6 (bleu)
-        { radius: 81.818182, score: 5 },    // Zone 5 (bleu)
-        { radius: 95.454545, score: 4 },    // Zone 4 (noir)
-        { radius: 109.090909, score: 3 },   // Zone 3 (noir)
-        { radius: 122.727273, score: 2 },   // Zone 2 (blanc)
-        { radius: 136.363636, score: 1 },   // Zone 1 (blanc)
-        { radius: Infinity, score: 0 }      // Manqué
-    ];
+    // Déterminer le type de cible
+    const targetCategorySelect = document.querySelector('select[name="target_category"]');
+    const targetCategory = targetCategorySelect ? targetCategorySelect.value : 'blason_40';
+    
+    // Pour le blason campagne, détecter par le type de tir, pas par la catégorie
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    const isBlasonCampagne = shootingType === 'Campagne';
+    
+    let zones;
+    
+    if (isBlasonCampagne) {
+        // Zones pour le blason campagne : 6 zones
+        // RINGS = 6, targetScale = 6/7, outerRadius = 150 * (6/7) = 128.571428...
+        // ringWidth = outerRadius / RINGS = 128.571428 / 6 = 21.428571...
+        // Épaisseur du trait = 1px, diamètre du point d'impact = 4px (rayon = 2px)
+        
+        zones = [
+            { radius: 21.428571 , score: 6 },    // Zone 6 (centre jaune)
+            { radius: 42.857143 , score: 5 },    // Zone 5 (jaune)
+            { radius: 64.285714 , score: 4 },    // Zone 4 (noir)
+            { radius: 85.714286 , score: 3 },    // Zone 3 (noir)
+            { radius: 107.142857 , score: 2 },   // Zone 2 (noir)
+            { radius: 128.571428 , score: 1 },   // Zone 1 (noir) - plus grand rayon
+            { radius: Infinity, score: 0 }      // Manqué
+        ];
+    } else {
+        // Rayons des zones (en unités SVG) - EXACTES calculs de l'app mobile
+        // RINGS = 10, targetScale = 10/11, outerRadius = 150 * (10/11) = 136.363636...
+        // ringWidth = outerRadius / RINGS = 136.363636 / 10 = 13.6363636...
+        zones = [
+            { radius: 13.636364, score: 10 },    // Zone 10 (centre jaune)
+            { radius: 27.272727, score: 9 },     // Zone 9 (jaune)
+            { radius: 40.909091, score: 8 },     // Zone 8 (rouge)
+            { radius: 54.545455, score: 7 },     // Zone 7 (rouge)
+            { radius: 68.181818, score: 6 },    // Zone 6 (bleu)
+            { radius: 81.818182, score: 5 },    // Zone 5 (bleu)
+            { radius: 95.454545, score: 4 },    // Zone 4 (noir)
+            { radius: 109.090909, score: 3 },   // Zone 3 (noir)
+            { radius: 122.727273, score: 2 },   // Zone 2 (blanc)
+            { radius: 136.363636, score: 1 },   // Zone 1 (blanc)
+            { radius: Infinity, score: 0 }      // Manqué
+        ];
+    }
     
     // Logique avec épaisseur de trait : trouver la zone en tenant compte de l'épaisseur des traits
     // L'épaisseur des traits est de 0.6 selon la cible SVG
@@ -1074,8 +1228,7 @@ function calculateScoreFromPosition(x, y) {
     let finalScore = zones[zones.length - 1].score;
     
     // Règle spécifique TRISPOT: seules les zones 6 à 10 scorent, le reste est considéré comme manqué (0)
-    const targetCategorySelect = document.querySelector('select[name="target_category"]');
-    if (targetCategorySelect && targetCategorySelect.value.toLowerCase() === 'trispot') {
+    if (targetCategory.toLowerCase() === 'trispot') {
         if (finalScore < 6) {
             finalScore = 0;
         }
@@ -1680,8 +1833,46 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeTrainingData();
     createScoresChart();
     
-    // Masquer la cible interactive pour les types de tir 3D et Nature
+    // Déterminer le type de blason selon le type de tir
     const shootingType = window.scoredTrainingData?.shooting_type || '';
+    const targetCategorySelect = document.getElementById('targetCategorySelect');
+    
+    // Déterminer le type de cible selon le type de tir
+    let targetCategory = 'blason_80'; // Valeur par défaut
+    if (shootingType === 'Campagne') {
+        targetCategory = 'blason_campagne';
+    } else if (shootingType === 'Salle') {
+        targetCategory = 'trispot';
+    } else if (shootingType === 'TAE') {
+        targetCategory = 'blason_122';
+    }
+    
+    // Positionner le sélecteur
+    if (targetCategorySelect) {
+        targetCategorySelect.value = targetCategory;
+    }
+    
+    // NE PAS générer le blason au chargement - il est déjà généré côté serveur PHP
+    // Le JavaScript ne doit intervenir que quand l'utilisateur change le type de cible
+    
+    // Écouter les changements du type de cible
+    if (targetCategorySelect) {
+        targetCategorySelect.addEventListener('change', function() {
+            const selectedCategory = this.value;
+            const shootingType = window.scoredTrainingData?.shooting_type || '';
+            
+            // Pour le tir campagne, NE RIEN FAIRE (le blason est fixe côté serveur)
+            if (shootingType === 'Campagne') {
+                console.log('🎯 Tir campagne : AUCUNE modification du blason, catégorie sélectionnée:', selectedCategory);
+                return; // NE RIEN FAIRE
+            }
+            
+            // Pour les autres types de tir, régénérer le blason
+            updateTargetVisualStyle(selectedCategory);
+        });
+    }
+    
+    // Masquer la cible interactive pour les types de tir 3D et Nature
     if (shootingType === '3D' || shootingType === 'Nature') {
         // Masquer les options de mode de saisie pour ces types de tir
         const scoreModeContainer = document.querySelector('.score-mode-container');
@@ -1775,18 +1966,35 @@ function showEndTarget(endNumber) {
     // Créer la cible interactive avec le type de cible enregistré
     const targetContainer = document.getElementById('interactiveTarget');
     if (targetContainer) {
-        const svgTarget = createSVGTarget({
-            hits: endHits,
-            size: 300,
-            rings: 10,
-            targetCategory: endData.target_category || 'blason_40'
-        });
+        // Vider le conteneur
+        targetContainer.innerHTML = '';
         
-        targetContainer.innerHTML = svgTarget;
+        // Déterminer le type de cible selon le type de tir
+        const shootingType = window.scoredTrainingData?.shooting_type || '';
+        let targetCategory = 'blason_80'; // Valeur par défaut
+        
+        if (shootingType === 'Campagne') {
+            targetCategory = 'blason_campagne';
+        } else if (shootingType === 'Salle') {
+            targetCategory = 'trispot';
+        } else if (shootingType === 'TAE') {
+            targetCategory = 'blason_122';
+        }
+        
+        console.log('🎯 Modal - Type de tir:', shootingType);
+        console.log('🎯 Modal - Type de cible:', targetCategory);
+        
+        // Créer la cible SVG
+        const target = createSVGTarget('interactiveTarget', endHits, {
+            size: 300,
+            targetCategory: targetCategory
+        });
         
         // Afficher la modal
         const modal = new bootstrap.Modal(document.getElementById('targetModal'));
         modal.show();
+    } else {
+        console.error('Container interactiveTarget not found');
     }
 }
 

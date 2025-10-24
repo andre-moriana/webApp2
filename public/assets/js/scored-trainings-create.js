@@ -16,6 +16,7 @@ function updateShootingConfiguration() {
     const shootingType = document.getElementById('shooting_type').value;
     const totalEndsInput = document.getElementById('total_ends');
     const arrowsPerEndInput = document.getElementById('arrows_per_end');
+    const targetCategorySelect = document.getElementById('target_category');
     
     // Vérifier que les éléments existent
     if (!totalEndsInput || !arrowsPerEndInput) {
@@ -40,5 +41,10 @@ function updateShootingConfiguration() {
         // Déclencher l'événement input pour mettre à jour l'aperçu
         totalEndsInput.dispatchEvent(new Event('input', { bubbles: true }));
         arrowsPerEndInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    
+    // Définir automatiquement le type de cible pour le tir campagne
+    if (shootingType === 'Campagne' && targetCategorySelect) {
+        targetCategorySelect.value = 'blason_campagne';
     }
 }

@@ -115,7 +115,7 @@ function validateScores(scores, shootingType) {
         'Salle': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         '3D': [0, 5, 8, 10, 11], // Scores spécifiques 3D
         'Nature': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        'Campagne': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'Campagne': [0, 1, 2, 3, 4, 5, 6],
         'Libre': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     };
     

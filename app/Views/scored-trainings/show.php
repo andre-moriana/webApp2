@@ -110,6 +110,7 @@ $additionalJS = [
                                 </div>
                                 <div class="col-md-4">
                                     <div class="target-controls">
+                                        <?php if (($scoredTraining['shooting_type'] ?? '') !== 'Campagne'): ?>
                                         <div class="mb-3">
                                             <label for="targetCategorySelect" class="form-label">Type de cible</label>
                                             <select class="form-select" id="targetCategorySelect">
@@ -120,6 +121,7 @@ $additionalJS = [
                                                 <option value="trispot">Trispot</option>
                                             </select>
                                         </div>
+                                        <?php endif; ?>
                                         <div class="mb-3">
                                             <label for="targetSizeSelect" class="form-label">Taille d'affichage</label>
                                             <select class="form-select" id="targetSizeSelect">
@@ -391,7 +393,6 @@ $additionalJS = [
                                         <option value="montant">Montant</option>
                                         <option value="descendant">Descendant</option>
                                         <option value="droit">Droit</option>
-                                        <option value="pret_du_sol">Prêt du sol</option>
                                     <?php elseif ($scoredTraining['shooting_type'] === 'TAE'): ?>
                                         <option value="FITA">FITA</option>
                                         <option value="Federal">Fédéral</option>
@@ -441,22 +442,45 @@ $additionalJS = [
                             <div class="target-wrapper" id="targetWrapper">
                                 <div class="target-zoom-container" id="targetZoomContainer">
                                     <svg class="target-svg" id="targetSvg" viewBox="0 0 300 300">
-                                        <!-- Cible avec les EXACTES proportions de SimpleTarget.tsx -->
-                                        <!-- RINGS = 10, targetScale = 10/11, side = 300 -->
-                                        <!-- outerRadius = (side / 2) * targetScale = 150 * (10/11) = 136.363636... -->
-                                        <!-- ringWidth = outerRadius / RINGS = 136.363636 / 10 = 13.6363636... -->
-                                        <!-- Calculs précis pour chaque anneau (de l'extérieur vers l'intérieur) -->
-                                        <circle cx="150" cy="150" r="136.363636" fill="white" stroke="black" stroke-width="1" class="zone-1"/>
-                                        <circle cx="150" cy="150" r="122.727273" fill="white" stroke="black" stroke-width="1" class="zone-2"/>
-                                        <circle cx="150" cy="150" r="109.090909" fill="black" stroke="white" stroke-width="1" class="zone-3"/>
-                                        <circle cx="150" cy="150" r="95.454545" fill="black" stroke="white" stroke-width="1" class="zone-4"/>
-                                        <circle cx="150" cy="150" r="81.818182" fill="blue" stroke="black" stroke-width="1" class="zone-5"/>
-                                        <circle cx="150" cy="150" r="68.181818" fill="blue" stroke="black" stroke-width="1" class="zone-6"/>
-                                        <circle cx="150" cy="150" r="54.545455" fill="red" stroke="black" stroke-width="1" class="zone-7"/>
-                                        <circle cx="150" cy="150" r="40.909091" fill="red" stroke="black" stroke-width="1" class="zone-8"/>
-                                        <circle cx="150" cy="150" r="27.272727" fill="yellow" stroke="black" stroke-width="1" class="zone-9"/>
-                                        <circle cx="150" cy="150" r="13.636364" fill="yellow" stroke="black" stroke-width="1" class="zone-10"/>
-<!-- Flèches placées -->
+                                        <?php 
+                                        // Générer le blason selon le type de tir
+                                        $shootingType = $scoredTraining['shooting_type'] ?? '';
+                                        $centerX = 150;
+                                        $centerY = 150;
+                                        
+                                        if ($shootingType === 'Campagne') {
+                                            // Blason campagne : 6 zones (1-4 noir, 5-6 jaune)
+                                            $numRings = 6;
+                                            $targetScale = $numRings / ($numRings + 1); // 6/7
+                                            $outerRadius = 150 * $targetScale; // 128.571428...
+                                            $ringWidth = $outerRadius / $numRings; // 21.428571...
+                                            
+                                            $colors = ['#212121', '#212121', '#212121', '#212121', '#FFD700', '#FFD700'];
+                                            
+                                            for ($i = 0; $i < $numRings; $i++) {
+                                                $radius = $outerRadius - $i * $ringWidth;
+                                                $color = $colors[$i];
+                                                $zoneNumber = $numRings - $i; // Zone 6 (centre) à zone 1 (extérieur)
+                                                $stroke_color = ($i === 5) ? 'black' : 'white';
+                                                echo "<circle cx='$centerX' cy='$centerY' r='$radius' fill='$color' stroke='$stroke_color' stroke-width='1' class='zone-$zoneNumber'></circle>";
+                                            }
+                                        } else {
+                                            // Blason standard : 10 zones
+                                            $numRings = 10;
+                                            $targetScale = $numRings / ($numRings + 1); // 10/11
+                                            $outerRadius = 150 * $targetScale; // 136.363636...
+                                            $ringWidth = $outerRadius / $numRings; // 13.636363...
+                                            
+                                            $colors = ['#FFFFFF','#FFFFFF','#212121','#212121','#1976D2','#1976D2','#D32F2F','#D32F2F','#FFD700','#FFD700'];
+                                            
+                                            for ($i = 0; $i < $numRings; $i++) {
+                                                $radius = $outerRadius - $i * $ringWidth;
+                                                $color = $colors[$i];
+                                                $zoneNumber = $numRings - $i; // Zone 10 (centre) à zone 1 (extérieur)
+                                                echo "<circle cx='$centerX' cy='$centerY' r='$radius' fill='$color' stroke='black' stroke-width='1' class='zone-$zoneNumber'></circle>";
+                                            }
+                                        }
+                                        ?>
                                         <g id="arrowsGroup"></g>
                                     </svg>
                                 </div>
@@ -532,9 +556,30 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeSVGTarget() {
+    // Vérifier que le conteneur existe
+    const container = document.getElementById('svgTargetContainer');
+    if (!container) {
+        console.error('Container svgTargetContainer not found');
+        return;
+    }
+    
     // Collecter tous les impacts de toutes les volées
     const allHits = [];
-    let detectedTargetCategory = 'blason_40'; // Valeur par défaut
+    
+    // Déterminer le type de cible selon le type de tir
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    let detectedTargetCategory = 'blason_80'; // Valeur par défaut
+    
+    if (shootingType === 'Campagne') {
+        detectedTargetCategory = 'blason_campagne';
+    } else if (shootingType === 'Salle') {
+        detectedTargetCategory = 'trispot';
+    } else if (shootingType === 'TAE') {
+        detectedTargetCategory = 'blason_122';
+    }
+    
+    console.log('🎯 Type de tir détecté:', shootingType);
+    console.log('🎯 Type de cible déterminé:', detectedTargetCategory);
     
     window.endsData.forEach(end => {
         if (end.shots && end.shots.length > 0) {
@@ -550,15 +595,11 @@ function initializeSVGTarget() {
                 }
             });
         }
-    // Détecter le type de cible à partir des données de la première volée qui a un target_category
-    if (end.target_category && detectedTargetCategory === 'blason_40') {
-        detectedTargetCategory = end.target_category;
-    }
     });
     
+    console.log('🎯 Nombre d\'impacts collectés:', allHits.length);
     
     // Créer la cible SVG avec le type détecté
-    
     const target = createSVGTarget('svgTargetContainer', allHits, {
         size: 300,
         targetCategory: detectedTargetCategory
