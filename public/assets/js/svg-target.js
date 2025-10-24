@@ -94,6 +94,21 @@ class SVGTarget {
      */
     generateTargetSVG() {
         const size = this.options.size;
+        const isTrispot = this.options.targetCategory.toLowerCase() === 'trispot';
+        
+        
+        if (isTrispot) {
+            return this.generateTrispotSVG();
+        } else {
+            return this.generateSingleTargetSVG();
+        }
+    }
+
+    /**
+     * Génère un SVG avec un seul blason
+     */
+    generateSingleTargetSVG() {
+        const size = this.options.size;
         const centerX = size / 2;
         const centerY = size / 2;
         const targetScale = this.options.rings / (this.options.rings + 1);
@@ -101,7 +116,6 @@ class SVGTarget {
         const ringWidth = targetRadius / this.options.rings;
         
         const palette = this.getColorPalette();
-        const isTrispot = this.options.targetCategory.toLowerCase() === 'trispot';
         
         let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="target-svg">`;
         
@@ -109,26 +123,27 @@ class SVGTarget {
         for (let i = 0; i < this.options.rings; i++) {
             const radius = targetRadius - i * ringWidth;
             const color = palette[i];
-            const strokeWidth = (isTrispot && i < 5) ? 0 : 1;
-            const strokeColor = (isTrispot && i < 5) ? 'none' : 'black';
             
             svg += `<circle 
                 cx="${centerX}" 
                 cy="${centerY}" 
                 r="${radius}" 
                 fill="${color}" 
-                stroke="${strokeColor}" 
-                stroke-width="${strokeWidth}"
+                stroke="black" 
+                stroke-width="1"
             />`;
         }
         
         // Ajout des impacts de flèches
         this.hits.forEach((hit, index) => {
             if (hit.hit_x !== null && hit.hit_y !== null) {
-                const hitX = centerX + (hit.hit_x * targetRadius / 100); // Conversion des coordonnées relatives
-                const hitY = centerY + (hit.hit_y * targetRadius / 100);
+                // Les coordonnées hit.hit_x et hit.hit_y sont relatives à une cible de référence (300px)
+                // Il faut les ajuster proportionnellement à la taille d'affichage actuelle
+                const referenceSize = 300; // Taille de référence de l'app mobile
+                const scaleFactor = size / referenceSize; // Facteur d'échelle
+                const hitX = centerX + (hit.hit_x * scaleFactor);
+                const hitY = centerY + (hit.hit_y * scaleFactor);
                 
-                // Différencier les impacts des volées précédentes
                 const isPreviousEnd = hit.endNumber !== undefined;
                 const fillColor = isPreviousEnd ? "rgba(0, 0, 255, 0.6)" : "rgba(255, 0, 0, 0.8)";
                 const strokeColor = "white";
@@ -145,18 +160,105 @@ class SVGTarget {
                     data-score="${hit.score}"
                     data-arrow="${hit.arrow_number || index + 1}"
                 />`;
-                
-                // Ajout du numéro de flèche
-                svg += `<text 
-                    x="${hitX}" 
-                    y="${hitY + 1}" 
-                    text-anchor="middle" 
-                    font-size="8" 
-                    fill="white" 
-                    font-weight="bold"
-                    class="arrow-number"
-                >${hit.arrow_number || index + 1}</text>`;
             }
+        });
+        
+        svg += '</svg>';
+        return svg;
+    }
+
+    /**
+     * Génère un SVG avec 3 blasons empilés pour le trispot
+     * Basé exactement sur TargetAnalysis.tsx de l'app mobile
+     */
+    generateTrispotSVG() {
+        const size = this.options.size;
+        
+        // Calculs de référence de l'app mobile (SimpleTarget.tsx)
+        const referenceSide = 300; // Taille de référence de l'app mobile
+        const targetScale = this.options.rings / (this.options.rings + 1); // 10/11
+        const referenceOuterRadius = (referenceSide / 2) * targetScale; // 150 * (10/11) = 136.363636...
+        const referenceRingWidth = referenceOuterRadius / this.options.rings; // 136.363636 / 10 = 13.6363636...
+        
+        // Adapter à la taille réelle du conteneur trispot
+        const blasonSize = size; // Taille de chaque blason dans le trispot
+        const scaleFactor = blasonSize / referenceSide; // Facteur d'échelle pour adapter à la taille réelle
+        const outerRadius = referenceOuterRadius * scaleFactor;
+        const ringWidth = referenceRingWidth * scaleFactor;
+        
+        // Palette exacte de TargetAnalysis.tsx
+        const isTrispot = true; // On est en mode trispot
+        const basePalette = ['#FFFFFF','#FFFFFF','#212121','#212121','#1976D2','#1976D2','#D32F2F','#D32F2F','#FFD700','#FFD700'];
+        const palette = basePalette.map((color, i) => (isTrispot && i < 5 ? '#EEEEEE' : color));
+        
+        // Hauteur pour 3 blasons empilés sans chevauchement
+        const svgHeight = size * 3; // Tripler la hauteur pour avoir assez d'espace
+        
+        let svg = `<svg width="${size}" height="${svgHeight}" viewBox="0 0 ${size} ${svgHeight}" class="target-svg trispot-svg">`;
+        
+        // Générer 3 blasons empilés
+        for (let targetIndex = 0; targetIndex < 3; targetIndex++) {
+            const centerY = (svgHeight / 3) * (targetIndex + 0.5);
+            const centerX = size / 2;
+            
+            // Génération des anneaux EXACTEMENT comme TargetAnalysis.tsx ligne 162
+            for (let i = 0; i < this.options.rings; i++) {
+                const radius = outerRadius - i * ringWidth; // Même calcul que TargetAnalysis.tsx ligne 162
+                const color = palette[i];
+                const strokeWidth = (isTrispot && i < 5) ? 0 : 1; // Même logique ligne 165
+                const strokeColor = (isTrispot && i < 5) ? 'none' : 'black'; // Même logique ligne 164
+                
+                svg += `<circle 
+                    cx="${centerX}" 
+                    cy="${centerY}" 
+                    r="${radius}" 
+                    fill="${color}" 
+                    stroke="${strokeColor}" 
+                    stroke-width="${strokeWidth}"
+                />`;
+            }
+        }
+        
+        // Filtrer les flèches valides
+        const validHits = this.hits.filter(hit => 
+            hit.hit_x !== null && 
+            hit.hit_y !== null && 
+            hit.arrow_number !== null && 
+            hit.arrow_number !== undefined
+        );
+        
+        // Ajouter les flèches EXACTEMENT comme TargetAnalysis.tsx ligne 170-180
+        validHits.forEach(hit => {
+            const targetIndex = hit.arrow_number - 1; // 0, 1, ou 2
+            const centerY = (svgHeight / 3) * (targetIndex + 0.5);
+            const centerX = size / 2;
+            
+            // Positionnement avec ajustement proportionnel à la taille d'affichage
+            // Les coordonnées hit.hit_x et hit.hit_y sont relatives à une cible de référence (300px)
+            // Il faut les ajuster proportionnellement à la taille d'affichage actuelle
+            const referenceSize = 300; // Taille de référence de l'app mobile
+            const scaleFactor = size / referenceSize; // Facteur d'échelle
+            const hitX = centerX + (hit.hit_x * scaleFactor);
+            const hitY = centerY + (hit.hit_y * scaleFactor);
+            
+            
+            const isPreviousEnd = hit.endNumber !== undefined;
+            const fillColor = isPreviousEnd ? "rgba(0, 0, 255, 0.6)" : "rgba(255, 0, 0, 1)"; // Même couleur ligne 176
+            const strokeColor = "white"; // Même couleur ligne 177
+            const radius = 2; // Même rayon ligne 175
+            
+            svg += `<circle 
+                cx="${hitX}" 
+                cy="${hitY}" 
+                r="${radius}" 
+                fill="${fillColor}" 
+                stroke="${strokeColor}"
+                stroke-width="1"
+                class="hit-point"
+                data-score="${hit.score}"
+                data-arrow="${hit.arrow_number}"
+                data-target="${targetIndex + 1}"
+            />`;
         });
         
         svg += '</svg>';

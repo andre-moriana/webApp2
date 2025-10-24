@@ -143,12 +143,6 @@ class ScoredTrainingController {
         // Extraire les données du tir compté
         $scoredTraining = $apiResponse['data'];
         
-        // Log de débogage pour l'image
-        error_log('ScoredTrainingController->show - Données du tir: ' . json_encode([
-            'id' => $scoredTraining['id'] ?? 'non défini',
-            'target_image_present' => isset($scoredTraining['target_image']),
-            'target_image_length' => isset($scoredTraining['target_image']) ? strlen($scoredTraining['target_image']) : 0
-        ]));
         
         // Les données de l'API externe sont maintenant correctes
         
@@ -288,14 +282,11 @@ class ScoredTrainingController {
         
         $trainingId = $data['training_id'] ?? '';
         $notes = $data['notes'] ?? '';
-        $targetImage = $data['target_image'] ?? '';
         
         // Log de débogage
         error_log('endTraining - Données reçues: ' . json_encode([
             'training_id' => $trainingId,
-            'notes_length' => strlen($notes),
-            'target_image_length' => strlen($targetImage),
-            'target_image_present' => !empty($targetImage)
+            'notes_length' => strlen($notes)
         ]));
         
         if (empty($trainingId)) {
@@ -347,16 +338,11 @@ class ScoredTrainingController {
                 'Content-Type: application/json'
             ]);
             $postData = [
-                'notes' => $notes,
-                'target_image' => $targetImage
+                'notes' => $notes
             ];
             
             // Log de débogage
-            error_log('endTraining - Données envoyées à l\'API: ' . json_encode([
-                'notes_length' => strlen($notes),
-                'target_image_length' => strlen($targetImage),
-                'target_image_present' => !empty($targetImage)
-            ]));
+            error_log('endTraining - Données envoyées à l\'API: ' . json_encode($postData));
             
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
             

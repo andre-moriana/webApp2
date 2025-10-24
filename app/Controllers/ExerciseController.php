@@ -117,18 +117,35 @@ class ExerciseController {
         $error = null;
 
         try {
+            // Debug: Afficher toutes les données reçues
+            error_log("DEBUG CREATE: POST data: " . json_encode($_POST));
+            error_log("DEBUG CREATE: FILES data: " . json_encode($_FILES));
+            
             // Préparer les données pour l'API backend
             $postData = [
                 'title' => $_POST['title'] ?? '',
                 'description' => $_POST['description'] ?? '',
                 'category' => $this->getCategoryNameById($_POST['category'] ?? '')
             ];
+            
+            error_log("DEBUG CREATE: Données préparées: " . json_encode($postData));
+            
+            if (isset($_FILES['attachment'])) {
+                error_log("DEBUG CREATE: Détails du fichier - Nom: " . ($_FILES['attachment']['name'] ?? 'N/A') . 
+                         ", Taille: " . ($_FILES['attachment']['size'] ?? 'N/A') . 
+                         ", Erreur: " . ($_FILES['attachment']['error'] ?? 'N/A'));
+            }
+            
             // Test si la méthode existe
             if (method_exists($this->apiService, 'createExerciseWithFile')) {
+                error_log("DEBUG CREATE: Appel createExerciseWithFile");
                 $response = $this->apiService->createExerciseWithFile($postData, $_FILES['attachment'] ?? null);
             } else {
+                error_log("DEBUG CREATE: Méthode createExerciseWithFile non trouvée");
                 $response = ['success' => false, 'message' => 'Méthode non trouvée'];
             }
+            
+            error_log("DEBUG CREATE: Réponse API: " . json_encode($response));
             
             if (isset($response["success"]) && $response["success"]) {
                 header("Location: /exercises?created=1");
@@ -282,6 +299,10 @@ class ExerciseController {
         try {
             error_log("DEBUG UPDATE: Début du try, préparation des données");
             
+            // Debug: Afficher toutes les données reçues
+            error_log("DEBUG UPDATE: POST data: " . json_encode($_POST));
+            error_log("DEBUG UPDATE: FILES data: " . json_encode($_FILES));
+            
             // Préparer les données pour l'API backend
             $postData = [
                 'title' => $_POST['title'] ?? '',
@@ -294,6 +315,12 @@ class ExerciseController {
             // Vérifier s'il y a un fichier à uploader
             $hasFile = isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK;
             error_log("DEBUG UPDATE: Fichier à uploader: " . ($hasFile ? 'OUI' : 'NON'));
+            
+            if (isset($_FILES['attachment'])) {
+                error_log("DEBUG UPDATE: Détails du fichier - Nom: " . ($_FILES['attachment']['name'] ?? 'N/A') . 
+                         ", Taille: " . ($_FILES['attachment']['size'] ?? 'N/A') . 
+                         ", Erreur: " . ($_FILES['attachment']['error'] ?? 'N/A'));
+            }
             
             if ($hasFile) {
                 error_log("DEBUG UPDATE: Appel API avec fichier");
@@ -380,21 +407,30 @@ class ExerciseController {
         // Configuration de base
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        curl_setopt($ch, CURLOPT_POST, true); // Utiliser POST au lieu de PUT
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        
+        // Headers - ne pas définir Content-Type pour multipart/form-data
+        $headers = [
+            'Accept: */*',
             'Authorization: Bearer ' . $token
-        ]);
+        ];
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         
         // Préparer les données POST
         $postFields = $data;
         
         // Ajouter le fichier seulement s'il existe et est valide
-        if ($fileData && isset($fileData['tmp_name']) && isset($fileData['type']) && isset($fileData['name']) && !empty($fileData['tmp_name'])) {
+        if ($fileData && isset($fileData['tmp_name']) && isset($fileData['type']) && isset($fileData['name']) && !empty($fileData['tmp_name']) && $fileData['error'] === UPLOAD_ERR_OK) {
             $postFields['attachment'] = new CURLFile(
                 $fileData['tmp_name'],
                 $fileData['type'],
                 $fileData['name']
             );
+            error_log("DEBUG makePutRequestWithFiles: Fichier ajouté - " . $fileData['name']);
+        } else {
+            error_log("DEBUG makePutRequestWithFiles: Aucun fichier valide fourni");
         }
         
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
@@ -403,6 +439,9 @@ class ExerciseController {
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
         curl_close($ch);
+        
+        error_log("DEBUG makePutRequestWithFiles: HTTP Code: " . $httpCode);
+        error_log("DEBUG makePutRequestWithFiles: Response: " . $response);
         
         if ($response === false) {
             throw new Exception("Erreur cURL: " . $curlError);

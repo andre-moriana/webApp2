@@ -107,10 +107,17 @@
                                             $backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
                                             $fileUrl = $backendUrl . '/uploads/exercise_sheets/' . $exercise['attachment_filename'];
                                             ?>
-                                            <a href="<?php echo htmlspecialchars($fileUrl); ?>" 
-                                               target="_blank" class="btn btn-primary btn-sm">
-                                                <i class="fas fa-download"></i> Télécharger
-                                            </a>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-info btn-sm" 
+                                                        onclick="showPdfPreview('<?php echo htmlspecialchars($fileUrl); ?>', '<?php echo htmlspecialchars($exercise['attachment_original_name'] ?? $exercise['attachment_filename']); ?>')"
+                                                        title="Aperçu du PDF">
+                                                    <i class="fas fa-eye"></i> Aperçu
+                                                </button>
+                                                <a href="<?php echo htmlspecialchars($fileUrl); ?>" 
+                                                   target="_blank" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-download"></i> Télécharger
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 <?php endif; ?>
@@ -175,4 +182,7 @@ function deleteExercise(id) {
         form.submit();
     }
 }
-</script> 
+</script>
+
+<!-- Inclure la modale d'aperçu PDF -->
+<?php include 'app/Views/components/pdf-preview-modal.php'; ?> 

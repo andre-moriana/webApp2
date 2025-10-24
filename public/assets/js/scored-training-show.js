@@ -8,6 +8,31 @@
 // Variables globales
 let trainingId, arrowsPerEnd, currentEnds, totalEnds;
 
+// Fonction pour masquer les zones 1-5 en mode trispot
+function updateTargetVisualStyle(targetCategory) {
+    const isTrispot = targetCategory.toLowerCase() === 'trispot';
+    const targetSvg = document.getElementById('targetSvg');
+    
+    if (targetSvg) {
+        for (let i = 1; i <= 5; i++) {
+            const zone = targetSvg.querySelector(`.zone-${i}`);
+            if (zone) {
+                if (isTrispot) {
+                    zone.setAttribute('fill', '#EEEEEE');
+                    zone.setAttribute('stroke', 'none');
+                    zone.setAttribute('stroke-width', '0');
+                } else {
+                    // Restaurer les couleurs normales
+                    const colors = ['white', 'white', 'black', 'black', 'blue'];
+                    zone.setAttribute('fill', colors[i-1]);
+                    zone.setAttribute('stroke', 'black');
+                    zone.setAttribute('stroke-width', '1');
+                }
+            }
+        }
+    }
+}
+
 // Variables pour mémoriser les valeurs du formulaire
 let savedTargetCategory = '';
 let savedShootingPosition = '';
@@ -15,6 +40,7 @@ let savedScoreMode = 'table'; // Mémoriser le mode de saisie sélectionné
 
 // Variables pour la cible interactive
 let targetScores = [];
+let targetCoordinates = []; // Stocker les coordonnées x,y des flèches
 let isZoomed = false;
 let currentArrowIndex = 0;
 let isDragging = false;
@@ -120,7 +146,6 @@ function initializeScoreFields() {
     const container = document.getElementById('scoresContainer');
     
     if (!container) {
-        console.error('Container scoresContainer non trouvé');
         return;
     }
     
@@ -263,12 +288,10 @@ function addEnd() {
     const containerElement = document.getElementById('scoresContainer');
     
     if (!modalElement) {
-        console.error('Modal addEndModal non trouvée');
         return;
     }
     
     if (!containerElement) {
-        console.error('Container scoresContainer non trouvé');
         return;
     }
     
@@ -284,6 +307,16 @@ function addEnd() {
         if (targetCategorySelect && savedTargetCategory) {
             targetCategorySelect.value = savedTargetCategory;
         }
+        
+        // Ajouter l'événement de changement pour masquer les zones en mode trispot
+        if (targetCategorySelect) {
+            targetCategorySelect.addEventListener('change', function() {
+                updateTargetVisualStyle(this.value);
+            });
+            // Appliquer le style initial
+            updateTargetVisualStyle(targetCategorySelect.value);
+        }
+        
         if (shootingPositionSelect && savedShootingPosition) {
             shootingPositionSelect.value = savedShootingPosition;
         }
@@ -302,20 +335,76 @@ function addEnd() {
         }
     }
     
-    // Initialiser les champs selon le mode sélectionné
-    if (savedScoreMode === 'table') {
+    // Déterminer le mode de saisie selon le type de tir
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    const shouldUseTableMode = shootingType === '3D' || shootingType === 'Nature';
+    
+    // Initialiser les champs selon le mode déterminé
+    if (shouldUseTableMode) {
+        // Forcer le mode tableau pour 3D et Nature (pas de cible interactive)
+        const tableMode = document.getElementById('tableMode');
+        const targetMode = document.getElementById('targetMode');
+        
+        if (targetMode && tableMode) {
+            tableMode.checked = true;
+            targetMode.checked = false;
+            toggleScoreMode();
+        }
+        
+        // Initialiser les champs de score en mode tableau
         initializeScoreFields();
     } else {
-        // Initialiser la cible interactive
-        targetScores = new Array(arrowsPerEnd).fill(null);
-        updateScoresDisplay();
+        // Mode selon la préférence utilisateur pour les autres types de tir
+        if (savedScoreMode === 'table') {
+            initializeScoreFields();
+        } else {
+            // Initialiser la cible interactive
+            targetScores = new Array(arrowsPerEnd).fill(null);
+            targetCoordinates = new Array(arrowsPerEnd).fill(null);
+            updateScoresDisplay();
+        }
     }
     
-    // Initialiser le numéro de volée si ce n'est pas déjà fait
-    if (endNumberInput && !endNumberInput.value) {
+    // Initialiser le numéro de volée - toujours mettre à jour
+    if (endNumberInput) {
         // Utiliser le nombre de lignes dans le tableau + 1
         const existingRows = document.querySelectorAll('.table-ends tbody tr').length;
         endNumberInput.value = existingRows + 1;
+        
+        // Déclencher la réévaluation du blocage après la mise à jour automatique
+        setTimeout(() => {
+            const targetCategorySelect = form.querySelector('select[name="target_category"]');
+            if (targetCategorySelect) {
+                const shootingType = window.scoredTrainingData?.shooting_type || '';
+                const endNumber = parseInt(endNumberInput.value) || 1;
+                const canModifyTarget = !(shootingType === 'Salle' || shootingType === 'TAE' || shootingType === 'Libre') || endNumber <= 1;
+                
+                if (!canModifyTarget) {
+                    targetCategorySelect.disabled = true;
+                    targetCategorySelect.title = 'Le type de blason ne peut pas être modifié après la première volée pour ce type de tir';
+                } else {
+                    targetCategorySelect.disabled = false;
+                    targetCategorySelect.title = '';
+                }
+            }
+        }, 100);
+    }
+    
+    // Bloquer le type de blason APRÈS la mise à jour du numéro de volée
+    const targetCategorySelect = form.querySelector('select[name="target_category"]');
+    if (targetCategorySelect) {
+        const shootingType = window.scoredTrainingData?.shooting_type || '';
+        const endNumber = parseInt(endNumberInput?.value || '1');
+        const canModifyTarget = !(shootingType === 'Salle' || shootingType === 'TAE' || shootingType === 'Libre') || endNumber <= 1;
+        
+        
+        if (!canModifyTarget) {
+            targetCategorySelect.disabled = true;
+            targetCategorySelect.title = 'Le type de blason ne peut pas être modifié après la première volée pour ce type de tir';
+        } else {
+            targetCategorySelect.disabled = false;
+            targetCategorySelect.title = '';
+        }
     }
     
     // Mettre à jour la visibilité des boutons selon le numéro de volée
@@ -326,10 +415,35 @@ function addEnd() {
     
     // Ajouter un événement pour écouter les changements du numéro de volée
     if (endNumberInput) {
-        endNumberInput.addEventListener('input', function() {
-            const endNumber = parseInt(this.value) || 1;
+        
+        const updateTargetCategory = function() {
+            const endNumber = parseInt(endNumberInput.value) || 1;
             updateButtonVisibility(endNumber);
-        });
+            
+            // Bloquer/débloquer la catégorie de cible selon le numéro de volée
+            const targetCategorySelect = form.querySelector('select[name="target_category"]');
+            
+            if (targetCategorySelect) {
+                const shootingType = window.scoredTrainingData?.shooting_type || '';
+                const canModifyTarget = !(shootingType === 'Salle' || shootingType === 'TAE' || shootingType === 'Libre') || endNumber <= 1;
+                
+                if (!canModifyTarget) {
+                    targetCategorySelect.disabled = true;
+                    targetCategorySelect.title = 'Le type de blason ne peut pas être modifié après la première volée pour ce type de tir';
+                } else {
+                    targetCategorySelect.disabled = false;
+                    targetCategorySelect.title = '';
+                }
+            }
+        };
+        
+        endNumberInput.addEventListener('input', updateTargetCategory);
+        endNumberInput.addEventListener('change', updateTargetCategory);
+        endNumberInput.addEventListener('keyup', updateTargetCategory);
+        endNumberInput.addEventListener('paste', updateTargetCategory);
+        
+        // Appeler la fonction au chargement initial
+        updateTargetCategory();
     }
     
     // Ajouter des événements pour mémoriser le mode de saisie en temps réel
@@ -352,12 +466,10 @@ function addEnd() {
     
     // Vérifier si Bootstrap est disponible
     if (typeof bootstrap === 'undefined') {
-        console.error('Bootstrap n\'est pas disponible');
         // Essayer avec jQuery si disponible
         if (typeof $ !== 'undefined') {
             $(modalElement).modal('show');
         } else {
-            console.error('Ni Bootstrap ni jQuery ne sont disponibles');
             return;
         }
     } else {
@@ -372,7 +484,16 @@ function saveEnd() {
         return;
     }
     
+    // Récupérer les données AVANT de bloquer le select
     const formData = new FormData(form);
+    
+    // BLOQUER LE SELECT À L'APPUI DU BOUTON ENREGISTRER
+    const targetCategorySelect = form.querySelector('select[name="target_category"]');
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    
+    if (targetCategorySelect && (shootingType === 'Salle' || shootingType === 'TAE' || shootingType === 'Libre')) {
+        targetCategorySelect.disabled = true;
+    }
     
     let scores = [];
     
@@ -388,13 +509,21 @@ function saveEnd() {
             scores.push(value);
         });
     } else if (targetMode && targetMode.checked) {
-        // Mode cible interactive
-        scores = getTargetScores();
+        // Mode cible interactive - utiliser les données complètes avec coordonnées
+        const targetData = getTargetData();
         
-        // Compléter avec des 0 si nécessaire
-        while (scores.length < arrowsPerEnd) {
-            scores.push(0);
+        // Compléter avec des flèches manquées si nécessaire
+        while (targetData.length < arrowsPerEnd) {
+            targetData.push({
+                arrow_number: targetData.length + 1,
+                score: 0,
+                hit_x: null,
+                hit_y: null
+            });
         }
+        
+        // Extraire les scores pour le calcul du total
+        scores = targetData.map(shot => shot.score);
     } else {
         alert('Veuillez sélectionner un mode de saisie');
         return;
@@ -403,17 +532,25 @@ function saveEnd() {
     // Calculer le total des scores
     const totalScore = scores.reduce((sum, score) => sum + score, 0);
     
-    // Vérifier si des scores valides ont été saisis
-    if (totalScore === 0) {
-        alert('Veuillez saisir au moins un score avant d\'enregistrer');
+    // Vérifier si le type de blason est sélectionné (obligatoire)
+    if (targetCategorySelect && !targetCategorySelect.value) {
+        alert('Veuillez sélectionner un type de blason');
+        targetCategorySelect.focus();
         return;
     }
     
     // Transformer les scores en structure attendue par l'API
-    const shots = scores.map((score, index) => ({
-        arrow_number: index + 1,
-        score: score
-    }));
+    let shots;
+    if (targetMode && targetMode.checked) {
+        // Utiliser les données complètes avec coordonnées
+        shots = getTargetData();
+    } else {
+        // Mode tableau - structure simple
+        shots = scores.map((score, index) => ({
+            arrow_number: index + 1,
+            score: score
+        }));
+    }
     
     const endData = {
         end_number: parseInt(formData.get('end_number')),
@@ -423,6 +560,7 @@ function saveEnd() {
         shots: shots,  // Structure correcte avec arrow_number et score
         total_score: totalScore  // Ajouter le total calculé
     };
+    
     // Afficher un indicateur de chargement
     const submitBtn = form.querySelector('button[onclick="saveEnd()"]');
     let originalText = '';
@@ -517,6 +655,7 @@ function saveEnd() {
             } else {
                 // Réinitialiser la cible interactive
                 targetScores = new Array(arrowsPerEnd).fill(null);
+                targetCoordinates = new Array(arrowsPerEnd).fill(null);
                 updateScoresDisplay();
             }
             
@@ -539,7 +678,6 @@ function saveEnd() {
             }
             
         } else {
-            console.error('❌ Erreur lors de la sauvegarde:', result);
             alert('Erreur: ' + (result.message || 'Erreur inconnue'));
             
             // Réactiver le bouton en cas d'erreur
@@ -550,7 +688,6 @@ function saveEnd() {
         }
     })
     .catch(error => {
-        console.error('❌ Erreur lors de la requête:', error);
         alert('Erreur lors de l\'ajout de la volée');
         
         // Réactiver le bouton en cas d'erreur
@@ -564,10 +701,19 @@ function saveEnd() {
 function saveEndAndClose() {
     const form = document.getElementById('addEndForm');
     if (!form) {
-        console.error('❌ Formulaire addEndForm non trouvé');
         return;
     }
+    
+    // Récupérer les données AVANT de bloquer le select
     const formData = new FormData(form);
+    
+    // BLOQUER LE SELECT À L'APPUI DU BOUTON ENREGISTRER
+    const targetCategorySelect = form.querySelector('select[name="target_category"]');
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    
+    if (targetCategorySelect && (shootingType === 'Salle' || shootingType === 'TAE' || shootingType === 'Libre')) {
+        targetCategorySelect.disabled = true;
+    }
     
     let scores = [];
     let hasValidScores = false;
@@ -587,13 +733,21 @@ function saveEndAndClose() {
             }
         });
     } else if (targetMode && targetMode.checked) {
-        // Mode cible interactive
-        scores = getTargetScores();
+        // Mode cible interactive - utiliser les données complètes avec coordonnées
+        const targetData = getTargetData();
         
-        // Compléter avec des 0 si nécessaire
-        while (scores.length < arrowsPerEnd) {
-            scores.push(0);
+        // Compléter avec des flèches manquées si nécessaire
+        while (targetData.length < arrowsPerEnd) {
+            targetData.push({
+                arrow_number: targetData.length + 1,
+                score: 0,
+                hit_x: null,
+                hit_y: null
+            });
         }
+        
+        // Extraire les scores pour le calcul du total
+        scores = targetData.map(shot => shot.score);
         
         // Vérifier s'il y a des scores valides
         hasValidScores = scores.some(score => score > 0);
@@ -620,10 +774,17 @@ function saveEndAndClose() {
     }
     
     // Transformer les scores en structure attendue par l'API
-    const shots = scores.map((score, index) => ({
-        arrow_number: index + 1,
-        score: score
-    }));
+    let shots;
+    if (targetMode && targetMode.checked) {
+        // Utiliser les données complètes avec coordonnées
+        shots = getTargetData();
+    } else {
+        // Mode tableau - structure simple
+        shots = scores.map((score, index) => ({
+            arrow_number: index + 1,
+            score: score
+        }));
+    }
     
     const endData = {
         end_number: parseInt(formData.get('end_number')),
@@ -633,6 +794,7 @@ function saveEndAndClose() {
         shots: shots,  // Structure correcte avec arrow_number et score
         total_score: totalScore  // Ajouter le total calculé
     };
+    
     
     // Utiliser l'API locale qui fait le pont vers l'API externe
     fetch(`/scored-trainings/${trainingId}/ends`, {
@@ -665,13 +827,9 @@ function saveEndAndClose() {
             setTimeout(() => {
                 endTraining();
             }, 500);
-        } else {
-            console.error('❌ Erreur lors de la sauvegarde:', result);
-            alert('Erreur: ' + (result.message || 'Erreur inconnue'));
         }
     })
     .catch(error => {
-        console.error('❌ Erreur lors de la requête:', error);
         alert('Erreur lors de l\'ajout de la volée');
     });
 }
@@ -683,8 +841,6 @@ function endTraining() {
         initializeTrainingData();
     }
     
-    // Ajouter la fonctionnalité de capture de cible à la modal
-    addTargetCaptureToFinalModal();
     
     const modal = new bootstrap.Modal(document.getElementById('endTrainingModal'));
     modal.show();
@@ -693,34 +849,21 @@ function endTraining() {
 function confirmEndTraining() {
     const form = document.getElementById('endTrainingForm');
     if (!form) {
-        console.error('❌ Formulaire de finalisation non trouvé');
         return;
     }
     
     // Vérifier que trainingId est défini
     if (!trainingId || trainingId === 0) {
-        console.error('❌ trainingId non défini:', trainingId);
         alert('Erreur: ID du tir compté non trouvé');
         return;
     }
     
     const formData = new FormData(form);
     
-    // Récupérer les données de l'image
-    const targetImageData = formData.get('target_image') || '';
-    console.log('Données de l\'image récupérées:', targetImageData ? 'Présentes (' + targetImageData.length + ' caractères)' : 'Absentes');
-    
     const data = {
         training_id: trainingId,
-        notes: formData.get('final_notes') || '',
-        target_image: targetImageData
+        notes: formData.get('final_notes') || ''
     };
-    
-    console.log('Données à envoyer:', {
-        training_id: data.training_id,
-        notes: data.notes,
-        target_image: data.target_image ? 'Présente' : 'Absente'
-    });
     
     // Récupérer le user_id depuis l'URL si présent
     const urlParams = new URLSearchParams(window.location.search);
@@ -742,18 +885,15 @@ function confirmEndTraining() {
     })
     .then(result => {
         if (result.success) {
-            alert('Tir compté finalisé avec succès ! La page va se recharger.');
+//            alert('Tir compté finalisé avec succès ! La page va se recharger.');
             setTimeout(() => {
                 location.reload();
-            }, 3000);
+            }, 1000);
         } else {
-            console.error('❌ Erreur lors de la finalisation:', result);
-            console.error('❌ Message d\'erreur:', result.message);
             alert('Erreur: ' + (result.message || 'Erreur inconnue'));
         }
     })
     .catch(error => {
-        console.error('❌ Erreur lors de la requête:', error);
         alert('Erreur lors de la finalisation');
     });
 }
@@ -777,114 +917,9 @@ function deleteTraining() {
             }
         })
         .catch(error => {
-            console.error('Erreur:', error);
             alert('Erreur lors de la suppression');
         });
     }
-}
-
-// Fonction pour afficher la cible enregistrée
-function displayTargetImage() {
-    console.log('displayTargetImage() appelée');
-    console.log('window.scoredTrainingData:', window.scoredTrainingData);
-    
-    // Vérifier si une image de cible est disponible dans les données
-    const targetImageData = window.scoredTrainingData?.target_image;
-    console.log('targetImageData:', targetImageData);
-    console.log('Type de targetImageData:', typeof targetImageData);
-    console.log('Longueur de targetImageData:', targetImageData ? targetImageData.length : 'undefined');
-    
-    // Pour le test, on va afficher un placeholder même sans image
-    const hasImage = targetImageData && targetImageData.length > 0;
-    console.log('hasImage:', hasImage);
-    
-    if (!hasImage) {
-        console.log('Aucune image de cible enregistrée - affichage d\'un placeholder');
-        // On va quand même afficher un conteneur pour tester la mise en page
-    }
-    
-    // Chercher le conteneur du graphique
-    const chartElement = document.getElementById('scoresChart');
-    console.log('chartElement:', chartElement);
-    
-    if (!chartElement) {
-        console.log('Élément du graphique non trouvé');
-        return;
-    }
-    
-    // Trouver le conteneur des détails des volées
-    const detailsContainer = document.querySelector('.detail-card');
-    if (!detailsContainer) {
-        console.log('Conteneur des détails non trouvé');
-        return;
-    }
-    
-    console.log('Conteneur des détails trouvé:', detailsContainer);
-    
-    // Créer le conteneur pour l'image de cible
-    const targetContainer = document.createElement('div');
-    targetContainer.className = 'card mb-3';
-    targetContainer.style.cssText = `
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-bottom: 1rem !important;
-        box-sizing: border-box;
-    `;
-    
-    if (hasImage) {
-        targetContainer.innerHTML = `
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-bullseye"></i> Cliché de la cible
-                    </h5>
-                </div>
-                <div class="card-body text-center d-flex flex-column justify-content-center">
-                    <div class="mb-3 position-relative">
-                        <img src="${targetImageData}" 
-                             class="img-fluid rounded shadow-sm target-image-preview" 
-                             style="max-width: 100%; height: auto; max-height: 300px; cursor: pointer;"
-                             alt="Cliché de la cible"
-                             onclick="openTargetModal('${targetImageData}')">
-                        <div class="position-absolute top-0 end-0 m-2">
-                            <button class="btn btn-sm btn-outline-primary" 
-                                    onclick="openTargetModal('${targetImageData}')"
-                                    title="Voir en plein écran">
-                                <i class="fas fa-expand"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <p class="text-muted small mb-0">
-                        <i class="fas fa-info-circle"></i> 
-                        Image capturée lors de la finalisation du tir
-                    </p>
-                </div>
-            </div>
-        `;
-    } else {
-        targetContainer.innerHTML = `
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-bullseye"></i> Cliché de la cible
-                    </h5>
-                </div>
-                <div class="card-body text-center d-flex flex-column justify-content-center">
-                    <div class="mb-3">
-                        <i class="fas fa-camera fa-3x text-muted"></i>
-                    </div>
-                    <p class="text-muted small mb-0">
-                        <i class="fas fa-info-circle"></i> 
-                        Aucun cliché de cible enregistré
-                    </p>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Insérer l'image de cible avant le conteneur des détails
-    detailsContainer.parentNode.insertBefore(targetContainer, detailsContainer);
-    console.log('Image de cible insérée avant les détails des volées');
 }
 
 // Créer le graphique des scores par volée
@@ -993,27 +1028,25 @@ function createScoresChart() {
 
 // Fonction pour calculer le score basé sur la position du clic
 function calculateScoreFromPosition(x, y) {
-    const centerX = 60; // Centre du viewBox 120x120
-    const centerY = 60;
+    const centerX = 150; // Centre du viewBox 300x300 (même que l'app mobile)
+    const centerY = 150;
     const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
     
-    console.log('Score calculation - Position:', x, y, 'Distance:', distance);
-    
-    // Rayons des zones (en unités SVG) - Blason FITA standard (viewBox 120x120)
-    // Correspondance exacte avec les rayons de la cible SVG
-    // Les zones sont triées du plus petit au plus grand rayon
+    // Rayons des zones (en unités SVG) - EXACTES calculs de l'app mobile
+    // RINGS = 10, targetScale = 10/11, outerRadius = 150 * (10/11) = 136.363636...
+    // ringWidth = outerRadius / RINGS = 136.363636 / 10 = 13.6363636...
     const zones = [
-        { radius: 3, score: 10 },    // Zone 10 (centre jaune) - r="3"
-        { radius: 9, score: 9 },     // Zone 9 (jaune) - r="9"
-        { radius: 15, score: 8 },    // Zone 8 (rouge) - r="15"
-        { radius: 21, score: 7 },    // Zone 7 (rouge) - r="21"
-        { radius: 27, score: 6 },    // Zone 6 (bleu) - r="27"
-        { radius: 33, score: 5 },    // Zone 5 (bleu) - r="33"
-        { radius: 39, score: 4 },    // Zone 4 (noir) - r="39"
-        { radius: 45, score: 3 },    // Zone 3 (noir) - r="45"
-        { radius: 51, score: 2 },    // Zone 2 (blanc) - r="51"
-        { radius: 57, score: 1 },    // Zone 1 (blanc) - r="57"
-        { radius: Infinity, score: 0 } // Manqué
+        { radius: 13.636364, score: 10 },    // Zone 10 (centre jaune)
+        { radius: 27.272727, score: 9 },     // Zone 9 (jaune)
+        { radius: 40.909091, score: 8 },     // Zone 8 (rouge)
+        { radius: 54.545455, score: 7 },     // Zone 7 (rouge)
+        { radius: 68.181818, score: 6 },    // Zone 6 (bleu)
+        { radius: 81.818182, score: 5 },    // Zone 5 (bleu)
+        { radius: 95.454545, score: 4 },    // Zone 4 (noir)
+        { radius: 109.090909, score: 3 },   // Zone 3 (noir)
+        { radius: 122.727273, score: 2 },   // Zone 2 (blanc)
+        { radius: 136.363636, score: 1 },   // Zone 1 (blanc)
+        { radius: Infinity, score: 0 }      // Manqué
     ];
     
     // Logique avec épaisseur de trait : trouver la zone en tenant compte de l'épaisseur des traits
@@ -1024,33 +1057,31 @@ function calculateScoreFromPosition(x, y) {
         const currentZone = zones[i];
         const nextZone = zones[i + 1];
         
-        console.log('Checking between zones:', currentZone.radius, 'and', nextZone.radius);
-        console.log('Distance:', distance, 'Current radius:', currentZone.radius, 'Next radius:', nextZone.radius);
-        
         // Si la distance est dans la zone actuelle (en tenant compte de l'épaisseur complète du trait)
         if (distance <= (currentZone.radius + strokeWidth)) {
             // Vérifier si on est sur le trait de séparation
             if (distance >= (currentZone.radius - strokeWidth)) {
                 // On est sur le trait, prendre la zone extérieure (actuelle)
-                console.log('On stroke, taking outer zone:', currentZone.score);
                 return currentZone.score;
             } else {
                 // On est dans la zone, prendre la zone actuelle
-                console.log('In zone:', currentZone.score);
                 return currentZone.score;
             }
         }
     }
     
     // Si on arrive ici, on est dans la zone la plus extérieure
-    console.log('Outer zone:', zones[zones.length - 1].score);
-    return zones[zones.length - 1].score;
+    let finalScore = zones[zones.length - 1].score;
     
-    console.log('Score: 0 (missed)');
-    return 0; // Manqué
+    // Règle spécifique TRISPOT: seules les zones 6 à 10 scorent, le reste est considéré comme manqué (0)
+    const targetCategorySelect = document.querySelector('select[name="target_category"]');
+    if (targetCategorySelect && targetCategorySelect.value.toLowerCase() === 'trispot') {
+        if (finalScore < 6) {
+            finalScore = 0;
+        }
+    }
     
-    console.log('Score: 0 (missed)');
-    return 0; // Manqué
+    return finalScore;
 }
 
 // Fonction pour ajouter une flèche sur la cible
@@ -1089,8 +1120,15 @@ function addArrowToTarget(x, y, score, arrowIndex) {
     
     arrowsGroup.appendChild(circle);
     
-    // Ajouter le score à la liste
+    // Convertir les coordonnées absolues en coordonnées relatives au centre
+    const centerX = 150; // Centre de la cible SVG
+    const centerY = 150;
+    const relativeX = x - centerX;
+    const relativeY = y - centerY;
+    
+    // Ajouter le score et les coordonnées relatives à la liste
     targetScores[arrowIndex] = score;
+    targetCoordinates[arrowIndex] = { x: relativeX, y: relativeY };
     updateScoresDisplay();
 }
 
@@ -1103,8 +1141,9 @@ function removeArrowFromTarget(arrowIndex) {
         arrowElement.remove();
     }
     
-    // Supprimer le score de la liste
+    // Supprimer le score et les coordonnées de la liste
     targetScores[arrowIndex] = null;
+    targetCoordinates[arrowIndex] = null;
     updateScoresDisplay();
 }
 
@@ -1146,7 +1185,6 @@ function handleTargetClick(event) {
     
     // Ignorer les clics après un drag
     if (justFinishedDragging) {
-        console.log('Click ignored - just finished dragging');
         justFinishedDragging = false;
         return;
     }
@@ -1154,25 +1192,22 @@ function handleTargetClick(event) {
     // Protection contre les doubles clics avec debounce
     const currentTime = Date.now();
     if (currentTime - lastClickTime < clickDebounceDelay) {
-        console.log('Click ignored - too soon after last click');
         return;
     }
     lastClickTime = currentTime;
     
     // Protection contre les doubles clics
     if (event.detail > 1) {
-        console.log('Click ignored - multiple clicks detected');
         return;
     }
-    
-    console.log('Processing click at:', event.clientX, event.clientY);
     
     const svg = document.getElementById('targetSvg');
     if (!svg) return;
     
     const rect = svg.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 120;
-    const y = ((event.clientY - rect.top) / rect.height) * 120;
+    // Convertir les coordonnées en coordonnées SVG (0-300)
+    const x = ((event.clientX - rect.left) / rect.width) * 300;
+    const y = ((event.clientY - rect.top) / rect.height) * 300;
     
     const score = calculateScoreFromPosition(x, y);
     
@@ -1191,7 +1226,6 @@ function handleTargetClick(event) {
         removeArrowFromTarget(0);
     }
     
-    console.log('Adding arrow at index:', arrowIndex, 'with score:', score);
     addArrowToTarget(x, y, score, arrowIndex);
 }
 
@@ -1204,8 +1238,8 @@ function handleTargetMouseDown(event) {
     
     isDragging = true;
     const rect = svg.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 120;
-    const y = ((event.clientY - rect.top) / rect.height) * 120;
+    const x = ((event.clientX - rect.left) / rect.width) * 300;
+    const y = ((event.clientY - rect.top) / rect.height) * 300;
     
     // Activer l'overlay de zoom
     const overlay = document.getElementById('zoomDragOverlay');
@@ -1237,8 +1271,8 @@ function handleTargetMouseMove(event) {
     if (!svg) return;
     
     const rect = svg.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 120;
-    const y = ((event.clientY - rect.top) / rect.height) * 120;
+    const x = ((event.clientX - rect.left) / rect.width) * 300;
+    const y = ((event.clientY - rect.top) / rect.height) * 300;
     
     // Mettre à jour l'indicateur de score
     updateScoreIndicator(x, y);
@@ -1255,8 +1289,8 @@ function handleTargetMouseUp(event) {
     if (!svg) return;
     
     const rect = svg.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 120;
-    const y = ((event.clientY - rect.top) / rect.height) * 120;
+    const x = ((event.clientX - rect.left) / rect.width) * 300;
+    const y = ((event.clientY - rect.top) / rect.height) * 300;
     
     const score = calculateScoreFromPosition(x, y);
     
@@ -1368,17 +1402,12 @@ function createMagnifyingGlass(mouseX, mouseY) {
     
     // Vérifier si le curseur est dans les limites de la cible
     if (mouseX < rect.left || mouseX > rect.right || mouseY < rect.top || mouseY > rect.bottom) {
-        console.log('Curseur en dehors de la cible');
         return; // Ne pas afficher la loupe si le curseur est en dehors
     }
     
     // Calculer la position relative dans le SVG (0-120)
-    const x = ((mouseX - rect.left) / rect.width) * 120;
-    const y = ((mouseY - rect.top) / rect.height) * 120;
-    
-    console.log('Position pointée:', x, y);
-    console.log('Rect SVG:', rect);
-    console.log('Mouse position:', mouseX, mouseY);
+    const x = ((mouseX - rect.left) / rect.width) * 300;
+    const y = ((mouseY - rect.top) / rect.height) * 300;
     
     // Créer un SVG cloné pour la loupe
     const clonedSvg = svg.cloneNode(true);
@@ -1388,8 +1417,6 @@ function createMagnifyingGlass(mouseX, mouseY) {
     // Le point (x,y) doit être au centre de la loupe, donc on déplace l'image
     const offsetX = 75 - x; // Déplacement pour centrer le point (x,y) au centre (75,75)
     const offsetY = 75 - y; // Déplacement pour centrer le point (x,y) au centre (75,75)
-    
-    console.log('Offset calculé:', offsetX, offsetY);
     
     // Créer un viewBox qui centre sur le point pointé avec zoom important
     const viewBoxX = x - 5; // Centre moins la moitié de la zone visible (10/2)
@@ -1467,11 +1494,8 @@ function updateMagnifyingGlass(mouseX, mouseY) {
     // Mettre à jour le contenu de la loupe pour suivre le curseur
     const svg = document.getElementById('targetSvg');
     const rect = svg.getBoundingClientRect();
-    const x = ((mouseX - rect.left) / rect.width) * 120;
-    const y = ((mouseY - rect.top) / rect.height) * 120;
-    
-    console.log('Update - Position pointée:', x, y);
-    console.log('Update - Offset calculé:', 75 - x, 75 - y);
+    const x = ((mouseX - rect.left) / rect.width) * 300;
+    const y = ((mouseY - rect.top) / rect.height) * 300;
     
     // Mettre à jour le SVG cloné avec la nouvelle position
     const clonedSvg = window.currentMagnifyingGlass.querySelector('svg');
@@ -1537,8 +1561,8 @@ function updateScoreIndicator(x, y) {
     if (indicator) {
         const svg = document.getElementById('targetSvg');
         const rect = svg.getBoundingClientRect();
-        const svgX = ((x / 120) * rect.width) + rect.left;
-        const svgY = ((y / 120) * rect.height) + rect.top;
+        const svgX = ((x / 300) * rect.width) + rect.left;
+        const svgY = ((y / 300) * rect.height) + rect.top;
         
         indicator.style.left = (svgX + 15) + 'px';
         indicator.style.top = (svgY - 10) + 'px';
@@ -1581,6 +1605,7 @@ function resetTarget() {
     }
     
     targetScores = new Array(arrowsPerEnd).fill(null);
+    targetCoordinates = new Array(arrowsPerEnd).fill(null);
     updateScoresDisplay();
 }
 
@@ -1592,6 +1617,18 @@ function toggleScoreMode() {
     const targetContainer = document.getElementById('targetModeContainer');
     
     if (!tableMode || !targetMode || !tableContainer || !targetContainer) return;
+    
+    // Vérifier le type de tir pour empêcher l'utilisation de la cible interactive
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    if (shootingType === '3D' || shootingType === 'Nature') {
+        // Forcer le mode tableau pour 3D et Nature
+        tableMode.checked = true;
+        targetMode.checked = false;
+        tableContainer.style.display = 'block';
+        targetContainer.style.display = 'none';
+        initializeScoreFields();
+        return;
+    }
     
     if (tableMode.checked) {
         tableContainer.style.display = 'block';
@@ -1606,169 +1643,62 @@ function toggleScoreMode() {
         // Initialiser la cible si ce n'est pas déjà fait
         if (targetScores.length === 0) {
             targetScores = new Array(arrowsPerEnd).fill(null);
+            targetCoordinates = new Array(arrowsPerEnd).fill(null);
         }
         updateScoresDisplay();
     }
 }
 
-// Fonction pour obtenir les scores depuis la cible
+// Fonction pour obtenir les scores et coordonnées depuis la cible
 function getTargetScores() {
     return targetScores.filter(score => score !== null && score !== undefined);
 }
 
-// Fonction pour capturer la cible et la convertir en image
-function captureTarget() {
-    console.log('captureTarget() appelée');
-    
-    const svg = document.getElementById('targetSvg');
-    console.log('SVG trouvé:', svg);
-    
-    if (!svg) {
-        console.error('Cible SVG non trouvée');
-        return null;
-    }
-    
-    // Cloner le SVG pour éviter de modifier l'original
-    const clonedSvg = svg.cloneNode(true);
-    console.log('SVG cloné');
-    
-    // Définir la taille de l'image de sortie
-    const width = 400;
-    const height = 400;
-    
-    // Créer un canvas pour la conversion
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    
-    // Créer un fond blanc
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, width, height);
-    
-    // Convertir le SVG en image
-    const svgData = new XMLSerializer().serializeToString(clonedSvg);
-    console.log('SVG sérialisé, taille:', svgData.length);
-    
-    const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
-    const svgUrl = URL.createObjectURL(svgBlob);
-    console.log('URL SVG créée:', svgUrl);
-    
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = function() {
-            console.log('Image SVG chargée');
-            // Dessiner l'image sur le canvas
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            // Convertir en base64
-            const dataURL = canvas.toDataURL('image/png');
-            console.log('Image convertie en base64, taille:', dataURL.length);
-            
-            // Nettoyer l'URL
-            URL.revokeObjectURL(svgUrl);
-            
-            resolve(dataURL);
-        };
-        img.onerror = function(error) {
-            console.error('Erreur lors du chargement de l\'image SVG:', error);
-            URL.revokeObjectURL(svgUrl);
-            reject(error);
-        };
-        img.src = svgUrl;
-    });
-}
-
-// Fonction pour ajouter la capture de cible à la modal de finalisation
-function addTargetCaptureToFinalModal() {
-    const finalNotesTextarea = document.getElementById('final_notes');
-    if (!finalNotesTextarea) return;
-    
-    // Créer un conteneur pour la capture de cible
-    const captureContainer = document.createElement('div');
-    captureContainer.className = 'mb-3';
-    captureContainer.innerHTML = `
-        <label class="form-label">Cliché de la cible</label>
-        <div class="d-flex gap-2 mb-2">
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="captureTargetImage()">
-                <i class="fas fa-camera"></i> Capturer la cible
-            </button>
-            <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearTargetImage()" id="clearTargetBtn" style="display: none;">
-                <i class="fas fa-trash"></i> Supprimer
-            </button>
-        </div>
-        <div id="targetImagePreview" class="text-center" style="display: none;">
-            <img id="targetImage" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
-        </div>
-        <input type="hidden" id="targetImageData" name="target_image">
-    `;
-    
-    // Insérer avant le textarea des notes
-    finalNotesTextarea.parentNode.insertBefore(captureContainer, finalNotesTextarea);
-}
-
-// Fonction pour capturer et afficher l'image de la cible
-async function captureTargetImage() {
-    console.log('captureTargetImage() appelée');
-    
-    try {
-        const captureBtn = document.querySelector('button[onclick="captureTargetImage()"]');
-        const originalText = captureBtn.innerHTML;
-        captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Capture...';
-        captureBtn.disabled = true;
-        
-        console.log('Début de la capture...');
-        const imageData = await captureTarget();
-        console.log('Image capturée, taille:', imageData ? imageData.length : 'null');
-        
-        if (imageData) {
-            // Afficher l'aperçu
-            const preview = document.getElementById('targetImagePreview');
-            const img = document.getElementById('targetImage');
-            const hiddenInput = document.getElementById('targetImageData');
-            const clearBtn = document.getElementById('clearTargetBtn');
-            
-            console.log('Éléments trouvés:', { preview, img, hiddenInput, clearBtn });
-            
-            img.src = imageData;
-            hiddenInput.value = imageData;
-            preview.style.display = 'block';
-            clearBtn.style.display = 'inline-block';
-            
-            console.log('Cible capturée avec succès, données stockées dans:', hiddenInput.name);
-        } else {
-            console.error('Aucune donnée d\'image retournée');
-            alert('Erreur: Aucune image n\'a pu être capturée');
+// Fonction pour obtenir les données complètes des flèches (scores + coordonnées)
+function getTargetData() {
+    const data = [];
+    for (let i = 0; i < targetScores.length; i++) {
+        if (targetScores[i] !== null && targetScores[i] !== undefined) {
+            // Les coordonnées sont déjà relatives au centre
+            data.push({
+                arrow_number: i + 1,
+                score: targetScores[i],
+                hit_x: targetCoordinates[i] ? targetCoordinates[i].x : null,
+                hit_y: targetCoordinates[i] ? targetCoordinates[i].y : null
+            });
         }
-        
-        captureBtn.innerHTML = originalText;
-        captureBtn.disabled = false;
-    } catch (error) {
-        console.error('Erreur lors de la capture:', error);
-        alert('Erreur lors de la capture de la cible: ' + error.message);
-        
-        const captureBtn = document.querySelector('button[onclick="captureTargetImage()"]');
-        captureBtn.innerHTML = '<i class="fas fa-camera"></i> Capturer la cible';
-        captureBtn.disabled = false;
     }
+    return data;
 }
 
-// Fonction pour supprimer l'image de la cible
-function clearTargetImage() {
-    const preview = document.getElementById('targetImagePreview');
-    const hiddenInput = document.getElementById('targetImageData');
-    const clearBtn = document.getElementById('clearTargetBtn');
-    
-    preview.style.display = 'none';
-    hiddenInput.value = '';
-    clearBtn.style.display = 'none';
-}
+
+
+
 
 // Initialiser l'application quand la page est chargée
 document.addEventListener('DOMContentLoaded', function() {
     initializeTrainingData();
     createScoresChart();
-    displayTargetImage();
+    
+    // Masquer la cible interactive pour les types de tir 3D et Nature
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    if (shootingType === '3D' || shootingType === 'Nature') {
+        // Masquer les options de mode de saisie pour ces types de tir
+        const scoreModeContainer = document.querySelector('.score-mode-container');
+        if (scoreModeContainer) {
+            scoreModeContainer.style.display = 'none';
+        }
+        
+        // Forcer le mode tableau pour ces types de tir
+        const targetMode = document.getElementById('targetMode');
+        const tableMode = document.getElementById('tableMode');
+        
+        if (targetMode && tableMode) {
+            tableMode.checked = true;
+            targetMode.checked = false;
+            toggleScoreMode();
+        }
+    }
     
     // Vérifier si on doit ouvrir automatiquement la modale d'ajout de volée
     const urlParams = new URLSearchParams(window.location.search);
@@ -1822,16 +1752,43 @@ window.deleteTraining = deleteTraining;
 window.toggleScoreMode = toggleScoreMode;
 window.resetTarget = resetTarget;
 window.removeArrowFromTarget = removeArrowFromTarget;
+window.showEndTarget = showEndTarget;
 
-// Fonctions pour la capture de cible
-window.captureTargetImage = captureTargetImage;
-window.clearTargetImage = clearTargetImage;
 
-// Fonction de test pour forcer l'affichage de la cible
-window.testTargetDisplay = function() {
-    console.log('Test de l\'affichage de la cible');
-    displayTargetImage();
-};
+// Fonction pour afficher la cible d'une volée spécifique
+function showEndTarget(endNumber) {
+    // Trouver les données de la volée
+    const endData = window.endsData.find(end => end.end_number === endNumber);
+    if (!endData) {
+        alert('Données de la volée non trouvées');
+        return;
+    }
+    
+    // Créer les hits pour l'affichage
+    const endHits = endData.shots.map(shot => ({
+        hit_x: shot.hit_x,
+        hit_y: shot.hit_y,
+        score: shot.score,
+        arrow_number: shot.arrow_number
+    }));
+    
+    // Créer la cible interactive avec le type de cible enregistré
+    const targetContainer = document.getElementById('interactiveTarget');
+    if (targetContainer) {
+        const svgTarget = createSVGTarget({
+            hits: endHits,
+            size: 300,
+            rings: 10,
+            targetCategory: endData.target_category || 'blason_40'
+        });
+        
+        targetContainer.innerHTML = svgTarget;
+        
+        // Afficher la modal
+        const modal = new bootstrap.Modal(document.getElementById('targetModal'));
+        modal.show();
+    }
+}
 
 // Fonction pour ouvrir la modal de visualisation de la cible en plein écran
 function openTargetModal(imageData) {

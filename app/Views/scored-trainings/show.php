@@ -24,7 +24,6 @@ $additionalJS = [
         arrows_per_end: <?= $scoredTraining['arrows_per_end'] ?>,
         total_arrows: <?= $scoredTraining['total_arrows'] ?>,
         status: '<?= addslashes($scoredTraining['status']) ?>',
-        target_image: <?= isset($scoredTraining['target_image']) && !empty($scoredTraining['target_image']) ? json_encode($scoredTraining['target_image']) : 'null' ?>
     };
     // Données des volées pour le graphique
     window.endsData = <?= json_encode($scoredTraining['ends'] ?? []) ?>;
@@ -94,7 +93,7 @@ $additionalJS = [
                 </div>
             </div>
             <!-- Cible SVG interactive -->
-            <?php if (!empty($scoredTraining['ends'])): ?>
+            <?php if (!empty($scoredTraining['ends']) && $scoredTraining['shooting_type'] !== '3D' && $scoredTraining['shooting_type'] !== 'Nature'): ?>
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card detail-card">
@@ -333,7 +332,7 @@ $additionalJS = [
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="target_category" class="form-label">Catégorie de cible</label>
-                                <select class="form-select" id="target_category" name="target_category">
+                                <select class="form-select" id="target_category" name="target_category" required>
                                     <option value="">Sélectionner</option>
                                     <?php if ($scoredTraining['shooting_type'] === 'TAE'): ?>
                                         <option value="blason_80">Blason 80cm</option>
@@ -408,7 +407,8 @@ $additionalJS = [
                             </div>
                         </div>
                     </div>
-                    <div class="mb-3">
+                    <?php if ($scoredTraining['shooting_type'] !== '3D' && $scoredTraining['shooting_type'] !== 'Nature'): ?>
+                    <div class="mb-3 score-mode-container">
                         <label class="form-label">Mode de saisie des scores</label>
                         <div class="btn-group w-100" role="group" aria-label="Mode de saisie">
                             <input type="radio" class="btn-check" name="scoreMode" id="tableMode" value="table" checked>
@@ -422,6 +422,11 @@ $additionalJS = [
                             </label>
                         </div>
                     </div>
+                    <?php else: ?>
+                    <!-- Mode de saisie masqué pour 3D et Nature - seul le mode tableau est disponible -->
+                    <input type="radio" class="btn-check" name="scoreMode" id="tableMode" value="table" checked style="display: none;">
+                    <input type="radio" class="btn-check" name="scoreMode" id="targetMode" value="target" style="display: none;">
+                    <?php endif; ?>
 <!-- Mode tableau -->
                     <div class="mb-3" id="tableModeContainer">
                         <label class="form-label">Scores des flèches</label>
@@ -435,29 +440,22 @@ $additionalJS = [
                         <div class="target-interactive-container">
                             <div class="target-wrapper" id="targetWrapper">
                                 <div class="target-zoom-container" id="targetZoomContainer">
-                                    <svg class="target-svg" id="targetSvg" viewBox="0 0 120 120">
-                                        <!-- Cercle extérieur (zone 1 - blanc) -->
-                                        <circle cx="60" cy="60" r="57" fill="white" stroke="black" stroke-width="1.2"/>
-                                        <!-- Zone 2 (blanc) -->
-                                        <circle cx="60" cy="60" r="51" fill="white" stroke="black" stroke-width="0.6"/>
-                                        <!-- Zone 3 (noir) - anneau de 45 à 39 -->
-                                        <circle cx="60" cy="60" r="45" fill="black" stroke="white" stroke-width="0.6"/>
-                                        <circle cx="60" cy="60" r="39" fill="white" stroke="none"/>
-                                        <!-- Zone 4 (noir) - anneau de 39 à 33 -->
-                                        <circle cx="60" cy="60" r="39" fill="black" stroke="white" stroke-width="0.6"/>
-                                        <circle cx="60" cy="60" r="33" fill="white" stroke="none"/>
-                                        <!-- Zone 5 (bleu) -->
-                                        <circle cx="60" cy="60" r="33" fill="blue" stroke="black" stroke-width="0.6"/>
-                                        <!-- Zone 6 (bleu) -->
-                                        <circle cx="60" cy="60" r="27" fill="blue" stroke="black" stroke-width="0.6"/>
-                                        <!-- Zone 7 (rouge) -->
-                                        <circle cx="60" cy="60" r="21" fill="red" stroke="black" stroke-width="0.6"/>
-                                        <!-- Zone 8 (rouge) -->
-                                        <circle cx="60" cy="60" r="15" fill="red" stroke="black" stroke-width="0.6"/>
-                                        <!-- Zone 9 (jaune) -->
-                                        <circle cx="60" cy="60" r="9" fill="yellow" stroke="black" stroke-width="0.6"/>
-                                        <!-- Zone 10 (jaune - centre) -->
-                                        <circle cx="60" cy="60" r="3" fill="yellow" stroke="black" stroke-width="0.6"/>
+                                    <svg class="target-svg" id="targetSvg" viewBox="0 0 300 300">
+                                        <!-- Cible avec les EXACTES proportions de SimpleTarget.tsx -->
+                                        <!-- RINGS = 10, targetScale = 10/11, side = 300 -->
+                                        <!-- outerRadius = (side / 2) * targetScale = 150 * (10/11) = 136.363636... -->
+                                        <!-- ringWidth = outerRadius / RINGS = 136.363636 / 10 = 13.6363636... -->
+                                        <!-- Calculs précis pour chaque anneau (de l'extérieur vers l'intérieur) -->
+                                        <circle cx="150" cy="150" r="136.363636" fill="white" stroke="black" stroke-width="1" class="zone-1"/>
+                                        <circle cx="150" cy="150" r="122.727273" fill="white" stroke="black" stroke-width="1" class="zone-2"/>
+                                        <circle cx="150" cy="150" r="109.090909" fill="black" stroke="white" stroke-width="1" class="zone-3"/>
+                                        <circle cx="150" cy="150" r="95.454545" fill="black" stroke="white" stroke-width="1" class="zone-4"/>
+                                        <circle cx="150" cy="150" r="81.818182" fill="blue" stroke="black" stroke-width="1" class="zone-5"/>
+                                        <circle cx="150" cy="150" r="68.181818" fill="blue" stroke="black" stroke-width="1" class="zone-6"/>
+                                        <circle cx="150" cy="150" r="54.545455" fill="red" stroke="black" stroke-width="1" class="zone-7"/>
+                                        <circle cx="150" cy="150" r="40.909091" fill="red" stroke="black" stroke-width="1" class="zone-8"/>
+                                        <circle cx="150" cy="150" r="27.272727" fill="yellow" stroke="black" stroke-width="1" class="zone-9"/>
+                                        <circle cx="150" cy="150" r="13.636364" fill="yellow" stroke="black" stroke-width="1" class="zone-10"/>
 <!-- Flèches placées -->
                                         <g id="arrowsGroup"></g>
                                     </svg>
@@ -526,8 +524,9 @@ $additionalJS = [
 <!-- Script pour l'initialisation de la cible SVG -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialiser la cible SVG si des volées existent
-    if (window.endsData && window.endsData.length > 0) {
+    // Initialiser la cible SVG si des volées existent et que ce n'est pas 3D ou Nature
+    const shootingType = window.scoredTrainingData?.shooting_type || '';
+    if (window.endsData && window.endsData.length > 0 && shootingType !== '3D' && shootingType !== 'Nature') {
         initializeSVGTarget();
     }
 });
@@ -535,6 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeSVGTarget() {
     // Collecter tous les impacts de toutes les volées
     const allHits = [];
+    let detectedTargetCategory = 'blason_40'; // Valeur par défaut
     
     window.endsData.forEach(end => {
         if (end.shots && end.shots.length > 0) {
@@ -550,17 +550,27 @@ function initializeSVGTarget() {
                 }
             });
         }
+    // Détecter le type de cible à partir des données de la première volée qui a un target_category
+    if (end.target_category && detectedTargetCategory === 'blason_40') {
+        detectedTargetCategory = end.target_category;
+    }
     });
     
-    // Créer la cible SVG
+    
+    // Créer la cible SVG avec le type détecté
+    
     const target = createSVGTarget('svgTargetContainer', allHits, {
         size: 300,
-        targetCategory: 'blason_40'
+        targetCategory: detectedTargetCategory
     });
+    
     
     // Gérer le changement de catégorie de cible
     const categorySelect = document.getElementById('targetCategorySelect');
     if (categorySelect) {
+        // Sélectionner automatiquement le type de cible détecté
+        categorySelect.value = detectedTargetCategory;
+        
         categorySelect.addEventListener('change', function() {
             target.setTargetCategory(this.value);
         });
@@ -591,6 +601,7 @@ function showEndTarget(endNumber) {
             hit_x: shot.hit_x,
             hit_y: shot.hit_y,
             score: shot.score,
+            arrow_number: shot.arrow_number, // Ajouter le numéro de flèche
             endNumber: endNumber
         }));
     
@@ -600,4 +611,24 @@ function showEndTarget(endNumber) {
     });
 }
 </script>
+
+<!-- Modal pour afficher la cible interactive -->
+<div class="modal fade" id="targetModal" tabindex="-1" aria-labelledby="targetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="targetModalLabel">Cible Interactive</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="interactiveTarget" class="text-center">
+                    <!-- La cible sera générée ici -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
 

@@ -360,6 +360,13 @@
                                                                                     $backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
                                                                                     $fileUrl = $backendUrl . '/uploads/exercise_sheets/' . $exerciseData['attachment_filename'];
                                                                                     ?>
+                                                                                    <?php if (strpos($mimeType, 'pdf') !== false || $fileExtension === 'pdf'): ?>
+                                                                                        <button class="btn btn-outline-info btn-sm me-2" 
+                                                                                                onclick="showPdfPreview('<?php echo htmlspecialchars($fileUrl); ?>', '<?php echo htmlspecialchars($exerciseData['attachment_original_name'] ?? $exerciseData['attachment_filename']); ?>')"
+                                                                                                title="Aperçu du PDF">
+                                                                                            <i class="fas fa-eye me-1"></i>Aperçu
+                                                                                        </button>
+                                                                                    <?php endif; ?>
                                                                                     <a href="<?php echo htmlspecialchars($fileUrl); ?>" 
                                                                                        class="btn btn-outline-primary btn-sm" 
                                                                                        target="_blank">
@@ -620,5 +627,8 @@
 
 <!-- JavaScript personnalisé -->
 <script src="/public/assets/js/trainings.js"></script>
+
+<!-- Inclure la modale d'aperçu PDF -->
+<?php include 'app/Views/components/pdf-preview-modal.php'; ?>
 
 

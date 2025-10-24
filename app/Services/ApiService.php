@@ -1444,8 +1444,9 @@ class ApiService {
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_HEADER, false);
         curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         
-        // Headers
+        // Headers - ne pas définir Content-Type pour multipart/form-data
         $headers = [
             'Accept: */*'
         ];
@@ -1454,31 +1455,39 @@ class ApiService {
             $headers[] = 'Authorization: Bearer ' . $this->token;
         }
         
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
         // Préparer les données POST
         $postFields = $data;
         
         // Ajouter le fichier si présent
-        if ($file && isset($file['tmp_name']) && !empty($file['tmp_name'])) {
+        if ($file && isset($file['tmp_name']) && !empty($file['tmp_name']) && $file['error'] === UPLOAD_ERR_OK) {
             $postFields['attachment'] = new CURLFile(
                 $file['tmp_name'],
                 $file['type'],
                 $file['name']
             );
+            error_log("DEBUG createExerciseWithFile: Fichier ajouté - " . $file['name']);
         } else {
+            error_log("DEBUG createExerciseWithFile: Aucun fichier valide fourni");
         }
         
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         
         if (curl_errno($ch)) {
             curl_close($ch);
-            throw new Exception("Erreur lors de la requête API: " . curl_error($ch));
+            error_log("DEBUG createExerciseWithFile: Erreur cURL - " . $curlError);
+            throw new Exception("Erreur lors de la requête API: " . $curlError);
         }
         
         curl_close($ch);
+        
+        error_log("DEBUG createExerciseWithFile: HTTP Code: " . $httpCode);
+        error_log("DEBUG createExerciseWithFile: Response: " . $response);
         
         $decodedResponse = json_decode($response, true);
         

@@ -1,3 +1,7 @@
+<?php
+// Définir l'URL du backend
+$backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
+?>
 <div class="container">
     <div class="row">
         <div class="col-12">
@@ -121,6 +125,11 @@
                                                                 <span class="badge badge-info mr-2">
                                                                     <i class="fas fa-paperclip"></i> Fichier joint
                                                                 </span>
+                                                                <button class="btn btn-sm btn-outline-info mr-2" 
+                                                                        onclick="showPdfPreview('<?php echo $backendUrl . '/uploads/exercise_sheets/' . $exercise['attachment_filename']; ?>', '<?php echo htmlspecialchars($exercise['attachment_original_name'] ?? $exercise['attachment_filename']); ?>')"
+                                                                        title="Aperçu du PDF">
+                                                                    <i class="fas fa-eye"></i> Aperçu
+                                                                </button>
                                                             <?php endif; ?>
                                                             
                                                             
@@ -180,5 +189,8 @@
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+
+<!-- Inclure la modale d'aperçu PDF -->
+<?php include 'app/Views/components/pdf-preview-modal.php'; ?>
 
 <script src="/public/assets/js/exercises.js"></script>
