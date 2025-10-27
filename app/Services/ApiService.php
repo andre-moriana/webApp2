@@ -1499,6 +1499,70 @@ class ApiService {
         ];
     }
 
+    public function updateExerciseWithFile($id, $data, $file = null) {
+        $url = rtrim($this->baseUrl, '/') . '/exercise_sheets?action=update&id=' . urlencode($id);
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        
+        // Headers - ne pas définir Content-Type pour multipart/form-data
+        $headers = [
+            'Accept: */*'
+        ];
+        
+        if ($this->token) {
+            $headers[] = 'Authorization: Bearer ' . $this->token;
+        }
+        
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        // Préparer les données POST
+        $postFields = $data;
+        
+        // Ajouter le fichier si présent
+        if ($file && isset($file['tmp_name']) && !empty($file['tmp_name']) && $file['error'] === UPLOAD_ERR_OK) {
+            $postFields['attachment'] = new CURLFile(
+                $file['tmp_name'],
+                $file['type'],
+                $file['name']
+            );
+            error_log("DEBUG updateExerciseWithFile: Fichier ajouté - " . $file['name']);
+        } else {
+            error_log("DEBUG updateExerciseWithFile: Aucun fichier valide fourni");
+        }
+        
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        
+        if (curl_errno($ch)) {
+            curl_close($ch);
+            error_log("DEBUG updateExerciseWithFile: Erreur cURL - " . $curlError);
+            throw new Exception("Erreur lors de la requête API: " . $curlError);
+        }
+        
+        curl_close($ch);
+        
+        error_log("DEBUG updateExerciseWithFile: HTTP Code: " . $httpCode);
+        error_log("DEBUG updateExerciseWithFile: Response: " . $response);
+        
+        $decodedResponse = json_decode($response, true);
+        
+        return [
+            'success' => $httpCode >= 200 && $httpCode < 300,
+            'data' => $decodedResponse,
+            'status_code' => $httpCode,
+            'message' => $httpCode >= 200 && $httpCode < 300 ? "Succès" : "Erreur HTTP " . $httpCode
+        ];
+    }
+
     public function makePostRequestWithFormData($endpoint, $data, $file = null) {
         $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
         

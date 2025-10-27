@@ -324,7 +324,8 @@ class ExerciseController {
             
             if ($hasFile) {
                 error_log("DEBUG UPDATE: Appel API avec fichier");
-                $response = $this->makePutRequestWithFiles('exercise_sheets?action=update&id=' . $id, $postData, $_FILES['attachment']);
+                // Utiliser updateExerciseWithFile de l'ApiService
+                $response = $this->apiService->updateExerciseWithFile($id, $postData, $_FILES['attachment']);
             } else {
                 error_log("DEBUG UPDATE: Appel API sans fichier");
                 $response = $this->apiService->updateExercise($id, $postData);
@@ -392,118 +393,7 @@ class ExerciseController {
         return '';
     }
 
-    private function makePutRequestWithFiles($endpoint, $data, $fileData) {
-        $apiUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000/api';
-        $url = $apiUrl . '/' . $endpoint;
-        
-        // Récupérer le token d'authentification
-        $token = $_SESSION['token'] ?? null;
-        if (!$token) {
-            throw new Exception("Token d'authentification manquant");
-        }
 
-        $ch = curl_init();
-        
-        // Configuration de base
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true); // Utiliser POST au lieu de PUT
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        
-        // Headers - ne pas définir Content-Type pour multipart/form-data
-        $headers = [
-            'Accept: */*',
-            'Authorization: Bearer ' . $token
-        ];
-        
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        
-        // Préparer les données POST
-        $postFields = $data;
-        
-        // Ajouter le fichier seulement s'il existe et est valide
-        if ($fileData && isset($fileData['tmp_name']) && isset($fileData['type']) && isset($fileData['name']) && !empty($fileData['tmp_name']) && $fileData['error'] === UPLOAD_ERR_OK) {
-            $postFields['attachment'] = new CURLFile(
-                $fileData['tmp_name'],
-                $fileData['type'],
-                $fileData['name']
-            );
-            error_log("DEBUG makePutRequestWithFiles: Fichier ajouté - " . $fileData['name']);
-        } else {
-            error_log("DEBUG makePutRequestWithFiles: Aucun fichier valide fourni");
-        }
-        
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-        
-        error_log("DEBUG makePutRequestWithFiles: HTTP Code: " . $httpCode);
-        error_log("DEBUG makePutRequestWithFiles: Response: " . $response);
-        
-        if ($response === false) {
-            throw new Exception("Erreur cURL: " . $curlError);
-        }
-        
-        $decodedResponse = json_decode($response, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Réponse JSON invalide: " . $response);
-        }
-        
-        return $decodedResponse;
-    }
-
-    private function makePostRequestWithFormData($endpoint, $data, $fileData) {
-        $apiUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000/api';
-        $url = $apiUrl . '/' . $endpoint;
-        
-        // Récupérer le token d'authentification
-        $token = $_SESSION['token'] ?? null;
-        if (!$token) {
-            throw new Exception("Token d'authentification manquant");
-        }
-
-        $ch = curl_init();
-        
-        // Configuration de base
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $token,
-            'Content-Type: application/x-www-form-urlencoded' // Indiquer que les données sont en form-urlencoded
-        ]);
-        
-        // Préparer les données POST
-        $postData = http_build_query($data);
-
-        // Ajouter le fichier seulement s'il existe et est valide
-        if ($fileData && isset($fileData['tmp_name']) && isset($fileData['type']) && isset($fileData['name']) && !empty($fileData['tmp_name'])) {
-            $postData .= '&attachment=' . urlencode(file_get_contents($fileData['tmp_name'])); // Utiliser file_get_contents pour lire le contenu du fichier
-            $postData .= '&attachment_type=' . urlencode($fileData['type']);
-            $postData .= '&attachment_name=' . urlencode($fileData['name']);
-        }
-        
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-        
-        if ($response === false) {
-            throw new Exception("Erreur cURL: " . $curlError);
-        }
-        
-        $decodedResponse = json_decode($response, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Réponse JSON invalide: " . $response);
-        }
-        
-        return $decodedResponse;
-    }
     
     public function destroy($id) {
         if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
