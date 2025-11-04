@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide d'Aide - Archers de Gémenos</title>
+    <style>
+        @page {
+            margin: 20mm;
+        }
+        
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: #333333;
+            line-height: 1.6;
+            padding: 20px;
+            margin: 0;
+            max-width: 210mm;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            background-color: #14532d;
+            color: #ffffff;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 28px;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .header p {
+            color: #BBCE00;
+            margin: 10px 0 5px 0;
+            font-size: 16px;
+        }
+        
+        .header .version {
+            color: #ffffff;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        h1 {
+            color: #14532d;
+            text-align: center;
+            border-bottom: 3px solid #BBCE00;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        
+        h2 {
+            color: #14532d;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 2px solid #14532d;
+            padding-bottom: 8px;
+        }
+        
+        h3 {
+            color: #14532d;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .toc {
+            background-color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .toc h2 {
+            border-bottom: none;
+            margin-top: 0;
+            padding-bottom: 0;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .toc li:last-child {
+            border-bottom: none;
+        }
+        
+        .toc li::before {
+            content: "▶ ";
+            color: #14532d;
+            margin-right: 8px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-header-line {
+            flex: 1;
+            height: 2px;
+            background-color: #e5e7eb;
+        }
+        
+        .section-header h2 {
+            margin: 0 12px;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .content-text {
+            color: #374151;
+            line-height: 1.8;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .section-subtitle {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-top: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .feature-list {
+            margin-left: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .feature-item {
+            font-size: 15px;
+            color: #4b5563;
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+        
+        .screenshot-container {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f9fafb;
+            border: 1px dashed #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .screenshot-caption {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .screenshot-description {
+            color: #6b7280;
+            font-style: italic;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        
+        .screenshot-note {
+            color: #9ca3af;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .contact {
+            background-color: #14532d;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+            margin-top: 50px;
+            border-radius: 8px;
+        }
+        
+        .contact h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .contact p {
+            color: #BBCE00;
+            margin: 10px 0;
+        }
+        
+        .contact-email {
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        
+        ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        p {
+            margin: 10px 0;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e5e7eb;
+            margin: 30px 0;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+            
+            h2 {
+                page-break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Guide d'Aide</h1>
+        <p>Application Mobile - Archers de Gémenos</p>
+        <p class="version">Version 2.0</p>
+    </div>
+    
+    <!-- Table des matières -->
+    <div class="toc">
+        <h2>Table des Matières</h2>
+        <ul>
+            <li>Introduction</li>
+            <li>Groupes de Discussions</li>
+            <li>Événements</li>
+            <li>Liste des Membres</li>
+            <li>Carnet d'Entraînement</li>
+            <li>Fiches d'Exercices</li>
+            <li>Tir Compté</li>
+            <li>Feuille de Marques</li>
+            <li>Chronomètre</li>
+            <li>Préférences Notifications</li>
+            <li>Fonctionnalités Administrateur</li>
+            <li>Conseils d'Utilisation</li>
+        </ul>
+    </div>
+    
+    <!-- Introduction -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Introduction</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                Bienvenue dans l'application mobile des Archers de Gémenos ! Ce guide vous aidera à comprendre et utiliser toutes les fonctionnalités de l'application.
+            </p>
+            <p class="content-text">
+                L'application vous permet de gérer vos entraînements, suivre vos progrès, communiquer avec les membres du club, et bien plus encore.
+            </p>
+        </div>
+    </div>
+    
+    <!-- Groupes de Discussions -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Groupes de Discussions</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                Les groupes de discussions permettent de créer des espaces de conversation thématiques avec les membres du club.
+            </p>
+            
+            <p class="section-subtitle">Fonctionnalités principales :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Consulter la liste des groupes disponibles</li>
+                <li class="feature-item">• Rejoindre ou quitter un groupe</li>
+                <li class="feature-item">• Créer des sujets de discussion dans un groupe</li>
+                <li class="feature-item">• Participer aux conversations</li>
+                <li class="feature-item">• Activer/désactiver les notifications pour chaque groupe</li>
+                <li class="feature-item">• Voir le nombre de messages non lus pour chaque groupe</li>
+            </ul>
+            
+            <p class="content-text">
+                Les groupes sont un excellent moyen de rester connecté avec les autres membres et d'échanger sur vos passions communes.
+            </p>
+            
+            <p class="section-subtitle">Comment utiliser :</p>
+            <ul class="feature-list">
+                <li class="feature-item">1. Accédez à l'écran "Groupes de Discussion" depuis le menu principal</li>
+                <li class="feature-item">2. Cliquez sur un groupe pour voir ses sujets de discussion</li>
+                <li class="feature-item">3. Créez un nouveau sujet ou participez à une conversation existante</li>
+                <li class="feature-item">4. Utilisez le bouton de notification pour activer/désactiver les alertes</li>
+            </ul>
+            
+            <div class="screenshot-container">
+                <p class="screenshot-caption">Groupe de discussion</p>
+                <p class="screenshot-description">Liste des groupes de discussion</p>
+                <p class="screenshot-note">📷 (Image disponible dans l'application)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Événements -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Événements</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                La section Événements vous permet de voir tous les événements organisés par le club et de vous y inscrire.
+            </p>
+            
+            <p class="section-subtitle">Fonctionnalités :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Consulter les événements à venir avec date et heure</li>
+                <li class="feature-item">• S'inscrire ou se désinscrire d'un événement</li>
+                <li class="feature-item">• Accéder au chat de l'événement pour échanger avec les participants</li>
+                <li class="feature-item">• Voir la liste des participants inscrits</li>
+                <li class="feature-item">• Voir le nombre de messages non lus dans le chat de l'événement</li>
+            </ul>
+            
+            <p class="section-subtitle">Utilisation :</p>
+            <ul class="feature-list">
+                <li class="feature-item">1. Accédez à "Événements" depuis le menu principal</li>
+                <li class="feature-item">2. Consultez la liste des événements à venir</li>
+                <li class="feature-item">3. Cliquez sur un événement pour voir les détails et vous inscrire</li>
+                <li class="feature-item">4. Accédez au chat de l'événement pour communiquer avec les autres participants</li>
+            </ul>
+            
+            <p class="content-text">
+                Les administrateurs peuvent créer de nouveaux événements depuis le menu "Actions" et consulter les événements passés pour archivage.
+            </p>
+            
+            <div class="screenshot-container">
+                <p class="screenshot-caption">Événements</p>
+                <p class="screenshot-description">Liste des événements</p>
+                <p class="screenshot-note">📷 (Image disponible dans l'application)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Liste des Membres -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Liste des Membres</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                Consultez la liste complète des membres du club avec leurs informations de contact et profils.
+            </p>
+            
+            <p class="section-subtitle">Informations disponibles :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Nom et prénom</li>
+                <li class="feature-item">• Email de contact</li>
+                <li class="feature-item">• Photo de profil</li>
+                <li class="feature-item">• Rôle dans le club</li>
+            </ul>
+            
+            <p class="content-text">
+                Cette fonctionnalité facilite la communication entre les membres du club.
+            </p>
+            
+            <div class="screenshot-container">
+                <p class="screenshot-caption">Liste des membres</p>
+                <p class="screenshot-description">Liste des membres du club</p>
+                <p class="screenshot-note">📷 (Image disponible dans l'application)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Carnet d'Entraînement -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Carnet d'Entraînement</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                Le carnet d'entraînement est votre historique complet de tous vos entraînements et séances de tir.
+            </p>
+            
+            <p class="section-subtitle">Ce que vous pouvez faire :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Consulter la frise chronologique de vos entraînements</li>
+                <li class="feature-item">• Accéder aux fiches d'exercices et exercices de tir compté</li>
+                <li class="feature-item">• Voir les détails de chaque session (nombre de flèches, volées, durée)</li>
+                <li class="feature-item">• Visualiser les catégories avec des icônes colorées :
+                    <br>  - 🟣 Mental/Concentration
+                    <br>  - 🔴 Physique
+                    <br>  - 🔵 Technique
+                    <br>  - 🟠 Préparation/Échauffement
+                    <br>  - 🔵 Récupération
+                    <br>  - 🟡 Compétition
+                </li>
+            </ul>
+            
+            <p class="content-text">
+                La frise chronologique vous donne une vue d'ensemble de votre progression avec des icônes colorées selon la catégorie de l'entraînement. Tirez vers le bas pour actualiser la liste.
+            </p>
+            
+            <div class="screenshot-container">
+                <p class="screenshot-caption">Carnet d'Entraînement</p>
+                <p class="screenshot-description">Frise chronologique des entraînements</p>
+                <p class="screenshot-note">📷 (Image disponible dans l'application)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fiches d'Exercices -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Fiches d'Exercices</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                Les fiches d'exercices contiennent des exercices structurés pour améliorer votre pratique de l'archerie.
+            </p>
+            
+            <p class="section-subtitle">Fonctionnalités :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Consulter les exercices disponibles par catégorie</li>
+                <li class="feature-item">• Voir les détails et instructions de chaque exercice</li>
+                <li class="feature-item">• Accéder au tableau de bord de progression pour chaque exercice</li>
+                <li class="feature-item">• Suivre votre évolution avec statistiques et graphiques</li>
+                <li class="feature-item">• Démarrer une session d'entraînement depuis une fiche d'exercice</li>
+            </ul>
+            
+            <p class="content-text">
+                Les coaches et administrateurs peuvent créer et modifier des fiches d'exercices pour guider vos entraînements. Chaque exercice peut être catégorisé (mental, physique, technique, etc.) pour mieux organiser votre progression.
+            </p>
+            
+            <div class="screenshot-container">
+                <p class="screenshot-caption">Fiches d'Exercices</p>
+                <p class="screenshot-description">Liste des fiches d'exercices</p>
+                <p class="screenshot-note">📷 (Image disponible dans l'application)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tir Compté -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Tir Compté</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                L'outil de tir compté vous permet d'enregistrer vos séances de tir avec scores détaillés.
+            </p>
+            
+            <p class="section-subtitle">Fonctionnalités principales :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Enregistrer vos flèches une par une</li>
+                <li class="feature-item">• Visualiser votre cible avec les impacts en temps réel</li>
+                <li class="feature-item">• Suivre votre score total et moyenne par volée</li>
+                <li class="feature-item">• Ajouter des notes et observations détaillées</li>
+                <li class="feature-item">• Enregistrer la géolocalisation de votre entraînement</li>
+                <li class="feature-item">• Voir des statistiques détaillées et graphiques de progression</li>
+                <li class="feature-item">• Exporter et partager vos résultats</li>
+            </ul>
+            
+            <p class="section-subtitle">Astuces d'utilisation :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Utilisez la saisie vocale pour enregistrer vos scores plus rapidement</li>
+                <li class="feature-item">• Visualisez la répartition de vos impacts sur la cible pour améliorer votre précision</li>
+                <li class="feature-item">• Consultez les statistiques pour suivre votre progression dans le temps</li>
+                <li class="feature-item">• Ajoutez des notes après chaque séance pour documenter vos observations</li>
+            </ul>
+            
+            <div class="screenshot-container">
+                <p class="screenshot-caption">Tir Compté</p>
+                <p class="screenshot-description">Interface du tir compté</p>
+                <p class="screenshot-note">📷 (Image disponible dans l'application)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Feuille de Marques -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Feuille de Marques</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                La feuille de marques est un outil spécialisé pour enregistrer vos scores lors de compétitions ou séances formelles selon les standards officiels.
+            </p>
+            
+            <p class="section-subtitle">Fonctionnalités :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Enregistrer les scores par volée (série de flèches)</li>
+                <li class="feature-item">• Calcul automatique des totaux par volée et global</li>
+                <li class="feature-item">• Format adapté aux compétitions officielles</li>
+                <li class="feature-item">• Suivi précis pour analyse de performance</li>
+            </ul>
+            
+            <p class="content-text">
+                Cet outil est particulièrement utile lors des compétitions où vous devez suivre un format précis de notation.
+            </p>
+            
+            <div class="screenshot-container">
+                <p class="screenshot-caption">Feuille de Marques</p>
+                <p class="screenshot-description">Interface de la feuille de marques</p>
+                <p class="screenshot-note">📷 (Image disponible dans l'application)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chronomètre -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Chronomètre</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                Le chronomètre intégré vous aide à structurer vos séances d'entraînement avec des intervalles de temps définis.
+            </p>
+            
+            <p class="section-subtitle">Fonctionnalités :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Définir des durées personnalisées pour vos séances</li>
+                <li class="feature-item">• Suivre le temps restant en temps réel</li>
+                <li class="feature-item">• Mettre en pause et reprendre le chronomètre</li>
+                <li class="feature-item">• Recevoir des alertes visuelles et sonores à la fin du temps</li>
+                <li class="feature-item">• Réinitialiser facilement pour une nouvelle séance</li>
+            </ul>
+            
+            <p class="content-text">
+                Idéal pour structurer vos entraînements par intervalles et respecter des temps de repos définis.
+            </p>
+        </div>
+    </div>
+    
+    <!-- Préférences Notifications -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Préférences Notifications</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                Gérez vos préférences de notifications pour rester informé des activités importantes du club.
+            </p>
+            
+            <p class="section-subtitle">Options disponibles :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Activer/désactiver les notifications globales</li>
+                <li class="feature-item">• Personnaliser les notifications par groupe</li>
+                <li class="feature-item">• Choisir les types d'événements à suivre</li>
+            </ul>
+            
+            <div class="screenshot-container">
+                <p class="screenshot-caption">Notifications</p>
+                <p class="screenshot-description">Interface des notifications</p>
+                <p class="screenshot-note">📷 (Image disponible dans l'application)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fonctionnalités Administrateur -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Fonctionnalités Administrateur</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="content-text">
+                Les administrateurs et coaches ont accès à des fonctionnalités supplémentaires pour gérer le club.
+            </p>
+            
+            <p class="section-subtitle">Fonctionnalités réservées :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Créer des groupes de discussion</li>
+                <li class="feature-item">• Créer et gérer des événements</li>
+                <li class="feature-item">• Créer et modifier des fiches d'exercices</li>
+                <li class="feature-item">• Créer des catégories d'exercices</li>
+                <li class="feature-item">• Gérer les utilisateurs du club</li>
+                <li class="feature-item">• Consulter les événements passés</li>
+            </ul>
+            
+            <div class="screenshot-container">
+                <p class="screenshot-caption">Administration</p>
+                <p class="screenshot-description">Fonctionnalités Administrateur</p>
+                <p class="screenshot-note">📷 (Image disponible dans l'application)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Conseils d'Utilisation -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-header-line"></div>
+            <h2>Conseils d'Utilisation</h2>
+            <div class="section-header-line"></div>
+        </div>
+        <div class="section-content">
+            <p class="section-subtitle">Pour tirer le meilleur parti de l'application :</p>
+            <ul class="feature-list">
+                <li class="feature-item">• Enregistrez régulièrement vos entraînements pour suivre votre progression</li>
+                <li class="feature-item">• Utilisez les notes pour documenter vos observations</li>
+                <li class="feature-item">• Activez les notifications pour ne rien manquer</li>
+                <li class="feature-item">• Consultez régulièrement le carnet d'entraînement pour analyser vos performances</li>
+                <li class="feature-item">• Participez aux groupes de discussion pour échanger avec la communauté</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Contact -->
+    <div class="contact">
+        <h3>Besoin d'aide supplémentaire ?</h3>
+        <p>Pour toute question ou problème, contactez-nous à :</p>
+        <p class="contact-email">archers.gemenos@gmail.com</p>
+    </div>
+</body>
+</html>
+
