@@ -150,18 +150,36 @@ async function searchUserByLicense(licenseNumber) {
             const genderField = document.getElementById('archerGender');
             
             if (nameField) {
-                const fullName = user.name || 
-                                (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : '') ||
-                                (user.firstName || user.lastName || '');
+                // Construire le nom complet en concaténant first_name et name
+                // La table users a: name (nom de famille) et first_name (prénom)
+                let fullName = '';
+                if (user.firstName || user.first_name) {
+                    fullName = (user.firstName || user.first_name || '');
+                }
+                if (user.name) {
+                    const name = user.name || '';
+                    fullName = fullName ? `${fullName} ${name}` : name;
+                }
+                // Si pas de prénom/nom, utiliser name seul
+                if (!fullName && user.name) {
+                    fullName = user.name;
+                }
                 nameField.value = fullName;
             }
             
-            if (categoryField && user.age_category) {
-                categoryField.value = user.age_category;
+            if (categoryField) {
+                const category = user.age_category || user.ageCategory || '';
+                if (category) {
+                    categoryField.value = category;
+                }
             }
             
-            if (weaponField && user.weapon) {
-                weaponField.value = user.weapon;
+            if (weaponField) {
+                // Récupérer bow_type depuis l'API (qui fonctionne déjà dans l'app mobile)
+                const weapon = user.bow_type || user.bowType || '';
+                if (weapon) {
+                    weaponField.value = weapon;
+                }
             }
             
             if (genderField && user.gender) {
