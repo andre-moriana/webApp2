@@ -7,6 +7,55 @@ if (!is_array($scoredTrainings)) {
     $scoredTrainings = [];
 }
 
+// Fonction pour filtrer les notes (retirer les signatures)
+if (!function_exists('filterNotesForDisplay')) {
+    function filterNotesForDisplay($notes) {
+        if (empty($notes)) return '';
+        
+        // Retirer tout ce qui contient __SIGNATURES__ et ce qui suit (y compris le JSON)
+        $filtered = $notes;
+        $signaturesIndex = strpos($filtered, '__SIGNATURES__');
+        if ($signaturesIndex !== false) {
+            $filtered = substr($filtered, 0, $signaturesIndex);
+        }
+        
+        // Retirer les lignes qui mentionnent des informations de signature
+        $lines = explode("\n", $filtered);
+        $filteredLines = [];
+        foreach ($lines as $line) {
+            $trimmedLine = trim($line);
+            $lowerLine = strtolower($trimmedLine);
+            
+            // Retirer les lignes qui contiennent "Signatures:" (même au milieu) ou "ont signé"
+            if (strpos($lowerLine, 'signatures:') !== false || 
+                strpos($lowerLine, 'signature:') !== false ||
+                strpos($lowerLine, 'ont signé') !== false ||
+                strpos($lowerLine, 'ont signe') !== false ||
+                preg_match('/signatures?[:\s]/i', $trimmedLine)) {
+                continue;
+            }
+            
+            // Retirer les lignes qui contiennent des données JSON de signature
+            if (preg_match('/^\s*\{["\']archer["\']|^\s*\{["\']scorer["\']/i', $trimmedLine)) {
+                continue;
+            }
+            
+            $filteredLines[] = $line;
+        }
+        
+        $filtered = implode("\n", $filteredLines);
+        
+        // Nettoyer les virgules et espaces en fin de chaque ligne
+        $filtered = preg_replace('/,\s*$/', '', $filtered);
+        $filtered = rtrim($filtered, " \t\n\r\0\x0B");
+        
+        // Retirer les lignes vides multiples
+        $filtered = preg_replace('/\n\s*\n\s*\n/', "\n\n", $filtered);
+        
+        return trim($filtered);
+    }
+}
+
 // Inclure les fichiers CSS et JS spécifiques
 $additionalCSS = [
     '/public/assets/css/scored-trainings.css',
@@ -188,7 +237,10 @@ $additionalJS = [
                                     <td>
                                         <strong><?= htmlspecialchars($training['title'] ?? 'Sans titre') ?></strong>
                                         <?php if (!empty($training['notes'])): ?>
-                                        <br><small class="text-muted"><?= htmlspecialchars(substr($training['notes'], 0, 50)) ?>...</small>
+                                        <?php
+                                        $filteredNotes = filterNotesForDisplay($training['notes']);
+                                        ?>
+                                        <br><small class="text-muted"><?= $filteredNotes ? htmlspecialchars(substr($filteredNotes, 0, 50)) . '...' : '' ?></small>
                                         <?php endif; ?>
                                     </td>
                                     <td>

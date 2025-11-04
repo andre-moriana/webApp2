@@ -1832,7 +1832,7 @@ function getTargetData() {
 function filterNotesForDisplay(notes) {
     if (!notes) return '';
     
-    // Retirer tout ce qui contient __SIGNATURES__ et ce qui suit
+    // Retirer tout ce qui contient __SIGNATURES__ et ce qui suit (y compris le JSON)
     let filtered = notes;
     const signaturesIndex = filtered.indexOf('__SIGNATURES__');
     if (signaturesIndex !== -1) {
@@ -1846,25 +1846,29 @@ function filterNotesForDisplay(notes) {
         .filter(line => {
             const trimmedLine = line.trim();
             const lowerLine = trimmedLine.toLowerCase();
-            // Retirer les lignes qui commencent par "Signatures:" ou contiennent "ont signé"
-            if (lowerLine.startsWith('signatures:') || 
-                lowerLine.startsWith('signature:')) {
+            
+            // Retirer les lignes qui contiennent "Signatures:" (même au milieu) ou "ont signé"
+            if (lowerLine.includes('signatures:') || 
+                lowerLine.includes('signature:')) {
                 return false;
             }
             if (lowerLine.includes('ont signé') || 
                 lowerLine.includes('ont signe')) {
                 return false;
             }
-            // Retirer les lignes qui contiennent "Signatures:" ou "Signature:" au début
-            if (lowerLine.match(/^signatures?[:\s]/i)) {
+            
+            // Retirer les lignes qui contiennent des données JSON de signature
+            if (/^\s*\{["']archer["']|^\s*\{["']scorer["']/i.test(trimmedLine)) {
                 return false;
             }
+            
             return true;
         })
         .join('\n')
         .trim();
     
-    // Nettoyer les virgules et espaces en fin
+    // Nettoyer les virgules et espaces en fin de chaque ligne
+    filtered = filtered.replace(/,\s*$/gm, '');
     filtered = filtered.replace(/[,\s]+$/, '');
     
     // Retirer les lignes vides multiples
