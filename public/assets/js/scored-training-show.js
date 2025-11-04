@@ -1828,10 +1828,75 @@ function getTargetData() {
 
 
 
+// Fonction pour filtrer les notes (retirer les signatures)
+function filterNotesForDisplay(notes) {
+    if (!notes) return '';
+    
+    // Retirer tout ce qui contient __SIGNATURES__ et ce qui suit
+    let filtered = notes;
+    const signaturesIndex = filtered.indexOf('__SIGNATURES__');
+    if (signaturesIndex !== -1) {
+        filtered = filtered.substring(0, signaturesIndex).trim();
+    }
+    
+    // Retirer les lignes qui mentionnent des informations de signature
+    // Exemples: "Signatures: ... et Marqueur ont signé", "Signatures:", etc.
+    const lines = filtered.split('\n');
+    filtered = lines
+        .filter(line => {
+            const trimmedLine = line.trim();
+            const lowerLine = trimmedLine.toLowerCase();
+            // Retirer les lignes qui commencent par "Signatures:" ou contiennent "ont signé"
+            if (lowerLine.startsWith('signatures:') || 
+                lowerLine.startsWith('signature:')) {
+                return false;
+            }
+            if (lowerLine.includes('ont signé') || 
+                lowerLine.includes('ont signe')) {
+                return false;
+            }
+            // Retirer les lignes qui contiennent "Signatures:" ou "Signature:" au début
+            if (lowerLine.match(/^signatures?[:\s]/i)) {
+                return false;
+            }
+            return true;
+        })
+        .join('\n')
+        .trim();
+    
+    // Nettoyer les virgules et espaces en fin
+    filtered = filtered.replace(/[,\s]+$/, '');
+    
+    // Retirer les lignes vides multiples
+    filtered = filtered.replace(/\n\s*\n\s*\n/g, '\n\n');
+    
+    return filtered.trim();
+}
+
 // Initialiser l'application quand la page est chargée
 document.addEventListener('DOMContentLoaded', function() {
     initializeTrainingData();
     createScoresChart();
+    
+    // Filtrer les notes pour masquer les informations de signature
+    // Chercher l'élément qui contient les notes (après le titre "Notes:")
+    const infoCard = document.querySelector('.card.detail-card');
+    if (infoCard) {
+        const notesSection = Array.from(infoCard.querySelectorAll('h6')).find(h6 => h6.textContent.trim() === 'Notes:');
+        if (notesSection) {
+            const notesElement = notesSection.nextElementSibling;
+            if (notesElement && notesElement.classList.contains('text-muted')) {
+                // Récupérer le texte original (en remplaçant les <br> par des \n)
+                const originalHTML = notesElement.innerHTML;
+                const originalNotes = originalHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+                const filteredNotes = filterNotesForDisplay(originalNotes);
+                if (filteredNotes !== originalNotes) {
+                    // Reconstruire le HTML avec les <br> pour les retours à la ligne
+                    notesElement.innerHTML = filteredNotes ? filteredNotes.replace(/\n/g, '<br>') : 'Aucune note';
+                }
+            }
+        }
+    }
     
     // Déterminer le type de blason selon le type de tir
     const shootingType = window.scoredTrainingData?.shooting_type || '';

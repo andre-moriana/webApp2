@@ -720,13 +720,46 @@ function formatDuration(minutes) {
 // Fonction pour filtrer les notes (retirer les signatures)
 function filterNotesForDisplay(notes) {
     if (!notes) return '';
-    const signaturesIndex = notes.indexOf('__SIGNATURES__');
+    
+    // Retirer tout ce qui contient __SIGNATURES__ et ce qui suit
+    let filtered = notes;
+    const signaturesIndex = filtered.indexOf('__SIGNATURES__');
     if (signaturesIndex !== -1) {
-        let filtered = notes.substring(0, signaturesIndex).trim();
-        filtered = filtered.replace(/,\s*$/, '');
-        return filtered;
+        filtered = filtered.substring(0, signaturesIndex).trim();
     }
-    return notes.trim();
+    
+    // Retirer les lignes qui mentionnent des informations de signature
+    // Exemples: "Signatures: ... et Marqueur ont signé", "Signatures:", etc.
+    const lines = filtered.split('\n');
+    filtered = lines
+        .filter(line => {
+            const trimmedLine = line.trim();
+            const lowerLine = trimmedLine.toLowerCase();
+            // Retirer les lignes qui commencent par "Signatures:" ou contiennent "ont signé"
+            if (lowerLine.startsWith('signatures:') || 
+                lowerLine.startsWith('signature:')) {
+                return false;
+            }
+            if (lowerLine.includes('ont signé') || 
+                lowerLine.includes('ont signe')) {
+                return false;
+            }
+            // Retirer les lignes qui contiennent "Signatures:" ou "Signature:" au début
+            if (lowerLine.match(/^signatures?[:\s]/i)) {
+                return false;
+            }
+            return true;
+        })
+        .join('\n')
+        .trim();
+    
+    // Nettoyer les virgules et espaces en fin
+    filtered = filtered.replace(/[,\s]+$/, '');
+    
+    // Retirer les lignes vides multiples
+    filtered = filtered.replace(/\n\s*\n\s*\n/g, '\n\n');
+    
+    return filtered.trim();
 }
 
 // Fonction pour charger les données de la frise chronologique
