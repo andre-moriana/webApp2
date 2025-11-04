@@ -90,17 +90,81 @@ class ApiController {
         }
 
         try {
-            $response = $this->apiService->makeRequest("users", "GET");
+            // Vérifier si on recherche par numéro de licence
+            $licenseNumber = $_GET['licence_number'] ?? null;
             
-            if ($response['success']) {
-                $this->sendJsonResponse($response);
+            if ($licenseNumber) {
+                // Recherche spécifique par numéro de licence
+                $endpoint = "users?licence_number=" . urlencode(trim($licenseNumber));
+                error_log("Recherche utilisateur par licence: " . $licenseNumber);
+                
+                $response = $this->apiService->makeRequest($endpoint, "GET");
+                
+                // Log pour debug
+                error_log("Réponse API recherche licence (brute): " . json_encode($response));
+                
+                // makeRequest retourne {success: true, data: {success: true, data: user}, status_code: 200}
+                // Il faut extraire la structure correcte
+                if (isset($response['data']) && is_array($response['data'])) {
+                    // Vérifier si data contient success et data (structure de l'API backend)
+                    if (isset($response['data']['success'])) {
+                        if ($response['data']['success'] && isset($response['data']['data'])) {
+                            // Structure {success: true, data: user} - retourner directement
+                            $this->sendJsonResponse($response['data']);
+                        } else {
+                            // Success false - utilisateur non trouvé
+                            $this->sendJsonResponse([
+                                'success' => false,
+                                'message' => $response['data']['message'] ?? 'Utilisateur non trouvé avec ce numéro de licence'
+                            ], $response['status_code'] ?? 404);
+                        }
+                    } else if (isset($response['data']['id'])) {
+                        // La structure est directement l'utilisateur (sans double encodage)
+                        $this->sendJsonResponse([
+                            'success' => true,
+                            'data' => $response['data']
+                        ]);
+                    } else {
+                        // Structure inattendue - log pour debug
+                        error_log("Structure de réponse inattendue: " . json_encode($response));
+                        $this->sendJsonResponse([
+                            'success' => false,
+                            'message' => 'Format de réponse inattendu de l\'API'
+                        ], 500);
+                    }
+                } else if ($response['success'] && isset($response['data'])) {
+                    // Structure normale
+                    $this->sendJsonResponse($response);
+                } else {
+                    // Si l'utilisateur n'est pas trouvé ou erreur
+                    $httpCode = $response['status_code'] ?? 404;
+                    if ($httpCode === 404) {
+                        $this->sendJsonResponse([
+                            'success' => false,
+                            'message' => 'Utilisateur non trouvé avec ce numéro de licence'
+                        ], 404);
+                    } else {
+                        $this->sendJsonResponse([
+                            'success' => false,
+                            'message' => $response['message'] ?? 'Erreur lors de la recherche'
+                        ], $httpCode);
+                    }
+                }
             } else {
-                $this->sendJsonResponse([
-                    'success' => false,
-                    'message' => $response['message'] ?? 'Erreur lors de la récupération des utilisateurs'
-                ], $response['status_code'] ?? 500);
+                // Liste normale des utilisateurs
+                $response = $this->apiService->makeRequest("users", "GET");
+                
+                if ($response['success']) {
+                    $this->sendJsonResponse($response);
+                } else {
+                    $this->sendJsonResponse([
+                        'success' => false,
+                        'message' => $response['message'] ?? 'Erreur lors de la récupération des utilisateurs'
+                    ], $response['status_code'] ?? 500);
+                }
             }
         } catch (Exception $e) {
+            error_log("Erreur dans ApiController::users: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des utilisateurs: ' . $e->getMessage()

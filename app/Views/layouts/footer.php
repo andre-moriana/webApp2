@@ -19,6 +19,11 @@
     </footer>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jsPDF pour l'export PDF (si nécessaire) -->
+    <?php if (isset($additionalJS) && in_array('/public/assets/js/score-sheet.js', $additionalJS)): ?>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <?php endif; ?>
 <!-- JavaScript personnalisé -->
     <script src="/public/assets/js/app.js"></script>
 <!-- JavaScript spécifique à la page (si défini) -->

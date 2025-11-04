@@ -58,6 +58,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/score-sheet">
+                            <i class="fas fa-clipboard-list me-1"></i> Feuille de marque
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/exercises">
                             <i class="fas fa-clipboard-list me-1"></i> Exercices
                         </a>
