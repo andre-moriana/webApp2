@@ -826,6 +826,34 @@ class ApiService {
         return $result;
     }
 
+    public function getGroupTopics($groupId) {
+        if (!$this->token) {
+            return [
+                "success" => false,
+                "data" => [],
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        $result = $this->makeRequest("topics/group/{$groupId}", "GET");
+        
+        if ($result["success"] && $result["status_code"] == 200) {
+            if (isset($result["data"]) && is_array($result["data"])) {
+                return [
+                    "success" => true,
+                    "data" => $result["data"],
+                    "message" => "Sujets récupérés avec succès"
+                ];
+            }
+        }
+        
+        return [
+            "success" => false,
+            "data" => [],
+            "message" => "Impossible de récupérer les sujets depuis l'API"
+        ];
+    }
+    
     public function getGroupMessages($groupId) {
         
         if (!$this->token) {
@@ -2010,6 +2038,158 @@ class ApiService {
         }
         
         return $baseUrl;
+    }
+    
+    /**
+     * Récupère les formulaires pour un groupe, événement ou sujet
+     * @param string|null $groupId ID du groupe
+     * @param string|null $eventId ID de l'événement
+     * @param string|null $topicId ID du sujet
+     * @return array Réponse de l'API
+     */
+    public function getForms($groupId = null, $eventId = null, $topicId = null) {
+        if (!$this->token) {
+            return [
+                "success" => false,
+                "data" => [],
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        $endpoint = "forms";
+        if ($groupId) {
+            $endpoint = "forms/group/{$groupId}";
+        } elseif ($eventId) {
+            $endpoint = "forms/event/{$eventId}";
+        } elseif ($topicId) {
+            $endpoint = "forms/topic/{$topicId}";
+        }
+        
+        $result = $this->makeRequest($endpoint, "GET");
+        
+        if ($result["success"] && $result["status_code"] == 200) {
+            // Extraire les données du résultat
+            $formsData = $result["data"];
+            
+            // Si les données sont imbriquées (data.data), extraire le tableau
+            if (isset($formsData["data"]) && is_array($formsData["data"])) {
+                $formsData = $formsData["data"];
+            }
+            
+            if (is_array($formsData)) {
+                return [
+                    "success" => true,
+                    "data" => $formsData,
+                    "message" => "Formulaires récupérés avec succès"
+                ];
+            }
+        }
+        
+        return [
+            "success" => false,
+            "data" => [],
+            "message" => "Impossible de récupérer les formulaires depuis l'API"
+        ];
+    }
+    
+    /**
+     * Soumet une réponse à un formulaire
+     * @param int $formId ID du formulaire
+     * @param array $responses Réponses du formulaire
+     * @return array Réponse de l'API
+     */
+    public function submitFormResponse($formId, $responses) {
+        if (!$this->token) {
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        $data = [
+            'responses' => $responses
+        ];
+        
+        $result = $this->makeRequest("forms/{$formId}/responses", "POST", $data);
+        
+        return $result;
+    }
+    
+    /**
+     * Récupère les réponses d'un formulaire
+     * @param int $formId ID du formulaire
+     * @return array Réponse de l'API
+     */
+    public function getFormResponses($formId) {
+        if (!$this->token) {
+            return [
+                "success" => false,
+                "data" => [],
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        $result = $this->makeRequest("forms/{$formId}/responses", "GET");
+        
+        if ($result["success"] && $result["status_code"] == 200) {
+            // Extraire les données du résultat
+            $responsesData = $result["data"];
+            
+            // Si les données sont imbriquées (data.data), extraire le tableau
+            if (isset($responsesData["data"]) && is_array($responsesData["data"])) {
+                $responsesData = $responsesData["data"];
+            }
+            
+            if (is_array($responsesData)) {
+                return [
+                    "success" => true,
+                    "data" => $responsesData,
+                    "message" => "Réponses récupérées avec succès"
+                ];
+            }
+        }
+        
+        return [
+            "success" => false,
+            "data" => [],
+            "message" => "Impossible de récupérer les réponses depuis l'API"
+        ];
+    }
+    
+    /**
+     * Supprime un formulaire
+     * @param int $formId ID du formulaire
+     * @return array Réponse de l'API
+     */
+    public function deleteForm($formId) {
+        if (!$this->token) {
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        $result = $this->makeRequest("forms/{$formId}", "DELETE");
+        
+        return $result;
+    }
+    
+    /**
+     * Crée un nouveau formulaire
+     * @param array $formData Données du formulaire (title, description, questions, topicId, etc.)
+     * @return array Réponse de l'API
+     */
+    public function createForm($formData) {
+        if (!$this->token) {
+            return [
+                "success" => false,
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        $result = $this->makeRequest("forms", "POST", $formData);
+        
+        return $result;
     }
 }
 ?>

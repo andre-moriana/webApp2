@@ -67,18 +67,18 @@ class GroupController {
             $groups = $this->getTestGroups();
         }
 
-        // Charger les messages de chat pour chaque groupe
-        $chatMessages = [];
+        // Charger les sujets pour chaque groupe
+        $groupTopics = [];
         foreach ($groups as $group) {
             try {
-                $messagesResponse = $this->apiService->getGroupMessages($group['id']);
-                if ($messagesResponse['success'] && isset($messagesResponse['data']) && $messagesResponse['data'] !== null) {
-                    $chatMessages[$group['id']] = $messagesResponse['data'];
+                $topicsResponse = $this->apiService->getGroupTopics($group['id']);
+                if ($topicsResponse['success'] && isset($topicsResponse['data']) && is_array($topicsResponse['data'])) {
+                    $groupTopics[$group['id']] = $topicsResponse['data'];
                 } else {
-                    $chatMessages[$group['id']] = [];
+                    $groupTopics[$group['id']] = [];
                 }
             } catch (Exception $e) {
-                $chatMessages[$group['id']] = [];
+                $groupTopics[$group['id']] = [];
             }
         }
 

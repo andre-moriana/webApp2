@@ -703,7 +703,75 @@ class ApiController {
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
             
-            // Appeler l'API pour récupérer le fichier
+            // Vérifier si on doit afficher inline (pour les PDF)
+            $inline = isset($_GET['inline']) && $_GET['inline'] == '1';
+            $imageUrl = $_GET['url'] ?? '';
+            
+            // Si une URL est fournie, utiliser la même logique que pour les images
+            if (!empty($imageUrl)) {
+                // Décoder l'URL si elle est encodée
+                $imageUrl = urldecode($imageUrl);
+                
+                // S'assurer que l'URL pointe vers l'API externe
+                $baseUrlWithoutApi = rtrim($this->baseUrl, '/api');
+                $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
+                
+                // Si l'URL est relative, la rendre absolue
+                if (strpos($imageUrl, 'http') !== 0) {
+                    $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
+                }
+                
+                // Faire une requête pour récupérer le fichier
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $imageUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                
+                // Ajouter le token d'authentification si disponible
+                if (isset($_SESSION['token'])) {
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                        'Authorization: Bearer ' . $_SESSION['token']
+                    ]);
+                }
+                
+                $fileData = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                curl_close($ch);
+                
+                if ($httpCode === 200 && !empty($fileData)) {
+                    // Déterminer le type MIME
+                    $mimeType = $contentType ?: 'application/octet-stream';
+                    if (strpos($fileData, '%PDF-') === 0) {
+                        $mimeType = 'application/pdf';
+                    }
+                    
+                    // Nettoyer la sortie et définir les headers appropriés
+                    if (ob_get_level()) {
+                        ob_clean();
+                    }
+                    
+                    header('Content-Type: ' . $mimeType);
+                    
+                    // Pour les PDF en mode inline, utiliser 'inline', sinon 'attachment'
+                    if ($inline && $mimeType === 'application/pdf') {
+                        header('Content-Disposition: inline; filename="attachment_' . $messageId . '.pdf"');
+                    } else {
+                        header('Content-Disposition: attachment; filename="attachment_' . $messageId . '"');
+                    }
+                    
+                    header('Content-Length: ' . strlen($fileData));
+                    header('Cache-Control: public, max-age=3600');
+                    header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
+                    
+                    echo $fileData;
+                    exit;
+                }
+            }
+            
+            // Méthode originale : appeler l'API pour récupérer le fichier
             $response = $this->apiService->makeRequest("messages/{$messageId}/attachment", "GET");
             
             if ($response['success']) {
@@ -730,10 +798,17 @@ class ApiController {
                     }
                     
                     header('Content-Type: ' . $mimeType);
-                    header('Content-Disposition: attachment; filename="attachment_' . $messageId . '"');
+                    
+                    // Pour les PDF en mode inline, utiliser 'inline', sinon 'attachment'
+                    if ($inline && $mimeType === 'application/pdf') {
+                        header('Content-Disposition: inline; filename="attachment_' . $messageId . '.pdf"');
+                    } else {
+                        header('Content-Disposition: attachment; filename="attachment_' . $messageId . '"');
+                    }
+                    
                     header('Content-Length: ' . strlen($rawResponse));
-                    header('Cache-Control: no-cache, must-revalidate');
-                    header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+                    header('Cache-Control: public, max-age=3600');
+                    header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
                     
                     echo $rawResponse;
                     exit;
@@ -804,12 +879,20 @@ class ApiController {
                 return;
             }
             
+            // Décoder l'URL si elle est encodée
+            $imageUrl = urldecode($imageUrl);
+            
             // S'assurer que l'URL pointe vers l'API externe
-            if (strpos($imageUrl, $this->baseUrl) !== 0) {
-                // Si l'URL est relative, la rendre absolue
-                if (strpos($imageUrl, 'http') !== 0) {
-                    $imageUrl = rtrim($this->baseUrl, '/api') . '/' . ltrim($imageUrl, '/');
-                }
+            $baseUrlWithoutApi = rtrim($this->baseUrl, '/api');
+            $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
+            
+            // Si l'URL est relative, la rendre absolue
+            if (strpos($imageUrl, 'http') !== 0) {
+                // URL relative, la rendre absolue
+                $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
+            } elseif (strpos($imageUrl, $baseUrlClean) === false && strpos($imageUrl, $this->baseUrl) === false) {
+                // URL absolue mais qui ne pointe pas vers notre API, on l'utilise telle quelle
+                // (peut être une URL externe valide)
             }
             // Faire une requête pour récupérer l'image
             $ch = curl_init();
@@ -893,6 +976,344 @@ class ApiController {
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des messages: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getTopicMessages($topicId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $response = $this->apiService->makeRequest("messages/topic/{$topicId}/history", "GET");
+            // Traiter la réponse comme pour les groupes
+            if ($response['success']) {
+                // L'API retourne directement un tableau de messages
+                $messages = [];
+                if (is_array($response['data'])) {
+                    $messages = $response['data'];
+                } elseif (is_array($response)) {
+                    $messages = $response;
+                }
+                
+                $this->sendJsonResponse($messages);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de la récupération des messages'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des messages: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function sendTopicMessage($topicId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $content = $input['content'] ?? '';
+
+        if (empty($content)) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Le message doit contenir du texte'
+            ], 400);
+        }
+
+        try {
+            $postData = [
+                'content' => $content
+            ];
+
+            $response = $this->apiService->makeRequest("messages/topic/{$topicId}/send", "POST", $postData);
+            if ($response['success']) {
+                $this->sendJsonResponse($response);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de l\'envoi du message'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'envoi du message: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getTopicForms($topicId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $response = $this->apiService->getForms(null, null, $topicId);
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des formulaires: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getEventForms($eventId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $response = $this->apiService->getForms(null, $eventId, null);
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des formulaires: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getScoredTrainings() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $userId = $_GET['user_id'] ?? null;
+            $response = $this->apiService->getScoredTrainings($userId);
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des tirs comptés: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getTrainingProgress() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $response = $this->apiService->getTrainingProgress();
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération du progrès: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getTrainingDashboard($exerciseId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $userId = $_GET['user_id'] ?? null;
+            $endpoint = "/training/dashboard/{$exerciseId}";
+            if ($userId) {
+                $endpoint .= "?user_id={$userId}";
+            }
+            $response = $this->apiService->makeRequest($endpoint, 'GET');
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération du dashboard: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getUserTrainingSessions($userId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            // Essayer d'abord l'endpoint des sessions
+            $endpoint = "/training/sessions/user/{$userId}";
+            $response = $this->apiService->makeRequest($endpoint, 'GET');
+            
+            // Si ça ne marche pas, essayer l'endpoint alternatif
+            if (!$response['success'] || empty($response['data'])) {
+                $endpoint = "/training?action=sessions&user_id={$userId}";
+                $response = $this->apiService->makeRequest($endpoint, 'GET');
+            }
+            
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des sessions: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getExercises() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $showHidden = isset($_GET['show_hidden']) && $_GET['show_hidden'] === 'true';
+            $response = $this->apiService->getExercises($showHidden);
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des exercices: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getExerciseSheet($exerciseId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $response = $this->apiService->getExerciseDetails($exerciseId);
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération de l\'exercice: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function submitFormResponse($formId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $responses = $input['responses'] ?? [];
+
+        if (empty($responses)) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Les réponses sont requises'
+            ], 400);
+        }
+
+        try {
+            $response = $this->apiService->submitFormResponse($formId, $responses);
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la soumission de la réponse: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getFormResponses($formId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $response = $this->apiService->getFormResponses($formId);
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des réponses: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteForm($formId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        try {
+            $response = $this->apiService->deleteForm($formId);
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression du formulaire: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function createForm() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (empty($input['title']) || empty($input['questions']) || !is_array($input['questions'])) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Le titre et au moins une question sont requis'
+            ], 400);
+        }
+
+        try {
+            $response = $this->apiService->createForm($input);
+            $this->sendJsonResponse($response);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la création du formulaire: ' . $e->getMessage()
             ], 500);
         }
     }

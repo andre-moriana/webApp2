@@ -1,12 +1,12 @@
 ﻿<div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
                 <h1 class="h3 mb-0">Entraînements</h1>
                 <?php if ($isAdmin || $isCoach): ?>
-                <div class="d-flex align-items-center">
-                    <label for="userSelect" class="form-label me-2 mb-0">Sélectionner un archer :</label>
-                    <select id="userSelect" class="form-select" style="width: auto;">
+                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 w-100 w-md-auto">
+                    <label for="userSelect" class="form-label mb-0 text-nowrap">Sélectionner un archer :</label>
+                    <select id="userSelect" class="form-select" style="min-width: 200px; width: 100%; max-width: 100%;">
                         <option value="">-- Choisir un archer --</option>
                         <?php if (!empty($users)): ?>
                         <?php foreach ($users as $user): ?>
@@ -145,6 +145,35 @@
             </div>
             <?php endif; ?>
 
+            <!-- Frise chronologique horizontale -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Frise chronologique</h5>
+                </div>
+                <div class="card-body position-relative">
+                    <!-- Bouton flèche gauche -->
+                    <button id="timeline-arrow-left" class="timeline-arrow timeline-arrow-left" onclick="scrollTimeline('left')" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    
+                    <!-- Bouton flèche droite -->
+                    <button id="timeline-arrow-right" class="timeline-arrow timeline-arrow-right" onclick="scrollTimeline('right')">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <div id="timeline-container" class="timeline-container">
+                        <div id="timeline-scroll" class="timeline-scroll">
+                            <div id="timeline-content" class="timeline-content">
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                    <p>Chargement de la frise chronologique...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Liste des entraînements groupés par catégorie -->
             <div class="card">
                 <div class="card-header">
@@ -167,23 +196,38 @@
                                         data-bs-target="#collapse<?php echo md5($categoryName); ?>" 
                                         aria-expanded="false" 
                                         aria-controls="collapse<?php echo md5($categoryName); ?>">
-                                    <div class="d-flex justify-content-between w-100 me-3">
+                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center w-100 me-3 gap-2">
                                         <div>
                                             <strong><?php echo htmlspecialchars($categoryName); ?></strong>
                                         </div>
                                         <div class="text-muted">
                                             <small>
-                                                <?php echo $categoryData['total_sessions']; ?> séances - 
-                                                <?php echo $categoryData['total_arrows']; ?> flèches - 
-                                                <?php 
-                                                $hours = floor($categoryData['total_time_minutes'] / 60);
-                                                $minutes = $categoryData['total_time_minutes'] % 60;
-                                                if ($hours > 0) {
-                                                    echo $hours . 'h ' . $minutes . 'min';
-                                                } else {
-                                                    echo $minutes . 'min';
-                                                }
-                                                ?>
+                                                <span class="d-inline d-md-none">
+                                                    <?php echo $categoryData['total_sessions']; ?> séances<br>
+                                                    <?php echo $categoryData['total_arrows']; ?> flèches<br>
+                                                    <?php 
+                                                    $hours = floor($categoryData['total_time_minutes'] / 60);
+                                                    $minutes = $categoryData['total_time_minutes'] % 60;
+                                                    if ($hours > 0) {
+                                                        echo $hours . 'h ' . $minutes . 'min';
+                                                    } else {
+                                                        echo $minutes . 'min';
+                                                    }
+                                                    ?>
+                                                </span>
+                                                <span class="d-none d-md-inline">
+                                                    <?php echo $categoryData['total_sessions']; ?> séances - 
+                                                    <?php echo $categoryData['total_arrows']; ?> flèches - 
+                                                    <?php 
+                                                    $hours = floor($categoryData['total_time_minutes'] / 60);
+                                                    $minutes = $categoryData['total_time_minutes'] % 60;
+                                                    if ($hours > 0) {
+                                                        echo $hours . 'h ' . $minutes . 'min';
+                                                    } else {
+                                                        echo $minutes . 'min';
+                                                    }
+                                                    ?>
+                                                </span>
                                             </small>
                                         </div>
                                     </div>
@@ -197,35 +241,35 @@
                                     <?php foreach ($categoryData['exercises'] as $exerciseId => $exerciseData): ?>
                                     <div class="card mb-3 exercise-card">
                                         <div class="card-header">
-                                            <div class="d-flex justify-content-between align-items-center">
+                                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
                                                 <h6 class="mb-0">
                                                     <i class="fas fa-dumbbell me-2"></i>
                                                     <?php echo htmlspecialchars($exerciseData['exercise_title']); ?>
                                                 </h6>
-                                                <div class="btn-group" role="group">
+                                                <div class="btn-group w-100 w-md-auto" role="group">
                                                    <button type="button" class="btn btn-success btn-sm start-session-btn" 
                                                             onclick="startTrainingSession(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')">
-                                                        <i class="fas fa-play me-1"></i>Commencer une session
+                                                        <i class="fas fa-play me-1"></i><span class="d-none d-sm-inline">Commencer une session</span><span class="d-sm-none">Commencer</span>
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="card-body">
                                             <!-- Statistiques de l'exercice -->
-                                            <div class="row text-center mb-3">
-                                                <div class="col-3">
+                                            <div class="row text-center mb-3 g-2">
+                                                <div class="col-6 col-md-3">
                                                     <div class="exercise-stats">
                                                         <h5 class="text-primary mb-0"><?php echo $exerciseData['stats']['total_sessions']; ?></h5>
                                                         <small class="text-muted">Séances</small>
                                                     </div>
                                                 </div>
-                                                <div class="col-3">
+                                                <div class="col-6 col-md-3">
                                                     <div class="exercise-stats">
                                                         <h5 class="text-success mb-0"><?php echo $exerciseData['stats']['total_arrows']; ?></h5>
                                                         <small class="text-muted">Flèches</small>
                                                     </div>
                                                 </div>
-                                                <div class="col-3">
+                                                <div class="col-6 col-md-3">
                                                     <div class="exercise-stats">
                                                         <h5 class="text-info mb-0">
                                                             <?php 
@@ -241,15 +285,18 @@
                                                         <small class="text-muted">Temps</small>
                                                     </div>
                                                 </div>
-                                                <div class="col-3">
-                                                    <h5 class="text-warning mb-0">
-                                                        <?php if ($exerciseData['stats']['last_session']): ?>
-                                                            <?php echo date('d/m/Y', strtotime($exerciseData['stats']['last_session'])); ?>
-                                                        <?php else: ?>
-                                                            -
-                                                        <?php endif; ?>
-                                                    </h5>
-                                                    <small class="text-muted">Dernière</small>
+                                                <div class="col-6 col-md-3">
+                                                    <div class="exercise-stats">
+                                                        <h5 class="text-warning mb-0">
+                                                            <?php if ($exerciseData['stats']['last_session']): ?>
+                                                                <span class="d-md-none"><?php echo date('d/m/y', strtotime($exerciseData['stats']['last_session'])); ?></span>
+                                                                <span class="d-none d-md-inline"><?php echo date('d/m/Y', strtotime($exerciseData['stats']['last_session'])); ?></span>
+                                                            <?php else: ?>
+                                                                -
+                                                            <?php endif; ?>
+                                                        </h5>
+                                                        <small class="text-muted">Dernière</small>
+                                                    </div>
                                                 </div>
                                             </div>
                                             
@@ -263,8 +310,8 @@
                                                         <h5 class="card-title mb-0">Exercice</h5>
                                                     </div>
                                                     <div class="card-body">
-                                                                <div class="row">
-                                                                <div class="col-md-8">
+                                                                <div class="row g-3">
+                                                                <div class="col-12 col-md-8">
                                                                     <p><strong>Nom :</strong> <?php echo htmlspecialchars($exerciseData['exercise_title'] ?? 'Non défini'); ?></p>
                                                                     <p><strong>Catégorie :</strong> 
                                                                         <span class="badge bg-primary"><?php echo htmlspecialchars($categoryName); ?></span>
@@ -316,7 +363,7 @@
                                                                     </div>
                                                                     <?php endif; ?>
                                                                 </div>
-                                                                <div class="col-md-4">
+                                                                <div class="col-12 col-md-4">
                                                                     <!-- Aperçu de la pièce jointe -->
                                                                     <?php if (!empty($exerciseData['attachment_filename'])): ?>
                                                                     <div class="text-center">
@@ -624,6 +671,12 @@
 
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/trainings.css" rel="stylesheet">
+
+<!-- Variables JavaScript pour la frise chronologique -->
+<script>
+window.currentUserId = <?php echo isset($selectedUserId) ? $selectedUserId : (isset($actualUserId) ? $actualUserId : 'null'); ?>;
+window.selectedUserId = <?php echo isset($selectedUserId) ? $selectedUserId : 'null'; ?>;
+</script>
 
 <!-- JavaScript personnalisé -->
 <script src="/public/assets/js/trainings.js"></script>

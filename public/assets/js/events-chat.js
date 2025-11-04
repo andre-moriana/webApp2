@@ -16,169 +16,176 @@ document.addEventListener("DOMContentLoaded", function() {
         // Charger automatiquement les messages de l'événement initial
         loadEventMessages(currentEventId);
         
+        // Charger les formulaires de l'événement initial
+        loadEventForms(currentEventId);
+        
         // Vérifier l'état d'inscription de l'utilisateur
         checkEventRegistrationStatus(currentEventId);
     }
 });
 
-// Créer un élément de message
-function createMessageElement(message) {
-    
-    // Gérer les différentes structures de données du backend
-    const authorId = message.author_id || message.author?._id || message.author?.id || message.userId || message.user_id;
-    const authorName = message.author_name || message.author?.name || message.userName || "Utilisateur inconnu";
-    const isOwnMessage = authorId == currentUserId;
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message-item ${isOwnMessage ? 'message-sent' : 'message-received'}`;
-    messageDiv.setAttribute('data-message-id', message._id || message.id);
-    
-    const messageContent = document.createElement('div');
-    messageContent.className = 'message-content';
-    
-    // Métadonnées du message
-    const messageMeta = document.createElement('div');
-    messageMeta.className = 'message-meta';
-    
-    if (isOwnMessage) {
-        const date = new Date(message.created_at).toLocaleDateString('fr-FR');
-        messageMeta.innerHTML = `
-            <span style="float: left;">${date}</span>
-            <span style="float: right; font-weight: bold;">Vous</span>
-            <div style="clear: both;"></div>
-        `;
-    } else {
-        const date = new Date(message.created_at).toLocaleDateString('fr-FR');
-        messageMeta.innerHTML = `<strong>${authorName}</strong> ${date}`;
-    }
-    
-    // Contenu du message
-    const messageText = document.createElement('div');
-    messageText.className = 'message-text';
-    messageText.textContent = message.content;
-    
-    messageContent.appendChild(messageMeta);
-    messageContent.appendChild(messageText);
-    
-    // Gestion des pièces jointes
-    if (message.attachment) {
-        const attachmentUrl = message.attachment.url || message.attachment.path || '';
-        const filename = message.attachment.filename || message.attachment.original_name || 'Pièce jointe';
-        const mimeType = message.attachment.mime_type || '';
-        
-        // Construire l'URL complète pour l'image via le backend WebApp2
-        let fullUrl;
-        if (attachmentUrl.startsWith('http')) {
-            fullUrl = attachmentUrl;
-        } else {
-            // Pour les images, utiliser la route d'images du backend WebApp2
-            const messageId = message._id || message.id;
-            fullUrl = `/messages/image/${messageId}?url=${encodeURIComponent(attachmentUrl)}`;
-        }
-        
-        // Détecter si c'est une image
-        const isImage = mimeType.startsWith('image/') || 
-                       /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(filename);
-        
-        if (isImage) {
-            // Afficher l'image directement dans le chat
-            const attachmentDiv = document.createElement('div');
-            attachmentDiv.className = 'message-attachment mt-2';
-            attachmentDiv.innerHTML = `
-                <div class="image-container">
-                    <img src="${fullUrl}" 
-                         alt="${filename}" 
-                         class="message-image" 
-                         onclick="openImageModal('${fullUrl}', '${filename}')"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <div class="image-fallback" style="display: none;">
-                        <a href="${fullUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-image me-1"></i>
-                            ${filename}
-                        </a>
-                    </div>
-                </div>
-            `;
-            messageContent.appendChild(attachmentDiv);
-        } else {
-            // Afficher un lien de téléchargement pour les autres fichiers
-            const attachmentDiv = document.createElement('div');
-            attachmentDiv.className = 'message-attachment mt-2';
-            attachmentDiv.innerHTML = `
-                <a href="${fullUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-paperclip me-1"></i>
-                    ${filename}
-                </a>
-            `;
-            messageContent.appendChild(attachmentDiv);
-        }
-    }
-    
-    // Actions du message
-    if (isOwnMessage) {
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'message-actions';
-        actionsDiv.innerHTML = `
-            <button type="button" class="btn btn-edit" onclick="editMessage('${message._id || message.id}')" title="Modifier">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button type="button" class="btn btn-delete" onclick="deleteMessage('${message._id || message.id}')" title="Supprimer">
-                <i class="fas fa-trash"></i>
-            </button>
-        `;
-        messageContent.appendChild(actionsDiv);
-    }
-    
-    messageDiv.appendChild(messageContent);
-    
-    return messageDiv;
+// Fonction pour échapper le HTML (similaire à groups-chat.js)
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
-// Fonction pour ouvrir l'image en modal
-function openImageModal(imageUrl, filename) {
-    // Créer le modal s'il n'existe pas
-    let modal = document.getElementById('imageModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'imageModal';
-        modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">${filename}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body text-center">
-                        <img src="${imageUrl}" class="img-fluid" alt="${filename}">
-                    </div>
-                    <div class="modal-footer">
-                        <a href="${imageUrl}" target="_blank" class="btn btn-primary">
-                            <i class="fas fa-external-link-alt me-1"></i>
-                            Ouvrir dans un nouvel onglet
-                        </a>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                    </div>
-                </div>
+// Créer un élément de message (format similaire à groups-chat.js)
+function createMessageElement(message) {
+    // Gérer les différentes structures de données du backend
+    const authorId = message.author_id || message.author?._id || message.author?.id || message.userId || message.user_id;
+    const authorName = message.author_name || message.author?.name || message.userName || "Utilisateur";
+    const messageTime = message.created_at || message.createdAt || message.timestamp;
+    const isCurrentUser = authorId && currentUserId && authorId.toString() === currentUserId.toString();
+    const messageClass = isCurrentUser ? "message-sent" : "message-received";
+    const alignClass = isCurrentUser ? "justify-content-end" : "justify-content-start";
+    
+    let formattedTime = "Date inconnue";
+    if (messageTime) {
+        try {
+            const date = new Date(messageTime);
+            if (!isNaN(date.getTime())) {
+                formattedTime = date.toLocaleString("fr-FR");
+            }
+        } catch (e) {
+            console.warn("Erreur de formatage de date:", e);
+        }
+    }
+
+    let attachmentHtml = "";
+    // Vérifier si le message a une pièce jointe (peut être null, un objet, ou une chaîne)
+    const hasAttachment = message.attachment && 
+        (message.attachment !== null) && 
+        (typeof message.attachment === 'object') &&
+        (message.attachment.filename || message.attachment.url || message.attachment.path);
+    
+    if (hasAttachment) {
+        let attachmentUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
+        
+        // Détecter si c'est une image ou un PDF par mimeType ou par extension
+        let isImage = false;
+        let isPdf = false;
+        
+        // Gérer les différents formats de mimeType (mimeType, mime_type, etc.)
+        const mimeType = message.attachment.mimeType || message.attachment.mime_type || '';
+        
+        if (mimeType) {
+            if (mimeType.startsWith("image/")) {
+                isImage = true;
+            } else if (mimeType === "application/pdf") {
+                isPdf = true;
+            }
+        }
+        
+        // Détecter par extension si mimeType n'est pas disponible
+        if (!isImage && !isPdf) {
+            const filename = message.attachment.filename || message.attachment.originalName || message.attachment.original_name || attachmentUrl;
+            const lowerFilename = filename.toLowerCase();
+            const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg"];
+            const pdfExtensions = [".pdf"];
+            
+            isImage = imageExtensions.some(ext => lowerFilename.endsWith(ext));
+            isPdf = pdfExtensions.some(ext => lowerFilename.endsWith(ext));
+        }
+        
+        const originalName = message.attachment.originalName || message.attachment.original_name || message.attachment.filename || "Pièce jointe";
+        
+        // Définir l'URL originale pour tous les types de fichiers
+        const originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
+        
+        // Pour les images, utiliser la route d'images du backend WebApp2
+        if (isImage) {
+            // Pour toutes les images, utiliser la route proxy du backend WebApp2
+            attachmentUrl = "/messages/image/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
+        } else if (isPdf) {
+            // Pour les PDF, utiliser la route d'attachment avec paramètre pour affichage inline
+            attachmentUrl = "/messages/attachment/" + (message._id || message.id) + "?inline=1&url=" + encodeURIComponent(originalUrl);
+        } else {
+            // Pour les autres fichiers, utiliser la route de téléchargement
+            attachmentUrl = "/messages/attachment/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
+        }
+        
+        attachmentHtml = `
+            <div class="message-attachment mt-2">
+                ${isImage 
+                    ? `<a href="${attachmentUrl}" target="_blank" class="attachment-link">
+                        <img src="${attachmentUrl}" 
+                             alt="${escapeHtml(originalName)}" 
+                             class="img-fluid rounded message-image" 
+                             style="max-width: 300px; max-height: 300px; object-fit: cover; cursor: pointer;"
+                             onerror="console.error('Erreur de chargement de l\\'image:', '${escapeHtml(originalName)}'); this.onerror=null; this.style.display='none'; const fallback = this.nextElementSibling; if(fallback) fallback.style.display='block';">
+                        <div class="image-fallback" style="display: none;">
+                            <div class="file-attachment p-2 bg-light rounded d-flex align-items-center">
+                                <i class="fas fa-image me-2"></i>
+                                <span>${escapeHtml(originalName)}</span>
+                            </div>
+                        </div>
+                    </a>`
+                    : isPdf
+                    ? `<div class="pdf-preview-container">
+                        <iframe src="${attachmentUrl}" 
+                                class="pdf-preview"
+                                style="width: 100%; max-width: 600px; height: 400px; border: 1px solid #dee2e6; border-radius: 8px;"
+                                title="${escapeHtml(originalName)}">
+                        </iframe>
+                        <div class="mt-2">
+                            <a href="${attachmentUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download me-1"></i>Télécharger le PDF
+                            </a>
+                        </div>
+                    </div>`
+                    : `<a href="${attachmentUrl}" target="_blank" class="attachment-link">
+                        <div class="file-attachment p-2 bg-light rounded d-flex align-items-center">
+                            <i class="fas fa-file me-2"></i>
+                            <span>${escapeHtml(originalName)}</span>
+                        </div>
+                    </a>`
+                }
+            </div>`;
+    }
+
+    // Boutons d'action (modifier/supprimer)
+    let actionButtons = "";
+    if (isCurrentUser || (typeof isAdmin !== "undefined" && isAdmin)) {
+        actionButtons = `
+            <div class="message-actions">
+                ${isCurrentUser ? `
+                    <button type="button" class="btn btn-edit" onclick="editMessage('${message._id || message.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                ` : ""}
+                ${(isCurrentUser || (typeof isAdmin !== "undefined" && isAdmin)) ? `
+                    <button type="button" class="btn btn-delete" onclick="deleteMessage('${message._id || message.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                ` : ""}
             </div>
         `;
-        document.body.appendChild(modal);
     }
+
+    const messageContent = message.content ? message.content.replace(/\n/g, "<br>") : "";
+    const hasContent = messageContent.trim() !== "";
     
-    // Mettre à jour l'image et le titre
-    const modalImage = modal.querySelector('img');
-    const modalTitle = modal.querySelector('.modal-title');
-    const modalLink = modal.querySelector('a[target="_blank"]');
-    
-    modalImage.src = imageUrl;
-    modalImage.alt = filename;
-    modalTitle.textContent = filename;
-    modalLink.href = imageUrl;
-    
-    // Afficher le modal
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
+    if (!hasContent && !hasAttachment) {
+        return "";
+    }
+
+    return `
+        <div class="d-flex ${alignClass} mb-3" data-message-id="${message._id || message.id}">
+            <div class="message ${messageClass}">
+                <div class="message-header">
+                    <span class="message-author">${escapeHtml(authorName)}</span>
+                    <span class="message-time">${formattedTime}</span>
+                </div>
+                ${hasContent ? `<div class="message-content">${messageContent}</div>` : ""}
+                ${attachmentHtml}
+                ${actionButtons}
+            </div>
+        </div>
+    `;
 }
+
 
 // Charger les messages d'un événement
 async function loadEventMessages(eventId) {
@@ -186,7 +193,6 @@ async function loadEventMessages(eventId) {
         const response = await fetch(`/events/${eventId}/messages`, {
             method: "GET",
             headers: {
-                "Authorization": `Bearer ${authToken}`,
                 "Content-Type": "application/json"
             }
         });
@@ -198,17 +204,26 @@ async function loadEventMessages(eventId) {
         
         const data = await response.json();
         
-        // L'endpoint retourne directement un tableau de messages
+        // Gérer différents formats de réponse API
+        let messages = [];
         if (Array.isArray(data)) {
-            displayMessages(data);
-        } else if (data && data.error) {
-            displayMessages([]);
-        } else if (data && data.success === false) {
-            displayMessages([]);
-        } else {
-            displayMessages([]);
+            messages = data;
+        } else if (data && data.data && Array.isArray(data.data)) {
+            messages = data.data;
+        } else if (data && data.success && Array.isArray(data.data)) {
+            messages = data.data;
         }
+        
+        // Trier les messages du plus ancien au plus récent
+        messages.sort((a, b) => {
+            const dateA = new Date(a.created_at || a.createdAt || a.timestamp || 0);
+            const dateB = new Date(b.created_at || b.createdAt || b.timestamp || 0);
+            return dateA.getTime() - dateB.getTime();
+        });
+        
+        displayMessages(messages);
     } catch (error) {
+        console.error('Erreur lors du chargement des messages:', error);
         displayMessages([]);
     }
 }
@@ -223,24 +238,30 @@ function displayMessages(messages) {
     messagesContainer.innerHTML = '';
     
     if (!messages || messages.length === 0) {
-        const noMessagesDiv = document.createElement('div');
-        noMessagesDiv.className = 'text-center text-muted';
-        noMessagesDiv.innerHTML = `
-            <i class="fas fa-comments fa-2x mb-2"></i>
-            <p>Aucun message dans le chat</p>
+        messagesContainer.innerHTML = `
+            <div class="text-center text-muted py-3">
+                <i class="fas fa-comments fa-2x mb-2"></i>
+                <p>Aucun message dans le chat</p>
+            </div>
         `;
-        messagesContainer.appendChild(noMessagesDiv);
         return;
     }
     
     // Créer et ajouter chaque message
+    let messagesHtml = '';
     messages.forEach(message => {
-        const messageElement = createMessageElement(message);
-        messagesContainer.appendChild(messageElement);
+        const messageHtml = createMessageElement(message);
+        if (messageHtml) {
+            messagesHtml += messageHtml;
+        }
     });
     
+    messagesContainer.innerHTML = messagesHtml;
+    
     // Faire défiler vers le bas
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    setTimeout(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }, 100);
 }
 
 // Envoyer un message
@@ -259,9 +280,6 @@ async function sendMessage(content, attachment = null) {
         
         const response = await fetch(`/events/${currentEventId}/messages`, {
             method: "POST",
-            headers: {
-                "Authorization": `Bearer ${authToken}`
-            },
             body: formData
         });
         
@@ -273,14 +291,21 @@ async function sendMessage(content, attachment = null) {
         const data = await response.json();
         
         if (data.success) {
+            // Réinitialiser le formulaire
+            if (messageInput) messageInput.value = "";
+            const attachmentInput = document.getElementById("message-attachment");
+            if (attachmentInput) attachmentInput.value = "";
+            
             // Attendre un peu avant de recharger pour s'assurer que le message est sauvegardé
             setTimeout(() => {
                 loadEventMessages(currentEventId);
+                // Les formulaires seront rechargés automatiquement par loadEventMessages modifié
             }, 500);
         } else {
             alert("Erreur lors de l'envoi du message: " + (data.message || data.error || "Erreur inconnue"));
         }
     } catch (error) {
+        console.error("Erreur lors de l'envoi du message:", error);
         alert("Erreur lors de l'envoi du message: " + error.message);
     }
 }
@@ -633,6 +658,7 @@ function updateEventSelection(selectedItem) {
     // Charger les messages de l'événement sélectionné
     if (eventId) {
         loadEventMessages(eventId);
+        // Les formulaires seront rechargés automatiquement par loadEventMessages modifié
         // Vérifier l'état d'inscription SANS s'inscrire automatiquement
         checkEventRegistrationStatus(eventId);
     }
@@ -644,6 +670,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (initialEventId && initialEventId !== "null") {
         currentEventId = initialEventId;
         loadEventMessages(currentEventId);
+        // Les formulaires seront rechargés automatiquement par loadEventMessages modifié
         
         // Vérifier l'état d'inscription SANS s'inscrire automatiquement
         checkEventRegistrationStatus(currentEventId);
@@ -818,3 +845,863 @@ window.deleteMessage = async function(messageId) {
 
 // Fonctions de test supprimées - elles utilisaient l'API externe directement
 // Ces fonctions ne sont plus nécessaires car toutes les requêtes passent maintenant par le backend WebApp2
+
+// ============================================
+// GESTION DES FORMULAIRES POUR LES ÉVÉNEMENTS
+// ============================================
+
+// Variable pour stocker les formulaires de l'événement actuel
+let currentEventForms = [];
+let currentEventFormResponseCounts = {};
+
+// Fonction pour charger les formulaires d'un événement
+function loadEventForms(eventId) {
+    console.log('Chargement des formulaires pour l\'événement:', eventId);
+    
+    // Réinitialiser les formulaires et compteurs avant de charger les nouveaux
+    currentEventForms = [];
+    currentEventFormResponseCounts = {};
+    
+    // Supprimer les formulaires existants du DOM immédiatement
+    const messagesContainer = document.getElementById('messages-container');
+    if (messagesContainer) {
+        const existingForms = messagesContainer.querySelectorAll('.form-message');
+        existingForms.forEach(form => form.remove());
+    }
+    
+    fetch(`/api/events/${eventId}/forms`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log('Réponse API formulaires, status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Données formulaires reçues:', data);
+        // Gérer différents formats de réponse API
+        let forms = [];
+        if (data.success && data.data) {
+            if (Array.isArray(data.data)) {
+                forms = data.data;
+            } else if (data.data.data && Array.isArray(data.data.data)) {
+                // Format imbriqué: {success: true, data: {data: [...]}}
+                forms = data.data.data;
+            } else if (Array.isArray(data.data)) {
+                forms = data.data;
+            }
+        } else if (Array.isArray(data)) {
+            forms = data;
+        }
+        
+        if (forms.length > 0) {
+            currentEventForms = forms;
+            console.log('Formulaires trouvés:', currentEventForms.length);
+            // Initialiser les compteurs à 0 pour tous les formulaires
+            currentEventForms.forEach(function(form) {
+                currentEventFormResponseCounts[form.id] = 0;
+            });
+            // Ajouter les formulaires aux messages affichés immédiatement
+            addEventFormsToMessages();
+            // Charger les compteurs de réponses pour chaque formulaire (asynchrone)
+            loadEventFormResponseCounts(forms);
+        } else {
+            console.log('Aucun formulaire trouvé');
+            currentEventForms = [];
+            // Appeler addEventFormsToMessages même s'il n'y a pas de formulaires pour s'assurer que les anciens sont supprimés
+            addEventFormsToMessages();
+        }
+    })
+    .catch(error => {
+        console.error('Erreur lors du chargement des formulaires:', error);
+        currentEventForms = [];
+        // Appeler addEventFormsToMessages même en cas d'erreur pour supprimer les anciens formulaires
+        addEventFormsToMessages();
+    });
+}
+
+// Fonction pour charger les compteurs de réponses
+function loadEventFormResponseCounts(forms) {
+    forms.forEach(function(form) {
+        fetch(`/api/forms/${form.id}/responses`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data && Array.isArray(data.data)) {
+                currentEventFormResponseCounts[form.id] = data.data.length;
+            } else {
+                currentEventFormResponseCounts[form.id] = 0;
+            }
+            // Mettre à jour l'affichage des formulaires
+            updateEventFormDisplay();
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des réponses:', error);
+            currentEventFormResponseCounts[form.id] = 0;
+        });
+    });
+}
+
+// Fonction pour ajouter les formulaires aux messages (en bas de la page)
+function addEventFormsToMessages() {
+    const messagesContainer = document.getElementById('messages-container');
+    if (!messagesContainer) {
+        console.error('Conteneur de messages non trouvé');
+        return;
+    }
+    
+    console.log('Ajout des formulaires, nombre:', currentEventForms.length);
+    
+    // Vérifier si des formulaires sont déjà affichés
+    const existingForms = messagesContainer.querySelectorAll('.form-message');
+    if (existingForms.length > 0) {
+        // Supprimer les anciens formulaires
+        existingForms.forEach(form => form.remove());
+    }
+    
+    if (currentEventForms.length === 0) {
+        console.log('Aucun formulaire à afficher');
+        return;
+    }
+    
+    // Ajouter les formulaires à la fin du conteneur (après les messages)
+    const fragment = document.createDocumentFragment();
+    currentEventForms.forEach(function(form) {
+        const responseCount = currentEventFormResponseCounts[form.id] || 0;
+        const formElement = document.createElement('div');
+        formElement.className = 'form-message mb-3';
+        formElement.setAttribute('data-form-id', form.id);
+        formElement.innerHTML = `
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">📊 ${escapeHtml(form.title || 'Formulaire')}</h6>
+                </div>
+                <div class="card-body">
+                    ${form.description && form.description.trim() ? `<div class="form-description mb-3">
+                        <p class="text-muted mb-0">${escapeHtml(form.description)}</p>
+                    </div>` : ''}
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-sm btn-primary" onclick="openEventFormModal(${form.id})">
+                            📝 Répondre
+                        </button>
+                        <button class="btn btn-sm btn-info" onclick="viewEventFormResults(${form.id})">
+                            📊 Résultats (${responseCount})
+                        </button>
+                        ${window.isAdmin ? `<button class="btn btn-sm btn-danger" onclick="deleteEventForm(${form.id})">
+                            🗑️ Supprimer
+                        </button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        fragment.appendChild(formElement);
+    });
+    
+    // Ajouter les formulaires à la fin du conteneur
+    messagesContainer.appendChild(fragment);
+    
+    console.log('Formulaires ajoutés avec succès en bas de page');
+}
+
+// Fonction pour mettre à jour l'affichage des formulaires
+function updateEventFormDisplay() {
+    currentEventForms.forEach(function(form) {
+        const formElement = document.querySelector(`[data-form-id="${form.id}"]`);
+        if (formElement) {
+            const resultsButton = formElement.querySelector('.btn-info');
+            if (resultsButton) {
+                const responseCount = currentEventFormResponseCounts[form.id] || 0;
+                resultsButton.textContent = `📊 Résultats (${responseCount})`;
+            }
+        }
+    });
+}
+
+// Fonction pour ouvrir le modal de formulaire
+window.openEventFormModal = function(formId) {
+    const form = currentEventForms.find(f => f.id == formId);
+    if (!form) return;
+    
+    // Créer ou récupérer le modal
+    let modal = document.getElementById('event-form-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'event-form-modal';
+        modal.className = 'modal fade';
+        modal.setAttribute('tabindex', '-1');
+        document.body.appendChild(modal);
+    }
+    
+    // Générer le HTML du formulaire (identique à groups-topics.js)
+    let formHtml = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📊 ${escapeHtml(form.title || 'Formulaire')}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    ${form.description ? `<p class="text-muted mb-3">${escapeHtml(form.description)}</p>` : ''}
+                    <form id="event-form-response-form">
+                        <input type="hidden" id="event-form-id" value="${form.id}">
+    `;
+    
+    if (form.questions && Array.isArray(form.questions)) {
+        form.questions.forEach(function(question, index) {
+            formHtml += `
+                <div class="mb-3">
+                    <label class="form-label">
+                        ${escapeHtml(question.text || '')}
+                        ${question.required ? '<span class="text-danger">*</span>' : ''}
+                    </label>
+            `;
+            
+            if (question.type === 'text') {
+                formHtml += `
+                    <textarea class="form-control" name="question_${question.id}" 
+                              ${question.required ? 'required' : ''} 
+                              rows="3" placeholder="Votre réponse..."></textarea>
+                `;
+            } else if (question.type === 'radio' && question.options) {
+                question.options.forEach(function(option) {
+                    formHtml += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="question_${question.id}" 
+                                   value="${escapeHtml(option)}" id="radio_${question.id}_${option}" 
+                                   ${question.required ? 'required' : ''}>
+                            <label class="form-check-label" for="radio_${question.id}_${option}">
+                                ${escapeHtml(option)}
+                            </label>
+                        </div>
+                    `;
+                });
+            } else if (question.type === 'checkbox' && question.options) {
+                question.options.forEach(function(option) {
+                    formHtml += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="question_${question.id}[]" 
+                                   value="${escapeHtml(option)}" id="checkbox_${question.id}_${option}">
+                            <label class="form-check-label" for="checkbox_${question.id}_${option}">
+                                ${escapeHtml(option)}
+                            </label>
+                        </div>
+                    `;
+                });
+            }
+            
+            formHtml += `</div>`;
+        });
+    }
+    
+    formHtml += `
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEventFormResponse()">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.innerHTML = formHtml;
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+};
+
+// Fonction pour soumettre une réponse de formulaire
+window.submitEventFormResponse = function() {
+    const formId = document.getElementById('event-form-id')?.value;
+    if (!formId) return;
+    
+    const form = document.getElementById('event-form-response-form');
+    const formData = new FormData(form);
+    const responses = {};
+    
+    // Collecter les réponses
+    formData.forEach((value, key) => {
+        if (key.startsWith('question_')) {
+            const questionId = key.replace('question_', '').replace('[]', '');
+            if (key.includes('[]')) {
+                // Checkbox multiple
+                if (!responses[questionId]) {
+                    responses[questionId] = [];
+                }
+                responses[questionId].push(value);
+            } else {
+                // Radio ou text
+                responses[questionId] = value;
+            }
+        }
+    });
+    
+    // Vérifier les champs obligatoires
+    const formObj = currentEventForms.find(f => f.id == formId);
+    if (formObj && formObj.questions) {
+        const missingRequired = formObj.questions.filter(q => 
+            q.required && (!responses[q.id] || (Array.isArray(responses[q.id]) && responses[q.id].length === 0))
+        );
+        if (missingRequired.length > 0) {
+            alert('Veuillez répondre à toutes les questions obligatoires');
+            return;
+        }
+    }
+    
+    // Envoyer la réponse
+    fetch(`/api/forms/${formId}/responses`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ responses: responses })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Votre réponse a été enregistrée');
+            bootstrap.Modal.getInstance(document.getElementById('event-form-modal')).hide();
+            // Recharger les compteurs de réponses
+            if (currentEventId) {
+                loadEventForms(currentEventId);
+            }
+        } else {
+            alert('Erreur lors de l\'envoi de la réponse: ' + (data.message || 'Erreur inconnue'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'envoi de la réponse');
+    });
+};
+
+// Fonction pour voir les résultats d'un formulaire (identique à groups-topics.js)
+window.viewEventFormResults = function(formId) {
+    console.log('Chargement des résultats pour le formulaire:', formId);
+    fetch(`/api/forms/${formId}/responses`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log('Réponse API résultats, status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Données résultats reçues:', data);
+        // Gérer différents formats de réponse API
+        let responses = [];
+        if (data.success && data.data) {
+            if (Array.isArray(data.data)) {
+                responses = data.data;
+            } else if (data.data.data && Array.isArray(data.data.data)) {
+                responses = data.data.data;
+            }
+        } else if (Array.isArray(data)) {
+            responses = data;
+        }
+        
+        console.log('Réponses extraites:', responses.length);
+        
+        if (responses.length > 0) {
+            const form = currentEventForms.find(f => f.id == formId);
+            if (!form) {
+                console.error('Formulaire non trouvé:', formId);
+                alert('Formulaire non trouvé');
+                return;
+            }
+            showEventFormResultsModal(form, responses);
+        } else {
+            alert('Aucune réponse disponible pour ce formulaire');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur lors du chargement des résultats:', error);
+        alert('Erreur lors du chargement des résultats: ' + error.message);
+    });
+};
+
+// Fonction pour afficher les résultats dans un modal (identique à groups-topics.js)
+function showEventFormResultsModal(form, responses) {
+    console.log('Affichage des résultats pour le formulaire:', form);
+    console.log('Nombre de réponses:', responses.length);
+    
+    let modal = document.getElementById('event-form-results-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'event-form-results-modal';
+        modal.className = 'modal fade';
+        modal.setAttribute('tabindex', '-1');
+        document.body.appendChild(modal);
+    }
+    
+    let resultsHtml = `
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📊 Résultats du Sondage</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+    `;
+    
+    if (responses.length === 0) {
+        resultsHtml += '<p class="text-center text-muted">Aucune réponse pour le moment</p>';
+    } else {
+        resultsHtml += `
+            <div class="alert alert-info mb-4">
+                <strong>📊 ${responses.length}</strong> réponse${responses.length > 1 ? 's' : ''} au total
+            </div>
+        `;
+        
+        if (form && form.questions && Array.isArray(form.questions)) {
+            form.questions.forEach(function(question, questionIndex) {
+                const questionResponses = [];
+                
+                responses.forEach(function(response) {
+                    let parsedResponses = response.responses;
+                    if (typeof response.responses === 'string') {
+                        try {
+                            parsedResponses = JSON.parse(response.responses);
+                        } catch (e) {
+                            parsedResponses = response.responses;
+                        }
+                    }
+                    
+                    let answer = null;
+                    if (parsedResponses && typeof parsedResponses === 'object') {
+                        answer = parsedResponses[question.id] || parsedResponses[question._id] || parsedResponses[String(question.id)] || parsedResponses[String(question._id)];
+                        if (!answer && questionIndex !== undefined) {
+                            const keys = Object.keys(parsedResponses);
+                            if (keys[questionIndex]) {
+                                answer = parsedResponses[keys[questionIndex]];
+                            }
+                        }
+                    }
+                    
+                    if (answer !== null && answer !== undefined && answer !== '') {
+                        const userName = response.user?.name || response.user_name || response.username || `Utilisateur ${response.user_id || ''}`;
+                        questionResponses.push({
+                            user: userName,
+                            answer: Array.isArray(answer) ? answer.join(', ') : String(answer),
+                            date: response.submitted_at || response.created_at || response.createdAt
+                        });
+                    }
+                });
+                
+                const choicesMap = {};
+                questionResponses.forEach(function(resp) {
+                    const choice = resp.answer;
+                    if (!choicesMap[choice]) {
+                        choicesMap[choice] = [];
+                    }
+                    choicesMap[choice].push(resp.user);
+                });
+                
+                resultsHtml += `
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">❓ ${escapeHtml(question.text || 'Question ' + (questionIndex + 1))}</h6>
+                        </div>
+                        <div class="card-body">
+                `;
+                
+                Object.entries(choicesMap).forEach(function([choice, users]) {
+                    resultsHtml += `
+                        <div class="mb-3 p-3 border rounded">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="text-success me-2">✅</span>
+                                <strong>${escapeHtml(choice)}</strong>
+                                <span class="badge bg-primary ms-2">${users.length} réponse${users.length > 1 ? 's' : ''}</span>
+                            </div>
+                            <div class="ms-4">
+                                ${users.map(function(user) {
+                                    return `<div class="mb-1">👤 ${escapeHtml(user)}</div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                if (Object.keys(choicesMap).length === 0) {
+                    resultsHtml += '<p class="text-muted">Aucune réponse pour cette question</p>';
+                }
+                
+                resultsHtml += `
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    }
+    
+    resultsHtml += `
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.innerHTML = resultsHtml;
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+// Fonction pour supprimer un formulaire
+window.deleteEventForm = function(formId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce formulaire ?')) {
+        return;
+    }
+    
+    fetch(`/api/forms/${formId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Formulaire supprimé avec succès');
+            // Recharger les formulaires
+            if (currentEventId) {
+                loadEventForms(currentEventId);
+            }
+        } else {
+            alert('Erreur lors de la suppression: ' + (data.message || 'Erreur inconnue'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la suppression');
+    });
+};
+
+// Fonction pour ouvrir le constructeur de formulaire
+window.openEventFormBuilder = function() {
+    if (!currentEventId || currentEventId === "null") {
+        alert('Veuillez d\'abord sélectionner un événement');
+        return;
+    }
+    
+    // Créer ou récupérer le modal de création de formulaire (identique à groups-topics.js)
+    let modal = document.getElementById('event-form-builder-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'event-form-builder-modal';
+        modal.className = 'modal fade';
+        modal.setAttribute('tabindex', '-1');
+        document.body.appendChild(modal);
+    }
+    
+    let builderHtml = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📊 Créer un formulaire</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="event-form-builder-form">
+                        <input type="hidden" id="builder-event-id" value="${currentEventId}">
+                        <div class="mb-3">
+                            <label for="event-form-title" class="form-label">Titre du formulaire <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="event-form-title" required placeholder="Ex: Questionnaire de satisfaction">
+                        </div>
+                        <div class="mb-3">
+                            <label for="event-form-description" class="form-label">Description</label>
+                            <textarea class="form-control" id="event-form-description" rows="2" placeholder="Description du formulaire (optionnel)"></textarea>
+                        </div>
+                        <div id="event-form-questions-container">
+                            <h6 class="mb-3">Questions</h6>
+                            <div id="event-form-questions-list"></div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addEventFormQuestion()">
+                                <i class="fas fa-plus"></i> Ajouter une question
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEventFormBuilder()">Créer le formulaire</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.innerHTML = builderHtml;
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    // Réinitialiser la liste des questions
+    window.eventFormBuilderQuestions = [];
+};
+
+// Variable pour stocker les questions du formulaire en cours de création
+window.eventFormBuilderQuestions = [];
+
+// Fonction pour ajouter une question au formulaire (identique à groups-topics.js)
+window.addEventFormQuestion = function() {
+    const questionId = 'question_' + Date.now();
+    const questionIndex = window.eventFormBuilderQuestions.length;
+    
+    window.eventFormBuilderQuestions.push({
+        id: questionId,
+        text: '',
+        type: 'text',
+        options: [],
+        required: false
+    });
+    
+    const questionsList = document.getElementById('event-form-questions-list');
+    if (!questionsList) return;
+    
+    const questionHtml = `
+        <div class="card mb-3 question-item" data-question-id="${questionId}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">Question ${questionIndex + 1}</h6>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeEventFormQuestion('${questionId}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Texte de la question <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control question-text" data-question-id="${questionId}" 
+                           placeholder="Ex: Quel est votre niveau de satisfaction ?" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Type de question</label>
+                    <select class="form-select question-type" data-question-id="${questionId}" onchange="updateEventQuestionType('${questionId}')">
+                        <option value="text">Texte libre</option>
+                        <option value="radio">Choix unique (radio)</option>
+                        <option value="checkbox">Choix multiple (checkbox)</option>
+                    </select>
+                </div>
+                <div class="question-options-container" data-question-id="${questionId}" style="display: none;">
+                    <label class="form-label">Options</label>
+                    <div class="question-options-list" data-question-id="${questionId}">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control option-input" placeholder="Option 1">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeEventOption(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control option-input" placeholder="Option 2">
+                            <button type="button" class="btn btn-outline-danger" onclick="removeEventOption(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addEventOption('${questionId}')">
+                        <i class="fas fa-plus"></i> Ajouter une option
+                    </button>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input question-required" type="checkbox" data-question-id="${questionId}" id="required_${questionId}">
+                    <label class="form-check-label" for="required_${questionId}">
+                        Question obligatoire
+                    </label>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = questionHtml;
+    questionsList.appendChild(tempDiv.firstChild);
+};
+
+// Fonction pour mettre à jour le type de question
+window.updateEventQuestionType = function(questionId) {
+    const question = window.eventFormBuilderQuestions.find(q => q.id === questionId);
+    if (!question) return;
+    
+    const select = document.querySelector(`.question-type[data-question-id="${questionId}"]`);
+    const optionsContainer = document.querySelector(`.question-options-container[data-question-id="${questionId}"]`);
+    
+    if (select && optionsContainer) {
+        question.type = select.value;
+        if (question.type === 'radio' || question.type === 'checkbox') {
+            optionsContainer.style.display = 'block';
+            if (question.options.length === 0) {
+                question.options = ['', ''];
+                updateEventOptionsDisplay(questionId);
+            }
+        } else {
+            optionsContainer.style.display = 'none';
+            question.options = [];
+        }
+    }
+};
+
+// Fonction pour ajouter une option
+window.addEventOption = function(questionId) {
+    const question = window.eventFormBuilderQuestions.find(q => q.id === questionId);
+    if (!question) return;
+    
+    question.options.push('');
+    updateEventOptionsDisplay(questionId);
+};
+
+// Fonction pour supprimer une option
+window.removeEventOption = function(button) {
+    const inputGroup = button.closest('.input-group');
+    const questionId = inputGroup.closest('.question-item').getAttribute('data-question-id');
+    const question = window.eventFormBuilderQuestions.find(q => q.id === questionId);
+    
+    if (question && question.options.length > 1) {
+        const index = Array.from(inputGroup.parentElement.children).indexOf(inputGroup);
+        question.options.splice(index, 1);
+        inputGroup.remove();
+    }
+};
+
+// Fonction pour mettre à jour l'affichage des options
+function updateEventOptionsDisplay(questionId) {
+    const question = window.eventFormBuilderQuestions.find(q => q.id === questionId);
+    if (!question) return;
+    
+    const optionsList = document.querySelector(`.question-options-list[data-question-id="${questionId}"]`);
+    if (!optionsList) return;
+    
+    optionsList.innerHTML = '';
+    question.options.forEach(function(option, index) {
+        const optionHtml = `
+            <div class="input-group mb-2">
+                <input type="text" class="form-control option-input" placeholder="Option ${index + 1}" value="${escapeHtml(option)}">
+                <button type="button" class="btn btn-outline-danger" onclick="removeEventOption(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = optionHtml;
+        optionsList.appendChild(tempDiv.firstChild);
+    });
+}
+
+// Fonction pour supprimer une question
+window.removeEventFormQuestion = function(questionId) {
+    window.eventFormBuilderQuestions = window.eventFormBuilderQuestions.filter(q => q.id !== questionId);
+    const questionElement = document.querySelector(`.question-item[data-question-id="${questionId}"]`);
+    if (questionElement) {
+        questionElement.remove();
+    }
+};
+
+// Fonction pour soumettre le formulaire créé
+window.submitEventFormBuilder = function() {
+    const eventId = document.getElementById('builder-event-id')?.value;
+    const title = document.getElementById('event-form-title')?.value;
+    const description = document.getElementById('event-form-description')?.value || '';
+    
+    if (!title || !title.trim()) {
+        alert('Le titre du formulaire est requis');
+        return;
+    }
+    
+    // Collecter les questions
+    const questions = [];
+    window.eventFormBuilderQuestions.forEach(function(questionData) {
+        const questionElement = document.querySelector(`.question-item[data-question-id="${questionData.id}"]`);
+        if (!questionElement) return;
+        
+        const textInput = questionElement.querySelector('.question-text');
+        const typeSelect = questionElement.querySelector('.question-type');
+        const requiredCheckbox = questionElement.querySelector('.question-required');
+        
+        if (!textInput || !textInput.value.trim()) {
+            alert('Toutes les questions doivent avoir un texte');
+            return;
+        }
+        
+        const question = {
+            text: textInput.value.trim(),
+            type: typeSelect ? typeSelect.value : 'text',
+            required: requiredCheckbox ? requiredCheckbox.checked : false
+        };
+        
+        if (question.type === 'radio' || question.type === 'checkbox') {
+            const optionInputs = questionElement.querySelectorAll('.option-input');
+            question.options = Array.from(optionInputs).map(input => input.value.trim()).filter(opt => opt);
+            if (question.options.length < 2) {
+                alert('Les questions de type radio ou checkbox doivent avoir au moins 2 options');
+                return;
+            }
+        }
+        
+        questions.push(question);
+    });
+    
+    if (questions.length === 0) {
+        alert('Le formulaire doit contenir au moins une question');
+        return;
+    }
+    
+    // Créer le formulaire
+    const formData = {
+        title: title.trim(),
+        description: description.trim(),
+        questions: questions,
+        eventId: eventId
+    };
+    
+    fetch('/api/forms', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Formulaire créé avec succès');
+            bootstrap.Modal.getInstance(document.getElementById('event-form-builder-modal')).hide();
+            // Recharger les formulaires
+            if (eventId) {
+                loadEventForms(eventId);
+            }
+        } else {
+            alert('Erreur lors de la création: ' + (data.message || 'Erreur inconnue'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la création du formulaire');
+    });
+};
+
+// Modifier loadEventMessages pour appeler loadEventForms après le chargement des messages
+const originalLoadEventMessages = loadEventMessages;
+window.loadEventMessages = function(eventId) {
+    originalLoadEventMessages(eventId);
+    // Charger les formulaires après les messages
+    if (eventId) {
+        setTimeout(() => {
+            loadEventForms(eventId);
+        }, 100);
+    }
+};
+
+// Modifier updateEventSelection pour charger les formulaires lors du changement d'événement
+const originalUpdateEventSelection = updateEventSelection;
+window.updateEventSelection = function(selectedItem) {
+    originalUpdateEventSelection(selectedItem);
+    // Charger les formulaires du nouvel événement
+    if (currentEventId) {
+        setTimeout(() => {
+            loadEventForms(currentEventId);
+        }, 100);
+    }
+};

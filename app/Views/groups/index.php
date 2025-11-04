@@ -103,67 +103,107 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
             </div>
         </div>
 
-        <!-- Section chat -->
+        <!-- Section sujets -->
         <div class="col-md-8">
             <?php if (!empty($groups)): ?>
-                <!-- Chat du premier groupe (affiché par défaut) -->
-                <div id="chat-container" class="card">
+                <!-- Sujets du premier groupe (affiché par défaut) -->
+                <div id="topics-container" class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0" id="chat-title"><?php echo htmlspecialchars($groups[0]['name']); ?></h5>
+                        <h5 class="mb-0" id="topics-title"><?php echo htmlspecialchars($groups[0]['name']); ?></h5>
+                        <a href="/groups/<?php echo $groups[0]['id']; ?>/topics/create" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-2"></i>Nouveau sujet
+                        </a>
                     </div>
-                    <div class="card-body" style="height: 500px;">
-                        <div class="chat-container">
-                            <div id="messages-container" class="messages-container mb-3">
-                                <?php 
-                                // Charger les vrais messages depuis l'API si disponibles
-                                if (empty($chatMessages) && !empty($groups)) {
-                                    $firstGroupId = $groups[0]['id'];
-                                    try {
-                                        $apiService = new ApiService();
-                                        $messagesResponse = $apiService->makeRequest("messages/{$firstGroupId}/history", "GET");
-                                        if ($messagesResponse['success']) {
-                                            // Vérifier que la clé "data" existe et n'est pas null
-                                            if (isset($messagesResponse['data']) && $messagesResponse['data'] !== null) {
-                                                $chatMessages = $messagesResponse['data'];
-                                                error_log("Messages chargés depuis l'API: " . count($chatMessages) . " messages");
-                                            } else {
-                                                error_log("Pas de données dans la réponse messages");
-                                                $chatMessages = [];
-                                            }
-                                        } else {
-                                            error_log("Erreur API messages: " . ($messagesResponse['message'] ?? 'Erreur inconnue'));
-                                            $chatMessages = [];
-                                        }
-                                    } catch (Exception $e) {
-                                        error_log("Exception lors du chargement des messages: " . $e->getMessage());
-                                        $chatMessages = [];
-                                    }
-                                }
-                                ?>
-                                <?php if (isset($chatMessages) && !empty($chatMessages)): ?>
-                                    <?php foreach ($chatMessages as $message): 
-                                        // Inclure le template de message
-                                        include __DIR__ . "/../chat/group-message.php";
-                                    endforeach; ?>
-                                <?php else: ?>
-                                    <div class="text-center text-muted">
-                                        <i class="fas fa-comments fa-2x mb-2"></i>
-                                        <p>Aucun message dans le chat</p>
-                                    </div>
-                                <?php endif; ?>
+                    <div class="card-body">
+                        <?php 
+                        $firstGroupId = $groups[0]['id'];
+                        $topics = $groupTopics[$firstGroupId] ?? [];
+                        ?>
+                        <?php if (empty($topics)): ?>
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-comments fa-3x mb-3"></i>
+                                <p>Aucun sujet de discussion</p>
+                                <a href="/groups/<?php echo $firstGroupId; ?>/topics/create" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Créer le premier sujet
+                                </a>
                             </div>
+                        <?php else: ?>
+                            <div class="list-group" id="topics-list">
+                                <?php foreach ($topics as $topic): ?>
+                                    <div class="list-group-item list-group-item-action topic-item" 
+                                         data-topic-id="<?php echo $topic['id']; ?>"
+                                         data-topic-title="<?php echo htmlspecialchars($topic['title'] ?? 'Sans titre'); ?>"
+                                         data-topic-description="<?php echo htmlspecialchars($topic['description'] ?? ''); ?>"
+                                         style="cursor: pointer;">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">
+                                                    <?php echo htmlspecialchars($topic['title'] ?? 'Sans titre'); ?>
+                                                    <?php if (isset($topic['unreadCount']) && $topic['unreadCount'] > 0): ?>
+                                                        <span class="badge bg-danger ms-2"><?php echo $topic['unreadCount']; ?></span>
+                                                    <?php endif; ?>
+                                                </h6>
+                                                <?php if (!empty($topic['description'])): ?>
+                                                    <p class="mb-1 text-muted small">
+                                                        <?php echo htmlspecialchars(substr($topic['description'], 0, 100)); ?>
+                                                        <?php echo strlen($topic['description']) > 100 ? '...' : ''; ?>
+                                                    </p>
+                                                <?php endif; ?>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user me-1"></i>
+                                                    Créé par <?php echo htmlspecialchars($topic['created_by_name'] ?? 'Anonyme'); ?>
+                                                    <?php if (!empty($topic['created_at'])): ?>
+                                                        <span class="ms-2">
+                                                            <i class="fas fa-calendar me-1"></i>
+                                                            <?php 
+                                                            $createdAt = new DateTime($topic['created_at']);
+                                                            echo $createdAt->format('d/m/Y');
+                                                            ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <!-- Section chat du sujet sélectionné -->
+                <div id="topic-chat-container" class="card mt-3" style="display: none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0" id="chat-topic-title">Sujet</h5>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeTopicChat()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="card-body" style="height: 500px; display: flex; flex-direction: column;">
+                        <div class="chat-container" style="flex: 1; overflow-y: auto;">
+                            <div id="topic-messages-container" class="messages-container mb-3">
+                                <div class="text-center text-muted py-3">
+                                    <i class="fas fa-comments fa-2x mb-2"></i>
+                                    <p>Chargement des messages...</p>
+                                </div>
+                            </div>
+                            
                             <div class="message-input-container">
-                                <form id="message-form" class="d-flex gap-2">
-                                    <input type="hidden" id="current-user-id" value="<?php echo $_SESSION['user']['id']; ?>">
-                                    <input type="hidden" id="current-group-id" value="<?php echo $groups[0]['id']; ?>">
+                                <form id="topic-message-form" class="d-flex gap-2">
+                                    <input type="hidden" id="current-topic-id-input" value="">
                                     <div class="flex-grow-1">
-                                        <input type="text" id="message-input" class="form-control" placeholder="Votre message...">
+                                        <input type="text" id="topic-message-input" class="form-control" placeholder="Votre message...">
                                     </div>
                                     <div class="d-flex gap-2">
                                         <div class="btn btn-outline-secondary position-relative">
                                             <i class="fas fa-paperclip"></i>
-                                            <input type="file" id="message-attachment" class="position-absolute top-0 start-0 opacity-0" style="width:100%; height:100%; cursor:pointer;">
+                                            <input type="file" id="topic-message-attachment" class="position-absolute top-0 start-0 opacity-0" style="width:100%; height:100%; cursor:pointer;">
                                         </div>
+                                        <?php if ($_SESSION["user"]["is_admin"]): ?>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="openFormBuilder()" title="Créer un formulaire">
+                                            <i class="fas fa-table"></i> 📊
+                                        </button>
+                                        <?php endif; ?>
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-paper-plane"></i>
                                         </button>
@@ -210,74 +250,11 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
 
 <!-- Variables PHP pour JavaScript -->
 <script>
-const currentUserId = <?php echo $_SESSION["user"]["id"]; ?>;
-const initialGroupId = <?php echo !empty($groups) ? $groups[0]['id'] : 'null'; ?>;
-// backendUrl supprimé - tous les appels passent maintenant par le backend WebApp2
-const isAdmin = <?php echo $_SESSION["user"]["is_admin"] ? 'true' : 'false'; ?>;
-const authToken = "<?php echo $_SESSION['token'] ?? ''; ?>";
+window.currentUserId = <?php echo $_SESSION["user"]["id"]; ?>;
+window.initialGroupId = <?php echo !empty($groups) ? $groups[0]['id'] : 'null'; ?>;
+window.isAdmin = <?php echo $_SESSION["user"]["is_admin"] ? 'true' : 'false'; ?>;
+window.groupTopics = <?php echo json_encode($groupTopics); ?>;
 </script>
 
-<!-- Inclusion du JavaScript -->
-<script src="/public/assets/js/groups-chat.js"></script>
-
-<!-- Script pour la suppression des groupes -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Script de suppression chargé');
-    
-    // Gérer les clics sur les boutons de suppression
-    document.querySelectorAll('.delete-group-btn').forEach(function(button) {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const groupId = this.getAttribute('data-group-id');
-            const groupName = this.getAttribute('data-group-name');
-            
-            console.log('Clic sur suppression du groupe:', groupId, groupName);
-            
-            // Mettre à jour le modal avec les informations du groupe
-            document.getElementById('groupName').textContent = groupName;
-            document.getElementById('deleteGroupId').value = groupId;
-            
-            // Afficher le modal
-            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            modal.show();
-        });
-    });
-    
-    // Gérer la soumission du formulaire de suppression
-    const deleteForm = document.getElementById('deleteForm');
-    if (deleteForm) {
-        deleteForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const groupId = document.getElementById('deleteGroupId').value;
-            console.log('Suppression du groupe:', groupId);
-            
-            // Créer un formulaire temporaire pour la suppression
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/groups/' + groupId;
-            
-            // Ajouter le champ _method pour simuler DELETE
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'DELETE';
-            form.appendChild(methodInput);
-            
-            // Ajouter le champ group_id
-            const groupIdInput = document.createElement('input');
-            groupIdInput.type = 'hidden';
-            groupIdInput.name = 'group_id';
-            groupIdInput.value = groupId;
-            form.appendChild(groupIdInput);
-            
-            // Soumettre le formulaire
-            document.body.appendChild(form);
-            form.submit();
-        });
-    }
-});
-</script>
+<!-- Inclusion du script JavaScript externe -->
+<script src="/public/assets/js/groups-topics.js"></script>

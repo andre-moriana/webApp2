@@ -3,6 +3,7 @@ $title = "Portail Archers de Gémenos - Détails de l'événement";
 ?>
 <!-- Inclusion des styles -->
 <link rel="stylesheet" href="/public/assets/css/events.css">
+<link rel="stylesheet" href="/public/assets/css/groups-chat.css">
 <div class="container-fluid">
     <div class="row">
         <!-- Détails de l"événement -->
@@ -160,6 +161,11 @@ $title = "Portail Archers de Gémenos - Détails de l'événement";
                                             <i class="fas fa-paperclip"></i>
                                             <input type="file" id="message-attachment" class="position-absolute top-0 start-0 opacity-0" style="width:100%; height:100%; cursor:pointer;">
                                         </div>
+                                        <?php if ($_SESSION["user"]["is_admin"]): ?>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="openEventFormBuilder()" title="Créer un formulaire">
+                                            <i class="fas fa-table"></i> 📊
+                                        </button>
+                                        <?php endif; ?>
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-paper-plane"></i>
                                         </button>

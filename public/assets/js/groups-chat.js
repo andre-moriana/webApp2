@@ -40,37 +40,91 @@ function createMessageElement(message) {
     }
 
     let attachmentHtml = "";
-    if (message.attachment && (message.attachment.filename || message.attachment.url || message.attachment.path)) {
+    // Vérifier si le message a une pièce jointe (peut être null, un objet, ou une chaîne)
+    const hasAttachment = message.attachment && 
+        (message.attachment !== null) && 
+        (typeof message.attachment === 'object') &&
+        (message.attachment.filename || message.attachment.url || message.attachment.path);
+    
+    if (hasAttachment) {
         let attachmentUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
-        const isImage = message.attachment.mimeType && message.attachment.mimeType.startsWith("image/");
+        
+        // Détecter si c'est une image ou un PDF par mimeType ou par extension
+        let isImage = false;
+        let isPdf = false;
+        
+        if (message.attachment.mimeType) {
+            if (message.attachment.mimeType.startsWith("image/")) {
+                isImage = true;
+            } else if (message.attachment.mimeType === "application/pdf") {
+                isPdf = true;
+            }
+        }
+        
+        // Détecter par extension si mimeType n'est pas disponible
+        if (!isImage && !isPdf) {
+            const filename = message.attachment.filename || message.attachment.originalName || attachmentUrl;
+            const lowerFilename = filename.toLowerCase();
+            const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg"];
+            const pdfExtensions = [".pdf"];
+            
+            isImage = imageExtensions.some(ext => lowerFilename.endsWith(ext));
+            isPdf = pdfExtensions.some(ext => lowerFilename.endsWith(ext));
+        }
+        
         const originalName = message.attachment.originalName || message.attachment.filename || "Pièce jointe";
         
+        // Définir l'URL originale pour tous les types de fichiers
+        const originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
+        
         // Pour les images, utiliser la route d'images du backend WebApp2
-        if (attachmentUrl && !attachmentUrl.startsWith("http")) {
-            if (isImage) {
-                // Pour les images, utiliser la route d'images du backend WebApp2 avec l'URL en paramètre
-                const originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
-                attachmentUrl = "/messages/image/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
-            } else {
-                // Pour les autres fichiers, utiliser la route de téléchargement
-                attachmentUrl = "/messages/attachment/" + (message._id || message.id);
-            }
+        if (isImage) {
+            // Pour toutes les images, utiliser la route proxy du backend WebApp2
+            attachmentUrl = "/messages/image/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
+        } else if (isPdf) {
+            // Pour les PDF, utiliser la route d'attachment avec paramètre pour affichage inline
+            attachmentUrl = "/messages/attachment/" + (message._id || message.id) + "?inline=1&url=" + encodeURIComponent(originalUrl);
+        } else {
+            // Pour les autres fichiers, utiliser la route de téléchargement
+            attachmentUrl = "/messages/attachment/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
         }
         
         attachmentHtml = `
             <div class="message-attachment mt-2">
-                <a href="${attachmentUrl}" target="_blank" class="attachment-link">
-                    ${isImage 
-                        ? `<img src="${attachmentUrl}" 
-                               alt="${originalName}" 
-                               class="img-fluid rounded" 
-                               style="max-width: 200px; max-height: 200px; object-fit: cover;">`
-                        : `<div class="file-attachment p-2 bg-light rounded d-flex align-items-center">
+                ${isImage 
+                    ? `<a href="${attachmentUrl}" target="_blank" class="attachment-link">
+                        <img src="${attachmentUrl}" 
+                             alt="${originalName}" 
+                             class="img-fluid rounded message-image" 
+                             style="max-width: 300px; max-height: 300px; object-fit: cover; cursor: pointer;"
+                             onerror="console.error('Erreur de chargement de l\\'image:', '${originalName}'); this.onerror=null; this.style.display='none'; const fallback = this.nextElementSibling; if(fallback) fallback.style.display='block';">
+                        <div class="image-fallback" style="display: none;">
+                            <div class="file-attachment p-2 bg-light rounded d-flex align-items-center">
+                                <i class="fas fa-image me-2"></i>
+                                <span>${originalName}</span>
+                            </div>
+                        </div>
+                    </a>`
+                    : isPdf
+                    ? `<div class="pdf-preview-container">
+                        <iframe src="${attachmentUrl}" 
+                                class="pdf-preview"
+                                style="width: 100%; max-width: 600px; height: 400px; border: 1px solid #dee2e6; border-radius: 8px;"
+                                title="${originalName}">
+                        </iframe>
+                        <div class="mt-2">
+                            <a href="${attachmentUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download me-1"></i>Télécharger le PDF
+                            </a>
+                        </div>
+                    </div>`
+                    : `<a href="${attachmentUrl}" target="_blank" class="attachment-link">
+                        <div class="file-attachment p-2 bg-light rounded d-flex align-items-center">
                             <i class="fas fa-file me-2"></i>
                             <span>${originalName}</span>
-                           </div>`
-                    }
-                </a>
+                        </div>
+                    </a>`
+                }
             </div>`;
     }
 
@@ -95,7 +149,6 @@ function createMessageElement(message) {
 
     const messageContent = message.content ? message.content.replace(/\n/g, "<br>") : "";
     const hasContent = messageContent.trim() !== "";
-    const hasAttachment = message.attachment && (message.attachment.filename || message.attachment.url || message.attachment.path);
     
     if (!hasContent && !hasAttachment) {
         return "";
@@ -230,10 +283,14 @@ if (messageForm) {
     messageForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         
-        if (!currentGroupId) return;
-        
         const content = messageInput.value.trim();
         if (!content) return;
+        
+        // Vérifier si on est sur une page de sujet
+        const isTopicPage = typeof window.isTopicPage !== 'undefined' && window.isTopicPage;
+        const topicId = isTopicPage ? (window.currentTopicId || document.getElementById('current-topic-id')?.value) : null;
+        
+        if (!isTopicPage && !currentGroupId) return;
         
         // Créer le message temporaire pour l'affichage immédiat
         const newMessage = {
@@ -246,38 +303,63 @@ if (messageForm) {
         
         // Afficher le message immédiatement
         const messageElement = createMessageElement(newMessage);
-        messagesContainer.insertAdjacentHTML("beforeend", messageElement);
+        if (messagesContainer) {
+            messagesContainer.insertAdjacentHTML("beforeend", messageElement);
+        }
         
         // Vider le champ de saisie
         messageInput.value = "";
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
      
         // Envoyer le message au backend
         try {
-            // Utiliser FormData comme l'app mobile
-            const formData = new FormData();
-            formData.append('content', content);
+            let response;
             
-            // Ajouter le fichier s'il y en a un
+            // Récupérer l'input de fichier une seule fois
             const attachmentInput = document.getElementById('message-attachment');
-            if (attachmentInput && attachmentInput.files && attachmentInput.files[0]) {
-                const file = attachmentInput.files[0];
-                formData.append('attachment', file);
-            }
             
-            const response = await fetch(`/messages/${currentGroupId}/send`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
-                    // Ne pas définir Content-Type, laissez le navigateur le faire automatiquement pour FormData
-                },
-                body: formData
-            });
+            if (isTopicPage && topicId) {
+                // Envoyer un message de sujet via le backend PHP
+                // Note: Pour l'instant, on n'envoie que le texte (les pièces jointes peuvent être ajoutées plus tard)
+                response = await fetch(`/api/topics/${topicId}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: content
+                    })
+                });
+            } else {
+                // Envoyer un message de groupe (code existant)
+                // Utiliser FormData comme l'app mobile
+                const formData = new FormData();
+                formData.append('content', content);
+                
+                // Ajouter le fichier s'il y en a un
+                if (attachmentInput && attachmentInput.files && attachmentInput.files[0]) {
+                    const file = attachmentInput.files[0];
+                    formData.append('attachment', file);
+                }
+                
+                response = await fetch(`/messages/${currentGroupId}/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
+                        // Ne pas définir Content-Type, laissez le navigateur le faire automatiquement pour FormData
+                    },
+                    body: formData
+                });
+            }
             
             if (response.ok) {
                 const data = await response.json();
                 // Mettre à jour l'ID du message avec celui du backend
-                const realMessageId = data._id || data.id || data.message_id;
+                // Pour les sujets, la réponse peut être dans data.data
+                const responseData = data.data || data;
+                const realMessageId = responseData._id || responseData.id || responseData.message_id || data._id || data.id || data.message_id;
                 if (realMessageId) {
                      // Mettre à jour l'attribut data-message-id dans le DOM
                     const messageElement = document.querySelector(`[data-message-id="${newMessage.id}"]`);
@@ -309,9 +391,17 @@ if (messageForm) {
                 
                 // Recharger les messages pour s'assurer que tout est à jour
                 console.log("Message envoyé avec succès, rechargement des messages...");
-                setTimeout(() => {
-                    loadGroupMessages(currentGroupId);
-                }, 500);
+                if (isTopicPage && topicId) {
+                    // Pour les sujets, recharger la page pour afficher le nouveau message
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 300);
+                } else if (currentGroupId) {
+                    // Pour les groupes, recharger les messages
+                    setTimeout(() => {
+                        loadGroupMessages(currentGroupId);
+                    }, 500);
+                }
             } else {
                  // Optionnel: Afficher un message d'erreur à l'utilisateur
                 alert("Erreur lors de l'envoi du message");

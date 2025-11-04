@@ -68,6 +68,23 @@ class Router {
         $this->addRoute("PUT", "/groups/{id}", "GroupController@update");
         $this->addRoute("DELETE", "/groups/{id}", "GroupController@destroy");
         
+        // Routes des sujets (topics) (protégées)
+        $this->addRoute("GET", "/groups/{groupId}/topics/create", "TopicController@create");
+        $this->addRoute("POST", "/groups/{groupId}/topics", "TopicController@store");
+        $this->addRoute("GET", "/groups/{groupId}/topics/{topicId}", "TopicController@show");
+        
+        // Routes API pour les messages de sujets (proxy vers API externe)
+        $this->addRoute("GET", "/api/topics/{topicId}/messages", "ApiController@getTopicMessages");
+        $this->addRoute("POST", "/api/topics/{topicId}/messages", "ApiController@sendTopicMessage");
+        
+        // Routes API pour les formulaires (proxy vers API externe)
+        $this->addRoute("GET", "/api/topics/{topicId}/forms", "ApiController@getTopicForms");
+        $this->addRoute("GET", "/api/events/{eventId}/forms", "ApiController@getEventForms");
+        $this->addRoute("POST", "/api/forms", "ApiController@createForm");
+        $this->addRoute("POST", "/api/forms/{formId}/responses", "ApiController@submitFormResponse");
+        $this->addRoute("GET", "/api/forms/{formId}/responses", "ApiController@getFormResponses");
+        $this->addRoute("DELETE", "/api/forms/{formId}", "ApiController@deleteForm");
+        
         // Routes internes pour les groupes (proxy vers API externe)
         $this->addRoute("GET", "/api/users", "ApiController@users");
         $this->addRoute("GET", "/users/{id}/avatar", "ApiController@getUserAvatar");
@@ -112,6 +129,12 @@ class Router {
         $this->addRoute("GET", "/api/stats", "ApiController@stats");
         $this->addRoute("GET", "/api/users", "ApiController@users");
         $this->addRoute("GET", "/api/trainings", "ApiController@trainings");
+        $this->addRoute("GET", "/api/scored-trainings", "ApiController@getScoredTrainings");
+        $this->addRoute("GET", "/api/training/progress", "ApiController@getTrainingProgress");
+        $this->addRoute("GET", "/api/training/dashboard/{id}", "ApiController@getTrainingDashboard");
+        $this->addRoute("GET", "/api/training/sessions/user/{userId}", "ApiController@getUserTrainingSessions");
+        $this->addRoute("GET", "/api/exercises", "ApiController@getExercises");
+        $this->addRoute("GET", "/api/exercises/{id}", "ApiController@getExerciseSheet");
         
         // Route de test simple
         $this->addRoute("GET", "/test-messages", "ApiController@testMessages");
