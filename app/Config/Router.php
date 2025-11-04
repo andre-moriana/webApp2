@@ -47,6 +47,10 @@ class Router {
         $this->addRoute("POST", "/scored-trainings/{id}/ends", "ScoredTrainingController@addEnd");
         $this->addRoute("DELETE", "/scored-trainings/{id}", "ScoredTrainingController@delete");
         
+        // Routes des feuilles de marque (protégées)
+        $this->addRoute("GET", "/score-sheet", "ScoreSheetController@index");
+        $this->addRoute("POST", "/score-sheet/save", "ScoreSheetController@save");
+        
         // Routes des utilisateurs (protégées)
         $this->addRoute("GET", "/users", "UserController@index");
         $this->addRoute("GET", "/users/create", "UserController@create");
