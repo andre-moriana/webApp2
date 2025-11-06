@@ -50,34 +50,68 @@ function initializeScoreSheet() {
         });
     }
     
-    // Recherche d'utilisateur par numéro de licence
-    const archerLicenseInput = document.getElementById('archerLicense');
-    if (archerLicenseInput) {
-        let searchTimeout;
-        let isSearching = false;
-        
-        archerLicenseInput.addEventListener('input', function() {
-            const licenseNumber = this.value.trim();
+    // Recherche d'utilisateur par numéro de licence - utiliser délégation d'événements
+    // pour que ça fonctionne même si le champ est caché au départ
+    setupLicenseSearch();
+    
+    // Initialiser le modal Bootstrap
+    const modalElement = document.getElementById('scoreModal');
+    if (modalElement) {
+        scoreModal = new bootstrap.Modal(modalElement);
+    }
+}
+
+// Variables pour la recherche par licence
+let licenseSearchTimeout = null;
+let isLicenseSearching = false;
+
+// Configurer la recherche par numéro de licence
+function setupLicenseSearch() {
+    // Utiliser la délégation d'événements sur le conteneur parent
+    const archerInfoSection = document.getElementById('archerInfoSection');
+    if (!archerInfoSection) {
+        // Si la section n'existe pas encore, réessayer après un court délai
+        setTimeout(setupLicenseSearch, 100);
+        return;
+    }
+    
+    // Supprimer l'ancien écouteur s'il existe en ajoutant un flag
+    if (archerInfoSection.hasAttribute('data-search-setup')) {
+        return; // Déjà configuré
+    }
+    
+    // Marquer comme configuré
+    archerInfoSection.setAttribute('data-search-setup', 'true');
+    
+    // Utiliser la délégation d'événements
+    archerInfoSection.addEventListener('input', function(e) {
+        // Vérifier si c'est le champ de licence
+        if (e.target.id === 'archerLicense') {
+            const licenseNumber = e.target.value.trim();
             
             // Retirer l'indicateur de recherche précédent
-            const existingIndicator = this.parentElement.querySelector('.search-indicator');
+            const existingIndicator = e.target.parentElement.querySelector('.search-indicator');
             if (existingIndicator) {
                 existingIndicator.remove();
             }
             
             // Délai de 500ms après la dernière saisie
-            clearTimeout(searchTimeout);
-            if (licenseNumber.length >= 3 && !isSearching) {
+            if (licenseSearchTimeout) {
+                clearTimeout(licenseSearchTimeout);
+            }
+            
+            if (licenseNumber.length >= 3 && !isLicenseSearching) {
                 // Afficher un indicateur de recherche
                 const indicator = document.createElement('span');
                 indicator.className = 'search-indicator ms-2';
                 indicator.innerHTML = '<i class="fas fa-spinner fa-spin text-primary"></i>';
-                this.parentElement.appendChild(indicator);
+                e.target.parentElement.appendChild(indicator);
                 
-                searchTimeout = setTimeout(() => {
-                    isSearching = true;
+                licenseSearchTimeout = setTimeout(() => {
+                    isLicenseSearching = true;
+                    console.log('Déclenchement de la recherche pour:', licenseNumber);
                     searchUserByLicense(licenseNumber).finally(() => {
-                        isSearching = false;
+                        isLicenseSearching = false;
                         if (indicator.parentElement) {
                             indicator.remove();
                         }
@@ -85,19 +119,13 @@ function initializeScoreSheet() {
                 }, 500);
             } else if (licenseNumber.length < 3) {
                 // Retirer l'indicateur si moins de 3 caractères
-                const indicator = this.parentElement.querySelector('.search-indicator');
+                const indicator = e.target.parentElement.querySelector('.search-indicator');
                 if (indicator) {
                     indicator.remove();
                 }
             }
-        });
-    }
-    
-    // Initialiser le modal Bootstrap
-    const modalElement = document.getElementById('scoreModal');
-    if (modalElement) {
-        scoreModal = new bootstrap.Modal(modalElement);
-    }
+        }
+    });
 }
 
 // Rechercher un utilisateur par numéro de licence
@@ -126,7 +154,7 @@ async function searchUserByLicense(licenseNumber) {
         }
         
         const responseText = await response.text();
-        console.log('Réponse brute:', responseText.substring(0, 200));
+        console.log('Réponse brute (complète):', responseText);
         
         let data;
         try {
@@ -138,10 +166,20 @@ async function searchUserByLicense(licenseNumber) {
         }
         
         console.log('Données parsées:', data);
+        console.log('Structure data:', {
+            success: data.success,
+            hasData: !!data.data,
+            dataType: typeof data.data,
+            dataKeys: data.data ? Object.keys(data.data) : []
+        });
         
         if (data.success && data.data) {
             const user = data.data;
-            console.log('Utilisateur trouvé:', user);
+            console.log('Utilisateur trouvé (complet):', JSON.stringify(user, null, 2));
+            console.log('Champs utilisateur disponibles:', Object.keys(user));
+            console.log('bow_type:', user.bow_type);
+            console.log('bowType:', user.bowType);
+            console.log('weapon:', user.weapon);
             
             // Remplir automatiquement les informations
             const nameField = document.getElementById('archerName');
@@ -175,10 +213,55 @@ async function searchUserByLicense(licenseNumber) {
             }
             
             if (weaponField) {
-                // Récupérer bow_type depuis l'API (qui fonctionne déjà dans l'app mobile)
-                const weapon = user.bow_type || user.bowType || '';
-                if (weapon) {
-                    weaponField.value = weapon;
+                // Récupérer bow_type depuis l'API
+                const weaponRaw = user.bow_type || user.bowType || '';
+                
+                // Mapping entre les valeurs de la base de données et les options du select
+                const weaponMapping = {
+                    'Classique': 'Arc classique',
+                    'classique': 'Arc classique',
+                    'Arc classique': 'Arc classique',
+                    'Poulies': 'Arc à poulies',
+                    'poulies': 'Arc à poulies',
+                    'Arc à poulies': 'Arc à poulies',
+                    'Barebow': 'Arc nu (barebow)',
+                    'barebow': 'Arc nu (barebow)',
+                    'Arc nu (barebow)': 'Arc nu (barebow)',
+                    'Arc nu': 'Arc nu (barebow)',
+                    'Longbow': 'Longbow',
+                    'longbow': 'Longbow',
+                    'Chasse': 'Arc de chasse',
+                    'chasse': 'Arc de chasse',
+                    'Arc de chasse': 'Arc de chasse'
+                };
+                
+                // Mapper la valeur si elle existe dans le mapping, sinon utiliser la valeur brute
+                const weapon = weaponMapping[weaponRaw] || weaponRaw;
+                
+                console.log('Valeur weapon brute:', weaponRaw);
+                console.log('Valeur weapon mappée:', weapon);
+                
+                if (weapon && weapon !== 'null' && weapon !== '') {
+                    // Vérifier si la valeur existe dans les options du select
+                    const options = Array.from(weaponField.options).map(opt => opt.value);
+                    if (options.includes(weapon)) {
+                        weaponField.value = weapon;
+                        console.log('Champ weapon rempli avec:', weapon);
+                    } else {
+                        console.warn('Valeur weapon non trouvée dans les options du select:', weapon);
+                        console.warn('Options disponibles:', options);
+                        // Essayer de trouver une correspondance partielle
+                        const partialMatch = options.find(opt => 
+                            opt.toLowerCase().includes(weaponRaw.toLowerCase()) || 
+                            weaponRaw.toLowerCase().includes(opt.toLowerCase().replace('arc ', '').replace('(', '').replace(')', ''))
+                        );
+                        if (partialMatch) {
+                            weaponField.value = partialMatch;
+                            console.log('Correspondance partielle trouvée:', partialMatch);
+                        }
+                    }
+                } else {
+                    console.warn('Aucune valeur weapon trouvée dans les données utilisateur');
                 }
             }
             
@@ -262,6 +345,9 @@ function initializeSheets() {
     document.getElementById('saveScoreSheetBtn').style.display = 'block';
     document.getElementById('signaturesBtn').style.display = 'block';
     document.getElementById('exportPdfBtn').style.display = 'block';
+    
+    // Réinitialiser la recherche par licence maintenant que la section est visible
+    setupLicenseSearch();
     
     // Afficher le premier archer
     currentUserIndex = 0;
@@ -450,46 +536,88 @@ function openScoreModal(rowIndex) {
         scoreInputs.appendChild(inputGroup);
     });
     
-    // Initialiser la cible interactive si nécessaire
+    // Sauvegarder la config pour la cible
     targetConfig = config;
-    targetHits = row.arrows
-        .map((arrow, index) => ({
-            x: arrow.hit_x ? (arrow.hit_x * 200 + 200) : null,
-            y: arrow.hit_y ? (arrow.hit_y * 200 + 200) : null,
-            score: arrow.value || 0
-        }))
-        .filter(hit => hit.x !== null && hit.y !== null);
     
-    // Réinitialiser la cible quand on change d'onglet
+    // Charger les hits existants (exactement comme dans scored-training-show.js)
+    // Les coordonnées sont déjà dans le format relatif (hit_x, hit_y)
+    const existingHits = row.arrows
+        .map((arrow, index) => {
+            if (arrow.hit_x !== undefined && arrow.hit_y !== undefined && arrow.value > 0) {
+                return {
+                    hit_x: arrow.hit_x,
+                    hit_y: arrow.hit_y,
+                    score: arrow.value,
+                    arrow_number: index + 1
+                };
+            }
+            return null;
+        })
+        .filter(hit => hit !== null);
+    
+    // Stocker pour l'initialisation
+    targetHits = existingHits;
+    
+    // Initialiser la cible interactive quand on passe à l'onglet cible
     const targetTab = document.getElementById('target-tab');
-    if (targetTab) {
-        // Retirer les anciens listeners pour éviter les doublons
-        const newTargetTab = targetTab.cloneNode(true);
-        targetTab.parentNode.replaceChild(newTargetTab, targetTab);
-        
-        newTargetTab.addEventListener('shown.bs.tab', function() {
-            setTimeout(() => {
-                initializeTargetForModal();
-            }, 100);
-        });
+    const targetPane = document.getElementById('targetMode');
+    
+    if (targetTab && targetPane) {
+        // Supprimer l'ancien listener s'il existe
+        targetTab.removeEventListener('shown.bs.tab', initializeTargetForModal);
+        // Ajouter le nouveau listener
+        targetTab.addEventListener('shown.bs.tab', initializeTargetForModal);
+    }
+    
+    // Initialiser aussi au chargement si on est déjà sur l'onglet cible
+    if (targetPane && targetPane.classList.contains('active')) {
+        setTimeout(initializeTargetForModal, 100);
     }
     
     scoreModal.show();
 }
 
+// Initialisation de la cible interactive (exactement comme dans scored-training-show.js)
 function initializeTargetForModal() {
-    const canvas = document.getElementById('targetCanvas'); // Canvas pour la cible dans le modal
-    if (!canvas) return;
+    const targetSvg = document.getElementById('targetSvg');
+    const resetButton = document.getElementById('resetTarget');
     
-    targetCanvas = canvas;
-    targetCtx = canvas.getContext('2d');
+    if (!targetSvg) return;
     
-    // Dessiner la cible
-    drawTarget();
+    // Initialiser les variables
+    const arrowsPerEnd = targetConfig ? targetConfig.arrows_per_end : 3;
+    targetScores = new Array(arrowsPerEnd).fill(null);
+    targetCoordinates = new Array(arrowsPerEnd).fill(null);
     
-    // Événements
-    canvas.removeEventListener('click', handleTargetClick);
-    canvas.addEventListener('click', handleTargetClick);
+    // Charger les hits existants depuis targetHits
+    if (targetHits && targetHits.length > 0) {
+        targetHits.forEach((hit, index) => {
+            if (hit.hit_x !== undefined && hit.hit_y !== undefined) {
+                // Convertir les coordonnées relatives en coordonnées absolues
+                const centerX = 150;
+                const centerY = 150;
+                const absX = centerX + (hit.hit_x * (150 * (10/11) / 2));
+                const absY = centerY + (hit.hit_y * (150 * (10/11) / 2));
+                
+                addArrowToTarget(absX, absY, hit.score, index);
+            }
+        });
+    }
+    
+    // Supprimer les anciens gestionnaires d'événements s'ils existent
+    targetSvg.removeEventListener('click', handleTargetClick);
+    targetSvg.removeEventListener('mousedown', handleTargetMouseDown);
+    
+    // Ajouter les nouveaux gestionnaires d'événements
+    targetSvg.addEventListener('click', handleTargetClick);
+    targetSvg.addEventListener('mousedown', handleTargetMouseDown);
+    
+    if (resetButton) {
+        resetButton.onclick = resetTarget;
+    }
+    
+    // Mettre à jour l'affichage des scores
+    updateScoresDisplay();
 }
 
 function updateArrowValue(arrowIndex, value) {
@@ -515,17 +643,15 @@ function saveVolleyScores() {
     const targetPane = document.getElementById('targetMode');
     const isTargetMode = targetPane && targetPane.classList.contains('active');
     
-    if (isTargetMode && targetHits.length > 0) {
-        // Utiliser les scores de la cible interactive
-        targetHits.forEach((hit, index) => {
-            if (row.arrows[index]) {
-                row.arrows[index].value = hit.score;
-                // Convertir les coordonnées en format relatif (0-1)
-                if (targetCanvas) {
-                    const centerX = targetCanvas.width / 2;
-                    const centerY = targetCanvas.height / 2;
-                    row.arrows[index].hit_x = (hit.x - centerX) / (targetCanvas.width / 2);
-                    row.arrows[index].hit_y = (hit.y - centerY) / (targetCanvas.height / 2);
+    if (isTargetMode && targetScores.length > 0) {
+        // Utiliser les scores de la cible interactive (exactement comme dans scored-training-show.js)
+        targetScores.forEach((score, index) => {
+            if (row.arrows[index] && score !== null && score !== undefined) {
+                row.arrows[index].value = score;
+                // Les coordonnées sont déjà dans targetCoordinates
+                if (targetCoordinates[index]) {
+                    row.arrows[index].hit_x = targetCoordinates[index].x;
+                    row.arrows[index].hit_y = targetCoordinates[index].y;
                 }
             }
         });
@@ -534,7 +660,8 @@ function saveVolleyScores() {
     }
     
     // Réinitialiser les variables de cible
-    targetHits = [];
+    targetScores = [];
+    targetCoordinates = [];
     
     scoreModal.hide();
     
@@ -876,110 +1003,565 @@ function saveSignatures() {
     bootstrap.Modal.getInstance(document.getElementById('signatureModal')).hide();
 }
 
-// ==================== CIBLE INTERACTIVE ====================
+// ==================== CIBLE INTERACTIVE (MÊME CODE QUE TIR COMPTÉ) ====================
 
-let targetCanvas = null;
-let targetCtx = null;
-let targetHits = [];
-let targetConfig = null;
+// Variables pour la cible interactive (exactement comme dans scored-training-show.js)
+let targetScores = [];
+let targetCoordinates = []; // Stocker les coordonnées x,y des flèches
+let targetHits = []; // Pour stocker temporairement les hits lors du chargement
+let isZoomed = false;
+let currentArrowIndex = 0;
+let isDragging = false;
+let currentDragScore = 0;
+let zoomCircle = null;
+let lastClickTime = 0;
+let clickDebounceDelay = 300; // 300ms de délai entre les clics
+let justFinishedDragging = false; // Flag pour éviter le clic après drag
 
-function initializeTarget() {
-    targetCanvas = document.getElementById('targetCanvas');
-    if (!targetCanvas) return;
-    
-    targetCtx = targetCanvas.getContext('2d');
-    
-    // Dessiner la cible
-    drawTarget();
-    
-    // Événements
-    targetCanvas.removeEventListener('click', handleTargetClick);
-    targetCanvas.addEventListener('click', handleTargetClick);
-}
-
-function drawTarget() {
-    if (!targetCtx || !targetCanvas) return;
-    
-    const centerX = targetCanvas.width / 2;
-    const centerY = targetCanvas.height / 2;
-    const maxRadius = Math.min(targetCanvas.width, targetCanvas.height) / 2 - 10;
-    
-    // Couleurs des zones (de l'extérieur vers l'intérieur : zone 1 à zone 10)
-    // Format: blanc, blanc, noir, noir, bleu, bleu, rouge, rouge, jaune, jaune
-    const colors = ['#FFFFFF', '#FFFFFF', '#212121', '#212121', '#1976D2', '#1976D2', '#D32F2F', '#D32F2F', '#FFD700', '#FFD700'];
-    
-    // Nettoyer le canvas
-    targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
-    
-    // Dessiner les 10 zones (de l'extérieur vers l'intérieur)
-    for (let i = 0; i < 10; i++) {
-        const radius = maxRadius * (10 - i) / 10;
-        targetCtx.fillStyle = colors[i];
-        targetCtx.beginPath();
-        targetCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        targetCtx.fill();
-        targetCtx.strokeStyle = '#000';
-        targetCtx.lineWidth = 1;
-        targetCtx.stroke();
-    }
-    
-    // Redessiner les impacts existants
-    targetHits.forEach(hit => {
-        if (hit.x && hit.y) {
-            drawHit(hit.x, hit.y, hit.score);
-        }
-    });
-}
-
-function handleTargetClick(e) {
-    if (!targetCtx || !targetConfig) return;
-    
-    const rect = targetCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const centerX = targetCanvas.width / 2;
-    const centerY = targetCanvas.height / 2;
+// Fonction pour calculer le score depuis la position (exactement comme dans scored-training-show.js)
+function calculateScoreFromPosition(x, y) {
+    const centerX = 150; // Centre du viewBox 300x300 (même que l'app mobile)
+    const centerY = 150;
     const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-    const maxRadius = Math.min(targetCanvas.width, targetCanvas.height) / 2 - 10;
     
-    // Calculer le score selon la distance
-    const score = Math.max(1, Math.min(10, Math.ceil(10 - (distance / maxRadius) * 10)));
+    // Déterminer le type de cible
+    const targetCategorySelect = document.querySelector('select[name="target_category"]') || 
+                                 document.getElementById('targetCategorySelect');
+    const targetCategory = targetCategorySelect ? targetCategorySelect.value : 'blason_80';
     
-    // Ajouter l'impact
-    if (targetHits.length < targetConfig.arrows_per_end) {
-        targetHits.push({ x, y, score });
-        drawHit(x, y, score);
-        updateTargetScoresList();
+    // Pour le blason campagne, détecter par le type de tir, pas par la catégorie
+    const isBlasonCampagne = selectedShootingType === 'Campagne';
+    
+    let zones;
+    
+    if (isBlasonCampagne) {
+        // Zones pour le blason campagne : 6 zones
+        zones = [
+            { radius: 21.428571 , score: 6 },    // Zone 6 (centre jaune)
+            { radius: 42.857143 , score: 5 },    // Zone 5 (jaune)
+            { radius: 64.285714 , score: 4 },    // Zone 4 (noir)
+            { radius: 85.714286 , score: 3 },    // Zone 3 (noir)
+            { radius: 107.142857 , score: 2 },   // Zone 2 (noir)
+            { radius: 128.571428 , score: 1 },   // Zone 1 (noir)
+            { radius: Infinity, score: 0 }      // Manqué
+        ];
+    } else {
+        // Rayons des zones (en unités SVG) - EXACTES calculs de l'app mobile
+        zones = [
+            { radius: 13.636364, score: 10 },    // Zone 10 (centre jaune)
+            { radius: 27.272727, score: 9 },     // Zone 9 (jaune)
+            { radius: 40.909091, score: 8 },     // Zone 8 (rouge)
+            { radius: 54.545455, score: 7 },     // Zone 7 (rouge)
+            { radius: 68.181818, score: 6 },    // Zone 6 (bleu)
+            { radius: 81.818182, score: 5 },    // Zone 5 (bleu)
+            { radius: 95.454545, score: 4 },    // Zone 4 (noir)
+            { radius: 109.090909, score: 3 },   // Zone 3 (noir)
+            { radius: 122.727273, score: 2 },   // Zone 2 (blanc)
+            { radius: 136.363636, score: 1 },   // Zone 1 (blanc)
+            { radius: Infinity, score: 0 }      // Manqué
+        ];
+    }
+    
+    // Logique avec épaisseur de trait : trouver la zone en tenant compte de l'épaisseur des traits
+    const strokeWidth = 0.6;
+    
+    for (let i = 0; i < zones.length - 1; i++) {
+        const currentZone = zones[i];
+        const nextZone = zones[i + 1];
+        
+        if (distance <= (currentZone.radius + strokeWidth)) {
+            if (distance >= (currentZone.radius - strokeWidth)) {
+                return currentZone.score;
+            } else {
+                return currentZone.score;
+            }
+        }
+    }
+    
+    let finalScore = zones[zones.length - 1].score;
+    
+    // Règle spécifique TRISPOT: seules les zones 6 à 10 scorent
+    if (targetCategory.toLowerCase() === 'trispot') {
+        if (finalScore < 6) {
+            finalScore = 0;
+        }
+    }
+    
+    return finalScore;
+}
+
+// Fonction pour ajouter une flèche sur la cible (exactement comme dans scored-training-show.js)
+function addArrowToTarget(x, y, score, arrowIndex) {
+    const svg = document.getElementById('targetSvg');
+    const arrowsGroup = document.getElementById('arrowsGroup');
+    
+    if (!svg || !arrowsGroup) return;
+    
+    // Créer un cercle pour représenter la flèche
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', x);
+    circle.setAttribute('cy', y);
+    circle.setAttribute('r', '0.3');
+    circle.setAttribute('class', 'arrow-marker');
+    circle.setAttribute('data-score', score);
+    circle.setAttribute('data-arrow-index', arrowIndex);
+    
+    // Déterminer la couleur de la flèche en fonction de la zone
+    if (score === 3 || score === 4) {
+        circle.setAttribute('fill', 'white');
+        circle.setAttribute('stroke', 'black');
+        circle.setAttribute('stroke-width', '0.1');
+    } else {
+        circle.setAttribute('fill', '#dc3545');
+        circle.setAttribute('stroke', '#fff');
+        circle.setAttribute('stroke-width', '0.1');
+    }
+    
+    // Ajouter un événement de clic pour supprimer la flèche
+    circle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        removeArrowFromTarget(arrowIndex);
+    });
+    
+    arrowsGroup.appendChild(circle);
+    
+    // Convertir les coordonnées absolues en coordonnées relatives au centre
+    const centerX = 150;
+    const centerY = 150;
+    const relativeX = x - centerX;
+    const relativeY = y - centerY;
+    
+    // Ajouter le score et les coordonnées relatives à la liste
+    targetScores[arrowIndex] = score;
+    targetCoordinates[arrowIndex] = { x: relativeX, y: relativeY };
+    updateScoresDisplay();
+}
+
+// Fonction pour supprimer une flèche de la cible
+function removeArrowFromTarget(arrowIndex) {
+    const arrowsGroup = document.getElementById('arrowsGroup');
+    const arrowElement = arrowsGroup.querySelector(`[data-arrow-index="${arrowIndex}"]`);
+    
+    if (arrowElement) {
+        arrowElement.remove();
+    }
+    
+    targetScores[arrowIndex] = null;
+    targetCoordinates[arrowIndex] = null;
+    updateScoresDisplay();
+}
+
+// Fonction pour mettre à jour l'affichage des scores
+function updateScoresDisplay() {
+    const scoresList = document.getElementById('scoresList');
+    if (!scoresList) return;
+    
+    scoresList.innerHTML = '';
+    
+    const arrowsPerEnd = targetConfig ? targetConfig.arrows_per_end : 3;
+    
+    for (let i = 0; i < arrowsPerEnd; i++) {
+        const score = targetScores[i];
+        const scoreItem = document.createElement('div');
+        scoreItem.className = 'score-item';
+        
+        if (score !== null && score !== undefined) {
+            scoreItem.innerHTML = `
+                <span>Flèche ${i + 1}:</span>
+                <span class="score-value">${score}</span>
+                <span class="remove-score" onclick="removeArrowFromTarget(${i})">
+                    <i class="fas fa-times"></i>
+                </span>
+            `;
+        } else {
+            scoreItem.innerHTML = `
+                <span>Flèche ${i + 1}:</span>
+                <span class="text-muted">Non placée</span>
+                <span></span>
+            `;
+        }
+        
+        scoresList.appendChild(scoreItem);
     }
 }
 
-function drawHit(x, y, score) {
-    targetCtx.fillStyle = '#000';
-    targetCtx.beginPath();
-    targetCtx.arc(x, y, 5, 0, 2 * Math.PI);
-    targetCtx.fill();
+// Fonction pour gérer le clic sur la cible (exactement comme dans scored-training-show.js)
+function handleTargetClick(event) {
+    if (isDragging) return;
     
-    // Afficher le score
-    targetCtx.fillStyle = '#fff';
-    targetCtx.font = 'bold 12px Arial';
-    targetCtx.textAlign = 'center';
-    targetCtx.fillText(score, x, y + 20);
+    // Ignorer les clics après un drag
+    if (justFinishedDragging) {
+        justFinishedDragging = false;
+        return;
+    }
+    
+    // Protection contre les doubles clics avec debounce
+    const currentTime = Date.now();
+    if (currentTime - lastClickTime < clickDebounceDelay) {
+        return;
+    }
+    lastClickTime = currentTime;
+    
+    // Protection contre les doubles clics
+    if (event.detail > 1) {
+        return;
+    }
+    
+    const svg = document.getElementById('targetSvg');
+    if (!svg) return;
+    
+    const rect = svg.getBoundingClientRect();
+    // Convertir les coordonnées en coordonnées SVG (0-300)
+    const x = ((event.clientX - rect.left) / rect.width) * 300;
+    const y = ((event.clientY - rect.top) / rect.height) * 300;
+    
+    const score = calculateScoreFromPosition(x, y);
+    
+    // Trouver le prochain index disponible
+    const arrowsPerEnd = targetConfig ? targetConfig.arrows_per_end : 3;
+    let arrowIndex = -1;
+    for (let i = 0; i < arrowsPerEnd; i++) {
+        if (targetScores[i] === null || targetScores[i] === undefined) {
+            arrowIndex = i;
+            break;
+        }
+    }
+    
+    if (arrowIndex === -1) {
+        // Toutes les flèches sont placées, remplacer la première
+        arrowIndex = 0;
+        removeArrowFromTarget(0);
+    }
+    
+    addArrowToTarget(x, y, score, arrowIndex);
 }
 
-function updateTargetScoresList() {
-    const list = document.getElementById('targetScoresList');
-    if (!list) return;
+// Fonction pour gérer le début du drag (exactement comme dans scored-training-show.js)
+function handleTargetMouseDown(event) {
+    if (isDragging) return;
     
-    list.innerHTML = targetHits.map((hit, index) => 
-        `<span class="badge bg-primary me-1">Flèche ${index + 1}: ${hit.score}</span>`
-    ).join('');
+    const svg = document.getElementById('targetSvg');
+    if (!svg) return;
+    
+    isDragging = true;
+    const rect = svg.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 300;
+    const y = ((event.clientY - rect.top) / rect.height) * 300;
+    
+    // Activer l'overlay de zoom
+    const overlay = document.getElementById('zoomDragOverlay');
+    if (overlay) {
+        overlay.classList.add('active');
+    }
+    
+    // Créer la loupe
+    createMagnifyingGlass(event.clientX, event.clientY);
+    
+    // Afficher l'indicateur de score
+    showScoreIndicator();
+    
+    // Calculer et afficher le score initial
+    updateScoreIndicator(x, y);
+    
+    // Ajouter les événements de drag
+    document.addEventListener('mousemove', handleTargetMouseMove);
+    document.addEventListener('mouseup', handleTargetMouseUp);
+    
+    event.preventDefault();
 }
 
+// Fonction pour gérer le mouvement de la souris pendant le drag
+function handleTargetMouseMove(event) {
+    if (!isDragging) return;
+    
+    const svg = document.getElementById('targetSvg');
+    if (!svg) return;
+    
+    const rect = svg.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 300;
+    const y = ((event.clientY - rect.top) / rect.height) * 300;
+    
+    // Mettre à jour l'indicateur de score
+    updateScoreIndicator(x, y);
+    
+    // Mettre à jour la position de la loupe
+    updateMagnifyingGlass(event.clientX, event.clientY);
+}
+
+// Fonction pour gérer la fin du drag
+function handleTargetMouseUp(event) {
+    if (!isDragging) return;
+    
+    const svg = document.getElementById('targetSvg');
+    if (!svg) return;
+    
+    const rect = svg.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 300;
+    const y = ((event.clientY - rect.top) / rect.height) * 300;
+    
+    const score = calculateScoreFromPosition(x, y);
+    
+    // Trouver le prochain index disponible
+    const arrowsPerEnd = targetConfig ? targetConfig.arrows_per_end : 3;
+    let arrowIndex = -1;
+    for (let i = 0; i < arrowsPerEnd; i++) {
+        if (targetScores[i] === null || targetScores[i] === undefined) {
+            arrowIndex = i;
+            break;
+        }
+    }
+    
+    if (arrowIndex === -1) {
+        // Toutes les flèches sont placées, remplacer la première
+        arrowIndex = 0;
+        removeArrowFromTarget(0);
+    }
+    
+    // Ajouter la flèche avec le score final
+    addArrowToTarget(x, y, score, arrowIndex);
+    
+    // Nettoyer
+    cleanupDrag();
+    
+    // Supprimer les événements
+    document.removeEventListener('mousemove', handleTargetMouseMove);
+    document.removeEventListener('mouseup', handleTargetMouseUp);
+}
+
+// Fonction pour créer une loupe autour du curseur (exactement comme dans scored-training-show.js)
+function createMagnifyingGlass(mouseX, mouseY) {
+    // Supprimer l'ancienne loupe si elle existe
+    const existingGlass = document.getElementById('magnifyingGlass');
+    if (existingGlass) {
+        existingGlass.remove();
+    }
+    
+    // Créer la loupe
+    const magnifyingGlass = document.createElement('div');
+    magnifyingGlass.id = 'magnifyingGlass';
+    magnifyingGlass.style.cssText = `
+        position: fixed;
+        width: 150px;
+        height: 150px;
+        border: 3px solid #007bff;
+        border-radius: 50%;
+        background: white;
+        box-shadow: 0 0 20px rgba(0, 123, 255, 0.8);
+        z-index: 9999;
+        pointer-events: none;
+        overflow: hidden;
+        transform: translate(-50%, -50%);
+    `;
+    
+    // Calculer la position pointée pour centrer la loupe
+    const svg = document.getElementById('targetSvg');
+    const rect = svg.getBoundingClientRect();
+    
+    // Vérifier si le curseur est dans les limites de la cible
+    if (mouseX < rect.left || mouseX > rect.right || mouseY < rect.top || mouseY > rect.bottom) {
+        return; // Ne pas afficher la loupe si le curseur est en dehors
+    }
+    
+    // Calculer la position relative dans le SVG (0-300)
+    const x = ((mouseX - rect.left) / rect.width) * 300;
+    const y = ((mouseY - rect.top) / rect.height) * 300;
+    
+    // Créer un SVG cloné pour la loupe
+    const clonedSvg = svg.cloneNode(true);
+    
+    // Créer un viewBox qui centre sur le point pointé avec zoom important
+    const viewBoxX = x - 5; // Centre moins la moitié de la zone visible (10/2)
+    const viewBoxY = y - 5; // Centre moins la moitié de la zone visible (10/2)
+    const viewBoxSize = 10; // Zone visible dans la loupe (très petite = zoom très important)
+    
+    clonedSvg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxSize} ${viewBoxSize}`);
+    clonedSvg.style.cssText = `
+        width: 150px;
+        height: 150px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    `;
+    
+    // Calculer le score pour la position pointée
+    const score = calculateScoreFromPosition(x, y);
+    
+    // Créer un élément pour afficher le score dans la loupe
+    const scoreDisplay = document.createElement('div');
+    scoreDisplay.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 18px;
+        font-weight: bold;
+        z-index: 10;
+        pointer-events: none;
+    `;
+    scoreDisplay.textContent = score;
+    
+    // Créer un point d'impact au centre de la loupe
+    const impactPoint = document.createElement('div');
+    impactPoint.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 8px;
+        height: 8px;
+        background: #ff0000;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 15;
+        pointer-events: none;
+        box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+    `;
+    
+    magnifyingGlass.appendChild(clonedSvg);
+    magnifyingGlass.appendChild(scoreDisplay);
+    magnifyingGlass.appendChild(impactPoint);
+    document.body.appendChild(magnifyingGlass);
+    
+    // Positionner la loupe
+    magnifyingGlass.style.left = mouseX + 'px';
+    magnifyingGlass.style.top = mouseY + 'px';
+    
+    // Stocker la référence
+    window.currentMagnifyingGlass = magnifyingGlass;
+}
+
+// Fonction pour mettre à jour la loupe pendant le drag
+function updateMagnifyingGlass(mouseX, mouseY) {
+    if (!window.currentMagnifyingGlass) return;
+    
+    // Mettre à jour la position de la loupe
+    window.currentMagnifyingGlass.style.left = mouseX + 'px';
+    window.currentMagnifyingGlass.style.top = mouseY + 'px';
+    
+    // Mettre à jour le contenu de la loupe pour suivre le curseur
+    const svg = document.getElementById('targetSvg');
+    const rect = svg.getBoundingClientRect();
+    const x = ((mouseX - rect.left) / rect.width) * 300;
+    const y = ((mouseY - rect.top) / rect.height) * 300;
+    
+    // Mettre à jour le SVG cloné avec la nouvelle position
+    const clonedSvg = window.currentMagnifyingGlass.querySelector('svg');
+    if (clonedSvg) {
+        const viewBoxX = x - 5;
+        const viewBoxY = y - 5;
+        const viewBoxSize = 10;
+        
+        clonedSvg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxSize} ${viewBoxSize}`);
+    }
+    
+    // Mettre à jour le score affiché dans la loupe
+    const scoreDisplay = window.currentMagnifyingGlass.querySelector('div');
+    if (scoreDisplay && scoreDisplay.textContent) {
+        const score = calculateScoreFromPosition(x, y);
+        scoreDisplay.textContent = score;
+    }
+    
+    // S'assurer que le point d'impact est visible
+    let impactPoint = window.currentMagnifyingGlass.querySelector('.impact-point');
+    if (!impactPoint) {
+        impactPoint = document.createElement('div');
+        impactPoint.className = 'impact-point';
+        impactPoint.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: #ff0000;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+        `;
+        window.currentMagnifyingGlass.appendChild(impactPoint);
+    }
+}
+
+// Fonction pour afficher l'indicateur de score
+function showScoreIndicator() {
+    const indicator = document.getElementById('targetScoreIndicator');
+    if (indicator) {
+        indicator.style.display = 'block';
+    }
+}
+
+// Fonction pour mettre à jour l'indicateur de score
+function updateScoreIndicator(x, y) {
+    const score = calculateScoreFromPosition(x, y);
+    currentDragScore = score;
+    
+    const scoreElement = document.getElementById('currentScore');
+    if (scoreElement) {
+        scoreElement.textContent = score;
+    }
+    
+    // Positionner l'indicateur à côté du pointeur
+    const indicator = document.getElementById('targetScoreIndicator');
+    if (indicator) {
+        const svg = document.getElementById('targetSvg');
+        const rect = svg.getBoundingClientRect();
+        const svgX = ((x / 300) * rect.width) + rect.left;
+        const svgY = ((y / 300) * rect.height) + rect.top;
+        
+        indicator.style.left = (svgX + 15) + 'px';
+        indicator.style.top = (svgY - 10) + 'px';
+    }
+}
+
+// Fonction pour nettoyer après le drag
+function cleanupDrag() {
+    isDragging = false;
+    currentDragScore = 0;
+    
+    // Activer le flag pour éviter le clic après drag
+    justFinishedDragging = true;
+    
+    // Supprimer l'overlay de zoom
+    const overlay = document.getElementById('zoomDragOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+    
+    // Supprimer la loupe
+    if (window.currentMagnifyingGlass) {
+        window.currentMagnifyingGlass.remove();
+        window.currentMagnifyingGlass = null;
+    }
+    
+    // Masquer l'indicateur de score
+    const indicator = document.getElementById('targetScoreIndicator');
+    if (indicator) {
+        indicator.style.display = 'none';
+    }
+}
+
+// Fonction pour réinitialiser la cible
+function resetTarget() {
+    const arrowsGroup = document.getElementById('arrowsGroup');
+    if (arrowsGroup) {
+        arrowsGroup.innerHTML = '';
+    }
+    
+    const arrowsPerEnd = targetConfig ? targetConfig.arrows_per_end : 3;
+    targetScores = new Array(arrowsPerEnd).fill(null);
+    targetCoordinates = new Array(arrowsPerEnd).fill(null);
+    updateScoresDisplay();
+}
+
+// Alias pour compatibilité
 function clearTarget() {
-    targetHits = [];
-    drawTarget();
-    updateTargetScoresList();
+    resetTarget();
 }
 
 // ==================== EXPORT PDF ====================

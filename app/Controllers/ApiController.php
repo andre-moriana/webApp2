@@ -96,59 +96,57 @@ class ApiController {
             if ($licenseNumber) {
                 // Recherche spécifique par numéro de licence
                 $endpoint = "users?licence_number=" . urlencode(trim($licenseNumber));
-                error_log("Recherche utilisateur par licence: " . $licenseNumber);
+                error_log("API WebApp2 - Recherche utilisateur par licence: " . $licenseNumber);
+                error_log("API WebApp2 - Endpoint: " . $endpoint);
                 
                 $response = $this->apiService->makeRequest($endpoint, "GET");
                 
-                // Log pour debug
-                error_log("Réponse API recherche licence (brute): " . json_encode($response));
+                // Log pour debug complet
+                error_log("API WebApp2 - Réponse API brute (type): " . gettype($response));
+                error_log("API WebApp2 - Réponse API brute (contenu): " . json_encode($response, JSON_PRETTY_PRINT));
                 
-                // makeRequest retourne {success: true, data: {success: true, data: user}, status_code: 200}
-                // Il faut extraire la structure correcte
-                if (isset($response['data']) && is_array($response['data'])) {
-                    // Vérifier si data contient success et data (structure de l'API backend)
-                    if (isset($response['data']['success'])) {
-                        if ($response['data']['success'] && isset($response['data']['data'])) {
-                            // Structure {success: true, data: user} - retourner directement
-                            $this->sendJsonResponse($response['data']);
-                        } else {
-                            // Success false - utilisateur non trouvé
-                            $this->sendJsonResponse([
-                                'success' => false,
-                                'message' => $response['data']['message'] ?? 'Utilisateur non trouvé avec ce numéro de licence'
-                            ], $response['status_code'] ?? 404);
-                        }
-                    } else if (isset($response['data']['id'])) {
-                        // La structure est directement l'utilisateur (sans double encodage)
-                        $this->sendJsonResponse([
-                            'success' => true,
-                            'data' => $response['data']
-                        ]);
+                // Vérifier la structure de la réponse
+                if (!isset($response['data'])) {
+                    error_log("API WebApp2 - ERREUR: Pas de clé 'data' dans la réponse");
+                    $this->sendJsonResponse([
+                        'success' => false,
+                        'message' => 'Erreur: réponse API invalide (pas de data)'
+                    ], 500);
+                    return;
+                }
+                
+                $apiData = $response['data'];
+                
+                // L'API backend retourne {success: true, data: user} qui est encapsulé dans {success: true, data: {success: true, data: user}}
+                // Donc response['data'] contient {success: true, data: user}
+                if (is_array($apiData) && isset($apiData['success'])) {
+                    // C'est la structure de l'API backend
+                    if ($apiData['success'] && isset($apiData['data'])) {
+                        // Tout est bon, retourner la réponse de l'API backend directement
+                        error_log("API WebApp2 - Utilisateur trouvé, retour de la réponse");
+                        $this->sendJsonResponse($apiData);
                     } else {
-                        // Structure inattendue - log pour debug
-                        error_log("Structure de réponse inattendue: " . json_encode($response));
+                        // Utilisateur non trouvé
+                        error_log("API WebApp2 - Utilisateur non trouvé (success: false)");
                         $this->sendJsonResponse([
                             'success' => false,
-                            'message' => 'Format de réponse inattendu de l\'API'
-                        ], 500);
+                            'message' => $apiData['message'] ?? 'Utilisateur non trouvé avec ce numéro de licence'
+                        ], $response['status_code'] ?? 404);
                     }
-                } else if ($response['success'] && isset($response['data'])) {
-                    // Structure normale
-                    $this->sendJsonResponse($response);
+                } else if (is_array($apiData) && isset($apiData['id'])) {
+                    // La structure est directement l'utilisateur (sans wrapper success/data)
+                    error_log("API WebApp2 - Structure utilisateur directe détectée");
+                    $this->sendJsonResponse([
+                        'success' => true,
+                        'data' => $apiData
+                    ]);
                 } else {
-                    // Si l'utilisateur n'est pas trouvé ou erreur
-                    $httpCode = $response['status_code'] ?? 404;
-                    if ($httpCode === 404) {
-                        $this->sendJsonResponse([
-                            'success' => false,
-                            'message' => 'Utilisateur non trouvé avec ce numéro de licence'
-                        ], 404);
-                    } else {
-                        $this->sendJsonResponse([
-                            'success' => false,
-                            'message' => $response['message'] ?? 'Erreur lors de la recherche'
-                        ], $httpCode);
-                    }
+                    // Structure inattendue
+                    error_log("API WebApp2 - ERREUR: Structure inattendue - " . json_encode($apiData));
+                    $this->sendJsonResponse([
+                        'success' => false,
+                        'message' => 'Format de réponse inattendu de l\'API: ' . json_encode($apiData)
+                    ], 500);
                 }
             } else {
                 // Liste normale des utilisateurs

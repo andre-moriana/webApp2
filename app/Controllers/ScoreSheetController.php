@@ -23,8 +23,13 @@ class ScoreSheetController {
         $pageTitle = 'Feuille de marque - Portail Archers de Gémenos';
         
         // Définir les fichiers CSS et JS spécifiques
-        $additionalCSS = ['/public/assets/css/score-sheet.css'];
-        $additionalJS = ['/public/assets/js/score-sheet.js?v=' . time()];
+        $additionalCSS = [
+            '/public/assets/css/score-sheet.css',
+            '/public/assets/css/scored-trainings.css'
+        ];
+        $additionalJS = [
+            '/public/assets/js/score-sheet.js?v=' . time()
+        ];
         
         // Inclure le header
         include 'app/Views/layouts/header.php';
