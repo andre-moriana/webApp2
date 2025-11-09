@@ -46,6 +46,7 @@ class Router {
         $this->addRoute("POST", "/scored-trainings/{id}/end", "ScoredTrainingController@endTraining");
         $this->addRoute("POST", "/scored-trainings/{id}/ends", "ScoredTrainingController@addEnd");
         $this->addRoute("DELETE", "/scored-trainings/{id}", "ScoredTrainingController@delete");
+        $this->addRoute("GET", "/scored-trainings/images-nature", "ScoredTrainingController@getNatureImages");
         
         // Routes des feuilles de marque (protégées)
         $this->addRoute("GET", "/score-sheet", "ScoreSheetController@index");
@@ -61,6 +62,10 @@ class Router {
         $this->addRoute("POST", "/users/{id}/update", "UserController@update");
         $this->addRoute("DELETE", "/users/{id}", "UserController@destroy");
         $this->addRoute("POST", "/users/{id}/delete", "UserController@destroy");
+        
+        // Routes d'import d'utilisateurs (protégées - admin seulement)
+        $this->addRoute("GET", "/users/import", "UserImportController@index");
+        $this->addRoute("POST", "/users/import/process", "UserImportController@process");
         
         // Routes des groupes (protégées)
         $this->addRoute("GET", "/groups", "GroupController@index");
@@ -97,6 +102,7 @@ class Router {
         
         // Routes API pour les groupes (proxy vers API externe)
         $this->addRoute("GET", "/api/users", "ApiController@users");
+        $this->addRoute("POST", "/api/groups/create", "ApiController@createGroup");
         $this->addRoute("POST", "/api/groups/{id}/members", "ApiController@addGroupMembers");
         $this->addRoute("DELETE", "/api/groups/{id}/remove-member/{memberId}", "ApiController@removeGroupMember");
         

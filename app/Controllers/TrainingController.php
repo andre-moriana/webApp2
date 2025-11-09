@@ -98,6 +98,19 @@ class TrainingController {
                     } else {
                         $users = $usersData;
                     }
+                    
+                    // Trier les utilisateurs par ordre alphabétique (nom puis prénom)
+                    usort($users, function($a, $b) {
+                        // Récupérer le nom complet pour la comparaison
+                        $nameA = ($a['name'] ?? '') . ' ' . ($a['firstName'] ?? '');
+                        $nameB = ($b['name'] ?? '') . ' ' . ($b['firstName'] ?? '');
+                        
+                        // Nettoyer les espaces et convertir en minuscules pour la comparaison
+                        $nameA = trim(strtolower($nameA));
+                        $nameB = trim(strtolower($nameB));
+                        
+                        return strcmp($nameA, $nameB);
+                    });
                 }
             } catch (Exception $e) {
                 error_log('Erreur lors de la récupération des utilisateurs: ' . $e->getMessage());
@@ -265,6 +278,19 @@ class TrainingController {
                     } else {
                         $users = $usersData;
                     }
+                    
+                    // Trier les utilisateurs par ordre alphabétique (nom puis prénom)
+                    usort($users, function($a, $b) {
+                        // Récupérer le nom complet pour la comparaison
+                        $nameA = ($a['name'] ?? '') . ' ' . ($a['firstName'] ?? '');
+                        $nameB = ($b['name'] ?? '') . ' ' . ($b['firstName'] ?? '');
+                        
+                        // Nettoyer les espaces et convertir en minuscules pour la comparaison
+                        $nameA = trim(strtolower($nameA));
+                        $nameB = trim(strtolower($nameB));
+                        
+                        return strcmp($nameA, $nameB);
+                    });
                 }
             } catch (Exception $e) {
                 error_log('Erreur lors de la récupération des utilisateurs: ' . $e->getMessage());

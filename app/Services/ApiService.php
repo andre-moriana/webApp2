@@ -2025,6 +2025,23 @@ class ApiService {
     }
     
     /**
+     * Récupère les images nature (blasons) par type/catégorie
+     * @param string|null $type Type d'image (catégorie)
+     * @param string|null $label Label pour recherche
+     * @return array Réponse de l'API
+     */
+    public function getNatureImages($type = null, $label = null) {
+        if ($type) {
+            $endpoint = "/images-nature/type/" . urlencode($type);
+        } elseif ($label) {
+            $endpoint = "/images-nature/search?label=" . urlencode($label);
+        } else {
+            $endpoint = "/images-nature";
+        }
+        return $this->makeRequest($endpoint, 'GET');
+    }
+    
+    /**
      * Récupère l'URL de base de l'API sans le suffixe /api
      * @return string URL de base
      */

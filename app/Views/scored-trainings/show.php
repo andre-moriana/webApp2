@@ -206,24 +206,34 @@ $additionalJS = [
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <?php 
-                                                $hasCoordinates = false;
-                                                if (isset($end['shots'])) {
-                                                    foreach ($end['shots'] as $shot) {
-                                                        if ($shot['hit_x'] !== null && $shot['hit_y'] !== null) {
-                                                            $hasCoordinates = true;
-                                                            break;
+                                                <div class="d-flex gap-1">
+                                                    <?php 
+                                                    $hasCoordinates = false;
+                                                    if (isset($end['shots'])) {
+                                                        foreach ($end['shots'] as $shot) {
+                                                            if ($shot['hit_x'] !== null && $shot['hit_y'] !== null) {
+                                                                $hasCoordinates = true;
+                                                                break;
+                                                            }
                                                         }
                                                     }
-                                                }
-                                                ?>
-                                                <?php if ($hasCoordinates): ?>
-                                                <button class="btn btn-sm btn-outline-primary" onclick="showEndTarget(<?= $end['end_number'] ?>)" title="Voir la cible de cette volée">
-                                                    <i class="fas fa-bullseye"></i>
-                                                </button>
-                                                <?php else: ?>
-                                                <span class="text-muted">-</span>
-                                                <?php endif; ?>
+                                                    ?>
+                                                    <?php if ($hasCoordinates): ?>
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="showEndTarget(<?= $end['end_number'] ?>)" title="Voir la cible de cette volée">
+                                                        <i class="fas fa-bullseye"></i>
+                                                    </button>
+                                                    <?php endif; ?>
+                                                    
+                                                    <?php if (!empty($end['ref_blason'])): ?>
+                                                    <button class="btn btn-sm btn-outline-info" onclick="showBlasonImage(<?= $end['ref_blason'] ?>)" title="Voir le blason de cette volée">
+                                                        <i class="fas fa-image"></i>
+                                                    </button>
+                                                    <?php endif; ?>
+                                                    
+                                                    <?php if (!$hasCoordinates && empty($end['ref_blason'])): ?>
+                                                    <span class="text-muted">-</span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </td>
                                         </tr>
                                         <?php endforeach; ?>
@@ -403,10 +413,11 @@ $additionalJS = [
                                         <option value="3">Categorie 3</option>
                                         <option value="4">Categorie 4</option>
                                     <?php elseif ($scoredTraining['shooting_type'] === 'Nature'): ?>
-                                        <option value="grands_gibiers">Grands gibiers</option>
-                                        <option value="moyens_gibiers">Moyens gibiers</option>
-                                        <option value="petits_gibiers">Petits gibiers</option>
-                                        <option value="petits_animaux">Petits animaux</option>
+                                        <option value="grands_gibiers">Grands Gibiers</option>
+                                        <option value="moyens_gibiers">Moyens Gibiers</option>
+                                        <option value="petits_gibiers">Petits Gibiers</option>
+                                        <option value="petits_animaux">Petits Animaux</option>
+                                        <option value="doubles_birdies">Doubles Birdies</option>
                                     <?php elseif ($scoredTraining['shooting_type'] === 'Campagne'): ?>
                                         <option value="birdie_20">Birdie 20cm</option>
                                         <option value="gaziniere_40">Gazinière 40cm</option>
@@ -424,6 +435,64 @@ $additionalJS = [
                         </div>
                         <?php endif; ?>
                     </div>
+                    <!-- Champ select pour le blason (uniquement pour le type Nature) -->
+                    <?php if ($scoredTraining['shooting_type'] === 'Nature'): ?>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3" id="nature_blason_wrapper" style="display: none;">
+                                <label for="nature_blason" class="form-label">Blason</label>
+                                <select class="form-select" id="nature_blason" name="ref_blason">
+                                    <option value="">Sélectionner un blason</option>
+                                </select>
+                                <div class="form-text">Sélectionnez le blason pour le tir Nature</div>
+                                <div id="nature_blason_loading" class="text-muted small mt-2" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin"></i> Chargement des blasons...
+                                </div>
+                                <!-- Conteneur pour l'aperçu de l'image du blason sélectionné -->
+                                <div id="nature_blason_preview" class="mt-3" style="display: none;">
+                                    <label class="form-label">Aperçu du blason</label>
+                                    <div class="border rounded p-2 text-center" style="background-color: #f8f9fa;">
+                                        <img id="nature_blason_image" src="" alt="Blason sélectionné" 
+                                             class="img-fluid" style="max-width: 100%; max-height: 400px; object-fit: contain; cursor: pointer;"
+                                             onclick="showNatureBlasonModal(this.src)">
+                                        <div class="mt-2">
+                                            <small class="text-muted">Cliquez sur l'image pour l'agrandir</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    <!-- Champ select pour le blason 3D (uniquement pour le type 3D) -->
+                    <?php if ($scoredTraining['shooting_type'] === '3D'): ?>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3" id="threeD_blason_wrapper" style="display: none;">
+                                <label for="threeD_blason" class="form-label">Cible</label>
+                                <select class="form-select" id="threeD_blason" name="ref_blason">
+                                    <option value="">Sélectionner une cible</option>
+                                </select>
+                                <div class="form-text">Sélectionnez la cible pour le tir 3D</div>
+                                <div id="threeD_blason_loading" class="text-muted small mt-2" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin"></i> Chargement des cibles...
+                                </div>
+                                <!-- Conteneur pour l'aperçu de l'image de la cible sélectionnée -->
+                                <div id="threeD_blason_preview" class="mt-3" style="display: none;">
+                                    <label class="form-label">Aperçu de la cible</label>
+                                    <div class="border rounded p-2 text-center" style="background-color: #f8f9fa;">
+                                        <img id="threeD_blason_image" src="" alt="Cible sélectionnée" 
+                                             class="img-fluid" style="max-width: 100%; max-height: 400px; object-fit: contain; cursor: pointer;"
+                                             onclick="showThreeDBlasonModal(this.src)">
+                                        <div class="mt-2">
+                                            <small class="text-muted">Cliquez sur l'image pour l'agrandir</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                     <div class="row">
                         <?php if ($scoredTraining['shooting_type'] !== 'Salle' && $scoredTraining['shooting_type'] !== 'TAE' && $scoredTraining['shooting_type'] !== 'Libre'): ?>
                         <div class="col-md-6">

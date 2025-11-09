@@ -445,6 +445,31 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <?php 
+                                            // Vérifier s'il y a des séances réelles à afficher
+                                            $hasRealSessions = false;
+                                            $realSessionCount = 0;
+                                            
+                                            if (!empty($exerciseData['sessions'])) {
+                                                // Compter uniquement les vraies séances (pas les données de progrès)
+                                                foreach ($exerciseData['sessions'] as $session) {
+                                                    // Ignorer les séances de type "données de progrès"
+                                                    if (isset($session['is_progress_data']) && $session['is_progress_data']) {
+                                                        continue;
+                                                    }
+                                                    
+                                                    // Vérifier que la séance a un ID valide (une vraie séance enregistrée)
+                                                    $sessionId = $session['id'] ?? $session['_id'] ?? null;
+                                                    if (!empty($sessionId) && $sessionId !== 'unknown' && $sessionId !== 'null') {
+                                                        $realSessionCount++;
+                                                    }
+                                                }
+                                                
+                                                // Il y a des séances réelles si le compteur est > 0
+                                                $hasRealSessions = $realSessionCount > 0;
+                                            }
+                                            ?>
+                                            <?php if ($hasRealSessions): ?>
                                             <div class="accordion" id="sessionsAccordion<?php echo $exerciseId; ?>">
                                                 <div class="accordion-item">
                                                     <h2 class="accordion-header" id="sessionsHeading<?php echo $exerciseId; ?>">
@@ -455,11 +480,11 @@
                                                                 aria-controls="sessionsCollapse<?php echo $exerciseId; ?>">
                                                             <small>
                                                                 <?php 
-                                                                $sessionCount = count($exerciseData['sessions']);
-                                                                if ($sessionCount === 1 && isset($exerciseData['sessions'][0]['is_progress_data'])) {
-                                                                    echo "Données de progrès (" . $exerciseData['stats']['total_sessions'] . " séances)";
+                                                                // Afficher le texte avec le bon singulier/pluriel
+                                                                if ($realSessionCount === 1) {
+                                                                    echo "Voir la séance";
                                                                 } else {
-                                                                    echo "Voir les " . $sessionCount . " séances";
+                                                                    echo "Voir les " . $realSessionCount . " séances";
                                                                 }
                                                                 ?>
                                                             </small>
@@ -470,46 +495,40 @@
                                                          aria-labelledby="sessionsHeading<?php echo $exerciseId; ?>" 
                                                          data-bs-parent="#sessionsAccordion<?php echo $exerciseId; ?>">
                                                         <div class="accordion-body p-2">
-                                                            <?php if (empty($exerciseData['sessions'])): ?>
-                                                            <div class="text-center py-2">
-                                                                <small class="text-muted">Aucune séance trouvée</small>
-                                                                <br>
-                                                                <button type="button" class="btn btn-sm btn-primary mt-2" 
-                                                                        onclick="startTrainingSession(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')">
-                                                                    <i class="fas fa-plus"></i> Créer une séance
-                                                                </button>
-                                                            </div>
-                                                            <?php else: ?>
-                                                            <?php foreach ($exerciseData['sessions'] as $session): ?>
+                                                            <?php 
+                                                            // Afficher uniquement les vraies séances (pas les données de progrès)
+                                                            foreach ($exerciseData['sessions'] as $session): 
+                                                                // Ignorer les séances de type "données de progrès"
+                                                                if (isset($session['is_progress_data']) && $session['is_progress_data']) {
+                                                                    continue;
+                                                                }
+                                                                
+                                                                // Vérifier que la séance a un ID valide avant de l'afficher
+                                                                $sessionId = $session['id'] ?? $session['_id'] ?? null;
+                                                                if (empty($sessionId) || $sessionId === 'unknown' || $sessionId === 'null') {
+                                                                    continue;
+                                                                }
+                                                            ?>
                                                             <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                                                                 <div>
                                                                     <small class="text-muted">
                                                                         <?php 
-                                                                        if (isset($session['is_progress_data']) && $session['is_progress_data']): ?>
-                                                                            <strong>Données de progrès</strong>
-                                                                        <?php else:
-                                                                            $date = $session['start_date'] ?? $session['created_at'] ?? '';
-                                                                            if ($date && $date !== 'Date inconnue' && $date !== '0000-00-00 00:00:00') {
-                                                                                echo date('d/m/Y H:i', strtotime($date));
-                                                                            } else {
-                                                                                echo 'Date inconnue';
-                                                                            }
-                                                                        endif;
+                                                                        $date = $session['start_date'] ?? $session['created_at'] ?? '';
+                                                                        if ($date && $date !== 'Date inconnue' && $date !== '0000-00-00 00:00:00') {
+                                                                            echo date('d/m/Y H:i', strtotime($date));
+                                                                        } else {
+                                                                            echo 'Date inconnue';
+                                                                        }
                                                                         ?>
                                                                     </small>
                                                                     <br>
                                                                     <small>
-                                                                        <?php if (isset($session['is_progress_data']) && $session['is_progress_data']): ?>
-                                                                            <?php echo $session['total_arrows']; ?> flèches total - 
-                                                                            <?php echo $session['total_sessions']; ?> séances
-                                                                        <?php else: ?>
-                                                                            <?php 
-                                                                            $arrows = $session['arrows_shot'] ?? $session['total_arrows'] ?? $session['arrows'] ?? 0;
-                                                                            echo $arrows; 
-                                                                            ?> flèches
-                                                                            <?php if (isset($session['score']) && $session['score'] > 0): ?>
-                                                                            - Score: <?php echo $session['score']; ?>
-                                                                            <?php endif; ?>
+                                                                        <?php 
+                                                                        $arrows = $session['arrows_shot'] ?? $session['total_arrows'] ?? $session['arrows'] ?? 0;
+                                                                        echo $arrows; 
+                                                                        ?> flèches
+                                                                        <?php if (isset($session['score']) && $session['score'] > 0): ?>
+                                                                        - Score: <?php echo $session['score']; ?>
                                                                         <?php endif; ?>
                                                                         <?php if (isset($session['is_aggregated']) && $session['is_aggregated']): ?>
                                                                         <span class="badge bg-info">Données agrégées</span>
@@ -520,32 +539,18 @@
                                                                     <?php endif; ?>
                                                                 </div>
                                                                 <div>
-                                                                    <?php if (isset($session['is_progress_data']) && $session['is_progress_data']): ?>
-                                                                    <span class="text-muted">
-                                                                        <small>Données de progrès</small>
-                                                                    </span>
-                                                                    <?php else: ?>
-                                                                    <a href="/trainings/<?php echo $session['id'] ?? ''; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
+                                                                    <a href="/trainings/<?php echo $sessionId; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
                                                                        class="btn btn-sm btn-outline-primary">
                                                                         <i class="fas fa-eye"></i> Voir
                                                                     </a>
-                                                                    <?php endif; ?>
                                                                 </div>
                                                             </div>
                                                             <?php endforeach; ?>
-                                                            
-                                                            <!-- Bouton pour créer une nouvelle séance même s'il y a déjà des séances -->
-                                                            <div class="text-center py-2 mt-2">
-                                                                <button type="button" class="btn btn-sm btn-success" 
-                                                                        onclick="startTrainingSession(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')">
-                                                                    <i class="fas fa-plus"></i> Nouvelle séance
-                                                                </button>
-                                                            </div>
-                                                            <?php endif; ?>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                     <?php endforeach; ?>

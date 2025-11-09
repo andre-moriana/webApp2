@@ -21,9 +21,14 @@ error_log("Session: " . print_r($_SESSION, true));
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">Gestion des utilisateurs</h1>
                 <?php if (isset($_SESSION['user']['is_admin']) && (bool)$_SESSION['user']['is_admin']): ?>
-                    <a href="/users/create" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Nouvel utilisateur
-                    </a>
+                    <div>
+                        <a href="/users/import" class="btn btn-success me-2">
+                            <i class="fas fa-file-upload me-2"></i>Importer depuis XML
+                        </a>
+                        <a href="/users/create" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Nouvel utilisateur
+                        </a>
+                    </div>
                 <?php endif; ?>
             </div>
             
@@ -37,9 +42,29 @@ error_log("Session: " . print_r($_SESSION, true));
             
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-users me-2"></i>Liste des utilisateurs
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-users me-2"></i>Liste des utilisateurs
+                        </h5>
+                        <div class="search-box">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="userSearchInput" 
+                                       placeholder="Rechercher un utilisateur..." 
+                                       autocomplete="off">
+                                <button class="btn btn-outline-secondary" 
+                                        type="button" 
+                                        id="clearSearchBtn" 
+                                        style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -72,7 +97,7 @@ error_log("Session: " . print_r($_SESSION, true));
                             </thead>
                             <tbody>
                                 <?php if (empty($users)): ?>
-                                    <tr>
+                                    <tr class="no-results-row">
                                         <td colspan="8" class="text-center py-4">
                                             <i class="fas fa-users fa-3x text-muted mb-3"></i>
                                             <p class="text-muted">Aucun utilisateur trouvé</p>
@@ -80,7 +105,18 @@ error_log("Session: " . print_r($_SESSION, true));
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($users as $user): ?>
-                                        <tr>
+                                        <tr class="user-row" data-searchable="<?php 
+                                            // Construire une chaîne de recherche avec toutes les données pertinentes
+                                            $searchableText = '';
+                                            if (!empty($user['firstName'])) $searchableText .= strtolower($user['firstName']) . ' ';
+                                            if (!empty($user['name'])) $searchableText .= strtolower($user['name']) . ' ';
+                                            if (!empty($user['email'])) $searchableText .= strtolower($user['email']) . ' ';
+                                            if (!empty($user['role'])) $searchableText .= strtolower($user['role']) . ' ';
+                                            if (!empty($user['status'])) $searchableText .= strtolower($user['status']) . ' ';
+                                            if (!empty($user['licenceNumber'])) $searchableText .= strtolower($user['licenceNumber']) . ' ';
+                                            if (!empty($user['id'])) $searchableText .= $user['id'] . ' ';
+                                            echo htmlspecialchars(trim($searchableText));
+                                        ?>">
                                             <td class="text-nowrap"><?php echo htmlspecialchars($user['id']); ?></td>
                                             <td class="text-nowrap">
                                                 <div class="d-flex align-items-center">

@@ -114,8 +114,128 @@ function handleAvatarDisplay() {
     });
 }
 
-// Ajouter les événements de clic sur les headers
-document.addEventListener('DOMContentLoaded', function() {
+// Fonction de recherche rapide
+function filterUsersTable(searchTerm) {
+    const table = document.getElementById('usersTable');
+    if (!table) {
+        return;
+    }
+    
+    const tbody = table.querySelector('tbody');
+    if (!tbody) {
+        return;
+    }
+    
+    const userRows = tbody.querySelectorAll('tr.user-row');
+    const noResultsRow = tbody.querySelector('tr.no-results-row');
+    
+    let visibleCount = 0;
+    const searchTermTrimmed = searchTerm ? searchTerm.trim().toLowerCase() : '';
+    
+    if (!searchTermTrimmed) {
+        // Afficher toutes les lignes utilisateur si la recherche est vide
+        userRows.forEach(row => {
+            row.style.display = '';
+            visibleCount++;
+        });
+        // Masquer le message "Aucun résultat" initial et celui de recherche
+        if (noResultsRow) {
+            noResultsRow.style.display = 'none';
+        }
+        const searchNoResultsRow = tbody.querySelector('tr.search-no-results');
+        if (searchNoResultsRow) {
+            searchNoResultsRow.remove();
+        }
+    } else {
+        // Rechercher dans le contenu visible des cellules
+        userRows.forEach(row => {
+            // Récupérer le texte de toutes les cellules (sauf Actions)
+            const cells = row.querySelectorAll('td');
+            let rowText = '';
+            
+            // Parcourir toutes les cellules sauf la dernière (Actions)
+            for (let i = 0; i < cells.length - 1; i++) {
+                const cellText = cells[i].textContent || cells[i].innerText || '';
+                rowText += cellText.toLowerCase() + ' ';
+            }
+            
+            // Vérifier aussi l'attribut data-searchable si disponible
+            const dataSearchable = (row.getAttribute('data-searchable') || '').toLowerCase();
+            rowText += dataSearchable;
+            
+            // Vérifier si le terme de recherche est présent
+            if (rowText.includes(searchTermTrimmed)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Gérer le message "Aucun résultat"
+        if (visibleCount === 0 && userRows.length > 0) {
+            // Créer ou afficher une ligne "Aucun résultat" pour la recherche
+            let searchNoResultsRow = tbody.querySelector('tr.search-no-results');
+            if (!searchNoResultsRow) {
+                searchNoResultsRow = document.createElement('tr');
+                searchNoResultsRow.className = 'search-no-results';
+                const colCount = table.querySelectorAll('thead th').length;
+                searchNoResultsRow.innerHTML = `<td colspan="${colCount}" class="text-center py-4"><i class="fas fa-search fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Aucun utilisateur ne correspond à votre recherche</p></td>`;
+                tbody.appendChild(searchNoResultsRow);
+            }
+            searchNoResultsRow.style.display = '';
+        } else {
+            // Masquer la ligne "Aucun résultat" de recherche
+            const searchNoResultsRow = tbody.querySelector('tr.search-no-results');
+            if (searchNoResultsRow) {
+                searchNoResultsRow.style.display = 'none';
+            }
+        }
+        
+        // Masquer la ligne "Aucun résultat" initiale
+        if (noResultsRow) {
+            noResultsRow.style.display = 'none';
+        }
+    }
+    
+    // Mettre à jour le compteur de résultats
+    updateResultsCount(visibleCount, userRows.length);
+}
+
+// Mettre à jour le compteur de résultats
+function updateResultsCount(visible, total) {
+    let counter = document.getElementById('resultsCounter');
+    if (!counter) {
+        // Créer le compteur s'il n'existe pas
+        const cardHeader = document.querySelector('.card-header');
+        if (cardHeader) {
+            counter = document.createElement('div');
+            counter.id = 'resultsCounter';
+            counter.className = 'text-muted small mt-2';
+            counter.style.width = '100%';
+            // Insérer après le d-flex dans le card-header
+            const flexContainer = cardHeader.querySelector('.d-flex');
+            if (flexContainer && flexContainer.parentElement) {
+                flexContainer.parentElement.appendChild(counter);
+            } else {
+                cardHeader.appendChild(counter);
+            }
+        }
+    }
+    
+    if (counter) {
+        if (visible < total) {
+            counter.textContent = `${visible} utilisateur(s) trouvé(s) sur ${total}`;
+            counter.style.display = 'block';
+        } else {
+            counter.style.display = 'none';
+        }
+    }
+}
+
+// Fonction d'initialisation
+function initUsersTable() {
+    // Gérer le tri
     const sortableHeaders = document.querySelectorAll('.sortable');
     sortableHeaders.forEach(header => {
         header.style.cursor = 'pointer';
@@ -127,7 +247,67 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gérer l'affichage des avatars
     handleAvatarDisplay();
-});
+    
+    // Gérer la recherche rapide
+    const searchInput = document.getElementById('userSearchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    
+    if (!searchInput) {
+        console.warn('Champ de recherche userSearchInput non trouvé');
+        return;
+    }
+    
+    // Recherche en temps réel lors de la saisie
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = this.value;
+        filterUsersTable(searchTerm);
+        
+        // Afficher/masquer le bouton de réinitialisation
+        if (clearSearchBtn) {
+            if (searchTerm.trim() !== '') {
+                clearSearchBtn.style.display = 'block';
+            } else {
+                clearSearchBtn.style.display = 'none';
+            }
+        }
+    });
+    
+    // Recherche au clavier (Escape pour effacer)
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            filterUsersTable('');
+            if (clearSearchBtn) {
+                clearSearchBtn.style.display = 'none';
+            }
+            this.focus();
+        }
+    });
+    
+    // Bouton pour effacer la recherche
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            if (searchInput) {
+                searchInput.value = '';
+                filterUsersTable('');
+                this.style.display = 'none';
+                searchInput.focus();
+            }
+        });
+    }
+    
+    // Test initial pour vérifier que tout fonctionne
+    const userRows = document.querySelectorAll('#usersTable tbody tr.user-row');
+    console.log('Initialisation de la recherche - Lignes utilisateur trouvées:', userRows.length);
+}
+
+// Initialiser quand le DOM est prêt
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUsersTable);
+} else {
+    // Le DOM est déjà chargé
+    initUsersTable();
+}
 
 function confirmDelete(userId) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.')) {

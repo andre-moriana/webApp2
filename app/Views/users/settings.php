@@ -139,19 +139,46 @@ include __DIR__ . '/../layouts/header.php';
                         <div class="col-md-6">
                             <dl class="row">
                                 <dt class="col-sm-4">Nom complet:</dt>
-                                <dd class="col-sm-8"><?php echo htmlspecialchars($user['name'] ?? $user['username'] ?? 'Non défini'); ?></dd>
+                                <dd class="col-sm-8">
+                                    <?php 
+                                    // Priorité: name puis last_name, puis username en dernier recours
+                                    $fullName = $user['name'] ?? '';
+                                    if (empty($fullName)) {
+                                        $fullName = $user['username'] ?? 'Non défini';
+                                    }
+                                    echo htmlspecialchars($fullName); 
+                                    ?>
+                                </dd>
                                 
                                 <dt class="col-sm-4">Prénom:</dt>
-                                <dd class="col-sm-8"><?php echo htmlspecialchars($user['firstName'] ?? $user['first_name'] ?? 'Non défini'); ?></dd>
+                                <dd class="col-sm-8">
+                                    <?php 
+                                    // Priorité: firstName puis first_name puis firstname
+                                    $firstName = $user['firstName'] ?? $user['first_name'] ?? $user['firstname'] ?? 'Non défini';
+                                    echo htmlspecialchars($firstName); 
+                                    ?>
+                                </dd>
                                 
                                 <dt class="col-sm-4">Email:</dt>
-                                <dd class="col-sm-8"><?php echo htmlspecialchars($user['email'] ?? 'Non défini'); ?></dd>
+                                <dd class="col-sm-8">
+                                    <?php 
+                                    // Utiliser l'email de la base de données
+                                    $email = $user['email'] ?? 'Non défini';
+                                    echo htmlspecialchars($email); 
+                                    ?>
+                                </dd>
                             </dl>
                         </div>
                         <div class="col-md-6">
                             <dl class="row">
                                 <dt class="col-sm-4">Nom d'utilisateur:</dt>
-                                <dd class="col-sm-8"><?php echo htmlspecialchars($user['username'] ?? $user['name'] ?? 'Non défini'); ?></dd>
+                                <dd class="col-sm-8">
+                                    <?php 
+                                    // Utiliser le username de la base de données
+                                    $username = $user['username'] ?? 'Non défini';
+                                    echo htmlspecialchars($username); 
+                                    ?>
+                                </dd>
                                 
                                 <dt class="col-sm-4">Rôle:</dt>
                                 <dd class="col-sm-8">

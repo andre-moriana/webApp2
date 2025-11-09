@@ -13,29 +13,189 @@ class UserSettingsController {
     public function index() {
         $pageTitle = "Paramètres utilisateur - Portail Archers de Gémenos";
         
-        // Récupérer les informations de l'utilisateur connecté
-        $userId = $_SESSION['user']['id'] ?? null;
+        // Vérifier que l'utilisateur est connecté
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || !isset($_SESSION['user'])) {
+            header('Location: /login');
+            exit;
+        }
+        
+        // Récupérer l'ID de l'utilisateur connecté (gérer différents formats)
+        $userId = $_SESSION['user']['id'] ?? $_SESSION['user']['_id'] ?? null;
+        
+        // Si pas d'ID dans la session, essayer de récupérer depuis le token JWT
+        if (!$userId && isset($_SESSION['token'])) {
+            try {
+                $tokenParts = explode('.', $_SESSION['token']);
+                if (count($tokenParts) === 3) {
+                    $payload = json_decode(base64_decode($tokenParts[1]), true);
+                    $userId = $payload['user_id'] ?? $payload['id'] ?? null;
+                }
+            } catch (Exception $e) {
+                error_log("Erreur décodage token dans UserSettingsController: " . $e->getMessage());
+            }
+        }
+        
         if (!$userId) {
+            $_SESSION['error'] = 'Impossible de récupérer les informations de l\'utilisateur';
             header('Location: /login');
             exit;
         }
         
         try {
-            // Récupérer les informations détaillées de l'utilisateur
-            $response = $this->apiService->getUserById($userId);
-            
-            if ($response['success'] && !empty($response['data'])) {
-                $user = $response['data'];
-            } else {
-                // Utiliser les données de session comme fallback
-                $user = $_SESSION['user'];
+            // Essayer d'abord de récupérer l'utilisateur connecté via /auth/me si disponible
+            // Cet endpoint retourne TOUJOURS l'utilisateur connecté, peu importe l'ID en session
+            $user = null;
+            $userIdFromMe = null;
+            try {
+                $meResponse = $this->apiService->makeRequest('auth/me', 'GET');
+                
+                if ($meResponse['success'] && !empty($meResponse['data'])) {
+                    $user = $meResponse['data']['user'] ?? $meResponse['data'];
+                    
+                    // Extraire l'ID de l'utilisateur depuis /auth/me
+                    $userIdFromMe = $user['id'] ?? $user['_id'] ?? null;
+                    
+                    // Si on a récupéré un ID différent de celui de la session, mettre à jour la session
+                    if ($userIdFromMe && $userIdFromMe != $userId) {
+                        $_SESSION['user']['id'] = $userIdFromMe;
+                        $_SESSION['user']['_id'] = $userIdFromMe;
+                        $userId = $userIdFromMe; // Utiliser le bon ID
+                    }
+                }
+            } catch (Exception $e) {
+                // L'endpoint /auth/me n'existe peut-être pas, continuer avec getUserById
+                error_log("Endpoint /auth/me non disponible, utilisation de getUserById: " . $e->getMessage());
             }
             
-            // Inclure la vue
+            // Si /auth/me n'a pas fonctionné, utiliser getUserById avec le bon ID
+            if (!$user || empty($user['username'])) {
+                // Utiliser l'ID récupéré de /auth/me si disponible, sinon celui de la session
+                $userIdToUse = $userIdFromMe ?? $userId;
+                $response = $this->apiService->getUserById($userIdToUse);
+                
+                // Gérer différents formats de réponse de l'API
+                if ($response['success']) {
+                    // Format 1: response['data'] contient directement l'utilisateur
+                    if (!empty($response['data']) && (isset($response['data']['username']) || isset($response['data']['email']) || isset($response['data']['id']) || isset($response['data']['_id']))) {
+                        $user = $response['data'];
+                    }
+                    // Format 2: response['data']['user'] contient l'utilisateur
+                    elseif (!empty($response['data']['user'])) {
+                        $user = $response['data']['user'];
+                    }
+                    // Format 3: response['user'] contient l'utilisateur
+                    elseif (!empty($response['user'])) {
+                        $user = $response['user'];
+                    }
+                }
+            }
+            
+            // Si on n'a toujours pas récupéré de données de l'API, utiliser la session
+            if (!$user || (empty($user['username']) && empty($user['email']))) {
+                $user = $_SESSION['user'];
+            } else {
+                // Les données de l'API sont disponibles - elles ont PRIORITÉ ABSOLUE
+                // On commence par copier les données de session (pour les champs non présents dans l'API)
+                // Puis on ÉCRASE avec les données de l'API pour les champs critiques
+                $userFromAPI = $user; // Sauvegarder les données brutes de l'API
+                $user = array_merge($_SESSION['user'] ?? [], $user);
+                
+                if (isset($userFromAPI['firstName'])) {
+                   $user['firstName'] = $userFromAPI['firstName'];
+                }
+                
+                // Nom - chercher dans tous les formats possibles
+                if (isset($userFromAPI['name'])) {
+                    $user['name'] = $userFromAPI['name'];
+                }
+              
+                // Email - chercher dans tous les formats possibles
+                if (isset($userFromAPI['email'])) {
+                    $user['email'] = $userFromAPI['email'];
+                }
+                
+                // Username - chercher dans tous les formats possibles
+                if (isset($userFromAPI['username'])) {
+                    $user['username'] = $userFromAPI['username'];
+                }
+            }
+            
+            // Normaliser les champs (gérer id/_id, firstName/first_name, etc.)
+            // S'assurer que les deux formats sont présents pour compatibilité
+            if (!empty($user['_id']) && empty($user['id'])) {
+                $user['id'] = $user['_id'];
+            }
+            if (!empty($user['id']) && empty($user['_id'])) {
+                $user['_id'] = $user['id'];
+            }
+            
+            // Normaliser firstName/first_name
+            if (!empty($user['first_name']) && empty($user['firstName'])) {
+                $user['firstName'] = $user['first_name'];
+            }
+            if (!empty($user['firstName']) && empty($user['first_name'])) {
+                $user['first_name'] = $user['firstName'];
+            }
+            
+            // Normaliser name/last_name
+            if (!empty($user['last_name']) && empty($user['name'])) {
+                $user['name'] = $user['last_name'];
+            }
+            if (!empty($user['name']) && empty($user['last_name'])) {
+                $user['last_name'] = $user['name'];
+            }
+            
+            // S'assurer que l'email est bien celui de la base de données (pas celui construit)
+            // Si l'email dans $user semble être construit (contient '@archers-gemenos.fr' et correspond au username),
+            // et qu'on a un email différent dans la session, vérifier lequel est le bon
+            if (isset($user['email']) && strpos($user['email'], '@archers-gemenos.fr') !== false) {
+                $emailFromUsername = ($user['username'] ?? '') . '@archers-gemenos.fr';
+            }
+            
+            // S'assurer que l'ID de l'utilisateur correspond bien à celui de la session
+            $sessionUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['_id'] ?? null;
+            $retrievedUserId = $user['id'] ?? $user['_id'] ?? null;
+            
+            // Vérifier que l'utilisateur récupéré correspond bien à l'utilisateur connecté
+            if ($sessionUserId && $retrievedUserId && $retrievedUserId != $sessionUserId) {
+                // Si l'ID récupéré correspond à l'ID demandé, c'est que l'ID de session est incorrect
+                // Il faut mettre à jour la session avec le bon ID
+                if ($retrievedUserId == $userId) {
+                    // Mettre à jour l'ID dans la session avec le bon ID
+                    $_SESSION['user']['id'] = $retrievedUserId;
+                    $_SESSION['user']['_id'] = $retrievedUserId;
+                } else {
+                    try {
+                        $sessionResponse = $this->apiService->getUserById($sessionUserId);
+                        if ($sessionResponse['success'] && !empty($sessionResponse['data'])) {
+                            $sessionUser = $sessionResponse['data']['user'] ?? $sessionResponse['data'];
+                        }
+                    } catch (Exception $e) {
+                        error_log("Erreur lors de la récupération avec l'ID de session: " . $e->getMessage());
+                    }
+                }
+            } elseif ($sessionUserId && !$retrievedUserId) {
+                $user = $_SESSION['user'];
+            } elseif (!$sessionUserId && $retrievedUserId) {
+                $_SESSION['user']['id'] = $retrievedUserId;
+                $_SESSION['user']['_id'] = $retrievedUserId;
+            }
+            
+            // Inclure la vue avec les données de l'utilisateur
             include __DIR__ . '/../Views/users/settings.php';
         } catch (Exception $e) {
             // Utiliser les données de session comme fallback
             $user = $_SESSION['user'];
+            // Normaliser les champs
+            if (empty($user['id']) && !empty($user['_id'])) {
+                $user['id'] = $user['_id'];
+            }
+            if (empty($user['firstName']) && !empty($user['first_name'])) {
+                $user['firstName'] = $user['first_name'];
+            }
+            if (empty($user['name']) && !empty($user['last_name'])) {
+                $user['name'] = $user['last_name'];
+            }
             include __DIR__ . '/../Views/users/settings.php';
         }
     }

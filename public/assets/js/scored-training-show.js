@@ -5,6 +5,695 @@
 
 // scored-training-show.js chargé
 
+// Fonction pour convertir la catégorie vers le format de la base de données
+// Même logique que dans l'application mobile (ligne 731)
+function convertCategoryToDBFormat(category) {
+    // Mapping des catégories internes vers les formats de la base de données
+    const categoryMapping = {
+        'grands_gibiers': 'Grands Gibiers',
+        'moyens_gibiers': 'Moyens Gibiers',
+        'petits_gibiers': 'Petits Gibiers',
+        'petits animaux': 'Petits Animaux',
+        'petits_animaux': 'Petits Animaux',
+        'doubles_birdies': 'Doubles Birdies'
+    };
+    
+    // Si la catégorie est dans le mapping, utiliser la valeur mappée
+    if (categoryMapping[category]) {
+        return categoryMapping[category];
+    }
+    
+    // Sinon, convertir en format standard (première lettre en majuscule, reste en minuscule)
+    return category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+}
+
+// Variable globale pour stocker les images nature chargées (comme natureImages dans l'app mobile)
+let loadedNatureImages = [];
+
+// Variable globale pour stocker les images 3D chargées (comme threeDImages dans l'app mobile)
+let loadedThreeDImages = [];
+
+// Fonction pour charger les images nature (blasons) par catégorie dans le formulaire "Ajouter une volée"
+// Même logique que fetchNatureImages dans l'application mobile (ligne 756)
+async function loadNatureBlasonsForVolley(category) {
+    console.log('🔵 loadNatureBlasonsForVolley appelée avec catégorie:', category);
+    
+    if (!category) {
+        console.log('🔵 Aucune catégorie, masquage du select');
+        const wrapper = document.getElementById('nature_blason_wrapper');
+        const select = document.getElementById('nature_blason');
+        if (wrapper) wrapper.style.display = 'none';
+        if (select) select.innerHTML = '<option value="">Sélectionner un blason</option>';
+        return;
+    }
+    
+    const wrapper = document.getElementById('nature_blason_wrapper');
+    const select = document.getElementById('nature_blason');
+    const loading = document.getElementById('nature_blason_loading');
+    
+    if (!wrapper || !select) {
+        console.error('❌ Éléments non trouvés pour le blason nature - wrapper:', !!wrapper, 'select:', !!select);
+        return;
+    }
+    
+    console.log('🔵 Éléments trouvés, affichage du wrapper');
+    
+    // Afficher le wrapper
+    wrapper.style.display = 'block';
+    
+    try {
+        loading.style.display = 'block';
+        select.innerHTML = '<option value="">Sélectionner un blason</option>';
+        
+        // Convertir la catégorie vers le format de la base de données
+        // Utiliser la même fonction que l'application mobile (ligne 731)
+        const dbCategory = convertCategoryToDBFormat(category);
+        console.log('🔵 Catégorie convertie:', category, '->', dbCategory);
+        
+        // Récupérer les images via le backend de l'application web
+        // Même logique que dans l'app mobile ligne 770-823
+        console.log('🔵 Appel API pour type:', dbCategory);
+        let response = await fetch(`/scored-trainings/images-nature?type=${encodeURIComponent(dbCategory)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        console.log('🔵 Réponse API type:', response.status, response.ok);
+        
+        let result = null;
+        
+        // Si pas de résultats avec le type normalisé, essayer la recherche par label (comme dans l'app mobile ligne 793-811)
+        if (response.ok) {
+            result = await response.json();
+            console.log('🔵 Résultat API type:', result);
+            if (!result.success || !result.data || (result.count !== undefined && result.count === 0)) {
+                console.log('🔵 Aucun résultat avec type, essai recherche par label');
+                // Essayer la recherche par label
+                response = await fetch(`/scored-trainings/images-nature?label=${encodeURIComponent(category)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    result = await response.json();
+                    console.log('🔵 Résultat API label:', result);
+                }
+            }
+        } else {
+            console.log('🔵 Erreur avec type, essai recherche par label');
+            // Si erreur, essayer la recherche par label
+            response = await fetch(`/scored-trainings/images-nature?label=${encodeURIComponent(category)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                result = await response.json();
+                console.log('🔵 Résultat API label (fallback):', result);
+            }
+        }
+        
+        if (response.ok) {
+            console.log('🔵 Réponse OK, vérification des données...');
+            console.log('🔵 Structure de result:', {
+                success: result?.success,
+                hasData: !!result?.data,
+                isArray: Array.isArray(result?.data),
+                dataLength: result?.data?.length,
+                count: result?.count,
+                message: result?.message
+            });
+            
+            // Vérifier différents formats de réponse possibles
+            let imagesArray = null;
+            
+            // Format 1: result.data est un tableau
+            if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
+                imagesArray = result.data;
+                console.log('✅ Format 1 détecté: result.data est un tableau');
+            }
+            // Format 2: result.data contient un tableau dans une propriété
+            else if (result && result.data && typeof result.data === 'object' && result.data.images && Array.isArray(result.data.images)) {
+                imagesArray = result.data.images;
+                console.log('✅ Format 2 détecté: result.data.images est un tableau');
+            }
+            // Format 3: result est directement un tableau
+            else if (Array.isArray(result) && result.length > 0) {
+                imagesArray = result;
+                console.log('✅ Format 3 détecté: result est directement un tableau');
+            }
+            // Format 4: result.success = true mais données dans une autre structure
+            else if (result && result.success && result.data) {
+                console.warn('⚠️ Format inattendu, tentative de conversion...');
+                console.warn('⚠️ result.data:', result.data);
+                // Essayer de convertir en tableau si c'est un objet unique
+                if (typeof result.data === 'object' && !Array.isArray(result.data)) {
+                    imagesArray = [result.data];
+                    console.log('✅ Format 4 détecté: conversion d\'un objet unique en tableau');
+                }
+            }
+            
+            if (imagesArray && imagesArray.length > 0) {
+                console.log('✅ Images reçues de l\'API:', imagesArray.length);
+                console.log('✅ Première image brute:', imagesArray[0]);
+                
+                // Trier les images par ordre alphabétique du label (comme dans l'app mobile ligne 784)
+                const sortedImages = [...imagesArray].sort((a, b) => {
+                    const labelA = (a.label || a.nom_fichier || '').toLowerCase();
+                    const labelB = (b.label || b.nom_fichier || '').toLowerCase();
+                    return labelA.localeCompare(labelB, 'fr', { sensitivity: 'base' });
+                });
+                
+                // Stocker les images dans la variable globale (comme natureImages dans l'app mobile)
+                loadedNatureImages = sortedImages;
+                console.log('✅ Images triées et stockées:', sortedImages.length);
+                
+                // Ajouter les options au select (comme dans l'app mobile ligne 1643-1654)
+                sortedImages.forEach((image, index) => {
+                    const option = document.createElement('option');
+                    option.value = image.id;
+                    const baseLabel = image.label || image.nom_fichier || `Image ${image.id}`;
+                    // Format exact comme dans l'app mobile ligne 1646: `${image.ref_blason} - ${baseLabel}`
+                    // Si ref_blason n'est pas présent, utiliser l'ID de l'image
+                    const refBlason = (image.ref_blason !== undefined && image.ref_blason !== null && image.ref_blason !== '') 
+                        ? image.ref_blason 
+                        : image.id;
+                    const displayLabel = `${refBlason} - ${baseLabel}`;
+                    option.textContent = displayLabel;
+                    select.appendChild(option);
+                    if (index === 0) {
+                        console.log('✅ Première option ajoutée:', displayLabel, 'value:', image.id);
+                    }
+                });
+                
+                console.log('✅ Blasons chargés:', sortedImages.length);
+                console.log('✅ Nombre d\'options dans le select après ajout:', select.options.length);
+                if (sortedImages.length > 0) {
+                    console.log('✅ Exemple de données image:', {
+                        id: sortedImages[0].id,
+                        label: sortedImages[0].label,
+                        ref_blason: sortedImages[0].ref_blason,
+                        nom_fichier: sortedImages[0].nom_fichier,
+                        type_image: sortedImages[0].type_image,
+                        url_image: sortedImages[0].url_image,
+                        chemin_local: sortedImages[0].chemin_local
+                    });
+                }
+                
+                // Ajouter un listener sur le select pour afficher l'image sélectionnée
+                select.addEventListener('change', function() {
+                    updateNatureBlasonPreview(this.value);
+                });
+            } else {
+                // Réponse OK mais pas de données
+                console.warn('⚠️ Aucune image nature trouvée pour la catégorie:', category);
+                console.warn('⚠️ Réponse complète:', result);
+                if (result && result.message) {
+                    console.warn('⚠️ Message:', result.message);
+                }
+            }
+        } else {
+            // Erreur HTTP
+            console.error('❌ Erreur HTTP lors du chargement des images nature:', response.status);
+            try {
+                const errorText = await response.text();
+                console.error('❌ Détails de l\'erreur:', errorText);
+            } catch (e) {
+                console.error('❌ Impossible de lire le texte d\'erreur');
+            }
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des images nature:', error);
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+// Fonction pour mettre à jour l'aperçu de l'image du blason sélectionné
+// Même logique que dans l'app mobile ligne 1664-1695
+function updateNatureBlasonPreview(selectedImageId) {
+    console.log('🖼️ updateNatureBlasonPreview appelée avec imageId:', selectedImageId);
+    
+    const previewContainer = document.getElementById('nature_blason_preview');
+    const previewImage = document.getElementById('nature_blason_image');
+    
+    if (!previewContainer || !previewImage) {
+        console.log('🖼️ Conteneur d\'aperçu non trouvé');
+        return;
+    }
+    
+    if (!selectedImageId || selectedImageId === '') {
+        // Masquer l'aperçu si aucun blason n'est sélectionné
+        previewContainer.style.display = 'none';
+        previewImage.src = '';
+        return;
+    }
+    
+    // Chercher l'image par id (comme dans l'app mobile ligne 1666)
+    const selectedImage = loadedNatureImages.find(img => img.id == selectedImageId);
+    
+    if (selectedImage) {
+        // Construire l'URL de l'image (comme dans l'app mobile ligne 1668-1669)
+        // BASE_URL pour l'app web est l'URL de l'API externe
+        const BASE_URL = 'http://82.67.123.22:25000';
+        let imageUrl = selectedImage.url_image || null;
+        
+        if (!imageUrl && selectedImage.chemin_local) {
+            imageUrl = BASE_URL + selectedImage.chemin_local;
+        }
+        
+        if (imageUrl) {
+            previewImage.src = imageUrl;
+            previewImage.alt = selectedImage.label || selectedImage.nom_fichier || 'Blason sélectionné';
+            previewContainer.style.display = 'block';
+            console.log('🖼️ Image affichée:', imageUrl);
+        } else {
+            console.warn('🖼️ Aucune URL d\'image trouvée pour le blason:', selectedImageId);
+            previewContainer.style.display = 'none';
+        }
+    } else {
+        console.warn('🖼️ Image non trouvée dans loadedNatureImages pour l\'ID:', selectedImageId);
+        previewContainer.style.display = 'none';
+    }
+}
+
+// Fonction pour afficher l'image en grand dans une modale (comme dans l'app mobile)
+function showNatureBlasonModal(imageUrl) {
+    console.log('🖼️ showNatureBlasonModal appelée avec URL:', imageUrl);
+    
+    // Créer ou récupérer la modale
+    let modal = document.getElementById('natureBlasonModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'natureBlasonModal';
+        modal.className = 'modal fade';
+        modal.setAttribute('tabindex', '-1');
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Aperçu du blason</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="natureBlasonModalImage" src="" alt="Blason" class="img-fluid" style="max-width: 100%; max-height: 70vh; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Mettre à jour l'image dans la modale
+    const modalImage = document.getElementById('natureBlasonModalImage');
+    if (modalImage) {
+        modalImage.src = imageUrl;
+    }
+    
+    // Afficher la modale avec Bootstrap
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+// Fonction pour afficher l'image du blason depuis son ID (ref_blason)
+// Appelée depuis le bouton dans le tableau des volées
+async function showBlasonImage(refBlasonId) {
+    console.log('🖼️ showBlasonImage appelée avec ref_blason ID:', refBlasonId);
+    
+    if (!refBlasonId) {
+        alert('Erreur: ID du blason non trouvé');
+        return;
+    }
+    
+    try {
+        // Récupérer toutes les images nature et trouver celle correspondant à l'ID
+        const response = await fetch(`/scored-trainings/images-nature`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            alert('Erreur lors de la récupération de l\'image du blason');
+            return;
+        }
+        
+        const result = await response.json();
+        
+        // Gérer différents formats de réponse
+        let image = null;
+        if (result.success && result.data) {
+            if (Array.isArray(result.data)) {
+                // Chercher l'image par ID (ref_blason correspond à l'ID de l'image)
+                image = result.data.find(img => img.id == refBlasonId || img.ref_blason == refBlasonId);
+            } else if (result.data.id == refBlasonId || result.data.ref_blason == refBlasonId) {
+                image = result.data;
+            }
+        }
+        
+        if (image) {
+            displayBlasonImage(image);
+        } else {
+            alert('Image du blason non trouvée');
+        }
+    } catch (error) {
+        console.error('Erreur lors de la récupération de l\'image du blason:', error);
+        alert('Erreur lors de la récupération de l\'image du blason');
+    }
+}
+
+// Fonction pour afficher l'image du blason dans une modale
+function displayBlasonImage(image) {
+    console.log('🖼️ displayBlasonImage appelée avec image:', image);
+    
+    // Construire l'URL de l'image (comme dans updateNatureBlasonPreview)
+    const BASE_URL = 'http://82.67.123.22:25000';
+    let imageUrl = image.url_image || null;
+    
+    if (!imageUrl && image.chemin_local) {
+        imageUrl = BASE_URL + image.chemin_local;
+    }
+    
+    if (!imageUrl) {
+        alert('URL de l\'image non trouvée');
+        return;
+    }
+    
+    // Récupérer le ref_blason (qui correspond à l'ID de l'image)
+    const refBlason = image.ref_blason !== undefined && image.ref_blason !== null && image.ref_blason !== '' 
+        ? image.ref_blason 
+        : image.id;
+    
+    // Récupérer la catégorie de cible (type_image) et le label
+    const category = image.type_image || '';
+    const label = image.label || image.nom_fichier || '';
+    
+    // Construire le titre : "Blason - {catégorie} - {label}"
+    let title = 'Blason';
+    if (category) {
+        title += ' - ' + category;
+    }
+    if (label) {
+        title += ' - ' + label;
+    }
+    
+    // Créer ou récupérer la modale
+    let modal = document.getElementById('blasonImageModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'blasonImageModal';
+        modal.className = 'modal fade';
+        modal.setAttribute('tabindex', '-1');
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="blasonImageModalTitle">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="blasonImageModalImage" src="" alt="Blason" class="img-fluid" style="max-width: 100%; max-height: 70vh; object-fit: contain;">
+                        <p class="mt-2 text-muted" id="blasonImageModalRef">Ref: ${refBlason}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Mettre à jour l'image et le texte dans la modale
+    const modalImage = document.getElementById('blasonImageModalImage');
+    const modalTitle = document.getElementById('blasonImageModalTitle') || modal.querySelector('.modal-title');
+    const modalRef = document.getElementById('blasonImageModalRef');
+    
+    if (modalImage) {
+        modalImage.src = imageUrl;
+        modalImage.alt = `Blason ${refBlason} - ${category} - ${label}`;
+    }
+    
+    if (modalTitle) {
+        modalTitle.textContent = title;
+    }
+    
+    if (modalRef) {
+        modalRef.textContent = `Ref: ${refBlason}`;
+    }
+    
+    // Afficher la modale avec Bootstrap
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+// Fonction pour charger les images 3D (cibles) par catégorie dans le formulaire "Ajouter une volée"
+// Même logique que fetchThreeDImages dans l'application mobile (ligne 862)
+async function loadThreeDImagesForVolley(category) {
+    console.log('🔵 loadThreeDImagesForVolley appelée avec catégorie:', category);
+    
+    if (!category) {
+        console.log('🔵 Aucune catégorie, masquage du select');
+        const wrapper = document.getElementById('threeD_blason_wrapper');
+        const select = document.getElementById('threeD_blason');
+        if (wrapper) wrapper.style.display = 'none';
+        if (select) select.innerHTML = '<option value="">Sélectionner une cible</option>';
+        return;
+    }
+    
+    const wrapper = document.getElementById('threeD_blason_wrapper');
+    const select = document.getElementById('threeD_blason');
+    const loading = document.getElementById('threeD_blason_loading');
+    
+    if (!wrapper || !select) {
+        console.error('❌ Éléments non trouvés pour le blason 3D - wrapper:', !!wrapper, 'select:', !!select);
+        return;
+    }
+    
+    console.log('🔵 Éléments trouvés, affichage du wrapper');
+    
+    // Afficher le wrapper
+    wrapper.style.display = 'block';
+    
+    try {
+        loading.style.display = 'block';
+        select.innerHTML = '<option value="">Sélectionner une cible</option>';
+        
+        // Pour les images 3D, le type_image correspond à target_category (1, 2, 3, 4)
+        // Utiliser l'API images-nature avec le type_image correspondant à la catégorie
+        // (comme dans l'app mobile ligne 874)
+        console.log('🔵 Appel API pour type 3D:', category);
+        let response = await fetch(`/scored-trainings/images-nature?type=${encodeURIComponent(category)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        console.log('🔵 Réponse API type 3D:', response.status, response.ok);
+        
+        let result = null;
+        
+        if (response.ok) {
+            result = await response.json();
+            console.log('🔵 Résultat API type 3D:', result);
+        } else {
+            console.error('❌ Erreur HTTP lors du chargement des images 3D:', response.status);
+        }
+        
+        if (response.ok) {
+            console.log('🔵 Réponse OK, vérification des données...');
+            console.log('🔵 Structure de result:', {
+                success: result?.success,
+                hasData: !!result?.data,
+                isArray: Array.isArray(result?.data),
+                dataLength: result?.data?.length,
+                count: result?.count
+            });
+            
+            // Vérifier différents formats de réponse possibles
+            let imagesArray = null;
+            
+            if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
+                imagesArray = result.data;
+                console.log('✅ Format 1 détecté: result.data est un tableau');
+            } else if (result && result.data && typeof result.data === 'object' && result.data.images && Array.isArray(result.data.images)) {
+                imagesArray = result.data.images;
+                console.log('✅ Format 2 détecté: result.data.images est un tableau');
+            } else if (Array.isArray(result) && result.length > 0) {
+                imagesArray = result;
+                console.log('✅ Format 3 détecté: result est directement un tableau');
+            }
+            
+            if (imagesArray && imagesArray.length > 0) {
+                console.log('✅ Images 3D reçues de l\'API:', imagesArray.length);
+                
+                // Trier les images par ordre alphabétique du label (comme dans l'app mobile ligne 888)
+                const sortedImages = [...imagesArray].sort((a, b) => {
+                    const labelA = (a.label || a.nom_fichier || '').toLowerCase();
+                    const labelB = (b.label || b.nom_fichier || '').toLowerCase();
+                    return labelA.localeCompare(labelB, 'fr', { sensitivity: 'base' });
+                });
+                
+                // Stocker les images dans la variable globale (comme threeDImages dans l'app mobile)
+                loadedThreeDImages = sortedImages;
+                console.log('✅ Images 3D triées et stockées:', sortedImages.length);
+                
+                // Ajouter les options au select
+                sortedImages.forEach((image, index) => {
+                    const option = document.createElement('option');
+                    option.value = image.id;
+                    const baseLabel = image.label || image.nom_fichier || `Image ${image.id}`;
+                    // Format exact comme pour Nature: `${image.ref_blason} - ${baseLabel}`
+                    const refBlason = (image.ref_blason !== undefined && image.ref_blason !== null && image.ref_blason !== '') 
+                        ? image.ref_blason 
+                        : image.id;
+                    const displayLabel = `${refBlason} - ${baseLabel}`;
+                    option.textContent = displayLabel;
+                    select.appendChild(option);
+                    if (index === 0) {
+                        console.log('✅ Première option 3D ajoutée:', displayLabel, 'value:', image.id);
+                    }
+                });
+                
+                // Ajouter un listener sur le select pour afficher l'image sélectionnée
+                select.addEventListener('change', function() {
+                    updateThreeDBlasonPreview(this.value);
+                });
+            } else {
+                console.warn('⚠️ Aucune image 3D trouvée pour la catégorie:', category);
+            }
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des images 3D:', error);
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+// Fonction pour mettre à jour l'aperçu de l'image de la cible 3D sélectionnée
+function updateThreeDBlasonPreview(selectedImageId) {
+    console.log('🖼️ updateThreeDBlasonPreview appelée avec imageId:', selectedImageId);
+    
+    const previewContainer = document.getElementById('threeD_blason_preview');
+    const previewImage = document.getElementById('threeD_blason_image');
+    
+    if (!previewContainer || !previewImage) {
+        console.log('🖼️ Conteneur d\'aperçu 3D non trouvé');
+        return;
+    }
+    
+    if (!selectedImageId || selectedImageId === '') {
+        previewContainer.style.display = 'none';
+        previewImage.src = '';
+        return;
+    }
+    
+    // Chercher l'image par id
+    const selectedImage = loadedThreeDImages.find(img => img.id == selectedImageId);
+    
+    if (selectedImage) {
+        // Construire l'URL de l'image
+        const BASE_URL = 'http://82.67.123.22:25000';
+        let imageUrl = selectedImage.url_image || null;
+        
+        if (!imageUrl && selectedImage.chemin_local) {
+            imageUrl = BASE_URL + selectedImage.chemin_local;
+        }
+        
+        if (imageUrl) {
+            previewImage.src = imageUrl;
+            previewImage.alt = selectedImage.label || selectedImage.nom_fichier || 'Cible sélectionnée';
+            previewContainer.style.display = 'block';
+            console.log('🖼️ Image 3D affichée:', imageUrl);
+        } else {
+            console.warn('🖼️ Aucune URL d\'image trouvée pour la cible 3D:', selectedImageId);
+            previewContainer.style.display = 'none';
+        }
+    } else {
+        console.warn('🖼️ Image 3D non trouvée dans loadedThreeDImages pour l\'ID:', selectedImageId);
+        previewContainer.style.display = 'none';
+    }
+}
+
+// Fonction pour afficher l'image 3D en grand dans une modale
+// Cette fonction est appelée depuis l'aperçu dans le formulaire
+// Pour l'affichage depuis le tableau, utiliser showBlasonImage qui gère aussi les images 3D
+function showThreeDBlasonModal(imageUrl) {
+    console.log('🖼️ showThreeDBlasonModal appelée avec URL:', imageUrl);
+    
+    // Trouver l'image correspondante dans loadedThreeDImages
+    const selectedImage = loadedThreeDImages.find(img => {
+        const BASE_URL = 'http://82.67.123.22:25000';
+        const imgUrl = img.url_image || (img.chemin_local ? BASE_URL + img.chemin_local : null);
+        return imgUrl === imageUrl;
+    });
+    
+    // Récupérer le ref_blason, la catégorie et le label
+    const refBlason = selectedImage ? (selectedImage.ref_blason !== undefined && selectedImage.ref_blason !== null && selectedImage.ref_blason !== '' 
+        ? selectedImage.ref_blason 
+        : selectedImage.id) : '';
+    const category = selectedImage?.type_image || '';
+    const label = selectedImage?.label || selectedImage?.nom_fichier || '';
+    
+    // Construire le titre : "Cible 3D - {catégorie} - {label}"
+    let title = 'Cible 3D';
+    if (category) {
+        title += ' - ' + category;
+    }
+    if (label) {
+        title += ' - ' + label;
+    }
+    
+    // Créer ou récupérer la modale
+    let modal = document.getElementById('threeDBlasonModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'threeDBlasonModal';
+        modal.className = 'modal fade';
+        modal.setAttribute('tabindex', '-1');
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="threeDBlasonModalTitle">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="threeDBlasonModalImage" src="" alt="Cible 3D" class="img-fluid" style="max-width: 100%; max-height: 70vh; object-fit: contain;">
+                        ${refBlason ? `<p class="mt-2 text-muted" id="threeDBlasonModalRef">Ref: ${refBlason}</p>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    const modalImage = document.getElementById('threeDBlasonModalImage');
+    const modalTitle = document.getElementById('threeDBlasonModalTitle') || modal.querySelector('.modal-title');
+    const modalRef = document.getElementById('threeDBlasonModalRef');
+    
+    if (modalImage) {
+        modalImage.src = imageUrl;
+        modalImage.alt = `Cible 3D ${refBlason} - ${category} - ${label}`;
+    }
+    
+    if (modalTitle) {
+        modalTitle.textContent = title;
+    }
+    
+    if (modalRef && refBlason) {
+        modalRef.textContent = `Ref: ${refBlason}`;
+    } else if (modalRef && !refBlason) {
+        modalRef.style.display = 'none';
+    }
+    
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
 // Variables globales
 let trainingId, arrowsPerEnd, currentEnds, totalEnds;
 
@@ -304,6 +993,7 @@ function addEndToTable(endData) {
                                 <th>Total</th>
                                 <th>Moyenne</th>
                                 <th>Commentaire</th>
+                                <th>Cible</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -316,6 +1006,32 @@ function addEndToTable(endData) {
     
     if (tbody) {
         const row = document.createElement('tr');
+        
+        // Vérifier si la volée a des coordonnées (pour le bouton cible)
+        const hasCoordinates = endData.shots && endData.shots.some(shot => 
+            shot.hit_x !== null && shot.hit_x !== undefined && 
+            shot.hit_y !== null && shot.hit_y !== undefined
+        );
+        
+        // Vérifier si la volée a un ref_blason (pour le bouton blason)
+        const hasBlason = endData.ref_blason !== null && endData.ref_blason !== undefined && endData.ref_blason !== '';
+        
+        // Construire les boutons de la colonne "Cible"
+        let targetButtons = '';
+        if (hasCoordinates) {
+            targetButtons += `<button class="btn btn-sm btn-outline-primary" onclick="showEndTarget(${endData.end_number})" title="Voir la cible de cette volée">
+                <i class="fas fa-bullseye"></i>
+            </button>`;
+        }
+        if (hasBlason) {
+            targetButtons += `<button class="btn btn-sm btn-outline-info" onclick="showBlasonImage(${endData.ref_blason})" title="Voir le blason de cette volée">
+                <i class="fas fa-image"></i>
+            </button>`;
+        }
+        if (!hasCoordinates && !hasBlason) {
+            targetButtons = '<span class="text-muted">-</span>';
+        }
+        
         row.innerHTML = `
             <td>
                 <div class="end-info">
@@ -336,6 +1052,11 @@ function addEndToTable(endData) {
             </td>
             <td>
                 ${endData.comment ? `<small class="text-muted comment-text">${endData.comment}</small>` : '<span class="text-muted">-</span>'}
+            </td>
+            <td>
+                <div class="d-flex gap-1">
+                    ${targetButtons}
+                </div>
             </td>
         `;
         tbody.appendChild(row);
@@ -425,6 +1146,16 @@ function addEnd() {
             targetCategorySelect.addEventListener('change', function() {
                 const shootingType = window.scoredTrainingData?.shooting_type || '';
                 
+                // Pour le tir Nature, charger les blasons selon la catégorie
+                if (shootingType === 'Nature') {
+                    loadNatureBlasonsForVolley(this.value);
+                }
+                
+                // Pour le tir 3D, charger les cibles selon la catégorie
+                if (shootingType === '3D') {
+                    loadThreeDImagesForVolley(this.value);
+                }
+                
                 // Pour le tir campagne, NE RIEN FAIRE (le blason est fixe côté serveur)
                 if (shootingType === 'Campagne') {
                     console.log('🎯 Tir campagne : AUCUNE modification du blason, catégorie sélectionnée:', this.value);
@@ -441,6 +1172,17 @@ function addEnd() {
                 updateTargetVisualStyle(targetCategorySelect.value);
             } else {
                 console.log('🎯 Tir campagne : SVG déjà généré côté serveur, pas de régénération JavaScript');
+            }
+            
+            // Si une catégorie est déjà sélectionnée et que c'est 3D, charger les cibles
+            if (shootingType === '3D' && targetCategorySelect.value) {
+                console.log('🔵 Catégorie 3D déjà sélectionnée au chargement, chargement des cibles:', targetCategorySelect.value);
+                // Attendre un peu que le DOM soit prêt
+                setTimeout(() => {
+                    loadThreeDImagesForVolley(targetCategorySelect.value).catch(error => {
+                        console.error('❌ Erreur lors du chargement initial des cibles 3D:', error);
+                    });
+                }, 200);
             }
         }
         
@@ -688,6 +1430,13 @@ function saveEnd() {
         total_score: totalScore  // Ajouter le total calculé
     };
     
+    // Ajouter ref_blason si le type est Nature ou 3D et qu'un blason/cible est sélectionné
+    const shootingTypeForBlason = window.scoredTrainingData?.shooting_type || '';
+    const refBlason = formData.get('ref_blason');
+    if ((shootingTypeForBlason === 'Nature' || shootingTypeForBlason === '3D') && refBlason) {
+        endData.ref_blason = parseInt(refBlason);
+    }
+    
     // Afficher un indicateur de chargement
     const submitBtn = form.querySelector('button[onclick="saveEnd()"]');
     let originalText = '';
@@ -752,9 +1501,73 @@ function saveEnd() {
             // Vider le formulaire pour la volée suivante
             form.reset();
             
+            // Réinitialiser le select du blason nature et son aperçu
+            const natureBlasonSelect = document.getElementById('nature_blason');
+            const natureBlasonPreview = document.getElementById('nature_blason_preview');
+            const natureBlasonWrapper = document.getElementById('nature_blason_wrapper');
+            
+            if (natureBlasonSelect) {
+                natureBlasonSelect.innerHTML = '<option value="">Sélectionner un blason</option>';
+                natureBlasonSelect.value = '';
+            }
+            
+            if (natureBlasonPreview) {
+                natureBlasonPreview.style.display = 'none';
+            }
+            
+            const natureBlasonImage = document.getElementById('nature_blason_image');
+            if (natureBlasonImage) {
+                natureBlasonImage.src = '';
+                natureBlasonImage.alt = '';
+            }
+            
+            // Réinitialiser le select de la cible 3D et son aperçu
+            const threeDBlasonSelect = document.getElementById('threeD_blason');
+            const threeDBlasonPreview = document.getElementById('threeD_blason_preview');
+            const threeDBlasonWrapper = document.getElementById('threeD_blason_wrapper');
+            
+            if (threeDBlasonSelect) {
+                threeDBlasonSelect.innerHTML = '<option value="">Sélectionner une cible</option>';
+                threeDBlasonSelect.value = '';
+            }
+            
+            if (threeDBlasonPreview) {
+                threeDBlasonPreview.style.display = 'none';
+            }
+            
+            const threeDBlasonImage = document.getElementById('threeD_blason_image');
+            if (threeDBlasonImage) {
+                threeDBlasonImage.src = '';
+                threeDBlasonImage.alt = '';
+            }
+            
+            // Si le type de tir est Nature, masquer le wrapper du blason si aucune catégorie n'est sélectionnée
+            if (shootingType === 'Nature' && natureBlasonWrapper) {
+                const targetCategoryValue = targetCategorySelect?.value || '';
+                if (!targetCategoryValue) {
+                    natureBlasonWrapper.style.display = 'none';
+                }
+            }
+            
+            // Si le type de tir est 3D, masquer le wrapper de la cible si aucune catégorie n'est sélectionnée
+            if (shootingType === '3D' && threeDBlasonWrapper) {
+                const targetCategoryValue = targetCategorySelect?.value || '';
+                if (!targetCategoryValue) {
+                    threeDBlasonWrapper.style.display = 'none';
+                }
+            }
+            
             // Restaurer les valeurs mémorisées
             if (targetCategorySelect && savedTargetCategory) {
                 targetCategorySelect.value = savedTargetCategory;
+                // Si le type est Nature et qu'une catégorie est restaurée, recharger les blasons
+                if (shootingType === 'Nature' && savedTargetCategory) {
+                    loadNatureBlasonsForVolley(savedTargetCategory);
+                }
+                // Si le type est 3D et qu'une catégorie est restaurée, recharger les cibles
+                if (shootingType === '3D' && savedTargetCategory) {
+                    loadThreeDImagesForVolley(savedTargetCategory);
+                }
             }
             if (shootingPositionSelect && savedShootingPosition) {
                 shootingPositionSelect.value = savedShootingPosition;
@@ -943,6 +1756,48 @@ function saveEndAndClose() {
                 savedScoreMode = 'table';
             } else if (targetMode && targetMode.checked) {
                 savedScoreMode = 'target';
+            }
+            
+            // Ajouter la volée au tableau localement
+            if (result.data && result.data.end) {
+                addEndToTable(result.data.end);
+            } else if (result.end) {
+                addEndToTable(result.end);
+            } else {
+                addEndToTable(endData);
+            }
+            
+            // Réinitialiser le formulaire avant de fermer la modal
+            form.reset();
+            
+            // Réinitialiser le select du blason nature et son aperçu
+            const natureBlasonSelect = document.getElementById('nature_blason');
+            const natureBlasonPreview = document.getElementById('nature_blason_preview');
+            const natureBlasonWrapper = document.getElementById('nature_blason_wrapper');
+            const targetCategorySelect = form.querySelector('select[name="target_category"]');
+            const shootingType = window.scoredTrainingData?.shooting_type || '';
+            
+            if (natureBlasonSelect) {
+                natureBlasonSelect.innerHTML = '<option value="">Sélectionner un blason</option>';
+                natureBlasonSelect.value = '';
+            }
+            
+            if (natureBlasonPreview) {
+                natureBlasonPreview.style.display = 'none';
+            }
+            
+            const natureBlasonImage = document.getElementById('nature_blason_image');
+            if (natureBlasonImage) {
+                natureBlasonImage.src = '';
+                natureBlasonImage.alt = '';
+            }
+            
+            // Si le type de tir est Nature, masquer le wrapper du blason si aucune catégorie n'est sélectionnée
+            if (shootingType === 'Nature' && natureBlasonWrapper) {
+                const targetCategoryValue = targetCategorySelect?.value || '';
+                if (!targetCategoryValue) {
+                    natureBlasonWrapper.style.display = 'none';
+                }
             }
             
             // Fermer la modale d'ajout de volée

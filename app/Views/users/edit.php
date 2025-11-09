@@ -140,7 +140,7 @@ $title = "Modifier l'utilisateur - Portail Archers de Gémenos";
                                             <label for="gender" class="form-label">Genre</label>
                                             <select class="form-select" id="gender" name="gender">
                                                 <option value="">Sélectionner...</option>
-                                                <option value="M" <?php echo ($user['gender'] ?? '') === 'M' ? 'selected' : ''; ?>>Homme</option>
+                                                <option value="H" <?php echo ($user['gender'] ?? '') === 'H' ? 'selected' : ''; ?>>Homme</option>
                                                 <option value="F" <?php echo ($user['gender'] ?? '') === 'F' ? 'selected' : ''; ?>>Femme</option>
                                             </select>
                                         </div>
@@ -150,15 +150,67 @@ $title = "Modifier l'utilisateur - Portail Archers de Gémenos";
                                             <label for="ageCategory" class="form-label">Catégorie d'âge</label>
                                             <select class="form-select" id="ageCategory" name="ageCategory">
                                                 <option value="">Sélectionner...</option>
-                                                <option value="Poussin" <?php echo ($user['ageCategory'] ?? '') === 'Poussin' ? 'selected' : ''; ?>>Poussin</option>
-                                                <option value="Benjamin" <?php echo ($user['ageCategory'] ?? '') === 'Benjamin' ? 'selected' : ''; ?>>Benjamin</option>
-                                                <option value="Minime" <?php echo ($user['ageCategory'] ?? '') === 'Minime' ? 'selected' : ''; ?>>Minime</option>
-                                                <option value="Cadet" <?php echo ($user['ageCategory'] ?? '') === 'Cadet' ? 'selected' : ''; ?>>Cadet</option>
-                                                <option value="Junior" <?php echo ($user['ageCategory'] ?? '') === 'Junior' ? 'selected' : ''; ?>>Junior</option>
-                                                <option value="Senior" <?php echo ($user['ageCategory'] ?? '') === 'Senior' ? 'selected' : ''; ?>>Senior</option>
-                                                <option value="V1" <?php echo ($user['ageCategory'] ?? '') === 'V1' ? 'selected' : ''; ?>>V1</option>
-                                                <option value="V2" <?php echo ($user['ageCategory'] ?? '') === 'V2' ? 'selected' : ''; ?>>V2</option>
-                                                <option value="V3" <?php echo ($user['ageCategory'] ?? '') === 'V3' ? 'selected' : ''; ?>>V3</option>
+                                                <?php
+                                                // Liste des catégories d'âge selon les choix prédéfinis dans l'application mobile
+                                                $ageCategories = [
+                                                    'DECOUVERTE',
+                                                    'U11 - POUSSINS',
+                                                    'U13 - BENJAMINS',
+                                                    'U13 - BENJAMINS (N)',
+                                                    'U15 - MINIMES',
+                                                    'U15 - MINIMES (N)',
+                                                    'U18 - CADETS',
+                                                    'U18 - CADETS (N)',
+                                                    'U21 - JUNIORS',
+                                                    'U21 - JUNIORS (N)',
+                                                    'SENIORS1 (S1)',
+                                                    'SENIORS1 (S1) (N)',
+                                                    'SENIORS2 (S2)',
+                                                    'SENIORS2 (S2) (N)',
+                                                    'SENIORS3 (S3)',
+                                                    'SENIORS3 (S3) (N)',
+                                                    'SENIORS1 (T1)',
+                                                    'SENIORS1 (T1) (N)',
+                                                    'SENIORS2 (T2)',
+                                                    'SENIORS2 (T2) (N)',
+                                                    'SENIORS3 (T3)',
+                                                    'SENIORS3 (T3) (N)',
+                                                    'DEBUTANTS',
+                                                    'W1',
+                                                    'W1 U18',
+                                                    'W1 NATIONAL',
+                                                    'OPEN',
+                                                    'OPEN U18',
+                                                    'OPEN VETERAN',
+                                                    'OPEN NATIONAL',
+                                                    'FEDERAL',
+                                                    'FEDERAL U18',
+                                                    'FEDERAL VETERAN',
+                                                    'FEDERAL NATIONAL',
+                                                    'CHALLENGE',
+                                                    'CHALLENGE U18',
+                                                    'CRITERIUM',
+                                                    'CRITERIUM U18',
+                                                    'POTENCE',
+                                                    'HV1',
+                                                    'HV2-3',
+                                                    'HV U18',
+                                                    'HV LIBRE',
+                                                    'SUPPORT 1',
+                                                    'SUPPORT 2',
+                                                ];
+                                                
+                                                $currentAgeCategory = $user['ageCategory'] ?? '';
+                                                foreach ($ageCategories as $category) {
+                                                    $selected = ($currentAgeCategory === $category) ? 'selected' : '';
+                                                    echo '<option value="' . htmlspecialchars($category) . '" ' . $selected . '>' . htmlspecialchars($category) . '</option>';
+                                                }
+                                                
+                                                // Si la catégorie actuelle n'est pas dans la liste, l'ajouter quand même
+                                                if (!empty($currentAgeCategory) && !in_array($currentAgeCategory, $ageCategories)) {
+                                                    echo '<option value="' . htmlspecialchars($currentAgeCategory) . '" selected>' . htmlspecialchars($currentAgeCategory) . '</option>';
+                                                }
+                                                ?>
                                             </select>
                                         </div>
                                     </div>
@@ -170,10 +222,28 @@ $title = "Modifier l'utilisateur - Portail Archers de Gémenos";
                                             <label for="bowType" class="form-label">Type d'arc</label>
                                             <select class="form-select" id="bowType" name="bowType">
                                                 <option value="">Sélectionner...</option>
-                                                <option value="Classique" <?php echo ($user['bowType'] ?? '') === 'Classique' ? 'selected' : ''; ?>>Classique</option>
-                                                <option value="Recurve" <?php echo ($user['bowType'] ?? '') === 'Recurve' ? 'selected' : ''; ?>>Recurve</option>
-                                                <option value="Compound" <?php echo ($user['bowType'] ?? '') === 'Compound' ? 'selected' : ''; ?>>Compound</option>
-                                                <option value="Barebow" <?php echo ($user['bowType'] ?? '') === 'Barebow' ? 'selected' : ''; ?>>Barebow</option>
+                                                <?php
+                                                // Liste des types d'arc selon les choix prédéfinis dans l'application mobile
+                                                $bowTypes = [
+                                                    'Arc Classique',
+                                                    'Arc à poulies',
+                                                    'Arc droit',
+                                                    'Arc de chasse',
+                                                    'Arc Nu',
+                                                    'Arc Libre',
+                                                ];
+                                                
+                                                $currentBowType = $user['bowType'] ?? '';
+                                                foreach ($bowTypes as $bowType) {
+                                                    $selected = ($currentBowType === $bowType) ? 'selected' : '';
+                                                    echo '<option value="' . htmlspecialchars($bowType) . '" ' . $selected . '>' . htmlspecialchars($bowType) . '</option>';
+                                                }
+                                                
+                                                // Si le type d'arc actuel n'est pas dans la liste, l'ajouter quand même
+                                                if (!empty($currentBowType) && !in_array($currentBowType, $bowTypes)) {
+                                                    echo '<option value="' . htmlspecialchars($currentBowType) . '" selected>' . htmlspecialchars($currentBowType) . '</option>';
+                                                }
+                                                ?>
                                             </select>
                                         </div>
                                     </div>

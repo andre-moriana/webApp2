@@ -63,14 +63,19 @@ class AuthController {
         }
 
         try {
-            // Extraire le nom d'utilisateur de l'email
-            $username = explode('@', $username)[0];
+            // Gérer le username : si c'est un email, extraire la partie avant @, sinon utiliser tel quel
+            $loginUsername = $username;
+            if (strpos($username, '@') !== false) {
+                // C'est un email, extraire la partie avant @
+                $loginUsername = explode('@', $username)[0];
+            }
+            // Sinon, c'est déjà un username, on l'utilise tel quel
             
             // Créer une nouvelle instance de ApiService
             $apiService = new ApiService();
             
-            // Utiliser l'API backend pour l'authentification
-            $loginResult = $apiService->login($username, $password);
+            // Utiliser l'API backend pour l'authentification avec le username
+            $loginResult = $apiService->login($loginUsername, $password);
 
             if ($loginResult['success'] && isset($loginResult['token'])) {
                 // Vérifier le statut de l'utilisateur
@@ -84,15 +89,62 @@ class AuthController {
                     exit;
                 }
                 
-                // Connexion réussie via l'API
+                // Connexion réussie via l'API - Stocker toutes les informations de l'utilisateur
+                $userData = $loginResult['user'] ?? [];
+                
+                // Log pour débogage - voir ce que l'API retourne
+                error_log("AuthController - Données utilisateur du login: " . json_encode($userData, JSON_PRETTY_PRINT));
+                
+                // Extraire l'ID - vérifier tous les formats possibles
+                $userId = null;
+                if (isset($userData['id'])) {
+                    $userId = $userData['id'];
+                } elseif (isset($userData['_id'])) {
+                    $userId = $userData['_id'];
+                } elseif (isset($userData['user_id'])) {
+                    $userId = $userData['user_id'];
+                }
+                
+                // Si pas d'ID dans les données, essayer de l'extraire du token JWT
+                if (!$userId && isset($loginResult['token'])) {
+                    try {
+                        $tokenParts = explode('.', $loginResult['token']);
+                        if (count($tokenParts) === 3) {
+                            $payload = json_decode(base64_decode($tokenParts[1]), true);
+                            $userId = $payload['user_id'] ?? $payload['id'] ?? $payload['userId'] ?? null;
+                        }
+                    } catch (Exception $e) {
+                        error_log("Erreur décodage token dans AuthController: " . $e->getMessage());
+                    }
+                }
+                
+                if (!$userId) {
+                    error_log("ATTENTION: Impossible de récupérer l'ID utilisateur lors de la connexion");
+                    $userId = 1; // Fallback temporaire - devrait être corrigé
+                }
+                
+                error_log("AuthController - ID utilisateur extrait: " . $userId);
+                
                 $_SESSION['user'] = [
-                    'id' => $loginResult['user']['id'] ?? 1,
-                    'last_name' => $loginResult['user']['name'] ?? '',
-                    'username' => $loginResult['user']['username'] ?? '',
-                    'email' => $username . '@archers-gemenos.fr',
-                    'role' => $loginResult['user']['role'] ?? 'user',
-                    'is_admin' => $loginResult['user']['is_admin'] ?? $loginResult['user']['isAdmin'] ?? false,
-                    'status' => $userStatus
+                    'id' => $userId,
+                    '_id' => $userId,
+                    'firstName' => $userData['firstName'] ?? $userData['first_name'] ?? '',
+                    'first_name' => $userData['first_name'] ?? $userData['firstName'] ?? '',
+                    'name' => $userData['name'] ?? $userData['last_name'] ?? '',
+                    'last_name' => $userData['last_name'] ?? $userData['name'] ?? '',
+                    'username' => $userData['username'] ?? $loginUsername,
+                    'email' => $userData['email'] ?? ($loginUsername . '@archers-gemenos.fr'),
+                    'role' => $userData['role'] ?? 'user',
+                    'is_admin' => $userData['is_admin'] ?? $userData['isAdmin'] ?? false,
+                    'isAdmin' => $userData['isAdmin'] ?? $userData['is_admin'] ?? false,
+                    'status' => $userStatus,
+                    'phone' => $userData['phone'] ?? '',
+                    'birthDate' => $userData['birthDate'] ?? $userData['birth_date'] ?? '',
+                    'gender' => $userData['gender'] ?? '',
+                    'licenceNumber' => $userData['licenceNumber'] ?? $userData['licence_number'] ?? '',
+                    'ageCategory' => $userData['ageCategory'] ?? $userData['age_category'] ?? '',
+                    'bowType' => $userData['bowType'] ?? $userData['bow_type'] ?? '',
+                    'profileImage' => $userData['profileImage'] ?? $userData['profile_image'] ?? null,
                 ];
                 
                 // Sauvegarder le token dans la session

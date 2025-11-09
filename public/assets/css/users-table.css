@@ -43,6 +43,41 @@
     display: none !important;
 }
 
+/* Styles pour la recherche rapide */
+.search-box {
+    min-width: 300px;
+    max-width: 400px;
+}
+
+.search-box .input-group-text {
+    border-right: none;
+}
+
+.search-box .form-control {
+    border-left: none;
+}
+
+.search-box .form-control:focus {
+    border-color: #ced4da;
+    box-shadow: none;
+}
+
+.search-box .form-control:focus + .input-group-text,
+.search-box .form-control:focus ~ .btn {
+    border-color: #86b7fe;
+}
+
+#resultsCounter {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    margin-left: 0.75rem;
+    font-style: italic;
+}
+
+.user-row[style*="display: none"] {
+    display: none !important;
+}
+
 @media (max-width: 768px) {
     .table-responsive {
         font-size: 0.875rem;
@@ -54,5 +89,21 @@
     
     .text-truncate {
         max-width: 100px !important;
+    }
+    
+    .search-box {
+        min-width: 100%;
+        max-width: 100%;
+        margin-top: 1rem;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .card-header .d-flex {
+        width: 100%;
+        flex-direction: column;
     }
 }

@@ -83,6 +83,19 @@ class ScoredTrainingController {
                     } else {
                         $users = $usersData;
                     }
+                    
+                    // Trier les utilisateurs par ordre alphabétique (nom puis prénom)
+                    usort($users, function($a, $b) {
+                        // Récupérer le nom complet pour la comparaison
+                        $nameA = ($a['name'] ?? '') . ' ' . ($a['firstName'] ?? '');
+                        $nameB = ($b['name'] ?? '') . ' ' . ($b['firstName'] ?? '');
+                        
+                        // Nettoyer les espaces et convertir en minuscules pour la comparaison
+                        $nameA = trim(strtolower($nameA));
+                        $nameB = trim(strtolower($nameB));
+                        
+                        return strcmp($nameA, $nameB);
+                    });
                 }
             } catch (Exception $e) {
                 error_log('Erreur lors de la récupération des utilisateurs: ' . $e->getMessage());
@@ -243,21 +256,30 @@ class ScoredTrainingController {
         $exerciseSheetId = $data['exercise_sheet_id'] ?? null;
         $notes = $data['notes'] ?? '';
         $shootingType = $data['shooting_type'] ?? null;
+        $refBlason = $data['ref_blason'] ?? null;
         
         if (empty($title) || $totalEnds <= 0 || $arrowsPerEnd <= 0) {
             $this->sendJsonResponse(['success' => false, 'message' => 'Données manquantes ou invalides']);
         }
         
         try {
-            // Appeler l'API backend
-            $response = $this->apiService->createScoredTraining([
+            // Préparer les données pour l'API
+            $trainingData = [
                 'title' => $title,
                 'total_ends' => (int)$totalEnds,
                 'arrows_per_end' => (int)$arrowsPerEnd,
                 'exercise_sheet_id' => $exerciseSheetId ? (int)$exerciseSheetId : null,
                 'notes' => $notes,
                 'shooting_type' => $shootingType
-            ]);
+            ];
+            
+            // Ajouter ref_blason si le type est Nature et qu'un blason est sélectionné
+            if ($shootingType === 'Nature' && $refBlason !== null) {
+                $trainingData['ref_blason'] = (int)$refBlason;
+            }
+            
+            // Appeler l'API backend
+            $response = $this->apiService->createScoredTraining($trainingData);
             
             $this->sendJsonResponse($response);
 
@@ -703,6 +725,58 @@ class ScoredTrainingController {
             return $decoded['user_id'] ?? null;
         } catch (Exception $e) {
            return null;
+        }
+    }
+    
+    /**
+     * Récupère les images nature (blasons) pour le formulaire
+     * GET /scored-trainings/images-nature?type=... ou ?label=...
+     */
+    public function getNatureImages() {
+        // Vérifier si l'utilisateur est connecté
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Non authentifié']);
+            return;
+        }
+        
+        $type = $_GET['type'] ?? null;
+        $label = $_GET['label'] ?? null;
+        
+        try {
+            $response = $this->apiService->getNatureImages($type, $label);
+            
+            // Log pour débogage
+            error_log("ScoredTrainingController::getNatureImages - Type: " . ($type ?? 'null') . ", Label: " . ($label ?? 'null'));
+            error_log("ScoredTrainingController::getNatureImages - Réponse API: " . json_encode($response));
+            
+            // Vérifier la structure de la réponse
+            // L'API externe retourne: ['success' => true, 'data' => [...], 'status_code' => 200]
+            // Il faut extraire le 'data' qui contient le JSON décodé
+            if (isset($response['success']) && $response['success'] && isset($response['data'])) {
+                // Le 'data' de ApiService contient la réponse JSON décodée de l'API externe
+                $apiData = $response['data'];
+                
+                // Si apiData contient déjà success et data, on le renvoie tel quel
+                if (isset($apiData['success']) && isset($apiData['data'])) {
+                    $this->sendJsonResponse($apiData);
+                } else {
+                    // Sinon, on renvoie la structure attendue
+                    $this->sendJsonResponse([
+                        'success' => true,
+                        'data' => $apiData,
+                        'count' => is_array($apiData) ? count($apiData) : (isset($apiData['count']) ? $apiData['count'] : 0)
+                    ]);
+                }
+            } else {
+                // Si la réponse n'est pas dans le format attendu, la renvoyer telle quelle
+                $this->sendJsonResponse($response);
+            }
+        } catch (Exception $e) {
+            error_log("ScoredTrainingController::getNatureImages - Erreur: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des images nature: ' . $e->getMessage()
+            ]);
         }
     }
 }

@@ -93,6 +93,37 @@ $additionalJS = [
                                     </div>
                                 </div>
 
+                                <!-- Champs spécifiques au tir Nature -->
+                                <div id="nature_fields_container" class="mb-3" style="display: none;">
+                                    <h6 class="mb-3">Informations Nature</h6>
+                                    
+                                    <!-- Catégorie de gibier -->
+                                    <div class="mb-3">
+                                        <label for="nature_category" class="form-label">Catégorie de gibier</label>
+                                        <select class="form-select" id="nature_category" name="nature_category" onchange="loadNatureImagesByCategory()">
+                                            <option value="">Sélectionner une catégorie</option>
+                                            <option value="grands_gibiers">Grands Gibiers</option>
+                                            <option value="moyens_gibiers">Moyens Gibiers</option>
+                                            <option value="petits_gibiers">Petits Gibiers</option>
+                                            <option value="petits_animaux">Petits Animaux</option>
+                                            <option value="doubles_birdies">Doubles Birdies</option>
+                                        </select>
+                                        <div class="form-text">Sélectionnez la catégorie de gibier</div>
+                                    </div>
+                                    
+                                    <!-- Blason (image de cible) -->
+                                    <div class="mb-3" id="nature_blason_wrapper" style="display: none;">
+                                        <label for="nature_blason" class="form-label">Blason</label>
+                                        <select class="form-select" id="nature_blason" name="nature_blason">
+                                            <option value="">Sélectionner un blason</option>
+                                        </select>
+                                        <div class="form-text">Sélectionnez le blason pour le tir Nature</div>
+                                        <div id="nature_blason_loading" class="text-muted small mt-2" style="display: none;">
+                                            <i class="fas fa-spinner fa-spin"></i> Chargement des blasons...
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="mb-3">
                                     <label for="notes" class="form-label">Notes</label>
                                     <textarea class="form-control" id="notes" name="notes" rows="3" 
@@ -139,4 +170,5 @@ $additionalJS = [
         </div>
     </div>
 </div>
+
 

@@ -81,6 +81,65 @@ class ApiController {
         }
     }
     
+    public function createGroup() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+            return;
+        }
+
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$input) {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => 'Données JSON invalides'
+                ], 400);
+                return;
+            }
+            
+            $name = trim($input['name'] ?? '');
+            $description = trim($input['description'] ?? '');
+            $isPrivate = isset($input['is_private']) ? (bool)$input['is_private'] : false;
+            
+            if (empty($name)) {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => 'Le nom du groupe est requis'
+                ], 400);
+                return;
+            }
+            
+            // Utiliser l'ApiService pour créer le groupe
+            $response = $this->apiService->createGroup([
+                'name' => $name,
+                'description' => $description,
+                'is_private' => $isPrivate
+            ]);
+            
+            if ($response['success']) {
+                $this->sendJsonResponse([
+                    'success' => true,
+                    'message' => 'Groupe créé avec succès',
+                    'data' => $response['data'] ?? null
+                ]);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de la création du groupe'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la création du groupe: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
     public function users() {
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             $this->sendJsonResponse([
@@ -556,22 +615,24 @@ class ApiController {
     }
     
     private function sendJsonResponse($data, $statusCode = 200) {
+        // Nettoyer toute sortie précédente
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        
         // Forcer le type de contenu et l'encodage
         header('Content-Type: application/json; charset=utf-8');
         http_response_code($statusCode);
 
-        // Nettoyer la sortie précédente
-        if (ob_get_length()) ob_clean();
-
-        // S'assurer qu'il n'y a pas de BOM
-        ob_start();
-        echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        $output = ob_get_clean();
+        // Encoder en JSON sans BOM
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         
-        // Supprimer tout BOM ou espace au début
-        $output = preg_replace('/^[\x{FEFF}\s]+/u', '', $output);
+        // S'assurer qu'il n'y a pas de BOM au début
+        $json = preg_replace('/^\xEF\xBB\xBF/', '', $json);
+        $json = preg_replace('/^[\x{FEFF}\s]+/u', '', $json);
         
-        echo $output;
+        // Envoyer la réponse
+        echo $json;
         exit;
     }
 
