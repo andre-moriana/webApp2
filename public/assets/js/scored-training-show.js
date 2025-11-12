@@ -257,13 +257,12 @@ function updateNatureBlasonPreview(selectedImageId) {
     const selectedImage = loadedNatureImages.find(img => img.id == selectedImageId);
     
     if (selectedImage) {
-        // Construire l'URL de l'image (comme dans l'app mobile ligne 1668-1669)
-        // BASE_URL pour l'app web est l'URL de l'API externe
-        const BASE_URL = 'http://82.67.123.22:25000';
+        // Construire l'URL de l'image via le backend local (pas d'appel direct à l'API externe)
         let imageUrl = selectedImage.url_image || null;
         
         if (!imageUrl && selectedImage.chemin_local) {
-            imageUrl = BASE_URL + selectedImage.chemin_local;
+            // Passer par le backend local qui fait le proxy vers l'API externe
+            imageUrl = `/scored-trainings/images-proxy?path=${encodeURIComponent(selectedImage.chemin_local)}`;
         }
         
         if (imageUrl) {
@@ -371,12 +370,12 @@ async function showBlasonImage(refBlasonId) {
 function displayBlasonImage(image) {
     console.log('🖼️ displayBlasonImage appelée avec image:', image);
     
-    // Construire l'URL de l'image (comme dans updateNatureBlasonPreview)
-    const BASE_URL = 'http://82.67.123.22:25000';
+    // Construire l'URL de l'image via le backend local (pas d'appel direct à l'API externe)
     let imageUrl = image.url_image || null;
     
     if (!imageUrl && image.chemin_local) {
-        imageUrl = BASE_URL + image.chemin_local;
+        // Passer par le backend local qui fait le proxy vers l'API externe
+        imageUrl = `/scored-trainings/images-proxy?path=${encodeURIComponent(image.chemin_local)}`;
     }
     
     if (!imageUrl) {
@@ -595,12 +594,12 @@ function updateThreeDBlasonPreview(selectedImageId) {
     const selectedImage = loadedThreeDImages.find(img => img.id == selectedImageId);
     
     if (selectedImage) {
-        // Construire l'URL de l'image
-        const BASE_URL = 'http://82.67.123.22:25000';
+        // Construire l'URL de l'image via le backend local (pas d'appel direct à l'API externe)
         let imageUrl = selectedImage.url_image || null;
         
         if (!imageUrl && selectedImage.chemin_local) {
-            imageUrl = BASE_URL + selectedImage.chemin_local;
+            // Passer par le backend local qui fait le proxy vers l'API externe
+            imageUrl = `/scored-trainings/images-proxy?path=${encodeURIComponent(selectedImage.chemin_local)}`;
         }
         
         if (imageUrl) {
@@ -626,8 +625,8 @@ function showThreeDBlasonModal(imageUrl) {
     
     // Trouver l'image correspondante dans loadedThreeDImages
     const selectedImage = loadedThreeDImages.find(img => {
-        const BASE_URL = 'http://82.67.123.22:25000';
-        const imgUrl = img.url_image || (img.chemin_local ? BASE_URL + img.chemin_local : null);
+        // Construire l'URL via le backend local (pas d'appel direct à l'API externe)
+        const imgUrl = img.url_image || (img.chemin_local ? `/scored-trainings/images-proxy?path=${encodeURIComponent(img.chemin_local)}` : null);
         return imgUrl === imageUrl;
     });
     
