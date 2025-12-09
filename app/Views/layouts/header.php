@@ -74,6 +74,11 @@
                         </a>
                     </li>
                     <?php endif; ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/clubs">
+                            <i class="fas fa-shield-alt me-1"></i> Clubs
+                        </a>
+                    </li>
                     <?php if ($_SESSION['user']['is_admin'] ?? false): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="/user-validation">

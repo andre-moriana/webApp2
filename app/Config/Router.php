@@ -77,6 +77,17 @@ class Router {
         $this->addRoute("PUT", "/groups/{id}", "GroupController@update");
         $this->addRoute("DELETE", "/groups/{id}", "GroupController@destroy");
         
+        // Routes des clubs (protégées - admin seulement pour création/modification/suppression)
+        $this->addRoute("GET", "/clubs", "ClubController@index");
+        $this->addRoute("GET", "/clubs/create", "ClubController@create");
+        $this->addRoute("GET", "/clubs/{id}/edit", "ClubController@edit");
+        $this->addRoute("GET", "/clubs/{id}", "ClubController@show");
+        $this->addRoute("POST", "/clubs", "ClubController@store");
+        $this->addRoute("PUT", "/clubs/{id}", "ClubController@update");
+        $this->addRoute("POST", "/clubs/{id}/update", "ClubController@update");
+        $this->addRoute("DELETE", "/clubs/{id}", "ClubController@destroy");
+        $this->addRoute("POST", "/clubs/{id}/delete", "ClubController@destroy");
+        
         // Routes des sujets (topics) (protégées)
         $this->addRoute("GET", "/groups/{groupId}/topics/create", "TopicController@create");
         $this->addRoute("POST", "/groups/{groupId}/topics", "TopicController@store");
