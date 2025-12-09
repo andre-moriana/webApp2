@@ -21,10 +21,13 @@ class ApiService {
         
         // Utiliser l'URL de l'API depuis la configuration .env ou une valeur par défaut
         if (!isset($_ENV["API_BASE_URL"])) {
-            // URL par défaut si pas de configuration .env
-            $this->baseUrl = "https://82.67.123.22:25000/api";
+            // URL par défaut si pas de configuration .env (HTTP car le serveur ne semble pas supporter HTTPS)
+            $this->baseUrl = "http://82.67.123.22:25000/api";
         } else {
             $this->baseUrl = $_ENV["API_BASE_URL"];
+            // Si l'URL dans .env utilise HTTPS mais cause des erreurs SSL, convertir automatiquement en HTTP
+            // (décommentez la ligne suivante si nécessaire)
+            // $this->baseUrl = str_replace('https://', 'http://', $this->baseUrl);
         }
         
         // Initialiser le token depuis la session
@@ -102,11 +105,19 @@ class ApiService {
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        $curlError = curl_error($ch);
+        $curlErrno = curl_errno($ch);
         error_log("DEBUG ApiService makeRequest: cURL terminé - HTTP Code: " . $httpCode . ", Content-Type: " . $contentType);
         
-        if (curl_errno($ch)) {
+        if ($curlErrno) {
             curl_close($ch);
-            throw new Exception("Erreur lors de la requête API: " . curl_error($ch));
+            // Détecter l'erreur "wrong version number" qui indique que le serveur n'utilise pas HTTPS
+            if (strpos($curlError, 'wrong version number') !== false || strpos($curlError, 'SSL routines') !== false) {
+                $httpUrl = str_replace('https://', 'http://', $url);
+                error_log("DEBUG ApiService: Erreur SSL détectée, tentative avec HTTP: " . $httpUrl);
+                throw new Exception("Erreur SSL détectée. Le serveur semble utiliser HTTP au lieu de HTTPS. Veuillez modifier l'URL dans le fichier .env de 'https://' à 'http://' pour l'URL: " . $this->baseUrl);
+            }
+            throw new Exception("Erreur lors de la requête API: " . $curlError);
         }
         
         curl_close($ch);
