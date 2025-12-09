@@ -274,19 +274,9 @@ class ApiController {
             }
 
             // Construire l'URL complète vers l'image sur le serveur backend
-            // Option 1: Utiliser la route API du backend pour servir l'image de profil
-            $serverBaseUrl = rtrim(str_replace('/api', '', $this->baseUrl), '/');
+            // Utiliser la route API /users/{id}/profile-image qui gère l'authentification et la recherche du fichier
             $apiBaseUrl = $this->baseUrl; // Contient déjà /api
-            
-            // Essayer d'abord avec la route API /users/{id}/profile-image si disponible
-            // Sinon, servir directement depuis /uploads/
-            if (strpos($imagePath, '/uploads/') === 0) {
-                // Utiliser la route API du backend pour servir l'image de profil
-                $externalUrl = $apiBaseUrl . '/users/' . $userId . '/profile-image';
-            } else {
-                // Fallback: servir directement depuis le serveur
-                $externalUrl = $serverBaseUrl . $imagePath;
-            }
+            $externalUrl = $apiBaseUrl . '/users/' . $userId . '/profile-image';
             
             error_log("DEBUG getUserAvatar: userId=$userId, imagePath=" . $imagePath . ", externalUrl=" . $externalUrl);
             

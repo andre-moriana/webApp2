@@ -124,21 +124,31 @@ error_log("Session: " . print_r($_SESSION, true));
                                                         <?php 
                                                         // Vérifier si une photo de profil existe
                                                         $profileImage = $user['profileImage'] ?? $user['profile_image'] ?? null;
+                                                        $displayName = $user['firstName'] ?? $user['name'] ?? 'U';
+                                                        $initial = strtoupper(substr($displayName, 0, 1));
+                                                        
                                                         if (!empty($profileImage)): 
-                                                            // Utiliser la route proxy du backend WebApp2
-                                                            $imageUrl = '/users/' . $user['id'] . '/avatar?path=' . urlencode($profileImage);
+                                                            // Construire l'URL directe vers le serveur backend
+                                                            $backendBaseUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
+                                                            // Enlever /api de l'URL si présent
+                                                            $backendBaseUrl = rtrim(str_replace('/api', '', $backendBaseUrl), '/');
+                                                            $imageUrl = $backendBaseUrl . $profileImage;
                                                         ?>
                                                             <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                                                  alt="Photo de profil" 
                                                                  class="rounded-circle user-avatar" 
-                                                                 style="width: 32px; height: 32px; object-fit: cover;">
+                                                                 style="width: 32px; height: 32px; object-fit: cover;"
+                                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center user-initial" 
+                                                                 style="width: 32px; height: 32px; font-size: 14px; display: none;">
+                                                                <?php echo $initial; ?>
+                                                            </div>
                                                         <?php else: 
                                                             // Utiliser l'initial si pas de photo
-                                                            $displayName = $user['firstName'] ?? $user['name'] ?? 'U';
                                                         ?>
                                                             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center user-initial" 
                                                                  style="width: 32px; height: 32px; font-size: 14px;">
-                                                                <?php echo strtoupper(substr($displayName, 0, 1)); ?>
+                                                                <?php echo $initial; ?>
                                                             </div>
                                                         <?php endif; ?>
                                                     </div>
