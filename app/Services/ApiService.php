@@ -25,9 +25,12 @@ class ApiService {
             $this->baseUrl = "http://82.67.123.22:25000/api";
         } else {
             $this->baseUrl = $_ENV["API_BASE_URL"];
-            // Si l'URL dans .env utilise HTTPS mais cause des erreurs SSL, convertir automatiquement en HTTP
-            // (décommentez la ligne suivante si nécessaire)
-            // $this->baseUrl = str_replace('https://', 'http://', $this->baseUrl);
+            // Pour ce serveur spécifique, forcer HTTP car il ne supporte pas HTTPS correctement
+            // La conversion automatique se fera aussi lors des requêtes en cas d'erreur SSL
+            if (strpos($this->baseUrl, '82.67.123.22:25000') !== false && strpos($this->baseUrl, 'https://') === 0) {
+                error_log("DEBUG ApiService: Conversion automatique HTTPS -> HTTP pour 82.67.123.22:25000");
+                $this->baseUrl = str_replace('https://', 'http://', $this->baseUrl);
+            }
         }
         
         // Initialiser le token depuis la session
@@ -46,7 +49,7 @@ class ApiService {
         }
     }
     
-    public function makeRequest($endpoint, $method = 'GET', $data = null) {
+    public function makeRequest($endpoint, $method = 'GET', $data = null, $retryWithHttp = true) {
         $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
         error_log("DEBUG ApiService makeRequest: URL: " . $url . ", Méthode: " . $method);
         $ch = curl_init();
@@ -110,13 +113,38 @@ class ApiService {
         error_log("DEBUG ApiService makeRequest: cURL terminé - HTTP Code: " . $httpCode . ", Content-Type: " . $contentType);
         
         if ($curlErrno) {
-            curl_close($ch);
-            // Détecter l'erreur "wrong version number" qui indique que le serveur n'utilise pas HTTPS
-            if (strpos($curlError, 'wrong version number') !== false || strpos($curlError, 'SSL routines') !== false) {
-                $httpUrl = str_replace('https://', 'http://', $url);
-                error_log("DEBUG ApiService: Erreur SSL détectée, tentative avec HTTP: " . $httpUrl);
-                throw new Exception("Erreur SSL détectée. Le serveur semble utiliser HTTP au lieu de HTTPS. Veuillez modifier l'URL dans le fichier .env de 'https://' à 'http://' pour l'URL: " . $this->baseUrl);
+            // Détecter les erreurs SSL qui indiquent que le serveur n'utilise pas HTTPS
+            $sslErrors = [
+                'wrong version number',
+                'SSL routines',
+                'SSL_ERROR',
+                'SSL_connect',
+                '0A00010B',
+                'SSL: wrong version number'
+            ];
+            
+            $isSslError = false;
+            foreach ($sslErrors as $sslErrorPattern) {
+                if (stripos($curlError, $sslErrorPattern) !== false) {
+                    $isSslError = true;
+                    break;
+                }
             }
+            
+            // Si c'est une erreur SSL et que l'URL utilise HTTPS, essayer avec HTTP
+            if ($retryWithHttp && $isSslError && strpos($url, 'https://') === 0) {
+                curl_close($ch);
+                // Essayer automatiquement avec HTTP au lieu de HTTPS
+                error_log("DEBUG ApiService: Erreur SSL détectée ('{$curlError}'), conversion automatique HTTPS -> HTTP");
+                
+                // Mettre à jour l'URL de base pour les prochaines requêtes
+                $this->baseUrl = str_replace('https://', 'http://', $this->baseUrl);
+                
+                // Réessayer la requête avec HTTP (une seule fois)
+                return $this->makeRequest($endpoint, $method, $data, false);
+            }
+            
+            curl_close($ch);
             throw new Exception("Erreur lors de la requête API: " . $curlError);
         }
         
