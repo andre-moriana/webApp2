@@ -55,6 +55,12 @@ class ApiService {
         curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Timeout de 30 secondes
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // Timeout de connexion de 10 secondes
         
+        // Configuration SSL pour gérer les certificats auto-signés ou problèmes SSL
+        if (strpos($url, 'https://') === 0) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Désactiver la vérification du certificat (pour développement)
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // Désactiver la vérification du hostname
+        }
+        
         // Headers pour accepter tous les types de contenu
         $headers = [
             'Accept: */*'
@@ -639,7 +645,11 @@ class ApiService {
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        // Configuration SSL pour gérer les certificats auto-signés ou problèmes SSL
+        if (strpos($url, 'https://') === 0) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        }
         curl_setopt($ch, CURLOPT_HEADER, true); // Pour récupérer les headers
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Suivre les redirections
         
