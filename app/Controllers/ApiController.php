@@ -274,11 +274,17 @@ class ApiController {
             }
 
             // Construire l'URL complète vers l'image sur le serveur backend
-            // Utiliser la route API /users/{id}/profile-image qui gère l'authentification et la recherche du fichier
-            $apiBaseUrl = $this->baseUrl; // Contient déjà /api
-            $externalUrl = $apiBaseUrl . '/users/' . $userId . '/profile-image';
+            // Servir directement depuis le serveur backend en utilisant le chemin fourni
+            $serverBaseUrl = rtrim(str_replace('/api', '', $this->baseUrl), '/');
             
-            error_log("DEBUG getUserAvatar: userId=$userId, imagePath=" . $imagePath . ", externalUrl=" . $externalUrl);
+            // S'assurer que le chemin commence par /
+            if (strpos($imagePath, '/') !== 0) {
+                $imagePath = '/' . $imagePath;
+            }
+            
+            $externalUrl = $serverBaseUrl . $imagePath;
+            
+            error_log("DEBUG getUserAvatar: userId=$userId, imagePath=" . $imagePath . ", serverBaseUrl=" . $serverBaseUrl . ", externalUrl=" . $externalUrl);
             
             // Faire une requête pour récupérer l'image avec authentification
             $ch = curl_init();

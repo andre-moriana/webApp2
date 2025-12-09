@@ -123,22 +123,25 @@ error_log("Session: " . print_r($_SESSION, true));
                                                     <div class="avatar-sm me-2">
                                                         <?php 
                                                         // Vérifier si une photo de profil existe
-                                                        $profileImage = $user['profileImage'] ?? $user['profile_image'] ?? null;
-                                                        $displayName = $user['firstName'] ?? $user['name'] ?? 'U';
+                                                        // Essayer plusieurs variantes du nom du champ
+                                                        $profileImage = $user['profileImage'] ?? $user['profile_image'] ?? $user['profileImage'] ?? null;
+                                                        $displayName = $user['firstName'] ?? $user['first_name'] ?? $user['name'] ?? 'U';
                                                         $initial = strtoupper(substr($displayName, 0, 1));
                                                         
+                                                        // Debug temporaire - à retirer en production
+                                                        // error_log("DEBUG user ID " . ($user['id'] ?? 'N/A') . " - profileImage: " . ($profileImage ?? 'NULL') . ", user keys: " . implode(', ', array_keys($user)));
+                                                        
                                                         if (!empty($profileImage)): 
-                                                            // Construire l'URL directe vers le serveur backend
-                                                            $backendBaseUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
-                                                            // Enlever /api de l'URL si présent
-                                                            $backendBaseUrl = rtrim(str_replace('/api', '', $backendBaseUrl), '/');
-                                                            $imageUrl = $backendBaseUrl . $profileImage;
+                                                            // Utiliser la route proxy locale qui gère l'authentification et les erreurs
+                                                            // Cette route fait un proxy vers le serveur backend
+                                                            $imageUrl = '/users/' . $user['id'] . '/avatar?path=' . urlencode($profileImage);
                                                         ?>
                                                             <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                                                  alt="Photo de profil" 
                                                                  class="rounded-circle user-avatar" 
                                                                  style="width: 32px; height: 32px; object-fit: cover;"
-                                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                                 onerror="console.error('Erreur chargement image:', this.src); this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
+                                                                 loading="lazy">
                                                             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center user-initial" 
                                                                  style="width: 32px; height: 32px; font-size: 14px; display: none;">
                                                                 <?php echo $initial; ?>
