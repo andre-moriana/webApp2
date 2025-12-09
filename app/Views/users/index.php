@@ -128,6 +128,19 @@ error_log("Session: " . print_r($_SESSION, true));
                                                         $displayName = $user['firstName'] ?? $user['first_name'] ?? $user['name'] ?? 'U';
                                                         $initial = strtoupper(substr($displayName, 0, 1));
                                                         
+                                                        // Normaliser le chemin de l'image si présent
+                                                        if (!empty($profileImage)) {
+                                                            // S'assurer que le chemin commence par /uploads/ pour la cohérence
+                                                            if (strpos($profileImage, '/uploads/') !== 0 && strpos($profileImage, 'uploads/') !== 0) {
+                                                                // Si le chemin ne commence pas par /uploads/, l'ajouter
+                                                                if (strpos($profileImage, '/') === 0) {
+                                                                    $profileImage = '/uploads' . $profileImage;
+                                                                } else {
+                                                                    $profileImage = '/uploads/' . $profileImage;
+                                                                }
+                                                            }
+                                                        }
+                                                        
                                                         // Debug temporaire pour voir les données disponibles
                                                         if (isset($_GET['debug']) && $_GET['debug'] === '1' && $user['id'] == ($_GET['user_id'] ?? 0)) {
                                                             error_log("DEBUG user ID " . $user['id'] . " - profileImage: " . ($profileImage ?? 'NULL'));
