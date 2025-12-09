@@ -124,23 +124,27 @@ error_log("Session: " . print_r($_SESSION, true));
                                                         <?php 
                                                         // Vérifier si une photo de profil existe
                                                         // Essayer plusieurs variantes du nom du champ
-                                                        $profileImage = $user['profileImage'] ?? $user['profile_image'] ?? $user['profileImage'] ?? null;
+                                                        $profileImage = $user['profileImage'] ?? $user['profile_image'] ?? null;
                                                         $displayName = $user['firstName'] ?? $user['first_name'] ?? $user['name'] ?? 'U';
                                                         $initial = strtoupper(substr($displayName, 0, 1));
                                                         
-                                                        // Debug temporaire - à retirer en production
-                                                        // error_log("DEBUG user ID " . ($user['id'] ?? 'N/A') . " - profileImage: " . ($profileImage ?? 'NULL') . ", user keys: " . implode(', ', array_keys($user)));
+                                                        // Debug temporaire pour voir les données disponibles
+                                                        if (isset($_GET['debug']) && $_GET['debug'] === '1' && $user['id'] == ($_GET['user_id'] ?? 0)) {
+                                                            error_log("DEBUG user ID " . $user['id'] . " - profileImage: " . ($profileImage ?? 'NULL'));
+                                                            error_log("DEBUG user keys: " . implode(', ', array_keys($user)));
+                                                            error_log("DEBUG user data: " . json_encode($user));
+                                                        }
                                                         
                                                         if (!empty($profileImage)): 
-                                                            // Utiliser la route proxy locale qui gère l'authentification et les erreurs
-                                                            // Cette route fait un proxy vers le serveur backend
+                                                            // Utiliser la route proxy locale qui gère l'authentification
+                                                            // Cette route fait un proxy vers le serveur backend avec le token
                                                             $imageUrl = '/users/' . $user['id'] . '/avatar?path=' . urlencode($profileImage);
                                                         ?>
                                                             <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                                                  alt="Photo de profil" 
                                                                  class="rounded-circle user-avatar" 
                                                                  style="width: 32px; height: 32px; object-fit: cover;"
-                                                                 onerror="console.error('Erreur chargement image:', this.src); this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
+                                                                 onerror="this.onerror=null; this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
                                                                  loading="lazy">
                                                             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center user-initial" 
                                                                  style="width: 32px; height: 32px; font-size: 14px; display: none;">

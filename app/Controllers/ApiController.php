@@ -266,25 +266,21 @@ class ApiController {
             if (empty($imagePath)) {
                 $this->cleanOutput();
                 http_response_code(400);
+                header('Content-Type: application/json');
                 echo json_encode([
                     "success" => false,
                     "message" => "Chemin de l'image manquant"
                 ]);
-                return;
+                exit;
             }
 
             // Construire l'URL complète vers l'image sur le serveur backend
-            // Servir directement depuis le serveur backend en utilisant le chemin fourni
-            $serverBaseUrl = rtrim(str_replace('/api', '', $this->baseUrl), '/');
+            // Utiliser la route API /users/{id}/profile-image qui gère l'authentification et la recherche du fichier
+            // Cette route est plus fiable car elle cherche le fichier dans différents emplacements
+            $apiBaseUrl = $this->baseUrl; // Contient déjà /api
+            $externalUrl = $apiBaseUrl . '/users/' . $userId . '/profile-image';
             
-            // S'assurer que le chemin commence par /
-            if (strpos($imagePath, '/') !== 0) {
-                $imagePath = '/' . $imagePath;
-            }
-            
-            $externalUrl = $serverBaseUrl . $imagePath;
-            
-            error_log("DEBUG getUserAvatar: userId=$userId, imagePath=" . $imagePath . ", serverBaseUrl=" . $serverBaseUrl . ", externalUrl=" . $externalUrl);
+            error_log("DEBUG getUserAvatar: userId=$userId, imagePath=" . $imagePath . ", externalUrl=" . $externalUrl);
             
             // Faire une requête pour récupérer l'image avec authentification
             $ch = curl_init();
@@ -321,17 +317,55 @@ class ApiController {
                 error_log("DEBUG getUserAvatar: Erreur cURL - Code: $httpCode, Errno: $curlErrno, Error: $curlError, URL: $externalUrl");
             }
             
-            if ($httpCode === 200 && $imageData !== false && empty($curlError)) {
-                // Nettoyer la sortie et définir les headers appropriés
-                $this->cleanOutput();
+            if ($httpCode === 200 && $imageData !== false && !empty($imageData) && empty($curlError)) {
+                // Nettoyer le buffer de sortie sans définir de headers JSON
+                // (cleanOutput() définit Content-Type: application/json, ce qui n'est pas souhaité pour les images)
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+                
+                // Déterminer le Content-Type si non détecté automatiquement
+                if (empty($contentType) || strpos($contentType, 'text/html') !== false) {
+                    // Détecter le type depuis l'extension du fichier ou le contenu
+                    $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+                    switch ($extension) {
+                        case 'jpg':
+                        case 'jpeg':
+                            $contentType = 'image/jpeg';
+                            break;
+                        case 'png':
+                            $contentType = 'image/png';
+                            break;
+                        case 'gif':
+                            $contentType = 'image/gif';
+                            break;
+                        case 'webp':
+                            $contentType = 'image/webp';
+                            break;
+                        default:
+                            // Détecter depuis le contenu (magic bytes)
+                            if (substr($imageData, 0, 2) === "\xFF\xD8") {
+                                $contentType = 'image/jpeg';
+                            } elseif (substr($imageData, 0, 8) === "\x89PNG\r\n\x1a\n") {
+                                $contentType = 'image/png';
+                            } elseif (substr($imageData, 0, 6) === "GIF87a" || substr($imageData, 0, 6) === "GIF89a") {
+                                $contentType = 'image/gif';
+                            } else {
+                                $contentType = 'image/jpeg'; // Par défaut
+                            }
+                    }
+                }
+                
                 header('Content-Type: ' . $contentType);
                 header('Content-Length: ' . strlen($imageData));
                 header('Cache-Control: public, max-age=3600'); // Cache pendant 1 heure
                 
                 // Afficher l'image
                 echo $imageData;
+                exit;
             } else {
                 // Si l'image n'est pas trouvée, retourner une image par défaut
+                error_log("DEBUG getUserAvatar: Image non trouvée ou erreur - HTTP: $httpCode, Error: $curlError");
                 $this->returnDefaultAvatar();
             }
         } catch (Exception $e) {
