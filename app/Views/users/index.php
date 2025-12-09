@@ -149,9 +149,17 @@ error_log("Session: " . print_r($_SESSION, true));
                                                         }
                                                         
                                                         if (!empty($profileImage)): 
-                                                            // Utiliser la route proxy locale qui gère l'authentification
-                                                            // Cette route fait un proxy vers le serveur backend avec le token
-                                                            $imageUrl = '/users/' . $user['id'] . '/avatar?path=' . urlencode($profileImage);
+                                                            // Construire l'URL directe vers le backend (même approche que dans settings.php ligne 54)
+                                                            // S'assurer que le chemin commence par /uploads/
+                                                            if (strpos($profileImage, '/uploads/') !== 0) {
+                                                                if (strpos($profileImage, 'uploads/') === 0) {
+                                                                    $profileImage = '/' . $profileImage;
+                                                                } else {
+                                                                    $profileImage = '/uploads/' . $profileImage;
+                                                                }
+                                                            }
+                                                            // Utiliser exactement la même URL que dans settings.php (qui fonctionne)
+                                                            $imageUrl = 'http://82.67.123.22:25000' . $profileImage;
                                                         ?>
                                                             <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                                                  alt="Photo de profil" 
