@@ -273,30 +273,59 @@ class ApiController {
                 return;
             }
 
-            // Construire l'URL complète vers l'API externe
-            $externalUrl = $this->baseUrl.$imagePath;
+            // Construire l'URL complète vers l'image sur le serveur backend
+            // Option 1: Utiliser la route API du backend pour servir l'image de profil
+            $serverBaseUrl = rtrim(str_replace('/api', '', $this->baseUrl), '/');
+            $apiBaseUrl = $this->baseUrl; // Contient déjà /api
+            
+            // Essayer d'abord avec la route API /users/{id}/profile-image si disponible
+            // Sinon, servir directement depuis /uploads/
+            if (strpos($imagePath, '/uploads/') === 0) {
+                // Utiliser la route API du backend pour servir l'image de profil
+                $externalUrl = $apiBaseUrl . '/users/' . $userId . '/profile-image';
+            } else {
+                // Fallback: servir directement depuis le serveur
+                $externalUrl = $serverBaseUrl . $imagePath;
+            }
+            
+            error_log("DEBUG getUserAvatar: userId=$userId, imagePath=" . $imagePath . ", externalUrl=" . $externalUrl);
             
             // Faire une requête pour récupérer l'image avec authentification
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $externalUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+            
+            // Configuration SSL si l'URL utilise HTTPS
+            if (strpos($externalUrl, 'https://') === 0) {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            }
             
             // Ajouter le token d'authentification si disponible
+            $headers = [];
             if (isset($_SESSION['token'])) {
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Authorization: Bearer ' . $_SESSION['token']
-                ]);
+                $headers[] = 'Authorization: Bearer ' . $_SESSION['token'];
+            }
+            if (!empty($headers)) {
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             }
             
             $imageData = curl_exec($ch);
+            $curlError = curl_error($ch);
+            $curlErrno = curl_errno($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
             curl_close($ch);
             
-            if ($httpCode === 200 && $imageData !== false) {
+            // Log pour debug
+            if ($curlErrno || $httpCode !== 200) {
+                error_log("DEBUG getUserAvatar: Erreur cURL - Code: $httpCode, Errno: $curlErrno, Error: $curlError, URL: $externalUrl");
+            }
+            
+            if ($httpCode === 200 && $imageData !== false && empty($curlError)) {
                 // Nettoyer la sortie et définir les headers appropriés
                 $this->cleanOutput();
                 header('Content-Type: ' . $contentType);
