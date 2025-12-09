@@ -151,7 +151,8 @@ $backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
                                                             // Vérifier les permissions pour l'édition et la suppression
                                                             $isAdmin = isset($_SESSION['user']['is_admin']) && $_SESSION['user']['is_admin'];
                                                             $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach'; // Supprimé strtolower()
-                                                            $canEdit = $isAdmin || $isCoach;
+                                                            $isDirigeant = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Dirigeant';
+                                                            $canEdit = $isAdmin || $isCoach || $isDirigeant;
                                                             ?>
                                                             
                                                             <?php if ($canEdit): ?>

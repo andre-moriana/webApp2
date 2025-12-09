@@ -71,6 +71,7 @@ $title = "Modifier l'utilisateur - Portail Archers de Gémenos";
                                             <select class="form-select" id="role" name="role">
                                                 <option value="Archer" <?php echo ($user['role'] ?? '') === 'Archer' ? 'selected' : ''; ?>>Archer</option>
                                                 <option value="Coach" <?php echo ($user['role'] ?? '') === 'Coach' ? 'selected' : ''; ?>>Coach</option>
+                                                <option value="Dirigeant" <?php echo ($user['role'] ?? '') === 'Dirigeant' ? 'selected' : ''; ?>>Dirigeant</option>
                                             </select>
                                         </div>
                                     </div>

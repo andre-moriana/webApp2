@@ -1,4 +1,4 @@
-﻿<div class="container-fluid">
+<div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <!-- Messages d'erreur/succès -->
@@ -53,7 +53,7 @@
                             <?php if (count($categoryExercisesWithSessions) > 1): ?>
                             <div class="me-3">
                                 <?php if ($previousExercise): ?>
-                                <a href="/trainings/<?php echo $previousExercise['session_id'] ?? ''; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) ? '?user_id=' . $selectedUserId : ''; ?>" 
+                                <a href="/trainings/<?php echo $previousExercise['session_id'] ?? ''; ?><?php echo ($isAdmin || $isCoach || $isDirigeant) && isset($selectedUserId) ? '?user_id=' . $selectedUserId : ''; ?>" 
                                    class="btn btn-outline-primary btn-sm me-2">
                                     <i class="fas fa-chevron-left"></i> Exercice précédent
                                 </a>
@@ -245,7 +245,7 @@
 </div>
 
 <!-- Modal pour modifier le statut de l'exercice -->
-<?php if (($currentUser['role'] ?? '') === 'Coach' || ($currentUser['is_admin'] ?? false)): ?>
+<?php if (($currentUser['role'] ?? '') === 'Coach' || ($currentUser['role'] ?? '') === 'Dirigeant' || ($currentUser['is_admin'] ?? false)): ?>
 <div class="modal fade" id="editProgressionModal" tabindex="-1" aria-labelledby="editProgressionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

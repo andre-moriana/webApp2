@@ -131,7 +131,8 @@
                                     // Vérifier les permissions pour l'édition et la suppression
                                     $isAdmin = isset($_SESSION['user']['is_admin']) && $_SESSION['user']['is_admin'];
                                     $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach';
-                                    $canEdit = $isAdmin || $isCoach;
+                                    $isDirigeant = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Dirigeant';
+                                    $canEdit = $isAdmin || $isCoach || $isDirigeant;
                                     ?>
                                     
                                     <?php if ($canEdit): ?>

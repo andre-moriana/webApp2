@@ -1,9 +1,9 @@
-﻿<div class="container-fluid">
+<div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
                 <h1 class="h3 mb-0">Entraînements</h1>
-                <?php if ($isAdmin || $isCoach): ?>
+                <?php if ($isAdmin || $isCoach || $isDirigeant): ?>
                 <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 w-100 w-md-auto">
                     <label for="userSelect" class="form-label mb-0 text-nowrap">Sélectionner un archer :</label>
                     <select id="userSelect" class="form-select" style="min-width: 200px; width: 100%; max-width: 100%;">
@@ -345,7 +345,7 @@
                                                                         ?>
                                                                         <span class="badge <?php echo $progressionClass; ?>"><?php echo $progressionText; ?></span>
                                                                     </p>
-                                                                    <?php if ($isAdmin || $isCoach): ?>
+                                                                    <?php if ($isAdmin || $isCoach || $isDirigeant): ?>
                                                                         <button type="button" class="btn btn-outline-secondary btn-sm" 
                                                                                 data-exercise-id="<?php echo $exerciseId ?? $exerciseData['exercise_id'] ?? ''; ?>"
                                                                                 data-exercise-title="<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>"
@@ -539,7 +539,7 @@
                                                                     <?php endif; ?>
                                                                 </div>
                                                                 <div>
-                                                                    <a href="/trainings/<?php echo $sessionId; ?><?php echo ($isAdmin || $isCoach) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
+                                                                    <a href="/trainings/<?php echo $sessionId; ?><?php echo ($isAdmin || $isCoach || $isDirigeant) && isset($selectedUserId) && $selectedUserId != $actualUserId ? '?user_id=' . $selectedUserId : ''; ?>" 
                                                                        class="btn btn-sm btn-outline-primary">
                                                                         <i class="fas fa-eye"></i> Voir
                                                                     </a>

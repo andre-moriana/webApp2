@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 // Inclure ApiService
 require_once __DIR__ . '/../Services/ApiService.php';
@@ -20,6 +20,7 @@ class TrainingController {
         $currentUser = $_SESSION['user'];
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
         // Récupérer l'ID utilisateur depuis le token pour éviter l'incohérence
         $actualUserId = $this->getUserIdFromToken();
@@ -36,6 +37,7 @@ class TrainingController {
                 $currentUser = $_SESSION['user'];
                 $isAdmin = $currentUser['is_admin'] ?? false;
                 $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
             }
         }
         
@@ -43,7 +45,7 @@ class TrainingController {
         $selectedUserId = $actualUserId; // Utiliser l'ID du token
         
         // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
-        if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+        if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
         // Récupérer les informations de l'utilisateur sélectionné
@@ -87,7 +89,7 @@ class TrainingController {
         
         // Récupérer la liste des utilisateurs pour les modals (seulement pour les coaches/admins)
         $users = [];
-        if ($isAdmin || $isCoach) {
+        if ($isAdmin || $isCoach || $isDirigeant) {
             try {
                 $usersResponse = $this->apiService->getUsers();
                 if ($usersResponse['success'] && !empty($usersResponse['data'])) {
@@ -143,6 +145,7 @@ class TrainingController {
         $currentUser = $_SESSION['user'];
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
         // Récupérer l'ID utilisateur depuis le token pour éviter l'incohérence
         $actualUserId = $this->getUserIdFromToken();
@@ -155,7 +158,7 @@ class TrainingController {
         $selectedUserId = $actualUserId; // Utiliser l'ID du token par défaut
         
         // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
-        if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+        if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
         
@@ -174,7 +177,7 @@ class TrainingController {
         }
         
         // Vérifier les permissions en utilisant l'ID du token
-        if (!$isAdmin && !$isCoach && $training['user_id'] != $actualUserId) {
+        if (!$isAdmin && !$isCoach && !$isDirigeant && $training['user_id'] != $actualUserId) {
             header('Location: /trainings?error=' . urlencode('Accès refusé'));
             exit;
         }
@@ -267,7 +270,7 @@ class TrainingController {
         
         // Récupérer la liste des utilisateurs pour la modal (seulement pour les coaches/admins)
         $users = [];
-        if ($isAdmin || $isCoach) {
+        if ($isAdmin || $isCoach || $isDirigeant) {
             try {
                 $usersResponse = $this->apiService->getUsers();
                 if ($usersResponse['success'] && !empty($usersResponse['data'])) {
@@ -323,12 +326,13 @@ class TrainingController {
         $currentUser = $_SESSION['user'];
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
         // Récupérer les statistiques de l'entraînement
         $stats = $this->getTrainingStats($id);
         
         // Vérifier les permissions
-        if (!$isAdmin && !$isCoach && $id != $currentUser['id']) {
+        if (!$isAdmin && !$isCoach && !$isDirigeant && $id != $currentUser['id']) {
             header('Location: /trainings?error=' . urlencode('Accès refusé'));
             exit;
         }
@@ -787,7 +791,7 @@ class TrainingController {
                         
                         // Pour les admins et coachs, afficher tous les exercices
                         // Pour les autres, ne pas afficher les exercices masqués
-                        if ($isAdmin || $isCoach || ($exercise['progression'] ?? 'non_actif') !== 'masqué') {
+                        if ($isAdmin || $isCoach || $isDirigeant || ($exercise['progression'] ?? 'non_actif') !== 'masqué') {
                             $categoryExercises[] = $exercise;
                         }
                     }
@@ -827,7 +831,7 @@ class TrainingController {
                     if (isset($exercise['category']) && $exercise['category'] === $category) {
                         // Pour les admins et coachs, afficher tous les exercices
                         // Pour les autres, ne pas afficher les exercices masqués
-                        if ($isAdmin || $isCoach || ($exercise['progression'] ?? 'non_actif') !== 'masqué') {
+                        if ($isAdmin || $isCoach || $isDirigeant || ($exercise['progression'] ?? 'non_actif') !== 'masqué') {
                             $visibleExercises[] = $exercise;
                         }
                     }
@@ -852,6 +856,7 @@ class TrainingController {
         $currentUser = $_SESSION['user'];
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
         // Vérifier les permissions
         if (!$isAdmin && !$isCoach) {
@@ -1095,8 +1100,9 @@ class TrainingController {
             $currentUser = $_SESSION['user'];
             $isAdmin = $currentUser['is_admin'] ?? false;
             $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
 
-            if (!$isAdmin && !$isCoach && (int)$userId !== (int)$actualUserId) {
+            if (!$isAdmin && !$isCoach && !$isDirigeant && (int)$userId !== (int)$actualUserId) {
                 echo json_encode(['success' => false, 'message' => 'Accès refusé']);
                 return;
             }
@@ -1176,7 +1182,7 @@ class TrainingController {
                     
                     // Pour les admins et coachs, afficher tous les exercices
                     // Pour les autres, ne pas afficher les exercices masqués
-                    if ($isAdmin || $isCoach || $exerciseProgression !== 'masqué') {
+                    if ($isAdmin || $isCoach || $isDirigeant || $exerciseProgression !== 'masqué') {
                         $filteredExercises[] = $exercise;
                     }
                 }
@@ -1593,6 +1599,7 @@ class TrainingController {
             $currentUser = $_SESSION['user'];
             $isAdmin = $currentUser['is_admin'] ?? false;
             $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
             
             // Vérifier les permissions
             if (!$isAdmin && !$isCoach) {

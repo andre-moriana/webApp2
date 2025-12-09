@@ -107,10 +107,11 @@ class ExerciseController {
 
         // Vérifier les permissions (admin ou coach seulement)
         $isAdmin = isset($_SESSION['user']['is_admin']) && $_SESSION['user']['is_admin'];
-        $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach'; // Supprimé strtolower et gardé 'Coach' avec C majuscule
+        $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach';
+        $isDirigeant = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Dirigeant'; // Supprimé strtolower et gardé 'Coach' avec C majuscule
         
-        if (!$isAdmin && !$isCoach) {
-            header("Location: /exercises?error=" . urlencode("Accès refusé. Seuls les administrateurs et les coachs peuvent créer des exercices."));
+        if (!$isAdmin && !$isCoach && !$isDirigeant) {
+            header("Location: /exercises?error=" . urlencode("Accès refusé. Seuls les administrateurs, les coachs et les dirigeants peuvent créer des exercices."));
             exit;
         }
 
@@ -212,10 +213,11 @@ class ExerciseController {
 
         // Vérifier les permissions (admin ou coach seulement)
         $isAdmin = isset($_SESSION['user']['is_admin']) && $_SESSION['user']['is_admin'];
-        $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach'; // Supprimé strtolower()
+        $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach';
+        $isDirigeant = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Dirigeant'; // Supprimé strtolower()
         
-        if (!$isAdmin && !$isCoach) {
-            header("Location: /exercises?error=" . urlencode("Accès refusé. Seuls les administrateurs et les coachs peuvent modifier les exercices."));
+        if (!$isAdmin && !$isCoach && !$isDirigeant) {
+            header("Location: /exercises?error=" . urlencode("Accès refusé. Seuls les administrateurs, les coachs et les dirigeants peuvent modifier les exercices."));
             exit;
         }
 
@@ -285,11 +287,12 @@ class ExerciseController {
 
         // Vérifier les permissions (admin ou coach seulement)
         $isAdmin = isset($_SESSION['user']['is_admin']) && $_SESSION['user']['is_admin'];
-        $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach'; // Supprimé strtolower()
+        $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach';
+        $isDirigeant = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Dirigeant'; // Supprimé strtolower()
         
-        if (!$isAdmin && !$isCoach) {
+        if (!$isAdmin && !$isCoach && !$isDirigeant) {
             error_log("DEBUG UPDATE: Accès refusé - utilisateur n'est ni admin ni coach");
-            header("Location: /exercises?error=" . urlencode("Accès refusé. Seuls les administrateurs et les coachs peuvent modifier les exercices."));
+            header("Location: /exercises?error=" . urlencode("Accès refusé. Seuls les administrateurs, les coachs et les dirigeants peuvent modifier les exercices."));
             exit;
         }
 
@@ -403,10 +406,11 @@ class ExerciseController {
 
         // Vérifier les permissions (admin ou coach seulement)
         $isAdmin = isset($_SESSION['user']['is_admin']) && $_SESSION['user']['is_admin'];
-        $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach'; // Supprimé strtolower()
+        $isCoach = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Coach';
+        $isDirigeant = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Dirigeant'; // Supprimé strtolower()
         
-        if (!$isAdmin && !$isCoach) {
-            header("Location: /exercises?error=" . urlencode("Accès refusé. Seuls les administrateurs et les coachs peuvent supprimer les exercices."));
+        if (!$isAdmin && !$isCoach && !$isDirigeant) {
+            header("Location: /exercises?error=" . urlencode("Accès refusé. Seuls les administrateurs, les coachs et les dirigeants peuvent supprimer les exercices."));
             exit;
         }
 

@@ -67,7 +67,7 @@
                             <i class="fas fa-clipboard-list me-1"></i> Exercices
                         </a>
                     </li>
-                    <?php if (($_SESSION['user']['is_admin'] ?? false) || ($_SESSION['user']['role'] ?? '') === 'Coach'): ?>
+                    <?php if (($_SESSION['user']['is_admin'] ?? false) || ($_SESSION['user']['role'] ?? '') === 'Coach' || ($_SESSION['user']['role'] ?? '') === 'Dirigeant'): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="/users">
                             <i class="fas fa-users me-1"></i> Utilisateurs

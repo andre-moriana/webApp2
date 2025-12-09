@@ -19,6 +19,7 @@ class ScoreSheetController {
         $currentUser = $_SESSION['user'];
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
         $pageTitle = 'Feuille de marque - Portail Archers de Gémenos';
         

@@ -32,6 +32,7 @@ class ScoredTrainingController {
         $currentUser = $_SESSION['user'];
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
         // Récupérer l'ID utilisateur depuis le token
         $actualUserId = $this->getUserIdFromToken();
@@ -44,7 +45,7 @@ class ScoredTrainingController {
         $selectedUserId = $actualUserId;
         
         // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
-        if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+        if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
         
@@ -52,7 +53,7 @@ class ScoredTrainingController {
         $selectedUser = $this->getUserInfo($selectedUserId);
         
         // Récupérer les exercices disponibles
-        $exercises = $this->getAllExercisesForUser($isAdmin, $isCoach);
+        $exercises = $this->getAllExercisesForUser($isAdmin, $isCoach || $isDirigeant);
         
         // Récupérer les tirs comptés de l'utilisateur
         $scoredTrainings = $this->getScoredTrainings($selectedUserId);
@@ -73,7 +74,7 @@ class ScoredTrainingController {
         
         // Récupérer la liste des utilisateurs pour les modals (seulement pour les coaches/admins)
         $users = [];
-        if ($isAdmin || $isCoach) {
+        if ($isAdmin || $isCoach || $isDirigeant) {
             try {
                 $usersResponse = $this->apiService->getUsers();
                 if ($usersResponse['success'] && !empty($usersResponse['data'])) {
@@ -130,6 +131,7 @@ class ScoredTrainingController {
         $currentUser = $_SESSION['user'];
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
         // Récupérer l'ID utilisateur depuis le token
         $actualUserId = $this->getUserIdFromToken();
@@ -142,7 +144,7 @@ class ScoredTrainingController {
         $selectedUserId = $actualUserId;
         
         // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
-        if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+        if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
         // Récupérer les détails du tir compté via l'API externe avec le user_id sélectionné
@@ -168,7 +170,7 @@ class ScoredTrainingController {
         // Debug: afficher les IDs pour comparaison
         $scoredTrainingUserId = $scoredTraining['user_id'] ?? null;
         // Vérifier les permissions
-        if (!$isAdmin && !$isCoach && $scoredTraining['user_id'] != $actualUserId) {
+        if (!$isAdmin && !$isCoach && !$isDirigeant && $scoredTraining['user_id'] != $actualUserId) {
             header('Location: /scored-trainings?error=' . urlencode('Accès refusé'));
             exit;
         }
@@ -198,6 +200,7 @@ class ScoredTrainingController {
         $currentUser = $_SESSION['user'];
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
         // Récupérer l'ID utilisateur depuis le token
         $actualUserId = $this->getUserIdFromToken();
@@ -210,12 +213,12 @@ class ScoredTrainingController {
         $selectedUserId = $actualUserId;
         
         // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
-        if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+        if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
         
         // Récupérer les exercices disponibles
-        $exercises = $this->getAllExercisesForUser($isAdmin, $isCoach);
+        $exercises = $this->getAllExercisesForUser($isAdmin, $isCoach || $isDirigeant);
         
         // Récupérer les configurations des types de tir
         $shootingConfigurations = $this->getShootingConfigurations();
@@ -329,12 +332,13 @@ class ScoredTrainingController {
         // Vérifier les permissions (comme dans show())
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
         // Récupérer l'ID de l'utilisateur sélectionné (par défaut l'utilisateur connecté)
         $selectedUserId = $actualUserId;
         
         // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
-        if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+        if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
 
@@ -571,7 +575,7 @@ class ScoredTrainingController {
                 foreach ($exercises as $exercise) {
                     $exerciseProgression = $exercise['progression'] ?? 'non_actif';
                     
-                    if ($isAdmin || $isCoach || $exerciseProgression !== 'masqué') {
+                    if ($isAdmin || $isCoach || $isDirigeant || $exerciseProgression !== 'masqué') {
                         $filteredExercises[] = $exercise;
                     }
                 }
@@ -658,12 +662,13 @@ class ScoredTrainingController {
         // Vérifier les permissions (comme dans show() et endTraining())
         $isAdmin = $currentUser['is_admin'] ?? false;
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
+        $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
         // Récupérer l'ID de l'utilisateur sélectionné (par défaut l'utilisateur connecté)
         $selectedUserId = $actualUserId;
         
         // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
-        if (($isAdmin || $isCoach) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+        if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
        

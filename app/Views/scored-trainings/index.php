@@ -76,7 +76,7 @@ $additionalJS = [
                     <button class="btn btn-primary-main" onclick="openCreateModal()">
                         <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Nouveau tir compté</span><span class="d-sm-none">Nouveau</span>
                     </button>
-                    <?php if ($isAdmin || $isCoach): ?>
+                    <?php if ($isAdmin || $isCoach || $isDirigeant): ?>
                     <div class="dropdown">
                         <button class="btn btn-outline-secondary dropdown-toggle w-100 w-sm-auto text-truncate" type="button" data-bs-toggle="dropdown" style="max-width: 200px;">
                             <i class="fas fa-user"></i> <span><?= htmlspecialchars($selectedUser['name'] ?? 'Utilisateur') ?></span>

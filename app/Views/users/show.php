@@ -81,7 +81,7 @@ $title = "Détails de l'utilisateur - Portail Archers de Gémenos";
                                 <div class="col-md-6 col-lg-4">
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Rôle :</label>
-                                        <span class="badge bg-<?php echo ($user['role'] === 'Coach') ? 'primary' : 'secondary'; ?> fs-6">
+                                        <span class="badge bg-<?php echo ($user['role'] === 'Coach' || $user['role'] === 'Dirigeant') ? 'primary' : 'secondary'; ?> fs-6">
                                             <?php echo ucfirst($user['role'] ?? 'Archer'); ?>
                                         </span>
                                     </div>
