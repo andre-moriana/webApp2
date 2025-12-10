@@ -189,6 +189,24 @@ $title = "Détails de l'utilisateur - Portail Archers de Gémenos";
                                     </div>
                                 </div>
                             </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Club :</label>
+                                        <p class="form-control-plaintext">
+                                            <?php 
+                                            $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
+                                            if (!empty($clubNameShort)) {
+                                                echo htmlspecialchars($clubNameShort);
+                                            } else {
+                                                echo 'Non renseigné';
+                                            }
+                                            ?>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
