@@ -90,18 +90,26 @@ function getClubsColumnIndex(column) {
 // Fonction de filtrage par type de club
 function filterClubsByType() {
     const table = document.getElementById('clubsTable');
-    if (!table) return;
+    if (!table) {
+        return;
+    }
     
     const tbody = table.querySelector('tbody');
-    if (!tbody) return;
+    if (!tbody) {
+        return;
+    }
     
     const checkboxes = document.querySelectorAll('.club-filter');
+    if (checkboxes.length === 0) {
+        return;
+    }
+    
     const rows = tbody.querySelectorAll('tr');
     const visibleTypes = [];
     
     // Récupérer les types sélectionnés
     checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
+        if (checkbox && checkbox.checked) {
             visibleTypes.push(checkbox.value);
         }
     });
@@ -110,12 +118,14 @@ function filterClubsByType() {
     
     // Filtrer les lignes
     rows.forEach(row => {
-        const clubType = row.getAttribute('data-club-type');
-        if (visibleTypes.includes(clubType)) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
+        if (row) {
+            const clubType = row.getAttribute('data-club-type');
+            if (clubType && visibleTypes.includes(clubType)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
         }
     });
     
@@ -129,28 +139,43 @@ function filterClubsByType() {
 // Fonction d'initialisation
 function initClubsTable() {
     const table = document.getElementById('clubsTable');
-    if (!table) return;
+    if (!table) {
+        console.log('clubs-table.js: Tableau clubsTable non trouvé');
+        return;
+    }
+    
+    const tbody = table.querySelector('tbody');
+    if (!tbody) {
+        console.log('clubs-table.js: Tbody non trouvé');
+        return;
+    }
     
     // Gérer le tri
     const sortableHeaders = table.querySelectorAll('.sortable');
-    sortableHeaders.forEach(header => {
-        header.style.cursor = 'pointer';
-        header.addEventListener('click', function() {
-            const column = this.getAttribute('data-column');
-            sortClubsTable(column);
+    if (sortableHeaders.length > 0) {
+        sortableHeaders.forEach(header => {
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', function() {
+                const column = this.getAttribute('data-column');
+                if (column) {
+                    sortClubsTable(column);
+                }
+            });
         });
-    });
+    }
     
     // Gérer les filtres
     const filterCheckboxes = document.querySelectorAll('.club-filter');
-    filterCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            filterClubsByType();
+    if (filterCheckboxes.length > 0) {
+        filterCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                filterClubsByType();
+            });
         });
-    });
-    
-    // Initialiser le compteur au chargement
-    filterClubsByType();
+        
+        // Initialiser le compteur au chargement seulement si les filtres existent
+        filterClubsByType();
+    }
 }
 
 // Initialiser le tableau au chargement de la page

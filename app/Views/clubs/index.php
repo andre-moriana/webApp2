@@ -63,6 +63,7 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
             <?php else: ?>
                 <div class="card">
                     <div class="card-body">
+                        <?php if (isset($clubs) && is_array($clubs) && count($clubs) > 0): ?>
                         <!-- Filtres par type de club -->
                         <div class="mb-3 p-3 bg-light rounded">
                             <label class="form-label fw-bold mb-2">
@@ -92,6 +93,7 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                 </small>
                             </div>
                         </div>
+                        <?php endif; ?>
                         
                         <div class="table-responsive">
                             <table class="table table-hover" id="clubsTable">
