@@ -24,6 +24,36 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
 .sort-desc i {
     opacity: 1;
 }
+.card-header .form-check {
+    margin-bottom: 0;
+    padding: 0.5rem 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+.card-header .form-check:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+.card-header .form-check-label {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+.card-header .form-check-input {
+    cursor: pointer;
+    margin-top: 0.25rem;
+}
+@media (max-width: 768px) {
+    .card-header .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    .card-header .d-flex > div:last-child {
+        margin-top: 1rem;
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+}
 </style>
 
 <div class="container-fluid">
@@ -85,6 +115,33 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                 </div>
             <?php else: ?>
                 <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>Liste des clubs
+                            </h5>
+                            <div class="d-flex gap-3 align-items-center">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filterRegional" checked>
+                                    <label class="form-check-label" for="filterRegional">
+                                        Comités régionaux
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filterDepartmental" checked>
+                                    <label class="form-check-label" for="filterDepartmental">
+                                        Comités départementaux
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filterClubs" checked>
+                                    <label class="form-check-label" for="filterClubs">
+                                        Clubs
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover" id="clubsTable">
@@ -110,7 +167,14 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                 </thead>
                                 <tbody>
                                     <?php foreach ($clubs as $club): ?>
-                                    <tr>
+                                    <?php 
+                                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                                    $isRegional = substr($nameShort, -5) === '00000';
+                                    $isDepartmental = substr($nameShort, -3) === '000' && !$isRegional;
+                                    $isClub = !$isRegional && !$isDepartmental;
+                                    $clubType = $isRegional ? 'regional' : ($isDepartmental ? 'departmental' : 'club');
+                                    ?>
+                                    <tr data-club-type="<?php echo $clubType; ?>">
                                         <td data-column="name">
                                             <strong><?php echo htmlspecialchars($club['name'] ?? 'N/A'); ?></strong>
                                         </td>

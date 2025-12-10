@@ -101,6 +101,65 @@ function sortClubsTable(column) {
     if (icon) {
         icon.className = isAscending ? 'fas fa-sort-down ms-1' : 'fas fa-sort-up ms-1';
     }
+    
+    // Réappliquer les filtres après le tri
+    filterClubsTable();
+}
+
+// Fonction de filtrage des clubs
+function filterClubsTable() {
+    const table = document.getElementById('clubsTable');
+    if (!table) {
+        return;
+    }
+    
+    const tbody = table.querySelector('tbody');
+    if (!tbody) {
+        return;
+    }
+    
+    const showRegional = document.getElementById('filterRegional').checked;
+    const showDepartmental = document.getElementById('filterDepartmental').checked;
+    const showClubs = document.getElementById('filterClubs').checked;
+    
+    const rows = tbody.querySelectorAll('tr[data-club-type]');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const clubType = row.getAttribute('data-club-type');
+        let shouldShow = false;
+        
+        if (clubType === 'regional' && showRegional) {
+            shouldShow = true;
+        } else if (clubType === 'departmental' && showDepartmental) {
+            shouldShow = true;
+        } else if (clubType === 'club' && showClubs) {
+            shouldShow = true;
+        }
+        
+        if (shouldShow) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Afficher un message si aucun résultat
+    let noResultsRow = tbody.querySelector('tr.no-results-filter');
+    if (visibleCount === 0) {
+        if (!noResultsRow) {
+            noResultsRow = document.createElement('tr');
+            noResultsRow.className = 'no-results-filter';
+            noResultsRow.innerHTML = '<td colspan="6" class="text-center py-4 text-muted">Aucun club ne correspond aux filtres sélectionnés</td>';
+            tbody.appendChild(noResultsRow);
+        }
+        noResultsRow.style.display = '';
+    } else {
+        if (noResultsRow) {
+            noResultsRow.style.display = 'none';
+        }
+    }
 }
 
 // Fonction d'initialisation
@@ -128,6 +187,20 @@ function initClubsTable() {
             }
         });
     });
+    
+    // Gérer les filtres
+    const filterRegional = document.getElementById('filterRegional');
+    const filterDepartmental = document.getElementById('filterDepartmental');
+    const filterClubs = document.getElementById('filterClubs');
+    
+    if (filterRegional && filterDepartmental && filterClubs) {
+        filterRegional.addEventListener('change', filterClubsTable);
+        filterDepartmental.addEventListener('change', filterClubsTable);
+        filterClubs.addEventListener('change', filterClubsTable);
+        
+        // Appliquer le filtre initial
+        filterClubsTable();
+    }
 }
 
 // Initialiser quand le DOM est prêt
