@@ -1,6 +1,7 @@
 <?php
 $title = "Gestion des clubs - Portail Archers de Gémenos";
 ?>
+<link rel="stylesheet" href="/public/assets/css/users-table.css">
 
 <div class="container-fluid">
     <div class="row">
@@ -63,14 +64,24 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                 <div class="card">
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                            <table class="table table-hover" id="clubsTable">
+                                <thead class="table-light">
                                     <tr>
-                                        <th>Nom</th>
-                                        <th>Nom court</th>
-                                        <th>Ville</th>
-                                        <th>Email</th>
-                                        <th>Président</th>
+                                        <th class="sortable" data-column="name">
+                                            Nom <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="sortable" data-column="nameShort">
+                                            Nom court <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="sortable" data-column="city">
+                                            Ville <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="sortable" data-column="email">
+                                            Email <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="sortable" data-column="president">
+                                            Président <i class="fas fa-sort ms-1"></i>
+                                        </th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
