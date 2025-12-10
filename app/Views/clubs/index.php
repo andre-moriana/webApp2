@@ -63,7 +63,7 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                 <div class="card">
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table id="clubsTable" class="table table-hover">
                                 <thead>
                                     <tr>
                                         <th>Nom</th>
@@ -71,7 +71,7 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                         <th>Ville</th>
                                         <th>Email</th>
                                         <th>Président</th>
-                                        <th>Actions</th>
+                                        <th class="no-sort">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -152,6 +152,24 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
 </div>
 
 <script>
+$(document).ready(function() {
+    $('#clubsTable').DataTable({
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+        },
+        responsive: true,
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Tous"]],
+        order: [[0, 'asc']], // Tri par défaut sur la colonne Nom (ordre croissant)
+        columnDefs: [
+            {
+                targets: 'no-sort',
+                orderable: false
+            }
+        ]
+    });
+});
+
 function confirmDelete(clubId) {
     document.getElementById('deleteClubId').value = clubId;
     const deleteForm = document.getElementById('deleteForm');
