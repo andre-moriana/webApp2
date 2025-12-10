@@ -89,8 +89,14 @@ function getClubsColumnIndex(column) {
 
 // Fonction de filtrage par type de club
 function filterClubsByType() {
+    const table = document.getElementById('clubsTable');
+    if (!table) return;
+    
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+    
     const checkboxes = document.querySelectorAll('.club-filter');
-    const rows = document.querySelectorAll('#clubsTable tbody tr');
+    const rows = tbody.querySelectorAll('tr');
     const visibleTypes = [];
     
     // Récupérer les types sélectionnés
@@ -122,8 +128,11 @@ function filterClubsByType() {
 
 // Fonction d'initialisation
 function initClubsTable() {
+    const table = document.getElementById('clubsTable');
+    if (!table) return;
+    
     // Gérer le tri
-    const sortableHeaders = document.querySelectorAll('#clubsTable .sortable');
+    const sortableHeaders = table.querySelectorAll('.sortable');
     sortableHeaders.forEach(header => {
         header.style.cursor = 'pointer';
         header.addEventListener('click', function() {

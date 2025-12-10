@@ -48,7 +48,7 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                 </div>
             <?php endif; ?>
             
-            <?php if (empty($clubs)): ?>
+            <?php if (!isset($clubs) || empty($clubs)): ?>
                 <div class="card">
                     <div class="card-body text-center py-5">
                         <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
@@ -116,14 +116,16 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <?php if (isset($clubs) && is_array($clubs)): ?>
                                     <?php foreach ($clubs as $club): 
                                         // Déterminer le type de club selon le nom court
                                         $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
                                         $clubType = 'club'; // Par défaut
-                                        if (!empty($nameShort)) {
-                                            if (substr($nameShort, -5) === '00000') {
+                                        if (!empty($nameShort) && is_string($nameShort)) {
+                                            $nameShortLength = strlen($nameShort);
+                                            if ($nameShortLength >= 5 && substr($nameShort, -5) === '00000') {
                                                 $clubType = 'regional';
-                                            } elseif (substr($nameShort, -3) === '000') {
+                                            } elseif ($nameShortLength >= 3 && substr($nameShort, -3) === '000') {
                                                 $clubType = 'departmental';
                                             }
                                         }
@@ -170,6 +172,7 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
