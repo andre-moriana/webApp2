@@ -244,6 +244,10 @@ class UserController {
                         ];
                     }
                 }
+                // Trier les clubs par nom
+                usort($clubs, function($a, $b) {
+                    return strcmp($a['name'], $b['name']);
+                });
             }
         } catch (Exception $e) {
             $error = 'Erreur lors de la récupération de l\'utilisateur';
