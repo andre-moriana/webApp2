@@ -48,16 +48,11 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                 </div>
             <?php endif; ?>
             
-            <?php if (!isset($clubs) || !is_array($clubs) || empty($clubs)): ?>
+            <?php if (empty($clubs)): ?>
                 <div class="card">
                     <div class="card-body text-center py-5">
                         <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
                         <p class="text-muted">Aucun club trouvé</p>
-                        <?php if (isset($error) && $error): ?>
-                            <div class="alert alert-warning mt-3">
-                                <?php echo htmlspecialchars($error); ?>
-                            </div>
-                        <?php endif; ?>
                         <?php if ($_SESSION['user']['is_admin'] ?? false): ?>
                         <a href="/clubs/create" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>Créer le premier club
@@ -68,38 +63,6 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
             <?php else: ?>
                 <div class="card">
                     <div class="card-body">
-                        <?php if (is_array($clubs) && count($clubs) > 0): ?>
-                        <!-- Filtres par type de club -->
-                        <div class="mb-3 p-3 bg-light rounded">
-                            <label class="form-label fw-bold mb-2">
-                                <i class="fas fa-filter me-2"></i>Filtrer par type :
-                            </label>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input club-filter" type="checkbox" id="filterClubs" value="club" checked>
-                                <label class="form-check-label" for="filterClubs">
-                                    Clubs
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input club-filter" type="checkbox" id="filterRegional" value="regional" checked>
-                                <label class="form-check-label" for="filterRegional">
-                                    Comités régionaux
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input club-filter" type="checkbox" id="filterDepartmental" value="departmental" checked>
-                                <label class="form-check-label" for="filterDepartmental">
-                                    Comités départementaux
-                                </label>
-                            </div>
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    <span id="clubsCount">0</span> club(s) affiché(s)
-                                </small>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        
                         <div class="table-responsive">
                             <table class="table table-hover" id="clubsTable">
                                 <thead class="table-light">
@@ -123,25 +86,12 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php if (isset($clubs) && is_array($clubs)): ?>
-                                    <?php foreach ($clubs as $club): 
-                                        // Déterminer le type de club selon le nom court
-                                        $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                                        $clubType = 'club'; // Par défaut
-                                        if (!empty($nameShort) && is_string($nameShort)) {
-                                            $nameShortLength = strlen($nameShort);
-                                            if ($nameShortLength >= 5 && substr($nameShort, -5) === '00000') {
-                                                $clubType = 'regional';
-                                            } elseif ($nameShortLength >= 3 && substr($nameShort, -3) === '000') {
-                                                $clubType = 'departmental';
-                                            }
-                                        }
-                                    ?>
-                                    <tr data-club-type="<?php echo $clubType; ?>">
+                                    <?php foreach ($clubs as $club): ?>
+                                    <tr>
                                         <td>
                                             <strong><?php echo htmlspecialchars($club['name'] ?? 'N/A'); ?></strong>
                                         </td>
-                                        <td><?php echo htmlspecialchars($nameShort ?: '-'); ?></td>
+                                        <td><?php echo htmlspecialchars($club['nameShort'] ?? $club['name_short'] ?? '-'); ?></td>
                                         <td><?php echo htmlspecialchars($club['city'] ?? '-'); ?></td>
                                         <td>
                                             <?php if (!empty($club['email'])): ?>
@@ -179,7 +129,6 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
-                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>

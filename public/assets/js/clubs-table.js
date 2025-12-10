@@ -6,13 +6,7 @@ function sortClubsTable(column) {
     const tbody = table.querySelector('tbody');
     if (!tbody) return;
     
-    // Récupérer toutes les lignes (visibles et cachées)
-    const allRows = Array.from(tbody.querySelectorAll('tr'));
-    
-    // Séparer les lignes visibles et cachées
-    const visibleRows = allRows.filter(row => row.style.display !== 'none');
-    const hiddenRows = allRows.filter(row => row.style.display === 'none');
-    
+    const rows = Array.from(tbody.querySelectorAll('tr'));
     const header = table.querySelector(`th[data-column="${column}"]`);
     if (!header) return;
     
@@ -27,8 +21,8 @@ function sortClubsTable(column) {
         }
     });
     
-    // Trier uniquement les lignes visibles
-    visibleRows.sort((a, b) => {
+    // Trier les lignes
+    rows.sort((a, b) => {
         let aValue = getCellValue(a, column);
         let bValue = getCellValue(b, column);
         
@@ -53,9 +47,8 @@ function sortClubsTable(column) {
         }
     });
     
-    // Réorganiser les lignes dans le DOM : d'abord les visibles triées, puis les cachées
-    visibleRows.forEach(row => tbody.appendChild(row));
-    hiddenRows.forEach(row => tbody.appendChild(row));
+    // Réorganiser les lignes dans le DOM
+    rows.forEach(row => tbody.appendChild(row));
     
     // Mettre à jour l'icône de tri
     header.classList.add(isAscending ? 'sort-desc' : 'sort-asc');
@@ -87,95 +80,17 @@ function getClubsColumnIndex(column) {
     return columns.indexOf(column) + 1;
 }
 
-// Fonction de filtrage par type de club
-function filterClubsByType() {
-    const table = document.getElementById('clubsTable');
-    if (!table) {
-        return;
-    }
-    
-    const tbody = table.querySelector('tbody');
-    if (!tbody) {
-        return;
-    }
-    
-    const checkboxes = document.querySelectorAll('.club-filter');
-    if (checkboxes.length === 0) {
-        return;
-    }
-    
-    const rows = tbody.querySelectorAll('tr');
-    const visibleTypes = [];
-    
-    // Récupérer les types sélectionnés
-    checkboxes.forEach(checkbox => {
-        if (checkbox && checkbox.checked) {
-            visibleTypes.push(checkbox.value);
-        }
-    });
-    
-    let visibleCount = 0;
-    
-    // Filtrer les lignes
-    rows.forEach(row => {
-        if (row) {
-            const clubType = row.getAttribute('data-club-type');
-            if (clubType && visibleTypes.includes(clubType)) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
-        }
-    });
-    
-    // Mettre à jour le compteur
-    const countElement = document.getElementById('clubsCount');
-    if (countElement) {
-        countElement.textContent = visibleCount;
-    }
-}
-
 // Fonction d'initialisation
 function initClubsTable() {
-    const table = document.getElementById('clubsTable');
-    if (!table) {
-        console.log('clubs-table.js: Tableau clubsTable non trouvé');
-        return;
-    }
-    
-    const tbody = table.querySelector('tbody');
-    if (!tbody) {
-        console.log('clubs-table.js: Tbody non trouvé');
-        return;
-    }
-    
     // Gérer le tri
-    const sortableHeaders = table.querySelectorAll('.sortable');
-    if (sortableHeaders.length > 0) {
-        sortableHeaders.forEach(header => {
-            header.style.cursor = 'pointer';
-            header.addEventListener('click', function() {
-                const column = this.getAttribute('data-column');
-                if (column) {
-                    sortClubsTable(column);
-                }
-            });
+    const sortableHeaders = document.querySelectorAll('#clubsTable .sortable');
+    sortableHeaders.forEach(header => {
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', function() {
+            const column = this.getAttribute('data-column');
+            sortClubsTable(column);
         });
-    }
-    
-    // Gérer les filtres
-    const filterCheckboxes = document.querySelectorAll('.club-filter');
-    if (filterCheckboxes.length > 0) {
-        filterCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                filterClubsByType();
-            });
-        });
-        
-        // Initialiser le compteur au chargement seulement si les filtres existent
-        filterClubsByType();
-    }
+    });
 }
 
 // Initialiser le tableau au chargement de la page
