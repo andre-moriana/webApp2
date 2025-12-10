@@ -87,6 +87,7 @@ class UserController {
         
         $user = null;
         $error = null;
+        $clubName = null;
         
         try {
             // Récupérer l'utilisateur depuis l'API
@@ -102,6 +103,26 @@ class UserController {
             
             if (!$user) {
                 $error = 'Utilisateur non trouvé';
+            } else {
+                // Récupérer le nom complet du club si l'utilisateur a un club
+                $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
+                if (!empty($clubNameShort)) {
+                    try {
+                        $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+                        if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
+                            foreach ($clubsResponse['data'] as $club) {
+                                $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                                if ($nameShort === $clubNameShort) {
+                                    $clubName = $club['name'] ?? '';
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (Exception $e) {
+                        // En cas d'erreur, on garde juste le name_short
+                        error_log('Erreur lors de la récupération du nom du club: ' . $e->getMessage());
+                    }
+                }
             }
         } catch (Exception $e) {
             $error = 'Erreur lors de la récupération de l\'utilisateur';

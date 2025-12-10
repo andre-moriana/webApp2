@@ -198,7 +198,12 @@ $title = "Détails de l'utilisateur - Portail Archers de Gémenos";
                                             <?php 
                                             $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
                                             if (!empty($clubNameShort)) {
-                                                echo htmlspecialchars($clubNameShort);
+                                                // Afficher le nom complet du club si disponible, sinon le name_short
+                                                if (!empty($clubName)) {
+                                                    echo htmlspecialchars($clubName);
+                                                } else {
+                                                    echo htmlspecialchars($clubNameShort);
+                                                }
                                             } else {
                                                 echo 'Non renseigné';
                                             }
