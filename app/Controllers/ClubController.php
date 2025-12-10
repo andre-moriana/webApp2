@@ -82,6 +82,7 @@ class ClubController {
         $phone = $_POST['phone'] ?? '';
         $email = $_POST['email'] ?? '';
         $website = $_POST['website'] ?? '';
+        $theme = $_POST['theme'] ?? '';
         $presidentId = !empty($_POST['presidentId']) ? (int)$_POST['presidentId'] : null;
 
         if (empty($name)) {
@@ -101,6 +102,7 @@ class ClubController {
                 'phone' => $phone,
                 'email' => $email,
                 'website' => $website,
+                'theme' => $theme,
                 'presidentId' => $presidentId
             ]);
             
@@ -203,6 +205,7 @@ class ClubController {
         $phone = $_POST['phone'] ?? '';
         $email = $_POST['email'] ?? '';
         $website = $_POST['website'] ?? '';
+        $theme = $_POST['theme'] ?? '';
         $presidentId = !empty($_POST['presidentId']) ? (int)$_POST['presidentId'] : null;
 
         if (empty($name)) {
@@ -222,6 +225,7 @@ class ClubController {
                 'phone' => $phone,
                 'email' => $email,
                 'website' => $website,
+                'theme' => $theme,
                 'presidentId' => $presidentId
             ]);
             

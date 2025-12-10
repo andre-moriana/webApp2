@@ -98,6 +98,24 @@ $title = "Modifier le club - Portail Archers de Gémenos";
                         </div>
 
                         <div class="mb-3">
+                            <label for="theme" class="form-label">Thème</label>
+                            <select class="form-select" id="theme" name="theme">
+                                <option value="">Sélectionner un thème...</option>
+                                <option value="light" <?php echo (($club['theme'] ?? '') === 'light') ? 'selected' : ''; ?>>Clair</option>
+                                <option value="dark" <?php echo (($club['theme'] ?? '') === 'dark') ? 'selected' : ''; ?>>Sombre</option>
+                                <option value="blue" <?php echo (($club['theme'] ?? '') === 'blue') ? 'selected' : ''; ?>>Bleu</option>
+                                <option value="green" <?php echo (($club['theme'] ?? '') === 'green') ? 'selected' : ''; ?>>Vert</option>
+                                <option value="red" <?php echo (($club['theme'] ?? '') === 'red') ? 'selected' : ''; ?>>Rouge</option>
+                                <option value="orange" <?php echo (($club['theme'] ?? '') === 'orange') ? 'selected' : ''; ?>>Orange</option>
+                                <option value="purple" <?php echo (($club['theme'] ?? '') === 'purple') ? 'selected' : ''; ?>>Violet</option>
+                                <option value="yellow" <?php echo (($club['theme'] ?? '') === 'yellow') ? 'selected' : ''; ?>>Jaune</option>
+                            </select>
+                            <small class="form-text text-muted">
+                                Choisissez le thème visuel du club
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="presidentId" class="form-label">Président (ID utilisateur)</label>
                             <input type="number" class="form-control" id="presidentId" name="presidentId"
                                    value="<?php echo htmlspecialchars($club['presidentId'] ?? $club['president_id'] ?? ''); ?>">

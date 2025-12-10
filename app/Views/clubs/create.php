@@ -96,6 +96,24 @@ $title = "Créer un nouveau club - Portail Archers de Gémenos";
                         </div>
 
                         <div class="mb-3">
+                            <label for="theme" class="form-label">Thème</label>
+                            <select class="form-select" id="theme" name="theme">
+                                <option value="">Sélectionner un thème...</option>
+                                <option value="light" <?php echo (($_POST['theme'] ?? '') === 'light') ? 'selected' : ''; ?>>Clair</option>
+                                <option value="dark" <?php echo (($_POST['theme'] ?? '') === 'dark') ? 'selected' : ''; ?>>Sombre</option>
+                                <option value="blue" <?php echo (($_POST['theme'] ?? '') === 'blue') ? 'selected' : ''; ?>>Bleu</option>
+                                <option value="green" <?php echo (($_POST['theme'] ?? '') === 'green') ? 'selected' : ''; ?>>Vert</option>
+                                <option value="red" <?php echo (($_POST['theme'] ?? '') === 'red') ? 'selected' : ''; ?>>Rouge</option>
+                                <option value="orange" <?php echo (($_POST['theme'] ?? '') === 'orange') ? 'selected' : ''; ?>>Orange</option>
+                                <option value="purple" <?php echo (($_POST['theme'] ?? '') === 'purple') ? 'selected' : ''; ?>>Violet</option>
+                                <option value="yellow" <?php echo (($_POST['theme'] ?? '') === 'yellow') ? 'selected' : ''; ?>>Jaune</option>
+                            </select>
+                            <small class="form-text text-muted">
+                                Choisissez le thème visuel du club
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="presidentId" class="form-label">Président (ID utilisateur)</label>
                             <input type="number" class="form-control" id="presidentId" name="presidentId"
                                    value="<?php echo htmlspecialchars($_POST['presidentId'] ?? ''); ?>">
