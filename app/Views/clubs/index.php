@@ -1,6 +1,30 @@
 <?php
 $title = "Gestion des clubs - Portail Archers de Gémenos";
 ?>
+<style>
+.sortable {
+    user-select: none;
+    position: relative;
+}
+.sortable:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+.sort-asc {
+    color: var(--primary-color, #14532d);
+}
+.sort-desc {
+    color: var(--primary-color, #14532d);
+}
+.sortable i {
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+.sortable:hover i,
+.sort-asc i,
+.sort-desc i {
+    opacity: 1;
+}
+</style>
 
 <div class="container-fluid">
     <div class="row">
@@ -63,26 +87,36 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                 <div class="card">
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table id="clubsTable" class="table table-hover">
+                            <table class="table table-hover" id="clubsTable">
                                 <thead>
                                     <tr>
-                                        <th>Nom</th>
-                                        <th>Nom court</th>
-                                        <th>Ville</th>
-                                        <th>Email</th>
-                                        <th>Président</th>
-                                        <th class="no-sort">Actions</th>
+                                        <th class="sortable" data-column="name" style="cursor: pointer;">
+                                            Nom <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="sortable" data-column="nameShort" style="cursor: pointer;">
+                                            Nom court <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="sortable" data-column="city" style="cursor: pointer;">
+                                            Ville <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="sortable" data-column="email" style="cursor: pointer;">
+                                            Email <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th class="sortable" data-column="president" style="cursor: pointer;">
+                                            Président <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($clubs as $club): ?>
                                     <tr>
-                                        <td>
+                                        <td data-column="name">
                                             <strong><?php echo htmlspecialchars($club['name'] ?? 'N/A'); ?></strong>
                                         </td>
-                                        <td><?php echo htmlspecialchars($club['nameShort'] ?? $club['name_short'] ?? '-'); ?></td>
-                                        <td><?php echo htmlspecialchars($club['city'] ?? '-'); ?></td>
-                                        <td>
+                                        <td data-column="nameShort"><?php echo htmlspecialchars($club['nameShort'] ?? $club['name_short'] ?? '-'); ?></td>
+                                        <td data-column="city"><?php echo htmlspecialchars($club['city'] ?? '-'); ?></td>
+                                        <td data-column="email">
                                             <?php if (!empty($club['email'])): ?>
                                                 <a href="mailto:<?php echo htmlspecialchars($club['email']); ?>">
                                                     <?php echo htmlspecialchars($club['email']); ?>
@@ -91,7 +125,7 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                                 -
                                             <?php endif; ?>
                                         </td>
-                                        <td>
+                                        <td data-column="president">
                                             <?php 
                                             $president = $club['president'] ?? null;
                                             if ($president && isset($president['name'])) {
@@ -151,25 +185,8 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
     </div>
 </div>
 
+<script src="/public/assets/js/clubs-table.js"></script>
 <script>
-$(document).ready(function() {
-    $('#clubsTable').DataTable({
-        language: {
-            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
-        },
-        responsive: true,
-        pageLength: 25,
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Tous"]],
-        order: [[0, 'asc']], // Tri par défaut sur la colonne Nom (ordre croissant)
-        columnDefs: [
-            {
-                targets: 'no-sort',
-                orderable: false
-            }
-        ]
-    });
-});
-
 function confirmDelete(clubId) {
     document.getElementById('deleteClubId').value = clubId;
     const deleteForm = document.getElementById('deleteForm');
