@@ -53,6 +53,18 @@ class ClubController {
             exit;
         }
 
+        $themes = [];
+        try {
+            // Récupérer les thèmes
+            $themesResponse = $this->apiService->makeRequest('themes/list', 'GET');
+            if ($themesResponse['success'] && isset($themesResponse['data'])) {
+                $themes = is_array($themesResponse['data']) ? $themesResponse['data'] : [];
+            }
+        } catch (Exception $e) {
+            // En cas d'erreur, continuer avec un tableau vide
+            error_log('Erreur lors de la récupération des thèmes: ' . $e->getMessage());
+        }
+
         $title = 'Créer un club - Portail Archers de Gémenos';
         
         include 'app/Views/layouts/header.php';
@@ -163,6 +175,7 @@ class ClubController {
         }
         
         $club = null;
+        $themes = [];
         $error = null;
         
         try {
@@ -172,6 +185,12 @@ class ClubController {
                 $club = $response['data'];
             } else {
                 $error = $response['message'] ?? 'Erreur lors de la récupération du club';
+            }
+            
+            // Récupérer les thèmes
+            $themesResponse = $this->apiService->makeRequest('themes/list', 'GET');
+            if ($themesResponse['success'] && isset($themesResponse['data'])) {
+                $themes = is_array($themesResponse['data']) ? $themesResponse['data'] : [];
             }
         } catch (Exception $e) {
             $error = 'Erreur lors de la récupération du club: ' . $e->getMessage();

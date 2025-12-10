@@ -101,14 +101,14 @@ $title = "Modifier le club - Portail Archers de Gémenos";
                             <label for="theme" class="form-label">Thème</label>
                             <select class="form-select" id="theme" name="theme">
                                 <option value="">Sélectionner un thème...</option>
-                                <option value="light" <?php echo (($club['theme'] ?? '') === 'light') ? 'selected' : ''; ?>>Clair</option>
-                                <option value="dark" <?php echo (($club['theme'] ?? '') === 'dark') ? 'selected' : ''; ?>>Sombre</option>
-                                <option value="blue" <?php echo (($club['theme'] ?? '') === 'blue') ? 'selected' : ''; ?>>Bleu</option>
-                                <option value="green" <?php echo (($club['theme'] ?? '') === 'green') ? 'selected' : ''; ?>>Vert</option>
-                                <option value="red" <?php echo (($club['theme'] ?? '') === 'red') ? 'selected' : ''; ?>>Rouge</option>
-                                <option value="orange" <?php echo (($club['theme'] ?? '') === 'orange') ? 'selected' : ''; ?>>Orange</option>
-                                <option value="purple" <?php echo (($club['theme'] ?? '') === 'purple') ? 'selected' : ''; ?>>Violet</option>
-                                <option value="yellow" <?php echo (($club['theme'] ?? '') === 'yellow') ? 'selected' : ''; ?>>Jaune</option>
+                                <?php if (!empty($themes)): ?>
+                                    <?php foreach ($themes as $theme): ?>
+                                        <option value="<?php echo htmlspecialchars($theme['id'] ?? ''); ?>" 
+                                                <?php echo (($club['theme'] ?? '') === ($theme['id'] ?? '')) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($theme['name'] ?? $theme['id'] ?? ''); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </select>
                             <small class="form-text text-muted">
                                 Choisissez le thème visuel du club
