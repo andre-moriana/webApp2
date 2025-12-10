@@ -79,7 +79,7 @@ function sortTable(column) {
 
 // Obtenir l'index de la colonne
 function getColumnIndex(column) {
-    const columns = ['id', 'name', 'email', 'role', 'status', 'lastLogin', 'actions'];
+    const columns = ['id', 'name', 'email', 'role', 'club', 'status', 'lastLogin', 'actions'];
     return columns.indexOf(column) + 1;
 }
 

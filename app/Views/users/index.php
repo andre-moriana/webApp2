@@ -83,6 +83,9 @@ error_log("Session: " . print_r($_SESSION, true));
                                     <th class="sortable" data-column="role">
                                         Rôle <i class="fas fa-sort ms-1"></i>
                                     </th>
+                                    <th class="sortable" data-column="club">
+                                        Club <i class="fas fa-sort ms-1"></i>
+                                    </th>
                                     <th class="sortable" data-column="status">
                                         Validation <i class="fas fa-sort ms-1"></i>
                                     </th>
@@ -98,7 +101,7 @@ error_log("Session: " . print_r($_SESSION, true));
                             <tbody>
                                 <?php if (empty($users)): ?>
                                     <tr class="no-results-row">
-                                        <td colspan="8" class="text-center py-4">
+                                        <td colspan="9" class="text-center py-4">
                                             <i class="fas fa-users fa-3x text-muted mb-3"></i>
                                             <p class="text-muted">Aucun utilisateur trouvé</p>
                                         </td>
@@ -115,6 +118,19 @@ error_log("Session: " . print_r($_SESSION, true));
                                             if (!empty($user['status'])) $searchableText .= strtolower($user['status']) . ' ';
                                             if (!empty($user['licenceNumber'])) $searchableText .= strtolower($user['licenceNumber']) . ' ';
                                             if (!empty($user['id'])) $searchableText .= $user['id'] . ' ';
+                                            // Ajouter le club dans la recherche
+                                            if (isset($user['club'])) {
+                                                if (is_array($user['club'])) {
+                                                    $clubNameShort = $user['club']['nameShort'] ?? $user['club']['name_short'] ?? '';
+                                                    if ($clubNameShort) $searchableText .= strtolower($clubNameShort) . ' ';
+                                                } else {
+                                                    $searchableText .= strtolower($user['club']) . ' ';
+                                                }
+                                            } elseif (isset($user['clubNameShort'])) {
+                                                $searchableText .= strtolower($user['clubNameShort']) . ' ';
+                                            } elseif (isset($user['club_name_short'])) {
+                                                $searchableText .= strtolower($user['club_name_short']) . ' ';
+                                            }
                                             echo htmlspecialchars(trim($searchableText));
                                         ?>">
                                             <td class="text-nowrap"><?php echo htmlspecialchars($user['id']); ?></td>
@@ -206,6 +222,26 @@ error_log("Session: " . print_r($_SESSION, true));
                                                 <span class="badge bg-<?php echo ($user['role'] === 'admin' || ($user['is_admin'] ?? $user['isAdmin'] ?? false)) ? 'danger' : 'secondary'; ?>">
                                                     <?php echo ucfirst($user['role'] ?? 'user'); ?>
                                                 </span>
+                                            </td>
+                                            <td class="text-nowrap" data-column="club">
+                                                <?php 
+                                                // Récupérer le name_short du club
+                                                $clubNameShort = '';
+                                                if (isset($user['club'])) {
+                                                    // Si club est un objet/tableau avec nameShort
+                                                    if (is_array($user['club'])) {
+                                                        $clubNameShort = $user['club']['nameShort'] ?? $user['club']['name_short'] ?? '';
+                                                    } else {
+                                                        // Si club est directement le name_short
+                                                        $clubNameShort = $user['club'];
+                                                    }
+                                                } elseif (isset($user['clubNameShort'])) {
+                                                    $clubNameShort = $user['clubNameShort'];
+                                                } elseif (isset($user['club_name_short'])) {
+                                                    $clubNameShort = $user['club_name_short'];
+                                                }
+                                                echo htmlspecialchars($clubNameShort ?: '-');
+                                                ?>
                                             </td>
                                             <td class="text-nowrap">
                                                 <?php 
