@@ -88,6 +88,10 @@ class Router {
         $this->addRoute("DELETE", "/clubs/{id}", "ClubController@destroy");
         $this->addRoute("POST", "/clubs/{id}/delete", "ClubController@destroy");
         
+        // Routes d'import de clubs (protégées - admin seulement)
+        $this->addRoute("GET", "/clubs/import", "ClubImportController@index");
+        $this->addRoute("POST", "/clubs/import/process", "ClubImportController@process");
+        
         // Routes des sujets (topics) (protégées)
         $this->addRoute("GET", "/groups/{groupId}/topics/create", "TopicController@create");
         $this->addRoute("POST", "/groups/{groupId}/topics", "TopicController@store");

@@ -10,9 +10,14 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                     <i class="fas fa-shield-alt me-2"></i>Gestion des clubs
                 </h1>
                 <?php if ($_SESSION['user']['is_admin'] ?? false): ?>
-                <a href="/clubs/create" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Nouveau club
-                </a>
+                <div class="btn-group">
+                    <a href="/clubs/create" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nouveau club
+                    </a>
+                    <a href="/clubs/import" class="btn btn-success">
+                        <i class="fas fa-file-upload me-2"></i>Importer depuis XML
+                    </a>
+                </div>
                 <?php endif; ?>
             </div>
             
