@@ -213,6 +213,7 @@ class UserController {
         
         $user = null;
         $error = null;
+        $clubs = [];
         
         try {
             // Récupérer l'utilisateur depuis l'API
@@ -228,6 +229,21 @@ class UserController {
             
             if (!$user) {
                 $error = 'Utilisateur non trouvé';
+            }
+            
+            // Récupérer la liste des clubs (filtrer ceux qui ne finissent pas par "000")
+            $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+            if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
+                foreach ($clubsResponse['data'] as $club) {
+                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                    // Filtrer les clubs dont le name_short ne finit pas par "000"
+                    if (!empty($nameShort) && substr($nameShort, -3) !== '000') {
+                        $clubs[] = [
+                            'nameShort' => $nameShort,
+                            'name' => $club['name'] ?? ''
+                        ];
+                    }
+                }
             }
         } catch (Exception $e) {
             $error = 'Erreur lors de la récupération de l\'utilisateur';
@@ -264,6 +280,7 @@ class UserController {
             'ageCategory' => $_POST['ageCategory'] ?? '',
             'arrivalYear' => $_POST['arrivalYear'] ?? '',
             'bowType' => $_POST['bowType'] ?? '',
+            'clubId' => $_POST['clubId'] ?? '',
             'role' => $_POST['role'] ?? '',
             'is_admin' => $_POST['is_admin'] ?? '0',
             'is_banned' => $_POST['is_banned'] ?? '0',

@@ -258,6 +258,40 @@ $title = "Modifier l'utilisateur - Portail Archers de Gémenos";
                                     </div>
                                 </div>
                                 
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="clubId" class="form-label">Club</label>
+                                            <select class="form-select" id="clubId" name="clubId">
+                                                <option value="">Sélectionner un club...</option>
+                                                <?php
+                                                $currentClubId = $user['club'] ?? $user['clubId'] ?? '';
+                                                if (!empty($clubs)) {
+                                                    foreach ($clubs as $club) {
+                                                        $selected = ($currentClubId === $club['nameShort']) ? 'selected' : '';
+                                                        $displayName = !empty($club['name']) ? $club['name'] . ' (' . $club['nameShort'] . ')' : $club['nameShort'];
+                                                        echo '<option value="' . htmlspecialchars($club['nameShort']) . '" ' . $selected . '>' . htmlspecialchars($displayName) . '</option>';
+                                                    }
+                                                }
+                                                // Si le club actuel n'est pas dans la liste, l'ajouter quand même
+                                                if (!empty($currentClubId)) {
+                                                    $found = false;
+                                                    foreach ($clubs as $club) {
+                                                        if ($club['nameShort'] === $currentClubId) {
+                                                            $found = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                    if (!$found) {
+                                                        echo '<option value="' . htmlspecialchars($currentClubId) . '" selected>' . htmlspecialchars($currentClubId) . '</option>';
+                                                    }
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div class="d-flex justify-content-end">
                                     <a href="/users/<?php echo $user['id']; ?>" class="btn btn-secondary me-2">Annuler</a>
                                     <button type="submit" class="btn btn-primary">

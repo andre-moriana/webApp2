@@ -227,6 +227,7 @@ class ApiService {
         if (!empty($userData['arrivalYear'])) $sportData['arrivalYear'] = $userData['arrivalYear'];
         if (!empty($userData['bowType'])) $sportData['bowType'] = $userData['bowType'];
         if (!empty($userData['role'])) $sportData['role'] = $userData['role'];
+        if (isset($userData['clubId'])) $sportData['clubId'] = $userData['clubId'];
         
         if (!empty($sportData)) {
             $result = $this->makeRequest("users/{$userId}/update-sport", "PUT", $sportData);
