@@ -63,6 +63,36 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
             <?php else: ?>
                 <div class="card">
                     <div class="card-body">
+                        <!-- Filtres par type de club -->
+                        <div class="mb-3 p-3 bg-light rounded">
+                            <label class="form-label fw-bold mb-2">
+                                <i class="fas fa-filter me-2"></i>Filtrer par type :
+                            </label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input club-filter" type="checkbox" id="filterClubs" value="club" checked>
+                                <label class="form-check-label" for="filterClubs">
+                                    Clubs
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input club-filter" type="checkbox" id="filterRegional" value="regional" checked>
+                                <label class="form-check-label" for="filterRegional">
+                                    Comités régionaux
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input club-filter" type="checkbox" id="filterDepartmental" value="departmental" checked>
+                                <label class="form-check-label" for="filterDepartmental">
+                                    Comités départementaux
+                                </label>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <span id="clubsCount">0</span> club(s) affiché(s)
+                                </small>
+                            </div>
+                        </div>
+                        
                         <div class="table-responsive">
                             <table class="table table-hover" id="clubsTable">
                                 <thead class="table-light">
@@ -86,12 +116,23 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($clubs as $club): ?>
-                                    <tr>
+                                    <?php foreach ($clubs as $club): 
+                                        // Déterminer le type de club selon le nom court
+                                        $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                                        $clubType = 'club'; // Par défaut
+                                        if (!empty($nameShort)) {
+                                            if (substr($nameShort, -5) === '00000') {
+                                                $clubType = 'regional';
+                                            } elseif (substr($nameShort, -3) === '000') {
+                                                $clubType = 'departmental';
+                                            }
+                                        }
+                                    ?>
+                                    <tr data-club-type="<?php echo $clubType; ?>">
                                         <td>
                                             <strong><?php echo htmlspecialchars($club['name'] ?? 'N/A'); ?></strong>
                                         </td>
-                                        <td><?php echo htmlspecialchars($club['nameShort'] ?? $club['name_short'] ?? '-'); ?></td>
+                                        <td><?php echo htmlspecialchars($nameShort ?: '-'); ?></td>
                                         <td><?php echo htmlspecialchars($club['city'] ?? '-'); ?></td>
                                         <td>
                                             <?php if (!empty($club['email'])): ?>
