@@ -81,6 +81,11 @@
                     </li>
                     <?php if ($_SESSION['user']['is_admin'] ?? false): ?>
                     <li class="nav-item">
+                        <a class="nav-link" href="/themes">
+                            <i class="fas fa-palette me-1"></i> Thèmes
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/user-validation">
                             <i class="fas fa-user-check me-1"></i> Validation
                         </a>

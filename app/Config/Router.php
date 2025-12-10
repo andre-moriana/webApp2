@@ -92,6 +92,17 @@ class Router {
         $this->addRoute("GET", "/clubs/import", "ClubImportController@index");
         $this->addRoute("POST", "/clubs/import/process", "ClubImportController@process");
         
+        // Routes des thèmes (protégées - admin seulement)
+        $this->addRoute("GET", "/themes", "ThemeController@index");
+        $this->addRoute("GET", "/themes/create", "ThemeController@create");
+        $this->addRoute("GET", "/themes/{id}/edit", "ThemeController@edit");
+        $this->addRoute("GET", "/themes/{id}", "ThemeController@show");
+        $this->addRoute("POST", "/themes", "ThemeController@store");
+        $this->addRoute("PUT", "/themes/{id}", "ThemeController@update");
+        $this->addRoute("POST", "/themes/{id}/update", "ThemeController@update");
+        $this->addRoute("DELETE", "/themes/{id}", "ThemeController@destroy");
+        $this->addRoute("POST", "/themes/{id}/delete", "ThemeController@destroy");
+        
         // Routes des sujets (topics) (protégées)
         $this->addRoute("GET", "/groups/{groupId}/topics/create", "TopicController@create");
         $this->addRoute("POST", "/groups/{groupId}/topics", "TopicController@store");
