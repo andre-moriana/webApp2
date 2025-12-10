@@ -31,7 +31,7 @@ class ClubController {
         }
 
         $title = 'Gestion des clubs - Portail Archers de Gémenos';
-        $additionalJS = ['/public/assets/js/clubs-table.js'];
+        //$additionalJS = ['/public/assets/js/clubs-table.js'];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/clubs/index.php';
