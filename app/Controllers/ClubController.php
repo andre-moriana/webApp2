@@ -21,17 +21,46 @@ class ClubController {
         try {
             $response = $this->apiService->makeRequest('clubs/list', 'GET');
             
-            if ($response['success'] && isset($response['data'])) {
-                $clubs = is_array($response['data']) ? $response['data'] : [];
+            // Vérifier si c'est une erreur 401 (Unauthorized)
+            if (isset($response['status_code']) && $response['status_code'] == 401) {
+                $error = 'Erreur d\'authentification. Veuillez vous reconnecter.';
+                if (isset($response['data']['error'])) {
+                    $error = $response['data']['error'];
+                }
+                $clubs = []; // S'assurer que clubs est un tableau vide
+            } elseif ($response['success'] && isset($response['data'])) {
+                // Le backend retourne directement un tableau de clubs
+                // Vérifier si data contient une erreur
+                if (isset($response['data']['error'])) {
+                    $error = $response['data']['error'];
+                    $clubs = [];
+                } elseif (is_array($response['data'])) {
+                    // Si data est un tableau, c'est la liste des clubs
+                    $clubs = $response['data'];
+                } else {
+                    $clubs = [];
+                }
             } else {
-                $error = $response['message'] ?? 'Erreur lors de la récupération des clubs';
+                // Vérifier si la réponse contient une erreur
+                if (isset($response['data']['error'])) {
+                    $error = $response['data']['error'];
+                } else {
+                    $error = $response['message'] ?? 'Erreur lors de la récupération des clubs';
+                }
+                $clubs = []; // S'assurer que clubs est toujours défini
             }
         } catch (Exception $e) {
             $error = 'Erreur lors de la récupération des clubs: ' . $e->getMessage();
+            $clubs = []; // S'assurer que clubs est toujours défini même en cas d'exception
+        }
+        
+        // S'assurer que clubs est toujours un tableau
+        if (!isset($clubs) || !is_array($clubs)) {
+            $clubs = [];
         }
 
         $title = 'Gestion des clubs - Portail Archers de Gémenos';
-        //$additionalJS = ['/public/assets/js/clubs-table.js'];
+        $additionalJS = ['/public/assets/js/clubs-table.js'];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/clubs/index.php';

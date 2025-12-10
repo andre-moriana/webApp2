@@ -48,11 +48,16 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                 </div>
             <?php endif; ?>
             
-            <?php if (!isset($clubs) || empty($clubs)): ?>
+            <?php if (!isset($clubs) || !is_array($clubs) || empty($clubs)): ?>
                 <div class="card">
                     <div class="card-body text-center py-5">
                         <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
                         <p class="text-muted">Aucun club trouvé</p>
+                        <?php if (isset($error) && $error): ?>
+                            <div class="alert alert-warning mt-3">
+                                <?php echo htmlspecialchars($error); ?>
+                            </div>
+                        <?php endif; ?>
                         <?php if ($_SESSION['user']['is_admin'] ?? false): ?>
                         <a href="/clubs/create" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>Créer le premier club
@@ -63,7 +68,7 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
             <?php else: ?>
                 <div class="card">
                     <div class="card-body">
-                        <?php if (isset($clubs) && is_array($clubs) && count($clubs) > 0): ?>
+                        <?php if (is_array($clubs) && count($clubs) > 0): ?>
                         <!-- Filtres par type de club -->
                         <div class="mb-3 p-3 bg-light rounded">
                             <label class="form-label fw-bold mb-2">
