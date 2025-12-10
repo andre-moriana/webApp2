@@ -291,6 +291,7 @@ class ClubImportController {
         return [
             'id' => $agreenum, // AGREENUM sera utilisé comme identifiant
             'name' => $nomClub,
+            'nameShort' => $agreenum, // AGREENUM copié dans name_short
             'city' => $localite
         ];
     }
@@ -323,6 +324,11 @@ class ClubImportController {
                 $createData = [
                     'name' => $clubData['name']
                 ];
+                
+                // Ajouter nameShort (AGREENUM) si disponible
+                if (!empty($clubData['nameShort'])) {
+                    $createData['nameShort'] = $clubData['nameShort'];
+                }
                 
                 // Ajouter la ville si disponible
                 if (!empty($clubData['city'])) {

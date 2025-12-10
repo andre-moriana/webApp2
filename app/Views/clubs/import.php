@@ -74,7 +74,7 @@ $title = "Import de clubs depuis XML - Portail Archers de Gémenos";
                             <li>Sélectionnez un fichier XML au format WINDEV_TABLE</li>
                             <li>Les clubs seront importés avec les champs suivants :</li>
                             <ul>
-                                <li><strong>AGREENUM</strong> → Identifiant du club</li>
+                                <li><strong>AGREENUM</strong> → Identifiant du club et nom court (name_short)</li>
                                 <li><strong>INntituleclub</strong> → Nom du club</li>
                                 <li><strong>Localite</strong> → Localité/Ville du club</li>
                             </ul>
