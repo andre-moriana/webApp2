@@ -46,16 +46,12 @@ $title = "Détails du thème - Portail Archers de Gémenos";
                                     <td><?php echo htmlspecialchars($theme['clubNameShort']); ?></td>
                                 </tr>
                                 <?php endif; ?>
-                                <?php if (!empty($theme['logo'])): ?>
                                 <tr>
                                     <th>Logo :</th>
                                     <td>
-                                        <a href="<?php echo htmlspecialchars($theme['logo']); ?>" target="_blank">
-                                            <?php echo htmlspecialchars($theme['logo']); ?>
-                                        </a>
+                                        <span class="text-muted">Le logo est géré par la table clubs</span>
                                     </td>
                                 </tr>
-                                <?php endif; ?>
                                 <tr>
                                     <th>Créé le :</th>
                                     <td>

@@ -47,21 +47,13 @@ $title = "Modifier le thème - Portail Archers de Gémenos";
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="clubNameShort" class="form-label">Nom court du club</label>
-                                    <input type="text" class="form-control" id="clubNameShort" name="clubNameShort"
-                                           value="<?php echo htmlspecialchars($theme['clubNameShort'] ?? ''); ?>">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="logo" class="form-label">URL du logo</label>
-                                    <input type="url" class="form-control" id="logo" name="logo"
-                                           value="<?php echo htmlspecialchars($theme['logo'] ?? ''); ?>">
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                            <label for="clubNameShort" class="form-label">Nom court du club</label>
+                            <input type="text" class="form-control" id="clubNameShort" name="clubNameShort"
+                                   value="<?php echo htmlspecialchars($theme['clubNameShort'] ?? ''); ?>">
+                            <small class="form-text text-muted">
+                                Le logo sera géré par la table clubs, pas par le thème
+                            </small>
                         </div>
 
                         <hr class="my-4">

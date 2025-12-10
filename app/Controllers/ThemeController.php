@@ -80,7 +80,6 @@ class ThemeController {
         $name = $_POST['name'] ?? '';
         $clubName = $_POST['clubName'] ?? '';
         $clubNameShort = $_POST['clubNameShort'] ?? '';
-        $logo = $_POST['logo'] ?? '';
         
         // Récupérer les couleurs
         $colors = [
@@ -109,7 +108,6 @@ class ThemeController {
                 'name' => $name,
                 'clubName' => $clubName,
                 'clubNameShort' => $clubNameShort,
-                'logo' => $logo,
                 'colors' => $colors
             ]);
             
@@ -259,7 +257,6 @@ class ThemeController {
         $name = $_POST['name'] ?? '';
         $clubName = $_POST['clubName'] ?? '';
         $clubNameShort = $_POST['clubNameShort'] ?? '';
-        $logo = $_POST['logo'] ?? '';
         
         // Récupérer les couleurs
         $colors = [
@@ -289,7 +286,6 @@ class ThemeController {
                 'name' => $name,
                 'clubName' => $clubName,
                 'clubNameShort' => $clubNameShort,
-                'logo' => $logo,
                 'colors' => $colors
             ]);
             
