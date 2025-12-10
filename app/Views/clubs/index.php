@@ -185,7 +185,6 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
     </div>
 </div>
 
-<script src="/public/assets/js/clubs-table.js"></script>
 <script>
 function confirmDelete(clubId) {
     document.getElementById('deleteClubId').value = clubId;
