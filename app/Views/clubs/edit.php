@@ -109,7 +109,14 @@ $title = "Modifier le club - Portail Archers de Gémenos";
                                     if (substr($backendUrl, -4) === '/api') {
                                         $backendUrl = substr($backendUrl, 0, -4);
                                     }
+                                    // Forcer HTTP pour les fichiers statiques (éviter les erreurs SSL)
+                                    if (strpos($backendUrl, 'https://') === 0 && strpos($backendUrl, '82.67.123.22:25000') !== false) {
+                                        $backendUrl = str_replace('https://', 'http://', $backendUrl);
+                                    }
                                     $logoUrl = $backendUrl . (strpos($logoUrl, '/') === 0 ? '' : '/') . $logoUrl;
+                                } elseif (preg_match('/^https:\/\//', $logoUrl) && strpos($logoUrl, '82.67.123.22:25000') !== false) {
+                                    // Si l'URL est déjà complète mais en HTTPS, convertir en HTTP
+                                    $logoUrl = str_replace('https://', 'http://', $logoUrl);
                                 }
                             ?>
                                 <div class="mb-2">
