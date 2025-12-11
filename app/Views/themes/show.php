@@ -37,22 +37,6 @@ $title = "Détails du thème - Portail Archers de Gémenos";
                                     <td><strong><?php echo htmlspecialchars($theme['name'] ?? ''); ?></strong></td>
                                 </tr>
                                 <tr>
-                                    <th>Nom du club :</th>
-                                    <td><?php echo htmlspecialchars($theme['clubName'] ?? ''); ?></td>
-                                </tr>
-                                <?php if (!empty($theme['clubNameShort'])): ?>
-                                <tr>
-                                    <th>Nom court du club :</th>
-                                    <td><?php echo htmlspecialchars($theme['clubNameShort']); ?></td>
-                                </tr>
-                                <?php endif; ?>
-                                <tr>
-                                    <th>Logo :</th>
-                                    <td>
-                                        <span class="text-muted">Le logo est géré par la table clubs</span>
-                                    </td>
-                                </tr>
-                                <tr>
                                     <th>Créé le :</th>
                                     <td>
                                         <?php if (!empty($theme['createdAt'])): ?>

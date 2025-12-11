@@ -57,7 +57,6 @@ $title = "Gestion des thèmes - Portail Archers de Gémenos";
                                     <tr>
                                         <th>ID</th>
                                         <th>Nom</th>
-                                        <th>Club</th>
                                         <th>Couleurs</th>
                                         <th>Créé le</th>
                                         <th>Actions</th>
@@ -74,12 +73,6 @@ $title = "Gestion des thèmes - Portail Archers de Gémenos";
                                             </td>
                                             <td>
                                                 <strong><?php echo htmlspecialchars($theme['name'] ?? ''); ?></strong>
-                                            </td>
-                                            <td>
-                                                <?php echo htmlspecialchars($theme['clubName'] ?? ''); ?>
-                                                <?php if (!empty($theme['clubNameShort'])): ?>
-                                                    <small class="text-muted">(<?php echo htmlspecialchars($theme['clubNameShort']); ?>)</small>
-                                                <?php endif; ?>
                                             </td>
                                             <td>
                                                 <?php if (!empty($theme['colors'])): ?>

@@ -24,36 +24,13 @@ $title = "Modifier le thème - Portail Archers de Gémenos";
                     <form method="POST" action="/themes/<?php echo htmlspecialchars($theme['id'] ?? ''); ?>" id="themeEditForm" class="needs-validation" novalidate>
                         <input type="hidden" name="_method" value="PUT">
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="name" class="form-label">Nom du thème <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="name" name="name" 
-                                           value="<?php echo htmlspecialchars($theme['name'] ?? ''); ?>" required>
-                                    <div class="invalid-feedback">
-                                        Veuillez saisir le nom du thème.
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="clubName" class="form-label">Nom du club <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="clubName" name="clubName"
-                                           value="<?php echo htmlspecialchars($theme['clubName'] ?? ''); ?>" required>
-                                    <div class="invalid-feedback">
-                                        Veuillez saisir le nom du club.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="mb-3">
-                            <label for="clubNameShort" class="form-label">Nom court du club</label>
-                            <input type="text" class="form-control" id="clubNameShort" name="clubNameShort"
-                                   value="<?php echo htmlspecialchars($theme['clubNameShort'] ?? ''); ?>">
-                            <small class="form-text text-muted">
-                                Le logo sera géré par la table clubs, pas par le thème
-                            </small>
+                            <label for="name" class="form-label">Nom du thème <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="<?php echo htmlspecialchars($theme['name'] ?? ''); ?>" required>
+                            <div class="invalid-feedback">
+                                Veuillez saisir le nom du thème.
+                            </div>
                         </div>
 
                         <hr class="my-4">
