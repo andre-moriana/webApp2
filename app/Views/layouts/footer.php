@@ -4,13 +4,13 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-6">
-                    <h5>Portail Archers de Gémenos</h5>
+                    <h5>Portail Arc Training</h5>
                     <p class="mb-0">Gestion de l'application mobile de tir à l'arc</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p class="mb-0">
                         <i class="fas fa-code me-1"></i>
-                        Développé par André Moriana pour les Archers de Gémenos
+                        Développé par André Moriana pour les Arc Training
                     </p>
                     <small class="text-muted">Version 1.0.0</small>
                     <p class="mt-2 mb-0">
