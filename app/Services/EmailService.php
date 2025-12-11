@@ -221,13 +221,16 @@ class EmailService {
             return false;
         }
         
-        // Construire le message complet
-        $emailMessage = "From: $fromName <$fromEmail>\r\n";
+        // Construire le message complet avec tous les en-têtes requis
+        $date = date('r'); // Format RFC 2822 pour la date
+        $emailMessage = "Date: $date\r\n";
+        $emailMessage .= "From: $fromName <$fromEmail>\r\n";
         $emailMessage .= "To: <$to>\r\n";
         $emailMessage .= "Reply-To: $replyName <$replyEmail>\r\n";
         $emailMessage .= "Subject: $subject\r\n";
         $emailMessage .= "MIME-Version: 1.0\r\n";
         $emailMessage .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $emailMessage .= "Message-ID: <" . time() . "." . uniqid() . "@" . ($_SERVER['SERVER_NAME'] ?? 'localhost') . ">\r\n";
         $emailMessage .= "\r\n";
         $emailMessage .= $htmlMessage;
         $emailMessage .= "\r\n.\r\n";

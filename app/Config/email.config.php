@@ -27,10 +27,10 @@ return [
     'smtp_port' => 587,
     
     // Nom d'utilisateur SMTP (surchargé par SMTP_USERNAME du .env)
-    'smtp_username' => '',
+    'smtp_username' => 'andre.moriana@free.fr',
     
     // Mot de passe SMTP (surchargé par SMTP_PASSWORD du .env)
-    'smtp_password' => '',
+    'smtp_password' => 'Ma16159297!',
     
     // Type de chiffrement (surchargé par SMTP_SECURE du .env)
     // 'tls' pour TLS, 'ssl' pour SSL, '' pour aucun
