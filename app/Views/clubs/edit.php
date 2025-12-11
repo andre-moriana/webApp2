@@ -122,7 +122,7 @@ $title = "Modifier le club - Portail Archers de Gémenos";
                             <?php endif; ?>
                             <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
                             <small class="form-text text-muted">
-                                Formats acceptés: JPG, PNG, GIF. Taille maximale: 5MB
+                                Formats acceptés: JPG, PNG, GIF, SVG, WEBP. Taille maximale: 10MB
                             </small>
                         </div>
 
