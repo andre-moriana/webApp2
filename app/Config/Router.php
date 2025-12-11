@@ -203,6 +203,10 @@ class Router {
         $this->addRoute("POST", "/user-settings/update-profile-image", "UserSettingsController@updateProfileImage");
         $this->addRoute("POST", "/user-settings/change-password", "UserSettingsController@changePassword");
         
+        // Route de protection des données personnelles (publique)
+        $this->addRoute("GET", "/privacy", "PrivacyController@index");
+        $this->addRoute("GET", "/donnees-personnelles", "PrivacyController@index");
+        
     }
     
     public function addRoute($method, $path, $handler) {

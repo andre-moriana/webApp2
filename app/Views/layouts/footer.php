@@ -13,6 +13,11 @@
                         Développé par André Moriana pour les Archers de Gémenos
                     </p>
                     <small class="text-muted">Version 1.0.0</small>
+                    <p class="mt-2 mb-0">
+                        <a href="/privacy" class="text-light text-decoration-none">
+                            <i class="fas fa-shield-alt me-1"></i>Protection des données personnelles
+                        </a>
+                    </p>
                 </div>
             </div>
         </div>
