@@ -78,8 +78,6 @@ class ThemeController {
         }
 
         $name = $_POST['name'] ?? '';
-        $clubName = $_POST['clubName'] ?? '';
-        $clubNameShort = $_POST['clubNameShort'] ?? '';
         
         // Récupérer les couleurs
         $colors = [
@@ -97,8 +95,8 @@ class ThemeController {
             'button' => $_POST['colorButton'] ?? '#007AFF'
         ];
 
-        if (empty($name) || empty($clubName)) {
-            $_SESSION['error'] = 'Le nom et le nom du club sont requis';
+        if (empty($name)) {
+            $_SESSION['error'] = 'Le nom est requis';
             header('Location: /themes/create');
             exit;
         }
@@ -106,8 +104,6 @@ class ThemeController {
         try {
             $response = $this->apiService->makeRequest('themes/create', 'POST', [
                 'name' => $name,
-                'clubName' => $clubName,
-                'clubNameShort' => $clubNameShort,
                 'colors' => $colors
             ]);
             
@@ -255,8 +251,6 @@ class ThemeController {
         }
 
         $name = $_POST['name'] ?? '';
-        $clubName = $_POST['clubName'] ?? '';
-        $clubNameShort = $_POST['clubNameShort'] ?? '';
         
         // Récupérer les couleurs
         $colors = [
@@ -274,8 +268,8 @@ class ThemeController {
             'button' => $_POST['colorButton'] ?? '#007AFF'
         ];
 
-        if (empty($name) || empty($clubName)) {
-            $_SESSION['error'] = 'Le nom et le nom du club sont requis';
+        if (empty($name)) {
+            $_SESSION['error'] = 'Le nom est requis';
             header('Location: /themes/' . $id . '/edit');
             exit;
         }
@@ -284,8 +278,6 @@ class ThemeController {
             $response = $this->apiService->makeRequest('themes/update', 'PUT', [
                 'id' => $id,
                 'name' => $name,
-                'clubName' => $clubName,
-                'clubNameShort' => $clubNameShort,
                 'colors' => $colors
             ]);
             
