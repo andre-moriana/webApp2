@@ -53,6 +53,11 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
         flex-direction: column;
         gap: 0.5rem !important;
     }
+    .card-header .input-group {
+        max-width: 100% !important;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
 }
 </style>
 
@@ -120,24 +125,32 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-shield-alt me-2"></i>Liste des clubs
                             </h5>
-                            <div class="d-flex gap-3 align-items-center">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filterRegional" checked>
-                                    <label class="form-check-label" for="filterRegional">
-                                        Comités régionaux
-                                    </label>
+                            <div class="d-flex gap-3 align-items-center flex-wrap">
+                                <div class="input-group" style="max-width: 300px;">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="searchClubs" placeholder="Rechercher un club...">
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filterDepartmental" checked>
-                                    <label class="form-check-label" for="filterDepartmental">
-                                        Comités départementaux
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filterClubs" checked>
-                                    <label class="form-check-label" for="filterClubs">
-                                        Clubs
-                                    </label>
+                                <div class="d-flex gap-3 align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="filterRegional" checked>
+                                        <label class="form-check-label" for="filterRegional">
+                                            Comités régionaux
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="filterDepartmental" checked>
+                                        <label class="form-check-label" for="filterDepartmental">
+                                            Comités départementaux
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="filterClubs" checked>
+                                        <label class="form-check-label" for="filterClubs">
+                                            Clubs
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>

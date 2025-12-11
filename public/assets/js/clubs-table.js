@@ -122,6 +122,10 @@ function filterClubsTable() {
     const showDepartmental = document.getElementById('filterDepartmental').checked;
     const showClubs = document.getElementById('filterClubs').checked;
     
+    // Récupérer le terme de recherche
+    const searchInput = document.getElementById('searchClubs');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
     const rows = tbody.querySelectorAll('tr[data-club-type]');
     let visibleCount = 0;
     
@@ -129,12 +133,29 @@ function filterClubsTable() {
         const clubType = row.getAttribute('data-club-type');
         let shouldShow = false;
         
+        // Vérifier le type de club
         if (clubType === 'regional' && showRegional) {
             shouldShow = true;
         } else if (clubType === 'departmental' && showDepartmental) {
             shouldShow = true;
         } else if (clubType === 'club' && showClubs) {
             shouldShow = true;
+        }
+        
+        // Si le club correspond au type, vérifier la recherche
+        if (shouldShow && searchTerm) {
+            // Récupérer le texte de toutes les cellules de données (sauf Actions)
+            const cells = row.querySelectorAll('td[data-column]');
+            let matchesSearch = false;
+            
+            cells.forEach(cell => {
+                const cellText = cell.textContent.toLowerCase().trim();
+                if (cellText.includes(searchTerm)) {
+                    matchesSearch = true;
+                }
+            });
+            
+            shouldShow = matchesSearch;
         }
         
         if (shouldShow) {
@@ -151,7 +172,7 @@ function filterClubsTable() {
         if (!noResultsRow) {
             noResultsRow = document.createElement('tr');
             noResultsRow.className = 'no-results-filter';
-            noResultsRow.innerHTML = '<td colspan="6" class="text-center py-4 text-muted">Aucun club ne correspond aux filtres sélectionnés</td>';
+            noResultsRow.innerHTML = '<td colspan="6" class="text-center py-4 text-muted">Aucun club ne correspond aux critères de recherche</td>';
             tbody.appendChild(noResultsRow);
         }
         noResultsRow.style.display = '';
@@ -197,10 +218,17 @@ function initClubsTable() {
         filterRegional.addEventListener('change', filterClubsTable);
         filterDepartmental.addEventListener('change', filterClubsTable);
         filterClubs.addEventListener('change', filterClubsTable);
-        
-        // Appliquer le filtre initial
-        filterClubsTable();
     }
+    
+    // Gérer le champ de recherche
+    const searchInput = document.getElementById('searchClubs');
+    if (searchInput) {
+        searchInput.addEventListener('input', filterClubsTable);
+        searchInput.addEventListener('keyup', filterClubsTable);
+    }
+    
+    // Appliquer le filtre initial
+    filterClubsTable();
 }
 
 // Initialiser quand le DOM est prêt
