@@ -103,6 +103,13 @@
                                 Votre compte est en attente ? Contactez un administrateur
                             </small>
                         </div>
+                        
+                        <div class="text-center mt-3 pt-3 border-top">
+                            <a href="/privacy" class="btn btn-link text-muted" style="font-size: 0.875rem;">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Protection des données personnelles
+                            </a>
+                        </div>
                     </div>
                 </div>
                 
