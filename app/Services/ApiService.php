@@ -2048,6 +2048,58 @@ class ApiService {
     }
     
     /**
+     * Upload le logo d'un club vers le backend
+     * @param string $clubId ID du club
+     * @param array $file Fichier uploadé
+     * @return array Réponse de l'API
+     */
+    public function uploadClubLogo($clubId, $file) {
+        $endpoint = $this->baseUrl . "/clubs/" . $clubId . "/upload-logo";
+        
+        // Utiliser cURL pour l'upload de fichier
+        $ch = curl_init();
+        
+        // Préparer les données pour l'upload multipart
+        $postData = [
+            'logo' => new CURLFile($file['tmp_name'], $file['type'], $file['name'])
+        ];
+        
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $endpoint,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $postData,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $this->token
+            ],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_SSL_VERIFYPEER => false
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        
+        if ($error) {
+            return ['success' => false, 'message' => 'Erreur de connexion: ' . $error];
+        }
+        
+        // Traiter la réponse
+        $responseData = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return ['success' => false, 'message' => 'Réponse invalide du serveur'];
+        }
+        
+        return [
+            'success' => $httpCode >= 200 && $httpCode < 300,
+            'data' => $responseData,
+            'status_code' => $httpCode,
+            'message' => $httpCode >= 200 && $httpCode < 300 ? 'Logo uploadé avec succès' : ($responseData['error'] ?? 'Erreur HTTP ' . $httpCode)
+        ];
+    }
+    
+    /**
      * Change le mot de passe d'un utilisateur
      * @param int $userId ID de l'utilisateur
      * @param string $currentPassword Mot de passe actuel

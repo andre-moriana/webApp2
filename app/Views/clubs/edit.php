@@ -21,7 +21,7 @@ $title = "Modifier le club - Portail Archers de Gémenos";
                         <?php unset($_SESSION['error']); ?>
                     <?php endif; ?>
                     
-                    <form method="POST" action="/clubs/<?php echo $club['id'] ?? $club['_id']; ?>" id="clubEditForm" class="needs-validation" novalidate>
+                    <form method="POST" action="/clubs/<?php echo $club['id'] ?? $club['_id']; ?>" id="clubEditForm" class="needs-validation" novalidate enctype="multipart/form-data">
                         <input type="hidden" name="_method" value="PUT">
                         
                         <div class="row">
@@ -95,6 +95,35 @@ $title = "Modifier le club - Portail Archers de Gémenos";
                                            value="<?php echo htmlspecialchars($club['website'] ?? ''); ?>">
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="logo" class="form-label">Logo du club</label>
+                            <?php if (!empty($club['logo'])): 
+                                // Construire l'URL complète du logo si c'est un chemin relatif
+                                $logoUrl = $club['logo'];
+                                if (!empty($logoUrl) && !preg_match('/^https?:\/\//', $logoUrl)) {
+                                    $backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
+                                    $backendUrl = rtrim($backendUrl, '/');
+                                    // Retirer /api de l'URL si présent
+                                    if (substr($backendUrl, -4) === '/api') {
+                                        $backendUrl = substr($backendUrl, 0, -4);
+                                    }
+                                    $logoUrl = $backendUrl . (strpos($logoUrl, '/') === 0 ? '' : '/') . $logoUrl;
+                                }
+                            ?>
+                                <div class="mb-2">
+                                    <img src="<?php echo htmlspecialchars($logoUrl); ?>" 
+                                         alt="Logo actuel" 
+                                         style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px; padding: 5px; object-fit: contain;">
+                                    <br>
+                                    <small class="text-muted">Logo actuel</small>
+                                </div>
+                            <?php endif; ?>
+                            <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                            <small class="form-text text-muted">
+                                Formats acceptés: JPG, PNG, GIF. Taille maximale: 5MB
+                            </small>
                         </div>
 
                         <div class="mb-3">

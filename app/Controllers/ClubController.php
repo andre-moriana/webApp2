@@ -234,6 +234,17 @@ class ClubController {
         }
 
         try {
+            // Gérer l'upload du logo si un fichier a été fourni
+            if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+                $logoResponse = $this->apiService->uploadClubLogo($id, $_FILES['logo']);
+                if (!$logoResponse['success']) {
+                    $_SESSION['error'] = $logoResponse['message'] ?? 'Erreur lors de l\'upload du logo';
+                    header('Location: /clubs/' . $id . '/edit');
+                    exit;
+                }
+            }
+
+            // Mettre à jour les autres informations du club
             $response = $this->apiService->makeRequest("clubs/{$id}", 'PUT', [
                 'name' => $name,
                 'nameShort' => $nameShort,
