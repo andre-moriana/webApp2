@@ -20,24 +20,11 @@
 }
 
 .login-logo {
-    max-width: 300px;
+    max-width: 200px;
     height: auto;
     display: block;
     margin: 0 auto;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-}
-
-/* Adaptation du logo pour les smartphones */
-@media (max-width: 576px) {
-    .login-logo {
-        max-width: 200px;
-    }
-}
-
-@media (max-width: 400px) {
-    .login-logo {
-        max-width: 150px;
-    }
 }
 
 .login-form {

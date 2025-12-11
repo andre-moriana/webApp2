@@ -23,25 +23,10 @@ body {
 }
 
 .navbar-logo {
-    height: 52px;
+    height: 35px;
     width: auto;
     object-fit: contain;
-    max-width: 180px;
-}
-
-/* Adaptation du logo pour les smartphones */
-@media (max-width: 576px) {
-    .navbar-logo {
-        height: 35px;
-        max-width: 120px;
-    }
-}
-
-@media (max-width: 400px) {
-    .navbar-logo {
-        height: 28px;
-        max-width: 100px;
-    }
+    max-width: 120px;
 }
 
 /* Correction du menu utilisateur */
