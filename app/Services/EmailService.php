@@ -87,6 +87,29 @@ class EmailService {
     }
     
     /**
+     * Lit une réponse SMTP complète (peut être multi-lignes)
+     */
+    private static function readSmtpResponse($socket) {
+        $response = '';
+        $lastLine = '';
+        while ($line = fgets($socket, 515)) {
+            $response .= $line;
+            $lastLine = trim($line);
+            // Les réponses SMTP se terminent par un espace après le code (ex: "250 OK")
+            // Les lignes intermédiaires ont un tiret après le code (ex: "250-")
+            if (preg_match('/^\d{3} /', $line)) {
+                // Dernière ligne avec code suivi d'un espace
+                break;
+            }
+        }
+        return [
+            'full' => $response,
+            'last' => $lastLine,
+            'code' => substr($lastLine, 0, 3)
+        ];
+    }
+    
+    /**
      * Envoie un email via SMTP
      */
     private static function sendViaSmtp($to, $fromEmail, $fromName, $replyName, $replyEmail, $subject, $htmlMessage) {
@@ -110,57 +133,62 @@ class EmailService {
         }
         
         // Lire la réponse initiale
-        $response = fgets($socket, 515);
-        if (substr($response, 0, 3) !== '220') {
-            error_log("Erreur SMTP: Réponse initiale invalide: $response");
+        $response = self::readSmtpResponse($socket);
+        if ($response['code'] !== '220') {
+            error_log("Erreur SMTP: Réponse initiale invalide (code {$response['code']}): {$response['full']}");
             fclose($socket);
             return false;
         }
         
         // Envoyer EHLO
-        fputs($socket, "EHLO " . $_SERVER['SERVER_NAME'] . "\r\n");
-        $response = fgets($socket, 515);
+        $serverName = $_SERVER['SERVER_NAME'] ?? 'localhost';
+        fputs($socket, "EHLO $serverName\r\n");
+        $response = self::readSmtpResponse($socket);
         
         // Si TLS est requis, démarrer TLS
         if ($smtpEncryption === 'tls') {
             fputs($socket, "STARTTLS\r\n");
-            $response = fgets($socket, 515);
-            if (substr($response, 0, 3) !== '220') {
-                error_log("Erreur SMTP: STARTTLS échoué: $response");
+            $response = self::readSmtpResponse($socket);
+            if ($response['code'] !== '220') {
+                error_log("Erreur SMTP: STARTTLS échoué (code {$response['code']}): {$response['full']}");
                 fclose($socket);
                 return false;
             }
             
             // Activer le chiffrement TLS
-            stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                error_log("Erreur SMTP: Impossible d'activer TLS");
+                fclose($socket);
+                return false;
+            }
             
             // Renvoyer EHLO après TLS
-            fputs($socket, "EHLO " . $_SERVER['SERVER_NAME'] . "\r\n");
-            $response = fgets($socket, 515);
+            fputs($socket, "EHLO $serverName\r\n");
+            $response = self::readSmtpResponse($socket);
         }
         
         // Authentification si nécessaire
         if (!empty($smtpUsername) && !empty($smtpPassword)) {
             fputs($socket, "AUTH LOGIN\r\n");
-            $response = fgets($socket, 515);
-            if (substr($response, 0, 3) !== '334') {
-                error_log("Erreur SMTP: AUTH LOGIN échoué: $response");
+            $response = self::readSmtpResponse($socket);
+            if ($response['code'] !== '334') {
+                error_log("Erreur SMTP: AUTH LOGIN échoué (code {$response['code']}): {$response['full']}");
                 fclose($socket);
                 return false;
             }
             
             fputs($socket, base64_encode($smtpUsername) . "\r\n");
-            $response = fgets($socket, 515);
-            if (substr($response, 0, 3) !== '334') {
-                error_log("Erreur SMTP: Authentification username échouée: $response");
+            $response = self::readSmtpResponse($socket);
+            if ($response['code'] !== '334') {
+                error_log("Erreur SMTP: Authentification username échouée (code {$response['code']}): {$response['full']}");
                 fclose($socket);
                 return false;
             }
             
             fputs($socket, base64_encode($smtpPassword) . "\r\n");
-            $response = fgets($socket, 515);
-            if (substr($response, 0, 3) !== '235') {
-                error_log("Erreur SMTP: Authentification password échouée: $response");
+            $response = self::readSmtpResponse($socket);
+            if ($response['code'] !== '235') {
+                error_log("Erreur SMTP: Authentification password échouée (code {$response['code']}): {$response['full']}");
                 fclose($socket);
                 return false;
             }
@@ -168,27 +196,27 @@ class EmailService {
         
         // Envoyer MAIL FROM
         fputs($socket, "MAIL FROM: <$fromEmail>\r\n");
-        $response = fgets($socket, 515);
-        if (substr($response, 0, 3) !== '250') {
-            error_log("Erreur SMTP: MAIL FROM échoué: $response");
+        $response = self::readSmtpResponse($socket);
+        if ($response['code'] !== '250') {
+            error_log("Erreur SMTP: MAIL FROM échoué (code {$response['code']}): {$response['full']}");
             fclose($socket);
             return false;
         }
         
         // Envoyer RCPT TO
         fputs($socket, "RCPT TO: <$to>\r\n");
-        $response = fgets($socket, 515);
-        if (substr($response, 0, 3) !== '250') {
-            error_log("Erreur SMTP: RCPT TO échoué: $response");
+        $response = self::readSmtpResponse($socket);
+        if ($response['code'] !== '250') {
+            error_log("Erreur SMTP: RCPT TO échoué (code {$response['code']}): {$response['full']}");
             fclose($socket);
             return false;
         }
         
         // Envoyer DATA
         fputs($socket, "DATA\r\n");
-        $response = fgets($socket, 515);
-        if (substr($response, 0, 3) !== '354') {
-            error_log("Erreur SMTP: DATA échoué: $response");
+        $response = self::readSmtpResponse($socket);
+        if ($response['code'] !== '354') {
+            error_log("Erreur SMTP: DATA échoué (code {$response['code']}): {$response['full']}");
             fclose($socket);
             return false;
         }
@@ -206,9 +234,9 @@ class EmailService {
         
         // Envoyer le message
         fputs($socket, $emailMessage);
-        $response = fgets($socket, 515);
-        if (substr($response, 0, 3) !== '250') {
-            error_log("Erreur SMTP: Envoi du message échoué: $response");
+        $response = self::readSmtpResponse($socket);
+        if ($response['code'] !== '250') {
+            error_log("Erreur SMTP: Envoi du message échoué (code {$response['code']}): {$response['full']}");
             fclose($socket);
             return false;
         }
@@ -254,4 +282,3 @@ class EmailService {
         return $html;
     }
 }
-
