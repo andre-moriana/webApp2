@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - Portail Archers de Gémenos</title>
+    <title>Connexion - Portail Arc Training</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -18,8 +18,7 @@
             <div class="col-md-6 col-lg-4">
                 <div class="login-container">
                     <div class="login-header">
-                        <i class="fas fa-bullseye fa-3x mb-3"></i>
-                        <h3 class="mb-0">Archers de Gémenos</h3>
+                        <img src="/public/assets/images/arc-training-logo.png" alt="Arc Training Logo" class="login-logo mb-3" style="max-width: 200px; height: auto;">
                         <p class="mb-0">Portail d'administration</p>
                     </div>
                     
@@ -122,7 +121,7 @@
                 <div class="text-center mt-4">
                     <small class="text-white">
                         <i class="fas fa-code me-1"></i>
-                        Développé par André Moriana pour les Archers de Gémenos
+                        Développé par André Moriana pour Arc Training
                     </small>
                 </div>
             </div>

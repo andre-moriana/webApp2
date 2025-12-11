@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle ?? 'Portail Archers de Gémenos'; ?></title>
+    <title><?php echo $pageTitle ?? 'Portail Arc Training'; ?></title>
 <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <!-- Font Awesome -->
@@ -21,8 +21,8 @@
     <!-- Navigation simplifiée pour les pages publiques -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/login">
-                <i class="fas fa-bullseye me-2"></i> Archers de Gémenos
+            <a class="navbar-brand d-flex align-items-center" href="/login">
+                <img src="/public/assets/images/arc-training-logo.png" alt="Arc Training Logo" class="navbar-logo me-2">
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="/contact">

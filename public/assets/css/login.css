@@ -19,6 +19,14 @@
     text-align: center;
 }
 
+.login-logo {
+    max-width: 300px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
 .login-form {
     padding: 2rem;
 }
