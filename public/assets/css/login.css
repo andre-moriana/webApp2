@@ -27,6 +27,19 @@
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
+/* Adaptation du logo pour les smartphones */
+@media (max-width: 576px) {
+    .login-logo {
+        max-width: 200px;
+    }
+}
+
+@media (max-width: 400px) {
+    .login-logo {
+        max-width: 150px;
+    }
+}
+
 .login-form {
     padding: 2rem;
 }
