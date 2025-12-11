@@ -112,11 +112,28 @@ class ThemeController {
                 header('Location: /themes');
                 exit;
             } else {
-                $_SESSION['error'] = $response['message'] ?? 'Erreur lors de la création du thème';
+                // Extraire le message d'erreur depuis la réponse
+                $errorMessage = 'Erreur lors de la création du thème';
+                
+                // Vérifier si l'erreur est dans data.error (format API)
+                if (isset($response['data']['error'])) {
+                    $errorMessage = $response['data']['error'];
+                } elseif (isset($response['data']['message'])) {
+                    $errorMessage = $response['data']['message'];
+                } elseif (isset($response['message'])) {
+                    $errorMessage = $response['message'];
+                }
+                
+                // Logger l'erreur pour le débogage
+                error_log('ThemeController::store - Erreur API: ' . json_encode($response));
+                
+                $_SESSION['error'] = $errorMessage;
                 header('Location: /themes/create');
                 exit;
             }
         } catch (Exception $e) {
+            error_log('ThemeController::store - Exception: ' . $e->getMessage());
+            error_log('ThemeController::store - Stack trace: ' . $e->getTraceAsString());
             $_SESSION['error'] = 'Erreur lors de la création du thème: ' . $e->getMessage();
             header('Location: /themes/create');
             exit;
