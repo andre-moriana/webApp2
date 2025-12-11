@@ -21,7 +21,7 @@
                         </p>
                         
                         <h2 class="h4 mt-4 mb-3">NOUS CONTACTER</h2>
-                        <p>Si vous avez des questions relatives à l'utilisation de vos données ou souhaitez nous faire part de vos commentaires ou préoccupations, vous pouvez contacter notre référent à la protection des données via notre formulaire de contact.</p>
+                        <p>Si vous avez des questions relatives à l'utilisation de vos données ou souhaitez nous faire part de vos commentaires ou préoccupations, vous pouvez contacter notre référent à la protection des données via notre <a href="/contact" class="text-success fw-bold">formulaire de contact</a>.</p>
                         
                         <h2 class="h4 mt-4 mb-3">LES DONNÉES PERSONNELLES QUE NOUS COLLECTONS</h2>
                         <p>Arc Training collecte uniquement des informations nécessaires et pertinentes et en reçoit de votre part, via notre Site ou application mobile.</p>
@@ -89,7 +89,7 @@
                         <h2 class="h4 mt-4 mb-3">SÉCURITÉ DE VOS DONNÉES PERSONNELLES</h2>
                         <p>De façon générale, nous nous efforçons de protéger les données à caractère personnel en tenant compte de la sensibilité des informations en cause et des risques potentiels induits par le traitement et sa mise en œuvre. Nous mettons en œuvre tout moyen utile afin de garantir la confidentialité, l'intégrité, la disponibilité et la résilience de vos données. Nous veillons par ailleurs à stocker les données vous concernant dans des systèmes d'information offrant un niveau de sécurité appropriée, dont l'accès est protégé, restreint et enregistré.</p>
                         
-                        <p>Si vous pensez que vos données personnelles sont utilisées de manière inappropriée par des tiers, nous vous remercions de nous en informer immédiatement via notre formulaire de contact.</p>
+                        <p>Si vous pensez que vos données personnelles sont utilisées de manière inappropriée par des tiers, nous vous remercions de nous en informer immédiatement via notre <a href="/contact" class="text-success fw-bold">formulaire de contact</a>.</p>
                         
                         <h2 class="h4 mt-4 mb-3">VOS DROITS</h2>
                         <p>Dans le respect de la réglementation, vous disposez des droits suivants :</p>
@@ -112,10 +112,10 @@
                         
                         <p>Quel que soit votre choix initial, vous pouvez changer d'avis à tout moment et choisir d'accepter ou de refuser tout ou partie de ces cookies directement sur le Site ou dans l'Appli. Un lien vers la page de gestion des cookies est à tout moment accessible dans le centre d'aide du Site et depuis les paramètres de l'Appli pour vous permettre de personnaliser vos préférences relatives aux cookies.</p>
                         
-                        <p>Si vous êtes le représentant légal d'un enfant âgé de moins de 16 ans et pensez que votre enfant nous a fourni des informations sans votre consentement, vous pouvez nous contacter via notre formulaire de contact pour que nous supprimions ces informations le cas échéant.</p>
+                        <p>Si vous êtes le représentant légal d'un enfant âgé de moins de 16 ans et pensez que votre enfant nous a fourni des informations sans votre consentement, vous pouvez nous contacter via notre <a href="/contact" class="text-success fw-bold">formulaire de contact</a> pour que nous supprimions ces informations le cas échéant.</p>
                         
                         <h2 class="h4 mt-4 mb-3">EXERCER VOS DROITS</h2>
-                        <p>Vous pouvez à tout moment exercer vos droits en nous contactant à l'adresse suivante : <strong>andre.moriana@gmail.com</strong>. Vous pouvez aussi contacter notre Délégué à la Protection des Données via notre formulaire de contact.</p>
+                        <p>Vous pouvez à tout moment exercer vos droits en nous contactant à l'adresse suivante : <strong>Les Archers de Gémenos – Maison des Associations Gérard Rossi – Route de Saint Pons – 13420 GEMENOS</strong>. Vous pouvez aussi contacter notre Délégué à la Protection des Données via notre <a href="/contact" class="text-success fw-bold">formulaire de contact</a>.</p>
                         
                         <p>Votre demande doit être accompagnée de la photocopie d'un justificatif d'identité (carte nationale d'identité ou passeport, carte de résident, carte de séjour ou livret de circulation délivrés par l'Etat français ou carte d'identité de l'Union Européenne). Une réponse vous sera adressée par nos soins dans un délai d'un mois à compter de la réception de votre demande.</p>
                         

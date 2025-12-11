@@ -25,6 +25,9 @@
                 <i class="fas fa-bullseye me-2"></i> Archers de Gémenos
             </a>
             <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/contact">
+                    <i class="fas fa-envelope me-1"></i> Contact
+                </a>
                 <a class="nav-link" href="/privacy">
                     <i class="fas fa-shield-alt me-1"></i> Données personnelles
                 </a>

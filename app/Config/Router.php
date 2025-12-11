@@ -207,6 +207,10 @@ class Router {
         $this->addRoute("GET", "/privacy", "PrivacyController@index");
         $this->addRoute("GET", "/donnees-personnelles", "PrivacyController@index");
         
+        // Routes du formulaire de contact (publiques)
+        $this->addRoute("GET", "/contact", "ContactController@index");
+        $this->addRoute("POST", "/contact/send", "ContactController@send");
+        
     }
     
     public function addRoute($method, $path, $handler) {

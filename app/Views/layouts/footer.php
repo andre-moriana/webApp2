@@ -14,6 +14,9 @@
                     </p>
                     <small class="text-muted">Version 1.0.0</small>
                     <p class="mt-2 mb-0">
+                        <a href="/contact" class="text-light text-decoration-none me-3">
+                            <i class="fas fa-envelope me-1"></i>Contact
+                        </a>
                         <a href="/privacy" class="text-light text-decoration-none">
                             <i class="fas fa-shield-alt me-1"></i>Protection des données personnelles
                         </a>
