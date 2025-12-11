@@ -34,26 +34,15 @@ class EmailService {
                 ];
             }
             
-            // Préparer les headers
-            $headers = [
-                'From' => $fromName . ' <' . $fromEmail . '>',
-                'Reply-To' => $name . ' <' . $email . '>',
-                'X-Mailer' => 'PHP/' . phpversion(),
-                'MIME-Version' => '1.0',
-                'Content-Type' => 'text/html; charset=UTF-8'
-            ];
-            
             // Construire le message HTML
             $htmlMessage = self::buildHtmlEmail($name, $email, $subject, $message);
             
-            // Convertir les headers en chaîne
-            $headersString = '';
-            foreach ($headers as $key => $value) {
-                $headersString .= $key . ': ' . $value . "\r\n";
+            // Utiliser SMTP si configuré, sinon utiliser mail()
+            if (EmailConfig::useSmtp()) {
+                $success = self::sendViaSmtp($to, $fromEmail, $fromName, $name, $email, $subject, $htmlMessage);
+            } else {
+                $success = self::sendViaMail($to, $fromEmail, $fromName, $name, $email, $subject, $htmlMessage);
             }
-            
-            // Envoyer l'email
-            $success = mail($to, $subject, $htmlMessage, $headersString);
             
             if ($success) {
                 return [
@@ -69,11 +58,166 @@ class EmailService {
             
         } catch (Exception $e) {
             error_log('Erreur EmailService: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
             return [
                 'success' => false,
-                'message' => 'Une erreur est survenue lors de l\'envoi de votre message.'
+                'message' => 'Une erreur est survenue lors de l\'envoi de votre message: ' . $e->getMessage()
             ];
         }
+    }
+    
+    /**
+     * Envoie un email via la fonction mail() de PHP
+     */
+    private static function sendViaMail($to, $fromEmail, $fromName, $replyName, $replyEmail, $subject, $htmlMessage) {
+        $headers = [
+            'From' => $fromName . ' <' . $fromEmail . '>',
+            'Reply-To' => $replyName . ' <' . $replyEmail . '>',
+            'X-Mailer' => 'PHP/' . phpversion(),
+            'MIME-Version' => '1.0',
+            'Content-Type' => 'text/html; charset=UTF-8'
+        ];
+        
+        $headersString = '';
+        foreach ($headers as $key => $value) {
+            $headersString .= $key . ': ' . $value . "\r\n";
+        }
+        
+        return mail($to, $subject, $htmlMessage, $headersString);
+    }
+    
+    /**
+     * Envoie un email via SMTP
+     */
+    private static function sendViaSmtp($to, $fromEmail, $fromName, $replyName, $replyEmail, $subject, $htmlMessage) {
+        $smtpHost = EmailConfig::getSmtpHost();
+        $smtpPort = EmailConfig::getSmtpPort();
+        $smtpUsername = EmailConfig::getSmtpUsername();
+        $smtpPassword = EmailConfig::getSmtpPassword();
+        $smtpEncryption = EmailConfig::getSmtpEncryption();
+        
+        // Construire l'hostname avec encryption si nécessaire
+        $hostname = $smtpHost;
+        if ($smtpEncryption === 'ssl') {
+            $hostname = 'ssl://' . $smtpHost;
+        }
+        
+        // Connexion au serveur SMTP
+        $socket = @fsockopen($hostname, $smtpPort, $errno, $errstr, 30);
+        if (!$socket) {
+            error_log("Erreur SMTP: Impossible de se connecter à $hostname:$smtpPort - $errstr ($errno)");
+            return false;
+        }
+        
+        // Lire la réponse initiale
+        $response = fgets($socket, 515);
+        if (substr($response, 0, 3) !== '220') {
+            error_log("Erreur SMTP: Réponse initiale invalide: $response");
+            fclose($socket);
+            return false;
+        }
+        
+        // Envoyer EHLO
+        fputs($socket, "EHLO " . $_SERVER['SERVER_NAME'] . "\r\n");
+        $response = fgets($socket, 515);
+        
+        // Si TLS est requis, démarrer TLS
+        if ($smtpEncryption === 'tls') {
+            fputs($socket, "STARTTLS\r\n");
+            $response = fgets($socket, 515);
+            if (substr($response, 0, 3) !== '220') {
+                error_log("Erreur SMTP: STARTTLS échoué: $response");
+                fclose($socket);
+                return false;
+            }
+            
+            // Activer le chiffrement TLS
+            stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            
+            // Renvoyer EHLO après TLS
+            fputs($socket, "EHLO " . $_SERVER['SERVER_NAME'] . "\r\n");
+            $response = fgets($socket, 515);
+        }
+        
+        // Authentification si nécessaire
+        if (!empty($smtpUsername) && !empty($smtpPassword)) {
+            fputs($socket, "AUTH LOGIN\r\n");
+            $response = fgets($socket, 515);
+            if (substr($response, 0, 3) !== '334') {
+                error_log("Erreur SMTP: AUTH LOGIN échoué: $response");
+                fclose($socket);
+                return false;
+            }
+            
+            fputs($socket, base64_encode($smtpUsername) . "\r\n");
+            $response = fgets($socket, 515);
+            if (substr($response, 0, 3) !== '334') {
+                error_log("Erreur SMTP: Authentification username échouée: $response");
+                fclose($socket);
+                return false;
+            }
+            
+            fputs($socket, base64_encode($smtpPassword) . "\r\n");
+            $response = fgets($socket, 515);
+            if (substr($response, 0, 3) !== '235') {
+                error_log("Erreur SMTP: Authentification password échouée: $response");
+                fclose($socket);
+                return false;
+            }
+        }
+        
+        // Envoyer MAIL FROM
+        fputs($socket, "MAIL FROM: <$fromEmail>\r\n");
+        $response = fgets($socket, 515);
+        if (substr($response, 0, 3) !== '250') {
+            error_log("Erreur SMTP: MAIL FROM échoué: $response");
+            fclose($socket);
+            return false;
+        }
+        
+        // Envoyer RCPT TO
+        fputs($socket, "RCPT TO: <$to>\r\n");
+        $response = fgets($socket, 515);
+        if (substr($response, 0, 3) !== '250') {
+            error_log("Erreur SMTP: RCPT TO échoué: $response");
+            fclose($socket);
+            return false;
+        }
+        
+        // Envoyer DATA
+        fputs($socket, "DATA\r\n");
+        $response = fgets($socket, 515);
+        if (substr($response, 0, 3) !== '354') {
+            error_log("Erreur SMTP: DATA échoué: $response");
+            fclose($socket);
+            return false;
+        }
+        
+        // Construire le message complet
+        $emailMessage = "From: $fromName <$fromEmail>\r\n";
+        $emailMessage .= "To: <$to>\r\n";
+        $emailMessage .= "Reply-To: $replyName <$replyEmail>\r\n";
+        $emailMessage .= "Subject: $subject\r\n";
+        $emailMessage .= "MIME-Version: 1.0\r\n";
+        $emailMessage .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $emailMessage .= "\r\n";
+        $emailMessage .= $htmlMessage;
+        $emailMessage .= "\r\n.\r\n";
+        
+        // Envoyer le message
+        fputs($socket, $emailMessage);
+        $response = fgets($socket, 515);
+        if (substr($response, 0, 3) !== '250') {
+            error_log("Erreur SMTP: Envoi du message échoué: $response");
+            fclose($socket);
+            return false;
+        }
+        
+        // Quitter
+        fputs($socket, "QUIT\r\n");
+        fclose($socket);
+        
+        return true;
     }
     
     /**

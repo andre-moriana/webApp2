@@ -14,14 +14,56 @@ class EmailConfig {
         if (self::$config === null) {
             self::loadConfig();
         }
-        return self::$config['from_email'] ?? 'noreply@archers-gemenos.com';
+        return self::$config['from_email'] ?? 'noreply@ArcTraining.eu';
     }
     
     public static function getFromName() {
         if (self::$config === null) {
             self::loadConfig();
         }
-        return self::$config['from_name'] ?? 'Portail Archers de Gémenos';
+        return self::$config['from_name'] ?? 'Portail Arc Training';
+    }
+    
+    public static function getSmtpHost() {
+        if (self::$config === null) {
+            self::loadConfig();
+        }
+        return self::$config['smtp_host'] ?? 'localhost';
+    }
+    
+    public static function getSmtpPort() {
+        if (self::$config === null) {
+            self::loadConfig();
+        }
+        return self::$config['smtp_port'] ?? 25;
+    }
+    
+    public static function getSmtpUsername() {
+        if (self::$config === null) {
+            self::loadConfig();
+        }
+        return self::$config['smtp_username'] ?? '';
+    }
+    
+    public static function getSmtpPassword() {
+        if (self::$config === null) {
+            self::loadConfig();
+        }
+        return self::$config['smtp_password'] ?? '';
+    }
+    
+    public static function getSmtpEncryption() {
+        if (self::$config === null) {
+            self::loadConfig();
+        }
+        return self::$config['smtp_encryption'] ?? ''; // 'tls' ou 'ssl' ou ''
+    }
+    
+    public static function useSmtp() {
+        if (self::$config === null) {
+            self::loadConfig();
+        }
+        return self::$config['use_smtp'] ?? false;
     }
     
     private static function loadConfig() {
@@ -33,8 +75,14 @@ class EmailConfig {
             // Configuration par défaut
             self::$config = [
                 'contact_email' => 'andremoriana@gmail.com',
-                'from_email' => 'noreply@archers-gemenos.com',
-                'from_name' => 'Portail Archers de Gémenos'
+                'from_email' => 'noreply@ArcTraining.eu',
+                'from_name' => 'Portail Arc Training',
+                'use_smtp' => false,
+                'smtp_host' => 'localhost',
+                'smtp_port' => 25,
+                'smtp_username' => '',
+                'smtp_password' => '',
+                'smtp_encryption' => ''
             ];
         }
     }

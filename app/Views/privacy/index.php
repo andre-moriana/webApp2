@@ -115,7 +115,7 @@
                         <p>Si vous êtes le représentant légal d'un enfant âgé de moins de 16 ans et pensez que votre enfant nous a fourni des informations sans votre consentement, vous pouvez nous contacter via notre <a href="/contact" class="text-success fw-bold">formulaire de contact</a> pour que nous supprimions ces informations le cas échéant.</p>
                         
                         <h2 class="h4 mt-4 mb-3">EXERCER VOS DROITS</h2>
-                        <p>Vous pouvez à tout moment exercer vos droits en nous contactant à l'adresse suivante : <strong>Les Archers de Gémenos – Maison des Associations Gérard Rossi – Route de Saint Pons – 13420 GEMENOS</strong>. Vous pouvez aussi contacter notre Délégué à la Protection des Données via notre <a href="/contact" class="text-success fw-bold">formulaire de contact</a>.</p>
+                        <p>Vous pouvez à tout moment exercer vos droits en nous contactant notre Délégué à la Protection des Données via notre <a href="/contact" class="text-success fw-bold">formulaire de contact</a>.</p>
                         
                         <p>Votre demande doit être accompagnée de la photocopie d'un justificatif d'identité (carte nationale d'identité ou passeport, carte de résident, carte de séjour ou livret de circulation délivrés par l'Etat français ou carte d'identité de l'Union Européenne). Une réponse vous sera adressée par nos soins dans un délai d'un mois à compter de la réception de votre demande.</p>
                         
