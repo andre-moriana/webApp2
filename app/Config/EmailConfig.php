@@ -67,51 +67,33 @@ class EmailConfig {
     }
     
     private static function loadConfig() {
-        $configFile = __DIR__ . '/email.config.php';
-        
-        // Charger la configuration depuis le fichier
-        if (file_exists($configFile)) {
-            self::$config = require $configFile;
-        } else {
-            // Configuration par défaut
-            self::$config = [
-                'contact_email' => 'andremoriana@gmail.com',
-                'from_email' => 'noreply@ArcTraining.eu',
-                'from_name' => 'Portail Arc Training',
-                'use_smtp' => false,
-                'smtp_host' => 'localhost',
-                'smtp_port' => 25,
-                'smtp_username' => '',
-                'smtp_password' => '',
-                'smtp_encryption' => ''
-            ];
-        }
-        
-        // Surcharger avec les variables d'environnement si disponibles (depuis .env)
-        // Chercher le fichier .env dans plusieurs emplacements possibles
-        $possibleEnvFiles = [
-            __DIR__ . '/../../../wamp64/www/BackendPHP/.env', // Chemin relatif depuis WebApp2
-            'D:/wamp64/www/BackendPHP/.env', // Chemin absolu Windows
-            '/var/www/BackendPHP/.env', // Chemin Linux
-            getenv('BACKEND_PATH') . '/.env', // Variable d'environnement
+        // Configuration par défaut
+        self::$config = [
+            'contact_email' => 'andremoriana@gmail.com',
+            'from_email' => 'noreply@ArcTraining.eu',
+            'from_name' => 'Portail Arc Training',
+            'use_smtp' => false,
+            'smtp_host' => 'localhost',
+            'smtp_port' => 25,
+            'smtp_username' => '',
+            'smtp_password' => '',
+            'smtp_encryption' => ''
         ];
         
-        $envVars = [];
-        foreach ($possibleEnvFiles as $envFile) {
-            if (file_exists($envFile)) {
-                $envVars = self::parseEnvFile($envFile);
-                break;
-            }
-        }
+        // Charger les variables d'environnement depuis le fichier .env de WebApp2
+        $envFile = __DIR__ . '/../../.env';
         
-        // Vérifier aussi les variables d'environnement système (getenv)
-        // qui peuvent être chargées par dotenv dans le BackendPHP
-        if (empty($envVars)) {
-            $envVars = [];
+        $envVars = [];
+        if (file_exists($envFile)) {
+            $envVars = self::parseEnvFile($envFile);
         }
         
         // Utiliser les variables d'environnement pour surcharger la config
-        // Priorité: getenv() > fichier .env > email.config.php
+        // Priorité: getenv() > fichier .env > valeurs par défaut
+        if (getenv('CONTACT_EMAIL') || isset($envVars['CONTACT_EMAIL'])) {
+            $contactEmail = getenv('CONTACT_EMAIL') ?: $envVars['CONTACT_EMAIL'];
+            self::$config['contact_email'] = trim($contactEmail, '"');
+        }
         if (getenv('SMTP_HOST') || isset($envVars['SMTP_HOST'])) {
             self::$config['smtp_host'] = getenv('SMTP_HOST') ?: $envVars['SMTP_HOST'];
         }

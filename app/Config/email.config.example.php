@@ -4,10 +4,10 @@
 
 return [
     // Adresse email de destination pour le formulaire de contact
-    'contact_email' => 'andremoriana@gmail.com',
+    'contact_email' => 'nom@domaine.com',
     
     // Adresse email expéditrice
-    'from_email' => 'noreply@archers-gemenos.com',
+    'from_email' => 'noreply@domaine.com',
     
     // Nom de l'expéditeur
     'from_name' => 'Portail Arc Training',
@@ -21,7 +21,7 @@ return [
     // Free: smtp.free.fr
     // Orange: smtp.orange.fr
     // Outlook/Hotmail: smtp-mail.outlook.com
-    'smtp_host' => 'smtp.gmail.com',
+    'smtp_host' => 'smtp.domaine.com',
     
     // Port SMTP
     // 587 pour TLS (recommandé)
