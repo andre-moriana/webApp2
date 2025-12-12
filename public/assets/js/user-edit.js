@@ -19,6 +19,20 @@ function loadUsersXml() {
                 return response.text();
             })
             .then(xmlText => {
+                // Nettoyer le texte XML (supprimer les espaces/retours à la ligne avant la déclaration XML)
+                xmlText = xmlText.trim();
+                
+                // S'assurer que le fichier commence bien par <?xml
+                if (!xmlText.startsWith('<?xml')) {
+                    // Chercher la déclaration XML dans le texte
+                    const xmlDeclMatch = xmlText.match(/<\?xml[^>]*\?>/);
+                    if (xmlDeclMatch) {
+                        // Extraire tout ce qui précède la déclaration XML et le supprimer
+                        const xmlDeclIndex = xmlText.indexOf(xmlDeclMatch[0]);
+                        xmlText = xmlText.substring(xmlDeclIndex);
+                    }
+                }
+                
                 // Parser le XML
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
