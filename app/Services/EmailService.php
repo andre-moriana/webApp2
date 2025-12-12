@@ -67,15 +67,64 @@ class EmailService {
     }
     
     /**
+     * Génère un Message-ID unique conforme aux normes RFC 5322
+     * 
+     * @param string $domain Domaine à utiliser pour le Message-ID
+     * @return string Message-ID au format <unique-id@domain>
+     */
+    private static function generateMessageId($domain = null) {
+        if ($domain === null) {
+            // Extraire le domaine de l'adresse email ou utiliser le serveur
+            $serverName = $_SERVER['SERVER_NAME'] ?? 'localhost';
+            $domain = $serverName;
+        }
+        
+        // Générer un identifiant unique avec plus d'entropie
+        $uniqueId = uniqid('', true) . '.' . bin2hex(random_bytes(8));
+        $timestamp = microtime(true);
+        
+        return '<' . sprintf('%.0f', $timestamp * 1000000) . '.' . $uniqueId . '@' . $domain . '>';
+    }
+    
+    /**
+     * Génère une date au format RFC 2822
+     * 
+     * @return string Date formatée selon RFC 2822
+     */
+    private static function generateDate() {
+        return date('r'); // Format RFC 2822 (ex: "Mon, 15 Jan 2024 14:30:00 +0100")
+    }
+    
+    /**
+     * Extrait le domaine à utiliser pour le Message-ID
+     * 
+     * @param string $fromEmail Adresse email de l'expéditeur
+     * @return string Domaine à utiliser
+     */
+    private static function extractDomain($fromEmail) {
+        $domain = $_SERVER['SERVER_NAME'] ?? 'localhost';
+        if (strpos($fromEmail, '@') !== false) {
+            $domain = substr(strrchr($fromEmail, '@'), 1);
+        }
+        return $domain;
+    }
+    
+    /**
      * Envoie un email via la fonction mail() de PHP
      */
     private static function sendViaMail($to, $fromEmail, $fromName, $replyName, $replyEmail, $subject, $htmlMessage) {
+        $domain = self::extractDomain($fromEmail);
+        
         $headers = [
+            'Date' => self::generateDate(),
             'From' => $fromName . ' <' . $fromEmail . '>',
+            'To' => '<' . $to . '>',
             'Reply-To' => $replyName . ' <' . $replyEmail . '>',
-            'X-Mailer' => 'PHP/' . phpversion(),
+            'Message-ID' => self::generateMessageId($domain),
             'MIME-Version' => '1.0',
-            'Content-Type' => 'text/html; charset=UTF-8'
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'X-Mailer' => 'PHP/' . phpversion(),
+            'X-Priority' => '3'
         ];
         
         $headersString = '';
@@ -222,15 +271,20 @@ class EmailService {
         }
         
         // Construire le message complet avec tous les en-têtes requis
-        $date = date('r'); // Format RFC 2822 pour la date
+        $domain = self::extractDomain($fromEmail);
+        $date = self::generateDate();
+        $messageId = self::generateMessageId($domain);
+        
         $emailMessage = "Date: $date\r\n";
         $emailMessage .= "From: $fromName <$fromEmail>\r\n";
         $emailMessage .= "To: <$to>\r\n";
         $emailMessage .= "Reply-To: $replyName <$replyEmail>\r\n";
         $emailMessage .= "Subject: $subject\r\n";
+        $emailMessage .= "Message-ID: $messageId\r\n";
         $emailMessage .= "MIME-Version: 1.0\r\n";
         $emailMessage .= "Content-Type: text/html; charset=UTF-8\r\n";
-        $emailMessage .= "Message-ID: <" . time() . "." . uniqid() . "@" . ($_SERVER['SERVER_NAME'] ?? 'localhost') . ">\r\n";
+        $emailMessage .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+        $emailMessage .= "X-Priority: 3\r\n";
         $emailMessage .= "\r\n";
         $emailMessage .= $htmlMessage;
         $emailMessage .= "\r\n.\r\n";
