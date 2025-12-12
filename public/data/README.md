@@ -1,22 +1,4 @@
-# Fichier XML des utilisateurs par licence
 
-## Emplacement
-
-Le fichier `users-licences.xml` doit être placé dans le dossier :
-```
-WebApp2/public/data/users-licences.xml
-```
-
-Ce fichier est accessible publiquement (sans authentification) à l'URL :
-```
-http://votre-domaine.com/public/data/users-licences.xml
-```
-
-## Structure du fichier XML
-
-Le fichier doit suivre la même structure que celle utilisée pour l'import d'utilisateurs (format WINDEV_TABLE) :
-
-```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <WINDEV_TABLE>
     <TABLE_CONTENU>
