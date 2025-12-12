@@ -40,7 +40,7 @@
                         <form method="POST" action="/auth/authenticate">
                             <div class="mb-3">
                                 <label for="email" class="form-label">
-                                    <i class="fas fa-user me-2"></i>Nom d'utilisateur ou Email
+                                    <i class="fas fa-user me-2"></i>Identifiant
                                 </label>
                                 <input type="text" 
                                        class="form-control" 
@@ -48,9 +48,9 @@
                                        name="email" 
                                        required 
                                        autocomplete="username"
-                                       placeholder="Votre nom d'utilisateur ou email">
+                                       placeholder="Nom d'utilisateur, email ou numéro de licence">
                                 <small class="form-text text-muted">
-                                    Saisissez votre nom d'utilisateur ou votre adresse email
+                                    Saisissez votre nom d'utilisateur, votre adresse email ou votre numéro de licence
                                 </small>
                             </div>
                             
