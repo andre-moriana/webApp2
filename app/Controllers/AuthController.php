@@ -340,6 +340,7 @@ class AuthController {
         $role = $_POST['role'] ?? '';
         $password = $_POST['password'] ?? '';
         $confirm_password = $_POST['confirm_password'] ?? '';
+        $licenceNumber = trim($_POST['licenceNumber'] ?? '');
 
         // Validation des champs
         if (empty($first_name) || empty($name) || empty($username) || empty($email) || empty($role) || empty($password)) {
@@ -374,6 +375,11 @@ class AuthController {
                 'role' => $role,
                 'status' => 'pending'
             ];
+            
+            // Ajouter le numéro de licence si fourni
+            if (!empty($licenceNumber)) {
+                $userData['licenceNumber'] = $licenceNumber;
+            }
 
             // Appeler l'API backend pour créer l'utilisateur
             $result = $apiService->createUser($userData);

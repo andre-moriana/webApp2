@@ -18,22 +18,38 @@
                 </div>
                 <div class="card-body">
                     <form action="/users" method="POST" id="createUserForm">
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Astuce :</strong> Entrez un numéro de licence pour rechercher et remplir automatiquement les informations de l'utilisateur s'il existe déjà.
+                        </div>
+                        
                         <div class="form-group mb-3">
-                            <label for="licenceNumber">Numéro de licence</label>
+                            <label for="licenceNumber" class="form-label">
+                                <i class="fas fa-id-card me-2"></i>Numéro de licence
+                            </label>
                             <div class="input-group">
                                 <input type="text" 
                                        class="form-control" 
                                        id="licenceNumber" 
                                        name="licenceNumber" 
                                        value="<?php echo htmlspecialchars($_SESSION['old_input']['licenceNumber'] ?? ''); ?>"
-                                       placeholder="Entrez le numéro de licence pour rechercher l'utilisateur">
-                                <button type="button" class="btn btn-outline-secondary" id="searchByLicence" title="Rechercher l'utilisateur">
-                                    <i class="fas fa-search"></i>
+                                       placeholder="Entrez le numéro de licence pour rechercher l'utilisateur"
+                                       autocomplete="off">
+                                <button type="button" class="btn btn-outline-primary" id="searchByLicence" title="Rechercher l'utilisateur">
+                                    <i class="fas fa-search me-1"></i>Rechercher
                                 </button>
                             </div>
-                            <small class="form-text text-muted">Si l'utilisateur existe déjà, le formulaire sera automatiquement rempli.</small>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                Si l'utilisateur existe déjà dans la base de données, le formulaire sera automatiquement rempli avec ses informations.
+                            </small>
                             <div id="licenceSearchResult" class="mt-2"></div>
                         </div>
+                        
+                        <hr class="my-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-user-plus me-2"></i>Informations de l'utilisateur
+                        </h5>
 
                         <div class="form-group mb-3">
                             <label for="name">Nom *</label>

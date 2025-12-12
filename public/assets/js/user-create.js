@@ -1,4 +1,46 @@
-// Fonction pour rechercher un utilisateur par numéro de licence
+// Cache pour le fichier XML chargé
+let usersXmlCache = null;
+
+// Fonction pour charger le fichier XML des utilisateurs
+function loadUsersXml() {
+    return new Promise((resolve, reject) => {
+        // Si le XML est déjà en cache, le retourner directement
+        if (usersXmlCache) {
+            resolve(usersXmlCache);
+            return;
+        }
+        
+        // Charger le fichier XML depuis le dossier public/data
+        fetch('/public/data/users-licences.xml')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Impossible de charger le fichier XML');
+                }
+                return response.text();
+            })
+            .then(xmlText => {
+                // Parser le XML
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+                
+                // Vérifier les erreurs de parsing
+                const parserError = xmlDoc.querySelector('parsererror');
+                if (parserError) {
+                    throw new Error('Erreur de parsing XML: ' + parserError.textContent);
+                }
+                
+                // Mettre en cache
+                usersXmlCache = xmlDoc;
+                resolve(xmlDoc);
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement du XML:', error);
+                reject(error);
+            });
+    });
+}
+
+// Fonction pour rechercher un utilisateur par numéro de licence dans le XML
 function searchUserByLicence() {
     const licenceNumber = document.getElementById('licenceNumber').value.trim();
     const resultDiv = document.getElementById('licenceSearchResult');
@@ -18,20 +60,55 @@ function searchUserByLicence() {
     const searchButton = document.getElementById('searchByLicence');
     searchButton.disabled = true;
     
-    // Faire la requête à l'API
-    fetch(`/api/users?licence_number=${encodeURIComponent(licenceNumber)}`)
-        .then(response => response.json())
-        .then(data => {
+    // Charger le XML et rechercher
+    loadUsersXml()
+        .then(xmlDoc => {
             searchButton.disabled = false;
             
-            if (data.success && data.data && data.data.users && data.data.users.length > 0) {
-                const user = data.data.users[0];
+            // Rechercher l'utilisateur par numéro de licence dans la structure WINDEV_TABLE
+            const users = xmlDoc.querySelectorAll('TABLE_CONTENU');
+            let foundUser = null;
+            
+            for (let i = 0; i < users.length; i++) {
+                const userNode = users[i];
+                const licenceNode = userNode.querySelector('IDLicence');
                 
+                if (licenceNode && licenceNode.textContent.trim() === licenceNumber) {
+                    // Convertir le nœud XML en objet JavaScript (format WINDEV_TABLE)
+                    const nom = getNodeText(userNode, 'NOM');
+                    const prenom = getNodeText(userNode, 'PRENOM');
+                    const nomComplet = getNodeText(userNode, 'NOMCOMPLET');
+                    
+                    // Extraire nom et prénom depuis NOMCOMPLET si nécessaire
+                    let lastName = nom;
+                    let firstName = prenom;
+                    if (!lastName && !firstName && nomComplet) {
+                        const parts = nomComplet.split(' ', 2);
+                        lastName = parts[0] || '';
+                        firstName = parts[1] || '';
+                    }
+                    
+                    foundUser = {
+                        licenceNumber: getNodeText(userNode, 'IDLicence'),
+                        firstName: firstName,
+                        first_name: firstName,
+                        lastName: lastName,
+                        name: lastName,
+                        last_name: lastName,
+                        email: getNodeText(userNode, 'EMAIL'),
+                        username: '', // Sera généré côté client si nécessaire
+                        role: 'Archer' // Par défaut
+                    };
+                    break;
+                }
+            }
+            
+            if (foundUser) {
                 // Afficher un message de succès
                 resultDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>Utilisateur trouvé ! Le formulaire a été rempli automatiquement.</div>';
                 
                 // Auto-remplir le formulaire
-                fillFormWithUserData(user);
+                fillFormWithUserData(foundUser);
             } else {
                 resultDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Aucun utilisateur trouvé avec ce numéro de licence. Vous pouvez créer un nouvel utilisateur.</div>';
             }
@@ -39,8 +116,14 @@ function searchUserByLicence() {
         .catch(error => {
             searchButton.disabled = false;
             console.error('Erreur lors de la recherche:', error);
-            resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Erreur lors de la recherche. Veuillez réessayer.</div>';
+            resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Erreur lors de la recherche: ' + error.message + '. Veuillez réessayer.</div>';
         });
+}
+
+// Fonction utilitaire pour extraire le texte d'un nœud XML
+function getNodeText(parentNode, tagName) {
+    const node = parentNode.querySelector(tagName);
+    return node ? node.textContent.trim() : '';
 }
 
 // Fonction pour remplir le formulaire avec les données de l'utilisateur

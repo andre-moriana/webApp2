@@ -122,8 +122,16 @@ $title = "Modifier l'utilisateur - Portail Archers de Gémenos";
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="licenceNumber" class="form-label">Numéro de licence</label>
-                                            <input type="text" class="form-control" id="licenceNumber" name="licenceNumber" 
-                                                   value="<?php echo htmlspecialchars($user['licenceNumber'] ?? ''); ?>">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="licenceNumber" name="licenceNumber" 
+                                                       value="<?php echo htmlspecialchars($user['licenceNumber'] ?? ''); ?>"
+                                                       placeholder="Entrez le numéro de licence pour rechercher l'utilisateur">
+                                                <button type="button" class="btn btn-outline-secondary" id="searchByLicence" title="Rechercher l'utilisateur">
+                                                    <i class="fas fa-search"></i>
+                                                </button>
+                                            </div>
+                                            <small class="form-text text-muted">Si l'utilisateur existe déjà, le formulaire sera automatiquement rempli.</small>
+                                            <div id="licenceSearchResult" class="mt-2"></div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
