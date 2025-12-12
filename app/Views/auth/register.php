@@ -122,15 +122,135 @@
                                        placeholder="adresse@exemple.com">
                             </div>
                             
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="birthDate" class="form-label">
+                                            <i class="fas fa-calendar me-2"></i>Date de naissance
+                                        </label>
+                                        <input type="date" 
+                                               class="form-control" 
+                                               id="birthDate" 
+                                               name="birthDate" 
+                                               placeholder="Date de naissance">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="gender" class="form-label">
+                                            <i class="fas fa-venus-mars me-2"></i>Genre
+                                        </label>
+                                        <select class="form-select" id="gender" name="gender">
+                                            <option value="">Sélectionner...</option>
+                                            <option value="H">Homme</option>
+                                            <option value="F">Femme</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="ageCategory" class="form-label">
+                                            <i class="fas fa-birthday-cake me-2"></i>Catégorie d'âge
+                                        </label>
+                                        <select class="form-select" id="ageCategory" name="ageCategory">
+                                            <option value="">Sélectionner...</option>
+                                            <?php
+                                            $ageCategories = [
+                                                'DECOUVERTE',
+                                                'U11 - POUSSINS',
+                                                'U13 - BENJAMINS',
+                                                'U13 - BENJAMINS (N)',
+                                                'U15 - MINIMES',
+                                                'U15 - MINIMES (N)',
+                                                'U18 - CADETS',
+                                                'U18 - CADETS (N)',
+                                                'U21 - JUNIORS',
+                                                'U21 - JUNIORS (N)',
+                                                'SENIORS1 (S1)',
+                                                'SENIORS1 (S1) (N)',
+                                                'SENIORS2 (S2)',
+                                                'SENIORS2 (S2) (N)',
+                                                'SENIORS3 (S3)',
+                                                'SENIORS3 (S3) (N)',
+                                                'SENIORS1 (T1)',
+                                                'SENIORS1 (T1) (N)',
+                                                'SENIORS2 (T2)',
+                                                'SENIORS2 (T2) (N)',
+                                                'SENIORS3 (T3)',
+                                                'SENIORS3 (T3) (N)',
+                                                'DEBUTANTS',
+                                                'W1',
+                                                'W1 U18',
+                                                'W1 NATIONAL',
+                                                'OPEN',
+                                                'OPEN U18',
+                                                'OPEN VETERAN',
+                                                'OPEN NATIONAL',
+                                                'FEDERAL',
+                                                'FEDERAL U18',
+                                                'FEDERAL VETERAN',
+                                                'FEDERAL NATIONAL',
+                                                'CHALLENGE',
+                                                'CHALLENGE U18',
+                                                'CRITERIUM',
+                                                'CRITERIUM U18',
+                                                'POTENCE',
+                                                'HV1',
+                                                'HV2-3',
+                                                'HV U18',
+                                                'HV LIBRE',
+                                                'SUPPORT 1',
+                                                'SUPPORT 2',
+                                            ];
+                                            foreach ($ageCategories as $category) {
+                                                echo '<option value="' . htmlspecialchars($category) . '">' . htmlspecialchars($category) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="bowType" class="form-label">
+                                            <i class="fas fa-bow-arrow me-2"></i>Type d'arc
+                                        </label>
+                                        <select class="form-select" id="bowType" name="bowType">
+                                            <option value="">Sélectionner...</option>
+                                            <?php
+                                            $bowTypes = [
+                                                'Arc Classique',
+                                                'Arc à poulies',
+                                                'Arc droit',
+                                                'Arc de chasse',
+                                                'Arc Nu',
+                                                'Arc Libre',
+                                            ];
+                                            foreach ($bowTypes as $bowType) {
+                                                echo '<option value="' . htmlspecialchars($bowType) . '">' . htmlspecialchars($bowType) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="mb-3">
-                                <label for="role" class="form-label">
-                                    <i class="fas fa-user-tag me-2"></i>Rôle
+                                <label for="clubId" class="form-label">
+                                    <i class="fas fa-users me-2"></i>Club
                                 </label>
-                                <select class="form-select" id="role" name="role" required>
-                                    <option value="">Sélectionner un rôle</option>
-                                    <option value="Archer">Archer</option>
-                                    <option value="Coach">Coach</option>
-                                    <option value="Admin">Administrateur</option>
+                                <select class="form-select" id="clubId" name="clubId">
+                                    <option value="">Sélectionner un club...</option>
+                                    <?php
+                                    if (!empty($clubs)) {
+                                        foreach ($clubs as $club) {
+                                            $displayName = !empty($club['name']) ? $club['name'] . ' (' . $club['nameShort'] . ')' : $club['nameShort'];
+                                            echo '<option value="' . htmlspecialchars($club['nameShort']) . '">' . htmlspecialchars($displayName) . '</option>';
+                                        }
+                                    }
+                                    ?>
                                 </select>
                             </div>
                             
