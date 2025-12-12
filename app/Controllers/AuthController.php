@@ -323,31 +323,6 @@ class AuthController {
     }
 
     public function register() {
-        // Récupérer la liste des clubs pour le formulaire
-        $clubs = [];
-        try {
-            $apiService = new ApiService();
-            $clubsResponse = $apiService->makeRequest('clubs/list', 'GET');
-            if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
-                foreach ($clubsResponse['data'] as $club) {
-                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                    // Filtrer les clubs dont le name_short ne finit pas par "000"
-                    if (!empty($nameShort) && substr($nameShort, -3) !== '000') {
-                        $clubs[] = [
-                            'nameShort' => $nameShort,
-                            'name' => $club['name'] ?? ''
-                        ];
-                    }
-                }
-                // Trier les clubs par nom
-                usort($clubs, function($a, $b) {
-                    return strcmp($a['name'] ?? $a['nameShort'], $b['name'] ?? $b['nameShort']);
-                });
-            }
-        } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
-        }
-        
         // Afficher le formulaire d'inscription
         include 'app/Views/auth/register.php';
     }

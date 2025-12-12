@@ -241,17 +241,15 @@
                                 <label for="clubId" class="form-label">
                                     <i class="fas fa-users me-2"></i>Club
                                 </label>
-                                <select class="form-select" id="clubId" name="clubId">
-                                    <option value="">Sélectionner un club...</option>
-                                    <?php
-                                    if (!empty($clubs)) {
-                                        foreach ($clubs as $club) {
-                                            $displayName = !empty($club['name']) ? $club['name'] . ' (' . $club['nameShort'] . ')' : $club['nameShort'];
-                                            echo '<option value="' . htmlspecialchars($club['nameShort']) . '">' . htmlspecialchars($displayName) . '</option>';
-                                        }
-                                    }
-                                    ?>
-                                </select>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="clubId" 
+                                       name="clubId" 
+                                       placeholder="Numéro du club">
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Ce champ sera automatiquement rempli lors de la recherche par numéro de licence. Vous pouvez le modifier si nécessaire.
+                                </small>
                             </div>
                             
                             <div class="mb-3">
@@ -264,13 +262,23 @@
                                            id="password" 
                                            name="password" 
                                            required 
-                                           placeholder="Mot de passe">
+                                           placeholder="Mot de passe"
+                                           minlength="6">
                                     <button class="btn btn-outline-secondary" 
                                             type="button" 
                                             id="togglePassword">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    <strong>Critères pour un mot de passe valide :</strong>
+                                    <ul class="mb-0 mt-1" style="font-size: 0.9em;">
+                                        <li>Au moins 6 caractères</li>
+                                        <li>Recommandé : mélange de lettres majuscules et minuscules</li>
+                                        <li>Recommandé : inclure des chiffres et des caractères spéciaux</li>
+                                    </ul>
+                                </small>
                             </div>
                             
                             <div class="mb-4">
