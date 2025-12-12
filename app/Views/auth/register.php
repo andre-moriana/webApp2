@@ -39,6 +39,33 @@
                         <?php endif; ?>
                         
                         <form method="POST" action="/auth/create-user" id="registerForm">
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Astuce :</strong> Entrez votre numéro de licence pour rechercher et remplir automatiquement vos informations si vous êtes déjà dans la base de données.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="licenceNumber" class="form-label">
+                                    <i class="fas fa-id-card me-2"></i>Numéro de licence
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="licenceNumber" 
+                                           name="licenceNumber" 
+                                           placeholder="Entrez votre numéro de licence"
+                                           autocomplete="off">
+                                    <button type="button" class="btn btn-outline-primary" id="searchByLicence" title="Rechercher">
+                                        <i class="fas fa-search me-1"></i>Rechercher
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    Si vous avez déjà un numéro de licence, entrez-le pour remplir automatiquement vos informations.
+                                </small>
+                                <div id="licenceSearchResult" class="mt-2"></div>
+                            </div>
+                            
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">

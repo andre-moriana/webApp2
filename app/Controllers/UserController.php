@@ -287,6 +287,9 @@ class UserController {
         
         $title = 'Modifier l\'utilisateur - Portail Archers de Gémenos';
         
+        // Définir les fichiers JS spécifiques
+        $additionalJS = ['/public/assets/js/user-edit.js'];
+        
         include 'app/Views/layouts/header.php';
         include 'app/Views/users/edit.php';
         include 'app/Views/layouts/footer.php';
