@@ -105,12 +105,18 @@ class ApiService {
         }
         
         error_log("DEBUG ApiService makeRequest: Exécution de cURL...");
+        if ($data !== null && ($method === 'POST' || $method === 'PUT' || $method === 'PATCH')) {
+            error_log("DEBUG ApiService makeRequest: Données POST: " . json_encode($data, JSON_PRETTY_PRINT));
+        }
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         $curlError = curl_error($ch);
         $curlErrno = curl_errno($ch);
         error_log("DEBUG ApiService makeRequest: cURL terminé - HTTP Code: " . $httpCode . ", Content-Type: " . $contentType);
+        if ($response) {
+            error_log("DEBUG ApiService makeRequest: Réponse brute (premiers 500 caractères): " . substr($response, 0, 500));
+        }
         
         if ($curlErrno) {
             // Détecter les erreurs SSL qui indiquent que le serveur n'utilise pas HTTPS
@@ -824,7 +830,30 @@ class ApiService {
             $registerData['licenceNumber'] = $userData['licenceNumber'];
         }
         
+        // Ajouter les champs optionnels
+        if (!empty($userData['clubId'])) {
+            $registerData['clubId'] = $userData['clubId'];
+        }
+        if (!empty($userData['gender'])) {
+            $registerData['gender'] = $userData['gender'];
+        }
+        if (!empty($userData['ageCategory'])) {
+            $registerData['ageCategory'] = $userData['ageCategory'];
+        }
+        if (!empty($userData['birthDate'])) {
+            $registerData['birthDate'] = $userData['birthDate'];
+        }
+        if (!empty($userData['bowType'])) {
+            $registerData['bowType'] = $userData['bowType'];
+        }
+        
+        // Log pour debug
+        error_log("DEBUG ApiService createUser - Données envoyées à l'API: " . json_encode($registerData, JSON_PRETTY_PRINT));
+        
         $result = $this->makeRequest("auth/register", "POST", $registerData);
+        
+        // Log pour debug
+        error_log("DEBUG ApiService createUser - Réponse API: " . json_encode($result, JSON_PRETTY_PRINT));
         
         return $result;
     }

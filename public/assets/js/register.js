@@ -102,6 +102,93 @@ function searchUserByLicence() {
                         firstName = parts[1] || '';
                     }
                     
+                    // Convertir la date de naissance
+                    let birthDate = getNodeText(userNode, 'DATENAISSANCE');
+                    if (birthDate && birthDate.includes('/')) {
+                        const parts = birthDate.split('/');
+                        if (parts.length === 3) {
+                            birthDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                        }
+                    }
+                    
+                    // Convertir le genre
+                    const sexe = getNodeText(userNode, 'SEXE');
+                    let gender = '';
+                    if (sexe === '1') gender = 'H';
+                    else if (sexe === '2') gender = 'F';
+                    
+                    // Convertir le type d'arc (TYPARC)
+                    const typArc = getNodeText(userNode, 'TYPARC');
+                    let bowType = '';
+                    const bowTypeMapping = {
+                        '1': 'Arc Classique',
+                        '2': 'Arc à poulies',
+                        '3': 'Arc droit',
+                        '4': 'Arc de chasse',
+                        '5': 'Arc Nu',
+                        '6': 'Arc Libre'
+                    };
+                    if (bowTypeMapping[typArc]) {
+                        bowType = bowTypeMapping[typArc];
+                    }
+                    
+                    // Convertir la catégorie d'âge (CATAGE) - mapping complet comme dans UserImportController
+                    const catage = getNodeText(userNode, 'CATAGE');
+                    let ageCategory = catage;
+                    const ageCategoryMapping = {
+                        '0': 'DECOUVERTE',
+                        '2': 'U13 - BENJAMINS',
+                        '3': 'U15 - MINIMES',
+                        '4': 'U18 - CADETS',
+                        '5': 'U21 - JUNIORS',
+                        '8': 'U11 - POUSSINS',
+                        '11': 'SENIORS1 (S1)',
+                        '12': 'SENIORS2 (S2)',
+                        '13': 'SENIORS3 (S3)',
+                        '14': 'SENIORS1 (T1)',
+                        '15': 'SENIORS2 (T2)',
+                        '16': 'SENIORS3 (T3)',
+                        '17': 'DEBUTANTS',
+                        '50': 'U13 - BENJAMINS (N)',
+                        '51': 'U15 - MINIMES (N)',
+                        '53': 'U18 - CADETS (N)',
+                        '54': 'U21 - JUNIORS (N)',
+                        '60': 'SENIORS1 (S1) (N)',
+                        '61': 'SENIORS2 (S2) (N)',
+                        '62': 'SENIORS3 (S3) (N)',
+                        '63': 'SENIORS1 (T1) (N)',
+                        '64': 'SENIORS2 (T2) (N)',
+                        '65': 'SENIORS3 (T3) (N)',
+                        '9': 'W1',
+                        '10': 'OPEN',
+                        '18': 'FEDERAL',
+                        '19': 'CHALLENGE',
+                        '20': 'CRITERIUM',
+                        '21': 'POTENCE',
+                        '23': 'HV1',
+                        '24': 'HV2-3',
+                        '25': 'HV LIBRE',
+                        '26': 'SUPPORT 1',
+                        '27': 'OPEN VETERAN',
+                        '28': 'OPEN U18',
+                        '29': 'CHALLENGE U18',
+                        '30': 'SUPPORT 2',
+                        '31': 'W1 U18',
+                        '32': 'FEDERAL U18',
+                        '33': 'FEDERAL VETERAN',
+                        '34': 'CRITERIUM U18',
+                        '35': 'HV U18',
+                        '36': 'FEDERAL NATIONAL',
+                        '37': 'OPEN NATIONAL',
+                        '38': 'W1 NATIONAL'
+                    };
+                    if (ageCategoryMapping[catage]) {
+                        ageCategory = ageCategoryMapping[catage];
+                    } else if (catage && /^(U\d+|SENIORS|DEBUTANTS|DECOUVERTE|W1|OPEN|FEDERAL|CHALLENGE|CRITERIUM|POTENCE|HV|SUPPORT)/i.test(catage)) {
+                        // Si c'est déjà un nom de catégorie, le garder tel quel
+                        ageCategory = catage;
+                    }
+                    
                     foundUser = {
                         licenceNumber: getNodeText(userNode, 'IDLicence'),
                         firstName: firstName,
@@ -113,11 +200,12 @@ function searchUserByLicence() {
                         username: '', // Sera généré côté client si nécessaire
                         role: 'Archer', // Par défaut
                         club: getNodeText(userNode, 'CIE'),
-                        birthDate: getNodeText(userNode, 'DATENAISSANCE'),
-                        gender: getNodeText(userNode, 'SEXE') === '1' ? 'H' : (getNodeText(userNode, 'SEXE') === '2' ? 'F' : ''),
-                        ageCategory: getNodeText(userNode, 'CATAGE'),
+                        clubId: getNodeText(userNode, 'CIE'),
+                        birthDate: birthDate,
+                        gender: gender,
+                        ageCategory: ageCategory,
                         categorie: getNodeText(userNode, 'CATEGORIE'),
-                        bowType: getNodeText(userNode, 'TYPARC')
+                        bowType: bowType
                     };
                     break;
                 }
@@ -177,10 +265,56 @@ function fillFormWithUserData(user) {
         }
     }
     
-    if (user.role) {
-        const roleField = document.getElementById('role');
-        if (roleField) {
-            roleField.value = user.role || '';
+    // Remplir les nouveaux champs
+    if (user.birthDate || user.birth_date) {
+        const birthDateField = document.getElementById('birthDate');
+        if (birthDateField) {
+            let birthDate = user.birthDate || user.birth_date || '';
+            // Convertir la date au format YYYY-MM-DD si nécessaire
+            if (birthDate && birthDate.includes('/')) {
+                const parts = birthDate.split('/');
+                if (parts.length === 3) {
+                    birthDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+            }
+            birthDateField.value = birthDate;
+        }
+    }
+    
+    if (user.gender) {
+        const genderField = document.getElementById('gender');
+        if (genderField) {
+            genderField.value = user.gender || '';
+        }
+    }
+    
+    if (user.ageCategory || user.age_category) {
+        const ageCategoryField = document.getElementById('ageCategory');
+        if (ageCategoryField) {
+            ageCategoryField.value = user.ageCategory || user.age_category || '';
+        }
+    }
+    
+    if (user.bowType || user.bow_type) {
+        const bowTypeField = document.getElementById('bowType');
+        if (bowTypeField) {
+            bowTypeField.value = user.bowType || user.bow_type || '';
+        }
+    }
+    
+    if (user.clubId || user.club_id || user.club) {
+        const clubIdField = document.getElementById('clubId');
+        if (clubIdField) {
+            // Le club peut être un nameShort ou un objet avec nameShort
+            let clubId = user.clubId || user.club_id || '';
+            if (!clubId && user.club) {
+                if (typeof user.club === 'string') {
+                    clubId = user.club;
+                } else if (user.club.nameShort || user.club.name_short) {
+                    clubId = user.club.nameShort || user.club.name_short;
+                }
+            }
+            clubIdField.value = clubId;
         }
     }
     

@@ -323,6 +323,31 @@ class AuthController {
     }
 
     public function register() {
+        // Récupérer la liste des clubs pour le formulaire
+        $clubs = [];
+        try {
+            $apiService = new ApiService();
+            $clubsResponse = $apiService->makeRequest('clubs/list', 'GET');
+            if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
+                foreach ($clubsResponse['data'] as $club) {
+                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                    // Filtrer les clubs dont le name_short ne finit pas par "000"
+                    if (!empty($nameShort) && substr($nameShort, -3) !== '000') {
+                        $clubs[] = [
+                            'nameShort' => $nameShort,
+                            'name' => $club['name'] ?? ''
+                        ];
+                    }
+                }
+                // Trier les clubs par nom
+                usort($clubs, function($a, $b) {
+                    return strcmp($a['name'] ?? $a['nameShort'], $b['name'] ?? $b['nameShort']);
+                });
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
+        }
+        
         // Afficher le formulaire d'inscription
         include 'app/Views/auth/register.php';
     }
@@ -337,13 +362,17 @@ class AuthController {
         $name = $_POST['name'] ?? '';
         $username = $_POST['username'] ?? '';
         $email = $_POST['email'] ?? '';
-        $role = $_POST['role'] ?? '';
         $password = $_POST['password'] ?? '';
         $confirm_password = $_POST['confirm_password'] ?? '';
         $licenceNumber = trim($_POST['licenceNumber'] ?? '');
+        $clubId = trim($_POST['clubId'] ?? '');
+        $gender = trim($_POST['gender'] ?? '');
+        $ageCategory = trim($_POST['ageCategory'] ?? '');
+        $birthDate = trim($_POST['birthDate'] ?? '');
+        $bowType = trim($_POST['bowType'] ?? '');
 
-        // Validation des champs
-        if (empty($first_name) || empty($name) || empty($username) || empty($email) || empty($role) || empty($password)) {
+        // Validation des champs obligatoires (role n'est plus requis, sera défini automatiquement)
+        if (empty($first_name) || empty($name) || empty($username) || empty($email) || empty($password)) {
             $_SESSION['error'] = 'Veuillez remplir tous les champs obligatoires';
             header('Location: /auth/register');
             exit;
@@ -372,7 +401,7 @@ class AuthController {
                 'username' => $username,
                 'email' => $email,
                 'password' => $password,
-                'role' => $role,
+                'role' => 'Archer', // Rôle par défaut pour les nouveaux utilisateurs
                 'status' => 'pending'
             ];
             
@@ -380,16 +409,60 @@ class AuthController {
             if (!empty($licenceNumber)) {
                 $userData['licenceNumber'] = $licenceNumber;
             }
+            
+            // Ajouter les champs optionnels
+            if (!empty($clubId)) {
+                $userData['clubId'] = $clubId;
+            }
+            if (!empty($gender)) {
+                $userData['gender'] = $gender;
+            }
+            if (!empty($ageCategory)) {
+                $userData['ageCategory'] = $ageCategory;
+            }
+            if (!empty($birthDate)) {
+                $userData['birthDate'] = $birthDate;
+            }
+            if (!empty($bowType)) {
+                $userData['bowType'] = $bowType;
+            }
 
+            // Log pour debug
+            error_log("DEBUG AuthController createUser - Données envoyées: " . json_encode($userData, JSON_PRETTY_PRINT));
+            
             // Appeler l'API backend pour créer l'utilisateur
             $result = $apiService->createUser($userData);
+            
+            // Log pour debug
+            error_log("DEBUG AuthController createUser - Réponse API: " . json_encode($result, JSON_PRETTY_PRINT));
 
             if ($result['success']) {
                 $_SESSION['success'] = 'Demande d\'inscription envoyée avec succès ! Votre compte sera activé après validation par un administrateur.';
                 header('Location: /login');
                 exit;
             } else {
-                $_SESSION['error'] = $result['message'] ?? 'Erreur lors de la création de l\'utilisateur';
+                // Récupérer le message d'erreur détaillé de l'API
+                $errorMessage = 'Erreur lors de la création de l\'utilisateur';
+                if (isset($result['data'])) {
+                    if (is_array($result['data'])) {
+                        if (isset($result['data']['message'])) {
+                            $errorMessage = $result['data']['message'];
+                        } elseif (isset($result['data']['error'])) {
+                            $errorMessage = $result['data']['error'];
+                        } elseif (isset($result['data']['errors'])) {
+                            $errorMessage = is_array($result['data']['errors']) 
+                                ? implode(', ', $result['data']['errors']) 
+                                : $result['data']['errors'];
+                        }
+                    } elseif (is_string($result['data'])) {
+                        $errorMessage = $result['data'];
+                    }
+                } elseif (isset($result['message'])) {
+                    $errorMessage = $result['message'];
+                }
+                
+                error_log("DEBUG AuthController createUser - Message d'erreur: " . $errorMessage);
+                $_SESSION['error'] = $errorMessage;
                 header('Location: /auth/register');
                 exit;
             }
