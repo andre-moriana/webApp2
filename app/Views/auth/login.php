@@ -10,7 +10,7 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="public/assets/css/login.css" rel="stylesheet">
+    <link href="/public/assets/css/login.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
