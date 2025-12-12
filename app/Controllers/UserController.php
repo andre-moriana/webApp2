@@ -151,6 +151,9 @@ class UserController {
         
         $title = 'Créer un utilisateur - Portail Archers de Gémenos';
         
+        // Définir les fichiers JS spécifiques
+        $additionalJS = ['/public/assets/js/user-create.js'];
+        
         include 'app/Views/layouts/header.php';
         include 'app/Views/users/create.php';
         include 'app/Views/layouts/footer.php';
@@ -180,6 +183,7 @@ class UserController {
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $password = trim($_POST['password'] ?? '');
+        $licenceNumber = trim($_POST['licenceNumber'] ?? '');
 
         // Validation basique
         $errors = [];
@@ -200,13 +204,20 @@ class UserController {
 
         try {
             // Appel à l'API pour créer l'utilisateur
-            $response = $this->apiService->createUser([
+            $userData = [
                 'first_name' => $first_name,
                 'name' => $name,
                 'username' => $username,
                 'email' => $email,
                 'password' => $password
-            ]);
+            ];
+            
+            // Ajouter le numéro de licence si fourni
+            if (!empty($licenceNumber)) {
+                $userData['licenceNumber'] = $licenceNumber;
+            }
+            
+            $response = $this->apiService->createUser($userData);
 
             if ($response['success']) {
                 $_SESSION['success'] = 'Utilisateur créé avec succès';

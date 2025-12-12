@@ -17,7 +17,24 @@
                     <h2>Créer un nouvel utilisateur</h2>
                 </div>
                 <div class="card-body">
-                    <form action="/users" method="POST">
+                    <form action="/users" method="POST" id="createUserForm">
+                        <div class="form-group mb-3">
+                            <label for="licenceNumber">Numéro de licence</label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="licenceNumber" 
+                                       name="licenceNumber" 
+                                       value="<?php echo htmlspecialchars($_SESSION['old_input']['licenceNumber'] ?? ''); ?>"
+                                       placeholder="Entrez le numéro de licence pour rechercher l'utilisateur">
+                                <button type="button" class="btn btn-outline-secondary" id="searchByLicence" title="Rechercher l'utilisateur">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Si l'utilisateur existe déjà, le formulaire sera automatiquement rempli.</small>
+                            <div id="licenceSearchResult" class="mt-2"></div>
+                        </div>
+
                         <div class="form-group mb-3">
                             <label for="name">Nom *</label>
                             <input type="text" 

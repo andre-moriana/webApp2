@@ -819,6 +819,11 @@ class ApiService {
             'requires_approval' => true
         ];
         
+        // Ajouter le numéro de licence si fourni
+        if (!empty($userData['licenceNumber'])) {
+            $registerData['licenceNumber'] = $userData['licenceNumber'];
+        }
+        
         $result = $this->makeRequest("auth/register", "POST", $registerData);
         
         return $result;

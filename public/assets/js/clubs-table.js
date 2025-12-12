@@ -118,8 +118,12 @@ function filterClubsTable() {
         return;
     }
     
-    const showRegional = document.getElementById('filterRegional').checked;
-    const showDepartmental = document.getElementById('filterDepartmental').checked;
+    // Récupérer les valeurs des selects
+    const filterRegional = document.getElementById('filterRegional');
+    const filterDepartmental = document.getElementById('filterDepartmental');
+    const selectedRegional = filterRegional ? filterRegional.value : '';
+    const selectedDepartmental = filterDepartmental ? filterDepartmental.value : '';
+    
     const showClubs = document.getElementById('filterClubs').checked;
     
     // Récupérer le terme de recherche
@@ -129,17 +133,52 @@ function filterClubsTable() {
     const rows = tbody.querySelectorAll('tr[data-club-type]');
     let visibleCount = 0;
     
+    // Extraire les préfixes pour le filtrage
+    let regionalPrefix = '';
+    let departmentalPrefix = '';
+    
+    if (selectedRegional) {
+        // Pour les régionaux : prendre les 2 premiers caractères
+        regionalPrefix = selectedRegional.substring(0, 2);
+    }
+    
+    if (selectedDepartmental) {
+        // Pour les départementaux : prendre les 4 premiers caractères
+        departmentalPrefix = selectedDepartmental.substring(0, 4);
+    }
+    
     rows.forEach(row => {
         const clubType = row.getAttribute('data-club-type');
         let shouldShow = false;
         
-        // Vérifier le type de club
-        if (clubType === 'regional' && showRegional) {
-            shouldShow = true;
-        } else if (clubType === 'departmental' && showDepartmental) {
-            shouldShow = true;
-        } else if (clubType === 'club' && showClubs) {
-            shouldShow = true;
+        // Récupérer le nameShort du club depuis l'attribut data
+        const nameShort = row.getAttribute('data-name-short') || '';
+        
+        // Priorité au filtre départemental s'il est sélectionné (plus spécifique)
+        if (departmentalPrefix) {
+            // Si un comité départemental est sélectionné, filtrer sur les 4 premiers caractères
+            // Afficher tous les clubs (départementaux et clubs normaux) qui commencent par ce préfixe
+            if (clubType === 'departmental' || clubType === 'club') {
+                shouldShow = nameShort.substring(0, 4) === departmentalPrefix;
+            } else if (clubType === 'regional') {
+                // Les régionaux ne sont pas affichés quand un départemental est sélectionné
+                shouldShow = false;
+            }
+        } else if (regionalPrefix) {
+            // Si un comité régional est sélectionné, filtrer sur les 2 premiers caractères
+            // Afficher tous les clubs (régionaux, départementaux et clubs normaux) qui commencent par ce préfixe
+            if (clubType === 'regional' || clubType === 'departmental' || clubType === 'club') {
+                shouldShow = nameShort.substring(0, 2) === regionalPrefix;
+            }
+        } else {
+            // Aucun filtre sélectionné, afficher selon le type
+            if (clubType === 'regional') {
+                shouldShow = true;
+            } else if (clubType === 'departmental') {
+                shouldShow = true;
+            } else if (clubType === 'club') {
+                shouldShow = showClubs;
+            }
         }
         
         // Si le club correspond au type, vérifier la recherche
@@ -181,6 +220,13 @@ function filterClubsTable() {
             noResultsRow.style.display = 'none';
         }
     }
+    
+    // Mettre à jour le compteur dans l'en-tête
+    const clubsCountElement = document.getElementById('clubsCount');
+    if (clubsCountElement) {
+        const totalRows = tbody.querySelectorAll('tr[data-club-type]').length;
+        clubsCountElement.textContent = `${visibleCount} club${visibleCount > 1 ? 's' : ''}${visibleCount !== totalRows ? ` sur ${totalRows}` : ''}`;
+    }
 }
 
 // Fonction d'initialisation
@@ -214,9 +260,13 @@ function initClubsTable() {
     const filterDepartmental = document.getElementById('filterDepartmental');
     const filterClubs = document.getElementById('filterClubs');
     
-    if (filterRegional && filterDepartmental && filterClubs) {
+    if (filterRegional) {
         filterRegional.addEventListener('change', filterClubsTable);
+    }
+    if (filterDepartmental) {
         filterDepartmental.addEventListener('change', filterClubsTable);
+    }
+    if (filterClubs) {
         filterClubs.addEventListener('change', filterClubsTable);
     }
     
