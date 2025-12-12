@@ -206,9 +206,9 @@ function searchUserByLicence() {
                         age_category: ageCategory,
                         bowType: bowType,
                         bow_type: bowType,
-                        club: getNodeText(userNode, 'CIE'),
-                        clubId: getNodeText(userNode, 'CIE'),
-                        club_id: getNodeText(userNode, 'CIE')
+                        club: getNodeText(userNode, 'club_unique'),
+                        clubId: getNodeText(userNode, 'club_unique'),
+                        club_id: getNodeText(userNode, 'club_unique')
                     };
                     break;
                 }

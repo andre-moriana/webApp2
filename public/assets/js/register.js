@@ -199,8 +199,8 @@ function searchUserByLicence() {
                         email: getNodeText(userNode, 'EMAIL'),
                         username: '', // Sera généré côté client si nécessaire
                         role: 'Archer', // Par défaut
-                        club: getNodeText(userNode, 'CIE'),
-                        clubId: getNodeText(userNode, 'CIE'),
+                        club: getNodeText(userNode, 'club_unique'),
+                        clubId: getNodeText(userNode, 'club_unique'),
                         birthDate: birthDate,
                         gender: gender,
                         ageCategory: ageCategory,
