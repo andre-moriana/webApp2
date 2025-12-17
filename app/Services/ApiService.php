@@ -22,7 +22,7 @@ class ApiService {
         // Utiliser l'URL de l'API depuis la configuration .env ou une valeur par défaut
         if (!isset($_ENV["API_BASE_URL"])) {
             // URL par défaut si pas de configuration .env (HTTP car le serveur ne semble pas supporter HTTPS)
-            $this->baseUrl = "http://82.67.123.22:25000/api";
+            $this->baseUrl = "https://82.67.123.22:25000/api";
         } else {
             $this->baseUrl = $_ENV["API_BASE_URL"];
             // Pour ce serveur spécifique, forcer HTTP car il ne supporte pas HTTPS correctement
