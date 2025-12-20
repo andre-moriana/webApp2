@@ -1,0 +1,12 @@
+# Sécurité pour le dossier uploads
+Options -Indexes
+<Files "*">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# Autoriser seulement les images
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
