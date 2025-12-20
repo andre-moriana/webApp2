@@ -82,13 +82,13 @@ class GroupController {
             }
         }
 
-        $title = 'Groupes - Portail Archers de Gémenos';
-        
+        $title = 'Groupes - Portail Arc Training';
+
         include 'app/Views/layouts/header.php';
         include 'app/Views/groups/index.php';
         include 'app/Views/layouts/footer.php';
     }
-    
+
     // Nouvelle méthode pour vérifier l'appartenance à un groupe
     private function checkUserGroupMembership($userId, $groupId) {
         try {
@@ -152,10 +152,11 @@ class GroupController {
                 }
             }
         } catch (Exception $e) {
-            $error = 'Erreur lors de la récupération du groupe';
+            $error = 'Erreur lors de la recuperation du groupe';
         }
         
-        $title = 'Détails du groupe - Portail Archers de Gémenos';
+        $title = 'De�tails du groupe - Portail Arc Training';
+
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/groups/show.php';
@@ -169,6 +170,7 @@ class GroupController {
         }
         
         $title = 'Créer un groupe - Portail Archers de Gémenos';
+
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/groups/create.php';
@@ -270,6 +272,7 @@ class GroupController {
             exit;
         }
         $title = 'Modifier le groupe - Portail Archers de Gémenos';
+
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/groups/edit.php';
@@ -441,7 +444,7 @@ class GroupController {
         unset($_SESSION['success']);
         
         $title = 'Membres du groupe - ' . $group['name'];
-        
+
         include 'app/Views/layouts/header.php';
         include 'app/Views/groups/members.php';
         include 'app/Views/layouts/footer.php';
