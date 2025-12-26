@@ -135,13 +135,13 @@ class ClubController {
     }
     
     public function show($id) {
-        // Afficher immédiatement dans la sortie pour confirmer que c'est appelé
-        echo "<!-- DEBUG: ClubController::show called with id=$id -->";
-        
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             header('Location: /login');
             exit;
         }
+        
+        // Afficher immédiatement dans la sortie pour confirmer que c'est appelé
+        echo "<!-- DEBUG: ClubController::show called with id=$id -->";
         
         $club = null;
         $error = null;
