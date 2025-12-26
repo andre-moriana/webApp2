@@ -364,7 +364,7 @@ $additionalJS = [
                             <?php endif; ?>
                         </div>
                     </div>
-                    <?php if ($scoredTraining['status'] === 'en_cours'): ?>
+                    <?php if (($scoredTraining['status'] ?? '') === 'en_cours'): ?>
                     <div class="card mt-3">
                         <div class="card-header">
                             <h5 class="mb-0">Finaliser le tir</h5>
