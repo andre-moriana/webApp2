@@ -28,7 +28,8 @@ $additionalJS[] = '/public/assets/js/clubs-show.js';
                         $user = $_SESSION['user'];
                         $isAdmin = $user['is_admin'] ?? false;
                         $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
-                        $belongsToClub = ($user['clubId'] ?? null) == ($club['id'] ?? $club['_id']);
+                        $belongsToClub = (string)($user['clubId'] ?? $user['club_id'] ?? '') === (string)($club['id'] ?? $club['_id'] ?? '');
+                        $canEditClub = $isAdmin || ($isDirigeant && $belongsToClub);
                         
                         // Afficher le bouton permissions si Dirigeant du club ou Admin
                         if ($isAdmin || ($isDirigeant && $belongsToClub)):
@@ -38,13 +39,10 @@ $additionalJS[] = '/public/assets/js/clubs-show.js';
                         </a>
                         <?php endif; ?>
                         
-                        <?php if ($isAdmin): ?>
+                        <?php if ($canEditClub): ?>
                         <a href="/clubs/<?php echo $club['id'] ?? $club['_id']; ?>/edit" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-edit me-1"></i>Modifier
                         </a>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDelete(<?php echo $club['id'] ?? $club['_id']; ?>)">
-                            <i class="fas fa-trash me-1"></i>Supprimer
-                        </button>
                         <?php endif; ?>
                     </div>
                 </div>
