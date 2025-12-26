@@ -168,6 +168,17 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                     $isClub = !$isRegional && !$isDepartmental;
                                     $clubType = $isRegional ? 'regional' : ($isDepartmental ? 'departmental' : 'club');
                                     ?>
+                                    <?php
+                                    $user = $_SESSION['user'] ?? [];
+                                    $isAdmin = $user['is_admin'] ?? false;
+                                    $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
+                                    $userClub = (string)($user['clubId'] ?? $user['club_id'] ?? '');
+                                    $clubId = $club['id'] ?? $club['_id'] ?? 'MISSING_ID';
+                                    $clubShort = (string)($club['nameShort'] ?? $club['name_short'] ?? '');
+                                    $clubIdStr = (string)$clubId;
+                                    $belongsToClub = $userClub !== '' && ($userClub === $clubIdStr || $userClub === $clubShort);
+                                    $canEditClub = $isAdmin || ($isDirigeant && $belongsToClub);
+                                    ?>
                                     <tr data-club-type="<?php echo $clubType; ?>" data-name-short="<?php echo htmlspecialchars($nameShort); ?>">
                                         <td data-column="name">
                                             <strong><?php echo htmlspecialchars($club['name'] ?? 'N/A'); ?></strong>
@@ -196,23 +207,14 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
-                                                <?php 
-                                                $clubId = $club['id'] ?? $club['_id'] ?? 'MISSING_ID';
-                                                // DEBUG: afficher temporairement l'ID
-                                                if ($clubId === 'MISSING_ID') {
-                                                    echo '<!-- DEBUG CLUB: ' . json_encode($club) . ' -->';
-                                                }
-                                                ?>
+                                                <?php if ($clubId === 'MISSING_ID') { echo '<!-- DEBUG CLUB: ' . json_encode($club) . ' -->'; } ?>
                                                 <a href="/clubs/<?php echo $clubId; ?>" class="btn btn-outline-primary" title="Voir">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <?php if ($_SESSION['user']['is_admin'] ?? false): ?>
+                                                <?php if ($canEditClub): ?>
                                                 <a href="/clubs/<?php echo $clubId; ?>/edit" class="btn btn-outline-secondary" title="Modifier">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-outline-danger" onclick="confirmDelete(<?php echo $clubId; ?>)" title="Supprimer">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
