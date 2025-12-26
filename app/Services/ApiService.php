@@ -207,6 +207,23 @@ class ApiService {
             'message' => 'Erreur de décodage JSON: ' . json_last_error_msg()
         ];
     }
+
+    // Helpers simples pour aligner les appels $apiService->get/put/post/delete
+    public function get($endpoint) {
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    public function post($endpoint, $data = null) {
+        return $this->makeRequest($endpoint, 'POST', $data);
+    }
+
+    public function put($endpoint, $data = null) {
+        return $this->makeRequest($endpoint, 'PUT', $data);
+    }
+
+    public function delete($endpoint, $data = null) {
+        return $this->makeRequest($endpoint, 'DELETE', $data);
+    }
     
     public function updateUser($userId, $userData) {
         
