@@ -37,8 +37,8 @@ $additionalJS = [
                 <div>
                     <h1 class="h3 mb-0"><?= htmlspecialchars($scoredTraining['title'] ?? 'Tir compté') ?></h1>
                     <p class="text-muted mb-0">
-                        <?= $scoredTraining['exercise_sheet_id'] ? 'Exercice associé' : '' ?>
-                        <?php if ($scoredTraining['shooting_type']): ?>
+                        <?= !empty($scoredTraining['exercise_sheet_id']) ? 'Exercice associé' : '' ?>
+                        <?php if (!empty($scoredTraining['shooting_type'])): ?>
                         • <?= htmlspecialchars($scoredTraining['shooting_type']) ?>
                         <?php endif; ?>
                     </p>
