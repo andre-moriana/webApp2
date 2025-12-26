@@ -32,6 +32,30 @@ $additionalJS = [
     // Token d'authentification pour l'API
     //window.token = '<?= $_SESSION['token'] ?? '' ?>';
 </script>
+<?php
+// DEBUG VISIBLE: ajouter ?debug=1 à l'URL pour afficher ces infos
+$__debugEnabled = isset($_GET['debug']) && $_GET['debug'] !== '0';
+if ($__debugEnabled) {
+    $__debugInfo = [
+        'id' => $scoredTraining['id'] ?? null,
+        'user_id' => $scoredTraining['user_id'] ?? null,
+        'title' => $scoredTraining['title'] ?? null,
+        'status' => $scoredTraining['status'] ?? null,
+        'keys' => is_array($scoredTraining ?? null) ? array_keys($scoredTraining) : 'not-array',
+        'ends_count' => (isset($scoredTraining['ends']) && is_array($scoredTraining['ends'])) ? count($scoredTraining['ends']) : 0,
+    ];
+    $dump = is_array($scoredTraining ?? null)
+        ? substr(json_encode($scoredTraining, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0, 3000)
+        : 'scoredTraining not an array';
+    echo '<div style="background:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:12px;margin:12px 0;">
+            <strong>DEBUG ScoredTraining:</strong>
+            <pre style="white-space:pre-wrap;word-break:break-word;margin:6px 0;">'.htmlspecialchars(json_encode($__debugInfo, JSON_UNESCAPED_UNICODE)).'</pre>
+            <details style="margin-top:6px;"><summary>Données complètes (tronquées)</summary>
+                <pre style="white-space:pre-wrap;word-break:break-word;margin:6px 0;">'.htmlspecialchars($dump)."\n... (truncated)".'</pre>
+            </details>
+          </div>';
+}
+?>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
