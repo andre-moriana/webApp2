@@ -21,7 +21,14 @@ class ClubController {
         try {
             $response = $this->apiService->makeRequest('clubs/list', 'GET');
             $payload = $this->apiService->unwrapData($response);
+            
             if ($response['success'] && is_array($payload)) {
+                // Normaliser l'ID de chaque club pour s'assurer que 'id' existe
+                foreach ($payload as &$club) {
+                    if (!isset($club['id']) && isset($club['_id'])) {
+                        $club['id'] = $club['_id'];
+                    }
+                }
                 $clubs = $payload;
             } else {
                 $error = $response['message'] ?? 'Erreur lors de la récupération des clubs';
@@ -149,6 +156,10 @@ class ClubController {
             
             if ($response['success'] && $payload) {
                 $club = $payload;
+                // Normaliser l'ID
+                if (!isset($club['id']) && isset($club['_id'])) {
+                    $club['id'] = $club['_id'];
+                }
             } else {
                 $error = $response['message'] ?? 'Erreur lors de la récupération du club';
             }
