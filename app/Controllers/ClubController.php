@@ -191,7 +191,9 @@ class ClubController {
         $user = $_SESSION['user'] ?? [];
         $isAdmin = !empty($user['is_admin']);
         $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
-        $belongsToClub = (string)($user['clubId'] ?? $user['club_id'] ?? '') === (string)$id;
+        $userClub = (string)($user['clubId'] ?? $user['club_id'] ?? '');
+        // Autoriser si l'id demandé correspond à l'id ou au name_short du club utilisateur
+        $belongsToClub = $userClub !== '' && ($userClub === (string)$id);
 
         if (!$isAdmin && !($isDirigeant && $belongsToClub)) {
             $_SESSION['error'] = 'Vous devez être Dirigeant de ce club ou Administrateur pour modifier le club.';
