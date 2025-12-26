@@ -135,9 +135,6 @@ class ClubController {
     }
     
     public function show($id) {
-        // Écrire immédiatement pour vérifier que la fonction est appelée
-        file_put_contents('/tmp/club_show_called.txt', "show() called with id: $id\n" . date('Y-m-d H:i:s'));
-        
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             header('Location: /login');
             exit;
@@ -145,31 +142,30 @@ class ClubController {
         
         $club = null;
         $error = null;
+        $debugInfo = [];
         
         try {
             $response = $this->apiService->makeRequest("clubs/{$id}", 'GET');
-            
-            // Écrire la réponse dans un fichier temporaire pour débogage
-            file_put_contents('/tmp/club_api_response.txt', "Response:\n" . json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            $debugInfo[] = "API Response: " . json_encode($response);
             
             $payload = $this->apiService->unwrapData($response);
-            file_put_contents('/tmp/club_payload.txt', "Payload:\n" . json_encode($payload, JSON_PRETTY_PRINT));
+            $debugInfo[] = "Unwrapped Payload: " . json_encode($payload);
+            $debugInfo[] = "Response Success: " . ($response['success'] ? 'true' : 'false');
+            $debugInfo[] = "Payload Empty: " . (empty($payload) ? 'true' : 'false');
             
             if ($response['success'] && $payload) {
                 $club = $payload;
-                file_put_contents('/tmp/club_success.txt', "Club found:\n" . json_encode($club, JSON_PRETTY_PRINT));
             } else {
                 $error = $response['message'] ?? 'Erreur lors de la récupération du club';
-                file_put_contents('/tmp/club_error.txt', "Error: $error, response['success']=" . ($response['success'] ? 'true' : 'false') . ", payload empty=" . (empty($payload) ? 'true' : 'false'));
             }
         } catch (Exception $e) {
             $error = 'Erreur lors de la récupération du club: ' . $e->getMessage();
-            file_put_contents('/tmp/club_exception.txt', "Exception: " . $e->getMessage());
+            $debugInfo[] = "Exception: " . $e->getMessage();
         }
         
         if (!$club) {
             $_SESSION['error'] = $error ?? 'Club non trouvé';
-            file_put_contents('/tmp/club_redirect.txt', "Redirecting, error: " . ($error ?? 'Club non trouvé'));
+            $_SESSION['debug_info'] = $debugInfo;
             header('Location: /clubs');
             exit;
         }
