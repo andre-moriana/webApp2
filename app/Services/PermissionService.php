@@ -291,6 +291,15 @@ class PermissionService
     public function getConfigurablePermissions()
     {
         return [
+            'clubs' => [
+                'label' => 'Clubs',
+                'actions' => [
+                    'view' => 'Consulter',
+                    'edit' => 'Modifier',
+                    'create' => 'Créer',
+                    'delete' => 'Supprimer'
+                ]
+            ],
             'groups' => [
                 'label' => 'Groupes',
                 'actions' => [
