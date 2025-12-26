@@ -217,11 +217,16 @@ class ScoredTrainingController {
             error_log('ScoredTrainingController@show ends fetch for id='.$id.': ' . json_encode(is_array($endsResponse) ? array_intersect_key($endsResponse, array_flip(['success','status_code','message'])) : $endsResponse));
             if (is_array($endsResponse) && !empty($endsResponse['success']) && !empty($endsResponse['data'])) {
                 $endsData = $endsResponse['data'];
-                // Certaines API renvoient { data: { ends: [...] } }
+                // Forme { data: { ends: [...] } }
                 if (isset($endsData['ends']) && is_array($endsData['ends'])) {
                     $scoredTraining['ends'] = $endsData['ends'];
-                } elseif (is_array($endsData)) {
-                    $scoredTraining['ends'] = $endsData;
+                // Forme { data: [ ... ] } uniquement si les éléments ressemblent à des volées
+                } elseif (is_array($endsData) && isset($endsData[0]) && is_array($endsData[0])) {
+                    $first = $endsData[0];
+                    $looksLikeEnd = array_key_exists('end_number', $first) || array_key_exists('shots', $first);
+                    if ($looksLikeEnd) {
+                        $scoredTraining['ends'] = $endsData;
+                    }
                 }
             }
         }
