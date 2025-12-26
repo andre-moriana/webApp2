@@ -225,6 +225,23 @@ class ScoredTrainingController {
                 }
             }
         }
+
+        // Forcer les volées à être un tableau et garantir shots en tableau
+        if (!is_array($scoredTraining['ends'] ?? null)) {
+            $scoredTraining['ends'] = [];
+        }
+        if (!empty($scoredTraining['ends']) && is_array($scoredTraining['ends'])) {
+            foreach ($scoredTraining['ends'] as $idx => $end) {
+                if (!is_array($end)) {
+                    $scoredTraining['ends'][$idx] = [];
+                    continue;
+                }
+                if (!isset($end['shots']) || !is_array($end['shots'])) {
+                    $end['shots'] = [];
+                }
+                $scoredTraining['ends'][$idx] = $end;
+            }
+        }
         
         if (!$scoredTraining || !is_array($scoredTraining)) {
             header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé'));
