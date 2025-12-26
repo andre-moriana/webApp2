@@ -1,13 +1,5 @@
 <?php
 $title = "Gestion des clubs - Portail Archers de Gémenos";
-echo '<div style="background:yellow;padding:20px;margin:20px;border:3px solid red;"><h1>DEBUG ACTIF</h1>';
-echo '<strong>SESSION USER complète:</strong><pre>' . print_r($_SESSION['user'] ?? [], true) . '</pre>';
-echo 'Nombre de clubs: ' . count($clubs ?? []) . '<br>';
-echo 'Clubs vide?: ' . (empty($clubs) ? 'OUI' : 'NON') . '<br>';
-if (!empty($clubs)) {
-    echo '<pre>Premier club: ' . print_r($clubs[0], true) . '</pre>';
-}
-echo '</div>';
 ?>
 <link href="/public/assets/css/clubs-index.css" rel="stylesheet">
 
@@ -54,14 +46,6 @@ echo '</div>';
                     <?php echo htmlspecialchars($error); ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-            <?php endif; ?>
-            
-            <!-- DEBUG: Premier club -->
-            <?php if (!empty($clubs)): ?>
-            <div class="alert alert-info">
-                <strong>DEBUG Premier club:</strong>
-                <pre><?php print_r($clubs[0]); ?></pre>
-            </div>
             <?php endif; ?>
             
             <?php if (empty($clubs)): ?>
