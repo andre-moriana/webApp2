@@ -162,13 +162,6 @@ class ClubController {
             $error = 'Erreur lors de la récupération du club: ' . $e->getMessage();
             $debugInfo[] = "Exception: " . $e->getMessage();
         }
-        
-        if (!$club) {
-            $_SESSION['error'] = $error ?? 'Club non trouvé';
-            $_SESSION['debug_info'] = $debugInfo;
-            header('Location: /clubs');
-            exit;
-        }
 
         $title = 'Détails du club - ' . htmlspecialchars($club['name'] ?? 'Club');
         
