@@ -78,8 +78,13 @@ class Router {
         $this->addRoute("DELETE", "/groups/{id}", "GroupController@destroy");
         
         // Routes des clubs (protégées - admin seulement pour création/modification/suppression)
+        // IMPORTANT: les routes plus spécifiques doivent être définies AVANT les routes paramétrées générales
         $this->addRoute("GET", "/clubs", "ClubController@index");
         $this->addRoute("GET", "/clubs/create", "ClubController@create");
+        $this->addRoute("GET", "/clubs/import", "ClubImportController@index");
+        $this->addRoute("POST", "/clubs/import/process", "ClubImportController@process");
+        $this->addRoute("GET", "/clubs/{id}/permissions", "ClubPermissionsController@edit");
+        $this->addRoute("POST", "/clubs/{id}/permissions", "ClubPermissionsController@update");
         $this->addRoute("GET", "/clubs/{id}/edit", "ClubController@edit");
         $this->addRoute("GET", "/clubs/{id}", "ClubController@show");
         $this->addRoute("POST", "/clubs", "ClubController@store");
@@ -87,14 +92,6 @@ class Router {
         $this->addRoute("POST", "/clubs/{id}/update", "ClubController@update");
         $this->addRoute("DELETE", "/clubs/{id}", "ClubController@destroy");
         $this->addRoute("POST", "/clubs/{id}/delete", "ClubController@destroy");
-        
-        // Routes d'import de clubs (protégées - admin seulement)
-        $this->addRoute("GET", "/clubs/import", "ClubImportController@index");
-        $this->addRoute("POST", "/clubs/import/process", "ClubImportController@process");
-        
-        // Routes des permissions des clubs (protégées - Dirigeant/Admin seulement)
-        $this->addRoute("GET", "/clubs/{id}/permissions", "ClubPermissionsController@edit");
-        $this->addRoute("POST", "/clubs/{id}/permissions", "ClubPermissionsController@update");
         
         // Routes des thèmes (protégées - admin seulement)
         $this->addRoute("GET", "/themes", "ThemeController@index");
