@@ -145,14 +145,18 @@ class ClubController {
         
         try {
             $response = $this->apiService->makeRequest("clubs/{$id}", 'GET');
+            error_log("ClubController show response: " . json_encode($response));
+            
             $payload = $this->apiService->unwrapData($response);
             if ($response['success'] && $payload) {
                 $club = $payload;
+                error_log("Club loaded: " . json_encode($club));
             } else {
                 $error = $response['message'] ?? 'Erreur lors de la récupération du club';
             }
         } catch (Exception $e) {
             $error = 'Erreur lors de la récupération du club: ' . $e->getMessage();
+            error_log("ClubController show exception: " . $e->getMessage());
         }
         
         if (!$club) {
