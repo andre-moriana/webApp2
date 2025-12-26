@@ -1,65 +1,7 @@
 <?php
 $title = "Gestion des clubs - Portail Archers de Gémenos";
 ?>
-<style>
-.sortable {
-    user-select: none;
-    position: relative;
-}
-.sortable:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-.sort-asc {
-    color: var(--primary-color, #14532d);
-}
-.sort-desc {
-    color: var(--primary-color, #14532d);
-}
-.sortable i {
-    opacity: 0.5;
-    transition: opacity 0.2s;
-}
-.sortable:hover i,
-.sort-asc i,
-.sort-desc i {
-    opacity: 1;
-}
-.card-header .form-check {
-    margin-bottom: 0;
-    padding: 0.5rem 1rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 0.25rem;
-    transition: background-color 0.2s;
-}
-.card-header .form-check:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-.card-header .form-check-label {
-    margin-left: 0.5rem;
-    cursor: pointer;
-    user-select: none;
-}
-.card-header .form-check-input {
-    cursor: pointer;
-    margin-top: 0.25rem;
-}
-@media (max-width: 768px) {
-    .card-header .d-flex {
-        flex-direction: column;
-        align-items: flex-start !important;
-    }
-    .card-header .d-flex > div:last-child {
-        margin-top: 1rem;
-        flex-direction: column;
-        gap: 0.5rem !important;
-    }
-    .card-header .input-group {
-        max-width: 100% !important;
-        width: 100%;
-        margin-bottom: 1rem;
-    }
-}
-</style>
+<link href="/public/assets/css/clubs-index.css" rel="stylesheet">
 
 <div class="container-fluid">
     <div class="row">
@@ -301,13 +243,9 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
     </div>
 </div>
 
-<script>
-function confirmDelete(clubId) {
-    document.getElementById('deleteClubId').value = clubId;
-    const deleteForm = document.getElementById('deleteForm');
-    deleteForm.action = '/clubs/' + clubId;
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    modal.show();
-}
-</script>
+
+<?php
+$additionalJS = $additionalJS ?? [];
+$additionalJS[] = '/public/assets/js/clubs-index.js';
+?>
 

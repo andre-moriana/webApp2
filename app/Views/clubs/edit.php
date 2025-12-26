@@ -1,5 +1,7 @@
 <?php
 $title = "Modifier le club - Portail Archers de Gémenos";
+$additionalJS = $additionalJS ?? [];
+$additionalJS[] = '/public/assets/js/clubs-form.js';
 ?>
 
 <div class="container-fluid">
@@ -175,22 +177,5 @@ $title = "Modifier le club - Portail Archers de Gémenos";
     </div>
 </div>
 
-<script>
-// Validation Bootstrap
-(function() {
-    'use strict';
-    window.addEventListener('load', function() {
-        var forms = document.getElementsByClassName('needs-validation');
-        var validation = Array.prototype.filter.call(forms, function(form) {
-            form.addEventListener('submit', function(event) {
-                if (form.checkValidity() === false) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
-        });
-    }, false);
-})();
-</script>
+
 

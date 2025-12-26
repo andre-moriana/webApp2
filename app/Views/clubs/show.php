@@ -1,6 +1,12 @@
 <?php
 $title = "Détails du club - " . htmlspecialchars($club['name'] ?? 'Club');
 ?>
+<?php
+$additionalCSS = $additionalCSS ?? [];
+$additionalCSS[] = '/public/assets/css/clubs-show.css';
+$additionalJS = $additionalJS ?? [];
+$additionalJS[] = '/public/assets/js/clubs-show.js';
+?>
 
 <div class="container-fluid">
     <div class="row justify-content-center">
@@ -10,16 +16,31 @@ $title = "Détails du club - " . htmlspecialchars($club['name'] ?? 'Club');
                     <h4 class="mb-0">
                         <i class="fas fa-shield-alt me-2"></i><?php echo htmlspecialchars($club['name'] ?? 'Club'); ?>
                     </h4>
-                    <?php if ($_SESSION['user']['is_admin'] ?? false): ?>
                     <div class="btn-group">
+                        <?php 
+                        // Vérifier si l'utilisateur peut gérer les permissions
+                        $user = $_SESSION['user'];
+                        $isAdmin = $user['is_admin'] ?? false;
+                        $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
+                        $belongsToClub = ($user['clubId'] ?? null) == ($club['id'] ?? $club['_id']);
+                        
+                        // Afficher le bouton permissions si Dirigeant du club ou Admin
+                        if ($isAdmin || ($isDirigeant && $belongsToClub)):
+                        ?>
+                        <a href="/clubs/<?php echo $club['id'] ?? $club['_id']; ?>/permissions" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-lock me-1"></i>Permissions
+                        </a>
+                        <?php endif; ?>
+                        
+                        <?php if ($isAdmin): ?>
                         <a href="/clubs/<?php echo $club['id'] ?? $club['_id']; ?>/edit" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-edit me-1"></i>Modifier
                         </a>
                         <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDelete(<?php echo $club['id'] ?? $club['_id']; ?>)">
                             <i class="fas fa-trash me-1"></i>Supprimer
                         </button>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -163,13 +184,4 @@ $title = "Détails du club - " . htmlspecialchars($club['name'] ?? 'Club');
     </div>
 </div>
 
-<script>
-function confirmDelete(clubId) {
-    document.getElementById('deleteClubId').value = clubId;
-    const deleteForm = document.getElementById('deleteForm');
-    deleteForm.action = '/clubs/' + clubId;
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    modal.show();
-}
-</script>
 
