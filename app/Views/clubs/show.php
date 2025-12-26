@@ -11,16 +11,6 @@ $additionalJS[] = '/public/assets/js/clubs-show.js';
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-md-10">
-            <!-- DEBUG: Afficher ce qui a été chargé -->
-            <div class="alert alert-info">
-                <strong>DEBUG INFO:</strong><br>
-                Club exists: <?php echo isset($club) ? 'yes' : 'no'; ?><br>
-                Club type: <?php echo gettype($club); ?><br>
-                Club empty: <?php echo empty($club) ? 'yes' : 'no'; ?><br>
-                Club keys: <?php echo is_array($club) ? implode(', ', array_keys($club)) : 'N/A'; ?><br>
-                Club JSON: <pre><?php echo json_encode($club, JSON_PRETTY_PRINT); ?></pre>
-            </div>
-            
             <?php if (!$club || empty($club)): ?>
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle me-2"></i>
@@ -176,6 +166,7 @@ $additionalJS[] = '/public/assets/js/clubs-show.js';
         </div>
     </div>
 </div>
+            <?php endif; ?>
 
 <!-- Modal de confirmation de suppression -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
