@@ -213,26 +213,47 @@ class ScoredTrainingController {
 
         // Si les volées sont absentes ou vides, tenter une récupération dédiée
         if (is_array($scoredTraining) && (empty($scoredTraining['ends']) || !is_array($scoredTraining['ends']))) {
+            // Essai 1 : avec user_id
             $endsResponse = $this->apiService->getScoredTrainingEnds($id, $selectedUserId);
-            error_log('ScoredTrainingController@show ends fetch for id='.$id.' user='.$selectedUserId.': ' . json_encode(is_array($endsResponse) ? array_intersect_key($endsResponse, array_flip(['success','status_code','message'])) : $endsResponse));
-            // Stocker un petit debug pour la vue
+            error_log('ScoredTrainingController@show ends fetch for id='.$id.' user='.$selectedUserId.' full=' . json_encode($endsResponse));
             $scoredTraining['_ends_debug'] = is_array($endsResponse) ? array_intersect_key($endsResponse, array_flip(['success','status_code','message'])) : ['type' => gettype($endsResponse)];
 
-            if (is_array($endsResponse)) {
-                $payload = $endsResponse;
-                if (isset($payload['data'])) {
-                    $payload = $payload['data'];
+            $payload = $endsResponse;
+            if (is_array($payload) && isset($payload['data'])) {
+                $payload = $payload['data'];
+            }
+            if (is_array($payload) && isset($payload['success']) && isset($payload['data'])) {
+                $payload = $payload['data'];
+            }
+            if (isset($payload['ends']) && is_array($payload['ends'])) {
+                $scoredTraining['ends'] = $payload['ends'];
+            } elseif (is_array($payload) && isset($payload[0]) && is_array($payload[0])) {
+                $first = $payload[0];
+                $looksLikeEnd = array_key_exists('end_number', $first) || array_key_exists('shots', $first);
+                if ($looksLikeEnd) {
+                    $scoredTraining['ends'] = $payload;
                 }
-                if (is_array($payload) && isset($payload['success']) && isset($payload['data'])) {
-                    $payload = $payload['data'];
+            }
+
+            // Essai 2 : sans user_id si toujours vide
+            if (empty($scoredTraining['ends']) || !is_array($scoredTraining['ends'])) {
+                $endsResponseNoUser = $this->apiService->getScoredTrainingEnds($id, null);
+                error_log('ScoredTrainingController@show ends fetch no-user for id='.$id.' full=' . json_encode($endsResponseNoUser));
+                $scoredTraining['_ends_debug_no_user'] = is_array($endsResponseNoUser) ? array_intersect_key($endsResponseNoUser, array_flip(['success','status_code','message'])) : ['type' => gettype($endsResponseNoUser)];
+                $payload2 = $endsResponseNoUser;
+                if (is_array($payload2) && isset($payload2['data'])) {
+                    $payload2 = $payload2['data'];
                 }
-                if (isset($payload['ends']) && is_array($payload['ends'])) {
-                    $scoredTraining['ends'] = $payload['ends'];
-                } elseif (is_array($payload) && isset($payload[0]) && is_array($payload[0])) {
-                    $first = $payload[0];
-                    $looksLikeEnd = array_key_exists('end_number', $first) || array_key_exists('shots', $first);
-                    if ($looksLikeEnd) {
-                        $scoredTraining['ends'] = $payload;
+                if (is_array($payload2) && isset($payload2['success']) && isset($payload2['data'])) {
+                    $payload2 = $payload2['data'];
+                }
+                if (isset($payload2['ends']) && is_array($payload2['ends'])) {
+                    $scoredTraining['ends'] = $payload2['ends'];
+                } elseif (is_array($payload2) && isset($payload2[0]) && is_array($payload2[0])) {
+                    $first2 = $payload2[0];
+                    $looksLikeEnd2 = array_key_exists('end_number', $first2) || array_key_exists('shots', $first2);
+                    if ($looksLikeEnd2) {
+                        $scoredTraining['ends'] = $payload2;
                     }
                 }
             }
