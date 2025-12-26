@@ -147,16 +147,12 @@ class ScoredTrainingController {
         if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
-        // Appeler comme le mobile: sans user_id pour l'utilisateur connecté, avec user_id seulement si différent
-        $useUserId = ($selectedUserId !== $actualUserId) ? $selectedUserId : null;
+        // Appeler avec le user_id approprié pour récupérer les ends
+        // Le backend nécessite le user_id dans la requête pour retourner les ends
+        $useUserId = ($selectedUserId !== $actualUserId) ? $selectedUserId : $actualUserId;
         
-        if ($useUserId) {
-            $response = $this->apiService->getScoredTrainingByIdWithUser($id, $useUserId);
-            error_log('ScoredTrainingController@show with user_id='.$useUserId.' for id='.$id.' response='.json_encode($response));
-        } else {
-            $response = $this->apiService->getScoredTrainingById($id);
-            error_log('ScoredTrainingController@show without user_id for id='.$id.' response='.json_encode($response));
-        }
+        $response = $this->apiService->getScoredTrainingByIdWithUser($id, $useUserId);
+        error_log('ScoredTrainingController@show with user_id='.$useUserId.' for id='.$id);
         
         $scoredTraining = null;
         if (is_array($response)) {
@@ -174,33 +170,17 @@ class ScoredTrainingController {
                     foreach ($data as $item) {
                         if (isset($item['id']) && (string)$item['id'] === (string)$id) {
                             $scoredTraining = $item;
-                            error_log('ScoredTrainingController@show matched training in list for id='.$id);
+                            error_log('ScoredTrainingController@show found training in array - id='.$id.' ends_count='.(is_array($item['ends']??[])?count($item['ends']??[]):0));
                             break;
                         }
                     }
                 } else {
                     $scoredTraining = $data;
+                    error_log('ScoredTrainingController@show single training - id='.$id.' ends_count='.(is_array($data['ends']??[])?count($data['ends']??[]):0));
                 }
             } elseif (isset($response['id'])) {
                 // Réponse directe sans wrapper
                 $scoredTraining = $response;
-            }
-        }
-        
-        // Le backend nécessite le user_id pour retourner les ends via getById/getByIdForAdmin
-        // On extrait le user_id du training trouvé et on refait l'appel avec ce user_id
-        if (!empty($scoredTraining['user_id'])) {
-            $trainingUserId = $scoredTraining['user_id'];
-            error_log('ScoredTrainingController@show refetch with training user_id='.$trainingUserId.' for id='.$id);
-            
-            $detailResponse = $this->apiService->getScoredTrainingByIdWithUser($id, $trainingUserId);
-            if (is_array($detailResponse) && !empty($detailResponse['success']) && !empty($detailResponse['data'])) {
-                $detailData = $detailResponse['data'];
-                // Si c'est un objet training (pas une liste)
-                if (is_array($detailData) && isset($detailData['id'])) {
-                    $scoredTraining = $detailData;
-                    error_log('ScoredTrainingController@show refetched with ends - id='.$id.' ends_count='.(is_array($scoredTraining['ends']??[])?count($scoredTraining['ends']??[]):0));
-                }
             }
         }
         
