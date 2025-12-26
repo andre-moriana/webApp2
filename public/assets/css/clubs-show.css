@@ -1,0 +1,6 @@
+/* Styles spécifiques à la page de détails du club (clubs/show) */
+
+/* Exemple : ajuster l'espacement des tables */
+.table-sm td {
+    vertical-align: middle;
+}

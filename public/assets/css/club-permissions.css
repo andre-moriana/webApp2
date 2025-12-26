@@ -1,0 +1,53 @@
+/* Styles pour la page de configuration des permissions */
+
+.permissions-table {
+    margin-top: 1rem;
+}
+
+.permissions-table thead {
+    background-color: #f8f9fa;
+}
+
+.permissions-table th {
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+    padding: 1rem 0.75rem;
+}
+
+.permissions-table td {
+    vertical-align: middle;
+    padding: 0.75rem;
+}
+
+.resource-label {
+    background-color: #f8f9fa;
+    font-weight: 500;
+    border-right: 2px solid #dee2e6;
+}
+
+.action-label {
+    padding-left: 0.5rem;
+}
+
+.permissions-table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.permissions-table select {
+    min-width: 150px;
+}
+
+@media (max-width: 768px) {
+    .permissions-table {
+        font-size: 0.875rem;
+    }
+    
+    .permissions-table th,
+    .permissions-table td {
+        padding: 0.5rem;
+    }
+    
+    .permissions-table select {
+        font-size: 0.875rem;
+    }
+}

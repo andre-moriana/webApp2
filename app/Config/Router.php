@@ -92,6 +92,10 @@ class Router {
         $this->addRoute("GET", "/clubs/import", "ClubImportController@index");
         $this->addRoute("POST", "/clubs/import/process", "ClubImportController@process");
         
+        // Routes des permissions des clubs (protégées - Dirigeant/Admin seulement)
+        $this->addRoute("GET", "/clubs/{id}/permissions", "ClubPermissionsController@edit");
+        $this->addRoute("POST", "/clubs/{id}/permissions", "ClubPermissionsController@update");
+        
         // Routes des thèmes (protégées - admin seulement)
         $this->addRoute("GET", "/themes", "ThemeController@index");
         $this->addRoute("GET", "/themes/create", "ThemeController@create");
