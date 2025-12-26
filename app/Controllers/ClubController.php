@@ -22,6 +22,9 @@ class ClubController {
 
         $clubs = [];
         $error = null;
+        
+        // DEBUG: Afficher l'utilisateur
+        $debugUser = $_SESSION['user'] ?? [];
 
         try {
             $response = $this->apiService->makeRequest('clubs/list', 'GET');
