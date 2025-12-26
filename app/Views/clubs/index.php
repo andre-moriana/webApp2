@@ -195,14 +195,21 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
-                                                <a href="/clubs/<?php echo $club['id'] ?? $club['_id']; ?>" class="btn btn-outline-primary" title="Voir">
+                                                <?php 
+                                                $clubId = $club['id'] ?? $club['_id'] ?? 'MISSING_ID';
+                                                // DEBUG: afficher temporairement l'ID
+                                                if ($clubId === 'MISSING_ID') {
+                                                    echo '<!-- DEBUG CLUB: ' . json_encode($club) . ' -->';
+                                                }
+                                                ?>
+                                                <a href="/clubs/<?php echo $clubId; ?>" class="btn btn-outline-primary" title="Voir">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <?php if ($_SESSION['user']['is_admin'] ?? false): ?>
-                                                <a href="/clubs/<?php echo $club['id'] ?? $club['_id']; ?>/edit" class="btn btn-outline-secondary" title="Modifier">
+                                                <a href="/clubs/<?php echo $clubId; ?>/edit" class="btn btn-outline-secondary" title="Modifier">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-outline-danger" onclick="confirmDelete(<?php echo $club['id'] ?? $club['_id']; ?>)" title="Supprimer">
+                                                <button type="button" class="btn btn-outline-danger" onclick="confirmDelete(<?php echo $clubId; ?>)" title="Supprimer">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                                 <?php endif; ?>
