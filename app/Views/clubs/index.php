@@ -37,6 +37,17 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                     <?php echo htmlspecialchars($_SESSION['error']); ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
+                <?php if (isset($_SESSION['debug_info']) && is_array($_SESSION['debug_info'])): ?>
+                    <div class="alert alert-info">
+                        <strong>Informations de débogage :</strong>
+                        <pre style="max-height: 300px; overflow-y: auto; background: #f5f5f5; padding: 10px; border-radius: 4px;">
+<?php foreach ($_SESSION['debug_info'] as $info): ?>
+<?php echo htmlspecialchars($info) . "\n"; ?>
+<?php endforeach; ?>
+                        </pre>
+                    </div>
+                    <?php unset($_SESSION['debug_info']); ?>
+                <?php endif; ?>
                 <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
             
