@@ -192,15 +192,7 @@ class ClubController {
         $isAdmin = !empty($user['is_admin']);
         $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
         $userClub = (string)($user['clubId'] ?? $user['club_id'] ?? '');
-        // Autoriser si l'id demandé correspond à l'id ou au name_short du club utilisateur
-        $belongsToClub = $userClub !== '' && ($userClub === (string)$id);
 
-        if (!$isAdmin && !($isDirigeant && $belongsToClub)) {
-            $_SESSION['error'] = 'Vous devez être Dirigeant de ce club ou Administrateur pour modifier le club.';
-            header('Location: /clubs/' . $id);
-            exit;
-        }
-        
         $club = null;
         $themes = [];
         $error = null;
@@ -212,6 +204,17 @@ class ClubController {
                 $club = $payload;
             } else {
                 $error = $response['message'] ?? 'Erreur lors de la récupération du club';
+            }
+            
+            // Autorisation: après récupération du club, comparer id et name_short
+            $clubId = (string)($club['id'] ?? $club['_id'] ?? '');
+            $clubShort = (string)($club['nameShort'] ?? $club['name_short'] ?? '');
+            $belongsToClub = $userClub !== '' && ($userClub === $clubId || $userClub === $clubShort);
+
+            if (!$isAdmin && !($isDirigeant && $belongsToClub)) {
+                $_SESSION['error'] = 'Vous devez être Dirigeant de ce club ou Administrateur pour modifier le club.';
+                header('Location: /clubs/' . ($clubId ?: $id));
+                exit;
             }
             
             // Récupérer les thèmes
