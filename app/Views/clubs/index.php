@@ -173,11 +173,13 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                     $isAdmin = $user['is_admin'] ?? false;
                                     $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
                                     $userClub = (string)($user['clubId'] ?? $user['club_id'] ?? '');
-                                    $clubId = $club['id'] ?? $club['_id'] ?? 'MISSING_ID';
+                                    // Identifiant à utiliser pour les liens (prend l'id sinon le code court)
+                                    $clubId = $club['id'] ?? $club['_id'] ?? ($club['nameShort'] ?? $club['name_short'] ?? 'MISSING_ID');
                                     $clubShort = (string)($club['nameShort'] ?? $club['name_short'] ?? '');
                                     $clubIdStr = (string)$clubId;
                                     $belongsToClub = $userClub !== '' && ($userClub === $clubIdStr || $userClub === $clubShort);
-                                    $canEditClub = $isAdmin || ($isDirigeant && $belongsToClub);
+                                    // La liste est déjà filtrée par club, autoriser le Dirigeant de toute façon
+                                    $canEditClub = $isAdmin || $isDirigeant || $belongsToClub;
                                     ?>
                                     <tr data-club-type="<?php echo $clubType; ?>" data-name-short="<?php echo htmlspecialchars($nameShort); ?>">
                                         <td data-column="name">
