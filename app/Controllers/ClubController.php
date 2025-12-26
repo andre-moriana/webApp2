@@ -140,21 +140,12 @@ class ClubController {
             exit;
         }
         
-        // Afficher immédiatement dans la sortie pour confirmer que c'est appelé
-        echo "<!-- DEBUG: ClubController::show called with id=$id -->";
-        
         $club = null;
         $error = null;
-        $debugInfo = [];
         
         try {
             $response = $this->apiService->makeRequest("clubs/{$id}", 'GET');
-            $debugInfo[] = "API Response: " . json_encode($response);
-            
             $payload = $this->apiService->unwrapData($response);
-            $debugInfo[] = "Unwrapped Payload: " . json_encode($payload);
-            $debugInfo[] = "Response Success: " . ($response['success'] ? 'true' : 'false');
-            $debugInfo[] = "Payload Empty: " . (empty($payload) ? 'true' : 'false');
             
             if ($response['success'] && $payload) {
                 $club = $payload;
@@ -163,7 +154,6 @@ class ClubController {
             }
         } catch (Exception $e) {
             $error = 'Erreur lors de la récupération du club: ' . $e->getMessage();
-            $debugInfo[] = "Exception: " . $e->getMessage();
         }
 
         $title = 'Détails du club - ' . htmlspecialchars($club['name'] ?? 'Club');
