@@ -70,7 +70,8 @@ class PermissionService
      */
     public function isAdmin($user)
     {
-        return isset($user['is_admin']) && $user['is_admin'] === true;
+        // Accept truthy values (bool true, 1, "1") to avoid strictness issues with session serialization
+        return !empty($user['is_admin']);
     }
     
     /**
@@ -78,7 +79,8 @@ class PermissionService
      */
     public function belongsToClub($user, $clubId)
     {
-        return isset($user['clubId']) && $user['clubId'] == $clubId;
+        // Compare as strings to avoid type mismatch (int vs string)
+        return isset($user['clubId']) && (string)$user['clubId'] === (string)$clubId;
     }
     
     /**
