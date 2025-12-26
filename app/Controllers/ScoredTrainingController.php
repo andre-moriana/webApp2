@@ -213,19 +213,23 @@ class ScoredTrainingController {
 
         // Si les volées sont absentes ou vides, tenter une récupération dédiée
         if (is_array($scoredTraining) && (empty($scoredTraining['ends']) || !is_array($scoredTraining['ends']))) {
-            $endsResponse = $this->apiService->getScoredTrainingEnds($id);
-            error_log('ScoredTrainingController@show ends fetch for id='.$id.': ' . json_encode(is_array($endsResponse) ? array_intersect_key($endsResponse, array_flip(['success','status_code','message'])) : $endsResponse));
-            if (is_array($endsResponse) && !empty($endsResponse['success']) && !empty($endsResponse['data'])) {
-                $endsData = $endsResponse['data'];
-                // Forme { data: { ends: [...] } }
-                if (isset($endsData['ends']) && is_array($endsData['ends'])) {
-                    $scoredTraining['ends'] = $endsData['ends'];
-                // Forme { data: [ ... ] } uniquement si les éléments ressemblent à des volées
-                } elseif (is_array($endsData) && isset($endsData[0]) && is_array($endsData[0])) {
-                    $first = $endsData[0];
+            $endsResponse = $this->apiService->getScoredTrainingEnds($id, $selectedUserId);
+            error_log('ScoredTrainingController@show ends fetch for id='.$id.' user='.$selectedUserId.': ' . json_encode(is_array($endsResponse) ? array_intersect_key($endsResponse, array_flip(['success','status_code','message'])) : $endsResponse));
+            if (is_array($endsResponse)) {
+                $payload = $endsResponse;
+                if (isset($payload['data'])) {
+                    $payload = $payload['data'];
+                }
+                if (is_array($payload) && isset($payload['success']) && isset($payload['data'])) {
+                    $payload = $payload['data'];
+                }
+                if (isset($payload['ends']) && is_array($payload['ends'])) {
+                    $scoredTraining['ends'] = $payload['ends'];
+                } elseif (is_array($payload) && isset($payload[0]) && is_array($payload[0])) {
+                    $first = $payload[0];
                     $looksLikeEnd = array_key_exists('end_number', $first) || array_key_exists('shots', $first);
                     if ($looksLikeEnd) {
-                        $scoredTraining['ends'] = $endsData;
+                        $scoredTraining['ends'] = $payload;
                     }
                 }
             }

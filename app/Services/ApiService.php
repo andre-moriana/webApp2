@@ -1897,8 +1897,11 @@ class ApiService {
      * @param int $trainingId
      * @return array
      */
-    public function getScoredTrainingEnds($trainingId) {
+    public function getScoredTrainingEnds($trainingId, $userId = null) {
         $endpoint = "/scored-training/" . $trainingId . "/ends";
+        if ($userId !== null) {
+            $endpoint .= "?user_id=" . urlencode((string)$userId);
+        }
         return $this->makeRequest($endpoint, 'GET');
     }
 
