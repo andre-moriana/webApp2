@@ -52,7 +52,7 @@ class TrainingController {
         $selectedUser = $this->getUserInfo($selectedUserId);
         
         // Récupérer TOUS les exercices disponibles (y compris les masqués pour les admins/coachs)
-        $allExercises = $this->getAllExercisesForUser($isAdmin, $isCoach);
+        $allExercises = $this->getAllExercisesForUser($isAdmin, $isCoach, $isDirigeant);
         
         // Récupérer les entraînements de l'utilisateur sélectionné
         $trainings = $this->getTrainings($selectedUserId);
@@ -1130,11 +1130,12 @@ class TrainingController {
 
     /**
      * Récupère tous les exercices disponibles pour l'utilisateur
-     * @param bool $isAdmin Si l'utilisateur est admin
-     * @param bool $isCoach Si l'utilisateur est coach
+    * @param bool $isAdmin Si l'utilisateur est admin
+    * @param bool $isCoach Si l'utilisateur est coach
+    * @param bool $isDirigeant Si l'utilisateur est dirigeant
      * @return array Liste des exercices
      */
-    private function getAllExercisesForUser($isAdmin, $isCoach) {
+    private function getAllExercisesForUser($isAdmin, $isCoach, $isDirigeant = false) {
         try {
             
             // Récupérer l'ID de l'utilisateur sélectionné
