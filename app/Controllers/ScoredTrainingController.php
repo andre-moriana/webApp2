@@ -165,14 +165,15 @@ class ScoredTrainingController {
                     $data = $data['data'];
                 }
                 
-                // Si data est un array de trainings, extraire celui qui correspond à l'ID
+                // Si data est un array de trainings (dashboard), on doit refaire un appel direct pour CE training
                 if (is_array($data) && isset($data[0]) && is_array($data[0])) {
-                    foreach ($data as $item) {
-                        if (isset($item['id']) && (string)$item['id'] === (string)$id) {
-                            $scoredTraining = $item;
-                            error_log('ScoredTrainingController@show found training in array - id='.$id.' ends_count='.(is_array($item['ends']??[])?count($item['ends']??[]):0));
-                            break;
-                        }
+                    error_log('ScoredTrainingController@show got array (dashboard), need to refetch single training for id='.$id);
+                    // C'est une liste du dashboard, pas le training seul - refaire l'appel pour un seul training
+                    // Cette fois sans passer par le dashboard
+                    $singleTrainingResponse = $this->getSingleTrainingDirectly($id, $useUserId);
+                    if ($singleTrainingResponse && isset($singleTrainingResponse['data'])) {
+                        $scoredTraining = $singleTrainingResponse['data'];
+                        error_log('ScoredTrainingController@show refetched single - id='.$id.' ends_count='.(is_array($scoredTraining['ends']??[])?count($scoredTraining['ends']??[]):0));
                     }
                 } else {
                     $scoredTraining = $data;
@@ -816,6 +817,34 @@ class ScoredTrainingController {
         } catch (Exception $e) {
            return null;
         }
+    }
+    
+    /**
+     * Appel direct au backend pour récupérer UN seul training avec ses ends
+     * Contourne le dashboard qui retourne une liste sans ends
+     */
+    private function getSingleTrainingDirectly($trainingId, $userId) {
+        $apiUrl = rtrim($_ENV['API_BASE_URL'] ?? 'http://localhost/BackendPHP/public', '/');
+        $endpoint = $apiUrl . '/api/scored-training/' . $trainingId . '?user_id=' . $userId;
+        
+        $ch = curl_init($endpoint);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . ($_SESSION['token'] ?? '')
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode === 200 && $response) {
+            $decoded = json_decode($response, true);
+            error_log('getSingleTrainingDirectly - id='.$trainingId.' ends_count='.(is_array($decoded['data']['ends']??[])?count($decoded['data']['ends']??[]):0));
+            return $decoded;
+        }
+        
+        return null;
     }
     
     /**
