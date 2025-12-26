@@ -52,11 +52,16 @@ class PermissionService
         if ($clubId !== null && !$this->belongsToClub($user, $clubId)) {
             return false;
         }
+
+        // Essayer de déléguer au backend Permissions API
+        $apiDecision = $this->checkPermissionViaApi($user, $resource, $action, $clubId);
+        if ($apiDecision !== null) {
+            return (bool) $apiDecision;
+        }
         
-        // Récupérer les permissions du club
-        $clubPermissions = $this->getClubPermissions($clubId ?? $user['clubId']);
+        // Fallback local : récupérer les permissions du club et évaluer localement
+        $clubPermissions = $this->getClubPermissions($clubId ?? ($user['clubId'] ?? null));
         
-        // Vérifier la permission spécifique
         return $this->checkPermission($user, $resource, $action, $clubPermissions);
     }
     
@@ -113,9 +118,9 @@ class PermissionService
         }
         
         try {
-            $response = $this->apiService->get("/clubs/{$clubId}/permissions");
+            $response = $this->apiService->get("/permissions/club/{$clubId}");
             
-            if ($response['success'] && isset($response['data'])) {
+            if (!empty($response['success']) && isset($response['data'])) {
                 return $response['data'];
             }
         } catch (\Exception $e) {
@@ -227,7 +232,7 @@ class PermissionService
         }
         
         try {
-            $response = $this->apiService->put("/clubs/{$clubId}/permissions", [
+            $response = $this->apiService->put("/permissions/club/{$clubId}", [
                 'permissions' => $permissions
             ]);
             
@@ -238,6 +243,38 @@ class PermissionService
                 'message' => 'Erreur lors de la mise à jour des permissions: ' . $e->getMessage()
             ];
         }
+    }
+
+    /**
+     * Délègue la décision de permission au backend PHP Permissions API.
+     * Retourne bool ou null (si indisponible / erreur).
+     */
+    private function checkPermissionViaApi($user, $resource, $action, $clubId)
+    {
+        try {
+            $payload = [
+                'userId' => $user['id'] ?? null,
+                'role' => $user['role'] ?? null,
+                'isAdmin' => $user['is_admin'] ?? false,
+                'clubId' => $clubId ?? ($user['clubId'] ?? null),
+                'resource' => $resource,
+                'action' => $action,
+            ];
+
+            $response = $this->apiService->post('/permissions/check', $payload);
+
+            if (!empty($response['success']) && array_key_exists('allowed', $response)) {
+                return (bool) $response['allowed'];
+            }
+
+            if (!empty($response['success']) && isset($response['data']['allowed'])) {
+                return (bool) $response['data']['allowed'];
+            }
+        } catch (\Exception $e) {
+            error_log('PermissionService checkPermissionViaApi error: ' . $e->getMessage());
+        }
+
+        return null; // fallback to local rules
     }
     
     /**
