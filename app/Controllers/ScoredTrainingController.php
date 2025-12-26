@@ -149,6 +149,7 @@ class ScoredTrainingController {
         }
         // Essayer d'abord via ApiService (plus standard) avec user_id
         $response = $this->apiService->getScoredTrainingByIdWithUser($id, $selectedUserId);
+        error_log('ScoredTrainingController@show primary response for id='.$id.' user='.$selectedUserId.': ' . json_encode(is_array($response) ? array_intersect_key($response, array_flip(['success','status_code','message','data'])) : $response));
         $scoredTraining = null;
         if (is_array($response) && !empty($response['success'])) {
             // Réponses possibles: { success, data } ou imbriquées
@@ -165,6 +166,7 @@ class ScoredTrainingController {
         // Fallback: appeler l'API externe avec user_id si non trouvé
         if (!$scoredTraining) {
             $apiResponse = $this->getScoredTrainingByIdWithUserId($id, $selectedUserId);
+            error_log('ScoredTrainingController@show fallback response for id='.$id.' user='.$selectedUserId.': ' . json_encode(is_array($apiResponse) ? array_intersect_key($apiResponse, array_flip(['success','message','data'])) : $apiResponse));
             if ($apiResponse && !empty($apiResponse['success']) && !empty($apiResponse['data'])) {
                 $scoredTraining = $apiResponse['data'];
             }
@@ -201,7 +203,7 @@ class ScoredTrainingController {
         
         // Log des clés présentes pour debug serveur
         if (is_array($scoredTraining)) {
-            error_log('ScoredTrainingController@show - training '.$id.' keys: ' . implode(',', array_keys($scoredTraining)));
+            error_log('ScoredTrainingController@show normalized - id='.$id.' keys=' . implode(',', array_keys($scoredTraining)) . ' ends_count='.(is_array($scoredTraining['ends'])?count($scoredTraining['ends']):0));
         }
         
         
