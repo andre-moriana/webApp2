@@ -171,6 +171,14 @@ class ScoredTrainingController {
                 $scoredTraining = $apiResponse['data'];
             }
         }
+        // Second fallback: tenter sans user_id si toujours vide
+        if (!$scoredTraining) {
+            $responseNoUser = $this->apiService->getScoredTrainingById($id);
+            error_log('ScoredTrainingController@show second fallback (no user_id) for id='.$id.': ' . json_encode(is_array($responseNoUser) ? array_intersect_key($responseNoUser, array_flip(['success','status_code','message','data'])) : $responseNoUser));
+            if (is_array($responseNoUser) && !empty($responseNoUser['success']) && !empty($responseNoUser['data'])) {
+                $scoredTraining = $responseNoUser['data'];
+            }
+        }
         
         // Normaliser différentes formes de réponses possibles
         if (is_array($scoredTraining)) {
