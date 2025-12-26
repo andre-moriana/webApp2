@@ -240,7 +240,7 @@ $additionalJS = [
                                     </tbody>
                                 </table>
                             </div>
-                            <?php if ($scoredTraining['status'] === 'en_cours'): ?>
+                            <?php if (($scoredTraining['status'] ?? '') === 'en_cours'): ?>
                             <div class="text-center mt-3">
                                 <button class="btn btn-primary btn-action" onclick="addEnd()">
                                     <i class="fas fa-plus"></i> Ajouter une volée
@@ -273,17 +273,24 @@ $additionalJS = [
                             <dl class="row">
                                 <dt class="col-sm-4">Statut:</dt>
                                 <dd class="col-sm-8">
-                                    <?php if ($scoredTraining['status'] === 'en_cours'): ?>
+                                    <?php $status = $scoredTraining['status'] ?? ''; ?>
+                                    <?php if ($status === 'en_cours'): ?>
                                     <span class="badge bg-warning status-badge status-en-cours">En cours</span>
-                                    <?php else: ?>
+                                    <?php elseif ($status === 'termine' || $status === 'terminé'): ?>
                                     <span class="badge bg-success status-badge status-termine">Terminé</span>
+                                    <?php else: ?>
+                                    <span class="badge bg-secondary">-</span>
                                     <?php endif; ?>
                                 </dd>
                                 <dt class="col-sm-4">Début:</dt>
                                 <dd class="col-sm-8">
-                                    <?= date('d/m/Y H:i', strtotime($scoredTraining['start_date'])) ?>
+                                    <?php if (!empty($scoredTraining['start_date'])): ?>
+                                        <?= date('d/m/Y H:i', strtotime($scoredTraining['start_date'])) ?>
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?>
                                 </dd>
-                                <?php if ($scoredTraining['end_date']): ?>
+                                <?php if (!empty($scoredTraining['end_date'])): ?>
                                 <dt class="col-sm-4">Fin:</dt>
                                 <dd class="col-sm-8">
                                     <?= date('d/m/Y H:i', strtotime($scoredTraining['end_date'])) ?>
