@@ -55,6 +55,9 @@ if ($__debugEnabled) {
             </details>
           </div>';
 }
+
+// Normaliser les volées pour éviter les warnings si l'API renvoie un booléen ou null
+$__ends = (isset($scoredTraining['ends']) && is_array($scoredTraining['ends'])) ? $scoredTraining['ends'] : [];
 ?>
 <div class="container-fluid">
     <div class="row">
@@ -177,7 +180,7 @@ if ($__debugEnabled) {
                             <h5 class="mb-0">Détails des volées</h5>
                         </div>
                         <div class="card-body">
-                            <?php if (empty($scoredTraining['ends'])): ?>
+                            <?php if (empty($__ends)): ?>
                             <div class="empty-state">
                                 <i class="fas fa-bullseye fa-3x mb-3"></i>
                                 <p>Aucune volée enregistrée</p>
@@ -201,31 +204,35 @@ if ($__debugEnabled) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($scoredTraining['ends'] as $end): ?>
+                                        <?php foreach ($__ends as $end): ?>
                                         <tr>
                                             <td>
                                                 <div class="end-info">
-                                                    <div class="end-number">Volée <?= $end['end_number'] ?></div>
+                                                    <?php $endNumber = is_array($end) ? ($end['end_number'] ?? ($end['number'] ?? '')) : ''; ?>
+                                                    <div class="end-number">Volée <?= htmlspecialchars((string)$endNumber) ?></div>
                                                     <div class="end-date">
-                                                        <?= date('d/m/Y H:i', strtotime($end['created_at'])) ?>
+                                                        <?php $createdAt = is_array($end) ? ($end['created_at'] ?? null) : null; ?>
+                                                        <?= $createdAt ? date('d/m/Y H:i', strtotime($createdAt)) : '-' ?>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
-                                                    <?php foreach ($end['shots'] as $shot): ?>
-                                                    <span class="badge bg-primary score-badge"><?= $shot['score'] ?></span>
+                                                    <?php $shots = (is_array($end) && isset($end['shots']) && is_array($end['shots'])) ? $end['shots'] : []; ?>
+                                                    <?php foreach ($shots as $shot): ?>
+                                                    <span class="badge bg-primary score-badge"><?= htmlspecialchars((string)($shot['score'] ?? '')) ?></span>
                                                     <?php endforeach; ?>
                                                 </div>
                                             </td>
                                             <td>
-                                                <strong class="total-score"><?= $end['total_score'] ?></strong>
+                                                <strong class="total-score"><?= htmlspecialchars((string)($end['total_score'] ?? '')) ?></strong>
                                             </td>
                                             <td>
-                                                <span class="average-score"><?= count($end['shots']) > 0 ? number_format($end['total_score'] / count($end['shots']), 1) : '0.0' ?></span>
+                                                <?php $shotsCount = count($shots); ?>
+                                                <span class="average-score"><?= $shotsCount > 0 ? number_format(($end['total_score'] ?? 0) / $shotsCount, 1) : '0.0' ?></span>
                                             </td>
                                             <td>
-                                                <?php if ($end['comment']): ?>
+                                                <?php if (!empty($end['comment'])): ?>
                                                 <small class="comment-text"><?= htmlspecialchars($end['comment']) ?></small>
                                                 <?php else: ?>
                                                 <span class="text-muted">-</span>
@@ -235,9 +242,9 @@ if ($__debugEnabled) {
                                                 <div class="d-flex gap-1">
                                                     <?php 
                                                     $hasCoordinates = false;
-                                                    if (isset($end['shots'])) {
-                                                        foreach ($end['shots'] as $shot) {
-                                                            if ($shot['hit_x'] !== null && $shot['hit_y'] !== null) {
+                                                    if (!empty($shots)) {
+                                                        foreach ($shots as $shot) {
+                                                            if (($shot['hit_x'] ?? null) !== null && ($shot['hit_y'] ?? null) !== null) {
                                                                 $hasCoordinates = true;
                                                                 break;
                                                             }
@@ -245,13 +252,13 @@ if ($__debugEnabled) {
                                                     }
                                                     ?>
                                                     <?php if ($hasCoordinates): ?>
-                                                    <button class="btn btn-sm btn-outline-primary" onclick="showEndTarget(<?= $end['end_number'] ?>)" title="Voir la cible de cette volée">
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="showEndTarget(<?= json_encode($endNumber) ?>)" title="Voir la cible de cette volée">
                                                         <i class="fas fa-bullseye"></i>
                                                     </button>
                                                     <?php endif; ?>
                                                     
                                                     <?php if (!empty($end['ref_blason'])): ?>
-                                                    <button class="btn btn-sm btn-outline-info" onclick="showBlasonImage(<?= $end['ref_blason'] ?>)" title="Voir le blason de cette volée">
+                                                    <button class="btn btn-sm btn-outline-info" onclick="showBlasonImage(<?= json_encode($end['ref_blason']) ?>)" title="Voir le blason de cette volée">
                                                         <i class="fas fa-image"></i>
                                                     </button>
                                                     <?php endif; ?>
