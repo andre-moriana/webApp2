@@ -12,6 +12,8 @@ $additionalJS = [
     '/public/assets/js/svg-target.js?v=' . time()
 ];
 ?>
+<!-- DEBUG scoredTraining keys: <?php echo isset($scoredTraining) && is_array($scoredTraining) ? htmlspecialchars(implode(',', array_keys($scoredTraining))) : 'N/A'; ?> -->
+<!-- DEBUG scoredTraining id/user: id=<?php echo htmlspecialchars((string)($scoredTraining['id'] ?? '')); ?> user_id=<?php echo htmlspecialchars((string)($scoredTraining['user_id'] ?? '')); ?> -->
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Données du tir compté pour JavaScript -->

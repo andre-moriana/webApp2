@@ -1882,6 +1882,17 @@ class ApiService {
     }
 
     /**
+     * Récupère un tir compté par ID pour un utilisateur donné (ajoute user_id en querystring)
+     * @param int $trainingId
+     * @param int $userId
+     * @return array
+     */
+    public function getScoredTrainingByIdWithUser($trainingId, $userId) {
+        $endpoint = "/scored-training/" . $trainingId . "?user_id=" . urlencode((string)$userId);
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
      * Crée un nouveau tir compté
      * @param array $data Données du tir compté
      * @return array Réponse de l'API
