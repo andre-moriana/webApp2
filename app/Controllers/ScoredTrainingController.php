@@ -147,8 +147,8 @@ class ScoredTrainingController {
         if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
-        // Essayer d'abord via ApiService (plus standard)
-        $response = $this->apiService->getScoredTrainingById($id);
+        // Essayer d'abord via ApiService (plus standard) avec user_id
+        $response = $this->apiService->getScoredTrainingByIdWithUser($id, $selectedUserId);
         $scoredTraining = null;
         if (is_array($response) && !empty($response['success'])) {
             // Réponses possibles: { success, data } ou imbriquées
