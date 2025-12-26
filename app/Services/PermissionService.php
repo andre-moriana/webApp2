@@ -121,9 +121,15 @@ class PermissionService
         
         try {
             $response = $this->apiService->get("/permissions/club/{$clubId}");
-            
             if (!empty($response['success']) && isset($response['data'])) {
-                return $response['data'];
+                // Décodage de la réponse du backend: peut être { success: true, data: {...} }
+                $payload = $response['data'];
+                if (isset($payload['data']) && is_array($payload['data'])) {
+                    return $payload['data'];
+                }
+                if (is_array($payload)) {
+                    return $payload;
+                }
             }
         } catch (\Exception $e) {
             error_log("Erreur lors de la récupération des permissions du club: " . $e->getMessage());
