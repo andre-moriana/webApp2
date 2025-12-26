@@ -147,61 +147,23 @@ class ScoredTrainingController {
         if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
-        // Essayer d'abord via ApiService (plus standard) avec user_id
-        $response = $this->apiService->getScoredTrainingByIdWithUser($id, $selectedUserId);
-        error_log('ScoredTrainingController@show primary response for id='.$id.' user='.$selectedUserId.': ' . json_encode(is_array($response) ? array_intersect_key($response, array_flip(['success','status_code','message','data'])) : $response));
+        // Appeler comme le mobile: sans user_id pour l'utilisateur connecté, avec user_id seulement si différent
+        $useUserId = ($selectedUserId !== $actualUserId) ? $selectedUserId : null;
+        
+        if ($useUserId) {
+            $response = $this->apiService->getScoredTrainingByIdWithUser($id, $useUserId);
+            error_log('ScoredTrainingController@show with user_id='.$useUserId.' for id='.$id);
+        } else {
+            $response = $this->apiService->getScoredTrainingById($id);
+            error_log('ScoredTrainingController@show without user_id for id='.$id);
+        }
+        
         $scoredTraining = null;
-        if (is_array($response) && !empty($response['success'])) {
-            // Réponses possibles: { success, data } ou imbriquées
-            if (!empty($response['data'])) {
-                $payload = $response['data'];
-                if (is_array($payload) && isset($payload['success']) && isset($payload['data'])) {
-                    $scoredTraining = $payload['data'];
-                } else {
-                    $scoredTraining = $payload;
-                }
-            }
+        if (is_array($response) && !empty($response['success']) && !empty($response['data'])) {
+            $scoredTraining = $response['data'];
         }
         
-        // Fallback: appeler l'API externe avec user_id si non trouvé
-        if (!$scoredTraining) {
-            $apiResponse = $this->getScoredTrainingByIdWithUserId($id, $selectedUserId);
-            error_log('ScoredTrainingController@show fallback response for id='.$id.' user='.$selectedUserId.': ' . json_encode(is_array($apiResponse) ? array_intersect_key($apiResponse, array_flip(['success','message','data'])) : $apiResponse));
-            if ($apiResponse && !empty($apiResponse['success']) && !empty($apiResponse['data'])) {
-                $scoredTraining = $apiResponse['data'];
-            }
-        }
-        // Second fallback: tenter sans user_id si toujours vide
-        if (!$scoredTraining) {
-            $responseNoUser = $this->apiService->getScoredTrainingById($id);
-            error_log('ScoredTrainingController@show second fallback (no user_id) for id='.$id.': ' . json_encode(is_array($responseNoUser) ? array_intersect_key($responseNoUser, array_flip(['success','status_code','message','data'])) : $responseNoUser));
-            if (is_array($responseNoUser) && !empty($responseNoUser['success']) && !empty($responseNoUser['data'])) {
-                $scoredTraining = $responseNoUser['data'];
-            }
-        }
-        
-        // Normaliser différentes formes de réponses possibles
-        if (is_array($scoredTraining)) {
-            if (isset($scoredTraining['success']) && isset($scoredTraining['data']) && is_array($scoredTraining['data'])) {
-                $scoredTraining = $scoredTraining['data'];
-            } elseif (isset($scoredTraining['training']) && is_array($scoredTraining['training'])) {
-                $scoredTraining = $scoredTraining['training'];
-            } elseif (isset($scoredTraining['scoredTraining']) && is_array($scoredTraining['scoredTraining'])) {
-                $scoredTraining = $scoredTraining['scoredTraining'];
-            }
-            // Si l'API renvoie une liste de tirs, extraire celui qui correspond à l'ID demandé
-            if (is_array($scoredTraining) && array_key_exists(0, $scoredTraining) && !array_key_exists('id', $scoredTraining)) {
-                foreach ($scoredTraining as $item) {
-                    if (is_array($item) && isset($item['id']) && (string)$item['id'] === (string)$id) {
-                        $scoredTraining = $item;
-                        error_log('ScoredTrainingController@show matched training in list for id='.$id);
-                        break;
-                    }
-                }
-            }
-        }
-        
-        // Valeurs par défaut de sécurité pour la vue (l'API backend retourne déjà les ends)
+        // Le backend retourne directement le training avec ends inclus
         if (is_array($scoredTraining)) {
             $scoredTraining['ends'] = $scoredTraining['ends'] ?? [];
             $scoredTraining['title'] = $scoredTraining['title'] ?? '';
@@ -209,7 +171,7 @@ class ScoredTrainingController {
             $scoredTraining['total_ends'] = $scoredTraining['total_ends'] ?? 0;
             $scoredTraining['arrows_per_end'] = $scoredTraining['arrows_per_end'] ?? 0;
             $scoredTraining['total_arrows'] = $scoredTraining['total_arrows'] ?? 0;
-            error_log('ScoredTrainingController@show after defaults - id='.$id.' ends_count='.(is_array($scoredTraining['ends'])?count($scoredTraining['ends']):0));
+            error_log('ScoredTrainingController@show final - id='.$id.' ends_count='.(is_array($scoredTraining['ends'])?count($scoredTraining['ends']):0));
         }
         
         if (!$scoredTraining || !is_array($scoredTraining)) {
