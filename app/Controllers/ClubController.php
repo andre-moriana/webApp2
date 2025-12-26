@@ -187,6 +187,17 @@ class ClubController {
             header('Location: /login');
             exit;
         }
+
+        $user = $_SESSION['user'] ?? [];
+        $isAdmin = !empty($user['is_admin']);
+        $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
+        $belongsToClub = (string)($user['clubId'] ?? $user['club_id'] ?? '') === (string)$id;
+
+        if (!$isAdmin && !($isDirigeant && $belongsToClub)) {
+            $_SESSION['error'] = 'Vous devez être Dirigeant de ce club ou Administrateur pour modifier le club.';
+            header('Location: /clubs/' . $id);
+            exit;
+        }
         
         $club = null;
         $themes = [];
