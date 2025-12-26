@@ -152,7 +152,6 @@ class ScoredTrainingController {
         $useUserId = ($selectedUserId !== $actualUserId) ? $selectedUserId : $actualUserId;
         
         $response = $this->apiService->getScoredTrainingByIdWithUser($id, $useUserId);
-        error_log('ScoredTrainingController@show with user_id='.$useUserId.' for id='.$id);
         
         $scoredTraining = null;
         if (is_array($response)) {
@@ -167,17 +166,13 @@ class ScoredTrainingController {
                 
                 // Si data est un array de trainings (dashboard), on doit refaire un appel direct pour CE training
                 if (is_array($data) && isset($data[0]) && is_array($data[0])) {
-                    error_log('ScoredTrainingController@show got array (dashboard), need to refetch single training for id='.$id);
                     // C'est une liste du dashboard, pas le training seul - refaire l'appel pour un seul training
-                    // Cette fois sans passer par le dashboard
                     $singleTrainingResponse = $this->getSingleTrainingDirectly($id, $useUserId);
                     if ($singleTrainingResponse && isset($singleTrainingResponse['data'])) {
                         $scoredTraining = $singleTrainingResponse['data'];
-                        error_log('ScoredTrainingController@show refetched single - id='.$id.' ends_count='.(is_array($scoredTraining['ends']??[])?count($scoredTraining['ends']??[]):0));
                     }
                 } else {
                     $scoredTraining = $data;
-                    error_log('ScoredTrainingController@show single training - id='.$id.' ends_count='.(is_array($data['ends']??[])?count($data['ends']??[]):0));
                 }
             } elseif (isset($response['id'])) {
                 // Réponse directe sans wrapper
@@ -197,7 +192,6 @@ class ScoredTrainingController {
         $scoredTraining['total_ends'] = $scoredTraining['total_ends'] ?? 0;
         $scoredTraining['arrows_per_end'] = $scoredTraining['arrows_per_end'] ?? 0;
         $scoredTraining['total_arrows'] = $scoredTraining['total_arrows'] ?? 0;
-        error_log('ScoredTrainingController@show final - id='.$id.' ends_count='.(is_array($scoredTraining['ends'])?count($scoredTraining['ends']):0));
         
         if (!$scoredTraining || !is_array($scoredTraining)) {
             header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé'));
@@ -206,14 +200,6 @@ class ScoredTrainingController {
 
         // Normaliser les clés vers snake_case attendu par la vue
         $scoredTraining = $this->normalizeScoredTraining($scoredTraining);
-        
-        // Log des clés présentes pour debug serveur
-        if (is_array($scoredTraining)) {
-            error_log('ScoredTrainingController@show normalized - id='.$id.' keys=' . implode(',', array_keys($scoredTraining)) . ' ends_count='.(is_array($scoredTraining['ends'])?count($scoredTraining['ends']):0));
-        }
-        
-        
-        // Les données de l'API externe sont maintenant correctes
         
         // Ajouter l'ID du tir compté s'il n'est pas présent
         if (!isset($scoredTraining['id'])) {
@@ -839,9 +825,7 @@ class ScoredTrainingController {
         curl_close($ch);
         
         if ($httpCode === 200 && $response) {
-            $decoded = json_decode($response, true);
-            error_log('getSingleTrainingDirectly - id='.$trainingId.' ends_count='.(is_array($decoded['data']['ends']??[])?count($decoded['data']['ends']??[]):0));
-            return $decoded;
+            return json_decode($response, true);
         }
         
         return null;
