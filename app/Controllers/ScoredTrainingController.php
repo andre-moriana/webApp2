@@ -187,6 +187,23 @@ class ScoredTrainingController {
             }
         }
         
+        // Le backend nécessite le user_id pour retourner les ends via getById/getByIdForAdmin
+        // On extrait le user_id du training trouvé et on refait l'appel avec ce user_id
+        if (!empty($scoredTraining['user_id'])) {
+            $trainingUserId = $scoredTraining['user_id'];
+            error_log('ScoredTrainingController@show refetch with training user_id='.$trainingUserId.' for id='.$id);
+            
+            $detailResponse = $this->apiService->getScoredTrainingByIdWithUser($id, $trainingUserId);
+            if (is_array($detailResponse) && !empty($detailResponse['success']) && !empty($detailResponse['data'])) {
+                $detailData = $detailResponse['data'];
+                // Si c'est un objet training (pas une liste)
+                if (is_array($detailData) && isset($detailData['id'])) {
+                    $scoredTraining = $detailData;
+                    error_log('ScoredTrainingController@show refetched with ends - id='.$id.' ends_count='.(is_array($scoredTraining['ends']??[])?count($scoredTraining['ends']??[]):0));
+                }
+            }
+        }
+        
         if (!$scoredTraining || !is_array($scoredTraining)) {
             header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé'));
             exit;
