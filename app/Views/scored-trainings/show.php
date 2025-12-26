@@ -298,14 +298,14 @@ $additionalJS = [
                                 <?php endif; ?>
                                 <dt class="col-sm-4">Type de tir:</dt>
                                 <dd class="col-sm-8">
-                                    <?= $scoredTraining['shooting_type'] ? htmlspecialchars($scoredTraining['shooting_type']) : '-' ?>
+                                    <?= !empty($scoredTraining['shooting_type']) ? htmlspecialchars($scoredTraining['shooting_type']) : '-' ?>
                                 </dd>
                                 <dt class="col-sm-4">Flèches/volée:</dt>
-                                <dd class="col-sm-8"><?= $scoredTraining['arrows_per_end'] ?></dd>
+                                <dd class="col-sm-8"><?= $scoredTraining['arrows_per_end'] ?? '-' ?></dd>
                                 <dt class="col-sm-4">Volées prévues:</dt>
-                                <dd class="col-sm-8"><?= $scoredTraining['total_ends'] ?></dd>
+                                <dd class="col-sm-8"><?= $scoredTraining['total_ends'] ?? '-' ?></dd>
                             </dl>
-                            <?php if ($scoredTraining['notes']): ?>
+                            <?php if (!empty($scoredTraining['notes'])): ?>
                             <hr>
                             <h6>Notes:</h6>
                             <?php
