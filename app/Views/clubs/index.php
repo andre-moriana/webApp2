@@ -1,5 +1,12 @@
 <?php
 $title = "Gestion des clubs - Portail Archers de Gémenos";
+echo '<div style="background:yellow;padding:20px;margin:20px;border:3px solid red;"><h1>DEBUG ACTIF</h1>';
+echo 'Nombre de clubs: ' . count($clubs ?? []) . '<br>';
+echo 'Clubs vide?: ' . (empty($clubs) ? 'OUI' : 'NON') . '<br>';
+if (!empty($clubs)) {
+    echo '<pre>Premier club: ' . print_r($clubs[0], true) . '</pre>';
+}
+echo '</div>';
 ?>
 <link href="/public/assets/css/clubs-index.css" rel="stylesheet">
 
