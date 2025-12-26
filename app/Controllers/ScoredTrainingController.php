@@ -210,6 +210,21 @@ class ScoredTrainingController {
             $scoredTraining['arrows_per_end'] = $scoredTraining['arrows_per_end'] ?? 0;
             $scoredTraining['total_arrows'] = $scoredTraining['total_arrows'] ?? 0;
         }
+
+        // Si les volées sont absentes ou vides, tenter une récupération dédiée
+        if (is_array($scoredTraining) && (empty($scoredTraining['ends']) || !is_array($scoredTraining['ends']))) {
+            $endsResponse = $this->apiService->getScoredTrainingEnds($id);
+            error_log('ScoredTrainingController@show ends fetch for id='.$id.': ' . json_encode(is_array($endsResponse) ? array_intersect_key($endsResponse, array_flip(['success','status_code','message'])) : $endsResponse));
+            if (is_array($endsResponse) && !empty($endsResponse['success']) && !empty($endsResponse['data'])) {
+                $endsData = $endsResponse['data'];
+                // Certaines API renvoient { data: { ends: [...] } }
+                if (isset($endsData['ends']) && is_array($endsData['ends'])) {
+                    $scoredTraining['ends'] = $endsData['ends'];
+                } elseif (is_array($endsData)) {
+                    $scoredTraining['ends'] = $endsData;
+                }
+            }
+        }
         
         if (!$scoredTraining || !is_array($scoredTraining)) {
             header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé'));
