@@ -208,6 +208,19 @@ class ApiService {
         ];
     }
 
+    /**
+     * Helper pour extraire le payload (data) d'une réponse standardisée { success, data, message }
+     */
+    public function unwrapData($response) {
+        if (!is_array($response)) {
+            return null;
+        }
+        if (isset($response['data'])) {
+            return $response['data'];
+        }
+        return null;
+    }
+
     // Helpers simples pour aligner les appels $apiService->get/put/post/delete
     public function get($endpoint) {
         return $this->makeRequest($endpoint, 'GET');
