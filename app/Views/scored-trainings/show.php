@@ -47,7 +47,7 @@ $additionalJS = [
                     <a href="/scored-trainings" class="btn btn-outline-secondary nav-button">
                         <i class="fas fa-arrow-left"></i> Retour
                     </a>
-                    <?php if ($scoredTraining['status'] === 'en_cours'): ?>
+                    <?php if (($scoredTraining['status'] ?? '') === 'en_cours'): ?>
                     <button class="btn btn-success btn-action" onclick="addEnd()">
                         <i class="fas fa-plus"></i> Ajouter une volée
                     </button>
@@ -155,7 +155,7 @@ $additionalJS = [
                             <div class="empty-state">
                                 <i class="fas fa-bullseye fa-3x mb-3"></i>
                                 <p>Aucune volée enregistrée</p>
-                                <?php if ($scoredTraining['status'] === 'en_cours'): ?>
+                                <?php if (($scoredTraining['status'] ?? '') === 'en_cours'): ?>
                                 <button class="btn btn-primary btn-action" onclick="addEnd()">
                                     <i class="fas fa-plus"></i> Ajouter une volée
                                 </button>
