@@ -1,6 +1,5 @@
 <?php
-
-namespace App\Services;
+require_once 'app/Services/ApiService.php';
 
 class PermissionService
 {
