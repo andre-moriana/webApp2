@@ -48,6 +48,14 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                 </div>
             <?php endif; ?>
             
+            <!-- DEBUG: Premier club -->
+            <?php if (!empty($clubs)): ?>
+            <div class="alert alert-info">
+                <strong>DEBUG Premier club:</strong>
+                <pre><?php print_r($clubs[0]); ?></pre>
+            </div>
+            <?php endif; ?>
+            
             <?php if (empty($clubs)): ?>
                 <div class="card">
                     <div class="card-body text-center py-5">
