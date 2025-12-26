@@ -171,6 +171,7 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                     <tr data-club-type="<?php echo $clubType; ?>" data-name-short="<?php echo htmlspecialchars($nameShort); ?>">
                                         <td data-column="name">
                                             <strong><?php echo htmlspecialchars($club['name'] ?? 'N/A'); ?></strong>
+                                            <br><small class="text-muted">ID: <?php echo htmlspecialchars($club['id'] ?? $club['_id'] ?? 'MANQUANT'); ?></small>
                                         </td>
                                         <td data-column="nameShort"><?php echo htmlspecialchars($club['nameShort'] ?? $club['name_short'] ?? '-'); ?></td>
                                         <td data-column="city"><?php echo htmlspecialchars($club['city'] ?? '-'); ?></td>
