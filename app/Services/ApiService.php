@@ -1893,6 +1893,16 @@ class ApiService {
     }
 
     /**
+     * Récupère les volées (ends) d'un tir compté
+     * @param int $trainingId
+     * @return array
+     */
+    public function getScoredTrainingEnds($trainingId) {
+        $endpoint = "/scored-training/" . $trainingId . "/ends";
+        return $this->makeRequest($endpoint, 'GET');
+    }
+
+    /**
      * Crée un nouveau tir compté
      * @param array $data Données du tir compté
      * @return array Réponse de l'API
