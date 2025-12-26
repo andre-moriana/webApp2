@@ -43,6 +43,7 @@ if ($__debugEnabled) {
         'status' => $scoredTraining['status'] ?? null,
         'keys' => is_array($scoredTraining ?? null) ? array_keys($scoredTraining) : 'not-array',
         'ends_count' => (isset($scoredTraining['ends']) && is_array($scoredTraining['ends'])) ? count($scoredTraining['ends']) : 0,
+        'ends_debug' => $scoredTraining['_ends_debug'] ?? null,
     ];
     $dump = is_array($scoredTraining ?? null)
         ? substr(json_encode($scoredTraining, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0, 3000)

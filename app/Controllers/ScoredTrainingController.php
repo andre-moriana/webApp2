@@ -215,6 +215,9 @@ class ScoredTrainingController {
         if (is_array($scoredTraining) && (empty($scoredTraining['ends']) || !is_array($scoredTraining['ends']))) {
             $endsResponse = $this->apiService->getScoredTrainingEnds($id, $selectedUserId);
             error_log('ScoredTrainingController@show ends fetch for id='.$id.' user='.$selectedUserId.': ' . json_encode(is_array($endsResponse) ? array_intersect_key($endsResponse, array_flip(['success','status_code','message'])) : $endsResponse));
+            // Stocker un petit debug pour la vue
+            $scoredTraining['_ends_debug'] = is_array($endsResponse) ? array_intersect_key($endsResponse, array_flip(['success','status_code','message'])) : ['type' => gettype($endsResponse)];
+
             if (is_array($endsResponse)) {
                 $payload = $endsResponse;
                 if (isset($payload['data'])) {
