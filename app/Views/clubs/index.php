@@ -1,10 +1,7 @@
 <?php
 $title = "Gestion des clubs - Portail Archers de Gémenos";
 echo '<div style="background:yellow;padding:20px;margin:20px;border:3px solid red;"><h1>DEBUG ACTIF</h1>';
-echo 'User ID: ' . ($_SESSION['user']['id'] ?? 'N/A') . '<br>';
-echo 'User club_id: ' . ($_SESSION['user']['club_id'] ?? $_SESSION['user']['clubId'] ?? 'N/A') . '<br>';
-echo 'User role: ' . ($_SESSION['user']['role'] ?? 'N/A') . '<br>';
-echo 'User is_admin: ' . ($_SESSION['user']['is_admin'] ?? 'N/A') . '<br>';
+echo '<strong>SESSION USER complète:</strong><pre>' . print_r($_SESSION['user'] ?? [], true) . '</pre>';
 echo 'Nombre de clubs: ' . count($clubs ?? []) . '<br>';
 echo 'Clubs vide?: ' . (empty($clubs) ? 'OUI' : 'NON') . '<br>';
 if (!empty($clubs)) {
