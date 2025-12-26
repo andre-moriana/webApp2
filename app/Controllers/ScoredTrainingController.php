@@ -152,27 +152,54 @@ class ScoredTrainingController {
         
         if ($useUserId) {
             $response = $this->apiService->getScoredTrainingByIdWithUser($id, $useUserId);
-            error_log('ScoredTrainingController@show with user_id='.$useUserId.' for id='.$id);
+            error_log('ScoredTrainingController@show with user_id='.$useUserId.' for id='.$id.' response='.json_encode($response));
         } else {
             $response = $this->apiService->getScoredTrainingById($id);
-            error_log('ScoredTrainingController@show without user_id for id='.$id);
+            error_log('ScoredTrainingController@show without user_id for id='.$id.' response='.json_encode($response));
         }
         
         $scoredTraining = null;
-        if (is_array($response) && !empty($response['success']) && !empty($response['data'])) {
-            $scoredTraining = $response['data'];
+        if (is_array($response)) {
+            // Gérer différents formats de réponse
+            if (!empty($response['success']) && !empty($response['data'])) {
+                $data = $response['data'];
+                
+                // Si data contient encore success/data (réponse imbriquée)
+                if (is_array($data) && isset($data['success']) && isset($data['data'])) {
+                    $data = $data['data'];
+                }
+                
+                // Si data est un array de trainings, extraire celui qui correspond à l'ID
+                if (is_array($data) && isset($data[0]) && is_array($data[0])) {
+                    foreach ($data as $item) {
+                        if (isset($item['id']) && (string)$item['id'] === (string)$id) {
+                            $scoredTraining = $item;
+                            error_log('ScoredTrainingController@show matched training in list for id='.$id);
+                            break;
+                        }
+                    }
+                } else {
+                    $scoredTraining = $data;
+                }
+            } elseif (isset($response['id'])) {
+                // Réponse directe sans wrapper
+                $scoredTraining = $response;
+            }
         }
         
-        // Le backend retourne directement le training avec ends inclus
-        if (is_array($scoredTraining)) {
-            $scoredTraining['ends'] = $scoredTraining['ends'] ?? [];
-            $scoredTraining['title'] = $scoredTraining['title'] ?? '';
-            $scoredTraining['status'] = $scoredTraining['status'] ?? '';
-            $scoredTraining['total_ends'] = $scoredTraining['total_ends'] ?? 0;
-            $scoredTraining['arrows_per_end'] = $scoredTraining['arrows_per_end'] ?? 0;
-            $scoredTraining['total_arrows'] = $scoredTraining['total_arrows'] ?? 0;
-            error_log('ScoredTrainingController@show final - id='.$id.' ends_count='.(is_array($scoredTraining['ends'])?count($scoredTraining['ends']):0));
+        if (!$scoredTraining || !is_array($scoredTraining)) {
+            header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé'));
+            exit;
         }
+        
+        // Normaliser et ajouter les defaults
+        $scoredTraining['ends'] = $scoredTraining['ends'] ?? [];
+        $scoredTraining['title'] = $scoredTraining['title'] ?? '';
+        $scoredTraining['status'] = $scoredTraining['status'] ?? '';
+        $scoredTraining['total_ends'] = $scoredTraining['total_ends'] ?? 0;
+        $scoredTraining['arrows_per_end'] = $scoredTraining['arrows_per_end'] ?? 0;
+        $scoredTraining['total_arrows'] = $scoredTraining['total_arrows'] ?? 0;
+        error_log('ScoredTrainingController@show final - id='.$id.' ends_count='.(is_array($scoredTraining['ends'])?count($scoredTraining['ends']):0));
         
         if (!$scoredTraining || !is_array($scoredTraining)) {
             header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé'));
