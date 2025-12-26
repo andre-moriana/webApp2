@@ -218,7 +218,8 @@ class ApiService {
         if (isset($response['data'])) {
             return $response['data'];
         }
-        return null;
+        // Si pas de clé 'data', retourner la réponse elle-même (peut être déjà unwrappée)
+        return $response;
     }
 
     // Helpers simples pour aligner les appels $apiService->get/put/post/delete
