@@ -137,6 +137,8 @@ class AuthController {
                     'role' => $userData['role'] ?? 'user',
                     'is_admin' => $userData['is_admin'] ?? $userData['isAdmin'] ?? false,
                     'isAdmin' => $userData['isAdmin'] ?? $userData['is_admin'] ?? false,
+                    'club_id' => $userData['club_id'] ?? $userData['clubId'] ?? null,
+                    'clubId' => $userData['clubId'] ?? $userData['club_id'] ?? null,
                     'status' => $userStatus,
                     'phone' => $userData['phone'] ?? '',
                     'birthDate' => $userData['birthDate'] ?? $userData['birth_date'] ?? '',
