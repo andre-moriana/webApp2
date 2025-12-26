@@ -1,8 +1,6 @@
 <?php
-
-namespace App\Controllers;
-
-use App\Services\PermissionService;
+require_once 'app/Services/PermissionService.php';
+require_once 'app/Services/ApiService.php';
 
 class ClubPermissionsController
 {
@@ -43,7 +41,7 @@ class ClubPermissionsController
         }
         
         // Récupérer les informations du club
-        $apiService = new \App\Services\ApiService();
+        $apiService = new ApiService();
         $clubResponse = $apiService->get("/clubs/{$clubId}");
         
         if (!$clubResponse['success']) {

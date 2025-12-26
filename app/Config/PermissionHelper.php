@@ -1,8 +1,5 @@
 <?php
-
-namespace App\Config;
-
-use App\Services\PermissionService;
+require_once 'app/Services/PermissionService.php';
 
 /**
  * Helper pour la gestion des permissions
