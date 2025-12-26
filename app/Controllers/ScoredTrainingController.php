@@ -195,6 +195,14 @@ class ScoredTrainingController {
             header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé'));
             exit;
         }
+
+        // Normaliser les clés vers snake_case attendu par la vue
+        $scoredTraining = $this->normalizeScoredTraining($scoredTraining);
+        
+        // Log des clés présentes pour debug serveur
+        if (is_array($scoredTraining)) {
+            error_log('ScoredTrainingController@show - training '.$id.' keys: ' . implode(',', array_keys($scoredTraining)));
+        }
         
         
         // Les données de l'API externe sont maintenant correctes
@@ -226,6 +234,38 @@ class ScoredTrainingController {
         
         // Inclure le footer
         include 'app/Views/layouts/footer.php';
+    }
+
+    private function normalizeScoredTraining($t) {
+        if (!is_array($t)) return $t;
+        // Map camelCase -> snake_case if missing
+        $map = [
+            'shooting_type' => 'shootingType',
+            'total_ends' => 'totalEnds',
+            'arrows_per_end' => 'arrowsPerEnd',
+            'total_arrows' => 'totalArrows',
+            'start_date' => 'startDate',
+            'end_date' => 'endDate',
+            'average_score' => 'averageScore',
+            'total_score' => 'totalScore',
+            'exercise_sheet_id' => 'exerciseSheetId',
+            'created_at' => 'createdAt',
+            'updated_at' => 'updatedAt',
+        ];
+        foreach ($map as $snake => $camel) {
+            if (!array_key_exists($snake, $t) && array_key_exists($camel, $t)) {
+                $t[$snake] = $t[$camel];
+            }
+        }
+        // Defaults for fields used by the view
+        $t['ends'] = $t['ends'] ?? [];
+        $t['title'] = $t['title'] ?? '';
+        $t['status'] = $t['status'] ?? '';
+        $t['total_ends'] = $t['total_ends'] ?? 0;
+        $t['arrows_per_end'] = $t['arrows_per_end'] ?? 0;
+        $t['total_arrows'] = $t['total_arrows'] ?? 0;
+        $t['notes'] = $t['notes'] ?? '';
+        return $t;
     }
     
     public function create() {
