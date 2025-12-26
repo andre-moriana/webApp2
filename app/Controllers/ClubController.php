@@ -20,9 +20,9 @@ class ClubController {
 
         try {
             $response = $this->apiService->makeRequest('clubs/list', 'GET');
-            
-            if ($response['success'] && isset($response['data'])) {
-                $clubs = is_array($response['data']) ? $response['data'] : [];
+            $payload = $this->apiService->unwrapData($response);
+            if ($response['success'] && is_array($payload)) {
+                $clubs = $payload;
             } else {
                 $error = $response['message'] ?? 'Erreur lors de la récupération des clubs';
             }
@@ -145,9 +145,9 @@ class ClubController {
         
         try {
             $response = $this->apiService->makeRequest("clubs/{$id}", 'GET');
-            
-            if ($response['success'] && isset($response['data'])) {
-                $club = $response['data'];
+            $payload = $this->apiService->unwrapData($response);
+            if ($response['success'] && $payload) {
+                $club = $payload;
             } else {
                 $error = $response['message'] ?? 'Erreur lors de la récupération du club';
             }
@@ -180,9 +180,9 @@ class ClubController {
         
         try {
             $response = $this->apiService->makeRequest("clubs/{$id}", 'GET');
-            
-            if ($response['success'] && isset($response['data'])) {
-                $club = $response['data'];
+            $payload = $this->apiService->unwrapData($response);
+            if ($response['success'] && $payload) {
+                $club = $payload;
             } else {
                 $error = $response['message'] ?? 'Erreur lors de la récupération du club';
             }
