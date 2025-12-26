@@ -147,16 +147,33 @@ class ScoredTrainingController {
         if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
         }
-        // Récupérer les détails du tir compté via l'API externe avec le user_id sélectionné
-        $apiResponse = $this->getScoredTrainingByIdWithUserId($id, $selectedUserId);
-        
-        if (!$apiResponse || !$apiResponse['success'] || empty($apiResponse['data'])) {
-            header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé pour cet utilisateur'));
-            exit;
+        // Essayer d'abord via ApiService (plus standard)
+        $response = $this->apiService->getScoredTrainingById($id);
+        $scoredTraining = null;
+        if (is_array($response) && !empty($response['success'])) {
+            // Réponses possibles: { success, data } ou imbriquées
+            if (!empty($response['data'])) {
+                $payload = $response['data'];
+                if (is_array($payload) && isset($payload['success']) && isset($payload['data'])) {
+                    $scoredTraining = $payload['data'];
+                } else {
+                    $scoredTraining = $payload;
+                }
+            }
         }
         
-        // Extraire les données du tir compté
-        $scoredTraining = $apiResponse['data'];
+        // Fallback: appeler l'API externe avec user_id si non trouvé
+        if (!$scoredTraining) {
+            $apiResponse = $this->getScoredTrainingByIdWithUserId($id, $selectedUserId);
+            if ($apiResponse && !empty($apiResponse['success']) && !empty($apiResponse['data'])) {
+                $scoredTraining = $apiResponse['data'];
+            }
+        }
+        
+        if (!$scoredTraining) {
+            header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé'));
+            exit;
+        }
         
         
         // Les données de l'API externe sont maintenant correctes
@@ -170,7 +187,7 @@ class ScoredTrainingController {
         // Debug: afficher les IDs pour comparaison
         $scoredTrainingUserId = $scoredTraining['user_id'] ?? null;
         // Vérifier les permissions
-        if (!$isAdmin && !$isCoach && !$isDirigeant && $scoredTraining['user_id'] != $actualUserId) {
+        if (!$isAdmin && !$isCoach && !$isDirigeant && (($scoredTraining['user_id'] ?? null) != $actualUserId)) {
             header('Location: /scored-trainings?error=' . urlencode('Accès refusé'));
             exit;
         }
