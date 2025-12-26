@@ -189,6 +189,16 @@ class ScoredTrainingController {
             } elseif (isset($scoredTraining['scoredTraining']) && is_array($scoredTraining['scoredTraining'])) {
                 $scoredTraining = $scoredTraining['scoredTraining'];
             }
+            // Si l'API renvoie une liste de tirs, extraire celui qui correspond à l'ID demandé
+            if (is_array($scoredTraining) && array_key_exists(0, $scoredTraining) && !array_key_exists('id', $scoredTraining)) {
+                foreach ($scoredTraining as $item) {
+                    if (is_array($item) && isset($item['id']) && (string)$item['id'] === (string)$id) {
+                        $scoredTraining = $item;
+                        error_log('ScoredTrainingController@show matched training in list for id='.$id);
+                        break;
+                    }
+                }
+            }
         }
         
         // Valeurs par défaut de sécurité pour la vue
