@@ -28,7 +28,10 @@ $additionalJS[] = '/public/assets/js/clubs-show.js';
                         $user = $_SESSION['user'];
                         $isAdmin = $user['is_admin'] ?? false;
                         $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
-                        $belongsToClub = (string)($user['clubId'] ?? $user['club_id'] ?? '') === (string)($club['id'] ?? $club['_id'] ?? '');
+                        $userClub = (string)($user['clubId'] ?? $user['club_id'] ?? '');
+                        $clubId = (string)($club['id'] ?? $club['_id'] ?? '');
+                        $clubShort = (string)($club['nameShort'] ?? $club['name_short'] ?? '');
+                        $belongsToClub = $userClub !== '' && ($userClub === $clubId || $userClub === $clubShort);
                         $canEditClub = $isAdmin || ($isDirigeant && $belongsToClub);
                         
                         // Afficher le bouton permissions si Dirigeant du club ou Admin
