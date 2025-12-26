@@ -10,6 +10,11 @@ class ClubController {
     }
     
     public function index() {
+        // Vider le cache opcache temporairement
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
+        }
+        
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             header('Location: /login');
             exit;
