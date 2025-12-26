@@ -170,7 +170,28 @@ class ScoredTrainingController {
             }
         }
         
-        if (!$scoredTraining) {
+        // Normaliser différentes formes de réponses possibles
+        if (is_array($scoredTraining)) {
+            if (isset($scoredTraining['success']) && isset($scoredTraining['data']) && is_array($scoredTraining['data'])) {
+                $scoredTraining = $scoredTraining['data'];
+            } elseif (isset($scoredTraining['training']) && is_array($scoredTraining['training'])) {
+                $scoredTraining = $scoredTraining['training'];
+            } elseif (isset($scoredTraining['scoredTraining']) && is_array($scoredTraining['scoredTraining'])) {
+                $scoredTraining = $scoredTraining['scoredTraining'];
+            }
+        }
+        
+        // Valeurs par défaut de sécurité pour la vue
+        if (is_array($scoredTraining)) {
+            $scoredTraining['ends'] = $scoredTraining['ends'] ?? [];
+            $scoredTraining['title'] = $scoredTraining['title'] ?? '';
+            $scoredTraining['status'] = $scoredTraining['status'] ?? '';
+            $scoredTraining['total_ends'] = $scoredTraining['total_ends'] ?? 0;
+            $scoredTraining['arrows_per_end'] = $scoredTraining['arrows_per_end'] ?? 0;
+            $scoredTraining['total_arrows'] = $scoredTraining['total_arrows'] ?? 0;
+        }
+        
+        if (!$scoredTraining || !is_array($scoredTraining)) {
             header('Location: /scored-trainings?error=' . urlencode('Tir compté non trouvé'));
             exit;
         }
