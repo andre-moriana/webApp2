@@ -17,13 +17,13 @@ $additionalJS = [
 <!-- Données du tir compté pour JavaScript -->
 <script>
     window.scoredTrainingData = {
-        id: <?= $scoredTraining['id'] ?>,
-        title: '<?= addslashes($scoredTraining['title']) ?>',
+        id: <?= $scoredTraining['id'] ?? 0 ?>,
+        title: '<?= addslashes($scoredTraining['title'] ?? '') ?>',
         shooting_type: '<?= addslashes($scoredTraining['shooting_type'] ?? '') ?>',
-        total_ends: <?= $scoredTraining['total_ends'] ?>,
-        arrows_per_end: <?= $scoredTraining['arrows_per_end'] ?>,
-        total_arrows: <?= $scoredTraining['total_arrows'] ?>,
-        status: '<?= addslashes($scoredTraining['status']) ?>',
+        total_ends: <?= $scoredTraining['total_ends'] ?? 0 ?>,
+        arrows_per_end: <?= $scoredTraining['arrows_per_end'] ?? 0 ?>,
+        total_arrows: <?= $scoredTraining['total_arrows'] ?? 0 ?>,
+        status: '<?= addslashes($scoredTraining['status'] ?? '') ?>',
     };
     // Données des volées pour le graphique
     window.endsData = <?= json_encode($scoredTraining['ends'] ?? []) ?>;
@@ -35,7 +35,7 @@ $additionalJS = [
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1 class="h3 mb-0"><?= htmlspecialchars($scoredTraining['title']) ?></h1>
+                    <h1 class="h3 mb-0"><?= htmlspecialchars($scoredTraining['title'] ?? 'Tir compté') ?></h1>
                     <p class="text-muted mb-0">
                         <?= $scoredTraining['exercise_sheet_id'] ? 'Exercice associé' : '' ?>
                         <?php if ($scoredTraining['shooting_type']): ?>
