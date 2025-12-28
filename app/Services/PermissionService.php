@@ -151,6 +151,12 @@ class PermissionService
             'groups_create' => 'Coach',
             'groups_delete' => 'Dirigeant',
             
+            // Sujets
+            'topics_view' => 'Archer',
+            'topics_edit' => 'Dirigeant',
+            'topics_create' => 'Archer',
+            'topics_delete' => 'Dirigeant',
+
             // Événements
             'events_view' => 'Archer',
             'events_edit' => 'Coach',
@@ -303,6 +309,15 @@ class PermissionService
             ],
             'groups' => [
                 'label' => 'Groupes',
+                'actions' => [
+                    'view' => 'Consulter',
+                    'edit' => 'Modifier',
+                    'create' => 'Créer',
+                    'delete' => 'Supprimer'
+                ]
+            ],
+            'topics' => [
+                'label' => 'Sujets',
                 'actions' => [
                     'view' => 'Consulter',
                     'edit' => 'Modifier',
