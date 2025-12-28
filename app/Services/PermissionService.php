@@ -22,6 +22,7 @@ class PermissionService
     
     // Définition des ressources
     const RESOURCE_GROUPS = 'groups';
+    const RESOURCE_TOPICS = 'topics';
     const RESOURCE_EVENTS = 'events';
     const RESOURCE_USERS = 'users';
     const RESOURCE_USERS_SELF = 'users_self';
