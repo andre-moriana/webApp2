@@ -478,18 +478,60 @@ class AuthController {
         }
 
         try {
-            // TODO: Implémenter l'appel API pour créer une demande de suppression
-            // Pour le moment, on envoie un email à l'admin ou on enregistre la demande
+            // Générer un token unique pour la validation
+            $token = bin2hex(random_bytes(32));
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+48 hours'));
             
-            // Log de la demande pour traitement manuel
+            // Enregistrer la demande dans la base de données
+            require_once __DIR__ . '/../../../BackendPHP/config/database.php';
+            $database = Database::getInstance();
+            $db = $database->getConnection();
+            
+            // Créer la table si elle n'existe pas
+            $createTableQuery = "CREATE TABLE IF NOT EXISTS account_deletion_requests (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                email VARCHAR(255) NOT NULL,
+                reason TEXT,
+                token VARCHAR(64) NOT NULL UNIQUE,
+                status VARCHAR(20) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                expires_at DATETIME NOT NULL,
+                validated_at DATETIME NULL,
+                INDEX idx_token (token),
+                INDEX idx_status (status)
+            )";
+            $db->exec($createTableQuery);
+            
+            // Insérer la demande
+            $insertQuery = "INSERT INTO account_deletion_requests (email, reason, token, expires_at) 
+                           VALUES (:email, :reason, :token, :expires_at)";
+            $stmt = $db->prepare($insertQuery);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':reason', $reason);
+            $stmt->bindParam(':token', $token);
+            $stmt->bindParam(':expires_at', $expiresAt);
+            $stmt->execute();
+            
+            // Envoyer les emails
+            require_once __DIR__ . '/../Services/EmailService.php';
+            
+            // Email à l'utilisateur
+            $userEmailResult = EmailService::sendAccountDeletionRequestToUser($email, $token);
+            
+            // Email à l'administrateur
+            $adminEmailResult = EmailService::sendAccountDeletionNotificationToAdmin($email, $reason, $token);
+            
+            // Log de la demande
             $logMessage = sprintf(
-                "[%s] Demande de suppression de compte - Email: %s - Raison: %s\n",
+                "[%s] Demande de suppression de compte - Email: %s - Token: %s - Raison: %s - Email user: %s - Email admin: %s\n",
                 date('Y-m-d H:i:s'),
                 $email,
-                $reason ?: 'Non spécifiée'
+                $token,
+                $reason ?: 'Non spécifiée',
+                $userEmailResult['success'] ? 'OK' : 'ERREUR',
+                $adminEmailResult['success'] ? 'OK' : 'ERREUR'
             );
             
-            // Créer le répertoire logs si nécessaire
             $logsDir = __DIR__ . '/../../logs';
             if (!file_exists($logsDir)) {
                 mkdir($logsDir, 0755, true);
@@ -501,13 +543,72 @@ class AuthController {
                 FILE_APPEND
             );
 
-            $_SESSION['success'] = 'Votre demande de suppression de compte a été enregistrée. Un administrateur la traitera dans les 30 jours conformément au RGPD. Vous recevrez un email de confirmation.';
+            $_SESSION['success'] = 'Votre demande de suppression de compte a été enregistrée. Vous allez recevoir un email de confirmation avec un lien pour valider définitivement la suppression. Vérifiez vos spams si vous ne le recevez pas.';
             header('Location: /auth/delete-account');
             exit;
 
         } catch (Exception $e) {
             error_log("Erreur lors de la demande de suppression: " . $e->getMessage());
             $_SESSION['error'] = 'Une erreur est survenue lors de l\'enregistrement de votre demande. Veuillez contacter un administrateur.';
+            header('Location: /auth/delete-account');
+            exit;
+        }
+    }
+
+    public function validateDeletion($token) {
+        try {
+            require_once __DIR__ . '/../../../BackendPHP/config/database.php';
+            $database = Database::getInstance();
+            $db = $database->getConnection();
+            
+            // Vérifier le token
+            $query = "SELECT * FROM account_deletion_requests 
+                     WHERE token = :token 
+                     AND status = 'pending' 
+                     AND expires_at > NOW()";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':token', $token);
+            $stmt->execute();
+            
+            $request = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$request) {
+                $_SESSION['error'] = 'Lien invalide ou expiré. Veuillez faire une nouvelle demande de suppression.';
+                header('Location: /auth/delete-account');
+                exit;
+            }
+            
+            // Mettre à jour le statut de la demande
+            $updateQuery = "UPDATE account_deletion_requests 
+                           SET status = 'validated', validated_at = NOW() 
+                           WHERE id = :id";
+            $stmt = $db->prepare($updateQuery);
+            $stmt->bindParam(':id', $request['id']);
+            $stmt->execute();
+            
+            // Log de la validation
+            $logMessage = sprintf(
+                "[%s] Validation de suppression de compte - Email: %s - Token: %s\n",
+                date('Y-m-d H:i:s'),
+                $request['email'],
+                $token
+            );
+            
+            $logsDir = __DIR__ . '/../../logs';
+            file_put_contents(
+                $logsDir . '/account-deletion-requests.log',
+                $logMessage,
+                FILE_APPEND
+            );
+            
+            // Afficher une page de confirmation
+            $_SESSION['success'] = 'Votre demande de suppression a été validée. Un administrateur procédera à la suppression définitive de votre compte dans les 30 jours conformément au RGPD. Vous recevrez un email de confirmation une fois l\'opération effectuée.';
+            header('Location: /auth/delete-account');
+            exit;
+            
+        } catch (Exception $e) {
+            error_log("Erreur lors de la validation de suppression: " . $e->getMessage());
+            $_SESSION['error'] = 'Une erreur est survenue. Veuillez contacter un administrateur.';
             header('Location: /auth/delete-account');
             exit;
         }

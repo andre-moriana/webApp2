@@ -338,4 +338,194 @@ class EmailService {
         
         return $html;
     }
+
+    /**
+     * Envoie un email de demande de suppression de compte à l'utilisateur
+     * 
+     * @param string $userEmail Email de l'utilisateur
+     * @param string $token Token de validation
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public static function sendAccountDeletionRequestToUser($userEmail, $token) {
+        try {
+            $fromEmail = EmailConfig::getFromEmail();
+            $fromName = EmailConfig::getFromName();
+            
+            $subject = "Confirmation de votre demande de suppression de compte";
+            
+            // Construire l'URL de validation
+            $validationUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") 
+                . "://" . $_SERVER['HTTP_HOST'] 
+                . "/auth/validate-deletion/" . $token;
+            
+            $htmlMessage = self::buildAccountDeletionUserEmail($validationUrl);
+            
+            // Utiliser SMTP si configuré, sinon utiliser mail()
+            if (EmailConfig::useSmtp()) {
+                $success = self::sendViaSmtp($userEmail, $fromEmail, $fromName, $fromName, $fromEmail, $subject, $htmlMessage);
+            } else {
+                $success = self::sendViaMail($userEmail, $fromEmail, $fromName, $fromName, $fromEmail, $subject, $htmlMessage);
+            }
+            
+            return [
+                'success' => $success,
+                'message' => $success ? 'Email envoyé avec succès' : 'Erreur lors de l\'envoi de l\'email'
+            ];
+            
+        } catch (Exception $e) {
+            error_log('Erreur EmailService (suppression user): ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erreur: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Envoie un email de notification à l'administrateur
+     * 
+     * @param string $userEmail Email de l'utilisateur qui demande la suppression
+     * @param string $reason Raison de la suppression
+     * @param string $token Token de validation
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public static function sendAccountDeletionNotificationToAdmin($userEmail, $reason, $token) {
+        try {
+            $adminEmail = EmailConfig::getContactEmail();
+            $fromEmail = EmailConfig::getFromEmail();
+            $fromName = EmailConfig::getFromName();
+            
+            $subject = "Nouvelle demande de suppression de compte";
+            
+            // Construire l'URL de validation
+            $validationUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") 
+                . "://" . $_SERVER['HTTP_HOST'] 
+                . "/auth/validate-deletion/" . $token;
+            
+            $htmlMessage = self::buildAccountDeletionAdminEmail($userEmail, $reason, $validationUrl);
+            
+            // Utiliser SMTP si configuré, sinon utiliser mail()
+            if (EmailConfig::useSmtp()) {
+                $success = self::sendViaSmtp($adminEmail, $fromEmail, $fromName, $fromName, $fromEmail, $subject, $htmlMessage);
+            } else {
+                $success = self::sendViaMail($adminEmail, $fromEmail, $fromName, $fromName, $fromEmail, $subject, $htmlMessage);
+            }
+            
+            return [
+                'success' => $success,
+                'message' => $success ? 'Email envoyé avec succès' : 'Erreur lors de l\'envoi de l\'email'
+            ];
+            
+        } catch (Exception $e) {
+            error_log('Erreur EmailService (suppression admin): ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erreur: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Construit le message HTML pour l'utilisateur
+     */
+    private static function buildAccountDeletionUserEmail($validationUrl) {
+        $html = '<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de suppression de compte</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background-color: #dc3545; color: white; padding: 20px; border-radius: 5px 5px 0 0;">
+        <h2 style="margin: 0;">⚠️ Demande de suppression de compte</h2>
+    </div>
+    <div style="background-color: #f8f9fa; padding: 20px; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px;">
+        <p>Bonjour,</p>
+        
+        <p>Nous avons bien reçu votre demande de suppression de compte sur le Portail Arc Training.</p>
+        
+        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>⚠️ Attention :</strong> Cette action est irréversible et entraînera la suppression définitive de toutes vos données personnelles, entraînements et statistiques.</p>
+        </div>
+        
+        <p><strong>Pour confirmer la suppression de votre compte, cliquez sur le lien ci-dessous :</strong></p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="' . htmlspecialchars($validationUrl) . '" 
+               style="background-color: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                Confirmer la suppression
+            </a>
+        </div>
+        
+        <p style="font-size: 14px; color: #666;">
+            Si vous n\'avez pas demandé cette suppression, ignorez simplement cet email. Votre compte restera actif.
+        </p>
+        
+        <p style="font-size: 14px; color: #666;">
+            Ce lien est valide pour 48 heures.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #dee2e6; margin: 20px 0;">
+        
+        <p style="font-size: 12px; color: #666;">
+            Conformément au RGPD, votre demande sera traitée sous 30 jours maximum.<br>
+            Pour toute question, contactez-nous via le formulaire de contact du portail.<br>
+            Date : ' . date('d/m/Y à H:i') . '
+        </p>
+    </div>
+</body>
+</html>';
+        
+        return $html;
+    }
+
+    /**
+     * Construit le message HTML pour l'administrateur
+     */
+    private static function buildAccountDeletionAdminEmail($userEmail, $reason, $validationUrl) {
+        $html = '<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvelle demande de suppression de compte</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background-color: #0d6efd; color: white; padding: 20px; border-radius: 5px 5px 0 0;">
+        <h2 style="margin: 0;">📋 Nouvelle demande de suppression</h2>
+    </div>
+    <div style="background-color: #f8f9fa; padding: 20px; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px;">
+        <p>Bonjour Administrateur,</p>
+        
+        <p>Une nouvelle demande de suppression de compte a été enregistrée.</p>
+        
+        <div style="background-color: white; padding: 15px; border-radius: 5px; margin: 20px 0; border: 1px solid #dee2e6;">
+            <p><strong>Email de l\'utilisateur :</strong> ' . htmlspecialchars($userEmail) . '</p>
+            <p><strong>Date de la demande :</strong> ' . date('d/m/Y à H:i') . '</p>
+            ' . (!empty($reason) ? '<p><strong>Raison :</strong></p><p style="background-color: #f8f9fa; padding: 10px; border-radius: 3px; white-space: pre-wrap;">' . nl2br(htmlspecialchars($reason)) . '</p>' : '<p><em>Aucune raison fournie</em></p>') . '
+        </div>
+        
+        <p><strong>Action requise :</strong></p>
+        <p>L\'utilisateur doit confirmer sa demande via le lien qui lui a été envoyé. Une fois confirmée, vous pourrez procéder à la suppression définitive du compte depuis le panneau d\'administration.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="' . htmlspecialchars($validationUrl) . '" 
+               style="background-color: #0d6efd; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                Voir la demande
+            </a>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #dee2e6; margin: 20px 0;">
+        
+        <p style="font-size: 12px; color: #666;">
+            Rappel RGPD : Cette demande doit être traitée sous 30 jours maximum.<br>
+            Ce message a été généré automatiquement par le Portail Arc Training.
+        </p>
+    </div>
+</body>
+</html>';
+        
+        return $html;
+    }
 }
