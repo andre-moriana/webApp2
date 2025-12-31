@@ -21,16 +21,10 @@ class ApiService {
         
         // Utiliser l'URL de l'API depuis la configuration .env ou une valeur par défaut
         if (!isset($_ENV["API_BASE_URL"])) {
-            // URL par défaut si pas de configuration .env (HTTP car le serveur ne semble pas supporter HTTPS)
-            $this->baseUrl = "https://82.67.123.22:25000/api";
+            // URL par défaut - le serveur utilise HTTPS
+            $this->baseUrl = "https://api.arctraining.fr/api";
         } else {
             $this->baseUrl = $_ENV["API_BASE_URL"];
-            // Pour ce serveur spécifique, forcer HTTP car il ne supporte pas HTTPS correctement
-            // La conversion automatique se fera aussi lors des requêtes en cas d'erreur SSL
-            if (strpos($this->baseUrl, '82.67.123.22:25000') !== false && strpos($this->baseUrl, 'https://') === 0) {
-                error_log("DEBUG ApiService: Conversion automatique HTTPS -> HTTP pour 82.67.123.22:25000");
-                $this->baseUrl = str_replace('https://', 'http://', $this->baseUrl);
-            }
         }
         
         // Initialiser le token depuis la session
@@ -119,41 +113,14 @@ class ApiService {
         }
         
         if ($curlErrno) {
-            // Détecter les erreurs SSL qui indiquent que le serveur n'utilise pas HTTPS
-            $sslErrors = [
-                'wrong version number',
-                'SSL routines',
-                'SSL_ERROR',
-                'SSL_connect',
-                '0A00010B',
-                'SSL: wrong version number'
-            ];
-            
-            $isSslError = false;
-            foreach ($sslErrors as $sslErrorPattern) {
-                if (stripos($curlError, $sslErrorPattern) !== false) {
-                    $isSslError = true;
-                    break;
-                }
-            }
-            
-            // Si c'est une erreur SSL et que l'URL utilise HTTPS, essayer avec HTTP
-            if ($retryWithHttp && $isSslError && strpos($url, 'https://') === 0) {
-                curl_close($ch);
-                // Essayer automatiquement avec HTTP au lieu de HTTPS
-                error_log("DEBUG ApiService: Erreur SSL détectée ('{$curlError}'), conversion automatique HTTPS -> HTTP");
-                
-                // Mettre à jour l'URL de base pour les prochaines requêtes
-                $this->baseUrl = str_replace('https://', 'http://', $this->baseUrl);
-                
-                // Réessayer la requête avec HTTP (une seule fois)
-                return $this->makeRequest($endpoint, $method, $data, false);
-            }
-            
+            // Retourner directement l'erreur sans fallback HTTP
             curl_close($ch);
-            throw new Exception("Erreur lors de la requête API: " . $curlError);
+            error_log("DEBUG ApiService: Erreur cURL ({$curlErrno}): {$curlError}");
+            return [
+                "success" => false,
+                "message" => "Erreur cURL: " . $curlError
+            ];
         }
-        
         curl_close($ch);
         
         // Nettoyer le BOM (Byte Order Mark) qui peut causer des erreurs de décodage
