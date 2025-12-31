@@ -952,6 +952,18 @@ class ApiService {
         return $result;
     }
 
+    /**
+     * Supprime définitivement un utilisateur qui a demandé la suppression de son compte
+     * @param int $userId ID de l'utilisateur à supprimer
+     * @return array Résultat de la suppression
+     */
+    public function permanentlyDeleteUser($userId) {
+        
+        $result = $this->makeRequest("users/{$userId}/delete-permanently", "DELETE");
+        
+        return $result;
+    }
+
     public function getGroupTopics($groupId) {
         if (!$this->token) {
             return [
