@@ -912,6 +912,17 @@ class ApiService {
     }
 
     /**
+     * Récupère les utilisateurs en attente de suppression
+     * @return array Liste des utilisateurs en attente de suppression
+     */
+    public function getDeletionPendingUsers() {
+        
+        $result = $this->makeRequest("users/deletion-pending", "GET");
+        
+        return $result;
+    }
+
+    /**
      * Valide un utilisateur en attente
      * @param int $userId ID de l'utilisateur à valider
      * @return array Résultat de la validation
