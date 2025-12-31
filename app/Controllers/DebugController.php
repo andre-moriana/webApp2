@@ -98,7 +98,7 @@ class DebugController {
         echo "<h2>3. Test direct cURL vers le backend</h2>";
 
         // Lire l'URL de l'API depuis .env
-        $baseUrl = "http://82.67.123.22:25000/api";
+        $baseUrl = "https://api.arctraining.fr/api";
         if (file_exists('.env')) {
             $lines = file('.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             foreach ($lines as $line) {
