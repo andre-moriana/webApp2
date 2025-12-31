@@ -482,9 +482,14 @@ class AuthController {
             require_once __DIR__ . '/../Services/ApiService.php';
             $apiService = new ApiService();
             
+            // Construire l'URL de base pour la validation
+            $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") 
+                . "://" . $_SERVER['HTTP_HOST'];
+            
             $response = $apiService->makeRequest('users/deletion-request', 'POST', [
                 'email' => $email,
-                'reason' => $reason
+                'reason' => $reason,
+                'base_url' => $baseUrl
             ]);
             
             if ($response && isset($response['success']) && $response['success']) {
