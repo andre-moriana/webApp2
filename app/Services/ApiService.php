@@ -959,7 +959,7 @@ class ApiService {
      */
     public function permanentlyDeleteUser($userId) {
         
-        $result = $this->makeRequest("users/{$userId}/delete-permanently", "DELETE");
+        $result = $this->makeRequest("users/{$userId}", "DELETE");
         
         return $result;
     }
