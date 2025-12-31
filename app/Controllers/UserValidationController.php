@@ -18,6 +18,18 @@ class UserValidationController {
         $authController = new AuthController();
         $authController->requireAuth();
 
+        // Debug: Vérifier les informations de session
+        error_log("DEBUG UserValidation index - User logged in: " . (isset($_SESSION['logged_in']) ? 'YES' : 'NO'));
+        error_log("DEBUG UserValidation index - Token présent: " . (isset($_SESSION['token']) ? 'YES' : 'NO'));
+        if (isset($_SESSION['user'])) {
+            error_log("DEBUG UserValidation index - User info: " . json_encode([
+                'id' => $_SESSION['user']['id'] ?? 'N/A',
+                'username' => $_SESSION['user']['username'] ?? 'N/A',
+                'is_admin' => $_SESSION['user']['is_admin'] ?? 'N/A',
+                'role' => $_SESSION['user']['role'] ?? 'N/A'
+            ]));
+        }
+
         try {
             $result = $this->apiService->getPendingUsers();
             
