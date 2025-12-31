@@ -478,7 +478,7 @@ class AuthController {
         }
 
         try {
-            // Appeler l'API backend pour créer la demande
+            // Appeler l'API backend pour créer la demande (l'API envoie aussi les emails)
             require_once __DIR__ . '/../Services/ApiService.php';
             $apiService = new ApiService();
             
@@ -489,25 +489,16 @@ class AuthController {
             
             if ($response && isset($response['success']) && $response['success']) {
                 $token = $response['data']['token'] ?? null;
-                
-                // Envoyer les emails
-                require_once __DIR__ . '/../Services/EmailService.php';
-                
-                // Email à l'utilisateur
-                $userEmailResult = EmailService::sendAccountDeletionRequestToUser($email, $token);
-                
-                // Email à l'administrateur
-                $adminEmailResult = EmailService::sendAccountDeletionNotificationToAdmin($email, $reason, $token);
+                $emailSent = $response['data']['email_sent'] ?? false;
                 
                 // Log de la demande
                 $logMessage = sprintf(
-                    "[%s] Demande de suppression de compte - Email: %s - Token: %s - Raison: %s - Email user: %s - Email admin: %s\n",
+                    "[%s] Demande de suppression de compte - Email: %s - Token: %s - Raison: %s - Emails envoyés: %s\n",
                     date('Y-m-d H:i:s'),
                     $email,
-                    $token,
+                    $token ?? 'N/A',
                     $reason ?: 'Non spécifiée',
-                    $userEmailResult['success'] ? 'OK' : 'ERREUR',
-                    $adminEmailResult['success'] ? 'OK' : 'ERREUR'
+                    $emailSent ? 'OUI' : 'NON'
                 );
                 
                 $logsDir = __DIR__ . '/../../logs';
