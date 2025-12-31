@@ -523,9 +523,9 @@ class AuthController {
 
                 $_SESSION['success'] = 'Votre demande de suppression de compte a été enregistrée. Vous allez recevoir un email de confirmation avec un lien pour valider définitivement la suppression. Vérifiez vos spams si vous ne le recevez pas.';
             } else {
-                $_SESSION['error'] = $response['message'] ?? 'Erreur lors de l\'enregistrement de votre demande.';
+                $_SESSION['error'] = $response['data']['message'] ?? $response['message'] ?? 'Erreur lors de l\'enregistrement de votre demande.';
             }
-            data']['message'] ?? $response['
+            
             header('Location: /auth/delete-account');
             exit;
 
