@@ -167,10 +167,19 @@
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3">
-                                                        <?php echo strtoupper(substr($user['name'] ?? $user['last_name'] ?? '', 0, 2)); ?>
+                                                        <?php 
+                                                        $displayName = $user['name'] ?? $user['last_name'] ?? '';
+                                                        if (empty($displayName) && !empty($user['first_name'])) {
+                                                            $displayName = $user['first_name'];
+                                                        }
+                                                        echo strtoupper(substr($displayName, 0, 2)); 
+                                                        ?>
                                                     </div>
                                                     <div>
-                                                        <strong><?php echo htmlspecialchars(($user['first_name'] ?? '') . ' ' . ($user['name'] ?? $user['last_name'] ?? '')); ?></strong>
+                                                        <strong><?php 
+                                                        $fullName = trim(($user['first_name'] ?? '') . ' ' . ($user['name'] ?? $user['last_name'] ?? ''));
+                                                        echo htmlspecialchars($fullName);
+                                                        ?></strong>
                                                         <br>
                                                         <small class="text-muted">@<?php echo htmlspecialchars($user['username'] ?? ''); ?></small>
                                                     </div>
@@ -191,7 +200,7 @@
                                             </td>
                                             <td>
                                                 <?php 
-                                                $requestedAt = $user['deletion_requested_at'] ?? $user['requested_at'] ?? '';
+                                                $requestedAt = $user['deletion_requested_at'] ?? $user['requested_at'] ?? $user['created_at'] ?? '';
                                                 if ($requestedAt) {
                                                     echo date('d/m/Y H:i', strtotime($requestedAt));
                                                 } else {

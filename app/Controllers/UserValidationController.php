@@ -38,6 +38,7 @@ class UserValidationController {
         }
 
         // Récupérer les utilisateurs en attente de suppression
+        $deletionPendingUsers = []; // Initialiser par défaut
         try {
             $deletionResult = $this->apiService->getDeletionPendingUsers();
             
@@ -48,12 +49,16 @@ class UserValidationController {
                 } else {
                     $deletionPendingUsers = $deletionResult['data'] ?? [];
                 }
+                
+                error_log('DEBUG UserValidation - Utilisateurs en attente de suppression: ' . count($deletionPendingUsers));
+                if (!empty($deletionPendingUsers)) {
+                    error_log('DEBUG UserValidation - Premier utilisateur: ' . json_encode($deletionPendingUsers[0]));
+                }
             } else {
-                $deletionPendingUsers = [];
+                error_log('ERREUR UserValidation - getDeletionPendingUsers a échoué: ' . ($deletionResult['message'] ?? 'Erreur inconnue'));
             }
         } catch (Exception $e) {
-            $deletionPendingUsers = [];
-            error_log('Erreur lors de la récupération des utilisateurs en attente de suppression: ' . $e->getMessage());
+            error_log('EXCEPTION UserValidation - Erreur lors de la récupération des utilisateurs en attente de suppression: ' . $e->getMessage());
         }
 
         $title = 'Validation des utilisateurs - Portail Archers de Gémenos';
