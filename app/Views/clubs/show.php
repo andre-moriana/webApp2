@@ -1,5 +1,5 @@
 <?php
-$title = "Détails du club - " . htmlspecialchars($club['name'] ?? 'Club');
+$title = "Details du club - " . htmlspecialchars($club['name'] ?? 'Club');
 ?>
 <?php
 $additionalCSS = $additionalCSS ?? [];
@@ -24,7 +24,7 @@ $additionalJS[] = '/public/assets/js/clubs-show.js';
                     </h4>
                     <div class="btn-group">
                         <?php 
-                        // Vérifier si l'utilisateur peut gérer les permissions
+                        // Verifier si l'utilisateur peut gerer les permissions
                         $user = $_SESSION['user'];
                         $isAdmin = $user['is_admin'] ?? false;
                         $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
