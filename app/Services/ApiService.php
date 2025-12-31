@@ -916,10 +916,24 @@ class ApiService {
      * @return array Liste des utilisateurs en attente de suppression
      */
     public function getDeletionPendingUsers() {
+        error_log("DEBUG ApiService getDeletionPendingUsers - Token présent: " . ($this->token ? 'OUI' : 'NON'));
+        if ($this->token) {
+            error_log("DEBUG ApiService getDeletionPendingUsers - Token (premiers 20 chars): " . substr($this->token, 0, 20) . "...");
+        }
         
         $result = $this->makeRequest("users/deletion-pending", "GET");
         
-        error_log("DEBUG ApiService getDeletionPendingUsers - Réponse API: " . json_encode($result, JSON_PRETTY_PRINT));
+        error_log("DEBUG ApiService getDeletionPendingUsers - Réponse complète: " . json_encode($result, JSON_PRETTY_PRINT));
+        error_log("DEBUG ApiService getDeletionPendingUsers - Success: " . ($result['success'] ? 'true' : 'false'));
+        error_log("DEBUG ApiService getDeletionPendingUsers - Status code: " . ($result['status_code'] ?? 'N/A'));
+        
+        if (isset($result['data'])) {
+            if (is_array($result['data'])) {
+                error_log("DEBUG ApiService getDeletionPendingUsers - Type de data: array, count: " . count($result['data']));
+            } else {
+                error_log("DEBUG ApiService getDeletionPendingUsers - Type de data: " . gettype($result['data']));
+            }
+        }
         
         return $result;
     }
