@@ -449,4 +449,67 @@ class AuthController {
             exit;
         }
     }
+
+    public function deleteAccount() {
+        // Afficher le formulaire de demande de suppression de compte
+        include 'app/Views/auth/delete-account.php';
+    }
+
+    public function deleteAccountRequest() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /auth/delete-account');
+            exit;
+        }
+
+        $email = $_POST['email'] ?? '';
+        $reason = $_POST['reason'] ?? '';
+        $confirmDelete = isset($_POST['confirmDelete']);
+
+        if (empty($email)) {
+            $_SESSION['error'] = 'Veuillez saisir votre email ou identifiant';
+            header('Location: /auth/delete-account');
+            exit;
+        }
+
+        if (!$confirmDelete) {
+            $_SESSION['error'] = 'Veuillez confirmer que vous souhaitez supprimer votre compte';
+            header('Location: /auth/delete-account');
+            exit;
+        }
+
+        try {
+            // TODO: Implémenter l'appel API pour créer une demande de suppression
+            // Pour le moment, on envoie un email à l'admin ou on enregistre la demande
+            
+            // Log de la demande pour traitement manuel
+            $logMessage = sprintf(
+                "[%s] Demande de suppression de compte - Email: %s - Raison: %s\n",
+                date('Y-m-d H:i:s'),
+                $email,
+                $reason ?: 'Non spécifiée'
+            );
+            
+            // Créer le répertoire logs si nécessaire
+            $logsDir = __DIR__ . '/../../logs';
+            if (!file_exists($logsDir)) {
+                mkdir($logsDir, 0755, true);
+            }
+            
+            file_put_contents(
+                $logsDir . '/account-deletion-requests.log',
+                $logMessage,
+                FILE_APPEND
+            );
+
+            $_SESSION['success'] = 'Votre demande de suppression de compte a été enregistrée. Un administrateur la traitera dans les 30 jours conformément au RGPD. Vous recevrez un email de confirmation.';
+            header('Location: /auth/delete-account');
+            exit;
+
+        } catch (Exception $e) {
+            error_log("Erreur lors de la demande de suppression: " . $e->getMessage());
+            $_SESSION['error'] = 'Une erreur est survenue lors de l\'enregistrement de votre demande. Veuillez contacter un administrateur.';
+            header('Location: /auth/delete-account');
+            exit;
+        }
+    }
 }
