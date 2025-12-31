@@ -193,6 +193,8 @@ class Router {
         $this->addRoute("POST", "/auth/update-password", "AuthController@updatePassword");
         $this->addRoute("GET", "/auth/register", "AuthController@register");
         $this->addRoute("POST", "/auth/create-user", "AuthController@createUser");
+        $this->addRoute("GET", "/auth/delete-account", "AuthController@deleteAccount");
+        $this->addRoute("POST", "/auth/delete-account-request", "AuthController@deleteAccountRequest");
         
         // Routes de validation des utilisateurs (protégées - admin seulement)
         $this->addRoute("GET", "/user-validation", "UserValidationController@index");
