@@ -37,6 +37,25 @@ class UserValidationController {
             $_SESSION['error'] = 'Erreur lors de la récupération des utilisateurs en attente: ' . $e->getMessage();
         }
 
+        // Récupérer les utilisateurs en attente de suppression
+        try {
+            $deletionResult = $this->apiService->getDeletionPendingUsers();
+            
+            if ($deletionResult['success']) {
+                // Gérer la double imbrication de data
+                if (isset($deletionResult['data']['data'])) {
+                    $deletionPendingUsers = $deletionResult['data']['data'] ?? [];
+                } else {
+                    $deletionPendingUsers = $deletionResult['data'] ?? [];
+                }
+            } else {
+                $deletionPendingUsers = [];
+            }
+        } catch (Exception $e) {
+            $deletionPendingUsers = [];
+            error_log('Erreur lors de la récupération des utilisateurs en attente de suppression: ' . $e->getMessage());
+        }
+
         $title = 'Validation des utilisateurs - Portail Archers de Gémenos';
         
         // CSS spécifique à la page
@@ -123,6 +142,43 @@ class UserValidationController {
             }
         } catch (Exception $e) {
             $_SESSION['error'] = 'Erreur lors du rejet de l\'utilisateur';
+        }
+
+        header('Location: /user-validation');
+        exit;
+    }
+
+    /**
+     * Supprime définitivement un utilisateur qui a demandé la suppression de son compte
+     */
+    public function deleteUser() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /user-validation');
+            exit;
+        }
+
+        // Vérifier l'authentification et l'approbation
+        $authController = new AuthController();
+        $authController->requireAuth();
+
+        $userId = $_POST['user_id'] ?? '';
+        
+        if (empty($userId)) {
+            $_SESSION['error'] = 'ID utilisateur manquant';
+            header('Location: /user-validation');
+            exit;
+        }
+
+        try {
+            $result = $this->apiService->permanentlyDeleteUser($userId);
+            
+            if ($result['success']) {
+                $_SESSION['success'] = 'Utilisateur supprimé définitivement avec succès !';
+            } else {
+                $_SESSION['error'] = $result['message'] ?? 'Erreur lors de la suppression de l\'utilisateur';
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Erreur lors de la suppression de l\'utilisateur: ' . $e->getMessage();
         }
 
         header('Location: /user-validation');
