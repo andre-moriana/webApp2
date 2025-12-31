@@ -567,9 +567,9 @@ class AuthController {
                 
                 $_SESSION['success'] = 'Votre demande de suppression a été validée. Un administrateur procédera à la suppression définitive de votre compte dans les 30 jours conformément au RGPD. Vous recevrez un email de confirmation une fois l\'opération effectuée.';
             } else {
-                $_SESSION['error'] = $response['message'] ?? 'Lien invalide ou expiré. Veuillez faire une nouvelle demande de suppression.';
-            }data']['message'] ?? $response['
-            
+                $_SESSION['error'] = $response['data']['message'] ?? $response['message'] ?? 'Lien invalide ou expiré. Veuillez faire une nouvelle demande de suppression.';
+            }
+           
             header('Location: /auth/delete-account');
             exit;
             
