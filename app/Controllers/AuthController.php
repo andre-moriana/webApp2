@@ -482,15 +482,13 @@ class AuthController {
             require_once __DIR__ . '/../Services/ApiService.php';
             $apiService = new ApiService();
             
-            $result = $apiService->makeRequest('users/deletion-request', 'POST', [
+            $response = $apiService->makeRequest('users/deletion-request', 'POST', [
                 'email' => $email,
                 'reason' => $reason
             ]);
             
-            $response = json_decode($result, true);
-            
             if ($response && isset($response['success']) && $response['success']) {
-                $token = $response['token'];
+                $token = $response['data']['token'] ?? null;
                 
                 // Envoyer les emails
                 require_once __DIR__ . '/../Services/EmailService.php';
@@ -527,7 +525,7 @@ class AuthController {
             } else {
                 $_SESSION['error'] = $response['message'] ?? 'Erreur lors de l\'enregistrement de votre demande.';
             }
-            
+            data']['message'] ?? $response['
             header('Location: /auth/delete-account');
             exit;
 
@@ -545,15 +543,14 @@ class AuthController {
             require_once __DIR__ . '/../Services/ApiService.php';
             $apiService = new ApiService();
             
-            $result = $apiService->makeRequest('users/deletion-request/' . $token . '/validate', 'POST');
-            $response = json_decode($result, true);
+            $response = $apiService->makeRequest('users/deletion-request/' . $token . '/validate', 'POST');
             
             if ($response && isset($response['success']) && $response['success']) {
                 // Log de la validation
                 $logMessage = sprintf(
                     "[%s] Validation de suppression de compte - Email: %s - Token: %s\n",
                     date('Y-m-d H:i:s'),
-                    $response['email'] ?? 'N/A',
+                    $response['data']['email'] ?? 'N/A',
                     $token
                 );
                 
@@ -571,7 +568,7 @@ class AuthController {
                 $_SESSION['success'] = 'Votre demande de suppression a été validée. Un administrateur procédera à la suppression définitive de votre compte dans les 30 jours conformément au RGPD. Vous recevrez un email de confirmation une fois l\'opération effectuée.';
             } else {
                 $_SESSION['error'] = $response['message'] ?? 'Lien invalide ou expiré. Veuillez faire une nouvelle demande de suppression.';
-            }
+            }data']['message'] ?? $response['
             
             header('Location: /auth/delete-account');
             exit;
