@@ -919,6 +919,8 @@ class ApiService {
         
         $result = $this->makeRequest("users/deletion-pending", "GET");
         
+        error_log("DEBUG ApiService getDeletionPendingUsers - Réponse API: " . json_encode($result, JSON_PRETTY_PRINT));
+        
         return $result;
     }
 
