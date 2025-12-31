@@ -213,6 +213,6 @@ class UserValidationController {
         }
 
         $user = $_SESSION['user'];
-        return isset($user['is_admin']) && $user['is_admin'] === true;
+        return isset($user['is_admin']) && $user['is_admin'] == true;
     }
 }
