@@ -113,6 +113,10 @@
                                     <i class="fas fa-shield-alt me-1"></i>
                                     Protection des données personnelles
                                 </a>
+                                <a href="/auth/delete-account" class="btn btn-link text-danger" style="font-size: 0.875rem;">
+                                    <i class="fas fa-user-slash me-1"></i>
+                                    Supprimer mon compte
+                                </a>
                             </div>
                         </div>
                     </div>
