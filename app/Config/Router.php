@@ -203,6 +203,9 @@ class Router {
         $this->addRoute("POST", "/user-validation/reject", "UserValidationController@reject");
         $this->addRoute("POST", "/user-validation/delete-user", "UserValidationController@deleteUser");
         
+        // Route de debug (admin seulement)
+        $this->addRoute("GET", "/debug/deletion-pending", "DebugController@deletionPending");
+        
         // Routes des paramètres utilisateur (protégées)
         $this->addRoute("GET", "/user-settings", "UserSettingsController@index");
         $this->addRoute("POST", "/user-settings/update-profile-image", "UserSettingsController@updateProfileImage");
