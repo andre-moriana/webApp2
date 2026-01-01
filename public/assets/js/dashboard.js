@@ -1,5 +1,9 @@
 // CSS pour afficher/masquer la liste au survol
+console.log('=== DASHBOARD.JS CHARGÉ ===');
+
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== DOMContentLoaded DÉCLENCHÉ ===');
+    
     // Ajouter le style CSS dynamiquement
     const style = document.createElement('style');
     style.textContent = `
