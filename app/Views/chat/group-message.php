@@ -53,9 +53,9 @@ if (isset($message["created_at"]) || isset($message["timestamp"])) {
     }
 }
 
-// URL du backend pour les pièces jointes
-$backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
-$backendUrl = str_replace('/api', '', $backendUrl); // Supprimer /api si présent
+// URL du backend pour les fichiers statiques (sans /api)
+// Les fichiers sont servis directement depuis https://api.arctraining.fr/uploads/...
+$backendUrl = 'https://api.arctraining.fr';
 
 ?>
 <div class="d-flex <?php echo $alignClass; ?> mb-3" data-message-id="<?php echo htmlspecialchars($messageId ?? ""); ?>">
