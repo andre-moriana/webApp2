@@ -149,7 +149,17 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <div class="card border-left-primary shadow-sm h-100">
+                        <div class="card border-left-primary shadow-sm h-100" 
+                             data-bs-toggle="tooltip" 
+                             data-bs-placement="top" 
+                             data-bs-html="true"
+                             title="<?php 
+                                if (!empty($stats['clubs_regional_list'])) {
+                                    echo '<strong>Comités Régionaux:</strong><br>' . implode('<br>', array_map('htmlspecialchars', $stats['clubs_regional_list']));
+                                } else {
+                                    echo 'Aucun comité régional';
+                                }
+                             ?>">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
@@ -169,7 +179,17 @@
                     </div>
                     
                     <div class="col-md-4 mb-3">
-                        <div class="card border-left-info shadow-sm h-100">
+                        <div class="card border-left-info shadow-sm h-100"
+                             data-bs-toggle="tooltip" 
+                             data-bs-placement="top" 
+                             data-bs-html="true"
+                             title="<?php 
+                                if (!empty($stats['clubs_departmental_list'])) {
+                                    echo '<strong>Comités Départementaux:</strong><br>' . implode('<br>', array_map('htmlspecialchars', $stats['clubs_departmental_list']));
+                                } else {
+                                    echo 'Aucun comité départemental';
+                                }
+                             ?>">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
@@ -290,55 +310,6 @@
     </div>
 </div>
 
-<!-- Actions rapides -->
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="fas fa-bolt me-2"></i>
-                    Actions rapides
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <?php if (($_SESSION['user']['is_admin'] ?? false) || ($_SESSION['user']['role'] ?? '') === 'Admin'): ?>
-                    <div class="col-md-3 mb-3">
-                        <a href="/users" class="btn btn-primary btn-block">
-                            <i class="fas fa-users me-2"></i>
-                            Gérer les utilisateurs
-                        </a>
-                    </div>
-                    <?php endif; ?>
-                    <div class="col-md-3 mb-3">
-                        <a href="/groups" class="btn btn-success btn-block">
-                            <i class="fas fa-layer-group me-2"></i>
-                            Gérer les groupes
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="/exercises" class="btn btn-secondary btn-block">
-                            <i class="fas fa-dumbbell me-2"></i>
-                            Gérer les exercices
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="/trainings" class="btn btn-info btn-block">
-                            <i class="fas fa-chart-line me-2"></i>
-                            Voir les entraînements
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="/events" class="btn btn-warning btn-block">
-                            <i class="fas fa-calendar-alt me-2"></i>
-                            Gérer les événements
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Informations système - Visible uniquement pour les administrateurs -->
 <?php 
