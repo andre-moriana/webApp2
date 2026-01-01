@@ -127,13 +127,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Délégation d'événements pour les clubs (car ils peuvent être dynamiquement ajoutés)
-    document.getElementById('clubs-list')?.addEventListener('click', function(e) {
+    // Gérer le clic sur un club
+    const clubsListElement = document.getElementById('clubs-list');
+    console.log('=== INIT clubs-list ===');
+    console.log('Element clubs-list trouvé:', clubsListElement);
+    
+    clubsListElement?.addEventListener('click', function(e) {
+        console.log('CLICK détecté sur clubs-list', e.target);
         const clubItem = e.target.closest('.club-item');
+        console.log('clubItem trouvé:', clubItem);
+        
         if (clubItem) {
             e.stopPropagation();
             
             const clubId = clubItem.getAttribute('data-club-id');
             const clubName = clubItem.textContent.trim();
+            
+            console.log('Club cliqué - ID:', clubId, 'Nom:', clubName);
             
             // Retirer la sélection des comités
             document.querySelectorAll('.committee-item').forEach(function(el) {
