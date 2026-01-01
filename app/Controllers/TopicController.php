@@ -38,12 +38,12 @@ class TopicController {
                     if (isset($message['attachment']) && is_array($message['attachment'])) {
                         $attachment = &$message['attachment'];
                         
-                        // Si storedFilename existe, construire l'URL correcte
-                        if (isset($attachment['storedFilename'])) {
+                        // Si storedFilename existe et n'est pas vide, construire l'URL correcte
+                        if (!empty($attachment['storedFilename'])) {
                             $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
                         }
                         // Sinon extraire depuis url existant
-                        elseif (isset($attachment['url'])) {
+                        elseif (isset($attachment['url']) && !empty($attachment['url'])) {
                             // Si l'URL contient un paramètre url=, l'extraire et utiliser le chemin tel quel
                             if (strpos($attachment['url'], '?') !== false && strpos($attachment['url'], 'url=') !== false) {
                                 $urlParts = parse_url($attachment['url']);
@@ -70,7 +70,7 @@ class TopicController {
                             }
                         }
                         // Sinon extraire depuis path
-                        elseif (isset($attachment['path'])) {
+                        elseif (isset($attachment['path']) && !empty($attachment['path'])) {
                             if (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['path'], $matches)) {
                                 $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
                             }
