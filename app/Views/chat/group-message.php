@@ -62,27 +62,25 @@ $backendUrl = $_ENV['API_BASE_URL'] ?? 'https://api.arctraining.fr';
                 $attachmentPath = $message["attachment"]["url"] ?? $message["attachment"]["path"] ?? "";
                 $originalName = $message["attachment"]["originalName"] ?? $message["attachment"]["filename"] ?? "Pièce jointe";
                 $mimeType = $message["attachment"]["mimeType"] ?? "";
+                $storedFilename = $message["attachment"]["storedFilename"] ?? "";
 
                 // Construire l'URL complète: https://api.arctraining.fr/uploads/messages/filename.jpg
-                if ($attachmentPath) {
-                    // Si l'URL contient /messages/image/ avec un paramètre url, extraire le vrai chemin
-                    if (strpos($attachmentPath, '/messages/image/') !== false && strpos($attachmentPath, '?url=') !== false) {
-                        parse_str(parse_url($attachmentPath, PHP_URL_QUERY), $params);
-                        if (isset($params['url'])) {
-                            $attachmentUrl = "https://api.arctraining.fr" . $params['url'];
-                        } else {
-                            $attachmentUrl = "";
-                        }
+                // Utiliser directement storedFilename si disponible
+                if ($storedFilename) {
+                    $attachmentUrl = "https://api.arctraining.fr/uploads/messages/" . $storedFilename;
+                }
+                // Sinon extraire le nom de fichier du chemin
+                elseif ($attachmentPath) {
+                    // Extraire le nom de fichier depuis n'importe quel format
+                    if (preg_match('/([a-f0-9]{32}\.[a-z0-9]+)$/i', $attachmentPath, $matches)) {
+                        $attachmentUrl = "https://api.arctraining.fr/uploads/messages/" . $matches[1];
                     }
-                    // Si le chemin commence par uploads/, on construit l'URL complète
-                    elseif (str_starts_with($attachmentPath, "uploads/")) {
+                    elseif (str_starts_with($attachmentPath, "uploads/messages/")) {
                         $attachmentUrl = "https://api.arctraining.fr/" . $attachmentPath;
-                    } 
-                    // Si c'est juste le nom de fichier, on ajoute le chemin complet
-                    elseif (!str_starts_with($attachmentPath, "http")) {
-                        $attachmentUrl = "https://api.arctraining.fr/uploads/messages/" . ltrim($attachmentPath, "/");
                     }
-                    // Sinon on utilise tel quel
+                    elseif (!str_starts_with($attachmentPath, "http")) {
+                        $attachmentUrl = "https://api.arctraining.fr/uploads/messages/" . basename($attachmentPath);
+                    }
                     else {
                         $attachmentUrl = $attachmentPath;
                     }
