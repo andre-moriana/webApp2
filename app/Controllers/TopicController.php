@@ -30,9 +30,16 @@ class TopicController {
             // Récupérer les messages du sujet (utiliser le même endpoint que l'app mobile)
             $messagesResult = $this->apiService->makeRequest("messages/topic/{$topicId}/history", "GET");
             $messages = [];
+            
+            // DEBUG: Afficher la réponse complète
+            echo "<!-- DEBUG Messages Result: " . json_encode($messagesResult) . " -->";
+            
             if ($messagesResult['success'] && isset($messagesResult['data']) && is_array($messagesResult['data'])) {
                 $messages = $messagesResult['data'];
             }
+            
+            // DEBUG: Afficher le nombre de messages
+            echo "<!-- DEBUG Nombre de messages: " . count($messages) . " -->";
             
             // Récupérer les détails du groupe
             $groupResponse = $this->apiService->getGroupDetails($groupId);

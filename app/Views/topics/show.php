@@ -26,6 +26,13 @@ $title = htmlspecialchars($topic['title'] ?? 'Sujet') . " - Portail Archers de G
                     <?php endif; ?>
                     
                     <div class="chat-container" style="height: 500px; overflow-y: auto;">
+                        <!-- DEBUG VISIBLE -->
+                        <div style="background: yellow; padding: 10px; margin: 10px 0;">
+                            <strong>DEBUG:</strong><br>
+                            Nombre de messages: <?php echo count($messages); ?><br>
+                            Messages array: <?php echo htmlspecialchars(json_encode($messages, JSON_PRETTY_PRINT)); ?>
+                        </div>
+                        
                         <div id="messages-container" class="messages-container mb-3">
                             <?php if (!empty($messages)): ?>
                                 <?php foreach ($messages as $message): 
