@@ -83,15 +83,6 @@ $backendUrl = 'https://api.arctraining.fr';
                     $attachmentUrl = rtrim($backendUrl, '/') . "/" . ltrim($attachmentPath, "/");
                 }
                 ?>
-                <!-- DEBUG INFO (visible dans le HTML) -->
-                <div style="background: yellow; padding: 5px; margin: 5px 0; font-size: 11px;" class="debug-info">
-                    <strong>DEBUG:</strong><br>
-                    Path: <?php echo htmlspecialchars($attachmentPath); ?><br>
-                    URL: <?php echo htmlspecialchars($attachmentUrl); ?><br>
-                    Backend: <?php echo htmlspecialchars($backendUrl); ?><br>
-                    Attachment Data: <?php echo htmlspecialchars(json_encode($message["attachment"])); ?>
-                </div>
-                <?php
                 <a href="<?php echo htmlspecialchars($attachmentUrl); ?>" target="_blank" class="attachment-link">
                     <?php if ($mimeType && strpos($mimeType, "image/") === 0): ?>
                         <img src="<?php echo htmlspecialchars($attachmentUrl); ?>"
