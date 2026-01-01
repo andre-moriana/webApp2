@@ -257,7 +257,7 @@
                                         <?php if (!empty($stats['all_clubs'])): ?>
                                             <?php foreach ($stats['all_clubs'] as $club): ?>
                                                 <li class="mb-1 club-item d-flex justify-content-between align-items-center" 
-                                                    data-club-id="<?php echo htmlspecialchars($club['id']); ?>"
+                                                    data-club-id="<?php echo htmlspecialchars($club['nameshort']); ?>"
                                                     style="cursor: pointer;"
                                                     title="Cliquez pour voir les utilisateurs">
                                                     <span>
