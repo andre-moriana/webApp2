@@ -21,6 +21,9 @@ class DashboardController {
         // Récupérer les statistiques
         $stats = $this->getStats();
         
+        // Définir les fichiers JS spécifiques
+        $additionalJS = ['/public/assets/js/dashboard.js'];
+        
         // Inclure le header
         include 'app/Views/layouts/header.php';
         
@@ -42,7 +45,9 @@ class DashboardController {
             'clubs_departmental' => 0,
             'clubs_total' => 0,
             'users_pending_validation' => 0,
-            'users_pending_deletion' => 0
+            'users_pending_deletion' => 0,
+            'clubs_regional_list' => [],
+            'clubs_departmental_list' => []
         ];
         
         try {
@@ -91,6 +96,7 @@ class DashboardController {
                     
                     foreach ($clubs as $club) {
                         $clubId = $club['nameshort'] ?? $club['nameShort'] ?? '';
+                        $clubName = $club['name'] ?? 'Club sans nom';
                         
                         // Ignorer les IDs spéciaux
                         if (in_array($clubId, $excludedIds)) {
@@ -102,10 +108,12 @@ class DashboardController {
                         // Comité Régional : finit par 00000 sauf 0000000
                         if (preg_match('/00000$/', $clubId) && $clubId !== '0000000') {
                             $stats['clubs_regional']++;
+                            $stats['clubs_regional_list'][] = $clubName;
                         }
                         // Comité Départemental : finit par 000 (mais pas 00000 qui sont régionaux)
                         elseif (preg_match('/000$/', $clubId) && !preg_match('/00000$/', $clubId)) {
                             $stats['clubs_departmental']++;
+                            $stats['clubs_departmental_list'][] = $clubName;
                         }
                         // Sinon c'est un club normal (ne finit pas par 000)
                     }
