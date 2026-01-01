@@ -72,22 +72,35 @@ $backendUrl = str_replace('/api', '', $backendUrl); // Supprimer /api si présen
         <?php if (isset($message["attachment"]) && $message["attachment"]): ?>
             <div class="message-attachment mt-2">
                 <?php
-                $attachmentUrl = $message["attachment"]["url"] ?? $message["attachment"]["path"] ?? "";
+                // Récupérer l'URL/path de l'attachment
+                $attachmentPath = $message["attachment"]["path"] ?? $message["attachment"]["url"] ?? "";
                 $originalName = $message["attachment"]["originalName"] ?? $message["attachment"]["filename"] ?? "Pièce jointe";
                 $mimeType = $message["attachment"]["mimeType"] ?? "";
 
+                // Debug: log les données de l'attachment
+                error_log("Attachment data: " . json_encode($message["attachment"]));
+                error_log("Attachment path: " . $attachmentPath);
+                error_log("Backend URL: " . $backendUrl);
+
                 // Construire l'URL complète vers le backend
-                if ($attachmentUrl && !str_starts_with($attachmentUrl, "http")) {
-                    $attachmentUrl = rtrim($backendUrl, '/') . "/" . ltrim($attachmentUrl, "/");
+                $attachmentUrl = $attachmentPath;
+                if ($attachmentPath && !str_starts_with($attachmentPath, "http")) {
+                    $attachmentUrl = rtrim($backendUrl, '/') . "/" . ltrim($attachmentPath, "/");
                 }
+                
+                error_log("Final attachment URL: " . $attachmentUrl);
                 ?>
                 <a href="<?php echo htmlspecialchars($attachmentUrl); ?>" target="_blank" class="attachment-link">
-                    <?php if (strpos($mimeType, "image/") === 0): ?>
+                    <?php if ($mimeType && strpos($mimeType, "image/") === 0): ?>
                         <img src="<?php echo htmlspecialchars($attachmentUrl); ?>"
                              alt="<?php echo htmlspecialchars($originalName); ?>"
                              class="img-fluid rounded"
                              style="max-width: 200px; max-height: 200px; object-fit: cover;"
-                             onerror="handleImageError(this)">
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="file-attachment p-2 bg-light rounded d-flex align-items-center" style="display:none;">
+                            <i class="fas fa-image me-2"></i>
+                            <span><?php echo htmlspecialchars($originalName); ?></span>
+                        </div>
                     <?php else: ?>
                         <div class="file-attachment p-2 bg-light rounded d-flex align-items-center">
                             <i class="fas fa-file me-2"></i>
