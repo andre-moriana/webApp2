@@ -283,17 +283,6 @@
     window.eventsByClub = <?php echo json_encode($stats['events_by_club'] ?? []); ?>;
     window.allEvents = <?php echo json_encode($stats['events_list'] ?? []); ?>;
     window.totalEvents = <?php echo $stats['events']; ?>;
-    
-    // DEBUG: Afficher les données des groupes
-    console.log('=== DONNÉES GROUPES ===');
-    console.log('Total groupes:', window.totalGroups);
-    console.log('window.allGroups:', window.allGroups);
-    console.log('window.groupsByClub:', window.groupsByClub);
-    if (window.allGroups && window.allGroups.length > 0) {
-        console.log('Premier groupe:', window.allGroups[0]);
-        console.log('club_id du premier groupe:', window.allGroups[0].club_id);
-    }
-
 </script>
 
 <!-- Statistiques UTILISATEURS -->
