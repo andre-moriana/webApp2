@@ -52,7 +52,13 @@ class DashboardController {
             'clubs_by_committee' => [],
             'all_clubs' => [],
             'users_list' => [],
-            'users_by_club' => []
+            'users_by_club' => [],
+            'groups_list' => [],
+            'groups_by_club' => [],
+            'topics_by_group' => [],
+            'topics_total' => 0,
+            'events_list' => [],
+            'events_by_club' => []
         ];
         
         try {
@@ -109,8 +115,112 @@ class DashboardController {
             
             if ($groupsResponse['success']) {
                 if (!empty($groupsResponse['data']['groups'])) {
-                    $stats['groups'] = count($groupsResponse['data']['groups']);
+                    $groups = $groupsResponse['data']['groups'];
+                    $stats['groups'] = count($groups);
+                    
+                    // Traiter chaque groupe
+                    foreach ($groups as $group) {
+                        $groupId = $group['id'] ?? $group['_id'] ?? '';
+                        $groupClubId = $group['clubId'] ?? $group['club_id'] ?? '';
+                        $groupName = $group['name'] ?? 'Groupe sans nom';
+                        
+                        $groupData = [
+                            'id' => $groupId,
+                            'name' => $groupName,
+                            'clubId' => $groupClubId,
+                            'topics' => []
+                        ];
+                        
+                        $stats['groups_list'][] = $groupData;
+                        
+                        // Associer le groupe à son club
+                        if (!empty($groupClubId)) {
+                            if (!isset($stats['groups_by_club'][$groupClubId])) {
+                                $stats['groups_by_club'][$groupClubId] = [];
+                            }
+                            $stats['groups_by_club'][$groupClubId][] = $groupData;
+                        }
+                        
+                        // Initialiser la liste des sujets pour ce groupe
+                        $stats['topics_by_group'][$groupId] = [];
+                    }
+                    
+                    // Récupérer les sujets (topics)
+                    try {
+                        $topicsResponse = $this->apiService->makeRequest('topics/list', 'GET');
+                        if ($topicsResponse['success'] && !empty($topicsResponse['data'])) {
+                            $topics = is_array($topicsResponse['data']) ? $topicsResponse['data'] : [];
+                            $stats['topics_total'] = count($topics);
+                            
+                            // Associer les sujets aux groupes
+                            foreach ($topics as $topic) {
+                                $topicGroupId = $topic['groupId'] ?? $topic['group_id'] ?? '';
+                                $topicData = [
+                                    'id' => $topic['id'] ?? $topic['_id'] ?? '',
+                                    'title' => $topic['title'] ?? 'Sujet sans titre',
+                                    'groupId' => $topicGroupId
+                                ];
+                                
+                                if (!empty($topicGroupId) && isset($stats['topics_by_group'][$topicGroupId])) {
+                                    $stats['topics_by_group'][$topicGroupId][] = $topicData;
+                                }
+                                
+                                // Ajouter les sujets aux groupes dans groups_list
+                                foreach ($stats['groups_list'] as &$groupInList) {
+                                    if ($groupInList['id'] === $topicGroupId) {
+                                        $groupInList['topics'][] = $topicData;
+                                    }
+                                }
+                                unset($groupInList);
+                                
+                                // Ajouter les sujets aux groupes dans groups_by_club
+                                foreach ($stats['groups_by_club'] as &$clubGroups) {
+                                    foreach ($clubGroups as &$groupInClub) {
+                                        if ($groupInClub['id'] === $topicGroupId) {
+                                            $groupInClub['topics'][] = $topicData;
+                                        }
+                                    }
+                                    unset($groupInClub);
+                                }
+                                unset($clubGroups);
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log('Erreur lors de la récupération des topics: ' . $e->getMessage());
+                    }
                 }
+            }
+            
+            // Récupérer les événements
+            try {
+                $eventsResponse = $this->apiService->makeRequest('events/list', 'GET');
+                if ($eventsResponse['success'] && !empty($eventsResponse['data'])) {
+                    $events = is_array($eventsResponse['data']) ? $eventsResponse['data'] : [];
+                    $stats['events'] = count($events);
+                    
+                    foreach ($events as $event) {
+                        $eventClubId = $event['clubId'] ?? $event['club_id'] ?? '';
+                        $eventData = [
+                            'id' => $event['id'] ?? $event['_id'] ?? '',
+                            'title' => $event['title'] ?? $event['name'] ?? 'Événement sans titre',
+                            'date' => $event['date'] ?? $event['eventDate'] ?? '',
+                            'clubId' => $eventClubId
+                        ];
+                        
+                        $stats['events_list'][] = $eventData;
+                        
+                        // Associer l'événement à son club
+                        if (!empty($eventClubId)) {
+                            if (!isset($stats['events_by_club'][$eventClubId])) {
+                                $stats['events_by_club'][$eventClubId] = [];
+                            }
+                            $stats['events_by_club'][$eventClubId][] = $eventData;
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Erreur lors de la récupération des événements: ' . $e->getMessage());
+                $stats['events'] = 3; // Valeur par défaut
             }
             
             // Récupérer le nombre d'exercices
@@ -189,7 +299,6 @@ class DashboardController {
             
             // Pour les autres statistiques, on utilise des valeurs par défaut
             $stats['trainings'] = 12; // Valeur par défaut
-            $stats['events'] = 3; // Valeur par défaut
             
         } catch (Exception $e) {
             // En cas d'erreur, on garde les valeurs par défaut

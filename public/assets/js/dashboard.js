@@ -104,6 +104,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Filtrer les utilisateurs
             filterUsersByCommittee(committeeId, committeeName);
+            
+            // Filtrer les groupes/sujets et événements
+            filterGroupsByCommittee(committeeId, committeeName);
+            filterEventsByCommittee(committeeId, committeeName);
         });
     });
     
@@ -111,6 +115,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('reset-clubs-btn')?.addEventListener('click', function(e) {
         e.stopPropagation();
         resetClubsDisplay();
+        resetUsersDisplay();
+        resetGroupsDisplay();
+        resetEventsDisplay();
     });
     
     // Gérer le bouton de réinitialisation des utilisateurs
@@ -143,6 +150,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Filtrer les utilisateurs par club
             filterUsersByClub(clubId, clubName);
+            
+            // Filtrer les groupes/sujets et événements par club
+            filterGroupsByClub(clubId, clubName);
+            filterEventsByClub(clubId, clubName);
         }
     });
 });
@@ -413,3 +424,341 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+// ==================== GESTION DES GROUPES/SUJETS ET ÉVÉNEMENTS ====================
+
+// Fonction pour filtrer les groupes et sujets par club
+function filterGroupsByClub(clubId, clubName) {
+    const groupsList = document.getElementById('groups-topics-list');
+    const groupsCount = document.getElementById('groups-count');
+    const topicsCount = document.getElementById('topics-count');
+    const groupsTitle = document.getElementById('groups-title');
+    const resetBtn = document.getElementById('reset-groups-btn');
+    
+    if (!groupsList) return;
+    
+    // Récupérer les groupes de ce club
+    const filteredGroups = window.groupsByClub[clubId] || [];
+    
+    // Compter les sujets
+    let totalTopics = 0;
+    filteredGroups.forEach(group => {
+        totalTopics += (group.topics || []).length;
+    });
+    
+    // Mettre à jour le titre et le compteur
+    groupsTitle.textContent = `Groupes / Sujets de ${clubName}`;
+    groupsCount.textContent = filteredGroups.length;
+    topicsCount.textContent = totalTopics;
+    
+    // Afficher le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'inline-block';
+    
+    // Vider la liste
+    groupsList.innerHTML = '';
+    
+    // Ajouter les groupes et sujets
+    if (filteredGroups.length > 0) {
+        filteredGroups.forEach(function(group) {
+            const li = document.createElement('li');
+            li.className = 'mb-2';
+            
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'font-weight-bold';
+            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)}`;
+            li.appendChild(groupDiv);
+            
+            // Ajouter les sujets s'il y en a
+            if (group.topics && group.topics.length > 0) {
+                const topicsUl = document.createElement('ul');
+                topicsUl.className = 'list-unstyled ml-3 mt-1';
+                topicsUl.style.fontSize = '0.8rem';
+                
+                group.topics.forEach(function(topic) {
+                    const topicLi = document.createElement('li');
+                    topicLi.className = 'mb-1';
+                    topicLi.innerHTML = `<i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> ${escapeHtml(topic.title)}`;
+                    topicsUl.appendChild(topicLi);
+                });
+                
+                li.appendChild(topicsUl);
+            }
+            
+            groupsList.appendChild(li);
+        });
+    } else {
+        groupsList.innerHTML = '<li class="text-muted">Aucun groupe trouvé pour ce club</li>';
+    }
+}
+
+// Fonction pour filtrer les événements par club
+function filterEventsByClub(clubId, clubName) {
+    const eventsList = document.getElementById('events-list');
+    const eventsCount = document.getElementById('events-count');
+    const eventsTitle = document.getElementById('events-title');
+    const resetBtn = document.getElementById('reset-events-btn');
+    
+    if (!eventsList) return;
+    
+    // Récupérer les événements de ce club
+    const filteredEvents = window.eventsByClub[clubId] || [];
+    
+    // Mettre à jour le titre et le compteur
+    eventsTitle.textContent = `Événements de ${clubName}`;
+    eventsCount.textContent = filteredEvents.length;
+    
+    // Afficher le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'inline-block';
+    
+    // Vider la liste
+    eventsList.innerHTML = '';
+    
+    // Ajouter les événements
+    if (filteredEvents.length > 0) {
+        filteredEvents.forEach(function(event) {
+            const li = document.createElement('li');
+            li.className = 'mb-1';
+            
+            let eventHtml = `<i class="fas fa-calendar text-warning" style="font-size: 0.6rem;"></i> ${escapeHtml(event.title)}`;
+            
+            if (event.date) {
+                const eventDate = new Date(event.date);
+                if (!isNaN(eventDate.getTime())) {
+                    const formattedDate = eventDate.toLocaleDateString('fr-FR');
+                    eventHtml += ` <span class="text-muted" style="font-size: 0.75rem;">(${formattedDate})</span>`;
+                }
+            }
+            
+            li.innerHTML = eventHtml;
+            eventsList.appendChild(li);
+        });
+    } else {
+        eventsList.innerHTML = '<li class="text-muted">Aucun événement trouvé pour ce club</li>';
+    }
+}
+
+// Fonction pour filtrer les groupes par comité
+function filterGroupsByCommittee(committeeId, committeeName) {
+    const groupsList = document.getElementById('groups-topics-list');
+    const groupsCount = document.getElementById('groups-count');
+    const topicsCount = document.getElementById('topics-count');
+    const groupsTitle = document.getElementById('groups-title');
+    const resetBtn = document.getElementById('reset-groups-btn');
+    
+    if (!groupsList) return;
+    
+    // Récupérer tous les clubs de ce comité
+    const clubs = window.clubsByCommittee[committeeId] || [];
+    const clubIds = clubs.map(club => club.id);
+    
+    // Filtrer les groupes par ces clubs
+    let filteredGroups = [];
+    let totalTopics = 0;
+    clubIds.forEach(function(clubId) {
+        const groupsInClub = window.groupsByClub[clubId] || [];
+        filteredGroups = filteredGroups.concat(groupsInClub);
+        groupsInClub.forEach(group => {
+            totalTopics += (group.topics || []).length;
+        });
+    });
+    
+    // Mettre à jour le titre et le compteur
+    groupsTitle.textContent = `Groupes / Sujets de ${committeeName}`;
+    groupsCount.textContent = filteredGroups.length;
+    topicsCount.textContent = totalTopics;
+    
+    // Afficher le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'inline-block';
+    
+    // Vider la liste
+    groupsList.innerHTML = '';
+    
+    // Ajouter les groupes et sujets
+    if (filteredGroups.length > 0) {
+        filteredGroups.forEach(function(group) {
+            const li = document.createElement('li');
+            li.className = 'mb-2';
+            
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'font-weight-bold';
+            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)}`;
+            li.appendChild(groupDiv);
+            
+            // Ajouter les sujets s'il y en a
+            if (group.topics && group.topics.length > 0) {
+                const topicsUl = document.createElement('ul');
+                topicsUl.className = 'list-unstyled ml-3 mt-1';
+                topicsUl.style.fontSize = '0.8rem';
+                
+                group.topics.forEach(function(topic) {
+                    const topicLi = document.createElement('li');
+                    topicLi.className = 'mb-1';
+                    topicLi.innerHTML = `<i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> ${escapeHtml(topic.title)}`;
+                    topicsUl.appendChild(topicLi);
+                });
+                
+                li.appendChild(topicsUl);
+            }
+            
+            groupsList.appendChild(li);
+        });
+    } else {
+        groupsList.innerHTML = '<li class="text-muted">Aucun groupe trouvé pour ce comité</li>';
+    }
+}
+
+// Fonction pour filtrer les événements par comité
+function filterEventsByCommittee(committeeId, committeeName) {
+    const eventsList = document.getElementById('events-list');
+    const eventsCount = document.getElementById('events-count');
+    const eventsTitle = document.getElementById('events-title');
+    const resetBtn = document.getElementById('reset-events-btn');
+    
+    if (!eventsList) return;
+    
+    // Récupérer tous les clubs de ce comité
+    const clubs = window.clubsByCommittee[committeeId] || [];
+    const clubIds = clubs.map(club => club.id);
+    
+    // Filtrer les événements par ces clubs
+    let filteredEvents = [];
+    clubIds.forEach(function(clubId) {
+        const eventsInClub = window.eventsByClub[clubId] || [];
+        filteredEvents = filteredEvents.concat(eventsInClub);
+    });
+    
+    // Mettre à jour le titre et le compteur
+    eventsTitle.textContent = `Événements de ${committeeName}`;
+    eventsCount.textContent = filteredEvents.length;
+    
+    // Afficher le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'inline-block';
+    
+    // Vider la liste
+    eventsList.innerHTML = '';
+    
+    // Ajouter les événements
+    if (filteredEvents.length > 0) {
+        filteredEvents.forEach(function(event) {
+            const li = document.createElement('li');
+            li.className = 'mb-1';
+            
+            let eventHtml = `<i class="fas fa-calendar text-warning" style="font-size: 0.6rem;"></i> ${escapeHtml(event.title)}`;
+            
+            if (event.date) {
+                const eventDate = new Date(event.date);
+                if (!isNaN(eventDate.getTime())) {
+                    const formattedDate = eventDate.toLocaleDateString('fr-FR');
+                    eventHtml += ` <span class="text-muted" style="font-size: 0.75rem;">(${formattedDate})</span>`;
+                }
+            }
+            
+            li.innerHTML = eventHtml;
+            eventsList.appendChild(li);
+        });
+    } else {
+        eventsList.innerHTML = '<li class="text-muted">Aucun événement trouvé pour ce comité</li>';
+    }
+}
+
+// Fonction pour réinitialiser l'affichage des groupes
+function resetGroupsDisplay() {
+    const groupsList = document.getElementById('groups-topics-list');
+    const groupsCount = document.getElementById('groups-count');
+    const topicsCount = document.getElementById('topics-count');
+    const groupsTitle = document.getElementById('groups-title');
+    const resetBtn = document.getElementById('reset-groups-btn');
+    
+    // Réinitialiser les valeurs
+    groupsTitle.textContent = 'Groupes / Sujets';
+    groupsCount.textContent = window.totalGroups || 0;
+    topicsCount.textContent = window.totalTopics || 0;
+    
+    // Masquer le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'none';
+    
+    // Réafficher tous les groupes
+    groupsList.innerHTML = '';
+    const allGroups = window.allGroups || [];
+    
+    if (allGroups.length > 0) {
+        allGroups.forEach(function(group) {
+            const li = document.createElement('li');
+            li.className = 'mb-2';
+            
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'font-weight-bold';
+            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)}`;
+            li.appendChild(groupDiv);
+            
+            // Ajouter les sujets s'il y en a
+            if (group.topics && group.topics.length > 0) {
+                const topicsUl = document.createElement('ul');
+                topicsUl.className = 'list-unstyled ml-3 mt-1';
+                topicsUl.style.fontSize = '0.8rem';
+                
+                group.topics.forEach(function(topic) {
+                    const topicLi = document.createElement('li');
+                    topicLi.className = 'mb-1';
+                    topicLi.innerHTML = `<i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> ${escapeHtml(topic.title)}`;
+                    topicsUl.appendChild(topicLi);
+                });
+                
+                li.appendChild(topicsUl);
+            }
+            
+            groupsList.appendChild(li);
+        });
+    } else {
+        groupsList.innerHTML = '<li class="text-muted">Aucun groupe</li>';
+    }
+}
+
+// Fonction pour réinitialiser l'affichage des événements
+function resetEventsDisplay() {
+    const eventsList = document.getElementById('events-list');
+    const eventsCount = document.getElementById('events-count');
+    const eventsTitle = document.getElementById('events-title');
+    const resetBtn = document.getElementById('reset-events-btn');
+    
+    // Réinitialiser les valeurs
+    eventsTitle.textContent = 'Total Événements';
+    eventsCount.textContent = window.totalEvents || 0;
+    
+    // Masquer le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'none';
+    
+    // Réafficher tous les événements
+    eventsList.innerHTML = '';
+    const allEvents = window.allEvents || [];
+    
+    if (allEvents.length > 0) {
+        allEvents.forEach(function(event) {
+            const li = document.createElement('li');
+            li.className = 'mb-1';
+            
+            let eventHtml = `<i class="fas fa-calendar text-warning" style="font-size: 0.6rem;"></i> ${escapeHtml(event.title)}`;
+            
+            if (event.date) {
+                const eventDate = new Date(event.date);
+                if (!isNaN(eventDate.getTime())) {
+                    const formattedDate = eventDate.toLocaleDateString('fr-FR');
+                    eventHtml += ` <span class="text-muted" style="font-size: 0.75rem;">(${formattedDate})</span>`;
+                }
+            }
+            
+            li.innerHTML = eventHtml;
+            eventsList.appendChild(li);
+        });
+    } else {
+        eventsList.innerHTML = '<li class="text-muted">Aucun événement</li>';
+    }
+}
+
+// Gestionnaire d'événements pour les boutons de réinitialisation
+document.getElementById('reset-groups-btn')?.addEventListener('click', function() {
+    resetGroupsDisplay();
+});
+
+document.getElementById('reset-events-btn')?.addEventListener('click', function() {
+    resetEventsDisplay();
+});
