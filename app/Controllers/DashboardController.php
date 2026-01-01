@@ -100,7 +100,7 @@ class DashboardController {
                         $stats['clubs_total']++;
                         
                         // Comité Régional : finit par 00000 sauf 0000000
-                        if (preg_match('/$00000/', $clubId) && $clubId !== '0000000') {
+                        if (preg_match('/00000$/', $clubId) && $clubId !== '0000000') {
                             $stats['clubs_regional']++;
                         }
                         // Comité Départemental : finit par 000 (mais pas 00000 qui sont régionaux)
