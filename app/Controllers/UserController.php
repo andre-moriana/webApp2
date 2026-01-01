@@ -1,5 +1,11 @@
 <?php
 
+require_once 'app/Config/PermissionHelper.php';
+require_once 'app/Services/PermissionService.php';
+
+use App\Config\PermissionHelper;
+use App\Services\PermissionService;
+
 class UserController {
     private $apiService;
     
@@ -12,6 +18,14 @@ class UserController {
             header('Location: /login');
             exit;
         }
+        
+        // Vérifier la permission de voir les utilisateurs
+        $clubId = $_SESSION['user']['clubId'] ?? null;
+        PermissionHelper::requirePermission(
+            PermissionService::RESOURCE_USERS_ALL,
+            PermissionService::ACTION_VIEW,
+            $clubId
+        );
         
         // Nettoyer les messages d'erreur de session
         unset($_SESSION['error']);
@@ -85,6 +99,20 @@ class UserController {
             exit;
         }
         
+        // Vérifier la permission de voir cet utilisateur
+        $clubId = $_SESSION['user']['clubId'] ?? null;
+        $currentUserId = $_SESSION['user']['id'] ?? null;
+        
+        // Si c'est son propre profil, pas besoin de permission spéciale
+        if ($currentUserId != $id) {
+            // Sinon, vérifier la permission de voir les autres utilisateurs
+            if (!PermissionHelper::canViewUser($id, $clubId)) {
+                $_SESSION['error'] = 'Vous n\'avez pas la permission de voir cet utilisateur.';
+                header('Location: /dashboard');
+                exit;
+            }
+        }
+        
         $user = null;
         $error = null;
         $clubName = null;
@@ -142,12 +170,13 @@ class UserController {
             exit;
         }
         
-        // Vérification des droits administrateur
-        if (!isset($_SESSION['user']['is_admin']) || !(bool)$_SESSION['user']['is_admin']) {
-            $_SESSION['error'] = 'Accès refusé. Seuls les administrateurs peuvent créer des utilisateurs.';
-            header('Location: /users');
-            exit;
-        }
+        // Vérifier la permission de créer des utilisateurs
+        $clubId = $_SESSION['user']['clubId'] ?? null;
+        PermissionHelper::requirePermission(
+            PermissionService::RESOURCE_USERS_ALL,
+            PermissionService::ACTION_CREATE,
+            $clubId
+        );
         
         $title = 'Créer un utilisateur - Portail Archers de Gémenos';
         
@@ -165,12 +194,13 @@ class UserController {
             exit;
         }
         
-        // Vérification des droits administrateur
-        if (!isset($_SESSION['user']['is_admin']) || !(bool)$_SESSION['user']['is_admin']) {
-            $_SESSION['error'] = 'Accès refusé. Seuls les administrateurs peuvent créer des utilisateurs.';
-            header('Location: /users');
-            exit;
-        }
+        // Vérifier la permission de créer des utilisateurs
+        $clubId = $_SESSION['user']['clubId'] ?? null;
+        PermissionHelper::requirePermission(
+            PermissionService::RESOURCE_USERS_ALL,
+            PermissionService::ACTION_CREATE,
+            $clubId
+        );
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /users/create');
@@ -243,6 +273,26 @@ class UserController {
             exit;
         }
         
+        // Vérifier la permission de modifier cet utilisateur
+        $clubId = $_SESSION['user']['clubId'] ?? null;
+        $currentUserId = $_SESSION['user']['id'] ?? null;
+        
+        // Si c'est son propre profil, utiliser la permission users_self_edit
+        if ($currentUserId == $id) {
+            PermissionHelper::requirePermission(
+                PermissionService::RESOURCE_USERS_SELF,
+                PermissionService::ACTION_EDIT,
+                $clubId
+            );
+        } else {
+            // Sinon, vérifier la permission de modifier les autres utilisateurs
+            if (!PermissionHelper::canEditUser($id, $clubId)) {
+                $_SESSION['error'] = 'Vous n\'avez pas la permission de modifier cet utilisateur.';
+                header('Location: /users');
+                exit;
+            }
+        }
+        
         $user = null;
         $error = null;
         $clubs = [];
@@ -299,6 +349,26 @@ class UserController {
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             header('Location: /login');
             exit;
+        }
+        
+        // Vérifier la permission de modifier cet utilisateur
+        $clubId = $_SESSION['user']['clubId'] ?? null;
+        $currentUserId = $_SESSION['user']['id'] ?? null;
+        
+        // Si c'est son propre profil, utiliser la permission users_self_edit
+        if ($currentUserId == $id) {
+            PermissionHelper::requirePermission(
+                PermissionService::RESOURCE_USERS_SELF,
+                PermissionService::ACTION_EDIT,
+                $clubId
+            );
+        } else {
+            // Sinon, vérifier la permission de modifier les autres utilisateurs
+            if (!PermissionHelper::canEditUser($id, $clubId)) {
+                $_SESSION['error'] = 'Vous n\'avez pas la permission de modifier cet utilisateur.';
+                header('Location: /users');
+                exit;
+            }
         }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -358,6 +428,14 @@ class UserController {
             header('Location: /login');
             exit;
         }
+        
+        // Vérifier la permission de supprimer des utilisateurs
+        $clubId = $_SESSION['user']['clubId'] ?? null;
+        PermissionHelper::requirePermission(
+            PermissionService::RESOURCE_USERS_ALL,
+            PermissionService::ACTION_DELETE,
+            $clubId
+        );
         
         try {
             // Appel à l'API pour supprimer l'utilisateur
