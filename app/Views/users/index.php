@@ -248,11 +248,13 @@ error_log("Session: " . print_r($_SESSION, true));
                                                 $status = $user['status'] ?? 'active';
                                                 $statusLabels = [
                                                     'pending' => 'En attente',
+                                                    'pending_deletion' => 'En attente de suppression',
                                                     'active' => 'Validé',
                                                     'rejected' => 'Rejeté'
                                                 ];
                                                 $statusColors = [
                                                     'pending' => 'warning',
+                                                    'pending_deletion' => 'danger',
                                                     'active' => 'success',
                                                     'rejected' => 'danger'
                                                 ];
