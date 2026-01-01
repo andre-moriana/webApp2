@@ -1729,5 +1729,28 @@ class ApiController {
             ]);
         }
     }
+    
+    public function getTopicMessages($topicId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            http_response_code(401);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Non authentifié']);
+            return;
+        }
+
+        try {
+            $response = $this->apiService->makeRequest("messages/topic/{$topicId}/history", "GET");
+            header('Content-Type: application/json');
+            echo json_encode($response);
+        } catch (Exception $e) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode([
+                "success" => false,
+                "data" => [],
+                "message" => "Erreur: " . $e->getMessage()
+            ]);
+        }
+    }
 }
 ?>
