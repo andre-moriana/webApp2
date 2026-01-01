@@ -337,7 +337,18 @@
                                     <ul class="list-unstyled mb-0" id="users-list" style="font-size: 0.85rem; max-height: 300px; overflow-y: auto;">
                                         <?php if (!empty($stats['users_list'])): ?>
                                             <?php foreach ($stats['users_list'] as $user): ?>
-                                                <li class="mb-1"><i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> <?php echo htmlspecialchars($user['name']); ?></li>
+                                                <li class="mb-1 d-flex justify-content-between align-items-center">
+                                                    <span>
+                                                        <i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> <?php echo htmlspecialchars($user['name']); ?>
+                                                    </span>
+                                                    <a href="https://arctraining.fr/users/<?php echo htmlspecialchars($user['id']); ?>" 
+                                                       class="btn btn-sm btn-outline-primary user-link" 
+                                                       style="font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;"
+                                                       title="Voir l'utilisateur"
+                                                       target="_blank">
+                                                        <i class="fas fa-external-link-alt"></i>
+                                                    </a>
+                                                </li>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <li class="text-muted">Aucun utilisateur</li>

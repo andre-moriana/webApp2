@@ -222,8 +222,21 @@ function filterUsersByClub(clubId, clubName) {
     if (filteredUsers.length > 0) {
         filteredUsers.forEach(function(user) {
             const li = document.createElement('li');
-            li.className = 'mb-1';
-            li.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
+            li.className = 'mb-1 d-flex justify-content-between align-items-center';
+            
+            const span = document.createElement('span');
+            span.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
+            
+            const link = document.createElement('a');
+            link.href = 'https://arctraining.fr/users/' + encodeURIComponent(user.id);
+            link.className = 'btn btn-sm btn-outline-primary user-link';
+            link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
+            link.title = "Voir l'utilisateur";
+            link.target = '_blank';
+            link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+            
+            li.appendChild(span);
+            li.appendChild(link);
             usersList.appendChild(li);
         });
     } else {
@@ -264,8 +277,21 @@ function filterUsersByCommittee(committeeId, committeeName) {
     if (filteredUsers.length > 0) {
         filteredUsers.forEach(function(user) {
             const li = document.createElement('li');
-            li.className = 'mb-1';
-            li.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
+            li.className = 'mb-1 d-flex justify-content-between align-items-center';
+            
+            const span = document.createElement('span');
+            span.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
+            
+            const link = document.createElement('a');
+            link.href = 'https://arctraining.fr/users/' + encodeURIComponent(user.id);
+            link.className = 'btn btn-sm btn-outline-primary user-link';
+            link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
+            link.title = "Voir l'utilisateur";
+            link.target = '_blank';
+            link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+            
+            li.appendChild(span);
+            li.appendChild(link);
             usersList.appendChild(li);
         });
     } else {
@@ -351,8 +377,21 @@ function resetUsersDisplay() {
     if (allUsers.length > 0) {
         allUsers.forEach(function(user) {
             const li = document.createElement('li');
-            li.className = 'mb-1';
-            li.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
+            li.className = 'mb-1 d-flex justify-content-between align-items-center';
+            
+            const span = document.createElement('span');
+            span.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
+            
+            const link = document.createElement('a');
+            link.href = 'https://arctraining.fr/users/' + encodeURIComponent(user.id);
+            link.className = 'btn btn-sm btn-outline-primary user-link';
+            link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
+            link.title = "Voir l'utilisateur";
+            link.target = '_blank';
+            link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+            
+            li.appendChild(span);
+            li.appendChild(link);
             usersList.appendChild(li);
         });
     } else {
