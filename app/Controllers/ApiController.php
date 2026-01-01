@@ -1731,6 +1731,9 @@ class ApiController {
     }
     
     public function getTopicMessages($topicId) {
+        // Log pour debug
+        error_log("DEBUG getTopicMessages appelé avec topicId: " . $topicId);
+        
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             http_response_code(401);
             header('Content-Type: application/json');
@@ -1739,10 +1742,14 @@ class ApiController {
         }
 
         try {
+            error_log("DEBUG: Appel API backend: messages/topic/{$topicId}/history");
             $response = $this->apiService->makeRequest("messages/topic/{$topicId}/history", "GET");
+            error_log("DEBUG: Réponse API reçue: " . json_encode($response));
+            
             header('Content-Type: application/json');
             echo json_encode($response);
         } catch (Exception $e) {
+            error_log("DEBUG: Exception: " . $e->getMessage());
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode([
