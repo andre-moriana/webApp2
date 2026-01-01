@@ -27,9 +27,6 @@ $title = htmlspecialchars($topic['title'] ?? 'Sujet') . " - Portail Archers de G
                     
                     <div class="chat-container" style="height: 500px; overflow-y: auto;">
                         <div id="messages-container" class="messages-container mb-3">
-                            <div style="background: red; color: white; padding: 10px;">
-                                DEBUG: Nombre de messages = <?php echo count($messages ?? []); ?>
-                            </div>
                             <?php if (!empty($messages)): ?>
                                 <?php foreach ($messages as $message): 
                                     // Inclure le template de message
@@ -76,5 +73,5 @@ window.isTopicPage = true;
 </script>
 
 <!-- Inclusion du script JavaScript externe -->
-<script src="/public/assets/js/groups-chat.js"></script>
+<script src="/public/assets/js/groups-chat.js?v=<?php echo time(); ?>"></script>
 
