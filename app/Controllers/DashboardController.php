@@ -131,6 +131,8 @@ class DashboardController {
                         $groupClubId = $group['club_id'] ?? '';
                         $groupName = $group['name'] ?? 'Groupe sans nom';
                         
+                        error_log("DEBUG Groupe ID: " . var_export($groupId, true) . " Type: " . gettype($groupId));
+                        
                         $groupData = [
                             'id' => $groupId,
                             'name' => $groupName,
@@ -154,19 +156,26 @@ class DashboardController {
                             // Associer les sujets aux groupes
                             foreach ($topics as $topic) {
                                 $topicGroupId = $topic['groupId'] ?? $topic['group_id'] ?? '';
+                                
+                                error_log("DEBUG Topic: " . ($topic['title'] ?? 'sans titre') . " | group_id: " . var_export($topicGroupId, true) . " Type: " . gettype($topicGroupId));
+                                error_log("DEBUG groupsById keys: " . implode(', ', array_keys($groupsById)));
+                                
                                 $topicData = [
                                     'id' => $topic['id'] ?? $topic['_id'] ?? '',
                                     'title' => $topic['title'] ?? 'Sujet sans titre',
                                     'groupId' => $topicGroupId
                                 ];
                                 
-                                if (!empty($topicGroupId) && isset($stats['topics_by_group'][$topicGroupId])) {
+                                if (!empty($topicGroupId) && isset($groupsById[$topicGroupId])) {
                                     $stats['topics_by_group'][$topicGroupId][] = $topicData;
                                 }
                                 
                                 // Ajouter les sujets aux groupes
                                 if (isset($groupsById[$topicGroupId])) {
                                     $groupsById[$topicGroupId]['topics'][] = $topicData;
+                                    error_log("DEBUG Topic ajouté au groupe " . $topicGroupId);
+                                } else {
+                                    error_log("DEBUG Topic NON ajouté - groupe " . var_export($topicGroupId, true) . " introuvable");
                                 }
                             }
                         }
