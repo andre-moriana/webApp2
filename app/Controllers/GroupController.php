@@ -60,11 +60,11 @@ class GroupController {
                     
                     $groups = $filteredGroups;
                 } else {
-                    $groups = $this->getTestGroups();
+                    $groups = [];
                 }
             }
         } catch (Exception $e) {
-            $groups = $this->getTestGroups();
+            $groups = [];
         }
 
         // Charger les sujets pour chaque groupe
@@ -155,7 +155,7 @@ class GroupController {
             $error = 'Erreur lors de la recuperation du groupe';
         }
         
-        $title = 'De©tails du groupe - Portail Arc Training';
+        $title = 'Deï¿½tails du groupe - Portail Arc Training';
 
         
         include 'app/Views/layouts/header.php';
