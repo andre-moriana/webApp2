@@ -34,9 +34,10 @@ class TopicController {
                 $messages = $messagesResult['data'];
                 
                 // Corriger les URLs des pièces jointes
-                foreach ($messages as &$message) {
+                $correctedMessages = [];
+                foreach ($messages as $message) {
                     if (isset($message['attachment']) && is_array($message['attachment'])) {
-                        $attachment = &$message['attachment'];
+                        $attachment = $message['attachment'];
                         
                         // Forcer la correction pour TOUS les fichiers
                         if (isset($attachment['url']) && strpos($attachment['url'], 'url=') !== false) {
@@ -57,8 +58,12 @@ class TopicController {
                         elseif (isset($attachment['storedFilename'])) {
                             $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
                         }
+                        
+                        $message['attachment'] = $attachment;
                     }
+                    $correctedMessages[] = $message;
                 }
+                $messages = $correctedMessages;
             }
             
             // Récupérer les détails du groupe
