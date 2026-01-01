@@ -36,6 +36,18 @@ document.addEventListener('DOMContentLoaded', function() {
             padding-left: 5px;
         }
         
+        .club-item:hover {
+            background-color: rgba(40, 167, 69, 0.1);
+            padding-left: 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .club-item.selected {
+            background-color: rgba(40, 167, 69, 0.2);
+            font-weight: bold;
+            padding-left: 5px;
+        }
+        
         #clubs-display-card .club-list {
             max-height: 0;
             overflow: hidden;
@@ -106,6 +118,33 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
         resetUsersDisplay();
     });
+    
+    // Délégation d'événements pour les clubs (car ils peuvent être dynamiquement ajoutés)
+    document.getElementById('clubs-list')?.addEventListener('click', function(e) {
+        const clubItem = e.target.closest('.club-item');
+        if (clubItem) {
+            e.stopPropagation();
+            
+            const clubId = clubItem.getAttribute('data-club-id');
+            const clubName = clubItem.textContent.trim();
+            
+            // Retirer la sélection des comités
+            document.querySelectorAll('.committee-item').forEach(function(el) {
+                el.classList.remove('selected');
+            });
+            
+            // Retirer la sélection des autres clubs
+            document.querySelectorAll('.club-item').forEach(function(el) {
+                el.classList.remove('selected');
+            });
+            
+            // Ajouter la sélection à l'item cliqué
+            clubItem.classList.add('selected');
+            
+            // Filtrer les utilisateurs par club
+            filterUsersByClub(clubId, clubName);
+        }
+    });
 });
 
 function displayClubsForCommittee(committeeId, committeeName) {
@@ -133,12 +172,49 @@ function displayClubsForCommittee(committeeId, committeeName) {
     if (clubs.length > 0) {
         clubs.forEach(function(club) {
             const li = document.createElement('li');
-            li.className = 'mb-1';
+            li.className = 'mb-1 club-item';
+            li.setAttribute('data-club-id', club.id);
+            li.style.cursor = 'pointer';
+            li.title = 'Cliquez pour voir les utilisateurs';
             li.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
             clubsList.appendChild(li);
         });
     } else {
         clubsList.innerHTML = '<li class="text-muted">Aucun club trouvé pour ce comité</li>';
+    }
+}
+
+function filterUsersByClub(clubId, clubName) {
+    const usersList = document.getElementById('users-list');
+    const usersCount = document.getElementById('users-count');
+    const usersTitle = document.getElementById('users-title');
+    const resetBtn = document.getElementById('reset-users-btn');
+    
+    if (!usersList) return;
+    
+    // Récupérer les utilisateurs de ce club
+    const filteredUsers = window.usersByClub[clubId] || [];
+    
+    // Mettre à jour le titre et le compteur
+    usersTitle.textContent = `Utilisateurs de ${clubName}`;
+    usersCount.textContent = filteredUsers.length;
+    
+    // Afficher le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'inline-block';
+    
+    // Vider la liste
+    usersList.innerHTML = '';
+    
+    // Ajouter les utilisateurs
+    if (filteredUsers.length > 0) {
+        filteredUsers.forEach(function(user) {
+            const li = document.createElement('li');
+            li.className = 'mb-1';
+            li.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
+            usersList.appendChild(li);
+        });
+    } else {
+        usersList.innerHTML = '<li class="text-muted">Aucun utilisateur trouvé pour ce club</li>';
     }
 }
 
@@ -205,7 +281,10 @@ function resetClubsDisplay() {
     if (allClubs.length > 0) {
         allClubs.forEach(function(club) {
             const li = document.createElement('li');
-            li.className = 'mb-1';
+            li.className = 'mb-1 club-item';
+            li.setAttribute('data-club-id', club.id);
+            li.style.cursor = 'pointer';
+            li.title = 'Cliquez pour voir les utilisateurs';
             li.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
             clubsList.appendChild(li);
         });
@@ -215,6 +294,10 @@ function resetClubsDisplay() {
     
     // Retirer les sélections
     document.querySelectorAll('.committee-item').forEach(function(el) {
+        el.classList.remove('selected');
+    });
+    
+    document.querySelectorAll('.club-item').forEach(function(el) {
         el.classList.remove('selected');
     });
     
