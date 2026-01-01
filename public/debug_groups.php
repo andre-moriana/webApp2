@@ -2,6 +2,11 @@
 // Script de debug pour vérifier les données des groupes
 session_start();
 
+// Vérifier si l'utilisateur est connecté
+if (!isset($_SESSION['user']) || !isset($_SESSION['auth_token'])) {
+    die("<h1>Erreur d'authentification</h1><p>Vous devez être connecté pour accéder à ce script.</p><p><a href='/login'>Se connecter</a></p>");
+}
+
 require_once __DIR__ . '/../app/Services/ApiService.php';
 
 $apiService = new ApiService();
