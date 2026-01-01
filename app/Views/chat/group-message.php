@@ -62,8 +62,10 @@ $backendUrl = $_ENV['API_BASE_URL'] ?? 'https://api.arctraining.fr';
                 $attachmentUrl = $message["attachment"]["url"] ?? "";
                 $originalName = $message["attachment"]["originalName"] ?? $message["attachment"]["filename"] ?? "Pièce jointe";
                 $mimeType = $message["attachment"]["mimeType"] ?? "";
+                
+                // Afficher l'URL pour debug
+                echo "<!-- URL FINALE: " . htmlspecialchars($attachmentUrl) . " -->";
                 ?>
-                <!-- DEBUG: URL = <?php echo $attachmentUrl; ?> -->
                 <a href="<?php echo htmlspecialchars($attachmentUrl); ?>" target="_blank" class="attachment-link">
                     <?php if (strpos($mimeType, "image/") === 0): ?>
                         <img src="<?php echo htmlspecialchars($attachmentUrl); ?>"
