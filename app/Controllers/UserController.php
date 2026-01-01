@@ -3,9 +3,6 @@
 require_once 'app/Config/PermissionHelper.php';
 require_once 'app/Services/PermissionService.php';
 
-use App\Config\PermissionHelper;
-use App\Services\PermissionService;
-
 class UserController {
     private $apiService;
     
