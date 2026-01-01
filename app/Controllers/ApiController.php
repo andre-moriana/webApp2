@@ -1729,5 +1729,60 @@ class ApiController {
             ]);
         }
     }
+    
+    /**
+     * Récupérer les messages d'un topic
+     */
+    public function getTopicMessages($topicId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            // Appeler l'API backend avec le bon endpoint
+            $response = $this->apiService->makeRequest("messages/topic/{$topicId}/history", "GET");
+            
+            // Retourner la réponse telle quelle
+            header('Content-Type: application/json');
+            echo json_encode($response['data'] ?? []);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la récupération des messages: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Envoyer un message dans un topic
+     */
+    public function sendTopicMessage($topicId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $content = $_POST['content'] ?? '';
+            $attachment = $_FILES['attachment'] ?? null;
+            
+            // Préparer les données
+            $data = ['content' => $content];
+            
+            // Si fichier attaché, utiliser FormData
+            if ($attachment) {
+                // TODO: gérer l'upload de fichier
+            }
+            
+            $response = $this->apiService->makeRequest("messages/topic/{$topicId}/send", "POST", $data);
+            
+            header('Content-Type: application/json');
+            echo json_encode($response);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de l'envoi du message: " . $e->getMessage()
+            ]);
+        }
+    }
 }
 ?>
