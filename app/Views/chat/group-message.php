@@ -77,19 +77,21 @@ $backendUrl = 'https://api.arctraining.fr';
                 $originalName = $message["attachment"]["originalName"] ?? $message["attachment"]["filename"] ?? "Pièce jointe";
                 $mimeType = $message["attachment"]["mimeType"] ?? "";
 
-                // Debug: log les données de l'attachment
-                error_log("Attachment data: " . json_encode($message["attachment"]));
-                error_log("Attachment path: " . $attachmentPath);
-                error_log("Backend URL: " . $backendUrl);
-
                 // Construire l'URL complète vers le backend
                 $attachmentUrl = $attachmentPath;
                 if ($attachmentPath && !str_starts_with($attachmentPath, "http")) {
                     $attachmentUrl = rtrim($backendUrl, '/') . "/" . ltrim($attachmentPath, "/");
                 }
-                
-                error_log("Final attachment URL: " . $attachmentUrl);
                 ?>
+                <!-- DEBUG INFO (visible dans le HTML) -->
+                <div style="background: yellow; padding: 5px; margin: 5px 0; font-size: 11px;" class="debug-info">
+                    <strong>DEBUG:</strong><br>
+                    Path: <?php echo htmlspecialchars($attachmentPath); ?><br>
+                    URL: <?php echo htmlspecialchars($attachmentUrl); ?><br>
+                    Backend: <?php echo htmlspecialchars($backendUrl); ?><br>
+                    Attachment Data: <?php echo htmlspecialchars(json_encode($message["attachment"])); ?>
+                </div>
+                <?php
                 <a href="<?php echo htmlspecialchars($attachmentUrl); ?>" target="_blank" class="attachment-link">
                     <?php if ($mimeType && strpos($mimeType, "image/") === 0): ?>
                         <img src="<?php echo htmlspecialchars($attachmentUrl); ?>"
