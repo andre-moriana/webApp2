@@ -74,7 +74,7 @@ class DashboardController {
                 // Compter les utilisateurs en attente de validation et de suppression
                 foreach ($users as $user) {
                     $status = $user['status'] ?? 'active';
-                    $deletionPending = $user['deletion_pending'] ?? $user['deletionPending'] ?? false;
+                    $deletionPending = $user['deletion_pending'] ?? $user['deletionPending'] ?? ($status === 'pending_deletion');
                     $clubId = $user['clubId'] ?? $user['club_id'] ?? '';
                     $userId = $user['id'] ?? $user['_id'] ?? '';
                     
@@ -104,7 +104,7 @@ class DashboardController {
                     if ($status === 'pending') {
                         $stats['users_pending_validation']++;
                     }
-                    if ($deletionPending) {
+                    if ($deletionPending || $status === 'pending_deletion') {
                         $stats['users_pending_deletion']++;
                     }
                 }
