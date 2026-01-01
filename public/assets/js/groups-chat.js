@@ -77,6 +77,9 @@ function createMessageElement(message) {
         // Définir l'URL originale pour tous les types de fichiers
         let originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
         
+        console.log('DEBUG ATTACHMENT - originalUrl:', originalUrl);
+        console.log('DEBUG ATTACHMENT - mimeType:', message.attachment.mimeType);
+        
         // IMPORTANT: Corriger l'URL pour tous les fichiers
         // Si l'URL contient déjà api.arctraining.fr, l'utiliser telle quelle
         if (originalUrl.includes('api.arctraining.fr')) {
@@ -92,6 +95,8 @@ function createMessageElement(message) {
                 attachmentUrl = 'https://api.arctraining.fr/uploads/messages/' + originalUrl;
             }
         }
+        
+        console.log('DEBUG ATTACHMENT - attachmentUrl final:', attachmentUrl);
         
         attachmentHtml = `
             <div class="message-attachment mt-2">
