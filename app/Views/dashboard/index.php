@@ -229,7 +229,7 @@
                     </div>
                     
                     <div class="col-md-4 mb-3">
-                        <div class="card border-left-success shadow-sm h-100" id="clubs-display-card">
+                        <div class="card border-left-success shadow-sm h-100 club-card-hover" id="clubs-display-card">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
@@ -245,15 +245,22 @@
                                     </div>
                                 </div>
                                 <!-- Liste des clubs -->
-                                <div id="clubs-list-container" class="mt-3" style="display: none;">
+                                <div id="clubs-list-container" class="club-list mt-3">
                                     <hr>
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <div class="text-xs font-weight-bold text-success" id="clubs-list-title">Liste des clubs:</div>
-                                        <button class="btn btn-sm btn-outline-secondary" id="reset-clubs-btn" style="font-size: 0.7rem; padding: 2px 8px;">
+                                        <button class="btn btn-sm btn-outline-secondary" id="reset-clubs-btn" style="font-size: 0.7rem; padding: 2px 8px; display: none;">
                                             <i class="fas fa-times"></i> Réinitialiser
                                         </button>
                                     </div>
                                     <ul class="list-unstyled mb-0" id="clubs-list" style="font-size: 0.85rem; max-height: 300px; overflow-y: auto;">
+                                        <?php if (!empty($stats['all_clubs'])): ?>
+                                            <?php foreach ($stats['all_clubs'] as $club): ?>
+                                                <li class="mb-1"><i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> <?php echo htmlspecialchars($club['name']); ?></li>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <li class="text-muted">Aucun club</li>
+                                        <?php endif; ?>
                                     </ul>
                                 </div>
                             </div>
@@ -268,6 +275,7 @@
 <!-- Script pour passer les données PHP à JavaScript -->
 <script>
     window.clubsByCommittee = <?php echo json_encode($stats['clubs_by_committee'] ?? []); ?>;
+    window.allClubs = <?php echo json_encode($stats['all_clubs'] ?? []); ?>;
     window.totalClubs = <?php echo $stats['clubs_total']; ?>;
 </script>
 
