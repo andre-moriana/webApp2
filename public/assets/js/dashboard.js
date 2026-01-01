@@ -226,17 +226,20 @@ function filterUsersByClub(clubId, clubName) {
             
             const span = document.createElement('span');
             span.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
-            
-            const link = document.createElement('a');
-            link.href = 'https://arctraining.fr/users/' + encodeURIComponent(user.id);
-            link.className = 'btn btn-sm btn-outline-primary user-link';
-            link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
-            link.title = "Voir l'utilisateur";
-            link.target = '_blank';
-            link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
-            
             li.appendChild(span);
-            li.appendChild(link);
+            
+            // Ajouter le lien uniquement si l'utilisateur a la permission
+            if (user.canView) {
+                const link = document.createElement('a');
+                link.href = 'https://arctraining.fr/users/' + encodeURIComponent(user.id);
+                link.className = 'btn btn-sm btn-outline-primary user-link';
+                link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
+                link.title = "Voir l'utilisateur";
+                link.target = '_blank';
+                link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+                li.appendChild(link);
+            }
+            
             usersList.appendChild(li);
         });
     } else {
@@ -281,17 +284,20 @@ function filterUsersByCommittee(committeeId, committeeName) {
             
             const span = document.createElement('span');
             span.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
-            
-            const link = document.createElement('a');
-            link.href = 'https://arctraining.fr/users/' + encodeURIComponent(user.id);
-            link.className = 'btn btn-sm btn-outline-primary user-link';
-            link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
-            link.title = "Voir l'utilisateur";
-            link.target = '_blank';
-            link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
-            
             li.appendChild(span);
-            li.appendChild(link);
+            
+            // Ajouter le lien uniquement si l'utilisateur a la permission
+            if (user.canView) {
+                const link = document.createElement('a');
+                link.href = 'https://arctraining.fr/users/' + encodeURIComponent(user.id);
+                link.className = 'btn btn-sm btn-outline-primary user-link';
+                link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
+                link.title = "Voir l'utilisateur";
+                link.target = '_blank';
+                link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+                li.appendChild(link);
+            }
+            
             usersList.appendChild(li);
         });
     } else {
@@ -381,17 +387,20 @@ function resetUsersDisplay() {
             
             const span = document.createElement('span');
             span.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
-            
-            const link = document.createElement('a');
-            link.href = 'https://arctraining.fr/users/' + encodeURIComponent(user.id);
-            link.className = 'btn btn-sm btn-outline-primary user-link';
-            link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
-            link.title = "Voir l'utilisateur";
-            link.target = '_blank';
-            link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
-            
             li.appendChild(span);
-            li.appendChild(link);
+            
+            // Ajouter le lien uniquement si l'utilisateur a la permission
+            if (user.canView) {
+                const link = document.createElement('a');
+                link.href = 'https://arctraining.fr/users/' + encodeURIComponent(user.id);
+                link.className = 'btn btn-sm btn-outline-primary user-link';
+                link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
+                link.title = "Voir l'utilisateur";
+                link.target = '_blank';
+                link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+                li.appendChild(link);
+            }
+            
             usersList.appendChild(li);
         });
     } else {

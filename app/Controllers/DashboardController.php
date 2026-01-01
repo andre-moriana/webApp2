@@ -1,6 +1,7 @@
 <?php
 // Inclure ApiService
 require_once __DIR__ . '/../Services/ApiService.php';
+require_once __DIR__ . '/../Config/PermissionHelper.php';
 
 class DashboardController {
     private $apiService;
@@ -61,19 +62,27 @@ class DashboardController {
                 $users = $usersResponse['data']['users'];
                 $stats['users'] = count($users);
                 
+                $currentUserId = $_SESSION['user']['id'] ?? null;
+                $currentUserClubId = $_SESSION['user']['clubId'] ?? null;
+                
                 // Compter les utilisateurs en attente de validation et de suppression
                 foreach ($users as $user) {
                     $status = $user['status'] ?? 'active';
                     $deletionPending = $user['deletion_pending'] ?? $user['deletionPending'] ?? false;
                     $clubId = $user['clubId'] ?? $user['club_id'] ?? '';
+                    $userId = $user['id'] ?? $user['_id'] ?? '';
+                    
+                    // Vérifier si l'utilisateur connecté peut voir cet utilisateur
+                    $canView = ($currentUserId == $userId) || PermissionHelper::canViewUser($userId, $currentUserClubId);
                     
                     // Stocker les données de l'utilisateur
                     $userData = [
-                        'id' => $user['id'] ?? $user['_id'] ?? '',
+                        'id' => $userId,
                         'name' => ($user['firstName'] ?? '') . ' ' . ($user['name'] ?? $user['lastName'] ?? ''),
                         'email' => $user['email'] ?? '',
                         'clubId' => $clubId,
-                        'status' => $status
+                        'status' => $status,
+                        'canView' => $canView
                     ];
                     
                     $stats['users_list'][] = $userData;

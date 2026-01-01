@@ -341,13 +341,15 @@
                                                     <span>
                                                         <i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> <?php echo htmlspecialchars($user['name']); ?>
                                                     </span>
-                                                    <a href="https://arctraining.fr/users/<?php echo htmlspecialchars($user['id']); ?>" 
-                                                       class="btn btn-sm btn-outline-primary user-link" 
-                                                       style="font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;"
-                                                       title="Voir l'utilisateur"
-                                                       target="_blank">
-                                                        <i class="fas fa-external-link-alt"></i>
-                                                    </a>
+                                                    <?php if ($user['canView'] ?? false): ?>
+                                                        <a href="https://arctraining.fr/users/<?php echo htmlspecialchars($user['id']); ?>" 
+                                                           class="btn btn-sm btn-outline-primary user-link" 
+                                                           style="font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;"
+                                                           title="Voir l'utilisateur"
+                                                           target="_blank">
+                                                            <i class="fas fa-external-link-alt"></i>
+                                                        </a>
+                                                    <?php endif; ?>
                                                 </li>
                                             <?php endforeach; ?>
                                         <?php else: ?>
