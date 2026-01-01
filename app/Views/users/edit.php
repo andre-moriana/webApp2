@@ -108,6 +108,8 @@ $title = "Modifier l'utilisateur - Portail Archers de Gémenos";
                                             <select class="form-select" id="status" name="status">
                                                 <option value="active" <?php echo ($user['status'] ?? '') === 'active' ? 'selected' : ''; ?>>Validé</option>
                                                 <option value="rejected" <?php echo ($user['status'] ?? '') === 'rejected' ? 'selected' : ''; ?>>Rejeté</option>
+                                                <option value="pending" <?php echo ($user['status'] ?? '') === 'pending' ? 'selected' : ''; ?>>En attente de validation</option>
+                                                <option value="pending_deletion" <?php echo ($user['status'] ?? '') === 'pending_deletion' ? 'selected' : ''; ?>>En attente de suppression</option>
                                             </select>
                                         </div>
                                     </div>
