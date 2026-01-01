@@ -181,7 +181,7 @@ async function loadGroupMessages(groupId) {
     `;
     
     try {
-        const response = await fetch(`/messages/${groupId}/history`, {
+        const response = await fetch(`/api/messages/${groupId}/history`, {
             headers: {
                 'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
             }
