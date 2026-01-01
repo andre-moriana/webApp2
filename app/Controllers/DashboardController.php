@@ -113,10 +113,18 @@ class DashboardController {
             // Récupérer le nombre de groupes
             $groupsResponse = $this->apiService->getGroups();
             
+            // DEBUG: Afficher la réponse brute
+            error_log("DEBUG getGroups response: " . json_encode($groupsResponse));
+            
             if ($groupsResponse['success']) {
                 if (!empty($groupsResponse['data']['groups'])) {
                     $groups = $groupsResponse['data']['groups'];
                     $stats['groups'] = count($groups);
+                    
+                    // DEBUG: Afficher le premier groupe
+                    if (!empty($groups[0])) {
+                        error_log("DEBUG Premier groupe: " . json_encode($groups[0]));
+                    }
                     
                     // Traiter chaque groupe
                     $groupsById = []; // Garder une référence indexée par ID
