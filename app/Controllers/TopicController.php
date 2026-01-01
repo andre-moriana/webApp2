@@ -51,8 +51,13 @@ class TopicController {
                                     parse_str($urlParts['query'], $queryParams);
                                     if (isset($queryParams['url'])) {
                                         $decodedPath = urldecode($queryParams['url']);
-                                        // Le chemin contient déjà /uploads/... on ajoute juste le domaine
-                                        $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
+                                        // Si le chemin décodé commence déjà par http, l'utiliser tel quel
+                                        if (str_starts_with($decodedPath, 'http')) {
+                                            $attachment['url'] = $decodedPath;
+                                        } else {
+                                            // Sinon ajouter le domaine devant le chemin
+                                            $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
+                                        }
                                     }
                                 }
                             }
