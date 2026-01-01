@@ -152,6 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
             filterUsersByClub(clubId, clubName);
             
             // Filtrer les groupes/sujets et événements par club
+            console.log('AVANT filterGroupsByClub - clubId:', clubId, 'clubName:', clubName);
             filterGroupsByClub(clubId, clubName);
             filterEventsByClub(clubId, clubName);
         }
