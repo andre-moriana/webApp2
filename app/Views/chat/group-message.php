@@ -65,8 +65,17 @@ $backendUrl = $_ENV['API_BASE_URL'] ?? 'https://api.arctraining.fr';
 
                 // Construire l'URL complète: https://api.arctraining.fr/uploads/messages/filename.jpg
                 if ($attachmentPath) {
+                    // Si l'URL contient /messages/image/ avec un paramètre url, extraire le vrai chemin
+                    if (strpos($attachmentPath, '/messages/image/') !== false && strpos($attachmentPath, '?url=') !== false) {
+                        parse_str(parse_url($attachmentPath, PHP_URL_QUERY), $params);
+                        if (isset($params['url'])) {
+                            $attachmentUrl = "https://api.arctraining.fr" . $params['url'];
+                        } else {
+                            $attachmentUrl = "";
+                        }
+                    }
                     // Si le chemin commence par uploads/, on construit l'URL complète
-                    if (str_starts_with($attachmentPath, "uploads/")) {
+                    elseif (str_starts_with($attachmentPath, "uploads/")) {
                         $attachmentUrl = "https://api.arctraining.fr/" . $attachmentPath;
                     } 
                     // Si c'est juste le nom de fichier, on ajoute le chemin complet
