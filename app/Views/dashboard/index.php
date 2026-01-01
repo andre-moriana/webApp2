@@ -276,6 +276,13 @@
     window.usersByClub = <?php echo json_encode($stats['users_by_club'] ?? []); ?>;
     window.allUsers = <?php echo json_encode($stats['users_list'] ?? []); ?>;
     window.totalUsers = <?php echo $stats['users']; ?>;
+    window.groupsByClub = <?php echo json_encode($stats['groups_by_club'] ?? []); ?>;
+    window.allGroups = <?php echo json_encode($stats['groups_list'] ?? []); ?>;
+    window.totalGroups = <?php echo $stats['groups']; ?>;
+    window.totalTopics = <?php echo $stats['topics_total']; ?>;
+    window.eventsByClub = <?php echo json_encode($stats['events_by_club'] ?? []); ?>;
+    window.allEvents = <?php echo json_encode($stats['events_list'] ?? []); ?>;
+    window.totalEvents = <?php echo $stats['events']; ?>;
 </script>
 
 <!-- Statistiques UTILISATEURS -->
@@ -387,6 +394,126 @@
     </div>
 </div>
 
+<!-- Statistiques ESPACE SOCIAL -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-info text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-comments me-2"></i>
+                    Statistiques Resaux Sociaux
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Groupes et Sujets -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-left-info shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center mb-3">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            <span id="groups-title">Groupes / Sujets</span>
+                                        </div>
+                                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                            <span id="groups-count"><?php echo $stats['groups']; ?></span> / 
+                                            <span id="topics-count"><?php echo $stats['topics_total']; ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-layer-group fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                                <!-- Liste des groupes et sujets -->
+                                <div class="groups-topics-list">
+                                    <hr>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="text-xs font-weight-bold text-info" id="groups-list-title">Groupes et Sujets:</div>
+                                        <button class="btn btn-sm btn-outline-secondary" id="reset-groups-btn" style="font-size: 0.7rem; padding: 2px 8px; display: none;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <ul class="list-unstyled mb-0" id="groups-topics-list" style="font-size: 0.85rem; max-height: 400px; overflow-y: auto;">
+                                        <?php if (!empty($stats['groups_list'])): ?>
+                                            <?php foreach ($stats['groups_list'] as $group): ?>
+                                                <li class="mb-2">
+                                                    <div class="font-weight-bold">
+                                                        <i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> 
+                                                        <?php echo htmlspecialchars($group['name']); ?>
+                                                    </div>
+                                                    <?php if (!empty($group['topics'])): ?>
+                                                        <ul class="list-unstyled ml-3 mt-1" style="font-size: 0.8rem;">
+                                                            <?php foreach ($group['topics'] as $topic): ?>
+                                                                <li class="mb-1">
+                                                                    <i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> 
+                                                                    <?php echo htmlspecialchars($topic['title']); ?>
+                                                                </li>
+                                                            <?php endforeach; ?>
+                                                        </ul>
+                                                    <?php endif; ?>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <li class="text-muted">Aucun groupe</li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Événements -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-left-warning shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center mb-3">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            <span id="events-title">Total Événements</span>
+                                        </div>
+                                        <div class="h4 mb-0 font-weight-bold text-gray-800" id="events-count">
+                                            <?php echo $stats['events']; ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                                <!-- Liste des événements -->
+                                <div class="events-list">
+                                    <hr>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="text-xs font-weight-bold text-warning" id="events-list-title">Liste des événements:</div>
+                                        <button class="btn btn-sm btn-outline-secondary" id="reset-events-btn" style="font-size: 0.7rem; padding: 2px 8px; display: none;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <ul class="list-unstyled mb-0" id="events-list" style="font-size: 0.85rem; max-height: 400px; overflow-y: auto;">
+                                        <?php if (!empty($stats['events_list'])): ?>
+                                            <?php foreach ($stats['events_list'] as $event): ?>
+                                                <li class="mb-1">
+                                                    <i class="fas fa-calendar text-warning" style="font-size: 0.6rem;"></i> 
+                                                    <?php echo htmlspecialchars($event['title']); ?>
+                                                    <?php if (!empty($event['date'])): ?>
+                                                        <span class="text-muted" style="font-size: 0.75rem;">
+                                                            (<?php echo date('d/m/Y', strtotime($event['date'])); ?>)
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <li class="text-muted">Aucun événement</li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Informations système - Visible uniquement pour les administrateurs -->
 <?php 
