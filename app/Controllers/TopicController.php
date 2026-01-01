@@ -37,35 +37,35 @@ class TopicController {
                 foreach ($messages as &$message) {
                     if (isset($message['attachment']) && is_array($message['attachment'])) {
                         $attachment = &$message['attachment'];
+                        $originalUrl = $attachment['url'] ?? '';
                         
-                        // Si storedFilename existe et n'est pas vide, construire l'URL correcte
-                        if (!empty($attachment['storedFilename'])) {
-                            $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
-                        }
-                        // Sinon extraire depuis url existant
-                        elseif (isset($attachment['url']) && !empty($attachment['url'])) {
-                            // Si l'URL contient un paramètre url=, l'extraire et utiliser le chemin tel quel
-                            if (strpos($attachment['url'], '?') !== false && strpos($attachment['url'], 'url=') !== false) {
-                                $urlParts = parse_url($attachment['url']);
-                                if (isset($urlParts['query'])) {
-                                    parse_str($urlParts['query'], $queryParams);
-                                    if (isset($queryParams['url'])) {
-                                        $decodedPath = urldecode($queryParams['url']);
-                                        // Si le chemin décodé commence déjà par http, l'utiliser tel quel
-                                        if (str_starts_with($decodedPath, 'http')) {
-                                            $attachment['url'] = $decodedPath;
-                                        } else {
-                                            // Sinon ajouter le domaine devant le chemin
-                                            $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
-                                        }
+                        // Toujours traiter l'URL si elle contient url= en paramètre
+                        if (!empty($originalUrl) && strpos($originalUrl, 'url=') !== false) {
+                            $urlParts = parse_url($originalUrl);
+                            if (isset($urlParts['query'])) {
+                                parse_str($urlParts['query'], $queryParams);
+                                if (isset($queryParams['url'])) {
+                                    $decodedPath = urldecode($queryParams['url']);
+                                    // Si le chemin décodé commence déjà par http, l'utiliser tel quel
+                                    if (str_starts_with($decodedPath, 'http')) {
+                                        $attachment['url'] = $decodedPath;
+                                    } else {
+                                        // Sinon ajouter le domaine devant le chemin
+                                        $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
                                     }
                                 }
                             }
-                            // Sinon extraire le nom de fichier (hash.extension)
-                            elseif (preg_match('/\/([a-f0-9]{32}\.[a-zA-Z0-9]+)(?:\?|$)/i', $attachment['url'], $matches)) {
+                        }
+                        // Si storedFilename existe et n'est pas vide, construire l'URL correcte
+                        elseif (!empty($attachment['storedFilename'])) {
+                            $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
+                        }
+                        // Extraire le nom de fichier depuis url avec regex
+                        elseif (!empty($originalUrl)) {
+                            if (preg_match('/\/([a-f0-9]{32}\.[a-zA-Z0-9]+)(?:\?|$)/i', $originalUrl, $matches)) {
                                 $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
                             }
-                            elseif (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['url'], $matches)) {
+                            elseif (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $originalUrl, $matches)) {
                                 $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
                             }
                         }
