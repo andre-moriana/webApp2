@@ -113,16 +113,11 @@ class DashboardController {
             // Récupérer les groupes directement via l'API
             $groupsResponse = $this->apiService->makeRequest('groups/list', 'GET');
             
-            // DEBUG: Afficher la réponse brute
-            error_log("DEBUG groups/list response: " . json_encode($groupsResponse));
-            
             if ($groupsResponse['success']) {
                 // L'API retourne directement le tableau de groupes dans ['data']
                 if (!empty($groupsResponse['data']) && is_array($groupsResponse['data'])) {
                     $groups = $groupsResponse['data'];
                     $stats['groups'] = count($groups);
-                    
-                    error_log("DEBUG Nombre de groupes: " . count($groups));
                     
                     // DEBUG: Afficher le premier groupe
                     if (!empty($groups[0])) {
@@ -183,9 +178,6 @@ class DashboardController {
                     foreach ($groupsById as $groupData) {
                         $stats['groups_list'][] = $groupData;
                         
-                        // DEBUG
-                        error_log("DEBUG Groupe: " . $groupData['name'] . " - club_id: " . ($groupData['club_id'] ?? 'NULL'));
-                        
                         // Associer le groupe à son club
                         if (!empty($groupData['club_id'])) {
                             if (!isset($stats['groups_by_club'][$groupData['club_id']])) {
@@ -194,9 +186,6 @@ class DashboardController {
                             $stats['groups_by_club'][$groupData['club_id']][] = $groupData;
                         }
                     }
-                    
-                    // DEBUG final
-                    error_log("DEBUG groups_by_club keys: " . json_encode(array_keys($stats['groups_by_club'] ?? [])));
                 }
             }
             

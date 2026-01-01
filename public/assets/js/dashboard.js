@@ -1,8 +1,6 @@
 // CSS pour afficher/masquer la liste au survol
-console.log('=== DASHBOARD.JS CHARGÉ ===');
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== DOMContentLoaded DÉCLENCHÉ ===');
     
     // Ajouter le style CSS dynamiquement
     const style = document.createElement('style');
@@ -133,21 +131,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Délégation d'événements pour les clubs (car ils peuvent être dynamiquement ajoutés)
     // Gérer le clic sur un club
     const clubsListElement = document.getElementById('clubs-list');
-    console.log('=== INIT clubs-list ===');
-    console.log('Element clubs-list trouvé:', clubsListElement);
     
     clubsListElement?.addEventListener('click', function(e) {
-        console.log('CLICK détecté sur clubs-list', e.target);
         const clubItem = e.target.closest('.club-item');
-        console.log('clubItem trouvé:', clubItem);
         
         if (clubItem) {
             e.stopPropagation();
             
             const clubId = clubItem.getAttribute('data-club-id');
             const clubName = clubItem.textContent.trim();
-            
-            console.log('Club cliqué - ID:', clubId, 'Nom:', clubName);
             
             // Retirer la sélection des comités
             document.querySelectorAll('.committee-item').forEach(function(el) {
@@ -166,7 +158,6 @@ document.addEventListener('DOMContentLoaded', function() {
             filterUsersByClub(clubId, clubName);
             
             // Filtrer les groupes/sujets et événements par club
-            console.log('AVANT filterGroupsByClub - clubId:', clubId, 'clubName:', clubName);
             filterGroupsByClub(clubId, clubName);
             filterEventsByClub(clubId, clubName);
         }
@@ -450,12 +441,6 @@ function filterGroupsByClub(clubId, clubName) {
     const resetBtn = document.getElementById('reset-groups-btn');
     
     if (!groupsList) return;
-    
-    // DEBUG: Afficher les données pour diagnostiquer
-    console.log('=== DEBUG filterGroupsByClub ===');
-    console.log('clubId recherché:', clubId);
-    console.log('window.groupsByClub:', window.groupsByClub);
-    console.log('Clés disponibles:', Object.keys(window.groupsByClub || {}));
     
     // Récupérer les groupes de ce club
     const filteredGroups = window.groupsByClub[clubId] || [];
