@@ -149,7 +149,7 @@ class PermissionHelper
     /**
      * Rendu conditionnel basé sur les permissions
      */
-    public static function ifCan($resource, $action, $clubId = null, $callback)
+    public static function ifCan($resource, $action, $callback, $clubId = null)
     {
         if (self::can($resource, $action, $clubId)) {
             $callback();
