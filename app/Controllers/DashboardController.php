@@ -146,7 +146,7 @@ class DashboardController {
                         $stats['topics_by_group'][$groupId] = [];
                     }
                     
-                    // Récupérer les sujets (topics)
+                    // Récupérer les sujets (topics) via l'API backend
                     try {
                         $topicsResponse = $this->apiService->makeRequest('topics/list', 'GET');
                         if ($topicsResponse['success'] && !empty($topicsResponse['data'])) {
@@ -155,32 +155,34 @@ class DashboardController {
                             
                             // Associer les sujets aux groupes
                             foreach ($topics as $topic) {
-                                $topicGroupId = $topic['groupId'] ?? $topic['group_id'] ?? '';
-                                
-                                error_log("DEBUG Topic: " . ($topic['title'] ?? 'sans titre') . " | group_id: " . var_export($topicGroupId, true) . " Type: " . gettype($topicGroupId));
-                                error_log("DEBUG groupsById keys: " . implode(', ', array_keys($groupsById)));
+                                // Convertir group_id en integer pour correspondre aux clés de $groupsById
+                                $topicGroupId = (int)($topic['group_id'] ?? 0);
                                 
                                 $topicData = [
-                                    'id' => $topic['id'] ?? $topic['_id'] ?? '',
+                                    'id' => $topic['id'] ?? '',
                                     'title' => $topic['title'] ?? 'Sujet sans titre',
-                                    'groupId' => $topicGroupId
+                                    'groupId' => $topicGroupId,
+                                    'description' => $topic['description'] ?? '',
+                                    'created_by_name' => $topic['created_by_name'] ?? ''
                                 ];
                                 
-                                if (!empty($topicGroupId) && isset($groupsById[$topicGroupId])) {
-                                    $stats['topics_by_group'][$topicGroupId][] = $topicData;
+                                // Ajouter aux topics par groupe
+                                if (!isset($stats['topics_by_group'][$topicGroupId])) {
+                                    $stats['topics_by_group'][$topicGroupId] = [];
                                 }
+                                $stats['topics_by_group'][$topicGroupId][] = $topicData;
                                 
                                 // Ajouter les sujets aux groupes
                                 if (isset($groupsById[$topicGroupId])) {
                                     $groupsById[$topicGroupId]['topics'][] = $topicData;
-                                    error_log("DEBUG Topic ajouté au groupe " . $topicGroupId);
-                                } else {
-                                    error_log("DEBUG Topic NON ajouté - groupe " . var_export($topicGroupId, true) . " introuvable");
                                 }
                             }
+                        } else {
+                            $stats['topics_total'] = 0;
                         }
                     } catch (Exception $e) {
                         error_log('Erreur lors de la récupération des topics: ' . $e->getMessage());
+                        $stats['topics_total'] = 0;
                     }
                     
                     // TOUJOURS construire groups_list et groups_by_club, même si les topics ont échoué
