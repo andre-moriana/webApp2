@@ -90,7 +90,7 @@ class DashboardController {
                     $excludedIds = ['0000000', '0000001', '0000002', '0000005', '0000006'];
                     
                     foreach ($clubs as $club) {
-                        $clubId = $club['id'] ?? $club['_id'] ?? '';
+                        $clubId = $club['nameshort'] ?? '';
                         
                         // Ignorer les IDs spéciaux
                         if (in_array($clubId, $excludedIds)) {
