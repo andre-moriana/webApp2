@@ -117,8 +117,9 @@ class DashboardController {
             error_log("DEBUG getGroups response: " . json_encode($groupsResponse));
             
             if ($groupsResponse['success']) {
-                if (!empty($groupsResponse['data']['groups'])) {
-                    $groups = $groupsResponse['data']['groups'];
+                // L'API retourne directement le tableau dans 'data', pas dans 'data']['groups']
+                if (!empty($groupsResponse['data'])) {
+                    $groups = $groupsResponse['data'];
                     $stats['groups'] = count($groups);
                     
                     // DEBUG: Afficher le premier groupe
