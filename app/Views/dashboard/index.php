@@ -149,17 +149,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <div class="card border-left-primary shadow-sm h-100" 
-                             data-bs-toggle="tooltip" 
-                             data-bs-placement="top" 
-                             data-bs-html="true"
-                             title="<?php 
-                                if (!empty($stats['clubs_regional_list'])) {
-                                    echo '<strong>Comités Régionaux:</strong><br>' . implode('<br>', array_map('htmlspecialchars', $stats['clubs_regional_list']));
-                                } else {
-                                    echo 'Aucun comité régional';
-                                }
-                             ?>">
+                        <div class="card border-left-primary shadow-sm h-100 club-card-hover">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
@@ -174,22 +164,26 @@
                                         <i class="fas fa-map-marked-alt fa-2x text-gray-300"></i>
                                     </div>
                                 </div>
+                                <!-- Liste déroulante -->
+                                <div class="club-list mt-3">
+                                    <hr>
+                                    <div class="text-xs font-weight-bold text-primary mb-2">Liste des comités:</div>
+                                    <ul class="list-unstyled mb-0" style="font-size: 0.85rem;">
+                                        <?php if (!empty($stats['clubs_regional_list'])): ?>
+                                            <?php foreach ($stats['clubs_regional_list'] as $club): ?>
+                                                <li class="mb-1"><i class="fas fa-chevron-right text-primary" style="font-size: 0.6rem;"></i> <?php echo htmlspecialchars($club); ?></li>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <li class="text-muted">Aucun comité régional</li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
                     <div class="col-md-4 mb-3">
-                        <div class="card border-left-info shadow-sm h-100"
-                             data-bs-toggle="tooltip" 
-                             data-bs-placement="top" 
-                             data-bs-html="true"
-                             title="<?php 
-                                if (!empty($stats['clubs_departmental_list'])) {
-                                    echo '<strong>Comités Départementaux:</strong><br>' . implode('<br>', array_map('htmlspecialchars', $stats['clubs_departmental_list']));
-                                } else {
-                                    echo 'Aucun comité départemental';
-                                }
-                             ?>">
+                        <div class="card border-left-info shadow-sm h-100 club-card-hover">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
@@ -203,6 +197,20 @@
                                     <div class="col-auto">
                                         <i class="fas fa-map-marker-alt fa-2x text-gray-300"></i>
                                     </div>
+                                </div>
+                                <!-- Liste déroulante -->
+                                <div class="club-list mt-3">
+                                    <hr>
+                                    <div class="text-xs font-weight-bold text-info mb-2">Liste des comités:</div>
+                                    <ul class="list-unstyled mb-0" style="font-size: 0.85rem;">
+                                        <?php if (!empty($stats['clubs_departmental_list'])): ?>
+                                            <?php foreach ($stats['clubs_departmental_list'] as $club): ?>
+                                                <li class="mb-1"><i class="fas fa-chevron-right text-info" style="font-size: 0.6rem;"></i> <?php echo htmlspecialchars($club); ?></li>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <li class="text-muted">Aucun comité départemental</li>
+                                        <?php endif; ?>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
