@@ -436,6 +436,12 @@ function filterGroupsByClub(clubId, clubName) {
     
     if (!groupsList) return;
     
+    // DEBUG: Afficher les données pour diagnostiquer
+    console.log('=== DEBUG filterGroupsByClub ===');
+    console.log('clubId recherché:', clubId);
+    console.log('window.groupsByClub:', window.groupsByClub);
+    console.log('Clés disponibles:', Object.keys(window.groupsByClub || {}));
+    
     // Récupérer les groupes de ce club
     const filteredGroups = window.groupsByClub[clubId] || [];
     
