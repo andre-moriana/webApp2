@@ -1238,13 +1238,14 @@ class ApiController {
                         }
                         // Sinon extraire depuis url existant
                         elseif (isset($attachment['url'])) {
-                            // Si l'URL contient un paramètre url=, l'extraire
+                            // Si l'URL contient un paramètre url=, l'extraire et utiliser le chemin tel quel
                             if (strpos($attachment['url'], '?') !== false && strpos($attachment['url'], 'url=') !== false) {
                                 $urlParts = parse_url($attachment['url']);
                                 if (isset($urlParts['query'])) {
                                     parse_str($urlParts['query'], $queryParams);
                                     if (isset($queryParams['url'])) {
                                         $decodedPath = urldecode($queryParams['url']);
+                                        // Le chemin contient déjà /uploads/... on ajoute juste le domaine
                                         $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
                                     }
                                 }
