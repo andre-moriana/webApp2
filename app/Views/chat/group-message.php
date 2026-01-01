@@ -54,7 +54,7 @@ if (isset($message["created_at"]) || isset($message["timestamp"])) {
 }
 
 // URL du backend pour les pièces jointes
-$backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
+$backendUrl = $_ENV['API_BASE_URL'] ?? 'https://api.arctraining.fr';
 $backendUrl = str_replace('/api', '', $backendUrl); // Supprimer /api si présent
 
 ?>
