@@ -256,7 +256,13 @@
                                     <ul class="list-unstyled mb-0" id="clubs-list" style="font-size: 0.85rem; max-height: 300px; overflow-y: auto;">
                                         <?php if (!empty($stats['all_clubs'])): ?>
                                             <?php foreach ($stats['all_clubs'] as $club): ?>
-                                                <li class="mb-1"><i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> <?php echo htmlspecialchars($club['name']); ?></li>
+                                                <li class="mb-1 club-item" 
+                                                    data-club-id="<?php echo htmlspecialchars($club['id']); ?>"
+                                                    style="cursor: pointer;"
+                                                    title="Cliquez pour voir les utilisateurs">
+                                                    <i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> 
+                                                    <?php echo htmlspecialchars($club['name']); ?>
+                                                </li>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <li class="text-muted">Aucun club</li>
