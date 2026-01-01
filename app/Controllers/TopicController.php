@@ -27,13 +27,6 @@ class TopicController {
             
             $topic = $result['data'];
             
-            // Récupérer les messages du sujet
-            $messagesResult = $this->apiService->makeRequest("topics/{$topicId}/messages", "GET");
-            $messages = [];
-            if ($messagesResult['success'] && isset($messagesResult['data']) && is_array($messagesResult['data'])) {
-                $messages = $messagesResult['data'];
-            }
-            
             // Récupérer les détails du groupe
             $groupResponse = $this->apiService->getGroupDetails($groupId);
             $group = null;
