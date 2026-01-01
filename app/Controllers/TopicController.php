@@ -33,36 +33,28 @@ class TopicController {
             if ($messagesResult['success'] && isset($messagesResult['data']) && is_array($messagesResult['data'])) {
                 $messages = $messagesResult['data'];
                 
-                // Corriger les URLs des pièces jointes - même traitement pour images et PDF
+                // Corriger les URLs des pièces jointes
                 foreach ($messages as &$message) {
                     if (isset($message['attachment']) && is_array($message['attachment'])) {
                         $attachment = &$message['attachment'];
-                        $originalUrl = $attachment['url'] ?? '';
                         
-                        // Si l'URL contient un paramètre url=, l'extraire
-                        if (!empty($originalUrl) && strpos($originalUrl, 'url=') !== false) {
-                            $urlParts = parse_url($originalUrl);
+                        // Forcer la correction pour TOUS les fichiers
+                        if (isset($attachment['url']) && strpos($attachment['url'], 'url=') !== false) {
+                            $urlParts = parse_url($attachment['url']);
                             if (isset($urlParts['query'])) {
                                 parse_str($urlParts['query'], $queryParams);
                                 if (isset($queryParams['url'])) {
                                     $decodedPath = urldecode($queryParams['url']);
-                                    // Si déjà une URL complète, l'utiliser
+                                    // Construire URL complète
                                     if (str_starts_with($decodedPath, 'http')) {
                                         $attachment['url'] = $decodedPath;
-                                    } 
-                                    // Si commence par /uploads/, construire URL complète
-                                    elseif (str_starts_with($decodedPath, '/uploads/')) {
+                                    } else {
                                         $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
-                                    }
-                                    // Sinon ajouter le chemin complet
-                                    else {
-                                        $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . basename($decodedPath);
                                     }
                                 }
                             }
                         }
-                        // Sinon utiliser storedFilename si disponible
-                        elseif (!empty($attachment['storedFilename'])) {
+                        elseif (isset($attachment['storedFilename'])) {
                             $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
                         }
                     }
