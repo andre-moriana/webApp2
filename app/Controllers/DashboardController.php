@@ -132,8 +132,8 @@ class DashboardController {
                         if (preg_match('/00000$/', $clubId) && $clubId !== '0000000') {
                             $stats['clubs_regional']++;
                             $stats['clubs_regional_list'][] = [
-                                'id' => $clubRealId,
-                                'nameshort' => $clubId,
+                                'id' => $clubId,
+                                'realId' => $clubRealId,
                                 'name' => $clubName
                             ];
                             $stats['clubs_by_committee'][$clubId] = [];
@@ -142,8 +142,8 @@ class DashboardController {
                         elseif (preg_match('/000$/', $clubId) && !preg_match('/00000$/', $clubId)) {
                             $stats['clubs_departmental']++;
                             $stats['clubs_departmental_list'][] = [
-                                'id' => $clubRealId,
-                                'nameshort' => $clubId,
+                                'id' => $clubId,
+                                'realId' => $clubRealId,
                                 'name' => $clubName
                             ];
                             $stats['clubs_by_committee'][$clubId] = [];
@@ -152,8 +152,8 @@ class DashboardController {
                         else {
                             $stats['clubs_total']++;
                             $clubData = [
-                                'id' => $clubRealId,
-                                'nameshort' => $clubId,
+                                'id' => $clubId,
+                                'realId' => $clubRealId,
                                 'name' => $clubName
                             ];
                             $stats['all_clubs'][] = $clubData;
