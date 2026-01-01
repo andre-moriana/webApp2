@@ -1879,29 +1879,31 @@ class ApiController {
      * Récupère l'historique des messages d'un groupe
      */
     public function getGroupMessages($groupId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+            return;
+        }
+        
         try {
-            // S'assurer qu'on est authentifié
-            $this->ensureAuthenticated();
-            
             $response = $this->apiService->makeRequest("messages/{$groupId}/history", "GET");
             
             if ($response['success']) {
-                http_response_code(200);
                 // Retourner directement le tableau de messages
-                echo json_encode($response['data'] ?? []);
+                $this->sendJsonResponse($response['data'] ?? []);
             } else {
-                http_response_code($response['status_code'] ?? 500);
-                echo json_encode([
+                $this->sendJsonResponse([
                     "success" => false,
                     "message" => "Erreur lors de la récupération: " . ($response['message'] ?? 'Erreur inconnue')
-                ]);
+                ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
+            $this->sendJsonResponse([
                 "success" => false,
                 "message" => "Erreur lors de la récupération: " . $e->getMessage()
-            ]);
+            ], 500);
         }
     }
     
@@ -1909,19 +1911,23 @@ class ApiController {
      * Envoie un message dans un groupe
      */
     public function sendGroupMessage($groupId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+            return;
+        }
+        
         try {
-            // S'assurer qu'on est authentifié
-            $this->ensureAuthenticated();
-            
             // Récupérer le contenu du message
             $content = $_POST['content'] ?? '';
             
             if (empty($content)) {
-                http_response_code(400);
-                echo json_encode([
+                $this->sendJsonResponse([
                     "success" => false,
                     "message" => "Le contenu du message est requis"
-                ]);
+                ], 400);
                 return;
             }
             
@@ -1937,21 +1943,18 @@ class ApiController {
             $response = $this->apiService->makeRequest("messages/{$groupId}/send", "POST", $data);
             
             if ($response['success']) {
-                http_response_code(200);
-                echo json_encode($response);
+                $this->sendJsonResponse($response);
             } else {
-                http_response_code($response['status_code'] ?? 500);
-                echo json_encode([
+                $this->sendJsonResponse([
                     "success" => false,
                     "message" => "Erreur lors de l'envoi: " . ($response['message'] ?? 'Erreur inconnue')
-                ]);
+                ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
+            $this->sendJsonResponse([
                 "success" => false,
                 "message" => "Erreur lors de l'envoi: " . $e->getMessage()
-            ]);
+            ], 500);
         }
     }
     
@@ -1959,40 +1962,41 @@ class ApiController {
      * Met à jour un message
      */
     public function updateMessage($messageId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+            return;
+        }
+        
         try {
-            // S'assurer qu'on est authentifié
-            $this->ensureAuthenticated();
-            
             $input = json_decode(file_get_contents('php://input'), true);
             $content = $input['content'] ?? '';
             
             if (empty($content)) {
-                http_response_code(400);
-                echo json_encode([
+                $this->sendJsonResponse([
                     "success" => false,
                     "message" => "Le contenu du message est requis"
-                ]);
+                ], 400);
                 return;
             }
             
             $response = $this->apiService->makeRequest("messages/{$messageId}", "PUT", ['content' => $content]);
             
             if ($response['success']) {
-                http_response_code(200);
-                echo json_encode($response);
+                $this->sendJsonResponse($response);
             } else {
-                http_response_code($response['status_code'] ?? 500);
-                echo json_encode([
+                $this->sendJsonResponse([
                     "success" => false,
                     "message" => "Erreur lors de la mise à jour: " . ($response['message'] ?? 'Erreur inconnue')
-                ]);
+                ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
+            $this->sendJsonResponse([
                 "success" => false,
                 "message" => "Erreur lors de la mise à jour: " . $e->getMessage()
-            ]);
+            ], 500);
         }
     }
     
@@ -2000,31 +2004,33 @@ class ApiController {
      * Supprime un message
      */
     public function deleteMessage($messageId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+            return;
+        }
+        
         try {
-            // S'assurer qu'on est authentifié
-            $this->ensureAuthenticated();
-            
             $response = $this->apiService->makeRequest("messages/{$messageId}", "DELETE");
             
             if ($response['success']) {
-                http_response_code(200);
-                echo json_encode([
+                $this->sendJsonResponse([
                     "success" => true,
                     "message" => "Message supprimé avec succès"
                 ]);
             } else {
-                http_response_code($response['status_code'] ?? 500);
-                echo json_encode([
+                $this->sendJsonResponse([
                     "success" => false,
                     "message" => "Erreur lors de la suppression: " . ($response['message'] ?? 'Erreur inconnue')
-                ]);
+                ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
+            $this->sendJsonResponse([
                 "success" => false,
                 "message" => "Erreur lors de la suppression: " . $e->getMessage()
-            ]);
+            ], 500);
         }
     }
 }
