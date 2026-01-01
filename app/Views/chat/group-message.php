@@ -6,18 +6,11 @@
  * @param bool $canDelete Si l'utilisateur peut supprimer le message
  */
 
-// DEBUG: Afficher la structure complète du message
-error_log("group-message.php - Structure du message: " . print_r($message, true));
-
 // Utiliser des clés flexibles pour l'ID du message
 $messageId = $message["id"] ?? $message["_id"] ?? $message["message_id"] ?? null;
 
 // Utiliser des clés flexibles pour l'ID de l'auteur
 $authorId = $message["author"]["_id"] ?? $message["author"]["id"] ?? $message["author_id"] ?? $message["userId"] ?? $message["user_id"] ?? null;
-
-// DEBUG: Afficher les valeurs
-error_log("group-message.php: authorId = " . ($authorId ?? "null"));
-error_log("group-message.php: session user id = " . ($_SESSION["user"]["id"] ?? "null"));
 
 // Calculer correctement si l'utilisateur actuel est l'auteur
 $isCurrentUser = false;
@@ -26,14 +19,9 @@ if ($authorId && isset($_SESSION["user"]["id"])) {
     $isCurrentUser = (string)$authorId === (string)$_SESSION["user"]["id"];
 }
 
-error_log("group-message.php: isCurrentUser = " . ($isCurrentUser ? "true" : "false"));
-
 // Calculer les permissions
 $canEdit = $isCurrentUser; // Seul l'auteur peut éditer
 $canDelete = $isCurrentUser || (isset($_SESSION["user"]["is_admin"]) && $_SESSION["user"]["is_admin"]); // Auteur ou admin peut supprimer
-
-// DEBUG: Afficher les permissions
-error_log("group-message.php - Permissions: canEdit=" . ($canEdit ? "true" : "false") . ", canDelete=" . ($canDelete ? "true" : "false"));
 
 $alignClass = $isCurrentUser ? "justify-content-end" : "justify-content-start";
 $messageClass = $isCurrentUser ? "message-sent" : "message-received";
