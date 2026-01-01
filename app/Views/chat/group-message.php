@@ -59,46 +59,9 @@ $backendUrl = $_ENV['API_BASE_URL'] ?? 'https://api.arctraining.fr';
         <?php if (isset($message["attachment"]) && $message["attachment"]): ?>
             <div class="message-attachment mt-2">
                 <?php
-                $attachmentPath = $message["attachment"]["url"] ?? $message["attachment"]["path"] ?? "";
+                $attachmentUrl = $message["attachment"]["url"] ?? "";
                 $originalName = $message["attachment"]["originalName"] ?? $message["attachment"]["filename"] ?? "Pièce jointe";
                 $mimeType = $message["attachment"]["mimeType"] ?? "";
-                $storedFilename = $message["attachment"]["storedFilename"] ?? "";
-
-                // Construire l'URL complète: https://api.arctraining.fr/uploads/messages/filename.jpg
-                if ($storedFilename) {
-                    $attachmentUrl = "https://api.arctraining.fr/uploads/messages/" . $storedFilename;
-                }
-                elseif ($attachmentPath) {
-                    // Si l'URL contient ?url=, extraire et décoder le paramètre
-                    if (strpos($attachmentPath, '?url=') !== false) {
-                        $urlParts = parse_url($attachmentPath);
-                        if (isset($urlParts['query'])) {
-                            parse_str($urlParts['query'], $queryParams);
-                            if (isset($queryParams['url'])) {
-                                // Le paramètre url contient déjà le chemin complet
-                                $decodedPath = urldecode($queryParams['url']);
-                                $attachmentUrl = "https://api.arctraining.fr" . $decodedPath;
-                            } else {
-                                $attachmentUrl = "";
-                            }
-                        } else {
-                            $attachmentUrl = "";
-                        }
-                    }
-                    // Si le chemin commence par uploads/, on construit l'URL complète
-                    elseif (str_starts_with($attachmentPath, "uploads/")) {
-                        $attachmentUrl = "https://api.arctraining.fr/" . $attachmentPath;
-                    }
-                    // Si c'est juste le nom de fichier, on ajoute le chemin complet
-                    elseif (!str_starts_with($attachmentPath, "http")) {
-                        $attachmentUrl = "https://api.arctraining.fr/uploads/messages/" . basename($attachmentPath);
-                    }
-                    else {
-                        $attachmentUrl = $attachmentPath;
-                    }
-                } else {
-                    $attachmentUrl = "";
-                }
                 ?>
                 <a href="<?php echo htmlspecialchars($attachmentUrl); ?>" target="_blank" class="attachment-link">
                     <?php if (strpos($mimeType, "image/") === 0): ?>
