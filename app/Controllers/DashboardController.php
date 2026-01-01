@@ -168,6 +168,9 @@ class DashboardController {
                             foreach ($groupsById as $groupData) {
                                 $stats['groups_list'][] = $groupData;
                                 
+                                // DEBUG
+                                error_log("DEBUG Groupe: " . $groupData['name'] . " - club_id: " . ($groupData['club_id'] ?? 'NULL'));
+                                
                                 // Associer le groupe à son club
                                 if (!empty($groupData['club_id'])) {
                                     if (!isset($stats['groups_by_club'][$groupData['club_id']])) {
@@ -176,6 +179,9 @@ class DashboardController {
                                     $stats['groups_by_club'][$groupData['club_id']][] = $groupData;
                                 }
                             }
+                            
+                            // DEBUG final
+                            error_log("DEBUG groups_by_club keys: " . json_encode(array_keys($stats['groups_by_club'])));
                         }
                     } catch (Exception $e) {
                         error_log('Erreur lors de la récupération des topics: ' . $e->getMessage());
