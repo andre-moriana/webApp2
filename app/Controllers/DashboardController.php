@@ -149,12 +149,11 @@ class DashboardController {
                     // Récupérer les sujets (topics) via l'API backend
                     try {
                         $topicsResponse = $this->apiService->makeRequest('topics/list', 'GET');
-                        error_log("TOPICS API Response: " . json_encode($topicsResponse));
                         
-                        if ($topicsResponse['success'] && !empty($topicsResponse['data'])) {
-                            $topics = is_array($topicsResponse['data']) ? $topicsResponse['data'] : [];
+                        // L'API retourne une double encapsulation: $response['data']['data']
+                        if ($topicsResponse['success'] && !empty($topicsResponse['data']['data'])) {
+                            $topics = is_array($topicsResponse['data']['data']) ? $topicsResponse['data']['data'] : [];
                             $stats['topics_total'] = count($topics);
-                            error_log("TOPICS Count: " . count($topics));
                             
                             // Associer les sujets aux groupes
                             foreach ($topics as $topic) {
