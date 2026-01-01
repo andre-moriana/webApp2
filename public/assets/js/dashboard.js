@@ -172,11 +172,24 @@ function displayClubsForCommittee(committeeId, committeeName) {
     if (clubs.length > 0) {
         clubs.forEach(function(club) {
             const li = document.createElement('li');
-            li.className = 'mb-1 club-item';
+            li.className = 'mb-1 club-item d-flex justify-content-between align-items-center';
             li.setAttribute('data-club-id', club.id);
             li.style.cursor = 'pointer';
             li.title = 'Cliquez pour voir les utilisateurs';
-            li.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
+            
+            const span = document.createElement('span');
+            span.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
+            
+            const link = document.createElement('a');
+            link.href = '/clubs';
+            link.className = 'btn btn-sm btn-outline-primary club-link';
+            link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
+            link.title = 'Voir la page des clubs';
+            link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+            link.onclick = function(e) { e.stopPropagation(); };
+            
+            li.appendChild(span);
+            li.appendChild(link);
             clubsList.appendChild(li);
         });
     } else {
@@ -281,11 +294,24 @@ function resetClubsDisplay() {
     if (allClubs.length > 0) {
         allClubs.forEach(function(club) {
             const li = document.createElement('li');
-            li.className = 'mb-1 club-item';
+            li.className = 'mb-1 club-item d-flex justify-content-between align-items-center';
             li.setAttribute('data-club-id', club.id);
             li.style.cursor = 'pointer';
             li.title = 'Cliquez pour voir les utilisateurs';
-            li.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
+            
+            const span = document.createElement('span');
+            span.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
+            
+            const link = document.createElement('a');
+            link.href = '/clubs';
+            link.className = 'btn btn-sm btn-outline-primary club-link';
+            link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
+            link.title = 'Voir la page des clubs';
+            link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
+            link.onclick = function(e) { e.stopPropagation(); };
+            
+            li.appendChild(span);
+            li.appendChild(link);
             clubsList.appendChild(li);
         });
     } else {
