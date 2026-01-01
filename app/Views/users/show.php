@@ -101,11 +101,13 @@ $title = "Détails de l'utilisateur - Portail Archers de Gémenos";
                                         $status = $user['status'] ?? 'active';
                                         $statusLabels = [
                                             'pending' => 'En attente de validation',
+                                            'pending_deletion' => 'En attente de suppression',
                                             'active' => 'Validé',
                                             'rejected' => 'Rejeté'
                                         ];
                                         $statusColors = [
                                             'pending' => 'warning',
+                                            'pending_deletion' => 'danger',
                                             'active' => 'success',
                                             'rejected' => 'danger'
                                         ];
