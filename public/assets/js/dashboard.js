@@ -47,6 +47,27 @@ document.addEventListener('DOMContentLoaded', function() {
             max-height: 500px;
             opacity: 1;
         }
+        
+        .user-card-hover .user-list {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.3s ease;
+        }
+        
+        .user-card-hover:hover .user-list {
+            max-height: 500px;
+            opacity: 1;
+        }
+        
+        .user-card-hover {
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .user-card-hover:hover {
+            transform: translateY(-5px);
+        }
     `;
     document.head.appendChild(style);
     
@@ -68,13 +89,22 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Afficher les clubs de ce comité
             displayClubsForCommittee(committeeId, committeeName);
+            
+            // Filtrer les utilisateurs
+            filterUsersByCommittee(committeeId, committeeName);
         });
     });
     
-    // Gérer le bouton de réinitialisation
+    // Gérer le bouton de réinitialisation des clubs
     document.getElementById('reset-clubs-btn')?.addEventListener('click', function(e) {
         e.stopPropagation();
         resetClubsDisplay();
+    });
+    
+    // Gérer le bouton de réinitialisation des utilisateurs
+    document.getElementById('reset-users-btn')?.addEventListener('click', function(e) {
+        e.stopPropagation();
+        resetUsersDisplay();
     });
 });
 
@@ -112,6 +142,48 @@ function displayClubsForCommittee(committeeId, committeeName) {
     }
 }
 
+function filterUsersByCommittee(committeeId, committeeName) {
+    const usersList = document.getElementById('users-list');
+    const usersCount = document.getElementById('users-count');
+    const usersTitle = document.getElementById('users-title');
+    const resetBtn = document.getElementById('reset-users-btn');
+    
+    if (!usersList) return;
+    
+    // Récupérer tous les clubs de ce comité
+    const clubs = window.clubsByCommittee[committeeId] || [];
+    const clubIds = clubs.map(club => club.id);
+    
+    // Filtrer les utilisateurs par ces clubs
+    let filteredUsers = [];
+    clubIds.forEach(function(clubId) {
+        const usersInClub = window.usersByClub[clubId] || [];
+        filteredUsers = filteredUsers.concat(usersInClub);
+    });
+    
+    // Mettre à jour le titre et le compteur
+    usersTitle.textContent = `Utilisateurs de ${committeeName}`;
+    usersCount.textContent = filteredUsers.length;
+    
+    // Afficher le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'inline-block';
+    
+    // Vider la liste
+    usersList.innerHTML = '';
+    
+    // Ajouter les utilisateurs
+    if (filteredUsers.length > 0) {
+        filteredUsers.forEach(function(user) {
+            const li = document.createElement('li');
+            li.className = 'mb-1';
+            li.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
+            usersList.appendChild(li);
+        });
+    } else {
+        usersList.innerHTML = '<li class="text-muted">Aucun utilisateur trouvé pour ce comité</li>';
+    }
+}
+
 function resetClubsDisplay() {
     const clubsList = document.getElementById('clubs-list');
     const clubsContainer = document.getElementById('clubs-list-container');
@@ -145,6 +217,38 @@ function resetClubsDisplay() {
     document.querySelectorAll('.committee-item').forEach(function(el) {
         el.classList.remove('selected');
     });
+    
+    // Réinitialiser aussi les utilisateurs
+    resetUsersDisplay();
+}
+
+function resetUsersDisplay() {
+    const usersList = document.getElementById('users-list');
+    const usersCount = document.getElementById('users-count');
+    const usersTitle = document.getElementById('users-title');
+    const resetBtn = document.getElementById('reset-users-btn');
+    
+    // Réinitialiser les valeurs
+    usersTitle.textContent = 'Total Utilisateurs';
+    usersCount.textContent = window.totalUsers || 0;
+    
+    // Masquer le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'none';
+    
+    // Réafficher tous les utilisateurs
+    usersList.innerHTML = '';
+    const allUsers = window.allUsers || [];
+    
+    if (allUsers.length > 0) {
+        allUsers.forEach(function(user) {
+            const li = document.createElement('li');
+            li.className = 'mb-1';
+            li.innerHTML = `<i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> ${escapeHtml(user.name)}`;
+            usersList.appendChild(li);
+        });
+    } else {
+        usersList.innerHTML = '<li class="text-muted">Aucun utilisateur</li>';
+    }
 }
 
 function escapeHtml(text) {

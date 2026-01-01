@@ -49,7 +49,9 @@ class DashboardController {
             'clubs_regional_list' => [],
             'clubs_departmental_list' => [],
             'clubs_by_committee' => [],
-            'all_clubs' => []
+            'all_clubs' => [],
+            'users_list' => [],
+            'users_by_club' => []
         ];
         
         try {
@@ -63,6 +65,26 @@ class DashboardController {
                 foreach ($users as $user) {
                     $status = $user['status'] ?? 'active';
                     $deletionPending = $user['deletion_pending'] ?? $user['deletionPending'] ?? false;
+                    $clubId = $user['clubId'] ?? $user['club_id'] ?? '';
+                    
+                    // Stocker les données de l'utilisateur
+                    $userData = [
+                        'id' => $user['id'] ?? $user['_id'] ?? '',
+                        'name' => ($user['firstName'] ?? '') . ' ' . ($user['name'] ?? $user['lastName'] ?? ''),
+                        'email' => $user['email'] ?? '',
+                        'clubId' => $clubId,
+                        'status' => $status
+                    ];
+                    
+                    $stats['users_list'][] = $userData;
+                    
+                    // Associer l'utilisateur à son club
+                    if (!empty($clubId)) {
+                        if (!isset($stats['users_by_club'][$clubId])) {
+                            $stats['users_by_club'][$clubId] = [];
+                        }
+                        $stats['users_by_club'][$clubId][] = $userData;
+                    }
                     
                     if ($status === 'pending') {
                         $stats['users_pending_validation']++;

@@ -277,6 +277,9 @@
     window.clubsByCommittee = <?php echo json_encode($stats['clubs_by_committee'] ?? []); ?>;
     window.allClubs = <?php echo json_encode($stats['all_clubs'] ?? []); ?>;
     window.totalClubs = <?php echo $stats['clubs_total']; ?>;
+    window.usersByClub = <?php echo json_encode($stats['users_by_club'] ?? []); ?>;
+    window.allUsers = <?php echo json_encode($stats['users_list'] ?? []); ?>;
+    window.totalUsers = <?php echo $stats['users']; ?>;
 </script>
 
 <!-- Statistiques UTILISATEURS -->
@@ -292,20 +295,39 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <div class="card border-left-primary shadow-sm h-100">
+                        <div class="card border-left-primary shadow-sm h-100 user-card-hover" id="users-display-card">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                            Total Utilisateurs
+                                            <span id="users-title">Total Utilisateurs</span>
                                         </div>
-                                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                        <div class="h4 mb-0 font-weight-bold text-gray-800" id="users-count">
                                             <?php echo $stats['users']; ?>
                                         </div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-users fa-2x text-gray-300"></i>
                                     </div>
+                                </div>
+                                <!-- Liste des utilisateurs -->
+                                <div class="user-list mt-3">
+                                    <hr>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="text-xs font-weight-bold text-primary" id="users-list-title">Liste des utilisateurs:</div>
+                                        <button class="btn btn-sm btn-outline-secondary" id="reset-users-btn" style="font-size: 0.7rem; padding: 2px 8px; display: none;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <ul class="list-unstyled mb-0" id="users-list" style="font-size: 0.85rem; max-height: 300px; overflow-y: auto;">
+                                        <?php if (!empty($stats['users_list'])): ?>
+                                            <?php foreach ($stats['users_list'] as $user): ?>
+                                                <li class="mb-1"><i class="fas fa-user text-primary" style="font-size: 0.6rem;"></i> <?php echo htmlspecialchars($user['name']); ?></li>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <li class="text-muted">Aucun utilisateur</li>
+                                        <?php endif; ?>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
