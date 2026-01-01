@@ -119,6 +119,7 @@ class DashboardController {
                     $stats['groups'] = count($groups);
                     
                     // Traiter chaque groupe
+                    $groupsById = []; // Garder une référence indexée par ID
                     foreach ($groups as $group) {
                         $groupId = $group['id'] ?? $group['_id'] ?? '';
                         $groupClubId = $group['clubId'] ?? $group['club_id'] ?? '';
@@ -131,15 +132,7 @@ class DashboardController {
                             'topics' => []
                         ];
                         
-                        $stats['groups_list'][] = $groupData;
-                        
-                        // Associer le groupe à son club
-                        if (!empty($groupClubId)) {
-                            if (!isset($stats['groups_by_club'][$groupClubId])) {
-                                $stats['groups_by_club'][$groupClubId] = [];
-                            }
-                            $stats['groups_by_club'][$groupClubId][] = $groupData;
-                        }
+                        $groupsById[$groupId] = $groupData;
                         
                         // Initialiser la liste des sujets pour ce groupe
                         $stats['topics_by_group'][$groupId] = [];
@@ -165,24 +158,23 @@ class DashboardController {
                                     $stats['topics_by_group'][$topicGroupId][] = $topicData;
                                 }
                                 
-                                // Ajouter les sujets aux groupes dans groups_list
-                                foreach ($stats['groups_list'] as &$groupInList) {
-                                    if ($groupInList['id'] === $topicGroupId) {
-                                        $groupInList['topics'][] = $topicData;
-                                    }
+                                // Ajouter les sujets aux groupes
+                                if (isset($groupsById[$topicGroupId])) {
+                                    $groupsById[$topicGroupId]['topics'][] = $topicData;
                                 }
-                                unset($groupInList);
+                            }
+                            
+                            // Maintenant reconstruire groups_list et groups_by_club avec les topics
+                            foreach ($groupsById as $groupData) {
+                                $stats['groups_list'][] = $groupData;
                                 
-                                // Ajouter les sujets aux groupes dans groups_by_club
-                                foreach ($stats['groups_by_club'] as &$clubGroups) {
-                                    foreach ($clubGroups as &$groupInClub) {
-                                        if ($groupInClub['id'] === $topicGroupId) {
-                                            $groupInClub['topics'][] = $topicData;
-                                        }
+                                // Associer le groupe à son club
+                                if (!empty($groupData['clubId'])) {
+                                    if (!isset($stats['groups_by_club'][$groupData['clubId']])) {
+                                        $stats['groups_by_club'][$groupData['clubId']] = [];
                                     }
-                                    unset($groupInClub);
+                                    $stats['groups_by_club'][$groupData['clubId']][] = $groupData;
                                 }
-                                unset($clubGroups);
                             }
                         }
                     } catch (Exception $e) {
