@@ -1236,7 +1236,13 @@ class ApiController {
                         if (isset($attachment['storedFilename'])) {
                             $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
                         }
-                        // Sinon extraire depuis path ou url
+                        // Sinon extraire depuis url existant
+                        elseif (isset($attachment['url'])) {
+                            if (preg_match('/([a-f0-9]{32}\.[a-z0-9]+)$/i', $attachment['url'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
+                            }
+                        }
+                        // Sinon extraire depuis path
                         elseif (isset($attachment['path'])) {
                             if (preg_match('/([a-f0-9]{32}\.[a-z0-9]+)$/i', $attachment['path'], $matches)) {
                                 $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
