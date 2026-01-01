@@ -470,7 +470,8 @@ function filterGroupsByClub(clubId, clubName) {
             
             const groupDiv = document.createElement('div');
             groupDiv.className = 'font-weight-bold';
-            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)}`;
+            const topicsCount = group.topics ? group.topics.length : 0;
+            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)} <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(${topicsCount} sujet${topicsCount > 1 ? 's' : ''})</span>`;
             li.appendChild(groupDiv);
             
             // Ajouter les sujets s'il y en a
@@ -586,7 +587,8 @@ function filterGroupsByCommittee(committeeId, committeeName) {
             
             const groupDiv = document.createElement('div');
             groupDiv.className = 'font-weight-bold';
-            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)}`;
+            const topicsCount = group.topics ? group.topics.length : 0;
+            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)} <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(${topicsCount} sujet${topicsCount > 1 ? 's' : ''})</span>`;
             li.appendChild(groupDiv);
             
             // Ajouter les sujets s'il y en a
@@ -693,7 +695,8 @@ function resetGroupsDisplay() {
             
             const groupDiv = document.createElement('div');
             groupDiv.className = 'font-weight-bold';
-            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)}`;
+            const topicsCount = group.topics ? group.topics.length : 0;
+            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)} <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(${topicsCount} sujet${topicsCount > 1 ? 's' : ''})</span>`;
             li.appendChild(groupDiv);
             
             // Ajouter les sujets s'il y en a

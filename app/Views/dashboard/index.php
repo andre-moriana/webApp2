@@ -440,6 +440,9 @@
                                                     <div class="font-weight-bold">
                                                         <i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> 
                                                         <?php echo htmlspecialchars($group['name']); ?>
+                                                        <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">
+                                                            (<?php echo count($group['topics'] ?? []); ?> sujet<?php echo count($group['topics'] ?? []) > 1 ? 's' : ''; ?>)
+                                                        </span>
                                                     </div>
                                                     <?php if (!empty($group['topics'])): ?>
                                                         <ul class="list-unstyled ml-3 mt-1" style="font-size: 0.8rem;">
