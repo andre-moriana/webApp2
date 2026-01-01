@@ -1238,8 +1238,19 @@ class ApiController {
                         }
                         // Sinon extraire depuis url existant
                         elseif (isset($attachment['url'])) {
-                            // Extraire le nom de fichier (hash.extension)
-                            if (preg_match('/\/([a-f0-9]{32}\.[a-zA-Z0-9]+)(?:\?|$)/i', $attachment['url'], $matches)) {
+                            // Si l'URL contient un paramètre url=, l'extraire
+                            if (strpos($attachment['url'], '?') !== false && strpos($attachment['url'], 'url=') !== false) {
+                                $urlParts = parse_url($attachment['url']);
+                                if (isset($urlParts['query'])) {
+                                    parse_str($urlParts['query'], $queryParams);
+                                    if (isset($queryParams['url'])) {
+                                        $decodedPath = urldecode($queryParams['url']);
+                                        $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
+                                    }
+                                }
+                            }
+                            // Sinon extraire le nom de fichier (hash.extension)
+                            elseif (preg_match('/\/([a-f0-9]{32}\.[a-zA-Z0-9]+)(?:\?|$)/i', $attachment['url'], $matches)) {
                                 $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
                             }
                             elseif (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['url'], $matches)) {
