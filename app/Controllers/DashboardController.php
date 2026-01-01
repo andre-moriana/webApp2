@@ -122,13 +122,13 @@ class DashboardController {
                     $groupsById = []; // Garder une référence indexée par ID
                     foreach ($groups as $group) {
                         $groupId = $group['id'] ?? $group['_id'] ?? '';
-                        $groupClubId = $group['clubId'] ?? $group['club_id'] ?? '';
+                        $groupClubId = $group['club_id'] ?? '';
                         $groupName = $group['name'] ?? 'Groupe sans nom';
                         
                         $groupData = [
                             'id' => $groupId,
                             'name' => $groupName,
-                            'clubId' => $groupClubId,
+                            'club_id' => $groupClubId,
                             'topics' => []
                         ];
                         
@@ -169,11 +169,11 @@ class DashboardController {
                                 $stats['groups_list'][] = $groupData;
                                 
                                 // Associer le groupe à son club
-                                if (!empty($groupData['clubId'])) {
-                                    if (!isset($stats['groups_by_club'][$groupData['clubId']])) {
-                                        $stats['groups_by_club'][$groupData['clubId']] = [];
+                                if (!empty($groupData['club_id'])) {
+                                    if (!isset($stats['groups_by_club'][$groupData['club_id']])) {
+                                        $stats['groups_by_club'][$groupData['club_id']] = [];
                                     }
-                                    $stats['groups_by_club'][$groupData['clubId']][] = $groupData;
+                                    $stats['groups_by_club'][$groupData['club_id']][] = $groupData;
                                 }
                             }
                         }
