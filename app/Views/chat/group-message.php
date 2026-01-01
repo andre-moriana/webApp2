@@ -43,7 +43,6 @@ if (isset($message["created_at"]) || isset($message["timestamp"])) {
 
 // URL du backend pour les pièces jointes
 $backendUrl = $_ENV['API_BASE_URL'] ?? 'https://api.arctraining.fr';
-$backendUrl = str_replace('/api', '', $backendUrl); // Supprimer /api si présent
 
 ?>
 <div class="d-flex <?php echo $alignClass; ?> mb-3" data-message-id="<?php echo htmlspecialchars($messageId ?? ""); ?>">
