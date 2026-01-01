@@ -264,10 +264,10 @@
                                                         <i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> 
                                                         <?php echo htmlspecialchars($club['name']); ?>
                                                     </span>
-                                                    <a href="/clubs" 
+                                                    <a href="/clubs/<?php echo htmlspecialchars($club['id']); ?>" 
                                                        class="btn btn-sm btn-outline-primary club-link" 
                                                        style="font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;"
-                                                       title="Voir la page des clubs"
+                                                       title="Voir le club"
                                                        onclick="event.stopPropagation();">
                                                         <i class="fas fa-external-link-alt"></i>
                                                     </a>
