@@ -1723,7 +1723,7 @@ class ApiController {
             }
             
             // Si l'URL est relative, la construire avec le backend
-            if (!str_starts_with($originalUrl, 'http')) {
+            if (substr($originalUrl, 0, 4) !== 'http') {
                 $backendUrl = $this->baseUrl;
                 $originalUrl = rtrim($backendUrl, '/') . '/' . ltrim($originalUrl, '/');
             }
@@ -1798,7 +1798,7 @@ class ApiController {
             }
             
             // Si l'URL est relative, la construire avec le backend
-            if (!str_starts_with($originalUrl, 'http')) {
+            if (substr($originalUrl, 0, 4) !== 'http') {
                 $backendUrl = $this->baseUrl;
                 $originalUrl = rtrim($backendUrl, '/') . '/' . ltrim($originalUrl, '/');
             }
@@ -1847,6 +1847,159 @@ class ApiController {
     }
     
     public function deleteEventMessage($messageId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $response = $this->apiService->makeRequest("messages/{$messageId}", "DELETE");
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Message supprimé avec succès"
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la suppression: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la suppression: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Récupère l'historique des messages d'un groupe
+     */
+    public function getGroupMessages($groupId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $response = $this->apiService->makeRequest("messages/{$groupId}/history", "GET");
+            
+            if ($response['success']) {
+                http_response_code(200);
+                // Retourner directement le tableau de messages
+                echo json_encode($response['data'] ?? []);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la récupération: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la récupération: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Envoie un message dans un groupe
+     */
+    public function sendGroupMessage($groupId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            // Récupérer le contenu du message
+            $content = $_POST['content'] ?? '';
+            
+            if (empty($content)) {
+                http_response_code(400);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Le contenu du message est requis"
+                ]);
+                return;
+            }
+            
+            // Préparer les données
+            $data = ['content' => $content];
+            
+            // Gérer la pièce jointe si présente
+            if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                // Pour l'instant, on envoie juste le contenu
+                // La gestion des fichiers peut être ajoutée plus tard
+            }
+            
+            $response = $this->apiService->makeRequest("messages/{$groupId}/send", "POST", $data);
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode($response);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de l'envoi: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de l'envoi: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Met à jour un message
+     */
+    public function updateMessage($messageId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $content = $input['content'] ?? '';
+            
+            if (empty($content)) {
+                http_response_code(400);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Le contenu du message est requis"
+                ]);
+                return;
+            }
+            
+            $response = $this->apiService->makeRequest("messages/{$messageId}", "PUT", ['content' => $content]);
+            
+            if ($response['success']) {
+                http_response_code(200);
+                echo json_encode($response);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la mise à jour: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la mise à jour: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Supprime un message
+     */
+    public function deleteMessage($messageId) {
         try {
             // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
