@@ -121,6 +121,7 @@ class DashboardController {
                     foreach ($clubs as $club) {
                         $clubId = $club['nameshort'] ?? $club['nameShort'] ?? '';
                         $clubName = $club['name'] ?? 'Club sans nom';
+                        $clubRealId = $club['id'] ?? $club['_id'] ?? $clubId; // ID MongoDB réel
                         
                         // Ignorer les IDs spéciaux
                         if (in_array($clubId, $excludedIds)) {
@@ -131,7 +132,8 @@ class DashboardController {
                         if (preg_match('/00000$/', $clubId) && $clubId !== '0000000') {
                             $stats['clubs_regional']++;
                             $stats['clubs_regional_list'][] = [
-                                'id' => $clubId,
+                                'id' => $clubRealId,
+                                'nameshort' => $clubId,
                                 'name' => $clubName
                             ];
                             $stats['clubs_by_committee'][$clubId] = [];
@@ -140,7 +142,8 @@ class DashboardController {
                         elseif (preg_match('/000$/', $clubId) && !preg_match('/00000$/', $clubId)) {
                             $stats['clubs_departmental']++;
                             $stats['clubs_departmental_list'][] = [
-                                'id' => $clubId,
+                                'id' => $clubRealId,
+                                'nameshort' => $clubId,
                                 'name' => $clubName
                             ];
                             $stats['clubs_by_committee'][$clubId] = [];
@@ -149,7 +152,8 @@ class DashboardController {
                         else {
                             $stats['clubs_total']++;
                             $clubData = [
-                                'id' => $clubId,
+                                'id' => $clubRealId,
+                                'nameshort' => $clubId,
                                 'name' => $clubName
                             ];
                             $stats['all_clubs'][] = $clubData;

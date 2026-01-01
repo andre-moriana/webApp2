@@ -173,7 +173,7 @@ function displayClubsForCommittee(committeeId, committeeName) {
         clubs.forEach(function(club) {
             const li = document.createElement('li');
             li.className = 'mb-1 club-item d-flex justify-content-between align-items-center';
-            li.setAttribute('data-club-id', club.id);
+            li.setAttribute('data-club-id', club.nameshort || club.id); // Utiliser nameshort pour le filtrage
             li.style.cursor = 'pointer';
             li.title = 'Cliquez pour voir les utilisateurs';
             
@@ -181,7 +181,7 @@ function displayClubsForCommittee(committeeId, committeeName) {
             span.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
             
             const link = document.createElement('a');
-            link.href = '/clubs/' + encodeURIComponent(club.id);
+            link.href = '/clubs/' + encodeURIComponent(club.id); // Utiliser l'ID réel pour le lien
             link.className = 'btn btn-sm btn-outline-primary club-link';
             link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
             link.title = 'Voir le club';
@@ -295,7 +295,7 @@ function resetClubsDisplay() {
         allClubs.forEach(function(club) {
             const li = document.createElement('li');
             li.className = 'mb-1 club-item d-flex justify-content-between align-items-center';
-            li.setAttribute('data-club-id', club.id);
+            li.setAttribute('data-club-id', club.nameshort || club.id); // Utiliser nameshort pour le filtrage
             li.style.cursor = 'pointer';
             li.title = 'Cliquez pour voir les utilisateurs';
             
@@ -303,7 +303,7 @@ function resetClubsDisplay() {
             span.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
             
             const link = document.createElement('a');
-            link.href = '/clubs/' + encodeURIComponent(club.id);
+            link.href = '/clubs/' + encodeURIComponent(club.id); // Utiliser l'ID réel pour le lien
             link.className = 'btn btn-sm btn-outline-primary club-link';
             link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
             link.title = 'Voir le club';
