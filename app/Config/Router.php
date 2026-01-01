@@ -177,6 +177,15 @@ class Router {
         $this->addRoute("GET", "/test-messages", "ApiController@testMessages");
         
         // Routes internes pour les messages des groupes (proxy vers API externe)
+        // Avec /api/ pour compatibilité mobile
+        $this->addRoute("GET", "/api/messages/attachment/{id}", "ApiController@downloadMessageAttachment");
+        $this->addRoute("GET", "/api/messages/image/{id}", "ApiController@getMessageImage");
+        $this->addRoute("GET", "/api/messages/{id}/history", "ApiController@getGroupMessages");
+        $this->addRoute("POST", "/api/messages/{id}/send", "ApiController@sendGroupMessage");
+        $this->addRoute("PUT", "/api/messages/{id}", "ApiController@updateMessage");
+        $this->addRoute("DELETE", "/api/messages/{id}", "ApiController@deleteMessage");
+        
+        // Routes sans /api/ pour compatibilité web
         $this->addRoute("GET", "/messages/attachment/{id}", "ApiController@downloadMessageAttachment");
         $this->addRoute("GET", "/messages/image/{id}", "ApiController@getMessageImage");
         $this->addRoute("GET", "/messages/{id}/history", "ApiController@getGroupMessages");
