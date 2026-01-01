@@ -35,6 +35,18 @@ document.addEventListener('DOMContentLoaded', function() {
             font-weight: bold;
             padding-left: 5px;
         }
+        
+        #clubs-display-card .club-list {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.3s ease;
+        }
+        
+        #clubs-display-card:hover .club-list {
+            max-height: 500px;
+            opacity: 1;
+        }
     `;
     document.head.appendChild(style);
     
@@ -60,7 +72,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Gérer le bouton de réinitialisation
-    document.getElementById('reset-clubs-btn')?.addEventListener('click', function() {
+    document.getElementById('reset-clubs-btn')?.addEventListener('click', function(e) {
+        e.stopPropagation();
         resetClubsDisplay();
     });
 });
@@ -70,6 +83,7 @@ function displayClubsForCommittee(committeeId, committeeName) {
     const clubsContainer = document.getElementById('clubs-list-container');
     const clubsCount = document.getElementById('clubs-count');
     const clubsTitle = document.getElementById('clubs-title');
+    const resetBtn = document.getElementById('reset-clubs-btn');
     
     if (!clubsList || !clubsContainer) return;
     
@@ -78,6 +92,9 @@ function displayClubsForCommittee(committeeId, committeeName) {
     // Mettre à jour le titre et le compteur
     clubsTitle.textContent = `Clubs de ${committeeName}`;
     clubsCount.textContent = clubs.length;
+    
+    // Afficher le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'inline-block';
     
     // Vider la liste
     clubsList.innerHTML = '';
@@ -90,10 +107,8 @@ function displayClubsForCommittee(committeeId, committeeName) {
             li.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
             clubsList.appendChild(li);
         });
-        clubsContainer.style.display = 'block';
     } else {
         clubsList.innerHTML = '<li class="text-muted">Aucun club trouvé pour ce comité</li>';
-        clubsContainer.style.display = 'block';
     }
 }
 
@@ -102,12 +117,29 @@ function resetClubsDisplay() {
     const clubsContainer = document.getElementById('clubs-list-container');
     const clubsCount = document.getElementById('clubs-count');
     const clubsTitle = document.getElementById('clubs-title');
+    const resetBtn = document.getElementById('reset-clubs-btn');
     
     // Réinitialiser les valeurs
     clubsTitle.textContent = 'Total Clubs';
     clubsCount.textContent = window.totalClubs || 0;
-    clubsContainer.style.display = 'none';
+    
+    // Masquer le bouton de réinitialisation
+    if (resetBtn) resetBtn.style.display = 'none';
+    
+    // Réafficher tous les clubs
     clubsList.innerHTML = '';
+    const allClubs = window.allClubs || [];
+    
+    if (allClubs.length > 0) {
+        allClubs.forEach(function(club) {
+            const li = document.createElement('li');
+            li.className = 'mb-1';
+            li.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
+            clubsList.appendChild(li);
+        });
+    } else {
+        clubsList.innerHTML = '<li class="text-muted">Aucun club</li>';
+    }
     
     // Retirer les sélections
     document.querySelectorAll('.committee-item').forEach(function(el) {

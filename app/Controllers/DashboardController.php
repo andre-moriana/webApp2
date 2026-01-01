@@ -126,10 +126,11 @@ class DashboardController {
                         // Sinon c'est un club normal (ne finit pas par 000)
                         else {
                             $stats['clubs_total']++;
-                            $stats['all_clubs'][] = [
+                            $clubData = [
                                 'id' => $clubId,
                                 'name' => $clubName
                             ];
+                            $stats['all_clubs'][] = $clubData;
                             
                             // Déterminer le comité parent (comité départemental = 3 premiers chiffres + '000')
                             // ou comité régional (2 premiers chiffres + '00000')
@@ -137,19 +138,13 @@ class DashboardController {
                                 // Vérifier d'abord le comité départemental
                                 $departmentalId = substr($clubId, 0, -3) . '000';
                                 if (isset($stats['clubs_by_committee'][$departmentalId])) {
-                                    $stats['clubs_by_committee'][$departmentalId][] = [
-                                        'id' => $clubId,
-                                        'name' => $clubName
-                                    ];
-                                } else {
-                                    // Sinon vérifier le comité régional
-                                    $regionalId = substr($clubId, 0, -5) . '00000';
-                                    if (isset($stats['clubs_by_committee'][$regionalId])) {
-                                        $stats['clubs_by_committee'][$regionalId][] = [
-                                            'id' => $clubId,
-                                            'name' => $clubName
-                                        ];
-                                    }
+                                    $stats['clubs_by_committee'][$departmentalId][] = $clubData;
+                                }
+                                
+                                // Ajouter aussi au comité régional
+                                $regionalId = substr($clubId, 0, -5) . '00000';
+                                if (isset($stats['clubs_by_committee'][$regionalId])) {
+                                    $stats['clubs_by_committee'][$regionalId][] = $clubData;
                                 }
                             }
                         }
