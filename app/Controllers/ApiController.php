@@ -1701,6 +1701,151 @@ class ApiController {
         }
     }
     
+    /**
+     * Télécharge et sert une pièce jointe de message
+     */
+    public function downloadMessageAttachment($messageId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            // Récupérer l'URL originale depuis le paramètre GET
+            $originalUrl = $_GET['url'] ?? '';
+            $inline = isset($_GET['inline']) && $_GET['inline'] === '1';
+            
+            if (empty($originalUrl)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'URL manquante'
+                ]);
+                return;
+            }
+            
+            // Si l'URL est relative, la construire avec le backend
+            if (!str_starts_with($originalUrl, 'http')) {
+                $backendUrl = $this->baseUrl;
+                $originalUrl = rtrim($backendUrl, '/') . '/' . ltrim($originalUrl, '/');
+            }
+            
+            // Récupérer le fichier depuis le backend
+            $token = $_SESSION['token'] ?? '';
+            $ch = curl_init($originalUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            
+            if ($token) {
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Authorization: Bearer ' . $token
+                ]);
+            }
+            
+            $fileContent = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+            curl_close($ch);
+            
+            if ($httpCode !== 200 || $fileContent === false) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Fichier introuvable'
+                ]);
+                return;
+            }
+            
+            // Servir le fichier
+            header('Content-Type: ' . ($contentType ?: 'application/octet-stream'));
+            if ($inline) {
+                header('Content-Disposition: inline');
+            } else {
+                // Extraire le nom du fichier de l'URL
+                $filename = basename(parse_url($originalUrl, PHP_URL_PATH));
+                header('Content-Disposition: attachment; filename="' . $filename . '"');
+            }
+            header('Content-Length: ' . strlen($fileContent));
+            echo $fileContent;
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erreur lors du téléchargement: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Récupère et sert une image de message
+     */
+    public function getMessageImage($messageId) {
+        try {
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            // Récupérer l'URL originale depuis le paramètre GET
+            $originalUrl = $_GET['url'] ?? '';
+            
+            if (empty($originalUrl)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'URL manquante'
+                ]);
+                return;
+            }
+            
+            // Si l'URL est relative, la construire avec le backend
+            if (!str_starts_with($originalUrl, 'http')) {
+                $backendUrl = $this->baseUrl;
+                $originalUrl = rtrim($backendUrl, '/') . '/' . ltrim($originalUrl, '/');
+            }
+            
+            // Récupérer l'image depuis le backend
+            $token = $_SESSION['token'] ?? '';
+            $ch = curl_init($originalUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            
+            if ($token) {
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Authorization: Bearer ' . $token
+                ]);
+            }
+            
+            $imageContent = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+            curl_close($ch);
+            
+            if ($httpCode !== 200 || $imageContent === false) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Image introuvable'
+                ]);
+                return;
+            }
+            
+            // Servir l'image avec le bon content-type
+            header('Content-Type: ' . ($contentType ?: 'image/jpeg'));
+            header('Content-Length: ' . strlen($imageContent));
+            header('Cache-Control: public, max-age=3600'); // Cache pour 1 heure
+            echo $imageContent;
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erreur lors du chargement de l\'image: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
     public function deleteEventMessage($messageId) {
         try {
             // S'assurer qu'on est authentifié
