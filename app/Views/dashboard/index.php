@@ -514,37 +514,3 @@
         </div>
     </div>
 </div>
-
-<!-- Informations système - Visible uniquement pour les administrateurs -->
-<?php 
-// Vérifier si l'utilisateur est administrateur
-$isAdmin = $_SESSION['user']['is_admin'] ?? $_SESSION['user']['isAdmin'] ?? false;
-if ($isAdmin): 
-?>
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Informations système
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Version PHP :</strong> <?php echo phpversion(); ?></p>
-                        <p><strong>Serveur :</strong> <?php echo $_SERVER['SERVER_SOFTWARE'] ?? 'Inconnu'; ?></p>
-                        <p><strong>Date/Heure :</strong> <?php echo date('d/m/Y H:i:s'); ?></p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Session ID :</strong> <?php echo session_id(); ?></p>
-                        <p><strong>Token :</strong> <?php echo htmlspecialchars($_SESSION['token'] ?? 'Non défini'); ?></p>
-                        <p><strong>Rôle :</strong> <?php echo htmlspecialchars($_SESSION['user']['role'] ?? 'admin'); ?></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
