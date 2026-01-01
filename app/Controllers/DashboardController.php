@@ -82,15 +82,15 @@ class DashboardController {
             }
             
             // Récupérer les clubs et compter par type
-            $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
-            if ($clubsResponse['success']) {
-                $clubs = $this->apiService->unwrapData($clubsResponse);
+            $clubsResponse = $this->apiService->getClubs();
+            if ($clubsResponse['success'] && !empty($clubsResponse['data']['clubs'])) {
+                $clubs = $clubsResponse['data']['clubs'];
                 if (is_array($clubs)) {
                     // IDs spéciaux à exclure du comptage
                     $excludedIds = ['0000000', '0000001', '0000002', '0000005', '0000006'];
                     
                     foreach ($clubs as $club) {
-                        $clubId = $club['nameshort'] ?? '';
+                        $clubId = $club['nameshort'] ?? $club['nameShort'] ?? '';
                         
                         // Ignorer les IDs spéciaux
                         if (in_array($clubId, $excludedIds)) {
@@ -104,7 +104,7 @@ class DashboardController {
                             $stats['clubs_regional']++;
                         }
                         // Comité Départemental : finit par 000 (mais pas 00000 qui sont régionaux)
-                        elseif (preg_match('/$000/', $clubId) && !preg_match('/$00000/', $clubId)) {
+                        elseif (preg_match('/000$/', $clubId) && !preg_match('/00000$/', $clubId)) {
                             $stats['clubs_departmental']++;
                         }
                         // Sinon c'est un club normal (ne finit pas par 000)

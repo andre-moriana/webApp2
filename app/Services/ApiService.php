@@ -495,6 +495,48 @@ class ApiService {
         ];
     }
     
+    public function getClubs() {
+        // Les clubs nécessitent une authentification
+        if (!$this->token) {
+            return [
+                "success" => false,
+                "data" => ["clubs" => []],
+                "message" => "Token d'authentification requis"
+            ];
+        }
+        
+        // Utiliser l'endpoint /clubs/list pour les clubs
+        $result = $this->makeRequest("clubs/list", "GET");
+        
+        if ($result["success"] && $result["status_code"] == 200) {
+            // Vérifier que la clé "data" existe et n'est pas null
+            if (!isset($result["data"]) || $result["data"] === null) {
+                return [
+                    "success" => false,
+                    "data" => ["clubs" => []],
+                    "message" => "Aucune donnée reçue de l'API pour les clubs"
+                ];
+            }
+            
+            $data = $result["data"];
+            
+            // La réponse devrait être un tableau direct de clubs
+            if (is_array($data)) {
+                return [
+                    "success" => true,
+                    "data" => ["clubs" => $data],
+                    "message" => "Clubs récupérés avec succès"
+                ];
+            }
+        }
+        
+        return [
+            "success" => false,
+            "data" => ["clubs" => []],
+            "message" => "Impossible de récupérer les clubs depuis l'API"
+        ];
+    }
+    
     private function getSimulatedGroups() {
         return [
             [
