@@ -75,32 +75,21 @@ function createMessageElement(message) {
         const originalName = message.attachment.originalName || message.attachment.filename || "Pièce jointe";
         
         // Définir l'URL originale pour tous les types de fichiers
-        const originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
+        let originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
         
-        // Pour les images, utiliser l'URL directe si elle existe déjà
-        if (isImage) {
-            // Si l'URL contient déjà api.arctraining.fr, l'utiliser directement
-            if (originalUrl.includes('api.arctraining.fr')) {
-                attachmentUrl = originalUrl;
-            } else {
-                // Sinon utiliser la route proxy du backend WebApp2
-                attachmentUrl = "/messages/image/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
-            }
-        } else if (isPdf) {
-            // Pour les PDF, utiliser l'URL directe si disponible
-            if (originalUrl.includes('api.arctraining.fr')) {
-                attachmentUrl = originalUrl;
-            } else {
-                // Sinon utiliser la route d'attachment avec paramètre pour affichage inline
-                attachmentUrl = "/messages/attachment/" + (message._id || message.id) + "?inline=1&url=" + encodeURIComponent(originalUrl);
-            }
+        // IMPORTANT: Corriger l'URL pour tous les fichiers
+        // Si l'URL contient déjà api.arctraining.fr, l'utiliser telle quelle
+        if (originalUrl.includes('api.arctraining.fr')) {
+            attachmentUrl = originalUrl;
         } else {
-            // Pour les autres fichiers, utiliser l'URL directe si disponible
-            if (originalUrl.includes('api.arctraining.fr')) {
-                attachmentUrl = originalUrl;
+            // Pour tous les autres cas, construire l'URL correcte vers api.arctraining.fr
+            if (originalUrl.startsWith('/uploads/')) {
+                attachmentUrl = 'https://api.arctraining.fr' + originalUrl;
+            } else if (originalUrl.startsWith('uploads/')) {
+                attachmentUrl = 'https://api.arctraining.fr/' + originalUrl;
             } else {
-                // Sinon utiliser la route de téléchargement
-                attachmentUrl = "/messages/attachment/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
+                // Si c'est juste un nom de fichier
+                attachmentUrl = 'https://api.arctraining.fr/uploads/messages/' + originalUrl;
             }
         }
         
