@@ -1741,13 +1741,22 @@ class ApiController {
             // Appeler l'API backend avec le bon endpoint
             $response = $this->apiService->makeRequest("messages/topic/{$topicId}/history", "GET");
             
-            // Retourner la réponse telle quelle
+            // Retourner la réponse complète avec la structure attendue
             header('Content-Type: application/json');
-            echo json_encode($response['data'] ?? []);
+            if ($response['success'] && isset($response['data'])) {
+                echo json_encode($response);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'data' => [],
+                    'message' => 'Erreur lors de la récupération des messages'
+                ]);
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
                 "success" => false,
+                "data" => [],
                 "message" => "Erreur lors de la récupération des messages: " . $e->getMessage()
             ]);
         }
