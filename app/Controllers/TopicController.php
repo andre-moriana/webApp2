@@ -32,6 +32,46 @@ class TopicController {
             $messages = [];
             if ($messagesResult['success'] && isset($messagesResult['data']) && is_array($messagesResult['data'])) {
                 $messages = $messagesResult['data'];
+                
+                // Corriger les URLs des pièces jointes
+                foreach ($messages as &$message) {
+                    if (isset($message['attachment']) && is_array($message['attachment'])) {
+                        $attachment = &$message['attachment'];
+                        
+                        // Si storedFilename existe, construire l'URL correcte
+                        if (isset($attachment['storedFilename'])) {
+                            $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
+                        }
+                        // Sinon extraire depuis url existant
+                        elseif (isset($attachment['url'])) {
+                            // Si l'URL contient un paramètre url=, l'extraire et utiliser le chemin tel quel
+                            if (strpos($attachment['url'], '?') !== false && strpos($attachment['url'], 'url=') !== false) {
+                                $urlParts = parse_url($attachment['url']);
+                                if (isset($urlParts['query'])) {
+                                    parse_str($urlParts['query'], $queryParams);
+                                    if (isset($queryParams['url'])) {
+                                        $decodedPath = urldecode($queryParams['url']);
+                                        // Le chemin contient déjà /uploads/... on ajoute juste le domaine
+                                        $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
+                                    }
+                                }
+                            }
+                            // Sinon extraire le nom de fichier (hash.extension)
+                            elseif (preg_match('/\/([a-f0-9]{32}\.[a-zA-Z0-9]+)(?:\?|$)/i', $attachment['url'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
+                            }
+                            elseif (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['url'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
+                            }
+                        }
+                        // Sinon extraire depuis path
+                        elseif (isset($attachment['path'])) {
+                            if (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['path'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
+                            }
+                        }
+                    }
+                }
             }
             
             // Récupérer les détails du groupe
