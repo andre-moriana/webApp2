@@ -1227,6 +1227,24 @@ class ApiController {
                     $messages = $response;
                 }
                 
+                // Corriger les URLs des pièces jointes
+                foreach ($messages as &$message) {
+                    if (isset($message['attachment']) && is_array($message['attachment'])) {
+                        $attachment = &$message['attachment'];
+                        
+                        // Si storedFilename existe, construire l'URL correcte
+                        if (isset($attachment['storedFilename'])) {
+                            $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
+                        }
+                        // Sinon extraire depuis path ou url
+                        elseif (isset($attachment['path'])) {
+                            if (preg_match('/([a-f0-9]{32}\.[a-z0-9]+)$/i', $attachment['path'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
+                            }
+                        }
+                    }
+                }
+                
                 $this->sendJsonResponse($messages);
             } else {
                 $this->sendJsonResponse([
