@@ -47,7 +47,9 @@ class DashboardController {
             'users_pending_validation' => 0,
             'users_pending_deletion' => 0,
             'clubs_regional_list' => [],
-            'clubs_departmental_list' => []
+            'clubs_departmental_list' => [],
+            'clubs_by_committee' => [],
+            'all_clubs' => []
         ];
         
         try {
@@ -103,19 +105,54 @@ class DashboardController {
                             continue;
                         }
                         
-                        $stats['clubs_total']++;
-                        
                         // Comité Régional : finit par 00000 sauf 0000000
                         if (preg_match('/00000$/', $clubId) && $clubId !== '0000000') {
                             $stats['clubs_regional']++;
-                            $stats['clubs_regional_list'][] = $clubName;
+                            $stats['clubs_regional_list'][] = [
+                                'id' => $clubId,
+                                'name' => $clubName
+                            ];
+                            $stats['clubs_by_committee'][$clubId] = [];
                         }
                         // Comité Départemental : finit par 000 (mais pas 00000 qui sont régionaux)
                         elseif (preg_match('/000$/', $clubId) && !preg_match('/00000$/', $clubId)) {
                             $stats['clubs_departmental']++;
-                            $stats['clubs_departmental_list'][] = $clubName;
+                            $stats['clubs_departmental_list'][] = [
+                                'id' => $clubId,
+                                'name' => $clubName
+                            ];
+                            $stats['clubs_by_committee'][$clubId] = [];
                         }
                         // Sinon c'est un club normal (ne finit pas par 000)
+                        else {
+                            $stats['clubs_total']++;
+                            $stats['all_clubs'][] = [
+                                'id' => $clubId,
+                                'name' => $clubName
+                            ];
+                            
+                            // Déterminer le comité parent (comité départemental = 3 premiers chiffres + '000')
+                            // ou comité régional (2 premiers chiffres + '00000')
+                            if (strlen($clubId) >= 7) {
+                                // Vérifier d'abord le comité départemental
+                                $departmentalId = substr($clubId, 0, -3) . '000';
+                                if (isset($stats['clubs_by_committee'][$departmentalId])) {
+                                    $stats['clubs_by_committee'][$departmentalId][] = [
+                                        'id' => $clubId,
+                                        'name' => $clubName
+                                    ];
+                                } else {
+                                    // Sinon vérifier le comité régional
+                                    $regionalId = substr($clubId, 0, -5) . '00000';
+                                    if (isset($stats['clubs_by_committee'][$regionalId])) {
+                                        $stats['clubs_by_committee'][$regionalId][] = [
+                                            'id' => $clubId,
+                                            'name' => $clubName
+                                        ];
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

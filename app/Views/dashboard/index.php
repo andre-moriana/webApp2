@@ -170,8 +170,14 @@
                                     <div class="text-xs font-weight-bold text-primary mb-2">Liste des comités:</div>
                                     <ul class="list-unstyled mb-0" style="font-size: 0.85rem;">
                                         <?php if (!empty($stats['clubs_regional_list'])): ?>
-                                            <?php foreach ($stats['clubs_regional_list'] as $club): ?>
-                                                <li class="mb-1"><i class="fas fa-chevron-right text-primary" style="font-size: 0.6rem;"></i> <?php echo htmlspecialchars($club); ?></li>
+                                            <?php foreach ($stats['clubs_regional_list'] as $committee): ?>
+                                                <li class="mb-1 committee-item" 
+                                                    data-committee-id="<?php echo htmlspecialchars($committee['id']); ?>"
+                                                    style="cursor: pointer;"
+                                                    title="Cliquez pour voir les clubs">
+                                                    <i class="fas fa-chevron-right text-primary" style="font-size: 0.6rem;"></i> 
+                                                    <?php echo htmlspecialchars($committee['name']); ?>
+                                                </li>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <li class="text-muted">Aucun comité régional</li>
@@ -204,8 +210,14 @@
                                     <div class="text-xs font-weight-bold text-info mb-2">Liste des comités:</div>
                                     <ul class="list-unstyled mb-0" style="font-size: 0.85rem;">
                                         <?php if (!empty($stats['clubs_departmental_list'])): ?>
-                                            <?php foreach ($stats['clubs_departmental_list'] as $club): ?>
-                                                <li class="mb-1"><i class="fas fa-chevron-right text-info" style="font-size: 0.6rem;"></i> <?php echo htmlspecialchars($club); ?></li>
+                                            <?php foreach ($stats['clubs_departmental_list'] as $committee): ?>
+                                                <li class="mb-1 committee-item" 
+                                                    data-committee-id="<?php echo htmlspecialchars($committee['id']); ?>"
+                                                    style="cursor: pointer;"
+                                                    title="Cliquez pour voir les clubs">
+                                                    <i class="fas fa-chevron-right text-info" style="font-size: 0.6rem;"></i> 
+                                                    <?php echo htmlspecialchars($committee['name']); ?>
+                                                </li>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <li class="text-muted">Aucun comité départemental</li>
@@ -217,20 +229,32 @@
                     </div>
                     
                     <div class="col-md-4 mb-3">
-                        <div class="card border-left-success shadow-sm h-100">
+                        <div class="card border-left-success shadow-sm h-100" id="clubs-display-card">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                            Total Clubs
+                                            <span id="clubs-title">Total Clubs</span>
                                         </div>
-                                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                        <div class="h4 mb-0 font-weight-bold text-gray-800" id="clubs-count">
                                             <?php echo $stats['clubs_total']; ?>
                                         </div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-building fa-2x text-gray-300"></i>
                                     </div>
+                                </div>
+                                <!-- Liste des clubs -->
+                                <div id="clubs-list-container" class="mt-3" style="display: none;">
+                                    <hr>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="text-xs font-weight-bold text-success" id="clubs-list-title">Liste des clubs:</div>
+                                        <button class="btn btn-sm btn-outline-secondary" id="reset-clubs-btn" style="font-size: 0.7rem; padding: 2px 8px;">
+                                            <i class="fas fa-times"></i> Réinitialiser
+                                        </button>
+                                    </div>
+                                    <ul class="list-unstyled mb-0" id="clubs-list" style="font-size: 0.85rem; max-height: 300px; overflow-y: auto;">
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -240,6 +264,12 @@
         </div>
     </div>
 </div>
+
+<!-- Script pour passer les données PHP à JavaScript -->
+<script>
+    window.clubsByCommittee = <?php echo json_encode($stats['clubs_by_committee'] ?? []); ?>;
+    window.totalClubs = <?php echo $stats['clubs_total']; ?>;
+</script>
 
 <!-- Statistiques UTILISATEURS -->
 <div class="row mb-4">
