@@ -1734,24 +1734,22 @@ class ApiController {
      * Récupérer les messages d'un topic
      */
     public function getTopicMessages($topicId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ]);
+            return;
+        }
+
         try {
-            // S'assurer qu'on est authentifié
-            $this->ensureAuthenticated();
-            
             // Appeler l'API backend avec le bon endpoint
             $response = $this->apiService->makeRequest("messages/topic/{$topicId}/history", "GET");
             
-            // Retourner la réponse complète avec la structure attendue
+            // Retourner la réponse complète
             header('Content-Type: application/json');
-            if ($response['success'] && isset($response['data'])) {
-                echo json_encode($response);
-            } else {
-                echo json_encode([
-                    'success' => false,
-                    'data' => [],
-                    'message' => 'Erreur lors de la récupération des messages'
-                ]);
-            }
+            echo json_encode($response);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
@@ -1766,10 +1764,16 @@ class ApiController {
      * Envoyer un message dans un topic
      */
     public function sendTopicMessage($topicId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ]);
+            return;
+        }
+
         try {
-            // S'assurer qu'on est authentifié
-            $this->ensureAuthenticated();
-            
             $content = $_POST['content'] ?? '';
             $attachment = $_FILES['attachment'] ?? null;
             
