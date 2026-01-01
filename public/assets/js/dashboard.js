@@ -181,10 +181,10 @@ function displayClubsForCommittee(committeeId, committeeName) {
             span.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
             
             const link = document.createElement('a');
-            link.href = '/clubs';
+            link.href = '/clubs/' + encodeURIComponent(club.id);
             link.className = 'btn btn-sm btn-outline-primary club-link';
             link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
-            link.title = 'Voir la page des clubs';
+            link.title = 'Voir le club';
             link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
             link.onclick = function(e) { e.stopPropagation(); };
             
@@ -303,10 +303,10 @@ function resetClubsDisplay() {
             span.innerHTML = `<i class="fas fa-building text-success" style="font-size: 0.6rem;"></i> ${escapeHtml(club.name)}`;
             
             const link = document.createElement('a');
-            link.href = '/clubs';
+            link.href = '/clubs/' + encodeURIComponent(club.id);
             link.className = 'btn btn-sm btn-outline-primary club-link';
             link.style.cssText = 'font-size: 0.6rem; padding: 2px 6px; margin-left: 5px;';
-            link.title = 'Voir la page des clubs';
+            link.title = 'Voir le club';
             link.innerHTML = '<i class="fas fa-external-link-alt"></i>';
             link.onclick = function(e) { e.stopPropagation(); };
             
