@@ -1610,21 +1610,40 @@ class ApiController {
     }
 
     public function sendTopicMessage($topicId) {
-        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            $this->sendJsonResponse([
-                'success' => false,
-                'message' => 'Non authentifié'
-            ], 401);
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
-        $content = $input['content'] ?? '';
+        error_log("[WebApp] sendTopicMessage - TopicId: {$topicId}");
+        
+        // Vérifier si c'est un formulaire multipart (avec fichier)
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        $isMultipart = strpos($contentType, 'multipart/form-data') !== false;
+        
+        if ($isMultipart) {
+            // Récupération depuis $_POST pour multipart/form-data
+            $content = $_POST['content'] ?? '';
+            $file = $_FILES['attachment'] ?? null;
+            error_log("[WebApp] sendTopicMessage - Mode multipart - Content: " . ($content ?: '(vide)'));
+            error_log("[WebApp] sendTopicMessage - File present: " . ($file ? 'Oui' : 'Non'));
+        } else {
+            // Récupération depuis JSON pour application/json
+            $input = json_decode(file_get_contents('php://input'), true);
+            $content = $input['content'] ?? '';
+            $file = null;
+            error_log("[WebApp] sendTopicMessage - Mode JSON - Content: " . ($content ?: '(vide)'));
+        }
 
-        if (empty($content)) {
+        // Vérifier qu'il y a au moins un contenu ou un fichier valide
+        $hasFile = $file && isset($file['error']) && $file['error'] === UPLOAD_ERR_OK;
+        if (empty($content) && !$hasFile) {
+            error_log("[WebApp] sendTopicMessage - Erreur: Ni contenu ni fichier valide");
             $this->sendJsonResponse([
                 'success' => false,
-                'message' => 'Le message doit contenir du texte'
+                'message' => 'Le message doit contenir du texte ou une pièce jointe'
             ], 400);
+            return;
         }
 
         try {
@@ -1632,7 +1651,21 @@ class ApiController {
                 'content' => $content
             ];
 
-            $response = $this->apiService->makeRequest("messages/topic/{$topicId}/send", "POST", $postData);
+            // Si un fichier est présent, utiliser makeRequestWithFile
+            if ($hasFile) {
+                error_log("[WebApp] sendTopicMessage - Ajout du fichier à la requête");
+                $postData['attachment'] = new CURLFile(
+                    $file['tmp_name'],
+                    $file['type'],
+                    $file['name']
+                );
+                $response = $this->apiService->makeRequestWithFile("messages/topic/{$topicId}/send", "POST", $postData);
+            } else {
+                $response = $this->apiService->makeRequest("messages/topic/{$topicId}/send", "POST", $postData);
+            }
+            
+            error_log("[WebApp] sendTopicMessage - Réponse reçue: " . json_encode($response));
+            
             if ($response['success']) {
                 $this->sendJsonResponse($response);
             } else {
@@ -1642,6 +1675,7 @@ class ApiController {
                 ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
+            error_log("[WebApp] sendTopicMessage - Exception: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de l\'envoi du message: ' . $e->getMessage()
