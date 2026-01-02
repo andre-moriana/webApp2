@@ -200,7 +200,8 @@ async function loadGroupMessages(groupId) {
         const response = await fetch(`/api/messages/${groupId}/history`, {
             headers: {
                 'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
-            }
+            },
+            credentials: 'same-origin'
         });
         
         
@@ -349,6 +350,7 @@ if (messageForm) {
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify({
                         content: content
                     })
@@ -375,6 +377,7 @@ if (messageForm) {
                         'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
                         // Ne pas définir Content-Type, laissez le navigateur le faire automatiquement pour FormData
                     },
+                    credentials: 'same-origin', // Inclure les cookies/session pour les requêtes same-origin
                     body: formData
                 });
                 
@@ -534,6 +537,7 @@ async function saveMessageEdit(messageId) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
             },
+            credentials: 'same-origin',
             body: JSON.stringify({
                 content: newContent
             })
@@ -585,7 +589,8 @@ window.deleteMessage = async function(messageId) {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
-                }
+                },
+                credentials: 'same-origin'
             });
             
             if (response.ok) {
