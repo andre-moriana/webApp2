@@ -1,17 +1,28 @@
 // Configuration
 let currentGroupId = null;
 
+console.log('[INIT] Script groups-chat.js chargé');
+
 // Sélecteurs DOM
 const messagesContainer = document.getElementById("messages-container");
 const messageForm = document.getElementById("message-form");
 const messageInput = document.getElementById("message-input");
 const chatTitle = document.getElementById("chat-title");
 
+console.log('[INIT] Éléments DOM:', {
+    messagesContainer: !!messagesContainer,
+    messageForm: !!messageForm,
+    messageInput: !!messageInput,
+    chatTitle: !!chatTitle
+});
+
 // Initialiser avec le premier groupe
 document.addEventListener("DOMContentLoaded", function() {
-   
+    console.log('[INIT] DOMContentLoaded - initialGroupId:', typeof initialGroupId !== "undefined" ? initialGroupId : 'undefined');
+    
     if (typeof initialGroupId !== "undefined" && initialGroupId) {
         currentGroupId = initialGroupId.toString();
+        console.log('[INIT] Chargement des messages pour le groupe:', currentGroupId);
         // Charger automatiquement les messages du groupe initial
         loadGroupMessages(currentGroupId);
     }
@@ -298,16 +309,20 @@ document.querySelectorAll(".group-item").forEach(item => {
 // Gérer l'envoi de messages
 if (messageForm) {
     messageForm.addEventListener("submit", async (e) => {
+        console.log('[FORM] Soumission du formulaire détectée');
         e.preventDefault();
         
         const content = messageInput.value.trim();
+        console.log('[FORM] Contenu du message:', content || '(vide)');
         
         // Récupérer l'input de fichier pour vérifier s'il y a un fichier
         const attachmentInput = document.getElementById('message-attachment');
         const hasFile = attachmentInput && attachmentInput.files && attachmentInput.files[0];
+        console.log('[FORM] Fichier attaché:', hasFile ? attachmentInput.files[0].name : 'aucun');
         
         // Vérifier qu'il y a au moins du contenu ou un fichier
         if (!content && !hasFile) {
+            console.log('[FORM] Aucun contenu ni fichier - abandon');
             return;
         }
         
