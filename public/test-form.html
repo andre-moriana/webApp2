@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Formulaire Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .console { background: #f0f0f0; padding: 10px; margin: 10px 0; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Test Formulaire Chat</h1>
+    
+    <div class="console" id="console-output">
+        <h3>Console de test:</h3>
+    </div>
+    
+    <form id="message-form">
+        <input type="text" id="message-input" placeholder="Votre message..." style="width: 300px; padding: 5px;">
+        <input type="file" id="message-attachment">
+        <button type="submit">Envoyer</button>
+    </form>
+    
+    <div id="messages-container"></div>
+
+    <script>
+        function log(msg) {
+            console.log(msg);
+            const output = document.getElementById('console-output');
+            const p = document.createElement('p');
+            p.textContent = new Date().toISOString() + ' - ' + msg;
+            output.appendChild(p);
+        }
+        
+        log('=== DEBUT DU TEST ===');
+        
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        
+        log('Formulaire trouvé: ' + (messageForm ? 'OUI' : 'NON'));
+        log('Input trouvé: ' + (messageInput ? 'OUI' : 'NON'));
+        
+        if (messageForm) {
+            messageForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                log('FORMULAIRE SOUMIS !');
+                log('Contenu: ' + messageInput.value);
+                
+                const attachmentInput = document.getElementById('message-attachment');
+                if (attachmentInput && attachmentInput.files && attachmentInput.files[0]) {
+                    log('Fichier: ' + attachmentInput.files[0].name);
+                } else {
+                    log('Pas de fichier');
+                }
+            });
+            log('Listener attaché avec succès');
+        } else {
+            log('ERREUR: Formulaire non trouvé !');
+        }
+    </script>
+</body>
+</html>

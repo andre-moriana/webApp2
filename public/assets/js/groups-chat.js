@@ -1,3 +1,6 @@
+console.log('=== DEBUT DU SCRIPT groups-chat.js ===');
+console.log('Timestamp:', new Date().toISOString());
+
 // Configuration
 let currentGroupId = null;
 
@@ -307,7 +310,9 @@ document.querySelectorAll(".group-item").forEach(item => {
 });
 
 // Gérer l'envoi de messages
+console.log('[INIT] Attachement du listener au formulaire - messageForm:', messageForm ? 'trouvé' : 'NULL');
 if (messageForm) {
+    console.log('[INIT] Listener attaché avec succès');
     messageForm.addEventListener("submit", async (e) => {
         console.log('[FORM] Soumission du formulaire détectée');
         e.preventDefault();
@@ -469,6 +474,8 @@ if (messageForm) {
             alert("Erreur lors de l'envoi du message: " + error.message);
         }
     });
+} else {
+    console.error('[INIT] ERREUR: Formulaire message-form non trouvé dans le DOM !');
 }
 
 // Rendez les fonctions globales
