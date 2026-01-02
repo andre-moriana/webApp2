@@ -453,3 +453,55 @@
         gap: 0.25rem;
     }
 }
+/* Boutons d'action des messages */
+.message-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.message-sent .message-actions {
+    border-top-color: rgba(255, 255, 255, 0.3);
+}
+
+.message-received .message-actions {
+    border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+.message-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border: none;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+}
+
+.message-actions .btn-edit {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: inherit;
+}
+
+.message-actions .btn-edit:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.message-actions .btn-delete {
+    background-color: rgba(220, 53, 69, 0.8);
+    color: white;
+}
+
+.message-actions .btn-delete:hover {
+    background-color: rgba(220, 53, 69, 1);
+}
+
+.message-received .message-actions .btn-edit {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #495057;
+}
+
+.message-received .message-actions .btn-edit:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
