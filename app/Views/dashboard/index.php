@@ -364,8 +364,10 @@
                                             <?php foreach ($stats['groups_list'] as $group): ?>
                                                 <li class="mb-2">
                                                     <div class="font-weight-bold">
-                                                        <i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> 
-                                                        <?php echo htmlspecialchars($group['name']); ?>
+                                                        <a href="/groups" style="text-decoration: none; color: #17a2b8; transition: color 0.2s;" onmouseover="this.style.color='#138496'" onmouseout="this.style.color='#17a2b8'">
+                                                            <i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> 
+                                                            <?php echo htmlspecialchars($group['name']); ?>
+                                                        </a>
                                                         <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">
                                                             (<?php echo count($group['topics'] ?? []); ?> sujet<?php echo count($group['topics'] ?? []) > 1 ? 's' : ''; ?>)
                                                         </span>
