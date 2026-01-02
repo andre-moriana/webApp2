@@ -424,11 +424,12 @@
 /* Boutons d'action des messages */
 .message-actions {
     display: flex !important;
-    gap: 0.5rem !important;
-    margin-top: 0.75rem !important;
-    padding-top: 0.5rem !important;
+    gap: 0.375rem !important;
+    margin-top: 0.5rem !important;
+    padding-top: 0.375rem !important;
     border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
     justify-content: flex-start !important;
+    flex-wrap: wrap !important;
 }
 
 .message-sent .message-actions {
@@ -440,21 +441,22 @@
 }
 
 .message-actions .btn {
-    padding: 0.5rem 1rem !important;
-    font-size: 0.875rem !important;
-    font-weight: 600 !important;
-    border: 2px solid transparent !important;
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    border: 1px solid transparent !important;
     cursor: pointer !important;
-    border-radius: 0.375rem !important;
+    border-radius: 0.25rem !important;
     transition: all 0.2s ease !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 0.375rem !important;
+    gap: 0.25rem !important;
     line-height: 1 !important;
+    white-space: nowrap !important;
 }
 
 .message-actions .btn i {
-    font-size: 1rem !important;
+    font-size: 0.75rem !important;
 }
 
 /* Boutons pour messages envoyés (fond bleu) */
