@@ -2150,8 +2150,15 @@ class ApiController {
         try {
             error_log("[ApiController] getTopicMessages - topicId: {$topicId}");
             
-            // S'assurer qu'on est authentifié
-            $this->ensureAuthenticated();
+            // Vérifier l'authentification
+            if (!$this->isAuthenticated()) {
+                http_response_code(401);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Non authentifié. Veuillez vous reconnecter."
+                ]);
+                return;
+            }
             
             // Appeler l'API backend pour récupérer les messages du topic
             $response = $this->apiService->makeRequest("topics/{$topicId}/messages", "GET");
@@ -2186,8 +2193,15 @@ class ApiController {
         try {
             error_log("[ApiController] sendTopicMessage - topicId: {$topicId}");
             
-            // S'assurer qu'on est authentifié
-            $this->ensureAuthenticated();
+            // Vérifier l'authentification
+            if (!$this->isAuthenticated()) {
+                http_response_code(401);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Non authentifié. Veuillez vous reconnecter."
+                ]);
+                return;
+            }
             
             // Gérer l'upload de fichier si présent
             $attachmentData = null;
