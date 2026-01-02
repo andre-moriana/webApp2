@@ -3,6 +3,8 @@ console.log('Timestamp:', new Date().toISOString());
 
 // Configuration
 let currentGroupId = null;
+let currentTopicId = null;
+let isTopicPage = false;
 
 console.log('[INIT] Script groups-chat.js chargé');
 
@@ -19,14 +21,23 @@ console.log('[INIT] Éléments DOM:', {
     chatTitle: !!chatTitle
 });
 
-// Initialiser avec le premier groupe
+// Initialiser avec le premier groupe OU le topic
 document.addEventListener("DOMContentLoaded", function() {
     console.log('[INIT] DOMContentLoaded - initialGroupId:', typeof initialGroupId !== "undefined" ? initialGroupId : 'undefined');
+    console.log('[INIT] DOMContentLoaded - window.currentTopicId:', window.currentTopicId);
+    console.log('[INIT] DOMContentLoaded - window.isTopicPage:', window.isTopicPage);
     
-    if (typeof initialGroupId !== "undefined" && initialGroupId) {
+    // Vérifier si on est sur une page de topic
+    if (window.isTopicPage && window.currentTopicId) {
+        isTopicPage = true;
+        currentTopicId = window.currentTopicId.toString();
+        console.log('[INIT] Chargement des messages pour le topic:', currentTopicId);
+        loadTopicMessages(currentTopicId);
+    }
+    // Sinon vérifier si on a un groupe initial
+    else if (typeof initialGroupId !== "undefined" && initialGroupId) {
         currentGroupId = initialGroupId.toString();
         console.log('[INIT] Chargement des messages pour le groupe:', currentGroupId);
-        // Charger automatiquement les messages du groupe initial
         loadGroupMessages(currentGroupId);
     }
 });
@@ -261,6 +272,89 @@ async function loadGroupMessages(groupId) {
         }
         
     } catch (error) {
+        messagesContainer.innerHTML = `
+            <div class="text-center text-danger">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <p>Erreur de connexion: ${error.message}</p>
+            </div>
+        `;
+    }
+    
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Charger les messages d'un topic (similaire à loadGroupMessages mais avec l'endpoint des topics)
+async function loadTopicMessages(topicId) {
+    console.log('[LOAD] Chargement des messages du topic:', topicId);
+    messagesContainer.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p class="mt-2">Chargement des messages...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`/api/topics/${topicId}/messages`, {
+            headers: {
+                'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
+            },
+            credentials: 'same-origin'
+        });
+        
+        console.log('[LOAD] Réponse reçue:', response.status, response.statusText);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('[LOAD] Données reçues:', data);
+            
+            // L'API retourne directement un tableau de messages
+            let messages = [];
+            if (Array.isArray(data)) {
+                messages = data;
+            } else if (data.success && data.data && Array.isArray(data.data)) {
+                messages = data.data;
+            } else if (data.data && Array.isArray(data.data)) {
+                messages = data.data;
+            }
+            
+            console.log('[LOAD] Nombre de messages:', messages.length);
+            
+            if (messages.length > 0) {
+                const messageElements = messages.map(message => createMessageElement(message)).filter(html => html !== "");
+                
+                if (messageElements.length > 0) {
+                    messagesContainer.innerHTML = messageElements.join("");
+                } else {
+                    messagesContainer.innerHTML = `
+                        <div class="text-center text-muted">
+                            <i class="fas fa-comments fa-2x mb-2"></i>
+                            <p>Aucun message valide dans le chat</p>
+                        </div>
+                    `;
+                }
+            } else {
+                messagesContainer.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-comments fa-2x mb-2"></i>
+                        <p>Aucun message dans ce sujet</p>
+                    </div>
+                `;
+            }
+        } else {
+            const errorText = await response.text();
+            console.error('[LOAD] Erreur:', response.status, errorText);
+            messagesContainer.innerHTML = `
+                <div class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <p>Erreur ${response.status}: ${errorText}</p>
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('[LOAD] Exception:', error);
         messagesContainer.innerHTML = `
             <div class="text-center text-danger">
                 <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
