@@ -650,21 +650,37 @@ document.addEventListener('DOMContentLoaded', function() {
             const topicId = document.getElementById('current-topic-id-input').value;
             const messageInput = document.getElementById('topic-message-input');
             const messageContent = messageInput.value.trim();
+            const attachmentInput = document.getElementById('topic-message-attachment');
+            const hasFile = attachmentInput && attachmentInput.files && attachmentInput.files[0];
             
-            if (!messageContent || !topicId) return;
+            if (!messageContent && !hasFile) {
+                console.log('[DEBUG] Aucun contenu ni fichier - abandon');
+                return;
+            }
+            
+            if (!topicId) {
+                console.error('[DEBUG] Pas de topicId');
+                return;
+            }
             
             console.log('[DEBUG] Envoi message topic - topicId:', topicId, 'content:', messageContent);
+            if (hasFile) {
+                console.log('[DEBUG] Fichier:', attachmentInput.files[0].name);
+            }
+            
+            // Utiliser FormData pour supporter les fichiers
+            const formData = new FormData();
+            formData.append('content', messageContent);
+            
+            if (hasFile) {
+                formData.append('attachment', attachmentInput.files[0]);
+            }
             
             // Appeler le backend de l'application web au lieu de l'API externe directement
             fetch(`/api/topics/${topicId}/messages`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 credentials: 'same-origin',
-                body: JSON.stringify({
-                    content: messageContent
-                })
+                body: formData
             })
             .then(response => {
                 console.log('[DEBUG] Réponse reçue - Status:', response.status, 'OK:', response.ok);
@@ -692,6 +708,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('[DEBUG] Données JSON parsées:', data);
                 if (data.success) {
                     messageInput.value = '';
+                    // Vider aussi l'input de fichier
+                    if (attachmentInput) {
+                        attachmentInput.value = '';
+                    }
                     // Recharger les messages
                     loadTopicMessages(topicId);
                 } else {
