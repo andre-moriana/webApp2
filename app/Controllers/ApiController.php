@@ -1192,6 +1192,54 @@ class ApiController {
                     $messages = $response;
                 }
                 
+                // Corriger les URLs des pièces jointes pour pointer vers /uploads/events
+                foreach ($messages as &$message) {
+                    if (isset($message['attachment']) && is_array($message['attachment'])) {
+                        $attachment = &$message['attachment'];
+                        
+                        // Si storedFilename existe, construire l'URL correcte vers /uploads/events
+                        if (isset($attachment['storedFilename'])) {
+                            $attachment['url'] = 'https://api.arctraining.fr/uploads/events/' . $attachment['storedFilename'];
+                        }
+                        // Sinon extraire depuis url existant
+                        elseif (isset($attachment['url'])) {
+                            // Si l'URL contient un paramètre url=, l'extraire et utiliser le chemin tel quel
+                            if (strpos($attachment['url'], '?') !== false && strpos($attachment['url'], 'url=') !== false) {
+                                $urlParts = parse_url($attachment['url']);
+                                if (isset($urlParts['query'])) {
+                                    parse_str($urlParts['query'], $queryParams);
+                                    if (isset($queryParams['url'])) {
+                                        $decodedPath = urldecode($queryParams['url']);
+                                        // Si le chemin contient /uploads/messages, le remplacer par /uploads/events
+                                        if (strpos($decodedPath, '/uploads/messages/') !== false) {
+                                            $decodedPath = str_replace('/uploads/messages/', '/uploads/events/', $decodedPath);
+                                        }
+                                        // Le chemin contient déjà /uploads/... on ajoute juste le domaine
+                                        $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
+                                    }
+                                }
+                            }
+                            // Sinon extraire le nom de fichier (hash.extension) et utiliser /uploads/events
+                            elseif (preg_match('/\/([a-f0-9]{32}\.[a-zA-Z0-9]+)(?:\?|$)/i', $attachment['url'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/events/' . $matches[1];
+                            }
+                            elseif (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['url'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/events/' . $matches[1];
+                            }
+                            // Si l'URL contient /uploads/messages, la remplacer par /uploads/events
+                            elseif (strpos($attachment['url'], '/uploads/messages/') !== false) {
+                                $attachment['url'] = str_replace('/uploads/messages/', '/uploads/events/', $attachment['url']);
+                            }
+                        }
+                        // Sinon extraire depuis path
+                        elseif (isset($attachment['path'])) {
+                            if (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['path'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/events/' . $matches[1];
+                            }
+                        }
+                    }
+                }
+                
                 $this->sendJsonResponse($messages);
             } else {
                 $this->sendJsonResponse([

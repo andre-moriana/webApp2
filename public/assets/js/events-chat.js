@@ -92,7 +92,36 @@ function createMessageElement(message) {
         const originalName = message.attachment.originalName || message.attachment.original_name || message.attachment.filename || "Pièce jointe";
         
         // Définir l'URL originale pour tous les types de fichiers
-        const originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
+        let originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
+        
+        // IMPORTANT: Corriger l'URL pour tous les fichiers des événements
+        // Si l'URL contient déjà api.arctraining.fr, vérifier qu'elle pointe vers /uploads/events
+        if (originalUrl.includes('api.arctraining.fr')) {
+            // Si l'URL pointe vers /uploads/messages, la remplacer par /uploads/events
+            if (originalUrl.includes('/uploads/messages/')) {
+                originalUrl = originalUrl.replace('/uploads/messages/', '/uploads/events/');
+            }
+        } else {
+            // Pour tous les autres cas, construire l'URL correcte vers api.arctraining.fr
+            if (originalUrl.startsWith('/uploads/')) {
+                // Si c'est /uploads/messages, remplacer par /uploads/events
+                if (originalUrl.startsWith('/uploads/messages/')) {
+                    originalUrl = 'https://api.arctraining.fr' + originalUrl.replace('/uploads/messages/', '/uploads/events/');
+                } else {
+                    originalUrl = 'https://api.arctraining.fr' + originalUrl;
+                }
+            } else if (originalUrl.startsWith('uploads/')) {
+                // Si c'est uploads/messages, remplacer par uploads/events
+                if (originalUrl.startsWith('uploads/messages/')) {
+                    originalUrl = 'https://api.arctraining.fr/' + originalUrl.replace('uploads/messages/', 'uploads/events/');
+                } else {
+                    originalUrl = 'https://api.arctraining.fr/' + originalUrl;
+                }
+            } else {
+                // Si c'est juste un nom de fichier, utiliser le dossier events pour les événements
+                originalUrl = 'https://api.arctraining.fr/uploads/events/' + originalUrl;
+            }
+        }
         
         // Pour les images, utiliser la route d'images du backend WebApp2
         if (isImage) {
