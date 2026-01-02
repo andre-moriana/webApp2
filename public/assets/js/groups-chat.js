@@ -84,13 +84,13 @@ function createMessageElement(message) {
         } else {
             // Pour tous les autres cas, construire l'URL correcte vers api.arctraining.fr
             if (originalUrl.startsWith('/uploads/')) {
-                attachmentUrl = 'https://api.arctraining.fr' + originalUrl;
-            } else if (originalUrl.startsWith('uploads/')) {
                 attachmentUrl = 'https://api.arctraining.fr/uploads/messages/' + originalUrl;
+            } else if (originalUrl.startsWith('uploads/')) {
+                attachmentUrl = 'https://api.arctraining.fr/' + originalUrl;
             } else {
                 // Si c'est juste un nom de fichier
                 attachmentUrl = 'https://api.arctraining.fr/uploads/messages/' + originalUrl;
-           }
+          }
         }
         
         attachmentHtml = `
