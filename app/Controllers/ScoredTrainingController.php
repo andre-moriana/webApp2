@@ -763,11 +763,26 @@ class ScoredTrainingController {
             ]);
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
             curl_close($ch);
+            
+            // Logger pour déboguer
+            error_log("DELETE scored-training/$id - HTTP Code: $httpCode");
+            error_log("DELETE scored-training/$id - Response: " . substr($response, 0, 500));
+            if ($curlError) {
+                error_log("DELETE scored-training/$id - CURL Error: $curlError");
+            }
+            
             if ($httpCode === 200) {
                 $response = json_decode($response, true);
             } else {
-                $response = ['success' => false, 'message' => 'Erreur API externe'];
+                // Essayer de décoder la réponse même si le code n'est pas 200
+                $decoded = json_decode($response, true);
+                if ($decoded && isset($decoded['message'])) {
+                    $response = ['success' => false, 'message' => 'Erreur API (HTTP ' . $httpCode . '): ' . $decoded['message']];
+                } else {
+                    $response = ['success' => false, 'message' => 'Erreur API externe (HTTP ' . $httpCode . '): ' . substr($response, 0, 200)];
+                }
             }
             // S'assurer que la réponse est un tableau
             if (!is_array($response)) {
