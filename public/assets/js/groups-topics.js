@@ -372,10 +372,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .then(response => {
+            console.log('Status HTTP:', response.status);
+            console.log('Content-Type:', response.headers.get('content-type'));
             if (!response.ok) {
-                throw new Error('Erreur HTTP: ' + response.status);
+                return response.text().then(text => {
+                    console.error('Réponse brute (erreur):', text.substring(0, 500));
+                    throw new Error('Erreur HTTP: ' + response.status + ' - ' + text.substring(0, 100));
+                });
             }
-            return response.json();
+            return response.text().then(text => {
+                console.log('Réponse brute (100 premiers caractères):', text.substring(0, 100));
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Erreur de parsing JSON:', e);
+                    console.error('Texte complet:', text);
+                    throw new Error('Réponse invalide: ' + text.substring(0, 100));
+                }
+            });
         })
         .then(data => {
             console.log('Données reçues pour le sujet:', topicId, data);
