@@ -423,6 +423,7 @@
 }
 /* Boutons d'action des messages */
 .message-actions {
+    position: relative !important;
     display: flex !important;
     gap: 0.375rem !important;
     margin: 0.5rem 0 0 0 !important;
@@ -432,6 +433,8 @@
     border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
     justify-content: flex-start !important;
     flex-wrap: wrap !important;
+    bottom: auto !important;
+    right: auto !important;
 }
 
 .message-sent .message-actions {
