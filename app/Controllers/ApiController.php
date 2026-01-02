@@ -2297,7 +2297,7 @@ class ApiController {
                 return;
             }
             
-            // Appeler l'API backend pour récupérer les messages du topic  
+            // Appeler l'API backend pour récupérer les messages du topic
             $response = $this->apiService->makeRequest("messages/topic/{$topicId}/history", "GET");
             
             error_log("[ApiController] getTopicMessages - response: " . json_encode($response));
