@@ -363,7 +363,11 @@ if (messageForm) {
                 if (attachmentInput && attachmentInput.files && attachmentInput.files[0]) {
                     const file = attachmentInput.files[0];
                     formData.append('attachment', file);
+                    console.log('[Client] Fichier ajouté:', file.name, file.type, file.size);
                 }
+                
+                console.log('[Client] Envoi du message au groupe:', currentGroupId);
+                console.log('[Client] Contenu:', content);
                 
                 response = await fetch(`/messages/${currentGroupId}/send`, {
                     method: 'POST',
@@ -373,6 +377,8 @@ if (messageForm) {
                     },
                     body: formData
                 });
+                
+                console.log('[Client] Réponse reçue - Status:', response.status, response.statusText);
             }
             
             if (response.ok) {
@@ -424,11 +430,25 @@ if (messageForm) {
                     }, 500);
                 }
             } else {
-                 // Optionnel: Afficher un message d'erreur à l'utilisateur
-                alert("Erreur lors de l'envoi du message");
+                // Afficher l'erreur détaillée
+                console.error('[Client] Erreur lors de l\'envoi - Status:', response.status);
+                const errorText = await response.text();
+                console.error('[Client] Erreur détaillée:', errorText);
+                
+                let errorMessage = "Erreur lors de l'envoi du message";
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    // Si ce n'est pas du JSON, utiliser le texte brut
+                    if (errorText) errorMessage = errorText;
+                }
+                
+                alert(errorMessage);
             }
         } catch (error) {
-            alert("Erreur lors de l'envoi du message");
+            console.error('[Client] Exception lors de l\'envoi:', error);
+            alert("Erreur lors de l'envoi du message: " + error.message);
         }
     });
 }

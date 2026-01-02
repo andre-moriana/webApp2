@@ -840,12 +840,23 @@ class ApiController {
         $content = $_POST['content'] ?? '';
         $file = $_FILES['attachment'] ?? null;
 
-        // Vérifier qu'il y a au moins un contenu ou un fichier
-        if (empty($content) && empty($file)) {
+        error_log("[WebApp] sendGroupMessage - GroupId: {$groupId}");
+        error_log("[WebApp] sendGroupMessage - Content: " . ($content ?: '(vide)'));
+        error_log("[WebApp] sendGroupMessage - File present: " . ($file ? 'Oui' : 'Non'));
+        if ($file) {
+            error_log("[WebApp] sendGroupMessage - File error: " . ($file['error'] ?? 'N/A'));
+            error_log("[WebApp] sendGroupMessage - File name: " . ($file['name'] ?? 'N/A'));
+        }
+
+        // Vérifier qu'il y a au moins un contenu ou un fichier valide
+        $hasFile = $file && isset($file['error']) && $file['error'] === UPLOAD_ERR_OK;
+        if (empty($content) && !$hasFile) {
+            error_log("[WebApp] sendGroupMessage - Erreur: Ni contenu ni fichier valide");
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Le message doit contenir du texte ou une pièce jointe'
             ], 400);
+            return;
         }
 
         try {
@@ -856,7 +867,8 @@ class ApiController {
             ];
 
             // Si un fichier est présent, l'ajouter directement aux données
-            if ($file && $file['error'] === UPLOAD_ERR_OK) {
+            if ($hasFile) {
+                error_log("[WebApp] sendGroupMessage - Ajout du fichier à la requête");
                 $postData['attachment'] = new CURLFile(
                     $file['tmp_name'],
                     $file['type'],
@@ -865,7 +877,10 @@ class ApiController {
             }
 
             // Envoyer le message avec le fichier si présent
+            error_log("[WebApp] sendGroupMessage - Envoi à l'API Backend...");
             $response = $this->apiService->makeRequestWithFile("messages/{$groupId}/send", "POST", $postData);
+            error_log("[WebApp] sendGroupMessage - Réponse reçue: " . json_encode($response));
+            
             if ($response['success']) {
                 $this->sendJsonResponse($response);
             } else {
@@ -875,6 +890,7 @@ class ApiController {
                 ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
+            error_log("[WebApp] sendGroupMessage - Exception: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de l\'envoi du message: ' . $e->getMessage()
