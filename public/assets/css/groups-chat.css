@@ -431,7 +431,6 @@
 }
 
 .message-sent .message-actions {
-    display: flex;
     border-top-color: rgba(255, 255, 255, 0.3) !important;
 }
 
