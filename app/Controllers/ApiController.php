@@ -1090,7 +1090,84 @@ class ApiController {
                     $fileData = curl_exec($ch);
                     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                    $curlError = curl_error($ch);
                     curl_close($ch);
+                }
+                
+                // Si toujours une erreur, essayer de récupérer le message via l'API pour obtenir l'URL correcte
+                if ($httpCode !== 200 && !empty($messageId)) {
+                    error_log("DEBUG downloadMessageAttachment: Échec du téléchargement direct, tentative via API. URL essayée: " . $imageUrl . ", HTTP Code: " . $httpCode);
+                    
+                    // Essayer de récupérer le message via l'API pour obtenir l'URL correcte de l'attachment
+                    $messageResponse = $this->apiService->makeRequest("messages/{$messageId}", "GET");
+                    if ($messageResponse['success'] && isset($messageResponse['data']['attachment'])) {
+                        $attachment = $messageResponse['data']['attachment'];
+                        $correctUrl = null;
+                        
+                        // Essayer différents champs pour trouver l'URL
+                        if (isset($attachment['url'])) {
+                            $correctUrl = $attachment['url'];
+                        } elseif (isset($attachment['path'])) {
+                            $correctUrl = $attachment['path'];
+                        } elseif (isset($attachment['storedFilename'])) {
+                            // Essayer les deux dossiers
+                            $correctUrl = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
+                        }
+                        
+                        if ($correctUrl) {
+                            // S'assurer que l'URL est complète
+                            if (strpos($correctUrl, 'https') !== 0) {
+                                $baseUrlClean = rtrim(rtrim($this->baseUrl, '/api'), '/');
+                                $correctUrl = $baseUrlClean . '/' . ltrim($correctUrl, '/');
+                            }
+                            
+                            error_log("DEBUG downloadMessageAttachment: URL corrigée depuis l'API: " . $correctUrl);
+                            
+                            // Réessayer avec l'URL de l'API
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, $correctUrl);
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                            
+                            if (isset($_SESSION['token'])) {
+                                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                                    'Authorization: Bearer ' . $_SESSION['token']
+                                ]);
+                            }
+                            
+                            $fileData = curl_exec($ch);
+                            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                            $curlError = curl_error($ch);
+                            curl_close($ch);
+                            
+                            // Si ça échoue encore, essayer l'autre dossier
+                            if ($httpCode !== 200 && strpos($correctUrl, '/uploads/messages/') !== false) {
+                                $correctUrl = str_replace('/uploads/messages/', '/uploads/events/', $correctUrl);
+                                error_log("DEBUG downloadMessageAttachment: Essai avec /uploads/events/: " . $correctUrl);
+                                
+                                $ch = curl_init();
+                                curl_setopt($ch, CURLOPT_URL, $correctUrl);
+                                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                                
+                                if (isset($_SESSION['token'])) {
+                                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                                        'Authorization: Bearer ' . $_SESSION['token']
+                                    ]);
+                                }
+                                
+                                $fileData = curl_exec($ch);
+                                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                                $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                                curl_close($ch);
+                            }
+                        }
+                    }
                 }
                 
                 if ($httpCode === 200 && !empty($fileData)) {
@@ -1125,6 +1202,22 @@ class ApiController {
                     header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
                     
                     echo $fileData;
+                    exit;
+                } else {
+                    // Si le téléchargement a échoué, retourner une erreur détaillée
+                    $errorMessage = "Erreur HTTP " . $httpCode;
+                    if (!empty($curlError)) {
+                        $errorMessage .= ": " . $curlError;
+                    }
+                    $errorMessage .= " (URL: " . $imageUrl . ")";
+                    error_log("DEBUG downloadMessageAttachment: Échec du téléchargement - " . $errorMessage);
+                    
+                    $this->cleanOutput();
+                    http_response_code(404);
+                    echo json_encode([
+                        "success" => false,
+                        "message" => "Erreur lors du téléchargement: " . $errorMessage
+                    ]);
                     exit;
                 }
             }
@@ -1210,18 +1303,34 @@ class ApiController {
                 }
             } else {
                 $this->cleanOutput();
+                $errorMessage = "Erreur lors du téléchargement: " . ($response['message'] ?? 'Erreur inconnue');
+                if (!empty($imageUrl)) {
+                    $errorMessage .= " (URL: " . $imageUrl . ")";
+                }
+                if (isset($httpCode) && $httpCode !== 200) {
+                    $errorMessage .= " (HTTP " . $httpCode . ")";
+                }
+                if (isset($curlError) && !empty($curlError)) {
+                    $errorMessage .= " (cURL: " . $curlError . ")";
+                }
+                error_log("DEBUG downloadMessageAttachment: " . $errorMessage);
                 http_response_code($response['status_code'] ?? 500);
                 echo json_encode([
                     "success" => false,
-                    "message" => "Erreur lors du téléchargement: " . ($response['message'] ?? 'Erreur inconnue')
+                    "message" => $errorMessage
                 ]);
             }
         } catch (Exception $e) {
             $this->cleanOutput();
+            $errorMessage = "Erreur lors du téléchargement: " . $e->getMessage();
+            if (!empty($imageUrl)) {
+                $errorMessage .= " (URL: " . $imageUrl . ")";
+            }
+            error_log("DEBUG downloadMessageAttachment Exception: " . $errorMessage);
             http_response_code(500);
             echo json_encode([
                 "success" => false,
-                "message" => "Erreur lors du téléchargement: " . $e->getMessage()
+                "message" => $errorMessage
             ]);
         }
     }
