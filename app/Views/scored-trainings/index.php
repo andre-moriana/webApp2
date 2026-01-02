@@ -73,9 +73,6 @@ $additionalJS = [
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
                 <h1 class="h3 mb-0">Tirs comptés</h1>
                 <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto">
-                    <button class="btn btn-primary-main" onclick="openCreateModal()">
-                        <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Nouveau tir compté</span><span class="d-sm-none">Nouveau</span>
-                    </button>
                     <?php if ($isAdmin || $isCoach || $isDirigeant): ?>
                     <div class="dropdown">
                         <button class="btn btn-outline-secondary dropdown-toggle w-100 w-sm-auto text-truncate" type="button" data-bs-toggle="dropdown" style="max-width: 200px;">
