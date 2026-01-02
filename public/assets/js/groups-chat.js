@@ -5,6 +5,8 @@ console.log('Timestamp:', new Date().toISOString());
 let currentGroupId = null;
 let currentTopicId = null;
 let isTopicPage = false;
+let authToken = null; // Pour l'application web, on utilise les sessions PHP
+let currentUserId = window.currentUserId || null; // ID de l'utilisateur connecté
 
 console.log('[INIT] Script groups-chat.js chargé');
 
