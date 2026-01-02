@@ -342,8 +342,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Fonction pour charger les messages d'un sujet
-    function loadTopicMessages(topicId) {
+    // Fonction pour charger les messages d'un sujet (globale pour être accessible depuis les boutons)
+    window.loadTopicMessages = function loadTopicMessages(topicId) {
         const messagesContainer = document.getElementById('topic-messages-container');
         if (!messagesContainer) return;
         
