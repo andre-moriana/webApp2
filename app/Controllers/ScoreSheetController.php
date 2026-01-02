@@ -102,7 +102,7 @@ class ScoreSheetController {
                 if (!$targetUserId && !empty($archerInfo['license_number'])) {
                     try {
                         // Essayer de trouver l'utilisateur par numéro de licence
-                        $baseUrl = $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000/api";
+                        $baseUrl = $_ENV["API_BASE_URL"] ?? "https://api.arctraining.fr/api";
                         $url = $baseUrl . "/users?licence_number=" . urlencode($archerInfo['license_number']);
                         
                         $ch = curl_init();
