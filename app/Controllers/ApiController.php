@@ -994,29 +994,26 @@ class ApiController {
                 // Décoder l'URL si elle est encodée
                 $imageUrl = urldecode($imageUrl);
                 
-                error_log("DEBUG downloadMessageAttachment: URL reçue: " . $imageUrl);
-                
                 // S'assurer que l'URL pointe vers l'API externe
                 $baseUrlWithoutApi = rtrim($this->baseUrl, '/api');
                 $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
                 
-                error_log("DEBUG downloadMessageAttachment: baseUrlClean: " . $baseUrlClean);
+                // Si baseUrlClean est vide, utiliser l'URL par défaut
+                if (empty($baseUrlClean)) {
+                    $baseUrlClean = 'https://api.arctraining.fr';
+                }
                 
                 // Si l'URL ne commence pas par https://, la rendre absolue
                 if (strpos($imageUrl, 'https://') !== 0) {
-                    error_log("DEBUG downloadMessageAttachment: URL n'est pas absolue, conversion en cours");
-                    
                     // Corriger les URLs incomplètes qui pointent vers /uploads/ sans le dossier messages/events
                     if (preg_match('#^/uploads/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))$#i', $imageUrl, $matches)) {
                         // C'est un fichier directement dans /uploads/, pas dans un sous-dossier
                         $filename = $matches[1];
                         $imageUrl = '/uploads/messages/' . $filename;
-                        error_log("DEBUG downloadMessageAttachment: Corrigé en: " . $imageUrl);
                     }
                     
                     // Toujours rendre l'URL absolue
                     $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
-                    error_log("DEBUG downloadMessageAttachment: URL finale absolue: " . $imageUrl);
                 }
                 
                 // Faire une requête pour récupérer le fichier
