@@ -457,9 +457,10 @@
 .message-actions {
     display: flex;
     gap: 0.5rem;
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
     padding-top: 0.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
+    justify-content: flex-start;
 }
 
 .message-sent .message-actions {
@@ -467,41 +468,85 @@
 }
 
 .message-received .message-actions {
-    border-top-color: rgba(0, 0, 0, 0.1);
+    border-top-color: rgba(0, 0, 0, 0.15);
 }
 
 .message-actions .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    border: none;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border: 1px solid transparent;
     cursor: pointer;
-    border-radius: 0.25rem;
-    transition: all 0.2s;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
-.message-actions .btn-edit {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: inherit;
+.message-actions .btn i {
+    font-size: 0.875rem;
 }
 
-.message-actions .btn-edit:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+/* Boutons pour messages envoyés (fond bleu) */
+.message-sent .message-actions .btn-edit {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #007bff;
+    border-color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
 }
 
-.message-actions .btn-delete {
-    background-color: rgba(220, 53, 69, 0.8);
+.message-sent .message-actions .btn-edit:hover {
+    background-color: white;
+    color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.message-sent .message-actions .btn-delete {
+    background-color: #dc3545;
     color: white;
+    border-color: #dc3545;
+    font-weight: 600;
 }
 
-.message-actions .btn-delete:hover {
-    background-color: rgba(220, 53, 69, 1);
+.message-sent .message-actions .btn-delete:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
+/* Boutons pour messages reçus (fond gris) */
 .message-received .message-actions .btn-edit {
-    background-color: rgba(0, 0, 0, 0.05);
-    color: #495057;
+    background-color: #fff;
+    color: #007bff;
+    border-color: #007bff;
+    font-weight: 600;
 }
 
 .message-received .message-actions .btn-edit:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: #007bff;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.message-received .message-actions .btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+    font-weight: 600;
+}
+
+.message-received .message-actions .btn-delete:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* État actif des boutons */
+.message-actions .btn:active {
+    transform: translateY(0);
 }
