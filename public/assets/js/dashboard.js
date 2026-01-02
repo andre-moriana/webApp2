@@ -588,7 +588,7 @@ function filterGroupsByCommittee(committeeId, committeeName) {
             const groupDiv = document.createElement('div');
             groupDiv.className = 'font-weight-bold';
             const topicsCount = group.topics ? group.topics.length : 0;
-            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)} <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(${topicsCount} sujet${topicsCount > 1 ? 's' : ''})</span>`;
+            groupDiv.innerHTML = `<a href="/groups" style="text-decoration: none; color: #17a2b8; transition: color 0.2s;" onmouseover="this.style.color='#138496'" onmouseout="this.style.color='#17a2b8'"><i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)}</a> <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(${topicsCount} sujet${topicsCount > 1 ? 's' : ''})</span>`;
             li.appendChild(groupDiv);
             
             // Ajouter les sujets s'il y en a
@@ -696,7 +696,7 @@ function resetGroupsDisplay() {
             const groupDiv = document.createElement('div');
             groupDiv.className = 'font-weight-bold';
             const topicsCount = group.topics ? group.topics.length : 0;
-            groupDiv.innerHTML = `<i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)} <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(${topicsCount} sujet${topicsCount > 1 ? 's' : ''})</span>`;
+            groupDiv.innerHTML = `<a href="/groups" style="text-decoration: none; color: #17a2b8; transition: color 0.2s;" onmouseover="this.style.color='#138496'" onmouseout="this.style.color='#17a2b8'"><i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> ${escapeHtml(group.name)}</a> <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">(${topicsCount} sujet${topicsCount > 1 ? 's' : ''})</span>`;
             li.appendChild(groupDiv);
             
             // Ajouter les sujets s'il y en a
