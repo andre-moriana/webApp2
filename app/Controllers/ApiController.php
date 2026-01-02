@@ -2142,5 +2142,122 @@ class ApiController {
             ]);
         }
     }
+    
+    /**
+     * Récupère les messages d'un topic
+     */
+    public function getTopicMessages($topicId) {
+        try {
+            error_log("[ApiController] getTopicMessages - topicId: {$topicId}");
+            
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            // Appeler l'API backend pour récupérer les messages du topic
+            $response = $this->apiService->makeRequest("topics/{$topicId}/messages", "GET");
+            
+            error_log("[ApiController] getTopicMessages - response: " . json_encode($response));
+            
+            if ($response['success']) {
+                http_response_code(200);
+                // Retourner directement les messages
+                echo json_encode($response['data'] ?? []);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la récupération des messages: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("[ApiController] getTopicMessages - exception: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la récupération des messages: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Envoie un message dans un topic
+     */
+    public function sendTopicMessage($topicId) {
+        try {
+            error_log("[ApiController] sendTopicMessage - topicId: {$topicId}");
+            
+            // S'assurer qu'on est authentifié
+            $this->ensureAuthenticated();
+            
+            // Gérer l'upload de fichier si présent
+            $attachmentData = null;
+            if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                error_log("[ApiController] sendTopicMessage - fichier détecté: " . $_FILES['attachment']['name']);
+                
+                // Créer un objet CURLFile pour l'envoi
+                $attachmentData = $_FILES['attachment'];
+            }
+            
+            // Récupérer le contenu du message
+            $content = $_POST['content'] ?? '';
+            
+            error_log("[ApiController] sendTopicMessage - content: {$content}");
+            error_log("[ApiController] sendTopicMessage - has attachment: " . ($attachmentData ? 'oui' : 'non'));
+            
+            if (empty($content) && !$attachmentData) {
+                http_response_code(400);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Le message ne peut pas être vide"
+                ]);
+                return;
+            }
+            
+            // Préparer les données
+            $messageData = [
+                'content' => $content
+            ];
+            
+            // Utiliser makeRequestWithFile si on a une pièce jointe
+            if ($attachmentData) {
+                $response = $this->apiService->makeRequestWithFile(
+                    "topics/{$topicId}/messages",
+                    "POST",
+                    $messageData,
+                    $attachmentData
+                );
+            } else {
+                $response = $this->apiService->makeRequest(
+                    "topics/{$topicId}/messages",
+                    "POST",
+                    $messageData
+                );
+            }
+            
+            error_log("[ApiController] sendTopicMessage - response: " . json_encode($response));
+            
+            if ($response['success']) {
+                http_response_code(201);
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Message envoyé avec succès",
+                    "data" => $response['data'] ?? null
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de l'envoi du message: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("[ApiController] sendTopicMessage - exception: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de l'envoi du message: " . $e->getMessage()
+            ]);
+        }
+    }
 }
 ?>
