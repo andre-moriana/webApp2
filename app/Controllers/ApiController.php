@@ -760,6 +760,61 @@ class ApiController {
                     $messages = $response;
                 }
                 
+                // Corriger les URLs des pièces jointes pour pointer vers /uploads/messages
+                foreach ($messages as &$message) {
+                    if (isset($message['attachment']) && is_array($message['attachment'])) {
+                        $attachment = &$message['attachment'];
+                        
+                        // Si storedFilename existe, construire l'URL correcte
+                        if (isset($attachment['storedFilename'])) {
+                            $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
+                        }
+                        // Sinon extraire depuis url existant
+                        elseif (isset($attachment['url'])) {
+                            // Si l'URL contient un paramètre url=, l'extraire et utiliser le chemin tel quel
+                            if (strpos($attachment['url'], '?') !== false && strpos($attachment['url'], 'url=') !== false) {
+                                $urlParts = parse_url($attachment['url']);
+                                if (isset($urlParts['query'])) {
+                                    parse_str($urlParts['query'], $queryParams);
+                                    if (isset($queryParams['url'])) {
+                                        $decodedPath = urldecode($queryParams['url']);
+                                        // Corriger les URLs incomplètes qui pointent vers /uploads/ sans le dossier messages/events
+                                        if (preg_match('#^/uploads/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))$#i', $decodedPath, $fileMatches)) {
+                                            $decodedPath = '/uploads/messages/' . $fileMatches[1];
+                                        }
+                                        // Le chemin contient déjà /uploads/... on ajoute juste le domaine
+                                        $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
+                                    }
+                                }
+                            }
+                            // Corriger les URLs qui sont juste /uploads/filename.pdf
+                            elseif (preg_match('#^/uploads/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))$#i', $attachment['url'], $fileMatches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $fileMatches[1];
+                            }
+                            // Sinon extraire le nom de fichier (hash.extension)
+                            elseif (preg_match('/\/([a-f0-9]{32}\.[a-zA-Z0-9]+)(?:\?|$)/i', $attachment['url'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
+                            }
+                            elseif (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['url'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
+                            }
+                            // Si l'URL ne contient pas /uploads/messages/ ou /uploads/events/, essayer de la corriger
+                            elseif (strpos($attachment['url'], '/uploads/messages/') === false && strpos($attachment['url'], '/uploads/events/') === false) {
+                                // Extraire le nom du fichier
+                                if (preg_match('#/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))(?:\?|$)#i', $attachment['url'], $fileMatches)) {
+                                    $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $fileMatches[1];
+                                }
+                            }
+                        }
+                        // Sinon extraire depuis path
+                        elseif (isset($attachment['path'])) {
+                            if (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['path'], $matches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
+                            }
+                        }
+                    }
+                }
+                
                 $this->sendJsonResponse($messages);
             } else {
                 $this->sendJsonResponse([
@@ -939,6 +994,16 @@ class ApiController {
                 // Décoder l'URL si elle est encodée
                 $imageUrl = urldecode($imageUrl);
                 
+                // Corriger les URLs incomplètes qui pointent vers /uploads/ sans le dossier messages/events
+                // Si l'URL est /uploads/filename.pdf, essayer de déterminer le bon dossier
+                if (preg_match('#^/uploads/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))$#i', $imageUrl, $matches)) {
+                    // C'est un fichier directement dans /uploads/, pas dans un sous-dossier
+                    // Essayer de déterminer si c'est un message de groupe ou un événement
+                    // Par défaut, on essaie /uploads/messages/ d'abord
+                    $filename = $matches[1];
+                    $imageUrl = '/uploads/messages/' . $filename;
+                }
+                
                 // S'assurer que l'URL pointe vers l'API externe
                 $baseUrlWithoutApi = rtrim($this->baseUrl, '/api');
                 $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
@@ -946,6 +1011,17 @@ class ApiController {
                 // Si l'URL est relative, la rendre absolue
                 if (strpos($imageUrl, 'https') !== 0) {
                     $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
+                }
+                
+                // Si l'URL ne contient toujours pas /uploads/messages/ ou /uploads/events/, essayer de la corriger
+                if (strpos($imageUrl, '/uploads/messages/') === false && strpos($imageUrl, '/uploads/events/') === false) {
+                    // Extraire le nom du fichier
+                    if (preg_match('#/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))(?:\?|$)#i', $imageUrl, $fileMatches)) {
+                        $filename = $fileMatches[1];
+                        // Par défaut, utiliser /uploads/messages/ pour les messages de groupe
+                        // (on pourrait améliorer en vérifiant le type de message via l'API)
+                        $imageUrl = $baseUrlClean . '/uploads/messages/' . $filename;
+                    }
                 }
                 
                 // Faire une requête pour récupérer le fichier
@@ -966,7 +1042,56 @@ class ApiController {
                 $fileData = curl_exec($ch);
                 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                $curlError = curl_error($ch);
                 curl_close($ch);
+                
+                // Si le téléchargement échoue et que l'URL contient /uploads/messages/, essayer /uploads/events/
+                if ($httpCode !== 200 && strpos($imageUrl, '/uploads/messages/') !== false) {
+                    $imageUrl = str_replace('/uploads/messages/', '/uploads/events/', $imageUrl);
+                    
+                    // Réessayer avec le nouveau chemin
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $imageUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                    
+                    if (isset($_SESSION['token'])) {
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                            'Authorization: Bearer ' . $_SESSION['token']
+                        ]);
+                    }
+                    
+                    $fileData = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                    curl_close($ch);
+                }
+                
+                // Inversement, si l'URL contient /uploads/events/ et échoue, essayer /uploads/messages/
+                if ($httpCode !== 200 && strpos($imageUrl, '/uploads/events/') !== false) {
+                    $imageUrl = str_replace('/uploads/events/', '/uploads/messages/', $imageUrl);
+                    
+                    // Réessayer avec le nouveau chemin
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $imageUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                    
+                    if (isset($_SESSION['token'])) {
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                            'Authorization: Bearer ' . $_SESSION['token']
+                        ]);
+                    }
+                    
+                    $fileData = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                    curl_close($ch);
+                }
                 
                 if ($httpCode === 200 && !empty($fileData)) {
                     // Déterminer le type MIME
