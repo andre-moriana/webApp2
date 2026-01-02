@@ -746,7 +746,7 @@ class ScoredTrainingController {
        
         try {
             // Ne pas passer user_id - l'API backend doit utiliser l'utilisateur connecté pour vérifier les permissions
-            $baseUrl = $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000/api";
+            $baseUrl = $_ENV["API_BASE_URL"] ?? "https://api.arctraining.fr/api";
             $url = $baseUrl . "/scored-training/" . $id;
             
             $ch = curl_init();
