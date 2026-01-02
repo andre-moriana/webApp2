@@ -483,7 +483,7 @@ function filterGroupsByClub(clubId, clubName) {
                 group.topics.forEach(function(topic) {
                     const topicLi = document.createElement('li');
                     topicLi.className = 'mb-1';
-                    topicLi.innerHTML = `<i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> ${escapeHtml(topic.title)}`;
+                    topicLi.innerHTML = `<i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> <a href="/groups/${group.id}/topics/${topic.id}" style="text-decoration: none; color: inherit; transition: color 0.2s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='inherit'">${escapeHtml(topic.title)}</a>`;
                     topicsUl.appendChild(topicLi);
                 });
                 
@@ -600,7 +600,7 @@ function filterGroupsByCommittee(committeeId, committeeName) {
                 group.topics.forEach(function(topic) {
                     const topicLi = document.createElement('li');
                     topicLi.className = 'mb-1';
-                    topicLi.innerHTML = `<i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> ${escapeHtml(topic.title)}`;
+                    topicLi.innerHTML = `<i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> <a href="/groups/${group.id}/topics/${topic.id}" style="text-decoration: none; color: inherit; transition: color 0.2s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='inherit'">${escapeHtml(topic.title)}</a>`;
                     topicsUl.appendChild(topicLi);
                 });
                 
@@ -708,7 +708,7 @@ function resetGroupsDisplay() {
                 group.topics.forEach(function(topic) {
                     const topicLi = document.createElement('li');
                     topicLi.className = 'mb-1';
-                    topicLi.innerHTML = `<i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> ${escapeHtml(topic.title)}`;
+                    topicLi.innerHTML = `<i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> <a href="/groups/${group.id}/topics/${topic.id}" style="text-decoration: none; color: inherit; transition: color 0.2s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='inherit'">${escapeHtml(topic.title)}</a>`;
                     topicsUl.appendChild(topicLi);
                 });
                 
