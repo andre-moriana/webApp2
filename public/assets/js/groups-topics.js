@@ -599,6 +599,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>`;
             }
             
+            // Déterminer les permissions
+            const canEdit = isCurrentUser;
+            const canDelete = isCurrentUser || (window.isAdmin === true);
+            
+            // HTML des boutons d'action
+            let actionsHtml = '';
+            if (canEdit || canDelete) {
+                actionsHtml = '<div class="message-actions">';
+                if (canEdit) {
+                    actionsHtml += `<button type="button" class="btn btn-sm btn-edit" onclick="editTopicMessage('${message._id || message.id}')"><i class="fas fa-edit"></i> Modifier</button>`;
+                }
+                if (canDelete) {
+                    actionsHtml += `<button type="button" class="btn btn-sm btn-delete" onclick="deleteTopicMessage('${message._id || message.id}')"><i class="fas fa-trash"></i> Supprimer</button>`;
+                }
+                actionsHtml += '</div>';
+            }
+            
             messagesHtml += `
                 <div class="d-flex ${alignClass} mb-3" data-message-id="${message._id || message.id || ''}">
                     <div class="message ${messageClass}">
@@ -608,6 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         ${messageContent ? `<div class="message-content">${escapeHtml(messageContent).replace(/\n/g, '<br>')}</div>` : ''}
                         ${attachmentHtml}
+                        ${actionsHtml}
                     </div>
                 </div>
             `;
@@ -1512,3 +1530,88 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Fonction globale pour éditer un message de topic
+window.editTopicMessage = async function(messageId) {
+    console.log('[Edit] Édition du message:', messageId);
+    
+    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageElement) {
+        console.error('[Edit] Message non trouvé');
+        return;
+    }
+    
+    const contentElement = messageElement.querySelector('.message-content');
+    if (!contentElement) {
+        console.error('[Edit] Contenu du message non trouvé');
+        return;
+    }
+    
+    const currentContent = contentElement.innerHTML.replace(/<br>/g, '\n');
+    const newContent = prompt('Modifier le message:', currentContent);
+    
+    if (newContent === null || newContent.trim() === currentContent.trim()) {
+        return; // Annulé ou pas de changement
+    }
+    
+    if (newContent.trim() === '') {
+        alert('Le message ne peut pas être vide');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/messages/${messageId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ content: newContent.trim() })
+        });
+        
+        if (response.ok) {
+            // Recharger les messages
+            const topicId = document.getElementById('current-topic-id-input')?.value;
+            if (topicId) {
+                loadTopicMessages(topicId);
+            }
+        } else {
+            const errorText = await response.text();
+            console.error('[Edit] Erreur:', errorText);
+            alert('Erreur lors de la modification du message');
+        }
+    } catch (error) {
+        console.error('[Edit] Exception:', error);
+        alert('Erreur lors de la modification du message');
+    }
+};
+
+// Fonction globale pour supprimer un message de topic
+window.deleteTopicMessage = async function(messageId) {
+    console.log('[Delete] Suppression du message:', messageId);
+    
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/messages/${messageId}`, {
+            method: 'DELETE',
+            credentials: 'same-origin'
+        });
+        
+        if (response.ok) {
+            // Recharger les messages
+            const topicId = document.getElementById('current-topic-id-input')?.value;
+            if (topicId) {
+                loadTopicMessages(topicId);
+            }
+        } else {
+            const errorText = await response.text();
+            console.error('[Delete] Erreur:', errorText);
+            alert('Erreur lors de la suppression du message');
+        }
+    } catch (error) {
+        console.error('[Delete] Exception:', error);
+        alert('Erreur lors de la suppression du message');
+    }
+};
