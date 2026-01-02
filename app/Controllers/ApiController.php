@@ -2144,6 +2144,143 @@ class ApiController {
     }
     
     /**
+     * Récupère les messages d'un groupe
+     */
+    public function getGroupMessages($groupId) {
+        try {
+            error_log("[ApiController] getGroupMessages - groupId: {$groupId}");
+            
+            // Vérifier l'authentification
+            if (!$this->isAuthenticated()) {
+                http_response_code(401);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Non authentifié. Veuillez vous reconnecter."
+                ]);
+                return;
+            }
+            
+            // Appeler l'API backend pour récupérer les messages du groupe
+            $response = $this->apiService->makeRequest("messages/{$groupId}/history", "GET");
+            
+            error_log("[ApiController] getGroupMessages - response: " . json_encode($response));
+            
+            if ($response['success']) {
+                http_response_code(200);
+                // Retourner directement les messages
+                echo json_encode($response['data'] ?? []);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de la récupération des messages: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("[ApiController] getGroupMessages - exception: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de la récupération des messages: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Envoie un message dans un groupe
+     */
+    public function sendGroupMessage($groupId) {
+        try {
+            error_log("[ApiController] sendGroupMessage - groupId: {$groupId}");
+            
+            // Vérifier l'authentification
+            if (!$this->isAuthenticated()) {
+                http_response_code(401);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Non authentifié. Veuillez vous reconnecter."
+                ]);
+                return;
+            }
+            
+            // Gérer l'upload de fichier si présent
+            $attachmentData = null;
+            if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                $attachmentData = $_FILES['attachment'];
+                error_log("[ApiController] sendGroupMessage - fichier détecté: " . $attachmentData['name']);
+            }
+            
+            // Récupérer le contenu du message
+            $content = $_POST['content'] ?? '';
+            if (empty($content) && !isset($_FILES['attachment'])) {
+                // Essayer de lire depuis le body JSON
+                $rawInput = file_get_contents('php://input');
+                $jsonData = json_decode($rawInput, true);
+                if ($jsonData && isset($jsonData['content'])) {
+                    $content = $jsonData['content'];
+                }
+            }
+            
+            error_log("[ApiController] sendGroupMessage - content: {$content}");
+            error_log("[ApiController] sendGroupMessage - has attachment: " . ($attachmentData ? 'oui' : 'non'));
+            
+            if (empty($content) && !$attachmentData) {
+                http_response_code(400);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Le message ne peut pas être vide"
+                ]);
+                return;
+            }
+            
+            // Préparer les données
+            $messageData = [
+                'content' => $content
+            ];
+            
+            // Utiliser makeRequestWithFile si on a une pièce jointe
+            if ($attachmentData) {
+                $response = $this->apiService->makeRequestWithFile(
+                    "messages/{$groupId}/send",
+                    "POST",
+                    $messageData,
+                    $attachmentData
+                );
+            } else {
+                $response = $this->apiService->makeRequest(
+                    "messages/{$groupId}/send",
+                    "POST",
+                    $messageData
+                );
+            }
+            
+            error_log("[ApiController] sendGroupMessage - response: " . json_encode($response));
+            
+            if ($response['success']) {
+                http_response_code(201);
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Message envoyé avec succès",
+                    "data" => $response['data'] ?? null
+                ]);
+            } else {
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Erreur lors de l'envoi du message: " . ($response['message'] ?? 'Erreur inconnue')
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("[ApiController] sendGroupMessage - exception: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                "success" => false,
+                "message" => "Erreur lors de l'envoi du message: " . $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
      * Récupère les messages d'un topic
      */
     public function getTopicMessages($topicId) {
@@ -2161,7 +2298,7 @@ class ApiController {
             }
             
             // Appeler l'API backend pour récupérer les messages du topic
-            $response = $this->apiService->makeRequest("topics/{$topicId}/messages", "GET");
+            $response = $this->apiService->makeRequest("messages/topic/{$topicId}/history", "GET");
             
             error_log("[ApiController] getTopicMessages - response: " . json_encode($response));
             
@@ -2235,14 +2372,14 @@ class ApiController {
             // Utiliser makeRequestWithFile si on a une pièce jointe
             if ($attachmentData) {
                 $response = $this->apiService->makeRequestWithFile(
-                    "topics/{$topicId}/messages",
+                    "messages/topic/{$topicId}/send",
                     "POST",
                     $messageData,
                     $attachmentData
                 );
             } else {
                 $response = $this->apiService->makeRequest(
-                    "topics/{$topicId}/messages",
+                    "messages/topic/{$topicId}/send",
                     "POST",
                     $messageData
                 );

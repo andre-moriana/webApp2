@@ -109,6 +109,10 @@ class Router {
         $this->addRoute("POST", "/groups/{groupId}/topics", "TopicController@store");
         $this->addRoute("GET", "/groups/{groupId}/topics/{topicId}", "TopicController@show");
         
+        // Routes API pour les messages de groupes
+        $this->addRoute("GET", "/api/messages/{groupId}/history", "ApiController@getGroupMessages");
+        $this->addRoute("POST", "/api/messages/{groupId}/send", "ApiController@sendGroupMessage");
+        
         // Routes API pour les formulaires (proxy vers API externe)
         $this->addRoute("GET", "/api/topics/{topicId}/messages", "ApiController@getTopicMessages");
         $this->addRoute("POST", "/api/topics/{topicId}/messages", "ApiController@sendTopicMessage");
