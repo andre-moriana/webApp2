@@ -376,6 +376,24 @@ class Router {
         if (!in_array($currentRoute, $publicRoutes)) {
             // Vérifier si l"utilisateur est connecté
             if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
+                // Si c'est une requête AJAX/API, retourner JSON
+                $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                         strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+                $isApiRequest = strpos($_SERVER['REQUEST_URI'], '/api/') !== false || 
+                               strpos($_SERVER['REQUEST_URI'], '/messages/') !== false;
+                
+                error_log("[Router Auth] Non authentifié - URI: " . $_SERVER['REQUEST_URI'] . " isAjax: " . ($isAjax ? 'yes' : 'no') . " isApi: " . ($isApiRequest ? 'yes' : 'no'));
+                
+                if ($isAjax || $isApiRequest) {
+                    header('Content-Type: application/json');
+                    http_response_code(401);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Non authentifié. Veuillez vous reconnecter.'
+                    ]);
+                    exit;
+                }
+                
                 header("Location: /login");
                 exit;
             }

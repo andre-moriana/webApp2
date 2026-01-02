@@ -18,8 +18,20 @@ if (file_exists('.env')) {
 // Configuration des erreurs
 error_reporting(E_ALL);
 ini_set('display_errors', $_ENV['APP_DEBUG'] ?? '1');
+
+// Configuration de la session
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_strict_mode', 1);
+ini_set('session.cookie_samesite', 'Lax');
+
 // Démarrage de la session
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+error_log("[index.php] Session démarrée - ID: " . session_id());
+error_log("[index.php] Session logged_in: " . (isset($_SESSION['logged_in']) ? ($_SESSION['logged_in'] ? 'true' : 'false') : 'not set'));
+
 // Inclusion du routeur principal
 require_once 'app/Config/Router.php';
 // Initialisation et exécution du routeur

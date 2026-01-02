@@ -9,6 +9,34 @@ class ApiController {
         $this->baseUrl = $_ENV["API_BASE_URL"];
     }
     
+    /**
+     * Vérifie l'authentification de l'utilisateur via la session
+     * Retourne true si authentifié, false sinon
+     */
+    private function isAuthenticated() {
+        // Démarrer la session si ce n'est pas déjà fait
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        error_log("[Auth Check] Session ID: " . session_id());
+        error_log("[Auth Check] Session logged_in: " . (isset($_SESSION['logged_in']) ? $_SESSION['logged_in'] : 'not set'));
+        error_log("[Auth Check] Session user: " . (isset($_SESSION['user']) ? json_encode($_SESSION['user']) : 'not set'));
+        
+        return isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+    }
+    
+    /**
+     * Envoie une réponse d'erreur d'authentification
+     */
+    private function sendUnauthenticatedResponse() {
+        error_log("[Auth] Utilisateur non authentifié - envoi erreur 401");
+        $this->sendJsonResponse([
+            'success' => false,
+            'message' => 'Non authentifié. Veuillez vous reconnecter.'
+        ], 401);
+    }
+    
     public function testMessages() {
         echo json_encode([
             'success' => true,
@@ -830,11 +858,9 @@ class ApiController {
     }
 
     public function sendGroupMessage($groupId) {
-        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            $this->sendJsonResponse([
-                'success' => false,
-                'message' => 'Non authentifié'
-            ], 401);
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
         }
 
         $content = $_POST['content'] ?? '';
