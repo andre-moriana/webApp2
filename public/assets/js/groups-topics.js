@@ -653,6 +653,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!messageContent || !topicId) return;
             
+            console.log('[DEBUG] Envoi message topic - topicId:', topicId, 'content:', messageContent);
+            
             // Appeler le backend de l'application web au lieu de l'API externe directement
             fetch(`/api/topics/${topicId}/messages`, {
                 method: 'POST',
@@ -665,13 +667,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             })
             .then(response => {
-                if (!response.ok) {
-                    console.error('Erreur HTTP:', response.status, response.statusText);
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return response.json();
+                console.log('[DEBUG] Réponse reçue - Status:', response.status, 'OK:', response.ok);
+                console.log('[DEBUG] Content-Type:', response.headers.get('content-type'));
+                
+                // Lire le texte brut d'abord
+                return response.text().then(text => {
+                    console.log('[DEBUG] Réponse brute (100 premiers caractères):', text.substring(0, 100));
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+                    }
+                    
+                    // Essayer de parser en JSON
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.error('[DEBUG] Erreur parsing JSON:', e);
+                        console.error('[DEBUG] Texte complet:', text);
+                        throw new Error('La réponse n\'est pas du JSON valide');
+                    }
+                });
             })
             .then(data => {
+                console.log('[DEBUG] Données JSON parsées:', data);
                 if (data.success) {
                     messageInput.value = '';
                     // Recharger les messages
