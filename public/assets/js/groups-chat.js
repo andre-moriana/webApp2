@@ -80,17 +80,28 @@ function createMessageElement(message) {
         // IMPORTANT: Corriger l'URL pour tous les fichiers
         // Si l'URL contient déjà api.arctraining.fr, l'utiliser telle quelle
         if (originalUrl.includes('api.arctraining.fr')) {
-            attachmentUrl = originalUrl;
+            // L'URL est déjà complète, l'utiliser telle quelle
         } else {
             // Pour tous les autres cas, construire l'URL correcte vers api.arctraining.fr
             if (originalUrl.startsWith('/uploads/')) {
-                attachmentUrl = 'https://api.arctraining.fr' + originalUrl;
+                originalUrl = 'https://api.arctraining.fr' + originalUrl;
             } else if (originalUrl.startsWith('uploads/')) {
-                attachmentUrl = 'https://api.arctraining.fr/' + originalUrl;
+                originalUrl = 'https://api.arctraining.fr/' + originalUrl;
             } else {
-                // Si c'est juste un nom de fichier
-                attachmentUrl = 'https://api.arctraining.fr/uploads/messages/' + originalUrl;
-          }
+                // Si c'est juste un nom de fichier, utiliser le dossier messages pour les groupes
+                originalUrl = 'https://api.arctraining.fr/uploads/messages/' + originalUrl;
+            }
+        }
+        
+        // Pour les images, utiliser la route proxy du backend WebApp2
+        if (isImage) {
+            attachmentUrl = '/messages/image/' + (message._id || message.id) + '?url=' + encodeURIComponent(originalUrl);
+        } else if (isPdf) {
+            // Pour les PDF, utiliser la route d'attachment avec paramètre pour affichage inline
+            attachmentUrl = '/messages/attachment/' + (message._id || message.id) + '?inline=1&url=' + encodeURIComponent(originalUrl);
+        } else {
+            // Pour les autres fichiers, utiliser la route de téléchargement
+            attachmentUrl = '/messages/attachment/' + (message._id || message.id) + '?url=' + encodeURIComponent(originalUrl);
         }
         
         attachmentHtml = `
