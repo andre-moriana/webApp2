@@ -6,7 +6,7 @@ class ApiController {
     
     public function __construct() {
         $this->apiService = new ApiService();
-        $this->baseUrl = $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000/api";
+        $this->baseUrl = $_ENV["API_BASE_URL"];
     }
     
     public function testMessages() {
@@ -684,7 +684,7 @@ class ApiController {
                     
                     if ($downloadUrl) {
                         // Si l'URL est relative, la rendre absolue
-                        if (strpos($downloadUrl, 'http') !== 0) {
+                        if (strpos($downloadUrl, 'https') !== 0) {
                             $baseUrl = rtrim($this->baseUrl, '/api');
                             $downloadUrl = $baseUrl . '/' . ltrim($downloadUrl, '/');
                         }
@@ -944,7 +944,7 @@ class ApiController {
                 $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
                 
                 // Si l'URL est relative, la rendre absolue
-                if (strpos($imageUrl, 'http') !== 0) {
+                if (strpos($imageUrl, 'https') !== 0) {
                     $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
                 }
                 
@@ -1055,7 +1055,7 @@ class ApiController {
                     
                     if ($downloadUrl) {
                         // Si l'URL est relative, la rendre absolue
-                        if (strpos($downloadUrl, 'http') !== 0) {
+                        if (strpos($downloadUrl, 'https') !== 0) {
                             $baseUrl = rtrim($this->baseUrl, '/api');
                             $downloadUrl = $baseUrl . '/' . ltrim($downloadUrl, '/');
                         }
@@ -1114,7 +1114,7 @@ class ApiController {
             $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
             
             // Si l'URL est relative, la rendre absolue
-            if (strpos($imageUrl, 'http') !== 0) {
+            if (strpos($imageUrl, 'https') !== 0) {
                 // URL relative, la rendre absolue
                 $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
             } elseif (strpos($imageUrl, $baseUrlClean) === false && strpos($imageUrl, $this->baseUrl) === false) {
