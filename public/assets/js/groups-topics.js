@@ -608,10 +608,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (canEdit || canDelete) {
                 actionsHtml = '<div class="message-actions">';
                 if (canEdit) {
-                    actionsHtml += `<button type="button" class="btn btn-sm btn-edit" onclick="editTopicMessage('${message._id || message.id}')"><i class="fas fa-edit"></i> Modifier</button>`;
+                    actionsHtml += `<button type="button" class="btn btn-sm btn-edit" onclick="editTopicMessage('${message._id || message.id}')"><i class="fas fa-edit"></i></button>`;
                 }
                 if (canDelete) {
-                    actionsHtml += `<button type="button" class="btn btn-sm btn-delete" onclick="deleteTopicMessage('${message._id || message.id}')"><i class="fas fa-trash"></i> Supprimer</button>`;
+                    actionsHtml += `<button type="button" class="btn btn-sm btn-delete" onclick="deleteTopicMessage('${message._id || message.id}')"><i class="fas fa-trash"></i></button>`;
                 }
                 actionsHtml += '</div>';
             }
