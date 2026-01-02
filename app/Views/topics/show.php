@@ -67,9 +67,20 @@ $title = htmlspecialchars($topic['title'] ?? 'Sujet') . " - Portail Archers de G
 
 <!-- Variables PHP pour JavaScript -->
 <script>
+console.log('=== DEBUT SCRIPT INLINE topics/show.php ===');
+console.log('Session user:', <?php echo json_encode($_SESSION["user"] ?? null); ?>);
+console.log('Topic:', <?php echo json_encode($topic ?? null); ?>);
+
 window.currentUserId = <?php echo $_SESSION["user"]["id"]; ?>;
 window.currentTopicId = <?php echo $topic['id']; ?>;
 window.isTopicPage = true;
+
+console.log('Variables globales définies:', {
+    currentUserId: window.currentUserId,
+    currentTopicId: window.currentTopicId,
+    isTopicPage: window.isTopicPage
+});
+console.log('=== FIN SCRIPT INLINE ===');
 </script>
 
 <!-- Inclusion du script JavaScript externe -->
