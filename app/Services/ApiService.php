@@ -759,7 +759,7 @@ class ApiService {
             
             if ($file && is_array($file) && isset($file['tmp_name'])) {
                 $postData = $data ?? [];
-                $postData['document'] = new CURLFile(
+                $postData['attachment'] = new CURLFile(
                     $file['tmp_name'],
                     $file['type'],
                     $file['name']
