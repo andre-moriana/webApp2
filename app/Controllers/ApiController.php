@@ -283,7 +283,6 @@ class ApiController {
             }
             
             // Construire l'URL directe vers l'image sur le serveur backend
-            // L'utilisateur a indiqué que l'URL directe fonctionne : http://82.67.123.22:25000/uploads/...
             $baseUrlWithoutApi = rtrim($this->baseUrl, '/api');
             $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
             $directUrl = $baseUrlClean . '/uploads/' . $cleanPath;
