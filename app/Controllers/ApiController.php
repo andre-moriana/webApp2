@@ -994,35 +994,22 @@ class ApiController {
                 // Décoder l'URL si elle est encodée
                 $imageUrl = urldecode($imageUrl);
                 
+            // S'assurer que l'URL pointe vers l'API externe
+            $baseUrlWithoutApi = rtrim($this->baseUrl, '/api');
+            $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
+            
+            // Si l'URL ne commence pas par https://, la rendre absolue
+            if (strpos($imageUrl, 'https://') !== 0) {
                 // Corriger les URLs incomplètes qui pointent vers /uploads/ sans le dossier messages/events
-                // Si l'URL est /uploads/filename.pdf, essayer de déterminer le bon dossier
                 if (preg_match('#^/uploads/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))$#i', $imageUrl, $matches)) {
                     // C'est un fichier directement dans /uploads/, pas dans un sous-dossier
-                    // Essayer de déterminer si c'est un message de groupe ou un événement
-                    // Par défaut, on essaie /uploads/messages/ d'abord
                     $filename = $matches[1];
                     $imageUrl = '/uploads/messages/' . $filename;
                 }
                 
-                // S'assurer que l'URL pointe vers l'API externe
-                $baseUrlWithoutApi = rtrim($this->baseUrl, '/api');
-                $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
-                
-                // Si l'URL est relative, la rendre absolue
-                if (strpos($imageUrl, 'https') !== 0) {
-                    $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
-                }
-                
-                // Si l'URL ne contient toujours pas /uploads/messages/ ou /uploads/events/, essayer de la corriger
-                if (strpos($imageUrl, '/uploads/messages/') === false && strpos($imageUrl, '/uploads/events/') === false) {
-                    // Extraire le nom du fichier
-                    if (preg_match('#/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))(?:\?|$)#i', $imageUrl, $fileMatches)) {
-                        $filename = $fileMatches[1];
-                        // Par défaut, utiliser /uploads/messages/ pour les messages de groupe
-                        // (on pourrait améliorer en vérifiant le type de message via l'API)
-                        $imageUrl = $baseUrlClean . '/uploads/messages/' . $filename;
-                    }
-                }
+                // Toujours rendre l'URL absolue
+                $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
+            }
                 
                 // Faire une requête pour récupérer le fichier
                 $ch = curl_init();
