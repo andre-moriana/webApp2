@@ -365,7 +365,7 @@
                                                 <li class="mb-2">
                                                     <div class="font-weight-bold">
                                                         <i class="fas fa-folder text-info" style="font-size: 0.7rem;"></i> 
-                                                        <a href="/groups" style="text-decoration: none; color: inherit;"><?php echo htmlspecialchars($group['name']); ?></a>
+                                                        <?php echo htmlspecialchars($group['name']); ?>
                                                         <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">
                                                             (<?php echo count($group['topics'] ?? []); ?> sujet<?php echo count($group['topics'] ?? []) > 1 ? 's' : ''; ?>)
                                                         </span>
@@ -375,7 +375,7 @@
                                                             <?php foreach ($group['topics'] as $topic): ?>
                                                                 <li class="mb-1">
                                                                     <i class="fas fa-comment text-muted" style="font-size: 0.6rem;"></i> 
-                                                                    <a href="/groups/<?php echo htmlspecialchars($group['id']); ?>/topics/<?php echo htmlspecialchars($topic['id']); ?>" style="text-decoration: none; color: inherit; transition: color 0.2s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='inherit'"><?php echo htmlspecialchars($topic['title']); ?></a>
+                                                                    <?php echo htmlspecialchars($topic['title']); ?>
                                                                 </li>
                                                             <?php endforeach; ?>
                                                         </ul>
