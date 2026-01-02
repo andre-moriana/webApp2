@@ -925,21 +925,30 @@ class ApiController {
     }
     
     public function updateMessage($messageId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+
+        error_log("[WebApp] updateMessage - MessageId: {$messageId}");
+        
         try {
-            // S'assurer qu'on est authentifié
-            $this->ensureAuthenticated();
             $input = json_decode(file_get_contents('php://input'), true);
             $content = $input['content'] ?? '';
+            
+            error_log("[WebApp] updateMessage - New content: " . ($content ?: '(vide)'));
+            
             if (empty($content)) {
-                http_response_code(400);
-                echo json_encode([
+                error_log("[WebApp] updateMessage - Erreur: contenu vide");
+                $this->sendJsonResponse([
                     "success" => false,
                     "message" => "Le contenu du message ne peut pas être vide"
-                ]);
+                ], 400);
                 return;
             }
             
             $response = $this->apiService->makeRequest("messages/{$messageId}", "PUT", ['content' => $content]);
+            error_log("[WebApp] updateMessage - Réponse: " . json_encode($response));
             
             if ($response['success']) {
                 http_response_code(200);
@@ -964,31 +973,34 @@ class ApiController {
     }
     
     public function deleteMessage($messageId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+
+        error_log("[WebApp] deleteMessage - MessageId: {$messageId}");
+        
         try {
-            // S'assurer qu'on est authentifié
-            $this->ensureAuthenticated();
-            
             $response = $this->apiService->makeRequest("messages/{$messageId}", "DELETE");
+            error_log("[WebApp] deleteMessage - Réponse: " . json_encode($response));
             
             if ($response['success']) {
-                http_response_code(200);
-                echo json_encode([
+                $this->sendJsonResponse([
                     "success" => true,
                     "message" => "Message supprimé avec succès"
                 ]);
             } else {
-                http_response_code($response['status_code'] ?? 500);
-                echo json_encode([
+                $this->sendJsonResponse([
                     "success" => false,
                     "message" => "Erreur lors de la suppression: " . ($response['message'] ?? 'Erreur inconnue')
-                ]);
+                ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
+            error_log("[WebApp] deleteMessage - Exception: " . $e->getMessage());
+            $this->sendJsonResponse([
                 "success" => false,
                 "message" => "Erreur lors de la suppression: " . $e->getMessage()
-            ]);
+            ], 500);
         }
     }
     
