@@ -89,7 +89,7 @@ function createMessageElement(message) {
                 attachmentUrl = 'https://api.arctraining.fr/' + originalUrl;
             } else {
                 // Si c'est juste un nom de fichier
-                attachmentUrl = 'https://api.arctraining.fr' + originalUrl;
+                attachmentUrl = 'https://api.arctraining.fr/uploads/messages/' + originalUrl;
           }
         }
         
