@@ -364,17 +364,27 @@ if (messageForm) {
             
             if (isTopicPage && topicId) {
                 // Envoyer un message de sujet via le backend PHP
-                // Note: Pour l'instant, on n'envoie que le texte (les pièces jointes peuvent être ajoutées plus tard)
+                // Utiliser FormData pour supporter les pièces jointes
+                const formData = new FormData();
+                formData.append('content', content);
+                
+                // Ajouter le fichier s'il y en a un
+                if (attachmentInput && attachmentInput.files && attachmentInput.files[0]) {
+                    const file = attachmentInput.files[0];
+                    formData.append('attachment', file);
+                    console.log('[Client] Fichier ajouté au topic:', file.name, file.type, file.size);
+                }
+                
+                console.log('[Client] Envoi du message au sujet:', topicId);
+                console.log('[Client] Contenu:', content);
+                
                 response = await fetch(`/api/topics/${topicId}/messages`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     credentials: 'same-origin',
-                    body: JSON.stringify({
-                        content: content
-                    })
+                    body: formData
                 });
+                
+                console.log('[Client] Réponse reçue - Status:', response.status, response.statusText);
             } else {
                 // Envoyer un message de groupe (code existant)
                 // Utiliser FormData comme l'app mobile
