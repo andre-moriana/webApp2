@@ -1107,6 +1107,12 @@ class ApiController {
                     
                     header('Content-Type: ' . $mimeType);
                     
+                    // Ajouter les headers CORS pour permettre l'affichage dans un iframe
+                    header('Access-Control-Allow-Origin: *');
+                    header('Access-Control-Allow-Methods: GET, OPTIONS');
+                    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+                    header('X-Content-Type-Options: nosniff');
+                    
                     // Pour les PDF en mode inline, utiliser 'inline', sinon 'attachment'
                     if ($inline && $mimeType === 'application/pdf') {
                         header('Content-Disposition: inline; filename="attachment_' . $messageId . '.pdf"');
@@ -1150,6 +1156,12 @@ class ApiController {
                     }
                     
                     header('Content-Type: ' . $mimeType);
+                    
+                    // Ajouter les headers CORS pour permettre l'affichage dans un iframe
+                    header('Access-Control-Allow-Origin: *');
+                    header('Access-Control-Allow-Methods: GET, OPTIONS');
+                    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+                    header('X-Content-Type-Options: nosniff');
                     
                     // Pour les PDF en mode inline, utiliser 'inline', sinon 'attachment'
                     if ($inline && $mimeType === 'application/pdf') {

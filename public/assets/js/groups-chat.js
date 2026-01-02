@@ -125,10 +125,11 @@ function createMessageElement(message) {
                         <iframe src="${attachmentUrl}" 
                                 class="pdf-preview"
                                 style="width: 100%; max-width: 600px; height: 400px; border: 1px solid #dee2e6; border-radius: 8px;"
-                                title="${originalName}">
+                                title="${originalName}"
+                                type="application/pdf">
                         </iframe>
                         <div class="mt-2">
-                            <a href="${attachmentUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <a href="${attachmentUrl.replace('?inline=1&', '?')}" target="_blank" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-download me-1"></i>Télécharger le PDF
                             </a>
                         </div>
@@ -299,7 +300,15 @@ if (messageForm) {
         e.preventDefault();
         
         const content = messageInput.value.trim();
-        if (!content) return;
+        
+        // Récupérer l'input de fichier pour vérifier s'il y a un fichier
+        const attachmentInput = document.getElementById('message-attachment');
+        const hasFile = attachmentInput && attachmentInput.files && attachmentInput.files[0];
+        
+        // Vérifier qu'il y a au moins du contenu ou un fichier
+        if (!content && !hasFile) {
+            return;
+        }
         
         // Vérifier si on est sur une page de sujet
         const isTopicPage = typeof window.isTopicPage !== 'undefined' && window.isTopicPage;
@@ -331,9 +340,6 @@ if (messageForm) {
         // Envoyer le message au backend
         try {
             let response;
-            
-            // Récupérer l'input de fichier une seule fois
-            const attachmentInput = document.getElementById('message-attachment');
             
             if (isTopicPage && topicId) {
                 // Envoyer un message de sujet via le backend PHP
