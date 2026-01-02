@@ -246,12 +246,6 @@
                                                     <i class="fas fa-dumbbell me-2"></i>
                                                     <?php echo htmlspecialchars($exerciseData['exercise_title']); ?>
                                                 </h6>
-                                                <div class="btn-group w-100 w-md-auto" role="group">
-                                                   <button type="button" class="btn btn-success btn-sm start-session-btn" 
-                                                            onclick="startTrainingSession(<?php echo $exerciseId; ?>, '<?php echo htmlspecialchars($exerciseData['exercise_title'], ENT_QUOTES); ?>')">
-                                                        <i class="fas fa-play me-1"></i><span class="d-none d-sm-inline">Commencer une session</span><span class="d-sm-none">Commencer</span>
-                                                    </button>
-                                                </div>
                                             </div>
                                         </div>
                                         <div class="card-body">
@@ -561,81 +555,6 @@
                     </div>
                     <?php endif; ?>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal pour commencer une session d'entraînement -->
-<div class="modal fade" id="trainingSessionModal" tabindex="-1" aria-labelledby="trainingSessionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content session-modal">
-            <div class="modal-header">
-                <h5 class="modal-title" id="trainingSessionModalLabel">
-                    <i class="fas fa-bullseye me-2"></i>Session d'entraînement
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Informations de la session -->
-                <div class="text-center mb-3">
-                    <h6 id="sessionExerciseTitle">Exercice</h6>
-                </div>
-                
-                <!-- Statistiques de la session -->
-                <div class="row text-center mb-3">
-                    <div class="col-4">
-                        <div class="session-stats">
-                            <div class="h5 mb-0" id="sessionVolleys">0</div>
-                            <small class="text-muted">Volées</small>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="session-stats">
-                            <div class="h5 mb-0" id="sessionArrows">0</div>
-                            <small class="text-muted">Flèches</small>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="session-stats">
-                            <div class="h5 mb-0" id="sessionTime">00:00</div>
-                            <small class="text-muted">Temps</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Saisie des flèches -->
-                <div id="arrowInputSection">
-                    <label for="arrowCount" class="form-label">Nombre de flèches dans cette volée :</label>
-                    <div class="input-group mb-3">
-                        <input type="number" class="form-control" id="arrowCount" min="1" max="20" value="6" placeholder="6">
-                        <button class="btn btn-primary" type="button" id="addVolleyBtn">
-                            <i class="fas fa-plus"></i> Ajouter volée
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Liste des volées -->
-                <div id="volleysList" class="volleys-list mb-3">
-                    <!-- Les volées seront ajoutées ici dynamiquement -->
-                </div>
-                
-                <!-- Section de fin de session -->
-                <div id="endSessionSection" class="end-session-section" style="display: none;">
-                    <hr>
-                    <div class="mb-3">
-                        <label for="sessionNotes" class="form-label">Notes de la session (optionnel) :</label>
-                        <textarea class="form-control" id="sessionNotes" rows="3" placeholder="Commentaires sur cette session..."></textarea>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelSessionBtn">
-                    <i class="fas fa-times"></i> Annuler
-                </button>
-                <button type="button" class="btn btn-danger" id="endSessionBtn" style="display: none;">
-                    <i class="fas fa-stop"></i> Terminer la session
-                </button>
             </div>
         </div>
     </div>
