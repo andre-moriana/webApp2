@@ -103,6 +103,8 @@ function continueTraining(trainingId) {
 }
 
 function deleteTraining(trainingId) {
+    console.log('🔍 deleteTraining called with ID:', trainingId);
+    
     // Vérifier si l'utilisateur est connecté
     if (typeof window.isLoggedIn !== 'undefined' && !window.isLoggedIn) {
         alert('Vous devez être connecté pour effectuer cette action.\n\nVeuillez vous reconnecter.');
@@ -111,6 +113,8 @@ function deleteTraining(trainingId) {
     }
     
     if (confirm('Êtes-vous sûr de vouloir supprimer ce tir compté ?')) {
+        console.log('✅ Confirmation OK, début de la requête DELETE');
+        
         // Faire la requête vers le contrôleur frontend
         fetch('/scored-trainings/delete/' + trainingId, {
             method: 'POST',
@@ -120,6 +124,7 @@ function deleteTraining(trainingId) {
             }
         })
         .then(response => {
+            console.log('📡 Réponse reçue:', response.status, response.statusText);
             if (!response.ok) {
                 console.error('❌ Erreur HTTP:', response.status, response.statusText);
                 throw new Error('Erreur HTTP: ' + response.status + ' ' + response.statusText);
@@ -127,6 +132,7 @@ function deleteTraining(trainingId) {
             return response.text();
         })
         .then(text => {
+            console.log('📄 Texte brut reçu:', text.substring(0, 200));
             // Nettoyer la réponse des caractères BOM et autres caractères invisibles
             let cleanText = text.replace(/^\uFEFF/, '').replace(/^\s+/, '').replace(/\s+$/, '');
             
@@ -141,8 +147,10 @@ function deleteTraining(trainingId) {
             
             try {
                 const result = JSON.parse(cleanText);
+                console.log('✅ JSON parsé:', result);
                
                 if (result.success) {
+                    alert('Tir compté supprimé avec succès');
                     // Préserver les paramètres de l'URL lors du rechargement
                     const currentUrl = new URL(window.location);
                     window.location.href = currentUrl.toString();
