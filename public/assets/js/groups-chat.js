@@ -224,6 +224,7 @@ async function loadGroupMessages(groupId) {
     `;
     
     try {
+        console.log('[LOAD] Appel API pour groupe:', groupId);
         const response = await fetch(`/api/messages/${groupId}/history`, {
             headers: {
                 'Authorization': `Bearer ${authToken || localStorage.getItem('token') || sessionStorage.getItem('token')}`
@@ -231,9 +232,23 @@ async function loadGroupMessages(groupId) {
             credentials: 'same-origin'
         });
         
+        console.log('[LOAD] Réponse reçue:', response.status, response.statusText);
         
         if (response.ok) {
-            const data = await response.json();
+            const contentType = response.headers.get('content-type');
+            console.log('[LOAD] Content-Type:', contentType);
+            
+            const text = await response.text();
+            console.log('[LOAD] Réponse brute (100 premiers caractères):', text.substring(0, 100));
+            
+            let data;
+            try {
+                data = JSON.parse(text);
+                console.log('[LOAD] JSON parsé avec succès');
+            } catch (e) {
+                console.error('[LOAD] Erreur de parsing JSON:', e);
+                throw new Error('Réponse invalide du serveur: ' + text.substring(0, 100));
+            }
             // L'API retourne directement un tableau de messages
             let messages = [];
             if (Array.isArray(data)) {
