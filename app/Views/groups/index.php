@@ -4,7 +4,7 @@ $title = "Gestion des groupes - Portail Archers de Gémenos";
 
 <!-- Inclusion des styles -->
 <link rel="stylesheet" href="/public/assets/css/events.css">
-<link rel="stylesheet" href="/public/assets/css/groups-chat.css">
+<link rel="stylesheet" href="/public/assets/css/groups-chat.css?v=<?php echo time(); ?>">
 
 <div class="container-fluid">
     <div class="row">
