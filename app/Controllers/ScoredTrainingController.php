@@ -421,7 +421,7 @@ class ScoredTrainingController {
         try {
             
             // Construire l'URL avec le user_id en paramètre
-            $baseUrl = $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000/api";
+            $baseUrl = $_ENV["API_BASE_URL"] ?? "https://api.actraining.fr/api";
             $url = $baseUrl . "/scored-training/" . $trainingId . "/end?user_id=" . $selectedUserId;
             
             $ch = curl_init();
@@ -539,7 +539,7 @@ class ScoredTrainingController {
     private function getScoredTrainingByIdWithUserId($trainingId, $selectedUserId) {
         try {
             // Utiliser l'API externe avec le user_id sélectionné
-            $baseUrl = $_ENV["API_BASE_URL"] ?? "http://82.67.123.22:25000/api";
+            $baseUrl = $_ENV["API_BASE_URL"] ?? "https://api.actraining.fr/api";
             $url = $baseUrl . "/scored-training/" . $trainingId . "?user_id=" . $selectedUserId;
             
             $ch = curl_init();
