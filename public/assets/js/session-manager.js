@@ -85,8 +85,8 @@ class SessionManager {
      * Pour les pages normales, vérifier périodiquement la session sans la maintenir active
      */
     startPeriodicCheck() {
-        // Vérifier toutes les 30 secondes si la session est toujours valide
-        setInterval(() => this.checkSessionOnly(), 30 * 1000);
+        // Vérifier toutes les 10 secondes si la session est toujours valide
+        setInterval(() => this.checkSessionOnly(), 10 * 1000);
     }
     
     /**
@@ -148,25 +148,19 @@ class SessionManager {
         
         // Sauvegarder l'URL actuelle pour rediriger après login (optionnel)
         const currentUrl = window.location.pathname + window.location.search;
-        if (currentUrl !== '/login') {
+        if (currentUrl !== '/login' && currentUrl !== '/logout') {
             sessionStorage.setItem('redirectAfterLogin', currentUrl);
         }
         
-        // Afficher un message à l'utilisateur
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: 'Session expirée',
-                text: 'Votre session a expiré. Vous allez être redirigé vers la page de connexion.',
-                icon: 'warning',
-                timer: 3000,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.href = '/login';
-            });
-        } else {
-            alert('Votre session a expiré. Vous allez être redirigé vers la page de connexion.');
-            window.location.href = '/login';
+        // Marquer que la session a expiré pour éviter les multiples redirections
+        if (sessionStorage.getItem('sessionExpired') === 'true') {
+            return; // Déjà en cours de redirection
         }
+        sessionStorage.setItem('sessionExpired', 'true');
+        
+        // Redirection immédiate vers la page de login
+        console.log('[SessionManager] Redirection immédiate vers /login');
+        window.location.replace('/login?expired=1');
     }
     
     /**

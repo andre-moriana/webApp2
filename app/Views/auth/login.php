@@ -23,6 +23,13 @@
                     </div>
                     
                     <div class="login-form">
+                        <?php if (isset($_GET['expired']) && $_GET['expired'] == '1'): ?>
+                            <div class="alert alert-warning" role="alert">
+                                <i class="fas fa-clock me-2"></i>
+                                Votre session a expiré. Veuillez vous reconnecter.
+                            </div>
+                        <?php endif; ?>
+                        
                         <?php if (isset($_SESSION['error'])): ?>
                             <div class="alert alert-danger" role="alert">
                                 <i class="fas fa-exclamation-triangle me-2"></i>

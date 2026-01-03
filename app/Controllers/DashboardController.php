@@ -2,6 +2,7 @@
 // Inclure ApiService
 require_once __DIR__ . '/../Services/ApiService.php';
 require_once __DIR__ . '/../Config/PermissionHelper.php';
+require_once __DIR__ . '/../Middleware/SessionGuard.php';
 
 class DashboardController {
     private $apiService;
@@ -11,11 +12,8 @@ class DashboardController {
     }
     
     public function index() {
-        // Vérifier si l'utilisateur est connecté
-        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            header('Location: /login');
-            exit;
-        }
+        // Vérifier la session avec le middleware
+        SessionGuard::check();
         
         $title = 'Tableau de bord - Portail Archers de Gémenos';
         

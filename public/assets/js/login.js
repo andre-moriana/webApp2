@@ -1,3 +1,6 @@
+// Nettoyer le flag de session expirée au chargement de la page de login
+sessionStorage.removeItem('sessionExpired');
+
 // Toggle password visibility
 document.getElementById('togglePassword').addEventListener('click', function() {
     const password = document.getElementById('password');
