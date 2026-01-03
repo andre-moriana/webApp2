@@ -14,7 +14,7 @@
     <link href="/public/assets/css/style.css" rel="stylesheet">
     <link href="/public/assets/css/chat-messages.css" rel="stylesheet">
     <!-- API Interceptor pour gérer les erreurs 401 -->
-    <script src="/public/assets/js/api-interceptor.js"></script>
+    <script src="/public/assets/js/api-interceptor.js?v=<?php echo time(); ?>"></script>
     <!-- CSS spécifique à la page (si défini) -->
     <?php if (isset($additionalCSS)): 
         foreach ($additionalCSS as $css): ?>

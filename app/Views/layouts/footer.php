@@ -33,7 +33,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <?php endif; ?>
 <!-- Gestionnaire de session (doit être chargé en premier) -->
-    <script src="/public/assets/js/session-manager.js"></script>
+    <script src="/public/assets/js/session-manager.js?v=<?php echo time(); ?>"></script>
 <!-- JavaScript personnalisé -->
     <script src="/public/assets/js/app.js"></script>
 <!-- JavaScript spécifique à la page (si défini) -->
