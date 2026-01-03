@@ -120,7 +120,14 @@
                     console.log('[SessionManager] Session expirée, redirection vers login');
                     this.handleSessionExpired();
                 } else {
-                    console.log('[SessionManager] Session active maintenue');
+                    // Vérifier si le token a été rafraîchi
+                    if (data.token && data.token.refreshed) {
+                        console.log('[SessionManager] ✅ Token JWT rafraîchi! Nouvelle expiration:', data.token.expires_at);
+                    } else if (data.token) {
+                        console.log('[SessionManager] Session maintenue - Token expire dans:', Math.floor(data.token.expires_in / 60), 'minutes');
+                    } else {
+                        console.log('[SessionManager] Session active maintenue');
+                    }
                 }
             } catch (error) {
                 console.error('[SessionManager] Erreur lors de la vérification de session:', error);

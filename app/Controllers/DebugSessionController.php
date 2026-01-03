@@ -248,6 +248,16 @@ class DebugSessionController {
         <?php
     }
     
+    public function testLongSession() {
+        // Serve the HTML file directly
+        $filePath = __DIR__ . '/../../public/test-long-session.html';
+        if (file_exists($filePath)) {
+            readfile($filePath);
+        } else {
+            echo "Fichier test-long-session.html introuvable";
+        }
+    }
+    
     private function renderDebugPage() {
         // Inclure le contenu de test-session-debug.php
         include __DIR__ . '/../../public/test-session-debug.php';
