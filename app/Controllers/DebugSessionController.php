@@ -20,6 +20,11 @@ class DebugSessionController {
         $this->renderSimplePage();
     }
     
+    public function expireToken() {
+        // Inclure le script d'expiration
+        include __DIR__ . '/../../public/expire-token-test.php';
+    }
+    
     private function renderSimplePage() {
         ?>
 <!DOCTYPE html>
