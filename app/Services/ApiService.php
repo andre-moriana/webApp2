@@ -43,7 +43,104 @@ class ApiService {
         }
     }
     
+    /**
+     * Vérifie si le token JWT est expiré en décodant le payload
+     */
+    private function isTokenExpired($token) {
+        if (!$token) {
+            return true;
+        }
+        
+        try {
+            $tokenParts = explode('.', $token);
+            if (count($tokenParts) !== 3) {
+                return true;
+            }
+            
+            $payload = json_decode(base64_decode($tokenParts[1]), true);
+            if (!$payload || !isset($payload['exp'])) {
+                return true;
+            }
+            
+            // Vérifier si le token expire dans moins de 5 minutes (300 secondes)
+            // On rafraîchit proactivement avant l'expiration
+            return (time() + 300) >= $payload['exp'];
+        } catch (Exception $e) {
+            error_log("Erreur vérification expiration token: " . $e->getMessage());
+            return true;
+        }
+    }
+    
+    /**
+     * Vérifie et rafraîchit le token si nécessaire avant chaque requête
+     */
+    private function ensureValidToken() {
+        // Si pas de token, pas besoin de vérifier
+        if (!$this->token) {
+            return;
+        }
+        
+        // Vérifier si le token est expiré
+        if ($this->isTokenExpired($this->token)) {
+            error_log("Token expiré, tentative de rafraîchissement...");
+            
+            // Essayer de rafraîchir le token si on a des identifiants
+            if (isset($_SESSION['refresh_token'])) {
+                $this->refreshToken();
+            } else {
+                // Pas de refresh token, nettoyer la session
+                error_log("Pas de refresh token disponible, session invalide");
+                $this->token = null;
+                $_SESSION['token'] = null;
+            }
+        }
+    }
+    
+    /**
+     * Rafraîchit le token JWT
+     */
+    private function refreshToken() {
+        try {
+            $refreshToken = $_SESSION['refresh_token'] ?? null;
+            if (!$refreshToken) {
+                return false;
+            }
+            
+            // Appeler l'endpoint de rafraîchissement sans vérifier le token
+            $oldToken = $this->token;
+            $this->token = $refreshToken; // Utiliser le refresh token temporairement
+            
+            $result = $this->makeRequest('auth/refresh', 'POST', ['refresh_token' => $refreshToken], false);
+            
+            if ($result['success'] && isset($result['data']['token'])) {
+                $this->token = $result['data']['token'];
+                $_SESSION['token'] = $this->token;
+                
+                // Mettre à jour le refresh token si fourni
+                if (isset($result['data']['refresh_token'])) {
+                    $_SESSION['refresh_token'] = $result['data']['refresh_token'];
+                }
+                
+                error_log("Token rafraîchi avec succès");
+                return true;
+            } else {
+                // Échec du rafraîchissement, restaurer l'ancien token
+                $this->token = $oldToken;
+                error_log("Échec du rafraîchissement du token");
+                return false;
+            }
+        } catch (Exception $e) {
+            error_log("Erreur lors du rafraîchissement du token: " . $e->getMessage());
+            return false;
+        }
+    }
+    
     public function makeRequest($endpoint, $method = 'GET', $data = null, $retryWithHttp = true) {
+        // Vérifier et rafraîchir le token si nécessaire (sauf pour auth/refresh)
+        if ($endpoint !== 'auth/refresh' && $endpoint !== 'auth/login') {
+            $this->ensureValidToken();
+        }
+        
         $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
         error_log("DEBUG ApiService makeRequest: URL: " . $url . ", Méthode: " . $method);
         $ch = curl_init();
@@ -122,6 +219,27 @@ class ApiService {
             ];
         }
         curl_close($ch);
+        
+        // Gérer les erreurs 401 (Unauthorized) - Token invalide
+        if ($httpCode === 401) {
+            error_log("Erreur 401: Token invalide ou expiré");
+            
+            // Nettoyer la session et le token
+            $this->token = null;
+            if (isset($_SESSION['token'])) {
+                unset($_SESSION['token']);
+            }
+            if (isset($_SESSION['refresh_token'])) {
+                unset($_SESSION['refresh_token']);
+            }
+            
+            return [
+                'success' => false,
+                'status_code' => 401,
+                'unauthorized' => true,
+                'message' => 'Session expirée, veuillez vous reconnecter'
+            ];
+        }
         
         // Nettoyer le BOM (Byte Order Mark) qui peut causer des erreurs de décodage
         $cleanResponse = preg_replace('/^\xEF\xBB\xBF/', '', $response);
