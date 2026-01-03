@@ -208,6 +208,10 @@ class Router {
         $this->addRoute("POST", "/auth/delete-account-request", "AuthController@deleteAccountRequest");
         $this->addRoute("GET", "/auth/validate-deletion/{token}", "AuthController@validateDeletion");
         
+        // Route API pour vérifier le token JWT
+        $this->addRoute("GET", "/api/auth/verify", "AuthController@verify");
+        $this->addRoute("POST", "/api/auth/verify", "AuthController@verify");
+        
         // Routes de validation des utilisateurs (protégées - admin seulement)
         $this->addRoute("GET", "/user-validation", "UserValidationController@index");
         $this->addRoute("POST", "/user-validation/approve", "UserValidationController@approve");
