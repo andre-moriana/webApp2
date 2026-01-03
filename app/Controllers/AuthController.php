@@ -152,6 +152,7 @@ class AuthController {
                 // Sauvegarder le token dans la session
                 $_SESSION['token'] = $loginResult['token'];
                 $_SESSION['logged_in'] = true;
+                $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                 
                 header('Location: /dashboard');
                 exit;
@@ -169,6 +170,7 @@ class AuthController {
                     ];
                     $_SESSION['token'] = 'demo-token-' . time();
                     $_SESSION['logged_in'] = true;
+                    $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                     
                     header('Location: /dashboard');
                     exit;
@@ -191,6 +193,7 @@ class AuthController {
                     'status' => 'active'
                 ];
                 $_SESSION['token'] = 'demo-token-' . time();
+                $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                 $_SESSION['logged_in'] = true;
                 
                 header('Location: /dashboard');

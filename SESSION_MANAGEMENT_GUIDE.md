@@ -110,11 +110,48 @@ keepAlivePages: [
 ### Nouveaux fichiers
 - [`/webApp2/public/keep-alive.php`](public/keep-alive.php) - Endpoint de vérification de session
 - [`/webApp2/public/assets/js/session-manager.js`](public/assets/js/session-manager.js) - Gestionnaire JavaScript
+- [`/webApp2/app/Middleware/SessionGuard.php`](app/Middleware/SessionGuard.php) - Middleware de vérification côté serveur
 
 ### Fichiers modifiés
-- [`/webApp2/index.php`](index.php) - Augmentation de la durée de session
+- [`/webApp2/index.php`](index.php) - Augmentation de la durée de session + initialisation last_activity
 - [`/webApp2/app/Views/layouts/footer.php`](app/Views/layouts/footer.php) - Inclusion du script session-manager
 - [`/webApp2/app/Config/Router.php`](app/Config/Router.php) - Ajout de la route keep-alive
+- [`/webApp2/app/Controllers/DashboardController.php`](app/Controllers/DashboardController.php) - Utilisation du SessionGuard
+- [`/webApp2/app/Controllers/AuthController.php`](app/Controllers/AuthController.php) - Initialisation du timestamp last_activity
+- [`/webApp2/app/Views/auth/login.php`](app/Views/auth/login.php) - Message d'expiration de session
+- [`/webApp2/public/assets/js/login.js`](public/assets/js/login.js) - Nettoyage du flag sessionExpired
+
+## Corrections apportées (v2)
+
+### Problème identifié
+La redirection vers la page de login ne fonctionnait pas correctement. L'utilisateur restait sur le dashboard sans données au lieu d'être redirigé automatiquement.
+
+### Solutions implémentées
+
+#### 1. Redirection JavaScript immédiate
+- **Avant** : Utilisation de SweetAlert avec délai de 3 secondes
+- **Après** : Redirection immédiate avec `window.location.replace('/login?expired=1')`
+- Protection contre les redirections multiples avec `sessionStorage`
+
+#### 2. Vérification plus fréquente
+- **Avant** : Vérification toutes les 30 secondes sur les pages normales
+- **Après** : Vérification toutes les **10 secondes** pour détecter rapidement l'expiration
+
+#### 3. Middleware côté serveur (`SessionGuard`)
+Nouveau middleware PHP qui vérifie :
+- ✅ Présence de la session valide
+- ✅ Timestamp de dernière activité (max 8 heures)
+- ✅ Existence de l'utilisateur dans la session
+- ✅ Redirection automatique vers `/login?expired=1`
+
+#### 4. Tracking de l'activité
+- Ajout de `$_SESSION['last_activity']` initialisé au login
+- Mise à jour à chaque requête vers keep-alive.php
+- Vérification du timeout de 8 heures
+
+#### 5. Message d'expiration
+- Ajout d'un message d'avertissement sur la page de login quand `?expired=1`
+- Nettoyage du flag `sessionExpired` au chargement de la page de login
 
 ## Sécurité
 
