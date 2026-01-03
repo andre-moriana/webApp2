@@ -53,6 +53,58 @@ class SessionGuard {
             exit;
         }
         
+        // VÉRIFICATION CRITIQUE: Vérifier le token JWT
+        if (!isset($_SESSION['token']) || empty($_SESSION['token'])) {
+            error_log("SessionGuard: Token manquant, redirection vers login");
+            session_unset();
+            session_destroy();
+            
+            header('Location: /login?expired=1');
+            exit;
+        }
+        
+        // Vérifier si le token JWT est expiré
+        $token = $_SESSION['token'];
+        try {
+            $tokenParts = explode('.', $token);
+            if (count($tokenParts) === 3) {
+                $payload = json_decode(base64_decode($tokenParts[1]), true);
+                
+                if ($payload && isset($payload['exp'])) {
+                    // Vérifier si le token est expiré
+                    if (time() >= $payload['exp']) {
+                        error_log("SessionGuard: Token JWT expiré (exp: " . $payload['exp'] . ", now: " . time() . "), redirection vers login");
+                        session_unset();
+                        session_destroy();
+                        
+                        header('Location: /login?expired=1');
+                        exit;
+                    }
+                } else {
+                    error_log("SessionGuard: Token JWT invalide (pas de payload exp), redirection vers login");
+                    session_unset();
+                    session_destroy();
+                    
+                    header('Location: /login?expired=1');
+                    exit;
+                }
+            } else {
+                error_log("SessionGuard: Token JWT mal formé, redirection vers login");
+                session_unset();
+                session_destroy();
+                
+                header('Location: /login?expired=1');
+                exit;
+            }
+        } catch (Exception $e) {
+            error_log("SessionGuard: Erreur lors de la vérification du token: " . $e->getMessage());
+            session_unset();
+            session_destroy();
+            
+            header('Location: /login?expired=1');
+            exit;
+        }
+        
         return true;
     }
     
