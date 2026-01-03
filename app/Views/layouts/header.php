@@ -15,8 +15,6 @@
     <link href="/public/assets/css/chat-messages.css" rel="stylesheet">
     <!-- API Interceptor pour gérer les erreurs 401 -->
     <script src="/public/assets/js/api-interceptor.js"></script>
-    <!-- Gestionnaire de session pour keep-alive -->
-    <script src="/public/assets/js/session-manager.js"></script>
     <!-- CSS spécifique à la page (si défini) -->
     <?php if (isset($additionalCSS)): 
         foreach ($additionalCSS as $css): ?>
