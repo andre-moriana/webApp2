@@ -23,6 +23,9 @@ ini_set('display_errors', $_ENV['APP_DEBUG'] ?? '1');
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_strict_mode', 1);
 ini_set('session.cookie_samesite', 'Lax');
+// Prolonger la durée de vie de la session à 8 heures pour les saisies longues
+ini_set('session.gc_maxlifetime', 28800); // 8 heures en secondes
+ini_set('session.cookie_lifetime', 28800); // 8 heures en secondes
 
 // Démarrage de la session
 if (session_status() === PHP_SESSION_NONE) {
