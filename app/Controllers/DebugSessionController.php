@@ -258,6 +258,16 @@ class DebugSessionController {
         }
     }
     
+    public function testRefreshDebug() {
+        // Serve the debug page for token refresh
+        $filePath = __DIR__ . '/../../public/test-refresh-debug.php';
+        if (file_exists($filePath)) {
+            include $filePath;
+        } else {
+            echo "Fichier test-refresh-debug.php introuvable";
+        }
+    }
+    
     private function renderDebugPage() {
         // Inclure le contenu de test-session-debug.php
         include __DIR__ . '/../../public/test-session-debug.php';

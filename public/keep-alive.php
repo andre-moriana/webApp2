@@ -86,17 +86,21 @@ if (isset($_SESSION['token'])) {
 
 // Si le token doit être rafraîchi, appeler l'API backend
 if ($tokenNeedsRefresh && isset($_SESSION['token'])) {
-    require_once __DIR__ . '/../app/Services/ApiService.php';
-    
     try {
+        require_once __DIR__ . '/../app/Services/ApiService.php';
+        
         $apiService = new ApiService();
+        
+        error_log("keep-alive.php: Appel de l'API refresh pour rafraîchir le token");
         
         // Essayer de rafraîchir le token via l'API backend
         $refreshResult = $apiService->makeRequest('auth/refresh', 'POST', [
             'token' => $_SESSION['token']
         ]);
         
-        if ($refreshResult['success'] && isset($refreshResult['data']['token'])) {
+        error_log("keep-alive.php: Résultat refresh: " . json_encode($refreshResult));
+        
+        if ($refreshResult && isset($refreshResult['success']) && $refreshResult['success'] && isset($refreshResult['data']['token'])) {
             // Token rafraîchi avec succès
             $_SESSION['token'] = $refreshResult['data']['token'];
             
@@ -113,10 +117,11 @@ if ($tokenNeedsRefresh && isset($_SESSION['token'])) {
             
             error_log("keep-alive.php: Token rafraîchi avec succès, nouveau exp: " . $tokenData['expires_at']);
         } else {
-            error_log("keep-alive.php: Échec du rafraîchissement du token");
+            error_log("keep-alive.php: Échec du rafraîchissement du token - " . json_encode($refreshResult));
         }
     } catch (Exception $e) {
         error_log("keep-alive.php: Erreur lors du rafraîchissement: " . $e->getMessage());
+        error_log("keep-alive.php: Stack trace: " . $e->getTraceAsString());
     }
 }
 
