@@ -12,8 +12,13 @@ class DashboardController {
     }
     
     public function index() {
+        error_log("DashboardController::index() - Début");
+        
         // Vérifier la session avec le middleware
+        error_log("DashboardController::index() - Appel de SessionGuard::check()");
         SessionGuard::check();
+        
+        error_log("DashboardController::index() - Session valide, chargement des stats");
         
         $title = 'Tableau de bord - Portail Archers de Gémenos';
         
