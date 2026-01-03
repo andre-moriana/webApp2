@@ -62,6 +62,16 @@ class DashboardController {
         try {
             // Récupérer le nombre d'utilisateurs
             $usersResponse = $this->apiService->getUsers();
+            
+            // Vérifier si on a une erreur 401 (token invalide)
+            if (isset($usersResponse['unauthorized']) && $usersResponse['unauthorized']) {
+                // Nettoyer la session et rediriger vers login
+                session_unset();
+                session_destroy();
+                header('Location: /login?expired=1');
+                exit;
+            }
+            
             if ($usersResponse['success'] && !empty($usersResponse['data']['users'])) {
                 $users = $usersResponse['data']['users'];
                 $stats['users'] = count($users);
