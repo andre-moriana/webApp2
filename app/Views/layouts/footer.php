@@ -32,6 +32,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <?php endif; ?>
+<!-- Gestionnaire de session (doit être chargé en premier) -->
+    <script src="/public/assets/js/session-manager.js"></script>
 <!-- JavaScript personnalisé -->
     <script src="/public/assets/js/app.js"></script>
 <!-- JavaScript spécifique à la page (si défini) -->

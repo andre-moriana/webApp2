@@ -222,13 +222,16 @@ class Router {
         $this->addRoute("POST", "/user-settings/update-profile-image", "UserSettingsController@updateProfileImage");
         $this->addRoute("POST", "/user-settings/change-password", "UserSettingsController@changePassword");
         
-        // Route de protection des données personnelles (publique)
+        // Routes de protection des données personnelles (publique)
         $this->addRoute("GET", "/privacy", "PrivacyController@index");
         $this->addRoute("GET", "/donnees-personnelles", "PrivacyController@index");
         
         // Routes du formulaire de contact (publiques)
         $this->addRoute("GET", "/contact", "ContactController@index");
         $this->addRoute("POST", "/contact/send", "ContactController@send");
+        
+        // Route pour maintenir la session active (protégée)
+        $this->addRoute("GET", "/keep-alive.php", "KeepAliveController@ping");
         
     }
     

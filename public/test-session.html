@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test du Gestionnaire de Session</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #28a745;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.active {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            padding: 15px;
+            border-left: 4px solid #0c5460;
+            margin: 20px 0;
+        }
+        .button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #218838;
+        }
+        .button.secondary {
+            background-color: #6c757d;
+        }
+        .button.secondary:hover {
+            background-color: #5a6268;
+        }
+        #log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #007bff;
+        }
+        .log-entry.success {
+            border-left-color: #28a745;
+        }
+        .log-entry.error {
+            border-left-color: #dc3545;
+        }
+        .log-entry.warning {
+            border-left-color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test du Gestionnaire de Session</h1>
+        
+        <div class="info">
+            <strong>📝 Instructions :</strong><br>
+            Cette page vous permet de tester le gestionnaire de session.<br>
+            Le keep-alive est automatiquement activé sur cette page de test.
+        </div>
+        
+        <div id="status" class="status inactive">
+            État du gestionnaire : En attente...
+        </div>
+        
+        <div>
+            <button class="button" onclick="testSession()">🔍 Tester la session maintenant</button>
+            <button class="button secondary" onclick="enableKeepAlive()">✅ Activer Keep-Alive</button>
+            <button class="button secondary" onclick="disableKeepAlive()">❌ Désactiver Keep-Alive</button>
+            <button class="button secondary" onclick="clearLog()">🗑️ Effacer le log</button>
+        </div>
+        
+        <div id="info">
+            <h3>ℹ️ Informations</h3>
+            <p><strong>Page actuelle :</strong> <span id="current-page"></span></p>
+            <p><strong>Keep-alive actif :</strong> <span id="keepalive-status">Non</span></p>
+            <p><strong>Intervalle de vérification :</strong> 5 minutes</p>
+            <p><strong>Prochaine vérification dans :</strong> <span id="next-check">-</span></p>
+        </div>
+        
+        <h3>📋 Journal des événements</h3>
+        <div id="log"></div>
+    </div>
+
+    <script src="/public/assets/js/session-manager.js"></script>
+    <script>
+        let logEntries = [];
+        let nextCheckTime = null;
+        let countdownInterval = null;
+
+        // Fonction pour ajouter une entrée au log
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.unshift(entry);
+            
+            const logDiv = document.getElementById('log');
+            const entryDiv = document.createElement('div');
+            entryDiv.className = `log-entry ${type}`;
+            entryDiv.textContent = entry;
+            
+            logDiv.insertBefore(entryDiv, logDiv.firstChild);
+            
+            // Garder seulement les 50 dernières entrées
+            if (logDiv.children.length > 50) {
+                logDiv.removeChild(logDiv.lastChild);
+            }
+        }
+
+        // Fonction pour tester la session manuellement
+        async function testSession() {
+            addLog('🔍 Test de la session en cours...', 'info');
+            
+            try {
+                const response = await fetch('/keep-alive.php', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addLog('✅ Session active - Utilisateur: ' + (data.user?.name || 'Inconnu'), 'success');
+                    updateStatus(true);
+                } else {
+                    addLog('❌ Session expirée ou invalide', 'error');
+                    updateStatus(false);
+                }
+            } catch (error) {
+                addLog('⚠️ Erreur lors du test: ' + error.message, 'error');
+                updateStatus(false);
+            }
+        }
+
+        // Fonction pour activer le keep-alive
+        function enableKeepAlive() {
+            if (window.sessionManager) {
+                window.sessionManager.enableKeepAlive();
+                addLog('✅ Keep-alive activé manuellement', 'success');
+                updateKeepAliveStatus();
+                
+                // Définir le temps de la prochaine vérification
+                nextCheckTime = Date.now() + (5 * 60 * 1000);
+                startCountdown();
+            } else {
+                addLog('⚠️ SessionManager non disponible', 'warning');
+            }
+        }
+
+        // Fonction pour désactiver le keep-alive
+        function disableKeepAlive() {
+            if (window.sessionManager) {
+                window.sessionManager.disableKeepAlive();
+                addLog('❌ Keep-alive désactivé', 'warning');
+                updateKeepAliveStatus();
+                
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+                document.getElementById('next-check').textContent = '-';
+            }
+        }
+
+        // Fonction pour mettre à jour le statut
+        function updateStatus(isActive) {
+            const statusDiv = document.getElementById('status');
+            if (isActive) {
+                statusDiv.className = 'status active';
+                statusDiv.textContent = '✅ État du gestionnaire : Actif - Session valide';
+            } else {
+                statusDiv.className = 'status inactive';
+                statusDiv.textContent = '❌ État du gestionnaire : Inactif - Session invalide';
+            }
+        }
+
+        // Fonction pour mettre à jour le statut du keep-alive
+        function updateKeepAliveStatus() {
+            const isActive = window.sessionManager && window.sessionManager.isActive;
+            document.getElementById('keepalive-status').textContent = isActive ? 'Oui' : 'Non';
+        }
+
+        // Fonction pour effacer le log
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            logEntries = [];
+            addLog('🗑️ Log effacé', 'info');
+        }
+
+        // Fonction pour démarrer le compte à rebours
+        function startCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            countdownInterval = setInterval(() => {
+                if (!nextCheckTime) {
+                    document.getElementById('next-check').textContent = '-';
+                    return;
+                }
+                
+                const remaining = nextCheckTime - Date.now();
+                if (remaining <= 0) {
+                    document.getElementById('next-check').textContent = 'Vérification en cours...';
+                    nextCheckTime = Date.now() + (5 * 60 * 1000);
+                } else {
+                    const minutes = Math.floor(remaining / 60000);
+                    const seconds = Math.floor((remaining % 60000) / 1000);
+                    document.getElementById('next-check').textContent = 
+                        `${minutes}m ${seconds}s`;
+                }
+            }, 1000);
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('🚀 Page de test chargée', 'success');
+            document.getElementById('current-page').textContent = window.location.pathname;
+            
+            // Attendre que sessionManager soit prêt
+            setTimeout(() => {
+                if (window.sessionManager) {
+                    addLog('✅ SessionManager initialisé', 'success');
+                    updateKeepAliveStatus();
+                    
+                    // Activer automatiquement le keep-alive pour cette page de test
+                    window.sessionManager.enableKeepAlive();
+                    nextCheckTime = Date.now() + (5 * 60 * 1000);
+                    startCountdown();
+                    
+                    // Test initial
+                    testSession();
+                } else {
+                    addLog('⚠️ SessionManager non disponible', 'error');
+                }
+            }, 1000);
+        });
+
+        // Intercepter les logs du SessionManager
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            const message = args.join(' ');
+            if (message.includes('[SessionManager]')) {
+                if (message.includes('Session active maintenue')) {
+                    addLog(message, 'success');
+                    nextCheckTime = Date.now() + (5 * 60 * 1000);
+                } else if (message.includes('Session expirée')) {
+                    addLog(message, 'error');
+                } else if (message.includes('Keep-alive')) {
+                    addLog(message, 'info');
+                } else {
+                    addLog(message, 'info');
+                }
+            }
+            originalConsoleLog.apply(console, args);
+        };
+    </script>
+</body>
+</html>
