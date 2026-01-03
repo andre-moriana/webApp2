@@ -225,6 +225,7 @@ class Router {
         $this->addRoute("GET", "/debug/session", "DebugSessionController@index");
         $this->addRoute("GET", "/test-session", "DebugSessionController@simple");
         $this->addRoute("GET", "/test-simple", "DebugSessionController@simple");
+        $this->addRoute("GET", "/expire-token", "DebugSessionController@expireToken");
         
         // Routes des paramètres utilisateur (protégées)
         $this->addRoute("GET", "/user-settings", "UserSettingsController@index");
