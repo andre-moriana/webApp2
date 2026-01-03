@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Saisie Longue - Session</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1000px; margin: 0 auto; background: #f5f5f5; }
+        .box { border: 2px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; background: white; }
+        .success { border-color: #4CAF50; background: #f1f8f4; }
+        .info { border-color: #2196F3; background: #e3f2fd; }
+        .warning { border-color: #ff9800; background: #fff3e0; }
+        button { padding: 10px 20px; margin: 5px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0b7dda; }
+        h1 { color: #333; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; border-radius: 3px; font-size: 12px; }
+        #logs { max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 11px; }
+        .log-entry { padding: 5px; border-bottom: 1px solid #eee; }
+        .log-info { color: #2196F3; }
+        .log-success { color: #4CAF50; font-weight: bold; }
+        .log-error { color: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Saisie Longue - Maintien de Session</h1>
+    
+    <div class="box info">
+        <h2>📋 Simulation de Saisie Longue</h2>
+        <p>Cette page simule une saisie de <strong>tir compté</strong> ou <strong>feuille de marque</strong> qui peut durer plusieurs heures.</p>
+        <p>Le système va:</p>
+        <ul>
+            <li>✅ Maintenir votre session PHP active (8 heures max)</li>
+            <li>✅ <strong>Rafraîchir automatiquement le token JWT</strong> quand il expire dans moins de 30 minutes</li>
+            <li>✅ Vérifier la session toutes les <strong>5 minutes</strong></li>
+            <li>✅ Afficher les logs en temps réel</li>
+        </ul>
+    </div>
+    
+    <div class="box">
+        <h2>⏱️ État Actuel</h2>
+        <div id="status">
+            <p><strong>Durée d'activité:</strong> <span id="duration">0</span> secondes</span></p>
+            <p><strong>Vérifications effectuées:</strong> <span id="checkCount">0</span></p>
+            <p><strong>Token rafraîchi:</strong> <span id="refreshCount">0</span> fois</p>
+            <p><strong>Prochain check dans:</strong> <span id="nextCheck">--</span> secondes</p>
+        </div>
+    </div>
+    
+    <div class="box success">
+        <h2>📊 Logs en Direct</h2>
+        <button onclick="clearLogs()">Effacer les logs</button>
+        <button onclick="testNow()">Vérifier Maintenant</button>
+        <div id="logs"></div>
+    </div>
+    
+    <div class="box">
+        <h2>🔧 Actions</h2>
+        <button onclick="window.location.href='/test-simple'">Voir Info Token</button>
+        <button onclick="window.location.href='/dashboard'">Retour Dashboard</button>
+        <button onclick="window.location.href='/logout'">Se Déconnecter</button>
+    </div>
+    
+    <script>
+        const startTime = Date.now();
+        let checkCount = 0;
+        let refreshCount = 0;
+        let nextCheckTime = 0;
+        let checkInterval = 5 * 60 * 1000; // 5 minutes
+        
+        function addLog(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry log-' + type;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logs.insertBefore(entry, logs.firstChild);
+        }
+        
+        function updateStats() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('duration').textContent = elapsed;
+            document.getElementById('checkCount').textContent = checkCount;
+            document.getElementById('refreshCount').textContent = refreshCount;
+            
+            const timeToNext = Math.max(0, Math.floor((nextCheckTime - Date.now()) / 1000));
+            document.getElementById('nextCheck').textContent = timeToNext;
+        }
+        
+        async function checkSession() {
+            checkCount++;
+            addLog('🔍 Vérification de session et token...', 'info');
+            
+            try {
+                const response = await fetch('/keep-alive.php', {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.token) {
+                        if (data.token.refreshed) {
+                            refreshCount++;
+                            addLog(`✅ TOKEN RAFRAÎCHI! Nouveau exp: ${data.token.expires_at}`, 'success');
+                        } else {
+                            const minutesLeft = Math.floor(data.token.expires_in / 60);
+                            addLog(`✓ Session OK - Token expire dans ${minutesLeft} minutes`, 'info');
+                        }
+                    } else {
+                        addLog('✓ Session maintenue active', 'info');
+                    }
+                } else {
+                    addLog('❌ Session expirée!', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/login?expired=1';
+                    }, 3000);
+                }
+            } catch (error) {
+                addLog('❌ Erreur: ' + error.message, 'error');
+            }
+            
+            updateStats();
+            nextCheckTime = Date.now() + checkInterval;
+        }
+        
+        function testNow() {
+            addLog('🚀 Vérification manuelle déclenchée', 'info');
+            checkSession();
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            addLog('📝 Logs effacés', 'info');
+        }
+        
+        // Vérifier immédiatement au chargement
+        addLog('🎯 Test de saisie longue démarré', 'success');
+        checkSession();
+        
+        // Puis vérifier toutes les 5 minutes
+        setInterval(checkSession, checkInterval);
+        
+        // Mettre à jour les stats toutes les secondes
+        setInterval(updateStats, 1000);
+    </script>
+</body>
+</html>
