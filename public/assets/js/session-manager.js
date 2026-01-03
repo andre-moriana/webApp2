@@ -3,10 +3,12 @@
  * et rediriger vers la page de login quand la session expire
  */
 
-class SessionManager {
-    constructor(options = {}) {
-        // Interval de vérification (par défaut 5 minutes)
-        this.checkInterval = options.checkInterval || 5 * 60 * 1000; // 5 minutes
+// Vérifier si la classe n'existe pas déjà pour éviter les doublons
+if (typeof SessionManager === 'undefined') {
+    class SessionManager {
+        constructor(options = {}) {
+            // Interval de vérification (par défaut 5 minutes)
+            this.checkInterval = options.checkInterval || 5 * 60 * 1000; // 5 minutes
         
         // Pages où le keep-alive doit être actif (saisie longue)
         this.keepAlivePages = options.keepAlivePages || [
@@ -187,22 +189,27 @@ class SessionManager {
     }
 }
 
-// Initialiser automatiquement le gestionnaire de session
-let sessionManager;
+// Fermer le bloc de protection contre les doublons de classe
+}
 
-document.addEventListener('DOMContentLoaded', function() {
-    sessionManager = new SessionManager({
-        checkInterval: 5 * 60 * 1000, // 5 minutes
-        keepAlivePages: [
-            '/scored-trainings',
-            '/score-sheet',
-            '/trainings'
-        ]
+// Initialiser automatiquement le gestionnaire de session (une seule fois)
+if (typeof window.sessionManager === 'undefined') {
+    let sessionManager;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        sessionManager = new SessionManager({
+            checkInterval: 5 * 60 * 1000, // 5 minutes
+            keepAlivePages: [
+                '/scored-trainings',
+                '/score-sheet',
+                '/trainings'
+            ]
+        });
+        
+        // Exposer l'instance globalement pour un contrôle manuel si nécessaire
+        window.sessionManager = sessionManager;
     });
-    
-    // Exposer l'instance globalement pour un contrôle manuel si nécessaire
-    window.sessionManager = sessionManager;
-});
+}
 
 // Export pour utilisation en tant que module si nécessaire
 if (typeof module !== 'undefined' && module.exports) {
