@@ -221,14 +221,6 @@ class Router {
         // Route de debug (admin seulement)
         $this->addRoute("GET", "/debug/deletion-pending", "DebugController@deletionPending");
         
-        // Route de debug session (accessible à tous pour diagnostic)
-        $this->addRoute("GET", "/debug/session", "DebugSessionController@index");
-        $this->addRoute("GET", "/test-session", "DebugSessionController@simple");
-        $this->addRoute("GET", "/test-simple", "DebugSessionController@simple");
-        $this->addRoute("GET", "/expire-token", "DebugSessionController@expireToken");
-        $this->addRoute("GET", "/test-long-session", "DebugSessionController@testLongSession");
-        $this->addRoute("GET", "/test-refresh-debug", "DebugSessionController@testRefreshDebug");
-        
         // Routes des paramètres utilisateur (protégées)
         $this->addRoute("GET", "/user-settings", "UserSettingsController@index");
         $this->addRoute("POST", "/user-settings/update-profile-image", "UserSettingsController@updateProfileImage");
