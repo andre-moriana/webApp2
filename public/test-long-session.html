@@ -96,6 +96,18 @@
                     credentials: 'same-origin'
                 });
                 
+                if (!response.ok) {
+                    addLog(`❌ Erreur HTTP: ${response.status} ${response.statusText}`, 'error');
+                    return;
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    addLog(`❌ Réponse non-JSON reçue: ${text.substring(0, 200)}`, 'error');
+                    return;
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
@@ -118,6 +130,7 @@
                 }
             } catch (error) {
                 addLog('❌ Erreur: ' + error.message, 'error');
+                console.error('Erreur détaillée:', error);
             }
             
             updateStats();
