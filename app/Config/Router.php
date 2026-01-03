@@ -217,6 +217,10 @@ class Router {
         // Route de debug (admin seulement)
         $this->addRoute("GET", "/debug/deletion-pending", "DebugController@deletionPending");
         
+        // Route de debug session (accessible à tous pour diagnostic)
+        $this->addRoute("GET", "/debug/session", "DebugSessionController@index");
+        $this->addRoute("GET", "/test-session", "DebugSessionController@index");
+        
         // Routes des paramètres utilisateur (protégées)
         $this->addRoute("GET", "/user-settings", "UserSettingsController@index");
         $this->addRoute("POST", "/user-settings/update-profile-image", "UserSettingsController@updateProfileImage");
