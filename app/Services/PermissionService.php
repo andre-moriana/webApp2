@@ -147,20 +147,20 @@ class PermissionService
         return [
             // Groupes
             'groups_view' => 'Archer',
-            'groups_edit' => 'Coach',
-            'groups_create' => 'Coach',
+            'groups_edit' => 'Archer',
+            'groups_create' => 'Archer',
             'groups_delete' => 'Dirigeant',
             
             // Sujets
             'topics_view' => 'Archer',
-            'topics_edit' => 'Dirigeant',
+            'topics_edit' => 'Archer',
             'topics_create' => 'Archer',
             'topics_delete' => 'Dirigeant',
 
             // Événements
             'events_view' => 'Archer',
-            'events_edit' => 'Coach',
-            'events_create' => 'Coach',
+            'events_edit' => 'Archer',
+            'events_create' => 'Archer',
             'events_delete' => 'Dirigeant',
             
             // Utilisateurs - Vue
@@ -172,8 +172,8 @@ class PermissionService
             
             // Exercices
             'exercises_view' => 'Archer',
-            'exercises_create' => 'Coach',
-            'exercises_edit' => 'Coach',
+            'exercises_create' => 'Archer',
+            'exercises_edit' => 'Archer',
             'exercises_delete' => 'Coach',
             
             // Progression d'entraînement
@@ -194,8 +194,8 @@ class PermissionService
             
             // Entraînements
             'trainings_view' => 'Archer',
-            'trainings_create' => 'Coach',
-            'trainings_edit' => 'Coach',
+            'trainings_create' => 'Archer',
+            'trainings_edit' => 'Archer',
         ];
     }
     
