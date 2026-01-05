@@ -1,3 +1,48 @@
+    // Concours (Contest) CRUD methods
+    public function getConcours() {
+        if (!$this->token) {
+            return ["success" => false, "message" => "Token d'authentification requis"];
+        }
+        $result = $this->makeRequest("concours", "GET");
+        return $result;
+    }
+
+    public function getConcoursById($id) {
+        if (!$this->token) {
+            return ["success" => false, "message" => "Token d'authentification requis"];
+        }
+        $result = $this->makeRequest("concours/{$id}", "GET");
+        return $result;
+    }
+
+    public function createConcours($data) {
+        if (!$this->token) {
+            return ["success" => false, "message" => "Token d'authentification requis"];
+        }
+        // Optionally add user_id if needed, similar to createGroup
+        $userId = $this->getCurrentUserId();
+        if ($userId && !isset($data['admin_id'])) {
+            $data['admin_id'] = $userId;
+        }
+        $result = $this->makeRequest("concours", "POST", $data);
+        return $result;
+    }
+
+    public function updateConcours($id, $data) {
+        if (!$this->token) {
+            return ["success" => false, "message" => "Token d'authentification requis"];
+        }
+        $result = $this->makeRequest("concours/{$id}", "PUT", $data);
+        return $result;
+    }
+
+    public function deleteConcours($id) {
+        if (!$this->token) {
+            return ["success" => false, "message" => "Token d'authentification requis"];
+        }
+        $result = $this->makeRequest("concours/{$id}", "DELETE");
+        return $result;
+    }
 <?php
 // Démarrer la session si elle n'est pas déjà démarrée
 if (session_status() === PHP_SESSION_NONE) {
