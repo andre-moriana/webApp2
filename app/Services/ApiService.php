@@ -4,15 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Démarrer la session si elle n'est pas déjà démarrée
-if (session_status() === PHP_SESSION_NONE) {
-    
-    // Démarrer la session si elle n'est pas déjà démarrée
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-
-    class ApiService {
+class ApiService {
         private $baseUrl;
         private $token;
 
