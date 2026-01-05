@@ -69,6 +69,11 @@
                             <i class="fas fa-clipboard-list me-1"></i> Exercices
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/concours">
+                            <i class="fas fa-trophy me-1"></i> Concours
+                        </a>
+                    </li>
                     <?php if (($_SESSION['user']['is_admin'] ?? false) || ($_SESSION['user']['role'] ?? '') === 'Coach' || ($_SESSION['user']['role'] ?? '') === 'Dirigeant'): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="/users">
