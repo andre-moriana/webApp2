@@ -5,6 +5,20 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 class ApiService {
+            /**
+             * Vérifie si le token JWT est expiré
+             * @param string $token
+             * @return bool
+             */
+            private function isTokenExpired($token) {
+                if (!$token) return true;
+                $parts = explode('.', $token);
+                if (count($parts) !== 3) return true;
+                $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+                if (!isset($payload['exp'])) return true;
+                // Expiré si la date d'expiration est passée
+                return (time() + 10) >= $payload['exp'];
+            }
         private $baseUrl;
         private $token;
 
