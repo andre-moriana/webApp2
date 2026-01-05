@@ -33,6 +33,7 @@ class ApiService {
                         $_ENV[trim($key)] = trim($value);
                     }
                 }
+           }
             // Exiger la présence de API_BASE_URL dans .env
             if (!isset($_ENV["API_BASE_URL"])) {
                 throw new \Exception("API_BASE_URL doit être défini dans le fichier .env");
