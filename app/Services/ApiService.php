@@ -32,12 +32,11 @@ class ApiService {
                     }
                 }
             }
-            // Utiliser l'URL de l'API depuis la configuration .env ou une valeur par défaut
+            // Exiger la présence de API_BASE_URL dans .env
             if (!isset($_ENV["API_BASE_URL"])) {
-                $this->baseUrl = "https://api.arctraining.fr/api";
-            } else {
-                $this->baseUrl = $_ENV["API_BASE_URL"];
+                throw new \Exception("API_BASE_URL doit être défini dans le fichier .env");
             }
+            $this->baseUrl = $_ENV["API_BASE_URL"];
             // Initialiser le token depuis la session
             $this->token = $_SESSION['token'] ?? null;
             // Démarrer la session si elle n'est pas déjà démarrée
