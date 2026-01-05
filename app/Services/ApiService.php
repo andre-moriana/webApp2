@@ -125,15 +125,6 @@ if (session_status() === PHP_SESSION_NONE) {
             }
             return $this->makeRequest("concours/{$id}", "DELETE");
         }
-            
-            // Vérifier si le token expire dans moins de 5 minutes (300 secondes)
-            // On rafraîchit proactivement avant l'expiration
-            return (time() + 300) >= $payload['exp'];
-        } catch (Exception $e) {
-            error_log("Erreur vérification expiration token: " . $e->getMessage());
-            return true;
-        }
-    }
     
     /**
      * Vérifie et rafraîchit le token si nécessaire avant chaque requête
