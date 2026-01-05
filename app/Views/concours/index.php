@@ -1,5 +1,7 @@
 <!-- Liste des concours -->
-<h1>Liste des concours</h1>
+<?php
+$title = "Gestion des concours - Portail Archers de Gémenos";
+?>
 <a href="/concours/create">Créer un concours</a>
 <table border="1" cellpadding="8">
     <tr>
