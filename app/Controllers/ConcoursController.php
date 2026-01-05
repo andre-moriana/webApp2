@@ -21,7 +21,21 @@ class ConcoursController
     // Enregistrement d'un nouveau concours
     public function store()
     {
-        // TODO: Envoyer les données à l'API BackendPHP
+        // Récupérer les données du formulaire
+        $data = $_POST;
+        $url = 'https://backendphp.example.com/api/concours';
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/json\r\n",
+                'method'  => 'POST',
+                'content' => json_encode($data),
+            ],
+        ];
+        $context  = stream_context_create($options);
+        $result = file_get_contents($url, false, $context);
+        // Rediriger vers la liste
+        header('Location: /concours');
+        exit();
     }
 
     // Affichage du formulaire d'édition
@@ -34,13 +48,35 @@ class ConcoursController
     // Mise à jour d'un concours
     public function update($id)
     {
-        // TODO: Envoyer les modifications à l'API BackendPHP
+        $data = $_POST;
+        $url = 'https://backendphp.example.com/api/concours/' . $id;
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/json\r\n",
+                'method'  => 'PUT',
+                'content' => json_encode($data),
+            ],
+        ];
+        $context  = stream_context_create($options);
+        $result = file_get_contents($url, false, $context);
+        header('Location: /concours');
+        exit();
     }
 
     // Suppression d'un concours
     public function delete($id)
     {
-        // TODO: Appeler l'API BackendPHP pour supprimer
+        $url = 'https://backendphp.example.com/api/concours/' . $id;
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/json\r\n",
+                'method'  => 'DELETE',
+            ],
+        ];
+        $context  = stream_context_create($options);
+        $result = file_get_contents($url, false, $context);
+        header('Location: /concours');
+        exit();
     }
 
     // Méthode utilitaire pour récupérer les concours via l'API
