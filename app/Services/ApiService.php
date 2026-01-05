@@ -34,8 +34,7 @@ class ApiService {
                     }
                 }
                 // Log de diagnostic pour vérifier la lecture de API_BASE_URL
-                error_log('API_BASE_URL lu: ' . ($_ENV['API_BASE_URL'] ?? 'NON DEFINI'));
-            }
+echo '<pre>API_BASE_URL lu: ' . htmlspecialchars($_ENV['API_BASE_URL'] ?? 'NON DEFINI') . '</pre>';            }
             // Exiger la présence de API_BASE_URL dans .env
             if (!isset($_ENV["API_BASE_URL"])) {
                 throw new \Exception("API_BASE_URL doit être défini dans le fichier .env");
