@@ -81,8 +81,9 @@ class ConcoursController
     // Méthode utilitaire pour récupérer les concours via l'API
     private function fetchConcoursFromApi($id = null)
     {
-        // Exemple d'appel API (à adapter)
-        $url = 'https://backendphp.example.com/api/concours';
+        // Utiliser l'URL de l'API depuis l'environnement
+        $baseUrl = $_ENV['API_BASE_URL'] ?? 'https://backendphp.example.com/api';
+        $url = rtrim($baseUrl, '/') . '/concours';
         if ($id) $url .= '/' . $id;
         $json = @file_get_contents($url);
         if ($json === false) {
