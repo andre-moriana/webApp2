@@ -84,9 +84,15 @@ class ConcoursController
         // Exemple d'appel API (à adapter)
         $url = 'https://backendphp.example.com/api/concours';
         if ($id) $url .= '/' . $id;
-        $json = file_get_contents($url);
+        $json = @file_get_contents($url);
+        if ($json === false) {
+            // Afficher un message d'erreur utilisateur et retourner un tableau vide
+            if ($id) return null;
+            echo '<div class="alert alert-danger">Impossible de contacter l’API concours. Vérifiez la connexion ou l’URL de l’API.</div>';
+            return [];
+        }
         $data = json_decode($json, true);
         if ($id) return new Concours($data);
-        return array_map(fn($c) => new Concours($c), $data);
+        return is_array($data) ? array_map(fn($c) => new Concours($c), $data) : [];
     }
 }
