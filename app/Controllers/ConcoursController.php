@@ -44,7 +44,13 @@ class ConcoursController
     // Affichage du formulaire d'édition
     public function edit($id)
     {
-        $concours = $this->fetchConcoursFromApi($id);
+        $concours = null;
+        $response = $this->apiService->makeRequest('concours/' . $id, 'GET');
+        if ($response['success'] && isset($response['data'])) {
+            $concours = new Concours($response['data']);
+        } else {
+            echo '<div class="alert alert-danger">Impossible de contacter l’API concours. Vérifiez la connexion ou l’URL de l’API.</div>';
+        }
         require __DIR__ . '/../Views/concours/edit.php';
     }
 
