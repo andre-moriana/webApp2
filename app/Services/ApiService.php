@@ -23,8 +23,10 @@ class ApiService {
         private $token;
 
         public function __construct() {
-            if (file_exists(".env")) {
-                $lines = file(".env", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            // Recherche du .env à la racine du projet (2 niveaux au-dessus de ce fichier)
+            $envPath = __DIR__ . '/../../.env';
+            if (file_exists($envPath)) {
+                $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
                 foreach ($lines as $line) {
                     if (strpos($line, "=") !== false && strpos($line, "#") !== 0) {
                         list($key, $value) = explode("=", $line, 2);
