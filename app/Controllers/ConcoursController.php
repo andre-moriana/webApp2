@@ -1,6 +1,5 @@
-<?php
-namespace App\Controllers;
 
+<?php
 use App\Models\Concours;
 
 class ConcoursController
