@@ -16,7 +16,7 @@ class ConcoursController
 
     public function index()
     {
-        $response = $this->apiService->makeRequest('concours', 'GET');
+        $response = $this->apiService->getConcours();
         $concours = [];
         if ($response['success'] && isset($response['data'])) {
             $concours = array_map(fn($c) => new Concours($c), $response['data']);
@@ -36,7 +36,8 @@ class ConcoursController
     public function store()
     {
         $data = $_POST;
-        $this->apiService->makeRequest('concours', 'POST', $data);
+        $response = $this->apiService->createConcours($data);
+        // Optionally handle errors here
         header('Location: /concours');
         exit();
     }
@@ -45,7 +46,7 @@ class ConcoursController
     public function edit($id)
     {
         $concours = null;
-        $response = $this->apiService->makeRequest('concours/' . $id, 'GET');
+        $response = $this->apiService->getConcoursById($id);
         if ($response['success'] && isset($response['data'])) {
             $concours = new Concours($response['data']);
         } else {
@@ -58,7 +59,8 @@ class ConcoursController
     public function update($id)
     {
         $data = $_POST;
-        $this->apiService->makeRequest('concours/' . $id, 'PUT', $data);
+        $response = $this->apiService->updateConcours($id, $data);
+        // Optionally handle errors here
         header('Location: /concours');
         exit();
     }
@@ -66,7 +68,8 @@ class ConcoursController
     // Suppression d'un concours
     public function delete($id)
     {
-        $this->apiService->makeRequest('concours/' . $id, 'DELETE');
+        $response = $this->apiService->deleteConcours($id);
+        // Optionally handle errors here
         header('Location: /concours');
         exit();
     }
