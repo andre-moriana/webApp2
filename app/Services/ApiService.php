@@ -1,18 +1,64 @@
-        // Concours (Contest) CRUD methods
+<?php
+// Démarrer la session si elle n'est pas déjà démarrée
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Démarrer la session si elle n'est pas déjà démarrée
+if (session_status() === PHP_SESSION_NONE) {
+    
+    // Démarrer la session si elle n'est pas déjà démarrée
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    class ApiService {
+        private $baseUrl;
+        private $token;
+
+        public function __construct() {
+            if (file_exists(".env")) {
+                $lines = file(".env", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                foreach ($lines as $line) {
+                    if (strpos($line, "=") !== false && strpos($line, "#") !== 0) {
+                        list($key, $value) = explode("=", $line, 2);
+                        $_ENV[trim($key)] = trim($value);
+                    }
+                }
+            }
+            // Utiliser l'URL de l'API depuis la configuration .env ou une valeur par défaut
+            if (!isset($_ENV["API_BASE_URL"])) {
+                $this->baseUrl = "https://api.arctraining.fr/api";
+            } else {
+                $this->baseUrl = $_ENV["API_BASE_URL"];
+            }
+            // Initialiser le token depuis la session
+            $this->token = $_SESSION['token'] ?? null;
+            // Démarrer la session si elle n'est pas déjà démarrée
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+            // Récupérer le token depuis la session
+            if (isset($_SESSION['token'])) {
+                $this->token = $_SESSION['token'];
+            } else {
+                $this->token = null;
+            }
+        }
+
+        // ================= Concours (Contest) CRUD methods =================
         public function getConcours() {
             if (!$this->token) {
                 return ["success" => false, "message" => "Token d'authentification requis"];
             }
-            $result = $this->makeRequest("concours", "GET");
-            return $result;
+            return $this->makeRequest("concours", "GET");
         }
 
         public function getConcoursById($id) {
             if (!$this->token) {
                 return ["success" => false, "message" => "Token d'authentification requis"];
             }
-            $result = $this->makeRequest("concours/{$id}", "GET");
-            return $result;
+            return $this->makeRequest("concours/{$id}", "GET");
         }
 
         public function createConcours($data) {
@@ -23,133 +69,62 @@
             if ($userId && !isset($data['admin_id'])) {
                 $data['admin_id'] = $userId;
             }
-            $result = $this->makeRequest("concours", "POST", $data);
-            return $result;
+            return $this->makeRequest("concours", "POST", $data);
         }
 
         public function updateConcours($id, $data) {
             if (!$this->token) {
                 return ["success" => false, "message" => "Token d'authentification requis"];
             }
-            $result = $this->makeRequest("concours/{$id}", "PUT", $data);
-            return $result;
+            return $this->makeRequest("concours/{$id}", "PUT", $data);
         }
 
         public function deleteConcours($id) {
             if (!$this->token) {
                 return ["success" => false, "message" => "Token d'authentification requis"];
             }
-            $result = $this->makeRequest("concours/{$id}", "DELETE");
-            return $result;
+            return $this->makeRequest("concours/{$id}", "DELETE");
         }
-    // Concours (Contest) CRUD methods
-    public function getConcours() {
-        if (!$this->token) {
-            return ["success" => false, "message" => "Token d'authentification requis"];
-        }
-        $result = $this->makeRequest("concours", "GET");
-        return $result;
-    }
 
-    public function getConcoursById($id) {
-        if (!$this->token) {
-            return ["success" => false, "message" => "Token d'authentification requis"];
-        }
-        $result = $this->makeRequest("concours/{$id}", "GET");
-        return $result;
-    }
-
-    public function createConcours($data) {
-        if (!$this->token) {
-            return ["success" => false, "message" => "Token d'authentification requis"];
-        }
-        // Optionally add user_id if needed, similar to createGroup
-        $userId = $this->getCurrentUserId();
-        if ($userId && !isset($data['admin_id'])) {
-            $data['admin_id'] = $userId;
-        }
-        $result = $this->makeRequest("concours", "POST", $data);
-        return $result;
-    }
-
-    public function updateConcours($id, $data) {
-        if (!$this->token) {
-            return ["success" => false, "message" => "Token d'authentification requis"];
-        }
-        $result = $this->makeRequest("concours/{$id}", "PUT", $data);
-        return $result;
-    }
-
-    public function deleteConcours($id) {
-        if (!$this->token) {
-            return ["success" => false, "message" => "Token d'authentification requis"];
-        }
-        $result = $this->makeRequest("concours/{$id}", "DELETE");
-        return $result;
-    }
-<?php
-// Démarrer la session si elle n'est pas déjà démarrée
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-class ApiService {
-    private $baseUrl;
-    private $token;
-    
-    public function __construct() {
-        if (file_exists(".env")) {
-            $lines = file(".env", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                if (strpos($line, "=") !== false && strpos($line, "#") !== 0) {
-                    list($key, $value) = explode("=", $line, 2);
-                    $_ENV[trim($key)] = trim($value);
-                }
+        // ================= Concours (Contest) CRUD methods =================
+        public function getConcours() {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
             }
+            return $this->makeRequest("concours", "GET");
         }
-        
-        // Utiliser l'URL de l'API depuis la configuration .env ou une valeur par défaut
-        if (!isset($_ENV["API_BASE_URL"])) {
-            // URL par défaut - le serveur utilise HTTPS
-            $this->baseUrl = "https://api.arctraining.fr/api";
-        } else {
-            $this->baseUrl = $_ENV["API_BASE_URL"];
-        }
-        
-        // Initialiser le token depuis la session
-        $this->token = $_SESSION['token'] ?? null;
-        
-        // Démarrer la session si elle n'est pas déjà démarrée
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        // Récupérer le token depuis la session
-        if (isset($_SESSION['token'])) {
-            $this->token = $_SESSION['token'];
-        } else {
-            $this->token = null;
-        }
-    }
-    
-    /**
-     * Vérifie si le token JWT est expiré en décodant le payload
-     */
-    private function isTokenExpired($token) {
-        if (!$token) {
-            return true;
-        }
-        
-        try {
-            $tokenParts = explode('.', $token);
-            if (count($tokenParts) !== 3) {
-                return true;
+
+        public function getConcoursById($id) {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
             }
-            
-            $payload = json_decode(base64_decode($tokenParts[1]), true);
-            if (!$payload || !isset($payload['exp'])) {
-                return true;
+            return $this->makeRequest("concours/{$id}", "GET");
+        }
+
+        public function createConcours($data) {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
             }
+            $userId = $this->getCurrentUserId();
+            if ($userId && !isset($data['admin_id'])) {
+                $data['admin_id'] = $userId;
+            }
+            return $this->makeRequest("concours", "POST", $data);
+        }
+
+        public function updateConcours($id, $data) {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
+            }
+            return $this->makeRequest("concours/{$id}", "PUT", $data);
+        }
+
+        public function deleteConcours($id) {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
+            }
+            return $this->makeRequest("concours/{$id}", "DELETE");
+        }
             
             // Vérifier si le token expire dans moins de 5 minutes (300 secondes)
             // On rafraîchit proactivement avant l'expiration
