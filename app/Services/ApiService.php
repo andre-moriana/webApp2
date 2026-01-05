@@ -77,46 +77,6 @@ class ApiService {
             }
             return $this->makeRequest("concours/{$id}", "DELETE");
         }
-
-        // ================= Concours (Contest) CRUD methods =================
-        public function getConcours() {
-            if (!$this->token) {
-                return ["success" => false, "message" => "Token d'authentification requis"];
-            }
-            return $this->makeRequest("concours", "GET");
-        }
-
-        public function getConcoursById($id) {
-            if (!$this->token) {
-                return ["success" => false, "message" => "Token d'authentification requis"];
-            }
-            return $this->makeRequest("concours/{$id}", "GET");
-        }
-
-        public function createConcours($data) {
-            if (!$this->token) {
-                return ["success" => false, "message" => "Token d'authentification requis"];
-            }
-            $userId = $this->getCurrentUserId();
-            if ($userId && !isset($data['admin_id'])) {
-                $data['admin_id'] = $userId;
-            }
-            return $this->makeRequest("concours", "POST", $data);
-        }
-
-        public function updateConcours($id, $data) {
-            if (!$this->token) {
-                return ["success" => false, "message" => "Token d'authentification requis"];
-            }
-            return $this->makeRequest("concours/{$id}", "PUT", $data);
-        }
-
-        public function deleteConcours($id) {
-            if (!$this->token) {
-                return ["success" => false, "message" => "Token d'authentification requis"];
-            }
-            return $this->makeRequest("concours/{$id}", "DELETE");
-        }
     
     /**
      * Vérifie et rafraîchit le token si nécessaire avant chaque requête
