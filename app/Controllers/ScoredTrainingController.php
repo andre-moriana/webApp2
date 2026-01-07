@@ -631,7 +631,7 @@ class ScoredTrainingController {
         return $stats;
     }
     
-    private function getAllExercisesForUser($isAdmin, $isCoach, $isDirigeant) {
+    private function getAllExercisesForUser($isAdmin, $isCoach) {
         try {
             $response = $this->apiService->getExercises();
             
@@ -647,7 +647,7 @@ class ScoredTrainingController {
                 foreach ($exercises as $exercise) {
                     $exerciseProgression = $exercise['progression'] ?? 'non_actif';
                     
-                    if ($isAdmin || $isCoach || $isDirigeant || $exerciseProgression !== 'masqué') {
+                    if ($isAdmin || $isCoach || $exerciseProgression !== 'masqué') {
                         $filteredExercises[] = $exercise;
                     }
                 }
