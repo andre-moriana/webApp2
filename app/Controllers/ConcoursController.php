@@ -54,9 +54,28 @@ class ConcoursController {
         include 'app/Views/layouts/footer.php';
     }
     // Affichage du formulaire de création
-    public function create()
-    {
-        require __DIR__ . '/../Views/concours/create.php';
+    public function create()    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+         $themes = [];
+        try {
+            // Récupérer les thèmes
+            $themesResponse = $this->apiService->makeRequest('themes/list', 'GET');
+            if ($themesResponse['success'] && isset($themesResponse['data'])) {
+                $themes = is_array($themesResponse['data']) ? $themesResponse['data'] : [];
+            }
+        } catch (Exception $e) {
+            // En cas d'erreur, continuer avec un tableau vide
+            error_log('Erreur lors de la récupération des thèmes: ' . $e->getMessage());
+        }
+
+        $title = 'Créer un concours - Portail Archers de Gémenos';
+        include 'app/Views/layouts/header.php';
+        include 'app/Views/concours/create.php';
+        include 'app/Views/layouts/footer.php';
+
     }
 
     // Enregistrement d'un nouveau concours
