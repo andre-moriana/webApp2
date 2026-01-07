@@ -631,7 +631,7 @@ class ScoredTrainingController {
         return $stats;
     }
     
-    private function getAllExercisesForUser($isAdmin, $isCoach) {
+    private function getAllExercisesForUser($isAdmin, $isCoach, ) {
         try {
             $response = $this->apiService->getExercises();
             
