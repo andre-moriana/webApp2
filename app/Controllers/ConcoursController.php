@@ -81,13 +81,53 @@ class ConcoursController {
     // Enregistrement d'un nouveau concours
     public function store()
     {
-        $data = $_POST;
-        $response = $this->apiService->createConcours($data);
+         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         // Optionally handle errors here
         header('Location: /concours');
         exit();
     }
+        $nom = $_POST['nom'] ?? '';
+        $description = $_POST['description'] ?? '';
+        $date_debut = $_POST['date_debut'] ?? '';
+        $date_fin = $_POST['date_fin'] ?? '';
+        $lieu = $_POST['lieu'] ?? '';
+        $type = $_POST['type'] ?? '';
+        $status = $_POST['status'] ?? '';
+        
+        if (empty($name)) {
+            $_SESSION['error'] = 'Le nom du concours est requis';
+            header('Location: /concours/create');
+            exit;
+        }
 
+        try {
+            $response = $this->apiService->makeRequest('concours/create', 'POST', [
+                'nom' => $nom,
+                'nameShort' => $nameShort,
+                'description' => $description,
+                'date_debut' => $date_debut,
+                'date_fin' => $date_fin,
+                'lieu' => $lieu,
+                'type' => $type,
+                'status' => $status
+            ]);
+            
+            if ($response['success']) {
+                $_SESSION['success'] = 'Concours créé avec succès';
+                header('Location: /concours');
+                exit;
+            } else {
+                $_SESSION['error'] = $response['message'] ?? 'Erreur lors de la création du concours';
+                header('Location: /concours/create');
+                exit;
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Erreur lors de la création du concours: ' . $e->getMessage();
+            header('Location: /concours/create');
+            exit;
+        }
+    }
+    
     // Affichage du formulaire d'édition
     public function edit($id)
     {
