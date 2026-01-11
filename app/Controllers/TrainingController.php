@@ -51,8 +51,8 @@ class TrainingController {
         // Récupérer les informations de l'utilisateur sélectionné
         $selectedUser = $this->getUserInfo($selectedUserId);
         
-        // Récupérer TOUS les exercices disponibles (y compris les masqués pour les admins/coachs)
-        $allExercises = $this->getAllExercisesForUser($isAdmin, $isCoach, $isDirigeant);
+        // Récupérer TOUS les exercices disponibles pour l'archer sélectionné (y compris les masqués pour les admins/coachs)
+        $allExercises = $this->getAllExercisesForUser($isAdmin, $isCoach, $isDirigeant, $selectedUserId);
         
         // Récupérer les entraînements de l'utilisateur sélectionné
         $trainings = $this->getTrainings($selectedUserId);
@@ -84,7 +84,7 @@ class TrainingController {
             }
         }
         
-        // Grouper les exercices par catégorie (pas seulement ceux qui ont des sessions)
+        // Grouper les exercices par catégorie pour l'archer sélectionné (et non l'utilisateur connecté)
         $groupedTrainings = $this->groupAllExercisesByCategory($allExercises, $trainings, $selectedUserId, $selectedUser, $realSessions);
         
         // Récupérer la liste des utilisateurs pour les modals (seulement pour les coaches/admins)
@@ -1135,11 +1135,10 @@ class TrainingController {
     * @param bool $isDirigeant Si l'utilisateur est dirigeant
      * @return array Liste des exercices
      */
-    private function getAllExercisesForUser($isAdmin, $isCoach, $isDirigeant = false) {
+    private function getAllExercisesForUser($isAdmin, $isCoach, $isDirigeant = false, $selectedUserId = null) {
         try {
             
-            // Récupérer l'ID de l'utilisateur sélectionné
-            $selectedUserId = $_GET['user_id'] ?? null;
+            // Utiliser l'ID de l'utilisateur sélectionné passé en paramètre
             if (!$selectedUserId) {
                 $selectedUserId = $this->getUserIdFromToken();
             }
