@@ -1260,7 +1260,7 @@ class TrainingController {
 foreach ($realSessions as $session) {
     if (!is_array($session)) continue;
     if (!isset($session['user_id']) || $session['user_id'] != $selectedUserId) continue; // filtrage strict
-    $exerciseId = $session['exercise_sheet_id'] ?? $session['exercise_id'] ?? 'no_exercise';
+    $exerciseId = isset($session['exercise_sheet_id']) ? (string)$session['exercise_sheet_id'] : (isset($session['exercise_id']) ? (string)$session['exercise_id'] : 'no_exercise');
     $exerciseIdsWithSessions[$exerciseId] = true;
     if (!isset($sessionsByExercise[$exerciseId])) {
         $sessionsByExercise[$exerciseId] = [];
@@ -1269,7 +1269,7 @@ foreach ($realSessions as $session) {
 }
 foreach ($allExercises as $exercise) {
     if (!is_array($exercise)) continue;
-    $exerciseId = $exercise['id'] ?? $exercise['_id'] ?? 'no_exercise';
+    $exerciseId = isset($exercise['id']) ? (string)$exercise['id'] : (isset($exercise['_id']) ? (string)$exercise['_id'] : 'no_exercise');
     if (isset($exerciseIdsWithSessions[$exerciseId])) {
         $exercisesWithData[] = $exercise;
     }
