@@ -1251,27 +1251,27 @@ class TrainingController {
             }
         }
         
-        // Grouper seulement les exercices qui ont des sessions ou des données de progression
+        // Grouper seulement les exercices qui ont des vraies sessions pour l'utilisateur sélectionné
         $exercisesWithData = [];
-        foreach ($allExercises as $exercise) {
-            if (!is_array($exercise)) {
-                continue;
-            }
-            $exerciseId = $exercise['id'] ?? $exercise['_id'] ?? 'no_exercise';
-            // Vérifier s'il y a des vraies séances pour cet exercice et cet utilisateur
-            $dashboardData = $this->getExerciseDashboardData($exerciseId, $selectedUserId);
-            $apiSessions = $dashboardData['sessions'] ?? [];
-            $hasValidSession = false;
-            foreach ($apiSessions as $session) {
-                if (isset($session['user_id']) && $session['user_id'] == $selectedUserId) {
-                    $hasValidSession = true;
-                    break;
-                }
-            }
-            if ($hasValidSession) {
-                $exercisesWithData[] = $exercise;
-            }
-        }
+        $exerciseIdsWithSessions = [];
+        $sessionsByExercise = [];
+foreach ($realSessions as $session) {
+    if (!is_array($session)) continue;
+    if (!isset($session['user_id']) || $session['user_id'] != $selectedUserId) continue; // filtrage strict
+    $exerciseId = $session['exercise_sheet_id'] ?? $session['exercise_id'] ?? 'no_exercise';
+    $exerciseIdsWithSessions[$exerciseId] = true;
+    if (!isset($sessionsByExercise[$exerciseId])) {
+        $sessionsByExercise[$exerciseId] = [];
+    }
+    $sessionsByExercise[$exerciseId][] = $session;
+}
+foreach ($allExercises as $exercise) {
+    if (!is_array($exercise)) continue;
+    $exerciseId = $exercise['id'] ?? $exercise['_id'] ?? 'no_exercise';
+    if (isset($exerciseIdsWithSessions[$exerciseId])) {
+        $exercisesWithData[] = $exercise;
+    }
+}
         
         // Grouper les exercices filtrés par catégorie
         foreach ($exercisesWithData as $exercise) {
@@ -1315,78 +1315,43 @@ class TrainingController {
             // Récupérer les sessions pour cet exercice depuis les données déjà récupérées
             $realSessions = $sessionsByExercise[$exerciseId] ?? [];
             
-            // Récupérer les statistiques et sessions depuis l'API backend
-            $dashboardData = $this->getExerciseDashboardData($exerciseId, $selectedUserId);
-            $globalStats = $dashboardData['stats'] ?? null;
-            $apiSessions = $dashboardData['sessions'] ?? [];
-            
-            // Utiliser les sessions de l'API si disponibles et qu'elles correspondent à l'utilisateur sélectionné
-            if (!empty($apiSessions)) {
-                // Vérifier que les sessions correspondent à l'utilisateur sélectionné
-                $validSessions = [];
-                foreach ($apiSessions as $session) {
-                    if (isset($session['user_id']) && $session['user_id'] == $selectedUserId) {
-                        $validSessions[] = $session;
-                    }
+            // Ajouter les vraies sessions si elles existent
+            if (!empty($realSessions)) {
+                foreach ($realSessions as $session) {
+                    $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
+                        'id' => $session['id'],
+                        'start_date' => $session['start_date'] ?? $session['created_at'] ?? null,
+                        'created_at' => $session['created_at'] ?? null,
+                        'end_date' => $session['end_date'] ?? null,
+                        'arrows_shot' => $session['total_arrows'] ?? 0, // Utiliser total_arrows au lieu de arrows_shot
+                        'total_arrows' => $session['total_arrows'] ?? 0,
+                        'duration_minutes' => $session['duration_minutes'] ?? 0,
+                        'total_sessions' => 1, // Chaque session compte pour 1
+                        'score' => $session['score'] ?? 0,
+                        'is_aggregated' => false,
+                        'user_name' => $selectedUser['name'] ?? 'Utilisateur',
+                        'user_id' => $selectedUserId
+                    ];
                 }
-                
-                if (!empty($validSessions)) {
-                    $realSessions = $validSessions;
-                } else {
-                    $realSessions = [];
-                }
-            }
-            
-            // Utiliser les statistiques de l'API backend seulement si l'utilisateur a des sessions
-            if ($globalStats && isset($globalStats['total_sessions']) && !empty($realSessions)) {
-                // Utiliser les statistiques calculées par l'API backend
-                $totalSessions = (int)$globalStats['total_sessions'];
-                $totalArrows = (int)($globalStats['total_arrows'] ?? $globalStats['total_arrows_shot'] ?? 0);
-                $totalTime = (int)($globalStats['total_duration_minutes'] ?? $globalStats['total_time_minutes'] ?? 0);
-                $lastSessionDate = $globalStats['last_session_date'] ?? $globalStats['last_training_date'] ?? null;
-                $firstSessionDate = $globalStats['first_session_date'] ?? $globalStats['first_training_date'] ?? null;
-                
             } else {
-                // Pas de statistiques API disponibles - l'utilisateur n'a pas de vraies séances
-                $totalSessions = 0;
-                $totalArrows = 0;
-                $totalTime = 0;
-                $lastSessionDate = null;
-                $firstSessionDate = null;
-            }
-                
-            // Mettre à jour les statistiques de l'exercice
-            $grouped[$category]['exercises'][$exerciseId]['stats']['total_sessions'] = $totalSessions;
-            $grouped[$category]['exercises'][$exerciseId]['stats']['total_arrows'] = $totalArrows;
-            $grouped[$category]['exercises'][$exerciseId]['stats']['total_time_minutes'] = $totalTime;
-            $grouped[$category]['exercises'][$exerciseId]['stats']['first_session'] = $firstSessionDate;
-            $grouped[$category]['exercises'][$exerciseId]['stats']['last_session'] = $lastSessionDate;
-            
-            // Mettre à jour les totaux de la catégorie
-            $grouped[$category]['total_sessions'] += $totalSessions;
-            $grouped[$category]['total_arrows'] += $totalArrows;
-            $grouped[$category]['total_time_minutes'] += $totalTime;
-            
-            // Ajouter les sessions
-            foreach ($realSessions as $session) {
-                if (!is_array($session)) {
-                    continue; // Ignorer les éléments non-tableaux
+                // Si pas de vraies sessions, créer une session représentative avec les données de progrès
+                if ($totalSessions > 0) {
+                    $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
+                        'id' => null, // Pas d'ID pour éviter les liens cliquables
+                        'start_date' => $training['start_date'] ?? null,
+                        'created_at' => $training['start_date'] ?? null,
+                        'end_date' => $training['last_session_date'] ?? null,
+                        'arrows_shot' => $totalArrows, // Utiliser le total des flèches
+                        'total_arrows' => $totalArrows,
+                        'duration_minutes' => $totalTime,
+                        'total_sessions' => $totalSessions,
+                        'score' => 0,
+                        'is_aggregated' => true,
+                        'is_progress_data' => true, // Marquer comme données de progrès
+                        'user_name' => $selectedUser['name'] ?? 'Utilisateur',
+                        'user_id' => $selectedUserId
+                    ];
                 }
-            
-                $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
-                'id' => $session['id'] ?? $session['_id'] ?? 'unknown',
-                    'start_date' => $session['start_date'] ?? $session['created_at'] ?? null,
-                    'created_at' => $session['created_at'] ?? null,
-                    'end_date' => $session['end_date'] ?? null,
-                'arrows_shot' => $session['total_arrows'] ?? $session['arrows_shot'] ?? 0,
-                'total_arrows' => $session['total_arrows'] ?? $session['arrows_shot'] ?? 0,
-                'duration_minutes' => $session['duration_minutes'] ?? $session['duration'] ?? 0,
-                    'total_sessions' => 1,
-                'score' => $session['score'] ?? $session['total_score'] ?? 0,
-                    'is_aggregated' => false,
-                    'user_name' => $selectedUser['name'] ?? 'Utilisateur',
-                    'user_id' => $selectedUserId
-                ];
             }
         }
         
