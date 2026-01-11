@@ -1253,31 +1253,22 @@ class TrainingController {
         
         // Grouper seulement les exercices qui ont des sessions ou des données de progression
         $exercisesWithData = [];
-        
-        // Collecter les IDs d'exercices qui ont des sessions
-        $exerciseIdsWithSessions = array_keys($sessionsByExercise);
-        
-        // Collecter les IDs d'exercices qui ont des données de progression
-        $exerciseIdsWithProgress = [];
-        foreach ($trainings as $training) {
-            if (is_array($training) && isset($training['exercise_sheet_id'])) {
-                $exerciseIdsWithProgress[] = $training['exercise_sheet_id'];
-            }
-        }
-        
-        // Combiner les deux listes
-        $exerciseIdsToShow = array_unique(array_merge($exerciseIdsWithSessions, $exerciseIdsWithProgress));
-        
-        // Filtrer les exercices pour ne garder que ceux qui ont des données
         foreach ($allExercises as $exercise) {
             if (!is_array($exercise)) {
                 continue;
             }
-            
             $exerciseId = $exercise['id'] ?? $exercise['_id'] ?? 'no_exercise';
-            
-            // Ne traiter que les exercices qui ont des sessions ou des données de progression
-            if (in_array($exerciseId, $exerciseIdsToShow)) {
+            // Vérifier s'il y a des vraies séances pour cet exercice et cet utilisateur
+            $dashboardData = $this->getExerciseDashboardData($exerciseId, $selectedUserId);
+            $apiSessions = $dashboardData['sessions'] ?? [];
+            $hasValidSession = false;
+            foreach ($apiSessions as $session) {
+                if (isset($session['user_id']) && $session['user_id'] == $selectedUserId) {
+                    $hasValidSession = true;
+                    break;
+                }
+            }
+            if ($hasValidSession) {
                 $exercisesWithData[] = $exercise;
             }
         }
