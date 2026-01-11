@@ -554,44 +554,46 @@ class TrainingController {
             
             // Récupérer les sessions pour cet exercice depuis les données déjà récupérées
             $realSessions = $sessionsByExercise[$exerciseId] ?? [];
-            
+
             // Ajouter les vraies sessions si elles existent
             if (!empty($realSessions)) {
+                $totalSessions = 0;
+                $totalArrows = 0;
+                $totalTime = 0;
+                $firstSessionDate = null;
+                $lastSessionDate = null;
                 foreach ($realSessions as $session) {
                     $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
                         'id' => $session['id'],
                         'start_date' => $session['start_date'] ?? $session['created_at'] ?? null,
                         'created_at' => $session['created_at'] ?? null,
                         'end_date' => $session['end_date'] ?? null,
-                        'arrows_shot' => $session['total_arrows'] ?? 0, // Utiliser total_arrows au lieu de arrows_shot
+                        'arrows_shot' => $session['total_arrows'] ?? 0,
                         'total_arrows' => $session['total_arrows'] ?? 0,
                         'duration_minutes' => $session['duration_minutes'] ?? 0,
-                        'total_sessions' => 1, // Chaque session compte pour 1
+                        'total_sessions' => 1,
                         'score' => $session['score'] ?? 0,
                         'is_aggregated' => false,
                         'user_name' => $selectedUser['name'] ?? 'Utilisateur',
                         'user_id' => $selectedUserId
                     ];
+                    $totalSessions++;
+                    $totalArrows += $session['total_arrows'] ?? 0;
+                    $totalTime += $session['duration_minutes'] ?? 0;
+                    $date = $session['start_date'] ?? $session['created_at'] ?? null;
+                    if ($date) {
+                        if (!$firstSessionDate || $date < $firstSessionDate) $firstSessionDate = $date;
+                        if (!$lastSessionDate || $date > $lastSessionDate) $lastSessionDate = $date;
+                    }
                 }
-            } else {
-                // Si pas de vraies sessions, créer une session représentative avec les données de progrès
-                if ($totalSessions > 0) {
-                    $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
-                        'id' => null, // Pas d'ID pour éviter les liens cliquables
-                        'start_date' => $training['start_date'] ?? null,
-                        'created_at' => $training['start_date'] ?? null,
-                        'end_date' => $training['last_session_date'] ?? null,
-                        'arrows_shot' => $totalArrows, // Utiliser le total des flèches
-                        'total_arrows' => $totalArrows,
-                        'duration_minutes' => $totalTime,
-                        'total_sessions' => $totalSessions,
-                        'score' => 0,
-                        'is_aggregated' => true,
-                        'is_progress_data' => true, // Marquer comme données de progrès
-                        'user_name' => $selectedUser['name'] ?? 'Utilisateur',
-                        'user_id' => $selectedUserId
-                    ];
-                }
+                $grouped[$category]['exercises'][$exerciseId]['stats']['total_sessions'] = $totalSessions;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['total_arrows'] = $totalArrows;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['total_time_minutes'] = $totalTime;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['first_session'] = $firstSessionDate;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['last_session'] = $lastSessionDate;
+                $grouped[$category]['total_sessions'] += $totalSessions;
+                $grouped[$category]['total_arrows'] += $totalArrows;
+                $grouped[$category]['total_time_minutes'] += $totalTime;
             }
         }
         
@@ -1314,44 +1316,46 @@ foreach ($allExercises as $exercise) {
             
             // Récupérer les sessions pour cet exercice depuis les données déjà récupérées
             $realSessions = $sessionsByExercise[$exerciseId] ?? [];
-            
+
             // Ajouter les vraies sessions si elles existent
             if (!empty($realSessions)) {
+                $totalSessions = 0;
+                $totalArrows = 0;
+                $totalTime = 0;
+                $firstSessionDate = null;
+                $lastSessionDate = null;
                 foreach ($realSessions as $session) {
                     $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
                         'id' => $session['id'],
                         'start_date' => $session['start_date'] ?? $session['created_at'] ?? null,
                         'created_at' => $session['created_at'] ?? null,
                         'end_date' => $session['end_date'] ?? null,
-                        'arrows_shot' => $session['total_arrows'] ?? 0, // Utiliser total_arrows au lieu de arrows_shot
+                        'arrows_shot' => $session['total_arrows'] ?? 0,
                         'total_arrows' => $session['total_arrows'] ?? 0,
                         'duration_minutes' => $session['duration_minutes'] ?? 0,
-                        'total_sessions' => 1, // Chaque session compte pour 1
+                        'total_sessions' => 1,
                         'score' => $session['score'] ?? 0,
                         'is_aggregated' => false,
                         'user_name' => $selectedUser['name'] ?? 'Utilisateur',
                         'user_id' => $selectedUserId
                     ];
+                    $totalSessions++;
+                    $totalArrows += $session['total_arrows'] ?? 0;
+                    $totalTime += $session['duration_minutes'] ?? 0;
+                    $date = $session['start_date'] ?? $session['created_at'] ?? null;
+                    if ($date) {
+                        if (!$firstSessionDate || $date < $firstSessionDate) $firstSessionDate = $date;
+                        if (!$lastSessionDate || $date > $lastSessionDate) $lastSessionDate = $date;
+                    }
                 }
-            } else {
-                // Si pas de vraies sessions, créer une session représentative avec les données de progrès
-                if ($totalSessions > 0) {
-                    $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
-                        'id' => null, // Pas d'ID pour éviter les liens cliquables
-                        'start_date' => $training['start_date'] ?? null,
-                        'created_at' => $training['start_date'] ?? null,
-                        'end_date' => $training['last_session_date'] ?? null,
-                        'arrows_shot' => $totalArrows, // Utiliser le total des flèches
-                        'total_arrows' => $totalArrows,
-                        'duration_minutes' => $totalTime,
-                        'total_sessions' => $totalSessions,
-                        'score' => 0,
-                        'is_aggregated' => true,
-                        'is_progress_data' => true, // Marquer comme données de progrès
-                        'user_name' => $selectedUser['name'] ?? 'Utilisateur',
-                        'user_id' => $selectedUserId
-                    ];
-                }
+                $grouped[$category]['exercises'][$exerciseId]['stats']['total_sessions'] = $totalSessions;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['total_arrows'] = $totalArrows;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['total_time_minutes'] = $totalTime;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['first_session'] = $firstSessionDate;
+                $grouped[$category]['exercises'][$exerciseId]['stats']['last_session'] = $lastSessionDate;
+                $grouped[$category]['total_sessions'] += $totalSessions;
+                $grouped[$category]['total_arrows'] += $totalArrows;
+                $grouped[$category]['total_time_minutes'] += $totalTime;
             }
         }
         
