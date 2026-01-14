@@ -103,7 +103,7 @@ $additionalJS[] = '/public/assets/js/clubs-form.js';
                             <label for="logo" class="form-label">Logo du club</label>
                             <?php if (!empty($club['logo'])): 
                                 // Construire l'URL complète du logo si c'est un chemin relatif
-                                $logoUrl = $club['logo'];
+                                $logoUrl = 'https://api.arctraining.fr' .$club['logo'];
                                 if (!empty($logoUrl) && !preg_match('/^https?:\/\//', $logoUrl)) {
                                     $backendUrl = $_ENV['API_BASE_URL'];
                                     $backendUrl = rtrim($backendUrl, '/');
