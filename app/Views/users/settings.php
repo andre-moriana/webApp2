@@ -51,7 +51,7 @@ include __DIR__ . '/../layouts/header.php';
                             $profileImage = $user['profileImage'] ?? $user['profile_image'] ?? null;
                             if (!empty($profileImage)): 
                                 // Construire l'URL complète vers le backend
-                                $imageUrl = 'http://82.67.123.22:25000' . $profileImage;
+                                $imageUrl = 'https://api.arctraining.fr' . $profileImage;
                             ?>
                                 <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                      alt="Photo de profil" 
