@@ -72,7 +72,12 @@ function initializeEventListeners() {
 function initializeUserSelection() {
     const userSelect = document.getElementById('userSelect');
     if (userSelect) {
-        userSelect.addEventListener('change', handleUserSelection);
+        // Supprimer tous les écouteurs existants en clonant l'élément
+        const newUserSelect = userSelect.cloneNode(true);
+        userSelect.parentNode.replaceChild(newUserSelect, userSelect);
+        
+        // Ajouter notre écouteur qui recharge complètement la page
+        newUserSelect.addEventListener('change', handleUserSelection, true); // true = capture phase pour s'exécuter en premier
     }
 }
 
@@ -229,11 +234,17 @@ function onModalHidden() {
 }
 
 // Gérer la sélection d'utilisateur
-function handleUserSelection() {
+function handleUserSelection(event) {
+    // Empêcher tout autre traitement de l'événement
+    if (event) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+    }
+    
     const selectedUserId = this.value;
     console.log('Changement d\'utilisateur sélectionné:', selectedUserId);
     
-    // Recharger la page avec le nouvel utilisateur pour garantir que toutes les données sont à jour
+    // Recharger IMMÉDIATEMENT la page avec le nouvel utilisateur pour garantir que toutes les données sont à jour
     const currentUrl = new URL(window.location);
     if (selectedUserId) {
         currentUrl.searchParams.set('user_id', selectedUserId);
@@ -245,8 +256,11 @@ function handleUserSelection() {
     // Ajouter un paramètre timestamp pour éviter le cache
     currentUrl.searchParams.set('_t', Date.now());
     
-    console.log('Rechargement vers:', currentUrl.toString());
-    // Forcer le rechargement complet de la page
+    console.log('Rechargement COMPLET de la page vers:', currentUrl.toString());
+    // Forcer le rechargement COMPLET de la page - utiliser location.replace pour éviter l'historique et forcer le rechargement
+    // Ne pas utiliser setTimeout car cela pourrait permettre à d'autres scripts de s'exécuter
+    window.location.replace(currentUrl.toString());
+    // Si replace ne fonctionne pas, essayer href
     window.location.href = currentUrl.toString();
 }
 
@@ -1222,13 +1236,8 @@ document.addEventListener('DOMContentLoaded', function() {
         loadTimeline();
     }, 500);
     
-    // Recharger la frise quand l'utilisateur change
-    const userSelect = document.getElementById('userSelect');
-    if (userSelect) {
-        userSelect.addEventListener('change', function() {
-            loadTimeline();
-        });
-    }
+    // NOTE: Le rechargement de la frise est géré par handleUserSelection qui recharge toute la page
+    // Pas besoin d'un écouteur séparé ici
     
     // Écouter les événements de scroll pour mettre à jour les flèches
     const timelineContainer = document.getElementById('timeline-container');
