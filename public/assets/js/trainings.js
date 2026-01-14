@@ -70,36 +70,28 @@ function initializeEventListeners() {
 
 // Initialiser la sélection d'utilisateur
 function initializeUserSelection() {
-    // Essayer plusieurs fois au cas où l'élément n'est pas encore chargé
-    let attempts = 0;
-    const maxAttempts = 10;
-    
-    const tryInitialize = () => {
+    // Attendre un peu pour s'assurer que le DOM est complètement chargé
+    setTimeout(function() {
         const userSelect = document.getElementById('userSelect');
         if (userSelect) {
-            console.log('Élément userSelect trouvé, attachement de l\'écouteur');
-            userSelect.addEventListener('change', function() {
-                console.log('Changement d\'utilisateur détecté:', this.value);
-                const selectedUserId = this.value;
-                if (selectedUserId) {
-                    const newUrl = '/trainings?user_id=' + encodeURIComponent(selectedUserId) + '&_t=' + Date.now();
-                    console.log('Redirection vers:', newUrl);
-                    window.location.href = newUrl;
-                } else {
-                    const newUrl = '/trainings?_t=' + Date.now();
-                    console.log('Redirection vers:', newUrl);
-                    window.location.href = newUrl;
-                }
-            });
-        } else if (attempts < maxAttempts) {
-            attempts++;
-            setTimeout(tryInitialize, 100);
-        } else {
-            console.error('Élément userSelect non trouvé après', maxAttempts, 'tentatives!');
+            // Supprimer les anciens écouteurs en clonant l'élément
+            const newSelect = userSelect.cloneNode(true);
+            userSelect.parentNode.replaceChild(newSelect, userSelect);
+            
+            // Attacher le nouvel écouteur
+            const updatedSelect = document.getElementById('userSelect');
+            if (updatedSelect) {
+                updatedSelect.addEventListener('change', function() {
+                    const selectedUserId = this.value;
+                    if (selectedUserId) {
+                        window.location.href = '/trainings?user_id=' + encodeURIComponent(selectedUserId);
+                    } else {
+                        window.location.href = '/trainings';
+                    }
+                });
+            }
         }
-    };
-    
-    tryInitialize();
+    }, 100);
 }
 
 // Démarrer une session d'entraînement
