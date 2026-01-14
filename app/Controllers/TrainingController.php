@@ -51,15 +51,54 @@ class TrainingController {
         // Récupérer les informations de l'utilisateur sélectionné
         $selectedUser = $this->getUserInfo($selectedUserId);
         
-        // Récupérer TOUS les exercices disponibles (y compris les masqués pour les admins/coachs)
-        $allExercises = $this->getAllExercisesForUser($isAdmin, $isCoach, $isDirigeant);
-        
         // Récupérer les entraînements de l'utilisateur sélectionné
         $trainings = $this->getTrainings($selectedUserId);
         
-        
         // Récupérer les vraies sessions d'entraînement depuis l'API
         $realSessions = $this->fetchAllTrainingSessions($selectedUserId);
+        
+        // Récupérer TOUS les exercices disponibles (y compris les masqués pour les admins/coachs)
+        $allExercises = $this->getAllExercisesForUser($isAdmin, $isCoach, $isDirigeant);
+        
+        // S'assurer que tous les exercices référencés par les sessions sont inclus
+        if (!empty($realSessions)) {
+            $exerciseIdsFromSessions = [];
+            foreach ($realSessions as $session) {
+                if (is_array($session)) {
+                    $exerciseId = $session['exercise_sheet_id'] ?? $session['exercise_id'] ?? null;
+                    if ($exerciseId && $exerciseId !== 'no_exercise') {
+                        $exerciseIdsFromSessions[$exerciseId] = true;
+                    }
+                }
+            }
+            
+            // Récupérer les exercices manquants depuis l'API
+            $existingExerciseIds = [];
+            foreach ($allExercises as $exercise) {
+                $existingExerciseIds[$exercise['id'] ?? $exercise['_id'] ?? ''] = true;
+            }
+            
+            // Pour chaque exercice référencé dans les sessions mais absent de la liste
+            foreach (array_keys($exerciseIdsFromSessions) as $exerciseId) {
+                if (!isset($existingExerciseIds[$exerciseId])) {
+                    // Récupérer l'exercice depuis l'API
+                    try {
+                        $exerciseResponse = $this->apiService->getExerciseDetails($exerciseId);
+                        if ($exerciseResponse['success'] && !empty($exerciseResponse['data'])) {
+                            $missingExercise = $exerciseResponse['data'];
+                            // S'assurer que l'exercice a bien un ID
+                            if (!isset($missingExercise['id']) && !isset($missingExercise['_id'])) {
+                                $missingExercise['id'] = $exerciseId;
+                            }
+                            $allExercises[] = $missingExercise;
+                        }
+                    } catch (Exception $e) {
+                        // Ignorer les erreurs pour les exercices introuvables
+                        error_log("Erreur lors de la récupération de l'exercice $exerciseId: " . $e->getMessage());
+                    }
+                }
+            }
+        }
         
         // Alternative: récupérer les sessions depuis les données de progression
         $sessionsFromProgress = [];
@@ -1228,34 +1267,38 @@ class TrainingController {
                     continue;
                 }
                 
-                $exerciseId = $session['exercise_sheet_id'] ?? $session['exercise_id'] ?? 'no_exercise';
+                // Accepter les sessions même si elles n'ont pas d'exercise_sheet_id
+                $exerciseId = $session['exercise_sheet_id'] ?? $session['exercise_id'] ?? null;
+                
+                // Si la session n'a pas d'exercice associé, on l'associe à 'no_exercise'
+                if (empty($exerciseId) || $exerciseId === 'no_exercise') {
+                    $exerciseId = 'no_exercise';
+                }
+                
                 if (!isset($sessionsByExercise[$exerciseId])) {
                     $sessionsByExercise[$exerciseId] = [];
                 }
                 $sessionsByExercise[$exerciseId][] = $session;
-                
-                // Log de la structure de chaque session
             }
         } else {
             // Fallback: utiliser les données de progression
-        foreach ($trainings as $training) {
-            if (!is_array($training)) {
-                continue;
-            }
-            
-            $exerciseId = $training['exercise_sheet_id'] ?? 'no_exercise';
-            if (!isset($sessionsByExercise[$exerciseId])) {
-                $sessionsByExercise[$exerciseId] = [];
-            }
-            $sessionsByExercise[$exerciseId][] = $training;
+            foreach ($trainings as $training) {
+                if (!is_array($training)) {
+                    continue;
+                }
                 
+                $exerciseId = $training['exercise_sheet_id'] ?? 'no_exercise';
+                if (!isset($sessionsByExercise[$exerciseId])) {
+                    $sessionsByExercise[$exerciseId] = [];
+                }
+                $sessionsByExercise[$exerciseId][] = $training;
             }
         }
         
         // Grouper seulement les exercices qui ont des sessions ou des données de progression
         $exercisesWithData = [];
         
-        // Collecter les IDs d'exercices qui ont des sessions
+        // Collecter les IDs d'exercices qui ont des sessions (y compris 'no_exercise')
         $exerciseIdsWithSessions = array_keys($sessionsByExercise);
         
         // Collecter les IDs d'exercices qui ont des données de progression
@@ -1266,8 +1309,11 @@ class TrainingController {
             }
         }
         
-        // Combiner les deux listes
-        $exerciseIdsToShow = array_unique(array_merge($exerciseIdsWithSessions, $exerciseIdsWithProgress));
+        // Combiner les deux listes (sans 'no_exercise' pour les exercices réels)
+        $exerciseIdsToShow = array_unique(array_merge(
+            array_filter($exerciseIdsWithSessions, function($id) { return $id !== 'no_exercise'; }),
+            $exerciseIdsWithProgress
+        ));
         
         // Filtrer les exercices pour ne garder que ceux qui ont des données
         foreach ($allExercises as $exercise) {
@@ -1281,6 +1327,11 @@ class TrainingController {
             if (in_array($exerciseId, $exerciseIdsToShow)) {
                 $exercisesWithData[] = $exercise;
             }
+        }
+        
+        // Si on a des sessions sans exercice associé, créer une catégorie "Autres entraînements"
+        if (isset($sessionsByExercise['no_exercise']) && !empty($sessionsByExercise['no_exercise'])) {
+            // Ces sessions seront traitées séparément plus tard si nécessaire
         }
         
         // Grouper les exercices filtrés par catégorie
@@ -1325,44 +1376,71 @@ class TrainingController {
             // Récupérer les sessions pour cet exercice depuis les données déjà récupérées
             $realSessions = $sessionsByExercise[$exerciseId] ?? [];
             
-            // Récupérer les statistiques et sessions depuis l'API backend
-            $dashboardData = $this->getExerciseDashboardData($exerciseId, $selectedUserId);
-            $globalStats = $dashboardData['stats'] ?? null;
-            $apiSessions = $dashboardData['sessions'] ?? [];
-            
-            // Utiliser les sessions de l'API si disponibles et qu'elles correspondent à l'utilisateur sélectionné
-            if (!empty($apiSessions)) {
-                // Vérifier que les sessions correspondent à l'utilisateur sélectionné
-                $validSessions = [];
-                foreach ($apiSessions as $session) {
-                    if (isset($session['user_id']) && $session['user_id'] == $selectedUserId) {
-                        $validSessions[] = $session;
-                    }
-                }
+            // Si on n'a pas de sessions depuis l'index, essayer de récupérer depuis l'API dashboard
+            if (empty($realSessions)) {
+                $dashboardData = $this->getExerciseDashboardData($exerciseId, $selectedUserId);
+                $apiSessions = $dashboardData['sessions'] ?? [];
                 
-                if (!empty($validSessions)) {
-                    $realSessions = $validSessions;
-                } else {
-                    $realSessions = [];
+                // Utiliser les sessions de l'API si disponibles et qu'elles correspondent à l'utilisateur sélectionné
+                if (!empty($apiSessions)) {
+                    // Vérifier que les sessions correspondent à l'utilisateur sélectionné ET à l'exercice
+                    $validSessions = [];
+                    foreach ($apiSessions as $session) {
+                        $sessionExerciseId = $session['exercise_sheet_id'] ?? $session['exercise_id'] ?? null;
+                        if (isset($session['user_id']) && $session['user_id'] == $selectedUserId && 
+                            $sessionExerciseId == $exerciseId) {
+                            $validSessions[] = $session;
+                        }
+                    }
+                    
+                    if (!empty($validSessions)) {
+                        $realSessions = $validSessions;
+                    }
                 }
             }
             
-            // Utiliser les statistiques de l'API backend seulement si l'utilisateur a des sessions
-            if ($globalStats && isset($globalStats['total_sessions']) && !empty($realSessions)) {
-                // Utiliser les statistiques calculées par l'API backend
-                $totalSessions = (int)$globalStats['total_sessions'];
-                $totalArrows = (int)($globalStats['total_arrows'] ?? $globalStats['total_arrows_shot'] ?? 0);
-                $totalTime = (int)($globalStats['total_duration_minutes'] ?? $globalStats['total_time_minutes'] ?? 0);
-                $lastSessionDate = $globalStats['last_session_date'] ?? $globalStats['last_training_date'] ?? null;
-                $firstSessionDate = $globalStats['first_session_date'] ?? $globalStats['first_training_date'] ?? null;
-                
-            } else {
-                // Pas de statistiques API disponibles - l'utilisateur n'a pas de vraies séances
-                $totalSessions = 0;
+            // Calculer les statistiques depuis les sessions réelles
+            if (!empty($realSessions)) {
+                $totalSessions = count($realSessions);
                 $totalArrows = 0;
                 $totalTime = 0;
                 $lastSessionDate = null;
                 $firstSessionDate = null;
+                
+                foreach ($realSessions as $session) {
+                    $totalArrows += (int)($session['total_arrows'] ?? $session['arrows_shot'] ?? 0);
+                    $totalTime += (int)($session['duration_minutes'] ?? $session['duration'] ?? 0);
+                    
+                    $sessionDate = $session['start_date'] ?? $session['created_at'] ?? null;
+                    if ($sessionDate) {
+                        if (!$lastSessionDate || strtotime($sessionDate) > strtotime($lastSessionDate)) {
+                            $lastSessionDate = $sessionDate;
+                        }
+                        if (!$firstSessionDate || strtotime($sessionDate) < strtotime($firstSessionDate)) {
+                            $firstSessionDate = $sessionDate;
+                        }
+                    }
+                }
+            } else {
+                // Essayer d'utiliser les statistiques de l'API backend si disponibles
+                $dashboardData = $this->getExerciseDashboardData($exerciseId, $selectedUserId);
+                $globalStats = $dashboardData['stats'] ?? null;
+                
+                if ($globalStats && isset($globalStats['total_sessions']) && $globalStats['total_sessions'] > 0) {
+                    // Utiliser les statistiques calculées par l'API backend
+                    $totalSessions = (int)$globalStats['total_sessions'];
+                    $totalArrows = (int)($globalStats['total_arrows'] ?? $globalStats['total_arrows_shot'] ?? 0);
+                    $totalTime = (int)($globalStats['total_duration_minutes'] ?? $globalStats['total_time_minutes'] ?? 0);
+                    $lastSessionDate = $globalStats['last_session_date'] ?? $globalStats['last_training_date'] ?? null;
+                    $firstSessionDate = $globalStats['first_session_date'] ?? $globalStats['first_training_date'] ?? null;
+                } else {
+                    // Pas de statistiques disponibles
+                    $totalSessions = 0;
+                    $totalArrows = 0;
+                    $totalTime = 0;
+                    $lastSessionDate = null;
+                    $firstSessionDate = null;
+                }
             }
                 
             // Mettre à jour les statistiques de l'exercice
