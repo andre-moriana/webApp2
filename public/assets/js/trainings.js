@@ -234,33 +234,22 @@ function onModalHidden() {
 }
 
 // Gérer la sélection d'utilisateur
-function handleUserSelection(event) {
-    // Empêcher tout autre traitement de l'événement
-    if (event) {
-        event.stopImmediatePropagation();
-        event.preventDefault();
-    }
-    
+function handleUserSelection() {
     const selectedUserId = this.value;
-    console.log('Changement d\'utilisateur sélectionné:', selectedUserId);
     
-    // Recharger IMMÉDIATEMENT la page avec le nouvel utilisateur pour garantir que toutes les données sont à jour
+    // Recharger la page avec le nouvel utilisateur pour garantir que toutes les données sont à jour
     const currentUrl = new URL(window.location);
     if (selectedUserId) {
         currentUrl.searchParams.set('user_id', selectedUserId);
     } else {
         currentUrl.searchParams.delete('user_id');
     }
-    // Supprimer le paramètre _t s'il existe déjà
+    // Supprimer le paramètre _t s'il existe déjà pour éviter l'accumulation
     currentUrl.searchParams.delete('_t');
     // Ajouter un paramètre timestamp pour éviter le cache
     currentUrl.searchParams.set('_t', Date.now());
     
-    console.log('Rechargement COMPLET de la page vers:', currentUrl.toString());
-    // Forcer le rechargement COMPLET de la page - utiliser location.replace pour éviter l'historique et forcer le rechargement
-    // Ne pas utiliser setTimeout car cela pourrait permettre à d'autres scripts de s'exécuter
-    window.location.replace(currentUrl.toString());
-    // Si replace ne fonctionne pas, essayer href
+    // Recharger complètement la page - le backend va recalculer toutes les statistiques
     window.location.href = currentUrl.toString();
 }
 
@@ -1236,8 +1225,20 @@ document.addEventListener('DOMContentLoaded', function() {
         loadTimeline();
     }, 500);
     
-    // NOTE: Le rechargement de la frise est géré par handleUserSelection qui recharge toute la page
-    // Pas besoin d'un écouteur séparé ici
+    // Recharger la frise quand l'utilisateur change (mais seulement si la page n'est pas en train de se recharger)
+    const userSelect = document.getElementById('userSelect');
+    if (userSelect) {
+        userSelect.addEventListener('change', function() {
+            // Ne recharger la frise que si la page n'est pas en train de se recharger
+            // (handleUserSelection va recharger toute la page, donc cette fonction ne sera pas appelée)
+            // Mais on la garde au cas où handleUserSelection ne serait pas appelé
+            setTimeout(() => {
+                if (document.readyState === 'complete') {
+                    loadTimeline();
+                }
+            }, 100);
+        });
+    }
     
     // Écouter les événements de scroll pour mettre à jour les flèches
     const timelineContainer = document.getElementById('timeline-container');
