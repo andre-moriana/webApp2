@@ -112,7 +112,9 @@ $additionalJS[] = '/public/assets/js/clubs-form.js';
                                     //    $backendUrl = substr($backendUrl, 0, -4);
                                     //}
                                 }
-                            ?>
+                                $imageUrl = 'https://api.arctraining.fr' . $logoUrl;
+                                echo $imageUrl;
+                           ?>
                                 <div class="mb-2">
                                     <img src="<?php echo htmlspecialchars($logoUrl); ?>" 
                                          alt="Logo actuel" 
