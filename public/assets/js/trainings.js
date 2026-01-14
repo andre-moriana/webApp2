@@ -76,20 +76,6 @@ function initializeUserSelection() {
     }
 }
 
-// Gérer la sélection d'utilisateur
-function handleUserSelection() {
-    const selectedUserId = this.value;
-    if (selectedUserId) {
-        const currentUrl = new URL(window.location);
-        currentUrl.searchParams.set('user_id', selectedUserId);
-        window.location.href = currentUrl.toString();
-    } else {
-        const currentUrl = new URL(window.location);
-        currentUrl.searchParams.delete('user_id');
-        window.location.href = currentUrl.toString();
-    }
-}
-
 // Démarrer une session d'entraînement
 function startTrainingSession(exerciseId, exerciseTitle) {
     currentExerciseId = exerciseId;
@@ -242,6 +228,19 @@ function onModalHidden() {
     }
 }
 
+// Gérer la sélection d'utilisateur
+function handleUserSelection() {
+    const selectedUserId = this.value;
+    if (selectedUserId) {
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set('user_id', selectedUserId);
+        window.location.href = currentUrl.toString();
+    } else {
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.delete('user_id');
+        window.location.href = currentUrl.toString();
+    }
+}
 
 // Ajouter une volée à la liste
 function addVolleyToList(volley) {
@@ -1131,8 +1130,13 @@ document.addEventListener('DOMContentLoaded', function() {
         loadTimeline();
     }, 500);
     
-    // Note: Le changement d'utilisateur est géré par handleUserSelection() qui recharge la page
-    // La frise sera automatiquement rechargée au chargement de la nouvelle page
+    // Recharger la frise quand l'utilisateur change
+    const userSelect = document.getElementById('userSelect');
+    if (userSelect) {
+        userSelect.addEventListener('change', function() {
+            loadTimeline();
+        });
+    }
     
     // Écouter les événements de scroll pour mettre à jour les flèches
     const timelineContainer = document.getElementById('timeline-container');
