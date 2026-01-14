@@ -11,6 +11,11 @@ class TrainingController {
     }
     
     public function index() {
+        // Empêcher la mise en cache pour s'assurer que les données sont toujours à jour
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
         // Vérifier si l'utilisateur est connecté
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             header('Location: /login');
