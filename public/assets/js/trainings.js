@@ -70,28 +70,24 @@ function initializeEventListeners() {
 
 // Initialiser la sélection d'utilisateur
 function initializeUserSelection() {
-    // Attendre un peu pour s'assurer que le DOM est complètement chargé
-    setTimeout(function() {
-        const userSelect = document.getElementById('userSelect');
-        if (userSelect) {
-            // Supprimer les anciens écouteurs en clonant l'élément
-            const newSelect = userSelect.cloneNode(true);
-            userSelect.parentNode.replaceChild(newSelect, userSelect);
-            
-            // Attacher le nouvel écouteur
-            const updatedSelect = document.getElementById('userSelect');
-            if (updatedSelect) {
-                updatedSelect.addEventListener('change', function() {
-                    const selectedUserId = this.value;
-                    if (selectedUserId) {
-                        window.location.href = '/trainings?user_id=' + encodeURIComponent(selectedUserId);
-                    } else {
-                        window.location.href = '/trainings';
-                    }
-                });
-            }
-        }
-    }, 100);
+    const userSelect = document.getElementById('userSelect');
+    if (userSelect) {
+        userSelect.addEventListener('change', handleUserSelection);
+    }
+}
+
+// Gérer la sélection d'utilisateur
+function handleUserSelection() {
+    const selectedUserId = this.value;
+    if (selectedUserId) {
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set('user_id', selectedUserId);
+        window.location.href = currentUrl.toString();
+    } else {
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.delete('user_id');
+        window.location.href = currentUrl.toString();
+    }
 }
 
 // Démarrer une session d'entraînement
