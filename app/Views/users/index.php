@@ -175,7 +175,7 @@ error_log("Session: " . print_r($_SESSION, true));
                                                                 }
                                                             }
                                                             // Utiliser exactement la même URL que dans settings.php (qui fonctionne)
-                                                            $imageUrl = 'http://82.67.123.22:25000' . $profileImage;
+                                                            $imageUrl = 'https://api.arctraining.fr' . $profileImage;
                                                         ?>
                                                             <img src="<?php echo htmlspecialchars($imageUrl); ?>" 
                                                                  alt="Photo de profil" 
