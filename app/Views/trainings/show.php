@@ -24,7 +24,7 @@
                             <?php if (!empty($training['profile_image'])): ?>
                             <?php
                             // Construire l'URL complète de l'image de profil
-                            $backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
+                            $backendUrl = $_ENV['API_BASE_URL'] ?? 'https://api.arctraining.fr';
                             $profileImageUrl = $backendUrl . $training['profile_image'];
                             ?>
                             <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 

@@ -112,7 +112,7 @@
                     <div class="d-flex align-items-center">
                         <div class="me-3">
                             <?php if (!empty($selectedUser['profile_image'])): ?>
-                                <img src="<?php echo $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000'; ?><?php echo htmlspecialchars($selectedUser['profile_image']); ?>" 
+                                <img src="<?php echo $_ENV['API_BASE_URL']; ?><?php echo htmlspecialchars($selectedUser['profile_image']); ?>" 
                                      class="rounded-circle user-avatar" 
                                      alt="Photo de profil"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -398,7 +398,7 @@
                                                                                 </div>
                                                                                 <div class="mt-2">
                                                                                     <?php
-                                                                                    $backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
+                                                                                    $backendUrl = $_ENV['API_BASE_URL'];
                                                                                     $fileUrl = $backendUrl . '/uploads/exercise_sheets/' . $exerciseData['attachment_filename'];
                                                                                     ?>
                                                                                     <?php if (strpos($mimeType, 'pdf') !== false || $fileExtension === 'pdf'): ?>
