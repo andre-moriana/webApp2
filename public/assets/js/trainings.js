@@ -72,12 +72,7 @@ function initializeEventListeners() {
 function initializeUserSelection() {
     const userSelect = document.getElementById('userSelect');
     if (userSelect) {
-        // Supprimer tous les écouteurs existants en clonant l'élément
-        const newUserSelect = userSelect.cloneNode(true);
-        userSelect.parentNode.replaceChild(newUserSelect, userSelect);
-        
-        // Ajouter notre écouteur qui recharge complètement la page
-        newUserSelect.addEventListener('change', handleUserSelection, true); // true = capture phase pour s'exécuter en premier
+        userSelect.addEventListener('change', handleUserSelection);
     }
 }
 
@@ -236,104 +231,14 @@ function onModalHidden() {
 // Gérer la sélection d'utilisateur
 function handleUserSelection() {
     const selectedUserId = this.value;
-    
-    // Recharger la page avec le nouvel utilisateur pour garantir que toutes les données sont à jour
-    const currentUrl = new URL(window.location);
     if (selectedUserId) {
+        const currentUrl = new URL(window.location);
         currentUrl.searchParams.set('user_id', selectedUserId);
+        window.location.href = currentUrl.toString();
     } else {
+        const currentUrl = new URL(window.location);
         currentUrl.searchParams.delete('user_id');
-    }
-    // Supprimer le paramètre _t s'il existe déjà pour éviter l'accumulation
-    currentUrl.searchParams.delete('_t');
-    // Ajouter un paramètre timestamp pour éviter le cache
-    currentUrl.searchParams.set('_t', Date.now());
-    
-    // Recharger complètement la page - le backend va recalculer toutes les statistiques
-    window.location.href = currentUrl.toString();
-}
-
-// Charger les statistiques d'un utilisateur via AJAX
-function loadUserStats(userId) {
-    // Afficher un indicateur de chargement
-    const statsCards = document.querySelectorAll('.stats-card .card-title');
-    statsCards.forEach(card => {
-        card.textContent = '...';
-    });
-    
-    // Déterminer l'ID utilisateur à utiliser
-    let statsUserId = userId;
-    if (!statsUserId) {
-        // Si aucun utilisateur n'est sélectionné, récupérer l'ID de l'utilisateur actuel depuis la page
-        // Chercher un élément qui contient l'ID utilisateur actuel (par exemple dans un data attribute)
-        const container = document.querySelector('.container-fluid[data-current-user-id]');
-        if (container) {
-            statsUserId = container.getAttribute('data-current-user-id');
-        }
-        
-        // Si on ne trouve toujours pas l'ID, recharger la page complète
-        if (!statsUserId) {
-            window.location.reload();
-            return;
-        }
-    }
-    
-    // Construire l'URL de l'API (la route est /trainings/{id}/stats)
-    const statsUrl = `/trainings/${statsUserId}/stats`;
-    
-    // Faire la requête AJAX
-    fetch(statsUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erreur lors du chargement des statistiques');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                console.error('Erreur:', data.error);
-                // En cas d'erreur, recharger la page complète
-                window.location.reload();
-                return;
-            }
-            
-            // Mettre à jour les statistiques dans l'interface
-            updateStatsDisplay(data);
-        })
-        .catch(error => {
-            console.error('Erreur lors du chargement des statistiques:', error);
-            // En cas d'erreur, recharger la page complète
-            window.location.reload();
-        });
-}
-
-// Mettre à jour l'affichage des statistiques
-function updateStatsDisplay(stats) {
-    // Mettre à jour le nombre d'entraînements
-    const trainingsCard = document.querySelector('.bg-primary .card-title');
-    if (trainingsCard) {
-        trainingsCard.textContent = stats.total_trainings || 0;
-    }
-    
-    // Mettre à jour le nombre de flèches
-    const arrowsCard = document.querySelector('.bg-success .card-title');
-    if (arrowsCard) {
-        arrowsCard.textContent = stats.total_arrows || 0;
-    }
-    
-    // Mettre à jour le temps total
-    const timeCard = document.querySelector('.bg-info .card-title');
-    if (timeCard) {
-        const totalMinutes = stats.total_time_minutes || 0;
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-        let timeDisplay;
-        if (hours > 0) {
-            timeDisplay = hours + 'h ' + minutes + 'min';
-        } else {
-            timeDisplay = minutes + 'min';
-        }
-        timeCard.textContent = timeDisplay;
+        window.location.href = currentUrl.toString();
     }
 }
 
@@ -1225,18 +1130,11 @@ document.addEventListener('DOMContentLoaded', function() {
         loadTimeline();
     }, 500);
     
-    // Recharger la frise quand l'utilisateur change (mais seulement si la page n'est pas en train de se recharger)
+    // Recharger la frise quand l'utilisateur change
     const userSelect = document.getElementById('userSelect');
     if (userSelect) {
         userSelect.addEventListener('change', function() {
-            // Ne recharger la frise que si la page n'est pas en train de se recharger
-            // (handleUserSelection va recharger toute la page, donc cette fonction ne sera pas appelée)
-            // Mais on la garde au cas où handleUserSelection ne serait pas appelé
-            setTimeout(() => {
-                if (document.readyState === 'complete') {
-                    loadTimeline();
-                }
-            }, 100);
+            loadTimeline();
         });
     }
     

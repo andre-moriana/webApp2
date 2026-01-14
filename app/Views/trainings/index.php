@@ -1,4 +1,4 @@
-<div class="container-fluid" data-current-user-id="<?php echo htmlspecialchars($selectedUserId ?? ''); ?>">
+<div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
