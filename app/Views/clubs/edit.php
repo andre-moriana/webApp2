@@ -108,9 +108,9 @@ $additionalJS[] = '/public/assets/js/clubs-form.js';
                                     $backendUrl = $_ENV['API_BASE_URL'];
                                     $backendUrl = rtrim($backendUrl, '/');
                                     // Retirer /api de l'URL si présent
-                                    if (substr($backendUrl, -4) === '/api') {
-                                        $backendUrl = substr($backendUrl, 0, -4);
-                                    }
+                                    //if (substr($backendUrl, -4) === '/api') {
+                                    //    $backendUrl = substr($backendUrl, 0, -4);
+                                    //}
                                 }
                             ?>
                                 <div class="mb-2">
