@@ -72,7 +72,15 @@ function initializeEventListeners() {
 function initializeUserSelection() {
     const userSelect = document.getElementById('userSelect');
     if (userSelect) {
-        userSelect.addEventListener('change', handleUserSelection);
+        // Supprimer tous les écouteurs existants pour éviter les conflits
+        const newSelect = userSelect.cloneNode(true);
+        userSelect.parentNode.replaceChild(newSelect, userSelect);
+        
+        // Attacher le nouvel écouteur sur le nouvel élément
+        const updatedSelect = document.getElementById('userSelect');
+        if (updatedSelect) {
+            updatedSelect.addEventListener('change', handleUserSelection);
+        }
     }
 }
 
@@ -1130,13 +1138,8 @@ document.addEventListener('DOMContentLoaded', function() {
         loadTimeline();
     }, 500);
     
-    // Recharger la frise quand l'utilisateur change
-    const userSelect = document.getElementById('userSelect');
-    if (userSelect) {
-        userSelect.addEventListener('change', function() {
-            loadTimeline();
-        });
-    }
+    // Note: Le changement d'utilisateur est géré par handleUserSelection() qui recharge la page
+    // La frise sera automatiquement rechargée au chargement de la nouvelle page
     
     // Écouter les événements de scroll pour mettre à jour les flèches
     const timelineContainer = document.getElementById('timeline-container');
