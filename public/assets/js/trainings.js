@@ -228,18 +228,25 @@ function onModalHidden() {
     }
 }
 
-// Gérer la sélection d'utilisateur
-function handleUserSelection() {
+// Gérer la sélection d'utilisateur - Recharger la page avec le paramètre user_id
+function handleUserSelection(event) {
+    // Empêcher toute autre action
+    event.preventDefault();
+    event.stopPropagation();
+    
     const selectedUserId = this.value;
-    if (selectedUserId) {
-        const currentUrl = new URL(window.location);
+    const currentUrl = new URL(window.location);
+    
+    if (selectedUserId && selectedUserId !== '') {
+        // Ajouter ou mettre à jour le paramètre user_id
         currentUrl.searchParams.set('user_id', selectedUserId);
-        window.location.href = currentUrl.toString();
     } else {
-        const currentUrl = new URL(window.location);
+        // Supprimer le paramètre user_id si aucun utilisateur n'est sélectionné
         currentUrl.searchParams.delete('user_id');
-        window.location.href = currentUrl.toString();
     }
+    
+    // Recharger la page immédiatement
+    window.location.href = currentUrl.toString();
 }
 
 // Ajouter une volée à la liste
@@ -1130,13 +1137,8 @@ document.addEventListener('DOMContentLoaded', function() {
         loadTimeline();
     }, 500);
     
-    // Recharger la frise quand l'utilisateur change
-    const userSelect = document.getElementById('userSelect');
-    if (userSelect) {
-        userSelect.addEventListener('change', function() {
-            loadTimeline();
-        });
-    }
+    // Note: Le changement d'utilisateur recharge maintenant la page complète
+    // donc pas besoin de recharger la frise via AJAX
     
     // Écouter les événements de scroll pour mettre à jour les flèches
     const timelineContainer = document.getElementById('timeline-container');
