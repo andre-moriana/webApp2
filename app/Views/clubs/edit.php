@@ -105,18 +105,18 @@ $additionalJS[] = '/public/assets/js/clubs-form.js';
                                 // Construire l'URL complète du logo si c'est un chemin relatif
                                 $logoUrl = $club['logo'];
                                 if (!empty($logoUrl) && !preg_match('/^https?:\/\//', $logoUrl)) {
-                                    $backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
+                                    $backendUrl = $_ENV['API_BASE_URL'];
                                     $backendUrl = rtrim($backendUrl, '/');
                                     // Retirer /api de l'URL si présent
                                     if (substr($backendUrl, -4) === '/api') {
                                         $backendUrl = substr($backendUrl, 0, -4);
                                     }
                                     // Forcer HTTP pour les fichiers statiques (éviter les erreurs SSL)
-                                    if (strpos($backendUrl, 'https://') === 0 && strpos($backendUrl, '82.67.123.22:25000') !== false) {
+                                    if (strpos($backendUrl, 'https://') === 0 && strpos($backendUrl, 'api.arctraining.fr') !== false) {
                                         $backendUrl = str_replace('https://', 'http://', $backendUrl);
                                     }
                                     $logoUrl = $backendUrl . (strpos($logoUrl, '/') === 0 ? '' : '/') . $logoUrl;
-                                } elseif (preg_match('/^https:\/\//', $logoUrl) && strpos($logoUrl, '82.67.123.22:25000') !== false) {
+                                } elseif (preg_match('/^https:\/\//', $logoUrl) && strpos($logoUrl, 'api.arctraining.fr') !== false) {
                                     // Si l'URL est déjà complète mais en HTTPS, convertir en HTTP
                                     $logoUrl = str_replace('https://', 'http://', $logoUrl);
                                 }

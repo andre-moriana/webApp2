@@ -1,6 +1,6 @@
 <?php
 // Définir l'URL du backend
-$backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
+$backendUrl = $_ENV['API_BASE_URL'];
 ?>
 <div class="container">
     <div class="row">
@@ -169,7 +169,7 @@ $backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
                                                         
                                                         <?php if (isset($exercise['attachment_filename']) && $exercise['attachment_filename']): ?>
                                                             <?php 
-                                                            $backendUrl = $_ENV['API_BASE_URL'] ?? 'http://82.67.123.22:25000';
+                                                            $backendUrl = $_ENV['API_BASE_URL'];
                                                             $fileUrl = $backendUrl . '/uploads/exercise_sheets/' . $exercise['attachment_filename'];
                                                             ?>
                                                             <div class="mt-2">
