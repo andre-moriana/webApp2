@@ -386,7 +386,30 @@ class TrainingController {
             $response = $this->apiService->getTrainings($userId);
             
             if ($response['success'] && !empty($response['data'])) {
-                return $response['data'];
+                $trainings = $response['data'];
+                
+                // Extraire les données si elles sont dans une structure imbriquée
+                if (isset($trainings['data']) && is_array($trainings['data'])) {
+                    $trainings = $trainings['data'];
+                }
+                
+                // FILTRER PAR USER_ID : S'assurer que toutes les données appartiennent à l'utilisateur sélectionné
+                if (is_array($trainings)) {
+                    $filteredTrainings = [];
+                    foreach ($trainings as $training) {
+                        if (!is_array($training)) {
+                            continue;
+                        }
+                        $trainingUserId = $training['user_id'] ?? $training['userId'] ?? null;
+                        // Convertir en int pour la comparaison stricte
+                        if ((int)$trainingUserId === (int)$userId) {
+                            $filteredTrainings[] = $training;
+                        }
+                    }
+                    return $filteredTrainings;
+                }
+                
+                return $trainings;
             }
             
             // Si erreur 403, l'utilisateur n'a pas les permissions
@@ -1267,6 +1290,12 @@ class TrainingController {
                     continue;
                 }
                 
+                // FILTRER PAR USER_ID : Ne garder que les sessions de l'utilisateur sélectionné
+                $sessionUserId = $session['user_id'] ?? $session['userId'] ?? null;
+                if ($sessionUserId != $selectedUserId) {
+                    continue; // Ignorer les sessions d'autres utilisateurs
+                }
+                
                 // Accepter les sessions même si elles n'ont pas d'exercise_sheet_id
                 $exerciseId = $session['exercise_sheet_id'] ?? $session['exercise_id'] ?? null;
                 
@@ -1285,6 +1314,12 @@ class TrainingController {
             foreach ($trainings as $training) {
                 if (!is_array($training)) {
                     continue;
+                }
+                
+                // FILTRER PAR USER_ID : Ne garder que les données de progression de l'utilisateur sélectionné
+                $trainingUserId = $training['user_id'] ?? $training['userId'] ?? null;
+                if ($trainingUserId != $selectedUserId) {
+                    continue; // Ignorer les données d'autres utilisateurs
                 }
                 
                 $exerciseId = $training['exercise_sheet_id'] ?? 'no_exercise';
@@ -1455,10 +1490,16 @@ class TrainingController {
             $grouped[$category]['total_arrows'] += $totalArrows;
             $grouped[$category]['total_time_minutes'] += $totalTime;
             
-            // Ajouter les sessions
+            // Ajouter les sessions (déjà filtrées par user_id plus haut)
             foreach ($realSessions as $session) {
                 if (!is_array($session)) {
                     continue; // Ignorer les éléments non-tableaux
+                }
+                
+                // DOUBLE VÉRIFICATION : S'assurer que la session appartient bien à l'utilisateur sélectionné
+                $sessionUserId = $session['user_id'] ?? $session['userId'] ?? null;
+                if ($sessionUserId != $selectedUserId) {
+                    continue; // Ignorer les sessions d'autres utilisateurs
                 }
             
                 $grouped[$category]['exercises'][$exerciseId]['sessions'][] = [
@@ -1518,8 +1559,6 @@ class TrainingController {
         try {
             $response = $this->apiService->makeRequest("/training/sessions/user/$userId", 'GET');
             
-            // Debug: Log de la réponse complète
-            
             if ($response['success'] && isset($response['data'])) {
                 $sessions = $response['data'];
                 
@@ -1530,8 +1569,20 @@ class TrainingController {
                 
                 // Vérifier que c'est bien un tableau
                 if (is_array($sessions)) {
-                    return $sessions;
-            } else {
+                    // FILTRER PAR USER_ID : Double vérification pour s'assurer que toutes les sessions appartiennent à l'utilisateur
+                    $filteredSessions = [];
+                    foreach ($sessions as $session) {
+                        if (!is_array($session)) {
+                            continue;
+                        }
+                        $sessionUserId = $session['user_id'] ?? $session['userId'] ?? null;
+                        // Convertir en int pour la comparaison stricte
+                        if ((int)$sessionUserId === (int)$userId) {
+                            $filteredSessions[] = $session;
+                        }
+                    }
+                    return $filteredSessions;
+                } else {
                     return [];
                 }
             }
