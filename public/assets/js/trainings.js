@@ -70,17 +70,36 @@ function initializeEventListeners() {
 
 // Initialiser la sélection d'utilisateur
 function initializeUserSelection() {
-    const userSelect = document.getElementById('userSelect');
-    if (userSelect) {
-        userSelect.addEventListener('change', function() {
-            const selectedUserId = this.value;
-            if (selectedUserId) {
-                window.location.href = '/trainings?user_id=' + encodeURIComponent(selectedUserId) + '&_t=' + Date.now();
-            } else {
-                window.location.href = '/trainings?_t=' + Date.now();
-            }
-        });
-    }
+    // Essayer plusieurs fois au cas où l'élément n'est pas encore chargé
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    const tryInitialize = () => {
+        const userSelect = document.getElementById('userSelect');
+        if (userSelect) {
+            console.log('Élément userSelect trouvé, attachement de l\'écouteur');
+            userSelect.addEventListener('change', function() {
+                console.log('Changement d\'utilisateur détecté:', this.value);
+                const selectedUserId = this.value;
+                if (selectedUserId) {
+                    const newUrl = '/trainings?user_id=' + encodeURIComponent(selectedUserId) + '&_t=' + Date.now();
+                    console.log('Redirection vers:', newUrl);
+                    window.location.href = newUrl;
+                } else {
+                    const newUrl = '/trainings?_t=' + Date.now();
+                    console.log('Redirection vers:', newUrl);
+                    window.location.href = newUrl;
+                }
+            });
+        } else if (attempts < maxAttempts) {
+            attempts++;
+            setTimeout(tryInitialize, 100);
+        } else {
+            console.error('Élément userSelect non trouvé après', maxAttempts, 'tentatives!');
+        }
+    };
+    
+    tryInitialize();
 }
 
 // Démarrer une session d'entraînement
@@ -235,23 +254,6 @@ function onModalHidden() {
     }
 }
 
-// Gérer la sélection d'utilisateur
-function handleUserSelection(event) {
-    // Récupérer la valeur sélectionnée
-    const selectedUserId = event.target ? event.target.value : (this ? this.value : null);
-    
-    // Construire l'URL avec le user_id
-    let newUrl = '/trainings';
-    if (selectedUserId) {
-        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
-        newUrl += '&_t=' + Date.now(); // Timestamp pour éviter le cache
-    } else {
-        newUrl += '?_t=' + Date.now(); // Timestamp même sans user_id
-    }
-    
-    // Recharger la page complètement
-    window.location.href = newUrl;
-}
 
 // Ajouter une volée à la liste
 function addVolleyToList(volley) {
