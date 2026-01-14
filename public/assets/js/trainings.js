@@ -72,9 +72,13 @@ function initializeEventListeners() {
 function initializeUserSelection() {
     const userSelect = document.getElementById('userSelect');
     if (userSelect) {
-        // Utiliser une fonction anonyme pour passer correctement l'événement
-        userSelect.addEventListener('change', function(event) {
-            handleUserSelection(event);
+        userSelect.addEventListener('change', function() {
+            const selectedUserId = this.value;
+            if (selectedUserId) {
+                window.location.href = '/trainings?user_id=' + encodeURIComponent(selectedUserId) + '&_t=' + Date.now();
+            } else {
+                window.location.href = '/trainings?_t=' + Date.now();
+            }
         });
     }
 }
