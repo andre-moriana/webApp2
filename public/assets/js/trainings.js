@@ -72,7 +72,10 @@ function initializeEventListeners() {
 function initializeUserSelection() {
     const userSelect = document.getElementById('userSelect');
     if (userSelect) {
-        userSelect.addEventListener('change', handleUserSelection);
+        // Utiliser une fonction anonyme pour passer correctement l'événement
+        userSelect.addEventListener('change', function(event) {
+            handleUserSelection(event);
+        });
     }
 }
 
@@ -229,21 +232,21 @@ function onModalHidden() {
 }
 
 // Gérer la sélection d'utilisateur
-function handleUserSelection() {
-    const selectedUserId = this.value;
+function handleUserSelection(event) {
+    // Récupérer la valeur sélectionnée
+    const selectedUserId = event.target ? event.target.value : (this ? this.value : null);
+    
+    // Construire l'URL avec le user_id
+    let newUrl = '/trainings';
     if (selectedUserId) {
-        const currentUrl = new URL(window.location);
-        currentUrl.searchParams.set('user_id', selectedUserId);
-        // Ajouter un timestamp pour éviter le cache
-        currentUrl.searchParams.set('_t', Date.now());
-        window.location.href = currentUrl.toString();
+        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
+        newUrl += '&_t=' + Date.now(); // Timestamp pour éviter le cache
     } else {
-        const currentUrl = new URL(window.location);
-        currentUrl.searchParams.delete('user_id');
-        // Ajouter un timestamp pour éviter le cache
-        currentUrl.searchParams.set('_t', Date.now());
-        window.location.href = currentUrl.toString();
+        newUrl += '?_t=' + Date.now(); // Timestamp même sans user_id
     }
+    
+    // Recharger la page complètement
+    window.location.href = newUrl;
 }
 
 // Ajouter une volée à la liste
