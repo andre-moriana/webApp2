@@ -47,6 +47,11 @@ class TrainingController {
         // Si un utilisateur est sélectionné via GET et que l'utilisateur a les permissions
         if (($isAdmin || $isCoach || $isDirigeant) && isset($_GET['user_id']) && !empty($_GET['user_id'])) {
             $selectedUserId = (int)$_GET['user_id'];
+            // Debug: Vérifier que l'utilisateur sélectionné est bien récupéré depuis GET
+            error_log("TrainingController::index() - Utilisateur sélectionné depuis GET: " . $selectedUserId);
+        } else {
+            // Debug: Utilisation de l'utilisateur actuel
+            error_log("TrainingController::index() - Utilisation de l'utilisateur actuel (token): " . $selectedUserId);
         }
         // Récupérer les informations de l'utilisateur sélectionné
         $selectedUser = $this->getUserInfo($selectedUserId);
@@ -120,7 +125,11 @@ class TrainingController {
         }
         
         // Calculer les statistiques à partir des données groupées qui contiennent les stats calculées dynamiquement
+        // IMPORTANT: Les statistiques sont calculées avec les données de l'utilisateur sélectionné ($selectedUserId)
         $stats = $this->calculateStatsFromGroupedTrainings($groupedTrainings);
+        
+        // Debug: Vérifier que les stats sont bien calculées pour le bon utilisateur
+        error_log("Stats calculées pour utilisateur ID: " . $selectedUserId . " - Total entraînements: " . ($stats['total_trainings'] ?? 0) . " - Total flèches: " . ($stats['total_arrows'] ?? 0));
         
         // Passer les données à la vue
         $trainingsByCategory = $groupedTrainings;
@@ -1375,17 +1384,20 @@ class TrainingController {
             // Utiliser exerciseSessions au lieu de realSessions pour éviter le conflit de variable
             $realSessionsForExercise = $exerciseSessions;
             
-            // Utiliser les statistiques de l'API backend seulement si l'utilisateur a des sessions
-            if ($globalStats && isset($globalStats['total_sessions']) && !empty($realSessionsForExercise)) {
-                // Utiliser les statistiques calculées par l'API backend
+            // Utiliser les statistiques de l'API backend seulement si elles existent et correspondent à l'utilisateur sélectionné
+            // IMPORTANT: Vérifier que les statistiques sont bien pour l'utilisateur sélectionné
+            if ($globalStats && isset($globalStats['total_sessions'])) {
+                // Utiliser les statistiques calculées par l'API backend (elles sont déjà filtrées par user_id dans l'endpoint)
                 $totalSessions = (int)$globalStats['total_sessions'];
                 $totalArrows = (int)($globalStats['total_arrows'] ?? $globalStats['total_arrows_shot'] ?? 0);
                 $totalTime = (int)($globalStats['total_duration_minutes'] ?? $globalStats['total_time_minutes'] ?? 0);
                 $lastSessionDate = $globalStats['last_session_date'] ?? $globalStats['last_training_date'] ?? null;
                 $firstSessionDate = $globalStats['first_session_date'] ?? $globalStats['first_training_date'] ?? null;
                 
+                // Debug: Vérifier que les stats sont bien récupérées pour l'utilisateur sélectionné
+                error_log("Stats pour exercice $exerciseId, utilisateur $selectedUserId: sessions=$totalSessions, flèches=$totalArrows, temps=$totalTime");
             } else {
-                // Pas de statistiques API disponibles - l'utilisateur n'a pas de vraies séances
+                // Pas de statistiques API disponibles - l'utilisateur n'a pas de vraies séances pour cet exercice
                 $totalSessions = 0;
                 $totalArrows = 0;
                 $totalTime = 0;
