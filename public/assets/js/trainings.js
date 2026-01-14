@@ -73,13 +73,16 @@ function initializeUserSelection() {
     const userSelect = document.getElementById('userSelect');
     if (userSelect) {
         // Supprimer tous les écouteurs existants pour éviter les conflits
+        // En clonant et remplaçant l'élément, on supprime tous les écouteurs attachés
         const newSelect = userSelect.cloneNode(true);
         userSelect.parentNode.replaceChild(newSelect, userSelect);
         
         // Attacher le nouvel écouteur sur le nouvel élément
         const updatedSelect = document.getElementById('userSelect');
         if (updatedSelect) {
-            updatedSelect.addEventListener('change', handleUserSelection);
+            updatedSelect.addEventListener('change', function() {
+                handleUserSelection.call(this);
+            });
         }
     }
 }
@@ -239,15 +242,19 @@ function onModalHidden() {
 // Gérer la sélection d'utilisateur
 function handleUserSelection() {
     const selectedUserId = this.value;
+    const currentUrl = new URL(window.location);
+    
     if (selectedUserId) {
-        const currentUrl = new URL(window.location);
         currentUrl.searchParams.set('user_id', selectedUserId);
-        window.location.href = currentUrl.toString();
     } else {
-        const currentUrl = new URL(window.location);
         currentUrl.searchParams.delete('user_id');
-        window.location.href = currentUrl.toString();
     }
+    
+    // Ajouter un timestamp pour éviter le cache du navigateur
+    currentUrl.searchParams.set('_t', Date.now());
+    
+    // Forcer le rechargement complet de la page
+    window.location.href = currentUrl.toString();
 }
 
 // Ajouter une volée à la liste
