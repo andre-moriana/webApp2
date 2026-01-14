@@ -70,10 +70,34 @@ function initializeEventListeners() {
 
 // Initialiser la sélection d'utilisateur
 function initializeUserSelection() {
-    const userSelect = document.getElementById('userSelect');
-    if (userSelect) {
-        userSelect.addEventListener('change', handleUserSelection);
-    }
+    // Utiliser setTimeout pour s'assurer que le DOM est complètement chargé
+    setTimeout(function() {
+        const userSelect = document.getElementById('userSelect');
+        if (userSelect) {
+            // Supprimer tous les anciens gestionnaires en clonant l'élément
+            const newSelect = userSelect.cloneNode(true);
+            userSelect.parentNode.replaceChild(newSelect, userSelect);
+            
+            // Réattacher le gestionnaire sur le nouvel élément
+            const finalSelect = document.getElementById('userSelect');
+            if (finalSelect) {
+                finalSelect.addEventListener('change', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    const selectedUserId = this.value;
+                    let newUrl = '/trainings';
+                    if (selectedUserId && selectedUserId !== '' && selectedUserId !== 'null' && selectedUserId !== 'undefined') {
+                        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
+                    }
+                    
+                    // Forcer le rechargement de la page
+                    window.location.href = newUrl;
+                }, true); // Utiliser capture phase
+            }
+        }
+    }, 100);
 }
 
 // Démarrer une session d'entraînement
@@ -231,22 +255,22 @@ function onModalHidden() {
 // Gérer la sélection d'utilisateur - Recharger la page avec le paramètre user_id
 function handleUserSelection(event) {
     // Empêcher toute autre action
-    event.preventDefault();
-    event.stopPropagation();
-    
-    const selectedUserId = this.value;
-    const currentUrl = new URL(window.location);
-    
-    if (selectedUserId && selectedUserId !== '') {
-        // Ajouter ou mettre à jour le paramètre user_id
-        currentUrl.searchParams.set('user_id', selectedUserId);
-    } else {
-        // Supprimer le paramètre user_id si aucun utilisateur n'est sélectionné
-        currentUrl.searchParams.delete('user_id');
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
     }
     
-    // Recharger la page immédiatement
-    window.location.href = currentUrl.toString();
+    const selectedUserId = this.value;
+    
+    // Construire l'URL avec le paramètre user_id
+    let newUrl = '/trainings';
+    if (selectedUserId && selectedUserId !== '' && selectedUserId !== 'null' && selectedUserId !== 'undefined') {
+        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
+    }
+    
+    // Recharger la page immédiatement - utiliser window.location.replace pour éviter l'historique
+    window.location.replace(newUrl);
 }
 
 // Ajouter une volée à la liste
