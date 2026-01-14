@@ -1242,10 +1242,17 @@ class TrainingController {
         $sessionsByExercise = [];
         
         // Utiliser les vraies sessions d'entraînement si disponibles
+        // IMPORTANT: Filtrer les sessions pour ne garder que celles de l'utilisateur sélectionné
         if (!empty($realSessions)) {
             foreach ($realSessions as $session) {
                 if (!is_array($session)) {
                     continue;
+                }
+                
+                // Filtrer par utilisateur sélectionné pour garantir que seules les sessions de cet utilisateur sont utilisées
+                $sessionUserId = $session['user_id'] ?? null;
+                if ($sessionUserId != $selectedUserId) {
+                    continue; // Ignorer les sessions qui ne correspondent pas à l'utilisateur sélectionné
                 }
                 
                 $exerciseId = $session['exercise_sheet_id'] ?? $session['exercise_id'] ?? 'no_exercise';
@@ -1253,8 +1260,6 @@ class TrainingController {
                     $sessionsByExercise[$exerciseId] = [];
                 }
                 $sessionsByExercise[$exerciseId][] = $session;
-                
-                // Log de la structure de chaque session
             }
         } else {
             // Fallback: utiliser les données de progression
@@ -1343,7 +1348,7 @@ class TrainingController {
             }
             
             // Récupérer les sessions pour cet exercice depuis les données déjà récupérées
-            $realSessions = $sessionsByExercise[$exerciseId] ?? [];
+            $exerciseSessions = $sessionsByExercise[$exerciseId] ?? [];
             
             // Récupérer les statistiques et sessions depuis l'API backend
             $dashboardData = $this->getExerciseDashboardData($exerciseId, $selectedUserId);
@@ -1361,14 +1366,17 @@ class TrainingController {
                 }
                 
                 if (!empty($validSessions)) {
-                    $realSessions = $validSessions;
+                    $exerciseSessions = $validSessions;
                 } else {
-                    $realSessions = [];
+                    $exerciseSessions = [];
                 }
             }
             
+            // Utiliser exerciseSessions au lieu de realSessions pour éviter le conflit de variable
+            $realSessionsForExercise = $exerciseSessions;
+            
             // Utiliser les statistiques de l'API backend seulement si l'utilisateur a des sessions
-            if ($globalStats && isset($globalStats['total_sessions']) && !empty($realSessions)) {
+            if ($globalStats && isset($globalStats['total_sessions']) && !empty($realSessionsForExercise)) {
                 // Utiliser les statistiques calculées par l'API backend
                 $totalSessions = (int)$globalStats['total_sessions'];
                 $totalArrows = (int)($globalStats['total_arrows'] ?? $globalStats['total_arrows_shot'] ?? 0);
@@ -1398,7 +1406,7 @@ class TrainingController {
             $grouped[$category]['total_time_minutes'] += $totalTime;
             
             // Ajouter les sessions
-            foreach ($realSessions as $session) {
+            foreach ($realSessionsForExercise as $session) {
                 if (!is_array($session)) {
                     continue; // Ignorer les éléments non-tableaux
                 }
