@@ -319,7 +319,8 @@ class TrainingController {
     public function stats($id) {
         // Vérifier si l'utilisateur est connecté
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            header('Location: /login');
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Non authentifié']);
             exit;
         }
         
@@ -328,14 +329,33 @@ class TrainingController {
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
         $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
-        // Récupérer les statistiques de l'entraînement
-        $stats = $this->getTrainingStats($id);
-        
         // Vérifier les permissions
         if (!$isAdmin && !$isCoach && !$isDirigeant && $id != $currentUser['id']) {
-            header('Location: /trainings?error=' . urlencode('Accès refusé'));
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Accès refusé']);
             exit;
         }
+        
+        // Récupérer l'ID de l'utilisateur sélectionné
+        $selectedUserId = (int)$id;
+        
+        // Récupérer les informations de l'utilisateur sélectionné
+        $selectedUser = $this->getUserInfo($selectedUserId);
+        
+        // Récupérer TOUS les exercices disponibles
+        $allExercises = $this->getAllExercisesForUser($isAdmin, $isCoach, $isDirigeant);
+        
+        // Récupérer les entraînements de l'utilisateur sélectionné
+        $trainings = $this->getTrainings($selectedUserId);
+        
+        // Récupérer les vraies sessions d'entraînement depuis l'API
+        $realSessions = $this->fetchAllTrainingSessions($selectedUserId);
+        
+        // Grouper les exercices par catégorie pour l'utilisateur sélectionné
+        $groupedTrainings = $this->groupAllExercisesByCategory($allExercises, $trainings, $selectedUserId, $selectedUser, $realSessions);
+        
+        // Calculer les statistiques à partir des données groupées (même méthode que index())
+        $stats = $this->calculateStatsFromGroupedTrainings($groupedTrainings);
         
         header('Content-Type: application/json');
         echo json_encode($stats);

@@ -231,14 +231,113 @@ function onModalHidden() {
 // Gérer la sélection d'utilisateur
 function handleUserSelection() {
     const selectedUserId = this.value;
+    
+    // Mettre à jour l'attribut data-current-user-id dans le conteneur
+    const container = document.querySelector('.container-fluid[data-current-user-id]');
+    if (container) {
+        if (selectedUserId) {
+            container.setAttribute('data-current-user-id', selectedUserId);
+        } else {
+            // Si aucun utilisateur n'est sélectionné, utiliser l'ID actuel par défaut
+            const currentUserId = container.getAttribute('data-current-user-id');
+            // Garder l'ID actuel ou utiliser une valeur par défaut
+        }
+    }
+    
+    // Mettre à jour l'URL sans recharger la page
+    const currentUrl = new URL(window.location);
     if (selectedUserId) {
-        const currentUrl = new URL(window.location);
         currentUrl.searchParams.set('user_id', selectedUserId);
-        window.location.href = currentUrl.toString();
     } else {
-        const currentUrl = new URL(window.location);
         currentUrl.searchParams.delete('user_id');
-        window.location.href = currentUrl.toString();
+    }
+    window.history.pushState({}, '', currentUrl.toString());
+    
+    // Charger les statistiques via AJAX
+    loadUserStats(selectedUserId || null);
+}
+
+// Charger les statistiques d'un utilisateur via AJAX
+function loadUserStats(userId) {
+    // Afficher un indicateur de chargement
+    const statsCards = document.querySelectorAll('.stats-card .card-title');
+    statsCards.forEach(card => {
+        card.textContent = '...';
+    });
+    
+    // Déterminer l'ID utilisateur à utiliser
+    let statsUserId = userId;
+    if (!statsUserId) {
+        // Si aucun utilisateur n'est sélectionné, récupérer l'ID de l'utilisateur actuel depuis la page
+        // Chercher un élément qui contient l'ID utilisateur actuel (par exemple dans un data attribute)
+        const container = document.querySelector('.container-fluid[data-current-user-id]');
+        if (container) {
+            statsUserId = container.getAttribute('data-current-user-id');
+        }
+        
+        // Si on ne trouve toujours pas l'ID, recharger la page complète
+        if (!statsUserId) {
+            window.location.reload();
+            return;
+        }
+    }
+    
+    // Construire l'URL de l'API (la route est /trainings/{id}/stats)
+    const statsUrl = `/trainings/${statsUserId}/stats`;
+    
+    // Faire la requête AJAX
+    fetch(statsUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erreur lors du chargement des statistiques');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                console.error('Erreur:', data.error);
+                // En cas d'erreur, recharger la page complète
+                window.location.reload();
+                return;
+            }
+            
+            // Mettre à jour les statistiques dans l'interface
+            updateStatsDisplay(data);
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des statistiques:', error);
+            // En cas d'erreur, recharger la page complète
+            window.location.reload();
+        });
+}
+
+// Mettre à jour l'affichage des statistiques
+function updateStatsDisplay(stats) {
+    // Mettre à jour le nombre d'entraînements
+    const trainingsCard = document.querySelector('.bg-primary .card-title');
+    if (trainingsCard) {
+        trainingsCard.textContent = stats.total_trainings || 0;
+    }
+    
+    // Mettre à jour le nombre de flèches
+    const arrowsCard = document.querySelector('.bg-success .card-title');
+    if (arrowsCard) {
+        arrowsCard.textContent = stats.total_arrows || 0;
+    }
+    
+    // Mettre à jour le temps total
+    const timeCard = document.querySelector('.bg-info .card-title');
+    if (timeCard) {
+        const totalMinutes = stats.total_time_minutes || 0;
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        let timeDisplay;
+        if (hours > 0) {
+            timeDisplay = hours + 'h ' + minutes + 'min';
+        } else {
+            timeDisplay = minutes + 'min';
+        }
+        timeCard.textContent = timeDisplay;
     }
 }
 
