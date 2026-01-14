@@ -231,30 +231,23 @@ function onModalHidden() {
 // Gérer la sélection d'utilisateur
 function handleUserSelection() {
     const selectedUserId = this.value;
+    console.log('Changement d\'utilisateur sélectionné:', selectedUserId);
     
-    // Mettre à jour l'attribut data-current-user-id dans le conteneur
-    const container = document.querySelector('.container-fluid[data-current-user-id]');
-    if (container) {
-        if (selectedUserId) {
-            container.setAttribute('data-current-user-id', selectedUserId);
-        } else {
-            // Si aucun utilisateur n'est sélectionné, utiliser l'ID actuel par défaut
-            const currentUserId = container.getAttribute('data-current-user-id');
-            // Garder l'ID actuel ou utiliser une valeur par défaut
-        }
-    }
-    
-    // Mettre à jour l'URL sans recharger la page
+    // Recharger la page avec le nouvel utilisateur pour garantir que toutes les données sont à jour
     const currentUrl = new URL(window.location);
     if (selectedUserId) {
         currentUrl.searchParams.set('user_id', selectedUserId);
     } else {
         currentUrl.searchParams.delete('user_id');
     }
-    window.history.pushState({}, '', currentUrl.toString());
+    // Supprimer le paramètre _t s'il existe déjà
+    currentUrl.searchParams.delete('_t');
+    // Ajouter un paramètre timestamp pour éviter le cache
+    currentUrl.searchParams.set('_t', Date.now());
     
-    // Charger les statistiques via AJAX
-    loadUserStats(selectedUserId || null);
+    console.log('Rechargement vers:', currentUrl.toString());
+    // Forcer le rechargement complet de la page
+    window.location.href = currentUrl.toString();
 }
 
 // Charger les statistiques d'un utilisateur via AJAX
