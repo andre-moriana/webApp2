@@ -1272,15 +1272,22 @@ class TrainingController {
             }
         } else {
             // Fallback: utiliser les données de progression
-        foreach ($trainings as $training) {
-            if (!is_array($training)) {
-                continue;
-            }
-            
-            $exerciseId = $training['exercise_sheet_id'] ?? 'no_exercise';
-            if (!isset($sessionsByExercise[$exerciseId])) {
-                $sessionsByExercise[$exerciseId] = [];
-            }
+            // IMPORTANT: Filtrer par utilisateur sélectionné même dans le fallback
+            foreach ($trainings as $training) {
+                if (!is_array($training)) {
+                    continue;
+                }
+                
+                // Filtrer par utilisateur sélectionné pour garantir que seules les données de cet utilisateur sont utilisées
+                $trainingUserId = $training['user_id'] ?? null;
+                if ($trainingUserId != $selectedUserId) {
+                    continue; // Ignorer les entraînements qui ne correspondent pas à l'utilisateur sélectionné
+                }
+                
+                $exerciseId = $training['exercise_sheet_id'] ?? 'no_exercise';
+                if (!isset($sessionsByExercise[$exerciseId])) {
+                    $sessionsByExercise[$exerciseId] = [];
+                }
             $sessionsByExercise[$exerciseId][] = $training;
                 
             }
