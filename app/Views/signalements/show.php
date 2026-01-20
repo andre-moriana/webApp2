@@ -276,7 +276,7 @@
                     <?php endif; ?>
                     
                     <button type="button" class="btn btn-outline-danger btn-sm" 
-                            onclick="if(confirm('Êtes-vous sûr de vouloir supprimer ce signalement ?')) alert('Fonctionnalité en cours de développement')">
+                            onclick="deleteReport(<?php echo htmlspecialchars($report['id']); ?>)">
                         <i class="fas fa-trash me-1"></i>
                         Supprimer le signalement
                     </button>

@@ -249,6 +249,155 @@ fetch('/signalements/message/123', {
 
 ---
 
+## 🗑️ Suppression des signalements
+
+### Architecture de la suppression
+
+**Implémenté le :** 20/01/2026
+
+### Flux de suppression
+
+```
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│  Frontend   │  POST   │   WebApp2    │  DELETE │  Backend    │
+│             │────────▶│              │────────▶│     API     │
+│  Browser    │         │  Controller  │         │             │
+└─────────────┘         └──────────────┘         └─────────────┘
+      │                        │                        │
+      │ 1. onclick             │                        │
+      │    deleteReport()      │                        │
+      │                        │                        │
+      ├───────────────────────▶│ 2. Vérif session       │
+      │ /signalements/X/delete │    SessionGuard        │
+      │                        │                        │
+      │                        ├───────────────────────▶│
+      │                        │ DELETE /reports/X      │
+      │                        │ (avec JWT token)       │
+      │                        │                        │
+      │                        │                        │ 3. Vérif admin
+      │                        │                        │    AdminMiddleware
+      │                        │                        │
+      │                        │                        │ 4. DELETE FROM
+      │                        │                        │    reports
+      │                        │                        │
+      │                        │◀───────────────────────┤
+      │                        │ {success: true}        │
+      │◀───────────────────────┤                        │
+      │ {success: true}        │                        │
+      │                        │                        │
+      │ 5. Redirect            │                        │
+      │    /signalements       │                        │
+      └────────────────────────┴────────────────────────┘
+```
+
+### Composants impliqués
+
+**1. Frontend JavaScript**
+```javascript
+// public/assets/js/signalement-detail.js
+window.deleteReport = function(reportId) {
+    // Confirmation utilisateur
+    if (!confirm('⚠️ ATTENTION...')) return;
+    
+    // Requête AJAX vers WebApp2
+    fetch(`/signalements/${reportId}/delete`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/signalements';
+        }
+    });
+};
+```
+
+**2. WebApp2 Controller**
+```php
+// app/Controllers/SignalementsController.php
+public function delete($id) {
+    SessionGuard::check();
+    
+    // Appel API via ApiService
+    $response = $this->apiService->makeRequest(
+        'reports/' . $id, 
+        'DELETE'
+    );
+    
+    if ($response['success']) {
+        header('Location: /signalements');
+    }
+}
+```
+
+**3. Backend API Route**
+```php
+// routes/reports.php
+// Route: DELETE /api/reports/:id
+if (preg_match('/^\/(\d+)$/', $path, $matches) && $method === 'DELETE') {
+    $user = AuthMiddleware::requireAuth();
+    AdminMiddleware::requireAdmin();
+    
+    $reportId = (int)$matches[1];
+    $sql = "DELETE FROM reports WHERE id = ?";
+    $affectedRows = $db->delete($sql, [$reportId]);
+    
+    echo json_encode([
+        'success' => true,
+        'message' => 'Signalement supprimé avec succès'
+    ]);
+}
+```
+
+**4. Routes configurées**
+```php
+// app/Config/Router.php
+$this->addRoute("POST", "/signalements/{id}/delete", 
+    "SignalementsController@delete");
+$this->addRoute("DELETE", "/signalements/{id}", 
+    "SignalementsController@delete");
+```
+
+### Sécurité de la suppression
+
+1. **Double vérification d'authentification**
+   - Session PHP vérifiée (WebApp2)
+   - Token JWT vérifié (Backend API)
+
+2. **Vérification des permissions**
+   - Middleware Admin uniquement
+
+3. **Confirmation utilisateur**
+   - Popup de confirmation avec avertissement
+   - Message explicite "Cette action est irréversible"
+
+4. **Protection base de données**
+   - Requêtes préparées (protection SQL injection)
+   - Contraintes de clés étrangères gérées
+
+### UX de la suppression
+
+**États du bouton :**
+
+| État | Apparence | Action |
+|------|-----------|--------|
+| Initial | "🗑️ Supprimer le signalement" (rouge) | Cliquable |
+| Confirmation | Popup native JavaScript | Annulable |
+| Suppression | "⏳ Suppression..." (désactivé) | En cours |
+| Succès | "✅ Signalement supprimé" | Redirection |
+| Erreur | "❌ Erreur..." (réactivé) | Retry possible |
+
+### Documentation
+
+- **Documentation complète :** `SUPPRESSION_SIGNALEMENTS.md`
+- **Guide de test :** `TEST_SUPPRESSION_SIGNALEMENT.md`
+
+---
+
 **Date de création :** 20/01/2026  
-**Version :** 1.2.0  
-**Statut :** ✅ Architecture validée et implémentée
+**Dernière mise à jour :** 20/01/2026  
+**Version :** 1.3.0  
+**Statut :** ✅ Architecture validée et implémentée (Affichage + Suppression)

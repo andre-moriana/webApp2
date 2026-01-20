@@ -152,6 +152,53 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+/**
+ * Fonction globale pour supprimer un signalement
+ */
+window.deleteReport = function(reportId) {
+    if (!confirm('⚠️ ATTENTION ⚠️\n\nÊtes-vous sûr de vouloir supprimer définitivement ce signalement ?\n\nCette action est irréversible.')) {
+        return;
+    }
+    
+    // Désactiver le bouton pendant la suppression
+    const deleteButton = document.querySelector('[onclick*="deleteReport"]');
+    if (deleteButton) {
+        deleteButton.disabled = true;
+        deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Suppression...';
+    }
+    
+    // Faire la requête AJAX pour supprimer le signalement
+    fetch(`/signalements/${reportId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Afficher un message de succès
+            alert('✅ Signalement supprimé avec succès');
+            // Rediriger vers la liste des signalements
+            window.location.href = '/signalements';
+        } else {
+            throw new Error(data.error || 'Erreur lors de la suppression');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur suppression signalement:', error);
+        alert('❌ Erreur lors de la suppression du signalement : ' + error.message);
+        
+        // Réactiver le bouton
+        if (deleteButton) {
+            deleteButton.disabled = false;
+            deleteButton.innerHTML = '<i class="fas fa-trash me-1"></i> Supprimer le signalement';
+        }
+    });
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     
     // Gestion du formulaire de mise à jour
@@ -263,16 +310,6 @@ document.addEventListener('DOMContentLoaded', function() {
         statusSelect.dispatchEvent(event);
     }
     
-    // Confirmation pour les actions critiques
-    const deleteButton = document.querySelector('[onclick*="Supprimer"]');
-    if (deleteButton) {
-        deleteButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (confirm('⚠️ ATTENTION ⚠️\n\nÊtes-vous sûr de vouloir supprimer définitivement ce signalement ?\n\nCette action est irréversible.')) {
-                alert('Fonctionnalité en cours de développement');
-            }
-        });
-    }
     
     // Auto-dismiss des alertes après 5 secondes
     const alerts = document.querySelectorAll('.alert-dismissible');
