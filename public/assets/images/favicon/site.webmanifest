@@ -1,0 +1,25 @@
+{
+  "name": "Arc Training - Portail Archers de Gémenos",
+  "short_name": "Arc Training",
+  "description": "Portail de gestion pour les Archers de Gémenos",
+  "icons": [
+    {
+      "src": "/assets/images/favicon/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/images/favicon/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#198754",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "orientation": "portrait-primary"
+}
