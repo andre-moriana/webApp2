@@ -96,17 +96,12 @@ if (message.author && message.author.name) {
 
 ### 1. Ouvrir la console du navigateur (F12)
 
-Vérifier les logs (format avec système de logging centralisé) :
+Vérifier les logs :
 ```
-[2026-01-20T...] [Signalements] Chargement du message {messageId: 417}
-[2026-01-20T...] [Signalements] URL de la requête {apiUrl: "/signalements/message/417"}
-[2026-01-20T...] [Signalements] Réponse complète {data: {...}, type: "object", ...}
-[2026-01-20T...] [Signalements] Structure du message {id: 417, content: "présent", ...}
-[2026-01-20T...] [Signalements] Nom auteur utilisé {authorName: "John Doe"}
+Réponse complète: {success: true, message: {...}}
+Structure du message: {id: 417, content: 'présent', author: {...}, ...}
+Nom auteur utilisé: John Doe
 ```
-
-**Note :** Le système utilise maintenant `window.logDebug()` et `window.logError()` au lieu de `console.log()`.  
-Voir `LOGGING_SYSTEM.md` pour plus de détails.
 
 ### 2. Vérifier les logs PHP
 

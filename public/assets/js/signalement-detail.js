@@ -3,29 +3,10 @@
  */
 
 /**
- * Helper pour le logging avec fallback
- */
-function logDebug(context, message, data) {
-    if (typeof window.logDebug === 'function') {
-        window.logDebug(context, message, data);
-    } else {
-        console.log(`[${context}] ${message}`, data || '');
-    }
-}
-
-function logError(context, message, error) {
-    if (typeof window.logError === 'function') {
-        window.logError(context, message, error);
-    } else {
-        console.error(`[${context}] ${message}`, error || '');
-    }
-}
-
-/**
  * Fonction globale pour charger un message
  */
 window.loadMessage = function(messageId) {
-    logDebug('Signalements', 'Chargement du message', { messageId });
+    console.log('Chargement du message:', messageId);
     const messageContent = document.getElementById('messageContent');
     
     // Afficher le loader
@@ -40,7 +21,7 @@ window.loadMessage = function(messageId) {
     
     // URL locale WebApp2 (pas directement l'API backend)
     const apiUrl = `/signalements/message/${messageId}`;
-    logDebug('Signalements', 'URL de la requête', { apiUrl });
+    console.log('URL:', apiUrl);
     
     // Faire la requête AJAX vers le backend WebApp2
     fetch(apiUrl, {
@@ -57,16 +38,14 @@ window.loadMessage = function(messageId) {
         return response.json();
     })
     .then(data => {
-        logDebug('Signalements', 'Réponse complète', {
-            data,
-            type: typeof data,
-            success: data.success,
-            hasMessage: !!data.message
-        });
+        console.log('Réponse complète:', data);
+        console.log('Type de data:', typeof data);
+        console.log('data.success:', data.success);
+        console.log('data.message:', data.message);
         
         if (data.success && data.message) {
             const message = data.message;
-            logDebug('Signalements', 'Structure du message', {
+            console.log('Structure du message:', {
                 id: message.id,
                 content: message.content ? 'présent' : 'absent',
                 author: message.author,
@@ -86,7 +65,7 @@ window.loadMessage = function(messageId) {
                         minute: '2-digit'
                     });
                 } catch (e) {
-                    logError('Signalements', 'Erreur formatage date', e);
+                    console.error('Erreur formatage date:', e);
                     formattedDate = message.created_at;
                 }
             }
@@ -98,7 +77,7 @@ window.loadMessage = function(messageId) {
             } else if (message.author_name) {
                 authorName = message.author_name;
             }
-            logDebug('Signalements', 'Nom auteur utilisé', { authorName });
+            console.log('Nom auteur utilisé:', authorName);
             
             let attachmentHtml = '';
             if (message.attachment) {
@@ -160,13 +139,9 @@ window.loadMessage = function(messageId) {
         }
     })
     .catch(error => {
-        logError('Signalements', 'Erreur chargement message', {
-            error,
-            message: error.message,
-            stack: error.stack,
-            apiUrl,
-            messageId
-        });
+        console.error('Erreur complète:', error);
+        console.error('Message erreur:', error.message);
+        console.error('Stack:', error.stack);
         
         messageContent.innerHTML = `
             <div class="alert alert-danger">
@@ -192,7 +167,7 @@ function escapeHtml(text) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    logDebug('Signalements', 'Page de détail chargée');
+    console.log('Page de détail du signalement chargée');
     
     // Gestion du formulaire de mise à jour
     const updateForm = document.querySelector('form[action*="/update"]');
@@ -238,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const savedNotes = localStorage.getItem(storageKey);
         if (savedNotes && !adminNotesTextarea.value) {
             adminNotesTextarea.value = savedNotes;
-            logDebug('Signalements', 'Brouillon de notes chargé', { reportId });
+            console.log('Brouillon de notes chargé');
         }
         
         // Sauvegarder automatiquement toutes les 5 secondes
@@ -247,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(saveTimer);
             saveTimer = setTimeout(() => {
                 localStorage.setItem(storageKey, this.value);
-                logDebug('Signalements', 'Brouillon de notes sauvegardé', { reportId });
+                console.log('Brouillon de notes sauvegardé');
             }, 5000);
         });
         

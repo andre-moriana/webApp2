@@ -2,19 +2,8 @@
  * Script pour la page de liste des signalements
  */
 
-/**
- * Helper pour le logging avec fallback
- */
-function logDebug(context, message, data) {
-    if (typeof window.logDebug === 'function') {
-        window.logDebug(context, message, data);
-    } else {
-        console.log(`[${context}] ${message}`, data || '');
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-    logDebug('Signalements', 'Page de gestion chargée');
+    console.log('Page de gestion des signalements chargée');
     
     // Initialiser DataTables si disponible
     if (typeof $ !== 'undefined' && $.fn.DataTable) {

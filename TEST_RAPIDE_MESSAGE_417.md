@@ -48,14 +48,11 @@ d:\wamp64\www\BackendPHP\database\test_message_417.sql
 
 4. **Vérifier la console (F12)**
    ```
-   Console > Rechercher (format avec logging centralisé) :
-   - "[Signalements] Chargement du message"
-   - "[Signalements] Réponse complète"
-   - "[Signalements] Structure du message"
-   - "[Signalements] Nom auteur utilisé"
+   Console > Rechercher :
+   - "Réponse complète:"
+   - "Structure du message:"
+   - "Nom auteur utilisé:"
    ```
-   
-   **Note :** Les logs utilisent maintenant le système de logging centralisé (`window.logDebug`).
 
 ### Étape 3 : Vérifier les logs backend
 
@@ -80,27 +77,20 @@ grep "MESSAGE GET - Réponse formatée" d:/wamp64/www/BackendPHP/logs/php_errors
 
 ### Dans la console (F12)
 ```javascript
-[2026-01-20T...] [Signalements] Chargement du message {messageId: 417}
-[2026-01-20T...] [Signalements] URL de la requête {apiUrl: "/signalements/message/417"}
-[2026-01-20T...] [Signalements] Réponse complète {
-  data: {
-    success: true,
-    message: {
-      id: 417,
-      content: "Bonjour, L'espace groupes...",
-      author: {
-        id: 8037,
-        name: "Nom utilisateur"
-      },
-      created_at: "2025-..."
-    }
-  },
-  type: "object",
+Réponse complète: {
   success: true,
-  hasMessage: true
+  message: {
+    id: 417,
+    content: "Bonjour, L'espace groupes...",
+    author: {
+      id: 8037,
+      name: "Nom utilisateur" // ou "Utilisateur inconnu"
+    },
+    created_at: "2025-..."
+  }
 }
-[2026-01-20T...] [Signalements] Structure du message {id: 417, content: "présent", ...}
-[2026-01-20T...] [Signalements] Nom auteur utilisé {authorName: "Nom utilisateur"}
+
+Nom auteur utilisé: "Nom utilisateur"  // Pas "Auteur inconnu"
 ```
 
 ### Dans les logs PHP
