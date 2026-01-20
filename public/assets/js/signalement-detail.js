@@ -6,7 +6,7 @@
  * Fonction globale pour charger un message
  */
 window.loadMessage = function(messageId) {
-    console.log('Chargement du message:', messageId);
+    window.logDebug('Signalements', 'Chargement du message', { messageId });
     const messageContent = document.getElementById('messageContent');
     
     // Afficher le loader
@@ -21,7 +21,7 @@ window.loadMessage = function(messageId) {
     
     // URL locale WebApp2 (pas directement l'API backend)
     const apiUrl = `/signalements/message/${messageId}`;
-    console.log('URL:', apiUrl);
+    window.logDebug('Signalements', 'URL de la requête', { apiUrl });
     
     // Faire la requête AJAX vers le backend WebApp2
     fetch(apiUrl, {
@@ -38,14 +38,16 @@ window.loadMessage = function(messageId) {
         return response.json();
     })
     .then(data => {
-        console.log('Réponse complète:', data);
-        console.log('Type de data:', typeof data);
-        console.log('data.success:', data.success);
-        console.log('data.message:', data.message);
+        window.logDebug('Signalements', 'Réponse complète', {
+            data,
+            type: typeof data,
+            success: data.success,
+            hasMessage: !!data.message
+        });
         
         if (data.success && data.message) {
             const message = data.message;
-            console.log('Structure du message:', {
+            window.logDebug('Signalements', 'Structure du message', {
                 id: message.id,
                 content: message.content ? 'présent' : 'absent',
                 author: message.author,
@@ -65,7 +67,7 @@ window.loadMessage = function(messageId) {
                         minute: '2-digit'
                     });
                 } catch (e) {
-                    console.error('Erreur formatage date:', e);
+                    window.logError('Signalements', 'Erreur formatage date', e);
                     formattedDate = message.created_at;
                 }
             }
@@ -77,7 +79,7 @@ window.loadMessage = function(messageId) {
             } else if (message.author_name) {
                 authorName = message.author_name;
             }
-            console.log('Nom auteur utilisé:', authorName);
+            window.logDebug('Signalements', 'Nom auteur utilisé', { authorName });
             
             let attachmentHtml = '';
             if (message.attachment) {
@@ -139,9 +141,13 @@ window.loadMessage = function(messageId) {
         }
     })
     .catch(error => {
-        console.error('Erreur complète:', error);
-        console.error('Message erreur:', error.message);
-        console.error('Stack:', error.stack);
+        window.logError('Signalements', 'Erreur chargement message', {
+            error,
+            message: error.message,
+            stack: error.stack,
+            apiUrl,
+            messageId
+        });
         
         messageContent.innerHTML = `
             <div class="alert alert-danger">
@@ -167,7 +173,7 @@ function escapeHtml(text) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page de détail du signalement chargée');
+    window.logDebug('Signalements', 'Page de détail chargée');
     
     // Gestion du formulaire de mise à jour
     const updateForm = document.querySelector('form[action*="/update"]');
@@ -213,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const savedNotes = localStorage.getItem(storageKey);
         if (savedNotes && !adminNotesTextarea.value) {
             adminNotesTextarea.value = savedNotes;
-            console.log('Brouillon de notes chargé');
+            window.logDebug('Signalements', 'Brouillon de notes chargé', { reportId });
         }
         
         // Sauvegarder automatiquement toutes les 5 secondes
@@ -222,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(saveTimer);
             saveTimer = setTimeout(() => {
                 localStorage.setItem(storageKey, this.value);
-                console.log('Brouillon de notes sauvegardé');
+                window.logDebug('Signalements', 'Brouillon de notes sauvegardé', { reportId });
             }, 5000);
         });
         

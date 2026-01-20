@@ -220,6 +220,31 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(container);
         return container;
     }
+    
+    // Fonction de logging centralisée
+    window.logDebug = function(context, message, data = null) {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            const timestamp = new Date().toISOString();
+            const logMessage = `[${timestamp}] [${context}] ${message}`;
+            
+            if (data !== null) {
+                console.log(logMessage, data);
+            } else {
+                console.log(logMessage);
+            }
+        }
+    };
+    
+    window.logError = function(context, message, error = null) {
+        const timestamp = new Date().toISOString();
+        const logMessage = `[${timestamp}] [ERROR] [${context}] ${message}`;
+        
+        if (error !== null) {
+            console.error(logMessage, error);
+        } else {
+            console.error(logMessage);
+        }
+    };
 });
 
 // Fonctions globales
@@ -242,7 +267,7 @@ window.ApiService = {
             
             return await response.json();
         } catch (error) {
-            console.error('API request failed:', error);
+            window.logError('ApiService', 'Erreur de requête API', error);
             throw error;
         }
     }
