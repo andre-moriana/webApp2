@@ -6,7 +6,6 @@
  * Fonction globale pour charger un message
  */
 window.loadMessage = function(messageId) {
-    console.log('Chargement du message:', messageId);
     const messageContent = document.getElementById('messageContent');
     
     // Afficher le loader
@@ -21,7 +20,6 @@ window.loadMessage = function(messageId) {
     
     // URL locale WebApp2 (pas directement l'API backend)
     const apiUrl = `/signalements/message/${messageId}`;
-    console.log('URL:', apiUrl);
     
     // Faire la requête AJAX vers le backend WebApp2
     fetch(apiUrl, {
@@ -38,24 +36,11 @@ window.loadMessage = function(messageId) {
         return response.json();
     })
     .then(data => {
-        console.log('Réponse complète:', data);
-        console.log('Type de data:', typeof data);
-        console.log('data.success:', data.success);
-        console.log('data.data:', data.data);
-        
         // Gérer la double enveloppe: data.data.message
         const apiResponse = data.data || data;
-        console.log('apiResponse:', apiResponse);
-        console.log('apiResponse.message:', apiResponse.message);
         
         if (apiResponse.success && apiResponse.message) {
             const message = apiResponse.message;
-            console.log('Structure du message:', {
-                id: message.id,
-                content: message.content ? 'présent' : 'absent',
-                author: message.author,
-                created_at: message.created_at
-            });
             
             // Gérer différents formats de date
             let formattedDate = 'Date inconnue';
@@ -70,7 +55,6 @@ window.loadMessage = function(messageId) {
                         minute: '2-digit'
                     });
                 } catch (e) {
-                    console.error('Erreur formatage date:', e);
                     formattedDate = message.created_at;
                 }
             }
@@ -82,7 +66,6 @@ window.loadMessage = function(messageId) {
             } else if (message.author_name) {
                 authorName = message.author_name;
             }
-            console.log('Nom auteur utilisé:', authorName);
             
             let attachmentHtml = '';
             if (message.attachment) {
@@ -144,9 +127,7 @@ window.loadMessage = function(messageId) {
         }
     })
     .catch(error => {
-        console.error('Erreur complète:', error);
-        console.error('Message erreur:', error.message);
-        console.error('Stack:', error.stack);
+        console.error('Erreur chargement message:', error);
         
         messageContent.innerHTML = `
             <div class="alert alert-danger">
@@ -172,7 +153,6 @@ function escapeHtml(text) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page de détail du signalement chargée');
     
     // Gestion du formulaire de mise à jour
     const updateForm = document.querySelector('form[action*="/update"]');
@@ -218,7 +198,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const savedNotes = localStorage.getItem(storageKey);
         if (savedNotes && !adminNotesTextarea.value) {
             adminNotesTextarea.value = savedNotes;
-            console.log('Brouillon de notes chargé');
         }
         
         // Sauvegarder automatiquement toutes les 5 secondes
@@ -227,7 +206,6 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(saveTimer);
             saveTimer = setTimeout(() => {
                 localStorage.setItem(storageKey, this.value);
-                console.log('Brouillon de notes sauvegardé');
             }, 5000);
         });
         

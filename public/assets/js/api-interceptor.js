@@ -6,22 +6,22 @@
 (function() {
     'use strict';
     
-    console.log('🔒 API Interceptor activé');
+    // console.log('🔒 API Interceptor activé');
     
     /**
      * Wrapper pour fetch qui gère automatiquement les erreurs 401
      */
     const originalFetch = window.fetch;
     window.fetch = function(...args) {
-        console.log('🌐 Fetch intercepté:', args[0]);
+        // console.log('🌐 Fetch intercepté:', args[0]);
         return originalFetch.apply(this, args)
             .then(response => {
-                console.log('📡 Réponse fetch:', args[0], 'Status:', response.status);
+                // console.log('📡 Réponse fetch:', args[0], 'Status:', response.status);
                 
                 // Si erreur 401, rediriger vers login
                 if (response.status === 401) {
-                    console.error('❌ Erreur 401 détectée sur:', args[0]);
-                    console.log('🔄 Redirection vers login...');
+                    // console.error('❌ Erreur 401 détectée sur:', args[0]);
+                    // console.log('🔄 Redirection vers login...');
                     
                     // Éviter les redirections multiples
                     if (!sessionStorage.getItem('redirectingToLogin')) {
@@ -60,7 +60,7 @@
         this.addEventListener('load', function() {
             // Si erreur 401, rediriger vers login
             if (this.status === 401) {
-                console.log('Session expirée (401), redirection vers login...');
+                // console.log('Session expirée (401), redirection vers login...');
                 
                 // Éviter les redirections multiples
                 if (!sessionStorage.getItem('redirectingToLogin')) {
@@ -82,12 +82,12 @@
      * Vérifier l'état de la session au chargement de la page
      */
     function checkSessionOnLoad() {
-        console.log('🔍 Vérification de session au chargement...');
-        console.log('📍 Page actuelle:', window.location.pathname);
+        // console.log('🔍 Vérification de session au chargement...');
+        // console.log('📍 Page actuelle:', window.location.pathname);
         
         // Si on est sur une page protégée, vérifier que les données se chargent
         if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-            console.log('🔒 Page protégée détectée, vérification du token...');
+            // console.log('🔒 Page protégée détectée, vérification du token...');
             
             // Faire une requête de test vers le backend pour vérifier le token
             fetch('/api/auth/verify', {
@@ -97,11 +97,11 @@
                 }
             })
             .then(response => {
-                console.log('✅ Réponse de /api/auth/verify:', response.status);
+                // console.log('✅ Réponse de /api/auth/verify:', response.status);
                 
                 if (response.status === 401) {
-                    console.error('❌ Token invalide au chargement (401)');
-                    console.log('🔄 Redirection immédiate vers login...');
+                    // console.error('❌ Token invalide au chargement (401)');
+                    // console.log('🔄 Redirection immédiate vers login...');
                     
                     // Éviter les redirections multiples
                     if (!sessionStorage.getItem('redirectingToLogin')) {
@@ -114,20 +114,20 @@
                         window.location.replace('/login?expired=1');
                     }
                 } else if (response.ok) {
-                    console.log('✅ Token valide');
+                    // console.log('✅ Token valide');
                     return response.json();
                 }
             })
             .then(data => {
-                if (data) {
-                    console.log('📊 Données session:', data);
-                }
+                // if (data) {
+                //     console.log('📊 Données session:', data);
+                // }
             })
             .catch(error => {
-                console.error('❌ Erreur lors de la vérification de session:', error);
+                console.error('Erreur lors de la vérification de session:', error);
             });
         } else {
-            console.log('📄 Page publique, pas de vérification nécessaire');
+            // console.log('📄 Page publique, pas de vérification nécessaire');
         }
     }
     
