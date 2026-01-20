@@ -285,6 +285,17 @@ error_log("Session: " . print_r($_SESSION, true));
                                                     <a href="/users/<?php echo $user['id']; ?>" class="btn btn-sm btn-outline-primary" title="Voir">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
+                                                    <?php 
+                                                    // Ne pas afficher le bouton message pour soi-même
+                                                    $currentUserId = $_SESSION['user']['id'] ?? null;
+                                                    if ($user['id'] != $currentUserId): 
+                                                    ?>
+                                                    <a href="/private-messages?user=<?php echo $user['id']; ?>&name=<?php echo urlencode($fullName); ?>" 
+                                                       class="btn btn-sm btn-outline-success" 
+                                                       title="Envoyer un message privé">
+                                                        <i class="fas fa-envelope"></i>
+                                                    </a>
+                                                    <?php endif; ?>
                                                     <a href="/users/<?php echo $user['id']; ?>/edit" class="btn btn-sm btn-outline-secondary" title="Modifier">
                                                         <i class="fas fa-edit"></i>
                                                     </a>

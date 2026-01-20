@@ -12,6 +12,19 @@ let selectedAttachment = null;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Initialisation de la page des messages privés');
     
+    // Vérifier si on arrive avec un utilisateur pré-sélectionné (depuis la liste des utilisateurs)
+    const urlParams = new URLSearchParams(window.location.search);
+    const preSelectedUserId = urlParams.get('user');
+    const preSelectedUserName = urlParams.get('name');
+    
+    if (preSelectedUserId && preSelectedUserName) {
+        console.log('Utilisateur pré-sélectionné détecté:', preSelectedUserId, preSelectedUserName);
+        // Ouvrir la conversation automatiquement
+        setTimeout(() => {
+            openConversation(preSelectedUserId, decodeURIComponent(preSelectedUserName));
+        }, 500); // Petit délai pour laisser la page se charger
+    }
+    
     // Gestion de la recherche d'utilisateurs dans la modal
     const userSearch = document.getElementById('user-search');
     if (userSearch) {
