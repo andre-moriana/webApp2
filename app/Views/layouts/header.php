@@ -6,15 +6,15 @@
     <title><?php echo $pageTitle ?? 'Portail Arc Training'; ?></title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/assets/images/favicon/favicon.svg">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="/public/assets/images/favicon/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
+    <link rel="icon" type="image/png" sizes="96x96" href="/public/assets/images/favicon/favicon-96x96.png">
     
     <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="/assets/images/favicon/apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="/public/assets/images/favicon/apple-touch-icon.png">
     
     <!-- Web App Manifest -->
-    <link rel="manifest" href="/assets/images/favicon/site.webmanifest">
+    <link rel="manifest" href="/public/assets/images/favicon/site.webmanifest">
     
     <!-- Theme Color -->
     <meta name="theme-color" content="#198754">
