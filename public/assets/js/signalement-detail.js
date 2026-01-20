@@ -41,10 +41,15 @@ window.loadMessage = function(messageId) {
         console.log('Réponse complète:', data);
         console.log('Type de data:', typeof data);
         console.log('data.success:', data.success);
-        console.log('data.message:', data.message);
+        console.log('data.data:', data.data);
         
-        if (data.success && data.message) {
-            const message = data.message;
+        // Gérer la double enveloppe: data.data.message
+        const apiResponse = data.data || data;
+        console.log('apiResponse:', apiResponse);
+        console.log('apiResponse.message:', apiResponse.message);
+        
+        if (apiResponse.success && apiResponse.message) {
+            const message = apiResponse.message;
             console.log('Structure du message:', {
                 id: message.id,
                 content: message.content ? 'présent' : 'absent',
