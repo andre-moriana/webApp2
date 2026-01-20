@@ -61,7 +61,10 @@ class DashboardController {
             'topics_by_group' => [],
             'topics_total' => 0,
             'events_list' => [],
-            'events_by_club' => []
+            'events_by_club' => [],
+            'reports_total' => 0,
+            'reports_pending' => 0,
+            'reports_list' => []
         ];
         
         try {
@@ -319,6 +322,37 @@ class DashboardController {
                         }
                     }
                 }
+            }
+            
+            // Récupérer les signalements
+            try {
+                $reportsResponse = $this->apiService->makeRequest('reports', 'GET');
+                if ($reportsResponse['success'] && !empty($reportsResponse['data']['reports'])) {
+                    $reports = is_array($reportsResponse['data']['reports']) ? $reportsResponse['data']['reports'] : [];
+                    $stats['reports_total'] = count($reports);
+                    
+                    foreach ($reports as $report) {
+                        $status = $report['status'] ?? 'pending';
+                        
+                        if ($status === 'pending') {
+                            $stats['reports_pending']++;
+                        }
+                        
+                        $stats['reports_list'][] = [
+                            'id' => $report['id'] ?? '',
+                            'reason' => $report['reason'] ?? '',
+                            'description' => $report['description'] ?? '',
+                            'status' => $status,
+                            'reporter_username' => $report['reporter_username'] ?? 'Inconnu',
+                            'reported_username' => $report['reported_username'] ?? $report['reported_user_name'] ?? 'N/A',
+                            'created_at' => $report['created_at'] ?? ''
+                        ];
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Erreur lors de la récupération des signalements: ' . $e->getMessage());
+                $stats['reports_total'] = 0;
+                $stats['reports_pending'] = 0;
             }
             
             // Pour les autres statistiques, on utilise des valeurs par défaut

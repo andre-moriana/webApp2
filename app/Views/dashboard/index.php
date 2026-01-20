@@ -333,7 +333,7 @@
             <div class="card-body">
                 <div class="row">
                     <!-- Groupes et Sujets -->
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <div class="card border-left-info shadow-sm h-100">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center mb-3">
@@ -392,7 +392,7 @@
                     </div>
                     
                     <!-- Événements -->
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <div class="card border-left-warning shadow-sm h-100">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center mb-3">
@@ -432,6 +432,125 @@
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <li class="text-muted">Aucun événement</li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Signalements -->
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-left-danger shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center mb-3">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                            Signalements
+                                        </div>
+                                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                            <span class="text-danger"><?php echo $stats['reports_pending']; ?></span> / 
+                                            <span><?php echo $stats['reports_total']; ?></span>
+                                        </div>
+                                        <div class="text-xs text-muted mt-1">En attente / Total</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-flag fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                                <!-- Liste des signalements -->
+                                <div class="reports-list">
+                                    <hr>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="text-xs font-weight-bold text-danger">Signalements récents:</div>
+                                        <?php if ($stats['reports_total'] > 0): ?>
+                                            <a href="/signalements" class="btn btn-sm btn-outline-danger" style="font-size: 0.7rem; padding: 2px 8px;">
+                                                <i class="fas fa-list"></i> Voir tout
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                    <ul class="list-unstyled mb-0" style="font-size: 0.85rem; max-height: 400px; overflow-y: auto;">
+                                        <?php if (!empty($stats['reports_list'])): ?>
+                                            <?php 
+                                            // Afficher uniquement les 5 derniers signalements
+                                            $recentReports = array_slice($stats['reports_list'], 0, 5);
+                                            foreach ($recentReports as $report): 
+                                                $statusClass = '';
+                                                $statusLabel = '';
+                                                switch ($report['status']) {
+                                                    case 'pending':
+                                                        $statusClass = 'badge-danger';
+                                                        $statusLabel = 'En attente';
+                                                        break;
+                                                    case 'reviewed':
+                                                        $statusClass = 'badge-warning';
+                                                        $statusLabel = 'En cours';
+                                                        break;
+                                                    case 'resolved':
+                                                        $statusClass = 'badge-success';
+                                                        $statusLabel = 'Résolu';
+                                                        break;
+                                                    case 'dismissed':
+                                                        $statusClass = 'badge-secondary';
+                                                        $statusLabel = 'Rejeté';
+                                                        break;
+                                                    default:
+                                                        $statusClass = 'badge-secondary';
+                                                        $statusLabel = $report['status'];
+                                                }
+                                                
+                                                $reasonLabels = [
+                                                    'harassment' => 'Harcèlement',
+                                                    'spam' => 'Spam',
+                                                    'inappropriate_content' => 'Contenu inapproprié',
+                                                    'violence' => 'Violence',
+                                                    'hate_speech' => 'Discours de haine',
+                                                    'fake_news' => 'Fausse information',
+                                                    'other' => 'Autre'
+                                                ];
+                                                $reasonLabel = $reasonLabels[$report['reason']] ?? $report['reason'];
+                                            ?>
+                                                <li class="mb-2 border-bottom pb-2">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div class="flex-grow-1">
+                                                            <div class="font-weight-bold" style="font-size: 0.8rem;">
+                                                                <i class="fas fa-flag text-danger" style="font-size: 0.6rem;"></i> 
+                                                                <?php echo htmlspecialchars($reasonLabel); ?>
+                                                            </div>
+                                                            <div class="text-muted" style="font-size: 0.75rem;">
+                                                                Signalé par: <?php echo htmlspecialchars($report['reporter_username']); ?>
+                                                            </div>
+                                                            <?php if (!empty($report['reported_username']) && $report['reported_username'] !== 'N/A'): ?>
+                                                                <div class="text-muted" style="font-size: 0.75rem;">
+                                                                    Utilisateur: <?php echo htmlspecialchars($report['reported_username']); ?>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                            <div class="text-muted" style="font-size: 0.7rem;">
+                                                                <?php 
+                                                                if (!empty($report['created_at'])) {
+                                                                    $date = new DateTime($report['created_at']);
+                                                                    echo $date->format('d/m/Y H:i');
+                                                                }
+                                                                ?>
+                                                            </div>
+                                                        </div>
+                                                        <div class="ml-2">
+                                                            <span class="badge <?php echo $statusClass; ?>" style="font-size: 0.65rem;">
+                                                                <?php echo $statusLabel; ?>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-1">
+                                                        <a href="/signalements/<?php echo htmlspecialchars($report['id']); ?>" 
+                                                           class="btn btn-sm btn-outline-primary" 
+                                                           style="font-size: 0.65rem; padding: 2px 6px;">
+                                                            <i class="fas fa-eye"></i> Voir détails
+                                                        </a>
+                                                    </div>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <li class="text-muted">Aucun signalement</li>
                                         <?php endif; ?>
                                     </ul>
                                 </div>
