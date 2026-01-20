@@ -172,14 +172,25 @@ class SignalementsController {
             // Appeler l'API backend via ApiService
             $response = $this->apiService->makeRequest('messages/get/' . $messageId, 'GET');
             
+            error_log("SignalementsController::getMessage - Réponse API: " . json_encode($response));
+            
+            // Vérifier la structure de la réponse
+            if (isset($response['success']) && $response['success'] && isset($response['message'])) {
+                error_log("SignalementsController::getMessage - Message trouvé, ID: " . ($response['message']['id'] ?? 'N/A'));
+                error_log("SignalementsController::getMessage - Author: " . json_encode($response['message']['author'] ?? 'N/A'));
+            } else {
+                error_log("SignalementsController::getMessage - Réponse invalide ou erreur");
+            }
+            
             // Retourner directement la réponse de l'API
             echo json_encode($response);
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération du message: ' . $e->getMessage());
+            error_log('SignalementsController::getMessage - Exception: ' . $e->getMessage());
+            error_log('SignalementsController::getMessage - Trace: ' . $e->getTraceAsString());
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'error' => 'Erreur lors de la récupération du message'
+                'error' => 'Erreur lors de la récupération du message: ' . $e->getMessage()
             ]);
         }
         
