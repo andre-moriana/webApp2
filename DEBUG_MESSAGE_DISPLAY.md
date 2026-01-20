@@ -10,7 +10,7 @@ Cette erreur se produit lorsque la structure de données retournée par l'API ne
 
 #### 1. Backend - Modèle Message (`Message.php`)
 
-**Problème :** Le champ `u.name` peut être NULL dans la base de données
+**Problème :** Le champ `u.name` peut être NULL ou vide dans la base de données
 
 **Solution :**
 ```php
@@ -19,18 +19,50 @@ SELECT m.*, u.name as author_name ...
 FROM messages m 
 INNER JOIN users u ON m.author_id = u.id
 
-// ✅ APRÈS
+// ✅ APRÈS (Version 1.2.1)
 SELECT m.*, 
-       COALESCE(u.name, u.username, 'Utilisateur inconnu') as author_name ...
+       CASE 
+           WHEN u.name IS NOT NULL AND u.name != '' THEN u.name
+           WHEN u.username IS NOT NULL AND u.username != '' THEN u.username
+           ELSE 'Utilisateur inconnu'
+       END as author_name,
+       ...
 FROM messages m 
 LEFT JOIN users u ON m.author_id = u.id
 ```
 
 **Avantages :**
-- `COALESCE` : Utilise `name`, sinon `username`, sinon 'Utilisateur inconnu'
+- `CASE` : Plus robuste que `COALESCE` pour gérer les chaînes vides
+- Vérifie explicitement `IS NOT NULL` et `!= ''`
 - `LEFT JOIN` : Retourne le message même si l'utilisateur n'existe plus
+- Logging : Enregistre le résultat pour débogage
 
-#### 2. Frontend - JavaScript (`signalement-detail.js`)
+#### 2. Backend - Route API (`routes/message.php`)
+
+**Problème :** L'opérateur `??` ne gère pas bien les valeurs NULL explicites
+
+**Solution :**
+```php
+// ❌ AVANT
+'author' => [
+    'id' => $message['author_id'],
+    'name' => $message['author_name'] ?? 'Utilisateur inconnu'
+]
+
+// ✅ APRÈS (Version 1.2.1)
+'author' => [
+    'id' => $message['author_id'],
+    'name' => !empty($message['author_name']) ? $message['author_name'] : 'Utilisateur inconnu'
+],
+'content' => !empty($message['content']) ? $message['content'] : 'Contenu non disponible'
+```
+
+**Avantages :**
+- `!empty()` : Gère NULL, chaînes vides, false, 0
+- Logging : Enregistre la réponse formatée
+- Cohérent : Même approche pour tous les champs
+
+#### 3. Frontend - JavaScript (`signalement-detail.js`)
 
 **Problème :** Le code supposait que `message.author.name` existe toujours
 
@@ -64,12 +96,17 @@ if (message.author && message.author.name) {
 
 ### 1. Ouvrir la console du navigateur (F12)
 
-Vérifier les logs :
+Vérifier les logs (format avec système de logging centralisé) :
 ```
-Réponse complète: {success: true, message: {...}}
-Structure du message: {id: 417, content: 'présent', author: {...}, ...}
-Nom auteur utilisé: John Doe
+[2026-01-20T...] [Signalements] Chargement du message {messageId: 417}
+[2026-01-20T...] [Signalements] URL de la requête {apiUrl: "/signalements/message/417"}
+[2026-01-20T...] [Signalements] Réponse complète {data: {...}, type: "object", ...}
+[2026-01-20T...] [Signalements] Structure du message {id: 417, content: "présent", ...}
+[2026-01-20T...] [Signalements] Nom auteur utilisé {authorName: "John Doe"}
 ```
+
+**Note :** Le système utilise maintenant `window.logDebug()` et `window.logError()` au lieu de `console.log()`.  
+Voir `LOGGING_SYSTEM.md` pour plus de détails.
 
 ### 2. Vérifier les logs PHP
 
@@ -228,6 +265,6 @@ Si le problème persiste :
 
 ---
 
-**Version :** 1.2.1  
+**Version :** 1.2.2  
 **Date :** 20/01/2026  
-**Statut :** ✅ Corrections appliquées
+**Statut :** ✅ Corrections appliquées (CASE + !empty())

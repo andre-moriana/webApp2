@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page de gestion des signalements chargée');
+    window.logDebug('Signalements', 'Page de gestion chargée');
     
     // Initialiser DataTables si disponible
     if (typeof $ !== 'undefined' && $.fn.DataTable) {
