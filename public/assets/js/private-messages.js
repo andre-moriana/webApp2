@@ -37,6 +37,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const userId = this.dataset.userId;
             const userName = this.dataset.userName;
             
+            console.log('Click sur user-item:', {
+                userId: userId,
+                userName: userName,
+                dataset: this.dataset
+            });
+            
+            // Vérifier que les données sont présentes
+            if (!userId || userId === '' || userId === 'undefined') {
+                console.error('user-item sans userId valide!', this);
+                showError('Erreur: Utilisateur invalide');
+                return;
+            }
+            
             // Fermer la modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('newConversationModal'));
             if (modal) {
@@ -111,11 +124,18 @@ function filterUsers(searchTerm) {
 function openConversation(userId, userName) {
     console.log(`Ouverture de la conversation avec ${userName} (${userId})`);
     
+    // Vérifier que l'userId n'est pas vide
+    if (!userId || userId === '' || userId === 'undefined') {
+        console.error('ID utilisateur invalide:', userId);
+        showError('Erreur: ID utilisateur invalide');
+        return;
+    }
+    
     currentConversationUserId = userId;
-    currentConversationUserName = userName;
+    currentConversationUserName = userName || 'Utilisateur';
     
     // Mettre à jour l'en-tête
-    document.getElementById('current-user-name').textContent = userName;
+    document.getElementById('current-user-name').textContent = currentConversationUserName;
     
     // Afficher le formulaire d'envoi
     document.getElementById('message-form-container').style.display = 'block';
@@ -143,16 +163,32 @@ function openConversation(userId, userName) {
  * Charge l'historique des messages avec un utilisateur
  */
 async function loadMessages(userId) {
+    // Vérifier que l'userId est valide
+    if (!userId || userId === '' || userId === 'undefined') {
+        console.error('loadMessages: ID utilisateur invalide:', userId);
+        showError('ID utilisateur invalide');
+        return;
+    }
+    
+    console.log('loadMessages: Chargement des messages pour userId:', userId);
+    
     try {
-        const response = await fetch(`/api/private-messages/${userId}/history`, {
+        const url = `/api/private-messages/${userId}/history`;
+        console.log('loadMessages: URL de la requête:', url);
+        
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
         });
         
+        console.log('loadMessages: Response status:', response.status);
+        
         if (!response.ok) {
-            throw new Error('Erreur lors du chargement des messages');
+            const errorText = await response.text();
+            console.error('loadMessages: Erreur HTTP:', response.status, errorText);
+            throw new Error(`Erreur HTTP ${response.status}: ${errorText}`);
         }
         
         const messages = await response.json();
@@ -165,7 +201,7 @@ async function loadMessages(userId) {
         
     } catch (error) {
         console.error('Erreur lors du chargement des messages:', error);
-        showError('Erreur lors du chargement des messages');
+        showError('Erreur lors du chargement des messages: ' + error.message);
     }
 }
 

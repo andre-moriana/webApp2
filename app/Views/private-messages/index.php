@@ -29,10 +29,25 @@
                             <?php foreach ($conversations as $conv): 
                                 $otherUser = $conv['other_user'] ?? [];
                                 $otherUserId = $otherUser['_id'] ?? $otherUser['id'] ?? '';
-                                $otherUserName = $otherUser['name'] ?? 'Utilisateur inconnu';
+                                // Essayer différents formats de nom
+                                $otherUserName = $otherUser['name'] ?? '';
+                                if (empty($otherUserName)) {
+                                    $firstName = $otherUser['firstName'] ?? '';
+                                    $lastName = $otherUser['lastName'] ?? '';
+                                    $otherUserName = trim($firstName . ' ' . $lastName);
+                                }
+                                if (empty($otherUserName)) {
+                                    $otherUserName = $otherUser['username'] ?? 'Utilisateur inconnu';
+                                }
                                 $lastMessage = $conv['last_message'] ?? '';
                                 $lastMessageDate = $conv['last_message_date'] ?? '';
                                 $unreadCount = $conv['unread_count'] ?? 0;
+                                
+                                // Debug
+                                error_log("Conversation: OtherUserID=$otherUserId, OtherUserName=$otherUserName");
+                                
+                                // Ne pas afficher les conversations sans utilisateur
+                                if (empty($otherUserId)) continue;
                             ?>
                                 <a href="#" 
                                    class="list-group-item list-group-item-action conversation-item" 
@@ -147,8 +162,20 @@
                         <div class="list-group">
                             <?php foreach ($users as $user): 
                                 $userId = $user['id'] ?? $user['_id'] ?? '';
-                                $userName = ($user['firstName'] ?? '') . ' ' . ($user['name'] ?? $user['lastName'] ?? '');
+                                // Construire le nom complet - plusieurs formats possibles
+                                $firstName = $user['firstName'] ?? '';
+                                $lastName = $user['name'] ?? $user['lastName'] ?? '';
+                                $userName = trim($firstName . ' ' . $lastName);
+                                if (empty($userName)) {
+                                    $userName = $user['username'] ?? 'Utilisateur';
+                                }
                                 $userEmail = $user['email'] ?? '';
+                                
+                                // Debug
+                                error_log("User in modal: ID=$userId, Name=$userName");
+                                
+                                // Ne pas afficher les utilisateurs sans ID
+                                if (empty($userId)) continue;
                             ?>
                                 <a href="#" 
                                    class="list-group-item list-group-item-action user-item" 
@@ -171,8 +198,25 @@
     </div>
 </div>
 
+<style>
+    /* Style pour la conversation active */
+    .conversation-item.active {
+        background-color: #d4edda;
+        border-left: 4px solid #198754;
+    }
+    
+    /* Style pour le hover */
+    .conversation-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
 <script>
     // Passer les données PHP au JavaScript
     window.currentUserId = '<?php echo $_SESSION['user']['id'] ?? ''; ?>';
     window.currentUserName = '<?php echo htmlspecialchars($_SESSION['user']['username'] ?? ''); ?>';
+    
+    // Debug
+    console.log('Current user ID:', window.currentUserId);
+    console.log('Current user name:', window.currentUserName);
 </script>

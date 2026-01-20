@@ -76,21 +76,40 @@ class PrivateMessagesController {
         try {
             $response = $this->apiService->getUsers();
             
+            error_log("PrivateMessagesController::getAllUsers() - Response success: " . ($response['success'] ? 'true' : 'false'));
+            
             if ($response['success'] && !empty($response['data']['users'])) {
                 $users = $response['data']['users'];
                 $currentUserId = $_SESSION['user']['id'] ?? null;
+                
+                error_log("PrivateMessagesController::getAllUsers() - Total users: " . count($users));
+                error_log("PrivateMessagesController::getAllUsers() - Current user ID: " . $currentUserId);
+                
+                // Debug: afficher le premier utilisateur
+                if (!empty($users[0])) {
+                    error_log("PrivateMessagesController::getAllUsers() - Premier utilisateur: " . json_encode($users[0]));
+                }
                 
                 // Filtrer pour exclure l'utilisateur actuel et les utilisateurs inactifs
                 $filteredUsers = array_filter($users, function($user) use ($currentUserId) {
                     $userId = $user['id'] ?? $user['_id'] ?? '';
                     $status = $user['status'] ?? 'active';
-                    return $userId !== $currentUserId && $status === 'active';
+                    $isValid = !empty($userId) && $userId !== $currentUserId && $status === 'active';
+                    
+                    if (!$isValid) {
+                        error_log("User filtered out: ID=$userId, Status=$status, CurrentUserId=$currentUserId");
+                    }
+                    
+                    return $isValid;
                 });
+                
+                error_log("PrivateMessagesController::getAllUsers() - Filtered users: " . count($filteredUsers));
                 
                 // Réindexer le tableau
                 return array_values($filteredUsers);
             }
             
+            error_log("PrivateMessagesController::getAllUsers() - No users found or error");
             return [];
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des utilisateurs: ' . $e->getMessage());
