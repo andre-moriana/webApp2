@@ -19,16 +19,17 @@ window.loadMessage = function(messageId) {
         </div>
     `;
     
-    // Récupérer le token depuis la session
-    const token = document.querySelector('meta[name="api-token"]')?.content;
+    // URL locale WebApp2 (pas directement l'API backend)
+    const apiUrl = `/signalements/message/${messageId}`;
+    console.log('URL:', apiUrl);
     
-    // Faire la requête AJAX
-    fetch(`https://arctraining.fr/api/messages/get/${messageId}`, {
+    // Faire la requête AJAX vers le backend WebApp2
+    fetch(apiUrl, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        }
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin' // Inclure les cookies de session
     })
     .then(response => {
         if (!response.ok) {
@@ -57,7 +58,7 @@ window.loadMessage = function(messageId) {
                     attachmentHtml = `
                         <div class="mt-3">
                             <strong>Pièce jointe:</strong><br>
-                            <img src="https://arctraining.fr/api/messages/image/${message.attachment.filename}" 
+                            <img src="/messages/image/${message.id}" 
                                  alt="Image jointe" 
                                  class="img-fluid rounded mt-2" 
                                  style="max-height: 400px;">
@@ -67,7 +68,7 @@ window.loadMessage = function(messageId) {
                     attachmentHtml = `
                         <div class="mt-3">
                             <strong>Pièce jointe:</strong><br>
-                            <a href="https://arctraining.fr/api/messages/attachment/${message.attachment.filename}" 
+                            <a href="/messages/attachment/${message.id}" 
                                target="_blank" class="btn btn-sm btn-outline-primary mt-2">
                                 <i class="fas fa-download me-1"></i>
                                 ${message.attachment.originalName || 'Télécharger'}
@@ -110,12 +111,19 @@ window.loadMessage = function(messageId) {
         }
     })
     .catch(error => {
-        console.error('Erreur:', error);
+        console.error('Erreur complète:', error);
+        console.error('Message erreur:', error.message);
+        console.error('Stack:', error.stack);
+        
         messageContent.innerHTML = `
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 <strong>Erreur lors du chargement du message</strong><br>
-                ${escapeHtml(error.message)}
+                ${escapeHtml(error.message)}<br>
+                <small class="mt-2 d-block">
+                    URL tentée : ${apiUrl}<br>
+                    Message ID : ${messageId}
+                </small>
             </div>
         `;
     });
