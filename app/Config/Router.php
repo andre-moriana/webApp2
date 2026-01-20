@@ -227,6 +227,7 @@ class Router {
         
         // Routes des signalements (protégées - admin seulement)
         $this->addRoute("GET", "/signalements", "SignalementsController@index");
+        $this->addRoute("GET", "/signalements/message/{messageId}", "SignalementsController@getMessage");
         $this->addRoute("GET", "/signalements/{id}", "SignalementsController@show");
         $this->addRoute("POST", "/signalements/{id}/update", "SignalementsController@update");
         

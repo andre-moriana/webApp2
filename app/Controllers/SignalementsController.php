@@ -156,4 +156,33 @@ class SignalementsController {
         header('Location: /signalements/' . $id);
         exit;
     }
+    
+    /**
+     * Récupère un message spécifique (appelé via AJAX)
+     */
+    public function getMessage($messageId) {
+        error_log("SignalementsController::getMessage($messageId) - Début");
+        
+        // Vérifier la session
+        SessionGuard::check();
+        
+        header('Content-Type: application/json; charset=utf-8');
+        
+        try {
+            // Appeler l'API backend via ApiService
+            $response = $this->apiService->makeRequest('messages/get/' . $messageId, 'GET');
+            
+            // Retourner directement la réponse de l'API
+            echo json_encode($response);
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération du message: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur lors de la récupération du message'
+            ]);
+        }
+        
+        exit;
+    }
 }
