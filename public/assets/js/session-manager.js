@@ -9,7 +9,7 @@
     
     // Si déjà défini, ne pas redéfinir
     if (window.SessionManagerDefined) {
-        console.log('[SessionManager] Déjà chargé, ignoré');
+        // console.log('[SessionManager] Déjà chargé, ignoré');
         return;
     }
     
@@ -50,10 +50,10 @@
             
             // Démarrer le keep-alive si on est sur une page de saisie longue
             if (this.isLongFormPage) {
-                console.log('[SessionManager] Page de saisie longue détectée, activation du keep-alive');
+                // console.log('[SessionManager] Page de saisie longue détectée, activation du keep-alive');
                 this.start();
             } else {
-                console.log('[SessionManager] Page normale, vérification périodique uniquement');
+                // console.log('[SessionManager] Page normale, vérification périodique uniquement');
                 this.startPeriodicCheck();
             }
         }
@@ -67,12 +67,12 @@
          */
         start() {
             if (this.isActive) {
-                console.log('[SessionManager] Keep-alive déjà actif');
+                // console.log('[SessionManager] Keep-alive déjà actif');
                 return;
             }
             
             this.isActive = true;
-            console.log('[SessionManager] Démarrage du keep-alive');
+            // console.log('[SessionManager] Démarrage du keep-alive');
             
             // Vérifier immédiatement
             this.checkSession();
@@ -89,7 +89,7 @@
                 clearInterval(this.intervalId);
                 this.intervalId = null;
                 this.isActive = false;
-                console.log('[SessionManager] Keep-alive arrêté');
+                // console.log('[SessionManager] Keep-alive arrêté');
             }
         }
         
@@ -117,20 +117,20 @@
                 const data = await response.json();
                 
                 if (!data.success || response.status === 401) {
-                    console.log('[SessionManager] Session expirée, redirection vers login');
+                    // console.log('[SessionManager] Session expirée, redirection vers login');
                     this.handleSessionExpired();
                 } else {
                     // Vérifier si le token a été rafraîchi
-                    if (data.token && data.token.refreshed) {
-                        console.log('[SessionManager] ✅ Token JWT rafraîchi! Nouvelle expiration:', data.token.expires_at);
-                    } else if (data.token) {
-                        console.log('[SessionManager] Session maintenue - Token expire dans:', Math.floor(data.token.expires_in / 60), 'minutes');
-                    } else {
-                        console.log('[SessionManager] Session active maintenue');
-                    }
+                    // if (data.token && data.token.refreshed) {
+                    //     console.log('[SessionManager] ✅ Token JWT rafraîchi! Nouvelle expiration:', data.token.expires_at);
+                    // } else if (data.token) {
+                    //     console.log('[SessionManager] Session maintenue - Token expire dans:', Math.floor(data.token.expires_in / 60), 'minutes');
+                    // } else {
+                    //     console.log('[SessionManager] Session active maintenue');
+                    // }
                 }
             } catch (error) {
-                console.error('[SessionManager] Erreur lors de la vérification de session:', error);
+                console.error('[SessionManager] Erreur:', error);
                 // Ne pas rediriger sur une erreur réseau, seulement sur expiration confirmée
             }
         }
@@ -150,7 +150,7 @@
                 });
                 
                 if (response.status === 401) {
-                    console.log('[SessionManager] Session expirée détectée');
+                    // console.log('[SessionManager] Session expirée détectée');
                     this.handleSessionExpired();
                 }
             } catch (error) {
@@ -178,7 +178,7 @@
             sessionStorage.setItem('sessionExpired', 'true');
             
             // Redirection immédiate vers la page de login
-            console.log('[SessionManager] Redirection immédiate vers /login');
+            // console.log('[SessionManager] Redirection immédiate vers /login');
             window.location.replace('/login?expired=1');
         }
         
@@ -187,7 +187,7 @@
          */
         enableKeepAlive() {
             if (!this.isActive) {
-                console.log('[SessionManager] Activation manuelle du keep-alive');
+                // console.log('[SessionManager] Activation manuelle du keep-alive');
                 this.isLongFormPage = true;
                 this.start();
             }
@@ -198,7 +198,7 @@
          */
         disableKeepAlive() {
             if (this.isActive && !this.keepAlivePages.some(page => window.location.pathname.includes(page))) {
-                console.log('[SessionManager] Désactivation manuelle du keep-alive');
+                // console.log('[SessionManager] Désactivation manuelle du keep-alive');
                 this.isLongFormPage = false;
                 this.stop();
                 this.startPeriodicCheck();
