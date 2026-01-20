@@ -17,12 +17,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const preSelectedUserId = urlParams.get('user');
     const preSelectedUserName = urlParams.get('name');
     
-    if (preSelectedUserId && preSelectedUserName) {
-        console.log('Utilisateur pré-sélectionné détecté:', preSelectedUserId, preSelectedUserName);
-        // Ouvrir la conversation automatiquement
-        setTimeout(() => {
-            openConversation(preSelectedUserId, decodeURIComponent(preSelectedUserName));
-        }, 500); // Petit délai pour laisser la page se charger
+    console.log('Paramètres URL:', { userId: preSelectedUserId, userName: preSelectedUserName });
+    
+    if (preSelectedUserId) {
+        // Décoder le nom si présent, sinon utiliser "Utilisateur"
+        const userName = preSelectedUserName ? decodeURIComponent(preSelectedUserName) : 'Utilisateur';
+        console.log('Ouverture automatique de la conversation avec:', userName, '(ID:', preSelectedUserId, ')');
+        
+        // Vérifier que les éléments DOM nécessaires existent
+        const messagesContainer = document.getElementById('messages-container');
+        const currentUserNameElement = document.getElementById('current-user-name');
+        const recipientIdInput = document.getElementById('recipient-id');
+        
+        if (messagesContainer && currentUserNameElement && recipientIdInput) {
+            // Ouvrir la conversation immédiatement (on est déjà dans DOMContentLoaded)
+            openConversation(preSelectedUserId, userName);
+            
+            // Nettoyer l'URL pour éviter de réouvrir la conversation en rafraîchissant
+            if (window.history.replaceState) {
+                window.history.replaceState({}, document.title, '/private-messages');
+            }
+        } else {
+            console.error('Éléments DOM manquants pour ouvrir la conversation');
+        }
     }
     
     // Gestion de la recherche d'utilisateurs dans la modal
@@ -135,7 +152,9 @@ function filterUsers(searchTerm) {
  * Ouvre une conversation avec un utilisateur
  */
 function openConversation(userId, userName) {
-    console.log(`Ouverture de la conversation avec ${userName} (${userId})`);
+    console.log(`=== OUVERTURE CONVERSATION ===`);
+    console.log('User ID:', userId);
+    console.log('User Name:', userName);
     
     // Vérifier que l'userId n'est pas vide
     if (!userId || userId === '' || userId === 'undefined') {
@@ -147,29 +166,56 @@ function openConversation(userId, userName) {
     currentConversationUserId = userId;
     currentConversationUserName = userName || 'Utilisateur';
     
+    console.log('Mise à jour de l\'en-tête avec:', currentConversationUserName);
+    
     // Mettre à jour l'en-tête
-    document.getElementById('current-user-name').textContent = currentConversationUserName;
+    const userNameElement = document.getElementById('current-user-name');
+    if (userNameElement) {
+        userNameElement.textContent = currentConversationUserName;
+        console.log('En-tête mis à jour');
+    } else {
+        console.error('Élément current-user-name introuvable');
+    }
     
     // Afficher le formulaire d'envoi
-    document.getElementById('message-form-container').style.display = 'block';
+    const formContainer = document.getElementById('message-form-container');
+    if (formContainer) {
+        formContainer.style.display = 'block';
+        console.log('Formulaire d\'envoi affiché');
+    } else {
+        console.error('Élément message-form-container introuvable');
+    }
     
     // Définir le destinataire
-    document.getElementById('recipient-id').value = userId;
+    const recipientInput = document.getElementById('recipient-id');
+    if (recipientInput) {
+        recipientInput.value = userId;
+        console.log('Destinataire défini:', userId);
+    } else {
+        console.error('Élément recipient-id introuvable');
+    }
     
-    // Marquer la conversation comme active
+    // Marquer la conversation comme active dans la liste (si elle existe)
     document.querySelectorAll('.conversation-item').forEach(item => {
         item.classList.remove('active');
     });
     const activeConv = document.querySelector(`.conversation-item[data-user-id="${userId}"]`);
     if (activeConv) {
         activeConv.classList.add('active');
+        console.log('Conversation marquée comme active dans la liste');
+    } else {
+        console.log('Conversation non trouvée dans la liste (nouvelle conversation)');
     }
     
     // Charger l'historique des messages
+    console.log('Chargement de l\'historique des messages...');
     loadMessages(userId);
     
     // Démarrer le polling pour les nouveaux messages
+    console.log('Démarrage du polling...');
     startMessagePolling();
+    
+    console.log('=== FIN OUVERTURE CONVERSATION ===');
 }
 
 /**
