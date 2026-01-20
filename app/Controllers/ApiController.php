@@ -2155,18 +2155,25 @@ class ApiController {
         try {
             $response = $this->apiService->makeRequest('private-messages/conversations', 'GET');
             
-            if ($response['success'] ?? false) {
-                $this->sendJsonResponse([
-                    'success' => true,
-                    'data' => $response['data'] ?? []
-                ]);
+            error_log("ApiController::getPrivateConversations() - Response type: " . gettype($response));
+            
+            // Le backend retourne directement un tableau de conversations
+            if (is_array($response)) {
+                // Si c'est déjà au format avec 'success', le renvoyer tel quel
+                if (isset($response['success'])) {
+                    $this->sendJsonResponse($response);
+                } else {
+                    // Sinon, c'est directement le tableau de conversations
+                    $this->sendJsonResponse($response);
+                }
             } else {
                 $this->sendJsonResponse([
                     'success' => false,
-                    'message' => $response['message'] ?? 'Erreur lors de la récupération des conversations'
-                ], $response['status_code'] ?? 500);
+                    'message' => 'Format de réponse invalide'
+                ], 500);
             }
         } catch (Exception $e) {
+            error_log("ApiController::getPrivateConversations() - Exception: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des conversations: ' . $e->getMessage()
@@ -2186,15 +2193,28 @@ class ApiController {
         try {
             $response = $this->apiService->makeRequest("private-messages/private/{$userId}/history", 'GET');
             
-            if ($response['success'] ?? false) {
-                $this->sendJsonResponse($response['data'] ?? []);
+            error_log("ApiController::getPrivateHistory() - Response type: " . gettype($response));
+            
+            // Le backend retourne directement un tableau de messages ou un objet d'erreur
+            if (is_array($response)) {
+                // Si c'est un objet avec 'error', c'est une erreur
+                if (isset($response['error'])) {
+                    $this->sendJsonResponse([
+                        'success' => false,
+                        'message' => $response['error']
+                    ], 500);
+                } else {
+                    // Sinon, c'est directement le tableau de messages
+                    $this->sendJsonResponse($response);
+                }
             } else {
                 $this->sendJsonResponse([
                     'success' => false,
-                    'message' => $response['message'] ?? 'Erreur lors de la récupération de l\'historique'
-                ], $response['status_code'] ?? 500);
+                    'message' => 'Format de réponse invalide'
+                ], 500);
             }
         } catch (Exception $e) {
+            error_log("ApiController::getPrivateHistory() - Exception: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération de l\'historique: ' . $e->getMessage()
@@ -2248,6 +2268,8 @@ class ApiController {
                 'recipientId' => $recipientId
             ];
             
+            error_log("ApiController::sendPrivateMessage() - Sending to recipientId: $recipientId");
+            
             // Gérer la pièce jointe si présente
             $hasAttachment = isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK;
             
@@ -2258,15 +2280,27 @@ class ApiController {
                 $response = $this->apiService->makeRequest('private-messages/private/send', 'POST', $data);
             }
             
-            if ($response['success'] ?? false) {
-                $this->sendJsonResponse($response['data'] ?? []);
+            error_log("ApiController::sendPrivateMessage() - Response type: " . gettype($response));
+            
+            // Le backend retourne directement l'objet message ou un objet d'erreur
+            if (is_array($response)) {
+                if (isset($response['error'])) {
+                    $this->sendJsonResponse([
+                        'success' => false,
+                        'error' => $response['error']
+                    ], 400);
+                } else {
+                    // C'est l'objet message
+                    $this->sendJsonResponse($response);
+                }
             } else {
                 $this->sendJsonResponse([
                     'success' => false,
-                    'message' => $response['message'] ?? 'Erreur lors de l\'envoi du message'
-                ], $response['status_code'] ?? 500);
+                    'message' => 'Format de réponse invalide'
+                ], 500);
             }
         } catch (Exception $e) {
+            error_log("ApiController::sendPrivateMessage() - Exception: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de l\'envoi du message: ' . $e->getMessage()

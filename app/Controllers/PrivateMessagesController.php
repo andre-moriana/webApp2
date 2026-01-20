@@ -50,18 +50,30 @@ class PrivateMessagesController {
         try {
             $response = $this->apiService->makeRequest('private-messages/conversations', 'GET');
             
+            error_log("PrivateMessagesController::getConversations() - Response type: " . gettype($response));
             error_log("PrivateMessagesController::getConversations() - Response: " . json_encode($response));
             
-            if ($response['success'] ?? false) {
-                return $response['data'] ?? [];
-            } else if (isset($response['unauthorized']) && $response['unauthorized']) {
-                // Nettoyer la session et rediriger vers login
-                session_unset();
-                session_destroy();
-                header('Location: /login?expired=1');
-                exit;
+            // Le backend retourne directement un tableau, pas un objet avec 'success'
+            if (is_array($response)) {
+                // Si c'est un tableau avec 'success', utiliser le format standard
+                if (isset($response['success'])) {
+                    if ($response['success']) {
+                        return $response['data'] ?? [];
+                    } else if (isset($response['unauthorized']) && $response['unauthorized']) {
+                        session_unset();
+                        session_destroy();
+                        header('Location: /login?expired=1');
+                        exit;
+                    }
+                    return [];
+                }
+                
+                // Sinon, c'est directement le tableau de conversations
+                error_log("PrivateMessagesController::getConversations() - Direct array format, count: " . count($response));
+                return $response;
             }
             
+            error_log("PrivateMessagesController::getConversations() - Response is not an array");
             return [];
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des conversations: ' . $e->getMessage());
