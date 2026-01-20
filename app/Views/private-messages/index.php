@@ -26,9 +26,18 @@
                                 <p class="small">Cliquez sur "Nouvelle conversation" pour commencer</p>
                             </div>
                         <?php else: ?>
-                            <?php foreach ($conversations as $conv): 
-                                // Format réel de l'API : {"user": {...}, "lastMessage": {...}, "unreadCount": 0}
-                                $otherUser = $conv['user'] ?? [];
+                            <?php 
+                            // Debug : afficher la structure de la première conversation
+                            if (!empty($conversations[0])) {
+                                error_log("First conversation structure: " . json_encode($conversations[0]));
+                            }
+                            
+                            foreach ($conversations as $conv): 
+                                // Essayer les deux formats possibles
+                                // Format 1 : {"user": {...}, "lastMessage": {...}, "unreadCount": 0}
+                                // Format 2 : {"other_user": {...}, "last_message": "...", "unread_count": 0}
+                                
+                                $otherUser = $conv['user'] ?? $conv['other_user'] ?? [];
                                 $otherUserId = $otherUser['_id'] ?? $otherUser['id'] ?? '';
                                 
                                 // Nom de l'utilisateur
@@ -42,19 +51,28 @@
                                     $otherUserName = $otherUser['username'] ?? 'Utilisateur inconnu';
                                 }
                                 
-                                // Dernier message
-                                $lastMessageObj = $conv['lastMessage'] ?? [];
-                                $lastMessage = $lastMessageObj['content'] ?? '';
-                                $lastMessageDate = $lastMessageObj['createdAt'] ?? '';
+                                // Dernier message - gérer les deux formats
+                                if (isset($conv['lastMessage']) && is_array($conv['lastMessage'])) {
+                                    // Format 1 : objet lastMessage
+                                    $lastMessage = $conv['lastMessage']['content'] ?? '';
+                                    $lastMessageDate = $conv['lastMessage']['createdAt'] ?? '';
+                                } else {
+                                    // Format 2 : champs directs
+                                    $lastMessage = $conv['last_message'] ?? '';
+                                    $lastMessageDate = $conv['last_message_date'] ?? '';
+                                }
                                 
-                                // Nombre de messages non lus
-                                $unreadCount = $conv['unreadCount'] ?? 0;
+                                // Nombre de messages non lus - gérer les deux formats
+                                $unreadCount = $conv['unreadCount'] ?? $conv['unread_count'] ?? 0;
                                 
                                 // Debug
-                                error_log("Conversation: OtherUserID=$otherUserId, OtherUserName=$otherUserName");
+                                error_log("Conversation: UserID=$otherUserId, UserName=$otherUserName, LastMessage=" . substr($lastMessage, 0, 30));
                                 
                                 // Ne pas afficher les conversations sans utilisateur
-                                if (empty($otherUserId)) continue;
+                                if (empty($otherUserId)) {
+                                    error_log("Skipping conversation: empty user ID");
+                                    continue;
+                                }
                             ?>
                                 <a href="#" 
                                    class="list-group-item list-group-item-action conversation-item" 
