@@ -196,4 +196,68 @@ class SignalementsController {
         
         exit;
     }
+    
+    /**
+     * Supprime un signalement
+     */
+    public function delete($id) {
+        error_log("SignalementsController::delete($id) - Début");
+        
+        // Vérifier la session
+        SessionGuard::check();
+        
+        // Si c'est une requête AJAX, retourner JSON
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+        
+        try {
+            // Appeler l'API backend pour supprimer le signalement
+            $response = $this->apiService->makeRequest('reports/' . $id, 'DELETE');
+            
+            if ($response['success']) {
+                if ($isAjax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Signalement supprimé avec succès'
+                    ]);
+                    exit;
+                } else {
+                    $_SESSION['success'] = 'Signalement supprimé avec succès';
+                    header('Location: /signalements');
+                    exit;
+                }
+            } else {
+                if ($isAjax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => $response['error'] ?? 'Erreur lors de la suppression'
+                    ]);
+                    exit;
+                } else {
+                    $_SESSION['error'] = $response['error'] ?? 'Erreur lors de la suppression';
+                    header('Location: /signalements/' . $id);
+                    exit;
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la suppression du signalement: ' . $e->getMessage());
+            
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Erreur serveur lors de la suppression'
+                ]);
+                exit;
+            } else {
+                $_SESSION['error'] = 'Erreur serveur lors de la suppression';
+                header('Location: /signalements/' . $id);
+                exit;
+            }
+        }
+    }
 }

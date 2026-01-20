@@ -230,6 +230,8 @@ class Router {
         $this->addRoute("GET", "/signalements/message/{messageId}", "SignalementsController@getMessage");
         $this->addRoute("GET", "/signalements/{id}", "SignalementsController@show");
         $this->addRoute("POST", "/signalements/{id}/update", "SignalementsController@update");
+        $this->addRoute("POST", "/signalements/{id}/delete", "SignalementsController@delete");
+        $this->addRoute("DELETE", "/signalements/{id}", "SignalementsController@delete");
         
         // Route de debug (admin seulement)
         $this->addRoute("GET", "/debug/deletion-pending", "DebugController@deletionPending");
