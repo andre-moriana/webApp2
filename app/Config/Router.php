@@ -74,6 +74,9 @@ class Router {
         $this->addRoute("GET", "/users/import", "UserImportController@index");
         $this->addRoute("POST", "/users/import/process", "UserImportController@process");
         
+        // Routes des messages privés (protégées)
+        $this->addRoute("GET", "/private-messages", "PrivateMessagesController@index");
+        
         // Routes des groupes (protégées)
         $this->addRoute("GET", "/groups", "GroupController@index");
         $this->addRoute("GET", "/groups/create", "GroupController@create");
@@ -115,6 +118,12 @@ class Router {
         $this->addRoute("GET", "/groups/{groupId}/topics/create", "TopicController@create");
         $this->addRoute("POST", "/groups/{groupId}/topics", "TopicController@store");
         $this->addRoute("GET", "/groups/{groupId}/topics/{topicId}", "TopicController@show");
+        
+        // Routes API pour les messages privés
+        $this->addRoute("GET", "/api/private-messages/conversations", "ApiController@getPrivateConversations");
+        $this->addRoute("GET", "/api/private-messages/{userId}/history", "ApiController@getPrivateHistory");
+        $this->addRoute("POST", "/api/private-messages/send", "ApiController@sendPrivateMessage");
+        $this->addRoute("POST", "/api/private-messages/{userId}/read", "ApiController@markPrivateMessagesAsRead");
         
         // Routes API pour les messages de groupes
         $this->addRoute("GET", "/api/messages/{groupId}/history", "ApiController@getGroupMessages");

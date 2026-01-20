@@ -2142,5 +2142,167 @@ class ApiController {
             ]);
         }
     }
+    
+    /**
+     * Récupère toutes les conversations privées de l'utilisateur
+     */
+    public function getPrivateConversations() {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        
+        try {
+            $response = $this->apiService->makeRequest('private-messages/conversations', 'GET');
+            
+            if ($response['success'] ?? false) {
+                $this->sendJsonResponse([
+                    'success' => true,
+                    'data' => $response['data'] ?? []
+                ]);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de la récupération des conversations'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des conversations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Récupère l'historique des messages privés avec un utilisateur
+     */
+    public function getPrivateHistory($userId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        
+        try {
+            $response = $this->apiService->makeRequest("private-messages/private/{$userId}/history", 'GET');
+            
+            if ($response['success'] ?? false) {
+                $this->sendJsonResponse($response['data'] ?? []);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de la récupération de l\'historique'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération de l\'historique: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Envoie un message privé
+     */
+    public function sendPrivateMessage() {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        
+        try {
+            // Récupérer les données du formulaire
+            $content = $_POST['content'] ?? '';
+            $recipientId = $_POST['recipientId'] ?? '';
+            
+            // Si les données ne sont pas dans $_POST, essayer de les lire depuis php://input (JSON)
+            if (empty($content) || empty($recipientId)) {
+                $rawInput = file_get_contents('php://input');
+                $jsonInput = json_decode($rawInput, true);
+                if ($jsonInput) {
+                    $content = $jsonInput['content'] ?? $content;
+                    $recipientId = $jsonInput['recipientId'] ?? $recipientId;
+                }
+            }
+            
+            if (empty($content)) {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => 'Le contenu du message ne peut pas être vide'
+                ], 400);
+                return;
+            }
+            
+            if (empty($recipientId)) {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => 'Le destinataire est requis'
+                ], 400);
+                return;
+            }
+            
+            // Préparer les données à envoyer
+            $data = [
+                'content' => $content,
+                'recipientId' => $recipientId
+            ];
+            
+            // Gérer la pièce jointe si présente
+            $hasAttachment = isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK;
+            
+            if ($hasAttachment) {
+                // Pour les pièces jointes, on doit utiliser multipart/form-data
+                $response = $this->apiService->makeRequest('private-messages/private/send', 'POST', $data, true);
+            } else {
+                $response = $this->apiService->makeRequest('private-messages/private/send', 'POST', $data);
+            }
+            
+            if ($response['success'] ?? false) {
+                $this->sendJsonResponse($response['data'] ?? []);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de l\'envoi du message'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'envoi du message: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Marque les messages privés comme lus
+     */
+    public function markPrivateMessagesAsRead($userId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        
+        try {
+            $response = $this->apiService->makeRequest("private-messages/private/{$userId}/read", 'POST');
+            
+            if ($response['success'] ?? false) {
+                $this->sendJsonResponse([
+                    'success' => true,
+                    'message' => 'Messages marqués comme lus'
+                ]);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors du marquage des messages'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors du marquage des messages: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 ?>
