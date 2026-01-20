@@ -3,10 +3,29 @@
  */
 
 /**
+ * Helper pour le logging avec fallback
+ */
+function logDebug(context, message, data) {
+    if (typeof window.logDebug === 'function') {
+        window.logDebug(context, message, data);
+    } else {
+        console.log(`[${context}] ${message}`, data || '');
+    }
+}
+
+function logError(context, message, error) {
+    if (typeof window.logError === 'function') {
+        window.logError(context, message, error);
+    } else {
+        console.error(`[${context}] ${message}`, error || '');
+    }
+}
+
+/**
  * Fonction globale pour charger un message
  */
 window.loadMessage = function(messageId) {
-    window.logDebug('Signalements', 'Chargement du message', { messageId });
+    logDebug('Signalements', 'Chargement du message', { messageId });
     const messageContent = document.getElementById('messageContent');
     
     // Afficher le loader
@@ -21,7 +40,7 @@ window.loadMessage = function(messageId) {
     
     // URL locale WebApp2 (pas directement l'API backend)
     const apiUrl = `/signalements/message/${messageId}`;
-    window.logDebug('Signalements', 'URL de la requête', { apiUrl });
+    logDebug('Signalements', 'URL de la requête', { apiUrl });
     
     // Faire la requête AJAX vers le backend WebApp2
     fetch(apiUrl, {
@@ -38,7 +57,7 @@ window.loadMessage = function(messageId) {
         return response.json();
     })
     .then(data => {
-        window.logDebug('Signalements', 'Réponse complète', {
+        logDebug('Signalements', 'Réponse complète', {
             data,
             type: typeof data,
             success: data.success,
@@ -47,7 +66,7 @@ window.loadMessage = function(messageId) {
         
         if (data.success && data.message) {
             const message = data.message;
-            window.logDebug('Signalements', 'Structure du message', {
+            logDebug('Signalements', 'Structure du message', {
                 id: message.id,
                 content: message.content ? 'présent' : 'absent',
                 author: message.author,
@@ -67,7 +86,7 @@ window.loadMessage = function(messageId) {
                         minute: '2-digit'
                     });
                 } catch (e) {
-                    window.logError('Signalements', 'Erreur formatage date', e);
+                    logError('Signalements', 'Erreur formatage date', e);
                     formattedDate = message.created_at;
                 }
             }
@@ -79,7 +98,7 @@ window.loadMessage = function(messageId) {
             } else if (message.author_name) {
                 authorName = message.author_name;
             }
-            window.logDebug('Signalements', 'Nom auteur utilisé', { authorName });
+            logDebug('Signalements', 'Nom auteur utilisé', { authorName });
             
             let attachmentHtml = '';
             if (message.attachment) {
@@ -141,7 +160,7 @@ window.loadMessage = function(messageId) {
         }
     })
     .catch(error => {
-        window.logError('Signalements', 'Erreur chargement message', {
+        logError('Signalements', 'Erreur chargement message', {
             error,
             message: error.message,
             stack: error.stack,
@@ -173,7 +192,7 @@ function escapeHtml(text) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    window.logDebug('Signalements', 'Page de détail chargée');
+    logDebug('Signalements', 'Page de détail chargée');
     
     // Gestion du formulaire de mise à jour
     const updateForm = document.querySelector('form[action*="/update"]');
@@ -219,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const savedNotes = localStorage.getItem(storageKey);
         if (savedNotes && !adminNotesTextarea.value) {
             adminNotesTextarea.value = savedNotes;
-            window.logDebug('Signalements', 'Brouillon de notes chargé', { reportId });
+            logDebug('Signalements', 'Brouillon de notes chargé', { reportId });
         }
         
         // Sauvegarder automatiquement toutes les 5 secondes
@@ -228,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(saveTimer);
             saveTimer = setTimeout(() => {
                 localStorage.setItem(storageKey, this.value);
-                window.logDebug('Signalements', 'Brouillon de notes sauvegardé', { reportId });
+                logDebug('Signalements', 'Brouillon de notes sauvegardé', { reportId });
             }, 5000);
         });
         
