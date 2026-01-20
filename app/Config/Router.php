@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 class Router {
     private $routes = [];
     private $basePath = "";
@@ -224,6 +224,11 @@ class Router {
         $this->addRoute("POST", "/user-validation/approve", "UserValidationController@approve");
         $this->addRoute("POST", "/user-validation/reject", "UserValidationController@reject");
         $this->addRoute("POST", "/user-validation/delete-user", "UserValidationController@deleteUser");
+        
+        // Routes des signalements (protégées - admin seulement)
+        $this->addRoute("GET", "/signalements", "SignalementsController@index");
+        $this->addRoute("GET", "/signalements/{id}", "SignalementsController@show");
+        $this->addRoute("POST", "/signalements/{id}/update", "SignalementsController@update");
         
         // Route de debug (admin seulement)
         $this->addRoute("GET", "/debug/deletion-pending", "DebugController@deletionPending");
