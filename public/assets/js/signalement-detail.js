@@ -38,18 +38,46 @@ window.loadMessage = function(messageId) {
         return response.json();
     })
     .then(data => {
-        console.log('Message reçu:', data);
+        console.log('Réponse complète:', data);
+        console.log('Type de data:', typeof data);
+        console.log('data.success:', data.success);
+        console.log('data.message:', data.message);
         
         if (data.success && data.message) {
             const message = data.message;
-            const createdDate = new Date(message.created_at);
-            const formattedDate = createdDate.toLocaleDateString('fr-FR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+            console.log('Structure du message:', {
+                id: message.id,
+                content: message.content ? 'présent' : 'absent',
+                author: message.author,
+                created_at: message.created_at
             });
+            
+            // Gérer différents formats de date
+            let formattedDate = 'Date inconnue';
+            if (message.created_at) {
+                try {
+                    const createdDate = new Date(message.created_at);
+                    formattedDate = createdDate.toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } catch (e) {
+                    console.error('Erreur formatage date:', e);
+                    formattedDate = message.created_at;
+                }
+            }
+            
+            // Récupérer le nom de l'auteur avec gestion des différents formats
+            let authorName = 'Auteur inconnu';
+            if (message.author && message.author.name) {
+                authorName = message.author.name;
+            } else if (message.author_name) {
+                authorName = message.author_name;
+            }
+            console.log('Nom auteur utilisé:', authorName);
             
             let attachmentHtml = '';
             if (message.attachment) {
@@ -84,7 +112,7 @@ window.loadMessage = function(messageId) {
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="fas fa-user me-2"></i>
-                                <strong>${escapeHtml(message.author.name)}</strong>
+                                <strong>${escapeHtml(authorName)}</strong>
                             </div>
                             <small class="text-muted">
                                 <i class="fas fa-clock me-1"></i>
@@ -94,14 +122,14 @@ window.loadMessage = function(messageId) {
                     </div>
                     <div class="card-body">
                         <div class="message-content">
-                            ${escapeHtml(message.content).replace(/\n/g, '<br>')}
+                            ${escapeHtml(message.content || 'Contenu non disponible').replace(/\n/g, '<br>')}
                         </div>
                         ${attachmentHtml}
                     </div>
                     <div class="card-footer bg-light">
                         <small class="text-muted">
                             <i class="fas fa-info-circle me-1"></i>
-                            Message ID: #${message.id}
+                            Message ID: #${message.id || messageId}
                         </small>
                     </div>
                 </div>
