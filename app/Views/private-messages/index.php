@@ -27,9 +27,11 @@
                             </div>
                         <?php else: ?>
                             <?php foreach ($conversations as $conv): 
-                                $otherUser = $conv['other_user'] ?? [];
+                                // Format réel de l'API : {"user": {...}, "lastMessage": {...}, "unreadCount": 0}
+                                $otherUser = $conv['user'] ?? [];
                                 $otherUserId = $otherUser['_id'] ?? $otherUser['id'] ?? '';
-                                // Essayer différents formats de nom
+                                
+                                // Nom de l'utilisateur
                                 $otherUserName = $otherUser['name'] ?? '';
                                 if (empty($otherUserName)) {
                                     $firstName = $otherUser['firstName'] ?? '';
@@ -39,9 +41,14 @@
                                 if (empty($otherUserName)) {
                                     $otherUserName = $otherUser['username'] ?? 'Utilisateur inconnu';
                                 }
-                                $lastMessage = $conv['last_message'] ?? '';
-                                $lastMessageDate = $conv['last_message_date'] ?? '';
-                                $unreadCount = $conv['unread_count'] ?? 0;
+                                
+                                // Dernier message
+                                $lastMessageObj = $conv['lastMessage'] ?? [];
+                                $lastMessage = $lastMessageObj['content'] ?? '';
+                                $lastMessageDate = $lastMessageObj['createdAt'] ?? '';
+                                
+                                // Nombre de messages non lus
+                                $unreadCount = $conv['unreadCount'] ?? 0;
                                 
                                 // Debug
                                 error_log("Conversation: OtherUserID=$otherUserId, OtherUserName=$otherUserName");
