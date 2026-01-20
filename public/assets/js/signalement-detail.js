@@ -2,6 +2,134 @@
  * Script pour la page de détail d'un signalement
  */
 
+/**
+ * Fonction globale pour charger un message
+ */
+window.loadMessage = function(messageId) {
+    console.log('Chargement du message:', messageId);
+    const messageContent = document.getElementById('messageContent');
+    
+    // Afficher le loader
+    messageContent.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p class="mt-2">Chargement du message...</p>
+        </div>
+    `;
+    
+    // Récupérer le token depuis la session
+    const token = document.querySelector('meta[name="api-token"]')?.content;
+    
+    // Faire la requête AJAX
+    fetch(`https://arctraining.fr/api/messages/get/${messageId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération du message');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Message reçu:', data);
+        
+        if (data.success && data.message) {
+            const message = data.message;
+            const createdDate = new Date(message.created_at);
+            const formattedDate = createdDate.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            let attachmentHtml = '';
+            if (message.attachment) {
+                const isImage = message.attachment.mimeType?.startsWith('image/');
+                if (isImage) {
+                    attachmentHtml = `
+                        <div class="mt-3">
+                            <strong>Pièce jointe:</strong><br>
+                            <img src="https://arctraining.fr/api/messages/image/${message.attachment.filename}" 
+                                 alt="Image jointe" 
+                                 class="img-fluid rounded mt-2" 
+                                 style="max-height: 400px;">
+                        </div>
+                    `;
+                } else {
+                    attachmentHtml = `
+                        <div class="mt-3">
+                            <strong>Pièce jointe:</strong><br>
+                            <a href="https://arctraining.fr/api/messages/attachment/${message.attachment.filename}" 
+                               target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                <i class="fas fa-download me-1"></i>
+                                ${message.attachment.originalName || 'Télécharger'}
+                            </a>
+                        </div>
+                    `;
+                }
+            }
+            
+            messageContent.innerHTML = `
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-user me-2"></i>
+                                <strong>${escapeHtml(message.author.name)}</strong>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                ${formattedDate}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="message-content">
+                            ${escapeHtml(message.content).replace(/\n/g, '<br>')}
+                        </div>
+                        ${attachmentHtml}
+                    </div>
+                    <div class="card-footer bg-light">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Message ID: #${message.id}
+                        </small>
+                    </div>
+                </div>
+            `;
+        } else {
+            throw new Error('Format de réponse invalide');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        messageContent.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Erreur lors du chargement du message</strong><br>
+                ${escapeHtml(error.message)}
+            </div>
+        `;
+    });
+};
+
+/**
+ * Fonction pour échapper les caractères HTML
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Page de détail du signalement chargée');
     

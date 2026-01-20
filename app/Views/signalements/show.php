@@ -268,7 +268,8 @@
                     
                     <?php if (!empty($report['message_id'])): ?>
                         <button type="button" class="btn btn-outline-info btn-sm" 
-                                onclick="alert('Fonctionnalité en cours de développement')">
+                                data-bs-toggle="modal" data-bs-target="#messageModal"
+                                onclick="loadMessage(<?php echo htmlspecialchars($report['message_id']); ?>)">
                             <i class="fas fa-comment me-1"></i>
                             Voir le message
                         </button>
@@ -307,6 +308,35 @@
                     <li>Prendre des mesures si nécessaire</li>
                     <li>Documenter la décision</li>
                 </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour afficher le message signalé -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="messageModalLabel">
+                    <i class="fas fa-comment me-2"></i>
+                    Message signalé
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="messageContent">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <p class="mt-2">Chargement du message...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Fermer
+                </button>
             </div>
         </div>
     </div>

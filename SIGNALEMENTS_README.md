@@ -68,7 +68,7 @@ Accessible via `/signalements/{id}`, cette page permet de :
 - Changer le statut du signalement
 - Ajouter/modifier des notes administrateur
 - Voir le profil de l'utilisateur signalé
-- Voir le message concerné (en développement)
+- Voir le message concerné (modal avec contenu complet)
 - Supprimer le signalement (en développement)
 
 **Guide d'aide :**
@@ -168,6 +168,7 @@ Les administrateurs peuvent :
 
 2. **Examen initial** → Statut `reviewed`
    - L'administrateur examine le contenu
+   - **Si un message est signalé** : Cliquer sur "Voir le message" pour visualiser le contenu complet
    - Vérifie le profil de l'utilisateur signalé
    - Ajoute des notes sur ses observations
 
@@ -175,6 +176,58 @@ Les administrateurs peuvent :
    - `resolved` : Action corrective prise (avertissement, suspension, etc.)
    - `dismissed` : Signalement non fondé
    - Notes finales ajoutées pour traçabilité
+
+### Guide d'utilisation rapide - Visualiser un message
+
+1. Ouvrir le détail d'un signalement (`/signalements/{id}`)
+2. Dans la section "Actions", cliquer sur le bouton **"Voir le message"**
+3. Une modal s'ouvre avec le contenu complet du message
+4. Examiner le contenu, l'auteur, la date et les pièces jointes
+5. Fermer la modal avec le bouton "Fermer" ou la croix
+6. Prendre les mesures appropriées selon le contenu
+
+## Visualisation du message signalé
+
+Lorsqu'un signalement concerne un message spécifique (identifié par `message_id`), les administrateurs peuvent visualiser le message dans une modal Bootstrap.
+
+### Fonctionnement
+
+1. **Bouton "Voir le message"** : Disponible uniquement si le signalement a un `message_id`
+2. **Modal interactive** : Affiche le message dans une fenêtre modale avec :
+   - Nom de l'auteur du message
+   - Date et heure de publication
+   - Contenu complet du message
+   - Pièces jointes (images affichées, autres fichiers téléchargeables)
+   - ID du message
+
+### API Backend
+
+Route ajoutée : `GET /api/messages/get/{id}`
+
+**Sécurité :**
+- Authentification requise (token JWT)
+- Accessible uniquement aux utilisateurs connectés
+
+**Réponse :**
+```json
+{
+  "success": true,
+  "message": {
+    "id": 123,
+    "content": "Contenu du message",
+    "author": {
+      "id": 456,
+      "name": "Nom de l'auteur"
+    },
+    "created_at": "2026-01-20T10:30:00",
+    "attachment": {
+      "filename": "image.jpg",
+      "originalName": "photo.jpg",
+      "mimeType": "image/jpeg"
+    }
+  }
+}
+```
 
 ## Fonctionnalités JavaScript
 
@@ -187,22 +240,25 @@ Les administrateurs peuvent :
 
 ### Page de détail (`signalement-detail.js`)
 
+- **Chargement dynamique des messages** : Récupération via AJAX
 - Validation du formulaire de mise à jour
 - Auto-save des notes (brouillon local dans localStorage)
 - Compteur de caractères pour les notes
 - Animation du changement de statut
 - Copie de l'ID au clic
 - Auto-dismiss des alertes
+- **Gestion des pièces jointes** : Affichage d'images et liens de téléchargement
 
 ## Améliorations futures
 
 - [ ] Suppression de signalement
-- [ ] Visualisation du message concerné
+- [x] Visualisation du message concerné (implémenté)
 - [ ] Système de notifications en temps réel
 - [ ] Historique des actions sur un signalement
 - [ ] Export des signalements (CSV, PDF)
 - [ ] Statistiques avancées
 - [ ] Modération en masse
+- [ ] Visualisation du contexte du message (messages avant/après)
 
 ## Support
 
