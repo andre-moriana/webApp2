@@ -97,6 +97,11 @@
                     </li>
                     <?php endif; ?>
                     <li class="nav-item">
+                        <a class="nav-link" href="/private-messages">
+                            <i class="fas fa-envelope me-1"></i> Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/clubs">
                             <i class="fas fa-shield-alt me-1"></i> Clubs
                         </a>
