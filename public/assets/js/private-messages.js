@@ -191,8 +191,31 @@ async function loadMessages(userId) {
             throw new Error(`Erreur HTTP ${response.status}: ${errorText}`);
         }
         
-        const messages = await response.json();
-        console.log('Messages chargés:', messages);
+        const response_data = await response.json();
+        console.log('Messages chargés (brut):', response_data);
+        console.log('Type de response_data:', typeof response_data);
+        console.log('Est un array?', Array.isArray(response_data));
+        
+        // Gérer différents formats de réponse
+        let messages = [];
+        
+        if (Array.isArray(response_data)) {
+            // C'est déjà un tableau de messages
+            messages = response_data;
+        } else if (response_data && typeof response_data === 'object') {
+            // C'est un objet, essayer d'extraire les messages
+            if (response_data.data && Array.isArray(response_data.data)) {
+                messages = response_data.data;
+            } else if (response_data.error) {
+                throw new Error(response_data.error);
+            } else {
+                console.error('Format de réponse non reconnu:', response_data);
+                throw new Error('Format de réponse invalide');
+            }
+        }
+        
+        console.log('Messages après traitement:', messages);
+        console.log('Nombre de messages:', messages.length);
         
         displayMessages(messages);
         
@@ -211,7 +234,24 @@ async function loadMessages(userId) {
 function displayMessages(messages) {
     const container = document.getElementById('messages-container');
     
-    if (!messages || messages.length === 0) {
+    console.log('displayMessages: messages =', messages);
+    console.log('displayMessages: type =', typeof messages);
+    console.log('displayMessages: is array =', Array.isArray(messages));
+    
+    // Vérifier que messages est bien un tableau
+    if (!Array.isArray(messages)) {
+        console.error('displayMessages: messages n\'est pas un tableau!', messages);
+        container.innerHTML = `
+            <div class="text-center text-muted mt-5">
+                <i class="fas fa-exclamation-triangle fa-4x mb-3 text-warning"></i>
+                <p>Erreur de format des messages</p>
+                <p class="small">Les messages ne sont pas dans le bon format</p>
+            </div>
+        `;
+        return;
+    }
+    
+    if (messages.length === 0) {
         container.innerHTML = `
             <div class="text-center text-muted mt-5">
                 <i class="fas fa-comments fa-4x mb-3"></i>
