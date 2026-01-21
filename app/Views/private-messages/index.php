@@ -122,6 +122,9 @@
                         <i class="fas fa-comments me-2"></i>
                         <span id="current-user-name">Sélectionnez une conversation</span>
                     </h5>
+                    <button class="btn btn-sm btn-outline-light" id="delete-conversation-btn" style="display: none;" title="Supprimer cette conversation">
+                        <i class="fas fa-trash-alt me-1"></i>Supprimer
+                    </button>
                 </div>
                 <div class="card-body" style="height: 500px; overflow-y: auto;" id="messages-container">
                     <div class="text-center text-muted mt-5">
