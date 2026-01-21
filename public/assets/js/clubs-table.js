@@ -229,6 +229,75 @@ function filterClubsTable() {
     }
 }
 
+// Variable globale pour stocker toutes les options départementales
+let allDepartmentalOptions = [];
+
+// Fonction pour filtrer les comités départementaux selon le comité régional sélectionné
+function updateDepartmentalSelect() {
+    const filterRegional = document.getElementById('filterRegional');
+    const filterDepartmental = document.getElementById('filterDepartmental');
+    
+    if (!filterRegional || !filterDepartmental) {
+        return;
+    }
+    
+    const selectedRegional = filterRegional.value;
+    const currentDepartmentalValue = filterDepartmental.value;
+    
+    // Si aucun comité régional n'est sélectionné, afficher tous les comités départementaux
+    if (!selectedRegional) {
+        filterDepartmental.innerHTML = '<option value="">Tous les comités départementaux</option>';
+        allDepartmentalOptions.forEach(opt => {
+            filterDepartmental.appendChild(opt.cloneNode(true));
+        });
+        // Restaurer la sélection si elle existe encore
+        if (currentDepartmentalValue) {
+            filterDepartmental.value = currentDepartmentalValue;
+        }
+        return;
+    }
+    
+    // Extraire les 2 premiers caractères du comité régional
+    const regionalPrefix = selectedRegional.substring(0, 2);
+    
+    // Filtrer les options départementales qui correspondent à ce préfixe
+    filterDepartmental.innerHTML = '<option value="">Tous les comités départementaux</option>';
+    
+    let hasMatches = false;
+    let shouldKeepSelection = false;
+    
+    allDepartmentalOptions.forEach(opt => {
+        const optValue = opt.value;
+        if (optValue && optValue.substring(0, 2) === regionalPrefix) {
+            filterDepartmental.appendChild(opt.cloneNode(true));
+            hasMatches = true;
+            // Vérifier si l'ancienne sélection est toujours valide
+            if (optValue === currentDepartmentalValue) {
+                shouldKeepSelection = true;
+            }
+        }
+    });
+    
+    // Si aucun comité départemental ne correspond, afficher un message
+    if (!hasMatches) {
+        const noMatchOption = document.createElement('option');
+        noMatchOption.value = '';
+        noMatchOption.textContent = 'Aucun comité départemental dans cette région';
+        noMatchOption.disabled = true;
+        filterDepartmental.appendChild(noMatchOption);
+    }
+    
+    // Restaurer la sélection uniquement si elle est toujours valide
+    if (shouldKeepSelection) {
+        filterDepartmental.value = currentDepartmentalValue;
+    } else {
+        filterDepartmental.value = '';
+    }
+    
+    console.log(`Comités départementaux filtrés pour la région ${regionalPrefix}:`, 
+                filterDepartmental.options.length - 1);
+}
+
 // Fonction d'initialisation
 function initClubsTable() {
     console.log('Initialisation de la table des clubs');
@@ -237,6 +306,13 @@ function initClubsTable() {
     if (!table) {
         console.error('Table clubsTable non trouvée');
         return;
+    }
+    
+    // Sauvegarder toutes les options départementales au démarrage
+    const filterDepartmental = document.getElementById('filterDepartmental');
+    if (filterDepartmental) {
+        allDepartmentalOptions = Array.from(filterDepartmental.options).filter(opt => opt.value !== '');
+        console.log('Options départementales sauvegardées:', allDepartmentalOptions.length);
     }
     
     // Gérer le tri
@@ -257,11 +333,14 @@ function initClubsTable() {
     
     // Gérer les filtres
     const filterRegional = document.getElementById('filterRegional');
-    const filterDepartmental = document.getElementById('filterDepartmental');
     const filterClubs = document.getElementById('filterClubs');
     
     if (filterRegional) {
-        filterRegional.addEventListener('change', filterClubsTable);
+        // Ajouter l'événement pour mettre à jour le select départemental
+        filterRegional.addEventListener('change', function() {
+            updateDepartmentalSelect();
+            filterClubsTable();
+        });
     }
     if (filterDepartmental) {
         filterDepartmental.addEventListener('change', filterClubsTable);
