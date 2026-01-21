@@ -129,6 +129,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Gestion du bouton de suppression de conversation
+    const deleteConversationBtn = document.getElementById('delete-conversation-btn');
+    if (deleteConversationBtn) {
+        deleteConversationBtn.addEventListener('click', function() {
+            deleteConversation();
+        });
+    }
 });
 
 /**
@@ -184,6 +192,12 @@ function openConversation(userId, userName) {
         console.log('Formulaire d\'envoi affiché');
     } else {
         console.error('Élément message-form-container introuvable');
+    }
+    
+    // Afficher le bouton de suppression
+    const deleteBtn = document.getElementById('delete-conversation-btn');
+    if (deleteBtn) {
+        deleteBtn.style.display = 'block';
     }
     
     // Définir le destinataire
@@ -563,6 +577,110 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Supprime la conversation courante
+ */
+async function deleteConversation() {
+    if (!currentConversationUserId) {
+        showError('Aucune conversation sélectionnée');
+        return;
+    }
+    
+    // Demander confirmation
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer cette conversation avec ${currentConversationUserName} ?\n\nTous les messages seront définitivement supprimés.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/private-messages/${currentConversationUserId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Erreur lors de la suppression de la conversation');
+        }
+        
+        // Succès - fermer la conversation
+        console.log('Conversation supprimée avec succès');
+        
+        // Masquer le formulaire et le bouton de suppression
+        document.getElementById('message-form-container').style.display = 'none';
+        document.getElementById('delete-conversation-btn').style.display = 'none';
+        
+        // Réinitialiser l'en-tête
+        document.getElementById('current-user-name').textContent = 'Sélectionnez une conversation';
+        
+        // Vider le conteneur de messages
+        const container = document.getElementById('messages-container');
+        container.innerHTML = `
+            <div class="text-center text-muted mt-5">
+                <i class="fas fa-comment-dots fa-4x mb-3"></i>
+                <p>Sélectionnez une conversation pour commencer à échanger des messages</p>
+            </div>
+        `;
+        
+        // Supprimer la conversation de la liste
+        const convItem = document.querySelector(`.conversation-item[data-user-id="${currentConversationUserId}"]`);
+        if (convItem) {
+            convItem.remove();
+        }
+        
+        // Vérifier s'il reste des conversations
+        const conversationsList = document.getElementById('conversations-list');
+        if (!conversationsList.querySelector('.conversation-item')) {
+            conversationsList.innerHTML = `
+                <div class="list-group-item text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>Aucune conversation</p>
+                    <p class="small">Cliquez sur "Nouvelle conversation" pour commencer</p>
+                </div>
+            `;
+        }
+        
+        // Arrêter le polling
+        if (messagePollingInterval) {
+            clearInterval(messagePollingInterval);
+        }
+        
+        // Réinitialiser les variables
+        currentConversationUserId = null;
+        currentConversationUserName = null;
+        
+        // Afficher un message de succès
+        showSuccess('Conversation supprimée avec succès');
+        
+    } catch (error) {
+        console.error('Erreur lors de la suppression de la conversation:', error);
+        showError(error.message || 'Erreur lors de la suppression de la conversation');
+    }
+}
+
+/**
+ * Affiche un message de succès
+ */
+function showSuccess(message) {
+    // Créer une alerte Bootstrap
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Supprimer l'alerte après 5 secondes
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
 }
 
 // Arrêter le polling quand on quitte la page

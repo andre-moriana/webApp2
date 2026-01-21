@@ -124,6 +124,7 @@ class Router {
         $this->addRoute("GET", "/api/private-messages/{userId}/history", "ApiController@getPrivateHistory");
         $this->addRoute("POST", "/api/private-messages/send", "ApiController@sendPrivateMessage");
         $this->addRoute("POST", "/api/private-messages/{userId}/read", "ApiController@markPrivateMessagesAsRead");
+        $this->addRoute("DELETE", "/api/private-messages/{userId}/delete", "ApiController@deletePrivateConversation");
         
         // Routes API pour les messages de groupes
         $this->addRoute("GET", "/api/messages/{groupId}/history", "ApiController@getGroupMessages");

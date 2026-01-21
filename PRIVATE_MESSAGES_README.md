@@ -37,6 +37,7 @@ Cette fonctionnalité permet aux utilisateurs d'échanger des messages privés (
      - `GET /api/private-messages/{userId}/history` - Historique avec un utilisateur
      - `POST /api/private-messages/send` - Envoyer un message
      - `POST /api/private-messages/{userId}/read` - Marquer comme lu
+     - `DELETE /api/private-messages/{userId}/delete` - Supprimer une conversation
 
 2. **ApiController** : `app/Controllers/ApiController.php`
    - Ajout des méthodes de proxy vers le backend PHP :
@@ -44,6 +45,7 @@ Cette fonctionnalité permet aux utilisateurs d'échanger des messages privés (
      - `getPrivateHistory($userId)` - Récupère l'historique d'une conversation
      - `sendPrivateMessage()` - Envoie un message privé
      - `markPrivateMessagesAsRead($userId)` - Marque les messages comme lus
+     - `deletePrivateConversation($userId)` - Supprime une conversation
 
 3. **Header** : `app/Views/layouts/header.php`
    - Ajout de l'élément de menu "Messages" avec icône d'enveloppe
@@ -85,6 +87,14 @@ Cette fonctionnalité permet aux utilisateurs d'échanger des messages privés (
 - Uniquement pour la conversation actuellement ouverte
 - Arrêt automatique quand on quitte la page
 
+### 7. Suppression de conversation
+- Bouton "Supprimer" dans l'en-tête de la conversation active
+- Demande de confirmation avant suppression
+- Supprime tous les messages de la conversation (envoyés et reçus)
+- Supprime également les pièces jointes associées
+- Retire la conversation de la liste
+- Réinitialise l'interface après suppression
+
 ## API Backend utilisée
 
 Le frontend communique avec le backend PHP via les endpoints suivants :
@@ -93,6 +103,7 @@ Le frontend communique avec le backend PHP via les endpoints suivants :
 - `GET /private-messages/private/{userId}/history` - Récupère l'historique d'une conversation
 - `POST /private-messages/private/send` - Envoie un message privé
 - `POST /private-messages/private/{userId}/read` - Marque les messages comme lus
+- `DELETE /private-messages/private/{userId}/delete` - Supprime une conversation
 - `GET /private-messages/private/{userId}/unreadCount` - Compte les messages non lus
 
 ## Sécurité
@@ -115,7 +126,7 @@ Le frontend communique avec le backend PHP via les endpoints suivants :
 1. **Notifications en temps réel** : Utiliser WebSocket au lieu du polling
 2. **Historique paginé** : Charger les messages par lots pour les longues conversations
 3. **Recherche dans les messages** : Rechercher du texte dans l'historique
-4. **Suppression de messages** : Permettre de supprimer ses propres messages
+4. **Suppression de messages individuels** : Permettre de supprimer un message spécifique
 5. **Modification de messages** : Permettre d'éditer ses messages récents
 6. **Indicateur de saisie** : Afficher quand l'autre utilisateur est en train d'écrire
 7. **Réactions aux messages** : Ajouter des emojis de réaction
@@ -137,9 +148,11 @@ Le frontend communique avec le backend PHP via les endpoints suivants :
 3. Marquage automatique comme lu
 4. Recherche d'utilisateurs dans la modal
 5. Polling automatique des nouveaux messages
-6. Comportement sur mobile
-7. Gestion des erreurs (réseau, serveur, etc.)
-8. Gestion des sessions expirées
+6. Suppression d'une conversation avec confirmation
+7. Suppression d'une conversation avec pièces jointes
+8. Comportement sur mobile
+9. Gestion des erreurs (réseau, serveur, etc.)
+10. Gestion des sessions expirées
 
 ## Support
 

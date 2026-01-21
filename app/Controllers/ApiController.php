@@ -2338,5 +2338,37 @@ class ApiController {
             ], 500);
         }
     }
+    
+    /**
+     * Supprime une conversation privée
+     */
+    public function deletePrivateConversation($userId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        
+        try {
+            $response = $this->apiService->makeRequest("private-messages/private/{$userId}/delete", 'DELETE');
+            
+            if ($response['success'] ?? false) {
+                $this->sendJsonResponse([
+                    'success' => true,
+                    'message' => $response['message'] ?? 'Conversation supprimée avec succès',
+                    'deletedCount' => $response['data']['deletedCount'] ?? 0
+                ]);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Erreur lors de la suppression de la conversation'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression de la conversation: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 ?>
