@@ -126,6 +126,12 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="filterClubs" checked>
+                                        <label class="form-check-label" for="filterClubs">
+                                            Clubs
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
