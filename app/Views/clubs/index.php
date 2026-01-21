@@ -258,6 +258,7 @@ $title = "Gestion des clubs - Portail Archers de Gémenos";
 
 <?php
 $additionalJS = $additionalJS ?? [];
+$additionalJS[] = '/public/assets/js/clubs-table.js';
 $additionalJS[] = '/public/assets/js/clubs-index.js';
 ?>
 
