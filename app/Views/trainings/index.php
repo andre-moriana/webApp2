@@ -593,6 +593,17 @@
     </div>
 </div>
 
+<script>
+
+function handleUserSelectChange(selectElement) {
+    const selectedUserId = selectElement.value;
+    let newUrl = '/scored-trainings';
+    if (selectedUserId && selectedUserId !== '' && selectedUserId !== 'null' && selectedUserId !== 'undefined') {
+        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
+    }
+    window.location.href = newUrl;
+}
+</script>
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/trainings.css" rel="stylesheet">
 
