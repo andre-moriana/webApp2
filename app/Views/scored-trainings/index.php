@@ -396,10 +396,10 @@ $additionalJS = [
 <!-- Données pour JavaScript -->
 // Fonction globale pour gérer le changement d'utilisateur - recharger la page
 <script>
-    
+
 function handleUserSelectChange(selectElement) {
     const selectedUserId = selectElement.value;
-    let newUrl = '/trainings';
+    let newUrl = '/scored-trainings';
     if (selectedUserId && selectedUserId !== '' && selectedUserId !== 'null' && selectedUserId !== 'undefined') {
         newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
     }
