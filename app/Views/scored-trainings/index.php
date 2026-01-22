@@ -394,6 +394,18 @@ $additionalJS = [
 </div>
 
 <!-- Données pour JavaScript -->
+// Fonction globale pour gérer le changement d'utilisateur - recharger la page
+<script>
+    
+function handleUserSelectChange(selectElement) {
+    const selectedUserId = selectElement.value;
+    let newUrl = '/trainings';
+    if (selectedUserId && selectedUserId !== '' && selectedUserId !== 'null' && selectedUserId !== 'undefined') {
+        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
+    }
+    window.location.href = newUrl;
+}
+</script>
 <script>
     // Passer les données PHP au JavaScript
     window.scoredTrainingsData = <?= json_encode($scoredTrainings) ?>;
