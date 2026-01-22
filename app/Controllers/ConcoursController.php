@@ -292,26 +292,35 @@ class ConcoursController {
         $code_authentification = $_POST['code_authentification'] ?? '';
         $type_publication_internet = $_POST['type_publication_internet'] ?? '';
         
+        // Debug: Stocker les données POST reçues
+        $_SESSION['debug_concours_store']['post_data'] = $_POST;
+        
         // Validation des champs requis
         if (empty($titre_competition)) {
             $_SESSION['error'] = 'Le titre de la compétition est requis';
+            $_SESSION['debug_concours_store']['validation_failed'] = 'titre_competition';
             header('Location: /concours/create');
             exit;
         }
         
         if (empty($date_debut) || empty($date_fin)) {
             $_SESSION['error'] = 'Les dates de début et de fin sont requises';
+            $_SESSION['debug_concours_store']['validation_failed'] = 'dates';
             header('Location: /concours/create');
             exit;
         }
         
         if (empty($lieu_competition)) {
             $_SESSION['error'] = 'Le lieu de la compétition est requis';
+            $_SESSION['debug_concours_store']['validation_failed'] = 'lieu_competition';
             header('Location: /concours/create');
             exit;
         }
 
+        $_SESSION['debug_concours_store']['validation_passed'] = true;
+
         try {
+            $_SESSION['debug_concours_store']['api_call_started'] = true;
             // Préparer les données pour l'API
             // Utiliser titre_competition comme nom pour la compatibilité avec la table actuelle
             $data = [
@@ -344,7 +353,7 @@ class ConcoursController {
             // L'endpoint est 'concours' (pas 'concours/create') car le routing se fait via PATH_INFO
             $response = $this->apiService->makeRequest('concours', 'POST', $data);
             
-            error_log('Réponse API complète: ' . json_encode($response, JSON_UNESCAPED_UNICODE));
+            $_SESSION['debug_concours_store']['api_response'] = $response;
             
             // makeRequest retourne { success: bool, data: {...}, status_code: int, message: string }
             // où data contient la réponse JSON de l'API { success: bool, data: {...}, message: string }
@@ -354,6 +363,7 @@ class ConcoursController {
             if ($response['success'] && isset($apiResponse) && is_array($apiResponse)) {
                 // La réponse API est dans $response['data']
                 if (isset($apiResponse['success']) && $apiResponse['success']) {
+                    $_SESSION['debug_concours_store']['api_success'] = true;
                     $_SESSION['success'] = $apiResponse['message'] ?? 'Concours créé avec succès';
                     header('Location: /concours');
                     exit;
@@ -361,8 +371,8 @@ class ConcoursController {
                     // L'API a retourné une erreur
                     $errorMessage = $apiResponse['message'] ?? $apiResponse['error'] ?? 'Erreur lors de la création du concours';
                     $_SESSION['error'] = $errorMessage;
-                    error_log('Erreur API: ' . $errorMessage);
-                    error_log('Réponse API complète: ' . json_encode($apiResponse, JSON_UNESCAPED_UNICODE));
+                    $_SESSION['debug_concours_store']['api_error'] = $errorMessage;
+                    $_SESSION['debug_concours_store']['api_response_data'] = $apiResponse;
                     header('Location: /concours/create');
                     exit;
                 }
@@ -370,14 +380,16 @@ class ConcoursController {
                 // Erreur HTTP ou problème de décodage
                 $errorMessage = $response['message'] ?? 'Erreur lors de la communication avec l\'API';
                 $_SESSION['error'] = $errorMessage;
-                error_log('Erreur HTTP ou décodage: ' . $errorMessage);
-                error_log('Code HTTP: ' . ($response['status_code'] ?? 'inconnu'));
+                $_SESSION['debug_concours_store']['http_error'] = $errorMessage;
+                $_SESSION['debug_concours_store']['http_status'] = $response['status_code'] ?? 'inconnu';
                 header('Location: /concours/create');
                 exit;
             }
         } catch (Exception $e) {
-            error_log('Exception lors de la création du concours: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
+            $_SESSION['debug_concours_store']['exception'] = [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ];
             $_SESSION['error'] = 'Erreur lors de la création du concours: ' . $e->getMessage();
             header('Location: /concours/create');
             exit;
