@@ -5,19 +5,6 @@
 <div class="container-fluid concours-create-container">
 <h1><?= isset($concours) ? 'Éditer' : 'Créer' ?> un concours</h1>
 
-<?php if (isset($_SESSION['debug_concours_store'])): ?>
-    <div class="alert alert-info">
-        <strong>Debug Concours Store:</strong>
-        <details>
-            <summary>Cliquez pour voir les détails</summary>
-            <pre style="max-height: 500px; overflow: auto;"><?= print_r($_SESSION['debug_concours_store'], true) ?></pre>
-        </details>
-    </div>
-    <?php 
-    // Ne pas unset immédiatement pour pouvoir voir les infos
-    // unset($_SESSION['debug_concours_store']); 
-    ?>
-<?php endif; ?>
 
 <?php if (isset($_SESSION['error'])): ?>
     <div class="alert alert-danger">
@@ -44,32 +31,6 @@ window.disciplinesData = disciplinesFromPHP || [];
 window.typeCompetitionsData = <?= json_encode($typeCompetitions ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?> || [];
 window.niveauChampionnatData = <?= json_encode($niveauChampionnat ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?> || [];
 
-console.log('=== DONNÉES DEPUIS PHP ===');
-console.log('Clubs depuis PHP:', window.clubsData);
-console.log('Nombre de clubs:', window.clubsData ? window.clubsData.length : 0);
-console.log('Disciplines depuis PHP:', window.disciplinesData);
-console.log('Type disciplines:', typeof window.disciplinesData);
-console.log('Est tableau disciplines?', Array.isArray(window.disciplinesData));
-console.log('Nombre de disciplines:', window.disciplinesData ? window.disciplinesData.length : 0);
-if (window.disciplinesData && window.disciplinesData.length > 0) {
-    console.log('Première discipline:', window.disciplinesData[0]);
-    console.log('Structure première discipline:', Object.keys(window.disciplinesData[0]));
-} else {
-    console.error('PROBLÈME: Aucune discipline dans window.disciplinesData!');
-    console.error('Valeur brute disciplinesFromPHP:', disciplinesFromPHP);
-}
-console.log('=== FIN DONNÉES PHP ===');
-
-// Test immédiat pour voir si le select existe
-setTimeout(function() {
-    var testSelect = document.getElementById('discipline');
-    if (testSelect) {
-        console.log('✅ Select discipline trouvé dans le DOM');
-        console.log('Nombre d\'options actuelles:', testSelect.options.length);
-    } else {
-        console.error('❌ Select discipline NON trouvé dans le DOM');
-    }
-}, 100);
 </script>
 <form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>" id="concoursForm" novalidate>
     
