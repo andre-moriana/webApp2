@@ -7,7 +7,9 @@
 
 <!-- Passer les clubs au JavaScript -->
 <script>
-window.clubsData = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE) ?>;
+window.clubsData = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
+console.log('Clubs depuis PHP:', window.clubsData);
+console.log('Nombre de clubs:', window.clubsData ? window.clubsData.length : 0);
 </script>
 <form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>" id="concoursForm">
     

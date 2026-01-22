@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Charger les clubs depuis les données passées par PHP
 function loadClubs() {
+    console.log('loadClubs() appelée');
+    console.log('window.clubsData:', window.clubsData);
+    
     const select = document.getElementById('club_organisateur');
     if (!select) {
         console.error('Select club_organisateur non trouvé');
@@ -21,28 +24,40 @@ function loadClubs() {
     // Utiliser les données passées depuis PHP
     const clubs = window.clubsData || [];
     
-    console.log('Clubs reçus depuis PHP:', clubs.length);
+    console.log('Clubs reçus depuis PHP:', clubs);
+    console.log('Nombre de clubs:', clubs.length);
+    
+    if (!Array.isArray(clubs)) {
+        console.error('window.clubsData n\'est pas un tableau:', typeof clubs);
+        return;
+    }
     
     if (clubs.length === 0) {
-        console.warn('Aucun club disponible');
+        console.warn('Aucun club disponible dans window.clubsData');
         return;
     }
     
     // Vider le select (garder seulement l'option par défaut)
     select.innerHTML = '<option value="">-- Sélectionner un club --</option>';
     
-    clubs.forEach(club => {
-        const option = document.createElement('option');
-        option.value = club.id || club._id || '';
-        const clubName = club.name || club.nameShort || 'Club';
-        const clubShort = club.nameShort || club.name_short || '';
-        option.textContent = clubName + (clubShort ? ' (' + clubShort + ')' : '');
-        option.dataset.code = clubShort;
-        option.dataset.name = clubName;
-        select.appendChild(option);
+    let addedCount = 0;
+    clubs.forEach((club, index) => {
+        try {
+            const option = document.createElement('option');
+            option.value = club.id || club._id || '';
+            const clubName = club.name || club.nameShort || 'Club';
+            const clubShort = club.nameShort || club.name_short || '';
+            option.textContent = clubName + (clubShort ? ' (' + clubShort + ')' : '');
+            option.dataset.code = clubShort;
+            option.dataset.name = clubName;
+            select.appendChild(option);
+            addedCount++;
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout du club', index, ':', error, club);
+        }
     });
     
-    console.log('Clubs ajoutés au select:', select.options.length - 1);
+    console.log('Clubs ajoutés au select:', addedCount, '/', clubs.length);
 }
 
 // Charger les disciplines depuis l'API
