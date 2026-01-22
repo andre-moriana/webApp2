@@ -4,6 +4,11 @@
 <!-- Formulaire de création/édition d'un concours -->
 <div class="container-fluid concours-create-container">
 <h1><?= isset($concours) ? 'Éditer' : 'Créer' ?> un concours</h1>
+
+<!-- Passer les clubs au JavaScript -->
+<script>
+window.clubsData = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE) ?>;
+</script>
 <form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>" id="concoursForm">
     
     <!-- Section principale -->
