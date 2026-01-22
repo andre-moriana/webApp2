@@ -2,7 +2,7 @@
 <link href="/public/assets/css/concours-create.css" rel="stylesheet">
 
 <!-- Formulaire de création/édition d'un concours avec gestion des départs -->
-<div class="container-fluid">
+<div class="container-fluid concours-create-container">
 <h1><?= isset($concours) ? 'Éditer' : 'Créer' ?> un concours</h1>
 <form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>">
     <label>Nom : <input type="text" name="nom" value="<?= $concours->nom ?? '' ?>" required></label><br>
