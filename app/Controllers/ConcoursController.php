@@ -133,12 +133,25 @@ class ConcoursController {
                 $disciplines = array_values($disciplinesPayload);
                 
                 error_log('Disciplines récupérées: ' . count($disciplines));
+                if (count($disciplines) > 0) {
+                    error_log('Première discipline: ' . json_encode($disciplines[0], JSON_UNESCAPED_UNICODE));
+                }
             } else {
                 error_log('Erreur dans la réponse disciplines: ' . ($disciplinesResponse['message'] ?? 'Unknown error'));
+                error_log('Réponse complète: ' . json_encode($disciplinesResponse, JSON_UNESCAPED_UNICODE));
             }
         } catch (Exception $e) {
             error_log('Exception lors de la récupération des disciplines: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
+        }
+
+        // Log final avant de passer à la vue
+        error_log('=== AVANT INCLUSION VUE ===');
+        error_log('Nombre de disciplines à passer à la vue: ' . count($disciplines));
+        error_log('Type de $disciplines: ' . gettype($disciplines));
+        error_log('Est un tableau: ' . (is_array($disciplines) ? 'oui' : 'non'));
+        if (count($disciplines) > 0) {
+            error_log('Première discipline (avant vue): ' . json_encode($disciplines[0], JSON_UNESCAPED_UNICODE));
         }
 
         $title = 'Créer un concours - Portail Archers de Gémenos';
