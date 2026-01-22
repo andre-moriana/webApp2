@@ -94,7 +94,7 @@
                                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                             Comités Départementaux
                                         </div>
-                                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                        <div class="h4 mb-0 font-weight-bold text-gray-800" id="departmental-committees-count">
                                             <?php echo $stats['clubs_departmental']; ?>
                                         </div>
                                     </div>
@@ -200,6 +200,7 @@
     window.eventsByClub = <?php echo json_encode($stats['events_by_club'] ?? []); ?>;
     window.allEvents = <?php echo json_encode($stats['events_list'] ?? []); ?>;
     window.totalEvents = <?php echo $stats['events']; ?>;
+    window.totalDepartmentalCommittees = <?php echo $stats['clubs_departmental']; ?>;
 </script>
 
 <!-- Statistiques UTILISATEURS -->
