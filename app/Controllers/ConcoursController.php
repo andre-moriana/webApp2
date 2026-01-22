@@ -60,6 +60,11 @@ class ConcoursController {
             exit;
         }
         
+        // Nettoyer les données de debug de la session
+        if (isset($_SESSION['debug_concours_store'])) {
+            unset($_SESSION['debug_concours_store']);
+        }
+        
         $themes = [];
         $clubs = [];
         $disciplines = []; // Initialiser à un tableau vide par défaut
@@ -115,10 +120,16 @@ class ConcoursController {
         
         try {
             // Récupérer les disciplines depuis la table concour_discipline
+            error_log('=== RÉCUPÉRATION DISCIPLINES - Début ===');
             $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
             
             error_log('=== RÉCUPÉRATION DISCIPLINES ===');
             error_log('Disciplines response success: ' . ($disciplinesResponse['success'] ? 'true' : 'false'));
+            error_log('Disciplines response status_code: ' . ($disciplinesResponse['status_code'] ?? 'N/A'));
+            error_log('Disciplines response message: ' . ($disciplinesResponse['message'] ?? 'N/A'));
+            if (isset($disciplinesResponse['data']) && is_array($disciplinesResponse['data'])) {
+                error_log('Disciplines response data keys: ' . implode(', ', array_keys($disciplinesResponse['data'])));
+            }
             
             // makeRequest retourne { success, data: { success, data: [...] } }
             // Il faut unwrap deux fois
@@ -201,9 +212,12 @@ class ConcoursController {
         
         try {
             // Récupérer les niveaux de championnat depuis la table concour_niveau_championnat
+            error_log('=== RÉCUPÉRATION NIVEAU CHAMPIONNAT - Début ===');
             $niveauChampionnatResponse = $this->apiService->makeRequest('concours/niveau-championnat', 'GET');
             
             error_log('Niveau championnat response success: ' . ($niveauChampionnatResponse['success'] ? 'true' : 'false'));
+            error_log('Niveau championnat response status_code: ' . ($niveauChampionnatResponse['status_code'] ?? 'N/A'));
+            error_log('Niveau championnat response message: ' . ($niveauChampionnatResponse['message'] ?? 'N/A'));
             
             // makeRequest retourne { success, data: { success, data: [...] } }
             // Il faut unwrap deux fois
@@ -259,13 +273,6 @@ class ConcoursController {
     // Enregistrement d'un nouveau concours
     public function store()
     {
-        // Debug: Afficher dans la session pour voir si la méthode est appelée
-        $_SESSION['debug_concours_store'] = [
-            'called' => true,
-            'method' => $_SERVER['REQUEST_METHOD'] ?? 'N/A',
-            'uri' => $_SERVER['REQUEST_URI'] ?? 'N/A',
-            'timestamp' => date('Y-m-d H:i:s')
-        ];
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $_SESSION['error'] = 'Méthode non autorisée. Méthode reçue: ' . ($_SERVER['REQUEST_METHOD'] ?? 'N/A');
@@ -292,35 +299,26 @@ class ConcoursController {
         $code_authentification = $_POST['code_authentification'] ?? '';
         $type_publication_internet = $_POST['type_publication_internet'] ?? '';
         
-        // Debug: Stocker les données POST reçues
-        $_SESSION['debug_concours_store']['post_data'] = $_POST;
-        
         // Validation des champs requis
         if (empty($titre_competition)) {
             $_SESSION['error'] = 'Le titre de la compétition est requis';
-            $_SESSION['debug_concours_store']['validation_failed'] = 'titre_competition';
             header('Location: /concours/create');
             exit;
         }
         
         if (empty($date_debut) || empty($date_fin)) {
             $_SESSION['error'] = 'Les dates de début et de fin sont requises';
-            $_SESSION['debug_concours_store']['validation_failed'] = 'dates';
             header('Location: /concours/create');
             exit;
         }
         
         if (empty($lieu_competition)) {
             $_SESSION['error'] = 'Le lieu de la compétition est requis';
-            $_SESSION['debug_concours_store']['validation_failed'] = 'lieu_competition';
             header('Location: /concours/create');
             exit;
         }
 
-        $_SESSION['debug_concours_store']['validation_passed'] = true;
-
         try {
-            $_SESSION['debug_concours_store']['api_call_started'] = true;
             // Préparer les données pour l'API
             // Utiliser titre_competition comme nom pour la compatibilité avec la table actuelle
             $data = [
@@ -348,46 +346,24 @@ class ConcoursController {
                 'type_publication_internet' => $type_publication_internet
             ];
             
-            error_log('Données à envoyer à l\'API: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
-            
             // L'endpoint est 'concours' (pas 'concours/create') car le routing se fait via PATH_INFO
-            $_SESSION['debug_concours_store']['api_endpoint'] = 'concours';
-            $_SESSION['debug_concours_store']['api_method'] = 'POST';
-            $_SESSION['debug_concours_store']['api_data_sent'] = $data;
-            
             $response = $this->apiService->makeRequest('concours', 'POST', $data);
-            
-            $_SESSION['debug_concours_store']['api_response'] = $response;
-            $_SESSION['debug_concours_store']['api_response_raw'] = json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             
             // makeRequest retourne { success: bool, data: {...}, status_code: int, message: string }
             // où data contient la réponse JSON de l'API { success: bool, data: {...}, message: string }
             $apiResponse = $response['data'] ?? null;
             
-            // Debug: Stocker la réponse complète
-            $_SESSION['debug_concours_store']['api_response_full'] = $response;
-            $_SESSION['debug_concours_store']['api_response_data'] = $apiResponse;
-            
             // Vérifier le succès HTTP ET le succès de l'opération dans la réponse API
             if ($response['success'] && isset($apiResponse) && is_array($apiResponse)) {
                 // La réponse API est dans $response['data']
                 if (isset($apiResponse['success']) && $apiResponse['success']) {
-                    $_SESSION['debug_concours_store']['api_success'] = true;
                     $_SESSION['success'] = $apiResponse['message'] ?? 'Concours créé avec succès';
                     header('Location: /concours');
                     exit;
                 } else {
                     // L'API a retourné une erreur - extraire le message d'erreur détaillé
                     $errorMessage = $apiResponse['error'] ?? $apiResponse['message'] ?? 'Erreur lors de la création du concours';
-                    
-                    // Si le message contient des détails de debug, les inclure
-                    if (isset($apiResponse['debug'])) {
-                        $errorMessage .= ' - ' . json_encode($apiResponse['debug'], JSON_UNESCAPED_UNICODE);
-                    }
-                    
                     $_SESSION['error'] = $errorMessage;
-                    $_SESSION['debug_concours_store']['api_error'] = $errorMessage;
-                    $_SESSION['debug_concours_store']['api_response_data'] = $apiResponse;
                     header('Location: /concours/create');
                     exit;
                 }
@@ -403,16 +379,10 @@ class ConcoursController {
                 }
                 
                 $_SESSION['error'] = $errorMessage;
-                $_SESSION['debug_concours_store']['http_error'] = $errorMessage;
-                $_SESSION['debug_concours_store']['http_status'] = $response['status_code'] ?? 'inconnu';
                 header('Location: /concours/create');
                 exit;
             }
         } catch (Exception $e) {
-            $_SESSION['debug_concours_store']['exception'] = [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ];
             $_SESSION['error'] = 'Erreur lors de la création du concours: ' . $e->getMessage();
             header('Location: /concours/create');
             exit;
