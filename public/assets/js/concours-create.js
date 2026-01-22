@@ -19,12 +19,20 @@ async function loadClubs() {
         const select = document.getElementById('club_organisateur');
         if (select && data) {
             const clubs = Array.isArray(data) ? data : (data.data || []);
-            clubs.forEach(club => {
+            
+            // Filtrer les clubs : exclure ceux dont le nameShort se termine par "000"
+            const filteredClubs = clubs.filter(club => {
+                const nameShort = club.nameShort || club.name_short || '';
+                // Exclure les clubs dont le nameShort se termine par "000"
+                return nameShort === '' || !nameShort.endsWith('000');
+            });
+            
+            filteredClubs.forEach(club => {
                 const option = document.createElement('option');
                 option.value = club.id || club._id;
                 option.textContent = (club.name || club.nameShort || 'Club') + 
                     (club.nameShort ? ' (' + club.nameShort + ')' : '');
-                option.dataset.code = club.nameShort || '';
+                option.dataset.code = club.nameShort || club.name_short || '';
                 option.dataset.name = club.name || '';
                 select.appendChild(option);
             });
