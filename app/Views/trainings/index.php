@@ -6,7 +6,7 @@
                 <?php if ($isAdmin || $isCoach || $isDirigeant): ?>
                 <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 w-100 w-md-auto">
                     <label for="userSelect" class="form-label mb-0 text-nowrap">Sélectionner un archer :</label>
-                    <select id="userSelect" class="form-select" style="min-width: 200px; width: 100%; max-width: 100%;">
+                    <select id="userSelect" class="form-select" style="min-width: 200px; width: 100%; max-width: 100%;" onchange="handleUserSelectChange(this)">
                         <option value="">-- Choisir un archer --</option>
                         <?php if (!empty($users)): ?>
                         <?php foreach ($users as $user): ?>
