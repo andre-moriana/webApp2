@@ -7,10 +7,27 @@
 
 <?php if (isset($_SESSION['debug_concours_store'])): ?>
     <div class="alert alert-info">
-        <strong>Debug:</strong> Le contrôleur store() a été appelé !
+        <strong>Debug Concours Store:</strong>
         <pre><?= print_r($_SESSION['debug_concours_store'], true) ?></pre>
     </div>
-    <?php unset($_SESSION['debug_concours_store']); ?>
+    <?php 
+    // Ne pas unset immédiatement pour pouvoir voir les infos
+    // unset($_SESSION['debug_concours_store']); 
+    ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger">
+        <strong>Erreur:</strong> <?= htmlspecialchars($_SESSION['error']) ?>
+    </div>
+    <?php unset($_SESSION['error']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success">
+        <strong>Succès:</strong> <?= htmlspecialchars($_SESSION['success']) ?>
+    </div>
+    <?php unset($_SESSION['success']); ?>
 <?php endif; ?>
 
 <!-- Passer les clubs et disciplines au JavaScript -->
