@@ -3,12 +3,27 @@
 document.addEventListener('DOMContentLoaded', function() {
     loadClubs();
     loadDisciplines();
-    loadTypeCompetitions();
+    // loadTypeCompetitions() sera appelée quand une discipline est sélectionnée
     loadTypePublications();
     
     // Gestion du club organisateur
     setupClubOrganisateur();
+    
+    // Gestion du changement de discipline pour charger les types de compétition
+    setupDisciplineChange();
 });
+
+// Configuration du changement de discipline
+function setupDisciplineChange() {
+    const disciplineSelect = document.getElementById('discipline');
+    if (disciplineSelect) {
+        disciplineSelect.addEventListener('change', function() {
+            const selectedDisciplineId = this.value;
+            console.log('Discipline changée:', selectedDisciplineId);
+            loadTypeCompetitions(selectedDisciplineId);
+        });
+    }
+}
 
 // Charger les clubs depuis les données passées par PHP
 function loadClubs() {
@@ -130,37 +145,61 @@ function loadDisciplines() {
     }
 }
 
-// Charger les types de compétition depuis l'API
-async function loadTypeCompetitions() {
-    try {
-        // TODO: Remplacer par l'endpoint réel de l'API
-        const response = await fetch('/api/type-competitions');
-        const data = await response.json();
-        
-        const select = document.getElementById('type_competition');
-        if (select && data) {
-            const types = Array.isArray(data) ? data : (data.data || []);
-            types.forEach(type => {
-                const option = document.createElement('option');
-                option.value = type.id || type._id || type;
-                option.textContent = type.name || type.nom || type;
-                select.appendChild(option);
-            });
-        }
-    } catch (error) {
-        console.error('Erreur lors du chargement des types de compétition:', error);
-        // Valeurs par défaut si l'API n'existe pas encore
-        const select = document.getElementById('type_competition');
-        if (select) {
-            const defaultTypes = ['Indoor', 'Outdoor', 'Field', '3D'];
-            defaultTypes.forEach(type => {
-                const option = document.createElement('option');
-                option.value = type.toLowerCase();
-                option.textContent = type;
-                select.appendChild(option);
-            });
-        }
+// Charger les types de compétition depuis les données passées par PHP
+// Cette fonction sera appelée quand une discipline est sélectionnée
+function loadTypeCompetitions(iddiscipline) {
+    console.log('=== loadTypeCompetitions() appelée ===');
+    console.log('ID Discipline sélectionnée:', iddiscipline);
+    console.log('window.typeCompetitionsData:', window.typeCompetitionsData);
+    
+    const select = document.getElementById('type_competition');
+    if (!select) {
+        console.error('ERREUR: Select type_competition non trouvé dans le DOM');
+        return;
     }
+    
+    // Vider le select (garder seulement l'option par défaut)
+    select.innerHTML = '<option value="">-- Sélectionner un type --</option>';
+    
+    if (!iddiscipline || iddiscipline === '') {
+        console.log('Aucune discipline sélectionnée, types de compétition non chargés');
+        return;
+    }
+    
+    // Utiliser les données passées depuis PHP
+    const allTypeCompetitions = window.typeCompetitionsData || [];
+    
+    // Filtrer par discipline
+    const filteredTypes = allTypeCompetitions.filter(function(typeComp) {
+        return typeComp.iddiscipline == iddiscipline;
+    });
+    
+    console.log('Types de compétition filtrés pour discipline', iddiscipline, ':', filteredTypes.length);
+    
+    if (filteredTypes.length === 0) {
+        console.warn('Aucun type de compétition trouvé pour la discipline', iddiscipline);
+        return;
+    }
+    
+    // Trier par nb_ordre
+    filteredTypes.sort(function(a, b) {
+        return (a.nb_ordre || 0) - (b.nb_ordre || 0);
+    });
+    
+    let addedCount = 0;
+    filteredTypes.forEach(function(typeComp, index) {
+        try {
+            const option = document.createElement('option');
+            option.value = typeComp.idformat_competition || typeComp.id || '';
+            option.textContent = typeComp.lb_format_competition || typeComp.name || typeComp.nom || 'Type';
+            select.appendChild(option);
+            addedCount++;
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout du type de compétition', index, ':', error);
+        }
+    });
+    
+    console.log('Types de compétition ajoutés au select:', addedCount);
 }
 
 // Charger les types de publication depuis l'API

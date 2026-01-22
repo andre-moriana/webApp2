@@ -63,6 +63,7 @@ class ConcoursController {
         $themes = [];
         $clubs = [];
         $disciplines = []; // Initialiser à un tableau vide par défaut
+        $typeCompetitions = []; // Initialiser à un tableau vide par défaut
         
         try {
             // Récupérer les thèmes
@@ -153,6 +154,47 @@ class ConcoursController {
             }
         } catch (Exception $e) {
             error_log('Exception lors de la récupération des disciplines: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+        }
+        
+        try {
+            // Récupérer les types de compétition depuis la table concour_type_competition
+            $typeCompetitionsResponse = $this->apiService->makeRequest('concours/type-competitions', 'GET');
+            
+            error_log('Type competitions response success: ' . ($typeCompetitionsResponse['success'] ? 'true' : 'false'));
+            
+            // makeRequest retourne { success, data: { success, data: [...] } }
+            // Il faut unwrap deux fois
+            $firstUnwrap = $this->apiService->unwrapData($typeCompetitionsResponse);
+            
+            // Si firstUnwrap contient encore { success, data }, unwrap une deuxième fois
+            if (is_array($firstUnwrap) && isset($firstUnwrap['data']) && isset($firstUnwrap['success'])) {
+                $typeCompetitionsPayload = $firstUnwrap['data'];
+            } else {
+                $typeCompetitionsPayload = $firstUnwrap;
+            }
+            
+            error_log('Type competitions payload is array: ' . (is_array($typeCompetitionsPayload) ? 'true' : 'false'));
+            error_log('Type competitions payload count: ' . (is_array($typeCompetitionsPayload) ? count($typeCompetitionsPayload) : 0));
+            
+            if ($typeCompetitionsResponse['success'] && is_array($typeCompetitionsPayload)) {
+                // Normaliser l'ID de chaque type de compétition
+                foreach ($typeCompetitionsPayload as &$typeCompetition) {
+                    if (!isset($typeCompetition['id']) && isset($typeCompetition['_id'])) {
+                        $typeCompetition['id'] = $typeCompetition['_id'];
+                    }
+                }
+                unset($typeCompetition); // Libérer la référence
+                
+                // Réindexer le tableau pour avoir des clés séquentielles
+                $typeCompetitions = array_values($typeCompetitionsPayload);
+                
+                error_log('Types de compétition récupérés: ' . count($typeCompetitions));
+            } else {
+                error_log('Erreur dans la réponse type competitions: ' . ($typeCompetitionsResponse['message'] ?? 'Unknown error'));
+            }
+        } catch (Exception $e) {
+            error_log('Exception lors de la récupération des types de compétition: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
         }
 
