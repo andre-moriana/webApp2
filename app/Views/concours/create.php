@@ -13,6 +13,7 @@ var disciplinesFromPHP = <?= json_encode($disciplines ?? [], JSON_UNESCAPED_UNIC
 
 window.clubsData = clubsFromPHP || [];
 window.disciplinesData = disciplinesFromPHP || [];
+window.typeCompetitionsData = <?= json_encode($typeCompetitions ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?> || [];
 
 console.log('=== DONNÉES DEPUIS PHP ===');
 console.log('Clubs depuis PHP:', window.clubsData);
@@ -62,7 +63,6 @@ setTimeout(function() {
         <div class="form-group">
             <label>Discipline :</label>
             <div class="discipline-fields">
-                <input type="text" id="discipline_search" name="discipline_search" placeholder="Rechercher..." autocomplete="off">
                 <select id="discipline" name="discipline" required>
                     <option value="">-- Sélectionner une discipline --</option>
                 </select>
@@ -73,7 +73,6 @@ setTimeout(function() {
         <div class="form-group">
             <label>Type Compétition :</label>
             <div class="type-competition-fields">
-                <input type="text" id="type_competition_search" name="type_competition_search" placeholder="Rechercher..." autocomplete="off">
                 <select id="type_competition" name="type_competition" required>
                     <option value="">-- Sélectionner un type --</option>
                 </select>
