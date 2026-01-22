@@ -93,6 +93,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const committeeId = this.getAttribute('data-committee-id');
             const committeeName = this.textContent.trim();
             
+            // Déterminer si c'est un comité régional ou départemental
+            // Un comité régional se termine par '00000' (ex: 1300000)
+            const isRegional = committeeId && committeeId.length >= 7 && committeeId.substring(committeeId.length - 5) === '00000';
+            
             // Retirer la sélection des autres items
             document.querySelectorAll('.committee-item').forEach(function(el) {
                 el.classList.remove('selected');
@@ -100,6 +104,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Ajouter la sélection à l'item cliqué
             this.classList.add('selected');
+            
+            // Si c'est un comité régional, filtrer les comités départementaux
+            if (isRegional) {
+                filterDepartmentalCommitteesByRegional(committeeId);
+            }
             
             // Afficher les clubs de ce comité
             displayClubsForCommittee(committeeId, committeeName);
@@ -120,6 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resetUsersDisplay();
         resetGroupsDisplay();
         resetEventsDisplay();
+        resetDepartmentalCommitteesFilter();
     });
     
     // Gérer le bouton de réinitialisation des utilisateurs
@@ -771,3 +781,60 @@ document.getElementById('reset-groups-btn')?.addEventListener('click', function(
 document.getElementById('reset-events-btn')?.addEventListener('click', function() {
     resetEventsDisplay();
 });
+
+// Fonction pour filtrer les comités départementaux selon le comité régional sélectionné
+function filterDepartmentalCommitteesByRegional(regionalCommitteeId) {
+    // Trouver le conteneur des comités départementaux
+    const departmentalContainer = document.querySelector('.col-md-4:nth-child(2) .club-list ul');
+    
+    if (!departmentalContainer) {
+        return;
+    }
+    
+    // Extraire les 2 premiers caractères du comité régional (ex: '13' pour '1300000')
+    const regionalPrefix = regionalCommitteeId ? regionalCommitteeId.substring(0, 2) : '';
+    
+    if (!regionalPrefix) {
+        return;
+    }
+    
+    // Parcourir tous les éléments de comités départementaux
+    const departmentalItems = departmentalContainer.querySelectorAll('.committee-item');
+    
+    departmentalItems.forEach(function(item) {
+        const committeeId = item.getAttribute('data-committee-id');
+        
+        // Un comité départemental se termine par '000' mais pas '00000' (ex: 1301000)
+        const isDepartmental = committeeId && 
+                               committeeId.length >= 7 && 
+                               committeeId.substring(committeeId.length - 3) === '000' &&
+                               committeeId.substring(committeeId.length - 5) !== '00000';
+        
+        if (isDepartmental) {
+            // Vérifier si le comité départemental appartient à cette région
+            const departmentalPrefix = committeeId.substring(0, 2);
+            if (departmentalPrefix === regionalPrefix) {
+                // Afficher le comité départemental
+                item.style.display = '';
+            } else {
+                // Masquer le comité départemental
+                item.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Fonction pour réinitialiser le filtre des comités départementaux
+function resetDepartmentalCommitteesFilter() {
+    const departmentalContainer = document.querySelector('.col-md-4:nth-child(2) .club-list ul');
+    
+    if (!departmentalContainer) {
+        return;
+    }
+    
+    const departmentalItems = departmentalContainer.querySelectorAll('.committee-item');
+    
+    departmentalItems.forEach(function(item) {
+        item.style.display = '';
+    });
+}
