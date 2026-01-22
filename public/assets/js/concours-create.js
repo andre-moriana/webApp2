@@ -63,33 +63,39 @@ function loadClubs() {
 // Charger les disciplines depuis l'API
 async function loadDisciplines() {
     try {
-        // TODO: Remplacer par l'endpoint réel de l'API
-        const response = await fetch('/api/disciplines');
+        const response = await fetch('/api/concours/disciplines');
+        
+        if (!response.ok) {
+            console.error('Erreur HTTP lors du chargement des disciplines:', response.status, response.statusText);
+            return;
+        }
+        
         const data = await response.json();
+        console.log('Disciplines reçues:', data);
         
         const select = document.getElementById('discipline');
-        if (select && data) {
-            const disciplines = Array.isArray(data) ? data : (data.data || []);
-            disciplines.forEach(discipline => {
+        if (!select) {
+            console.error('Select discipline non trouvé');
+            return;
+        }
+        
+        // Vider le select (garder seulement l'option par défaut)
+        select.innerHTML = '<option value="">-- Sélectionner une discipline --</option>';
+        
+        if (Array.isArray(data) && data.length > 0) {
+            data.forEach(discipline => {
                 const option = document.createElement('option');
-                option.value = discipline.id || discipline._id || discipline;
-                option.textContent = discipline.name || discipline.nom || discipline;
+                option.value = discipline.id || discipline.iddiscipline || '';
+                option.textContent = discipline.name || discipline.nom || discipline.lb_discipline || 'Discipline';
                 select.appendChild(option);
             });
+            console.log('Disciplines ajoutées au select:', select.options.length - 1);
+        } else {
+            console.warn('Aucune discipline trouvée dans la réponse');
         }
     } catch (error) {
         console.error('Erreur lors du chargement des disciplines:', error);
-        // Valeurs par défaut si l'API n'existe pas encore
-        const select = document.getElementById('discipline');
-        if (select) {
-            const defaultDisciplines = ['Arc Classique', 'Arc à Poulies', 'Arc Droit', 'Arc Nu'];
-            defaultDisciplines.forEach(discipline => {
-                const option = document.createElement('option');
-                option.value = discipline.toLowerCase().replace(/\s+/g, '_');
-                option.textContent = discipline;
-                select.appendChild(option);
-            });
-        }
+        console.error('Stack:', error.stack);
     }
 }
 
