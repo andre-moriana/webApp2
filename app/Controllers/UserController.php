@@ -34,42 +34,70 @@ class UserController {
         try {
             // Récupérer les utilisateurs depuis l'API
             $response = $this->apiService->getUsers();
-            if ($response['success'] && isset($response['data']['users']) && !empty($response['data']['users'])) {
-                $users = $response['data']['users'];
+            
+            error_log('UserController::index() - Réponse getUsers(): ' . json_encode($response, JSON_UNESCAPED_UNICODE));
+            
+            // Vérifier le format de la réponse
+            // makeRequest retourne { success: bool, data: {...}, status_code: int }
+            // où data contient la réponse JSON de l'API
+            $apiResponse = $response['data'] ?? null;
+            
+            // L'API /users retourne directement un tableau d'utilisateurs, pas { users: [...] }
+            if ($response['success'] && isset($apiResponse) && is_array($apiResponse)) {
+                // Si apiResponse est directement un tableau, l'utiliser
+                if (isset($apiResponse[0]) && is_array($apiResponse[0])) {
+                    $users = $apiResponse;
+                } elseif (isset($apiResponse['users']) && is_array($apiResponse['users'])) {
+                    $users = $apiResponse['users'];
+                } else {
+                    // Format inattendu
+                    error_log('Format de réponse inattendu pour getUsers(): ' . json_encode($apiResponse, JSON_UNESCAPED_UNICODE));
+                    $users = [];
+                }
                 
-                // Enrichir les utilisateurs avec le nom complet du club
-                // Utiliser EXACTEMENT la même méthode que dans show() qui fonctionne
-                try {
-                    $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
-                    if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
-                        // Enrichir chaque utilisateur avec le nom complet du club (même logique que show())
-                        foreach ($users as &$user) {
-                            // Récupérer le clubNameShort de la même manière que dans show()
-                            $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
-                            
-                            if (!empty($clubNameShort)) {
-                                // Chercher le club dans la liste (même logique que show())
-                                foreach ($clubsResponse['data'] as $club) {
-                                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                                    // Comparer exactement comme dans show() - par nameShort
-                                    if ($nameShort === $clubNameShort) {
-                                        $clubName = $club['name'] ?? '';
-                                        if (!empty($clubName)) {
-                                            $user['clubName'] = $clubName;
+                // Si on a des utilisateurs, les enrichir avec le nom complet du club
+                if (!empty($users)) {
+                    // Enrichir les utilisateurs avec le nom complet du club
+                    // Utiliser EXACTEMENT la même méthode que dans show() qui fonctionne
+                    try {
+                        $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+                        if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
+                            // Enrichir chaque utilisateur avec le nom complet du club (même logique que show())
+                            foreach ($users as &$user) {
+                                // Récupérer le clubNameShort de la même manière que dans show()
+                                $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
+                                
+                                if (!empty($clubNameShort)) {
+                                    // Chercher le club dans la liste (même logique que show())
+                                    foreach ($clubsResponse['data'] as $club) {
+                                        $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                                        // Comparer exactement comme dans show() - par nameShort
+                                        if ($nameShort === $clubNameShort) {
+                                            $clubName = $club['name'] ?? '';
+                                            if (!empty($clubName)) {
+                                                $user['clubName'] = $clubName;
+                                            }
+                                            break;
                                         }
-                                        break;
                                     }
                                 }
                             }
+                            unset($user); // Libérer la référence
                         }
-                        unset($user); // Libérer la référence
+                    } catch (Exception $e) {
+                        // En cas d'erreur, continuer sans enrichissement
+                        error_log('Erreur lors de l\'enrichissement des clubs: ' . $e->getMessage());
                     }
-                } catch (Exception $e) {
-                    // En cas d'erreur, continuer sans enrichissement
-                    error_log('Erreur lors de l\'enrichissement des clubs: ' . $e->getMessage());
+                } else {
+                    // Aucun utilisateur trouvé mais l'API a répondu
+                    error_log('Aucun utilisateur dans la réponse API');
                 }
             } else {
+                // L'API n'a pas répondu avec succès
+                error_log('API backend non accessible - success=' . ($response['success'] ? 'true' : 'false') . ', status_code=' . ($response['status_code'] ?? 'N/A'));
+                error_log('Réponse complète: ' . json_encode($response, JSON_UNESCAPED_UNICODE));
                 $error = 'API backend non accessible - Affichage de données simulées';
+                $users = $this->getSimulatedUsers();
             }
         } catch (Exception $e) {
             // En cas d'erreur, utiliser des données simulées
