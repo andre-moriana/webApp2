@@ -16,9 +16,31 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gestion de la soumission du formulaire
     const form = document.getElementById('concoursForm');
     if (form) {
+        console.log('Formulaire concoursForm trouvé - Action:', form.action);
         form.addEventListener('submit', function(e) {
-            console.log('Formulaire soumis - Action:', form.action);
-            console.log('Formulaire soumis - Method:', form.method);
+            console.log('=== SOUMISSION DU FORMULAIRE ===');
+            console.log('Action:', form.action);
+            console.log('Method:', form.method);
+            console.log('Form data:', new FormData(form));
+            
+            // Vérifier que tous les champs requis sont remplis
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            requiredFields.forEach(function(field) {
+                if (!field.value) {
+                    console.error('Champ requis vide:', field.name);
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                console.error('Formulaire invalide - soumission annulée');
+                e.preventDefault();
+                alert('Veuillez remplir tous les champs requis');
+                return false;
+            }
+            
+            console.log('Formulaire valide - soumission normale vers:', form.action);
             // Ne pas empêcher la soumission normale du formulaire
             // Le formulaire sera soumis normalement vers /concours/store
         });
