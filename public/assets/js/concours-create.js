@@ -262,12 +262,13 @@ async function loadTypePublications() {
             return;
         }
         
-        // Utiliser l'endpoint concours/type-publications
-        const response = await fetch('/api/concours/type-publications', {
+        // Utiliser l'endpoint direct type-publications
+        const response = await fetch('/api/type-publications', {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
-            }
+            },
+            credentials: 'include' // Inclure les cookies pour l'authentification
         });
         
         // Vérifier le Content-Type avant de parser JSON
