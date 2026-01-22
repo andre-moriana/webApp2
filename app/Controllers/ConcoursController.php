@@ -359,6 +359,10 @@ class ConcoursController {
             // où data contient la réponse JSON de l'API { success: bool, data: {...}, message: string }
             $apiResponse = $response['data'] ?? null;
             
+            // Debug: Stocker la réponse complète
+            $_SESSION['debug_concours_store']['api_response_full'] = $response;
+            $_SESSION['debug_concours_store']['api_response_data'] = $apiResponse;
+            
             // Vérifier le succès HTTP ET le succès de l'opération dans la réponse API
             if ($response['success'] && isset($apiResponse) && is_array($apiResponse)) {
                 // La réponse API est dans $response['data']
@@ -368,8 +372,14 @@ class ConcoursController {
                     header('Location: /concours');
                     exit;
                 } else {
-                    // L'API a retourné une erreur
-                    $errorMessage = $apiResponse['message'] ?? $apiResponse['error'] ?? 'Erreur lors de la création du concours';
+                    // L'API a retourné une erreur - extraire le message d'erreur détaillé
+                    $errorMessage = $apiResponse['error'] ?? $apiResponse['message'] ?? 'Erreur lors de la création du concours';
+                    
+                    // Si le message contient des détails de debug, les inclure
+                    if (isset($apiResponse['debug'])) {
+                        $errorMessage .= ' - ' . json_encode($apiResponse['debug'], JSON_UNESCAPED_UNICODE);
+                    }
+                    
                     $_SESSION['error'] = $errorMessage;
                     $_SESSION['debug_concours_store']['api_error'] = $errorMessage;
                     $_SESSION['debug_concours_store']['api_response_data'] = $apiResponse;
@@ -379,6 +389,14 @@ class ConcoursController {
             } else {
                 // Erreur HTTP ou problème de décodage
                 $errorMessage = $response['message'] ?? 'Erreur lors de la communication avec l\'API';
+                
+                // Si l'API a retourné un message d'erreur dans data, l'utiliser
+                if (isset($apiResponse['error'])) {
+                    $errorMessage = $apiResponse['error'];
+                } elseif (isset($apiResponse['message'])) {
+                    $errorMessage = $apiResponse['message'];
+                }
+                
                 $_SESSION['error'] = $errorMessage;
                 $_SESSION['debug_concours_store']['http_error'] = $errorMessage;
                 $_SESSION['debug_concours_store']['http_status'] = $response['status_code'] ?? 'inconnu';

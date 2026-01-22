@@ -8,7 +8,10 @@
 <?php if (isset($_SESSION['debug_concours_store'])): ?>
     <div class="alert alert-info">
         <strong>Debug Concours Store:</strong>
-        <pre><?= print_r($_SESSION['debug_concours_store'], true) ?></pre>
+        <details>
+            <summary>Cliquez pour voir les détails</summary>
+            <pre style="max-height: 500px; overflow: auto;"><?= print_r($_SESSION['debug_concours_store'], true) ?></pre>
+        </details>
     </div>
     <?php 
     // Ne pas unset immédiatement pour pouvoir voir les infos
