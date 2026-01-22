@@ -79,6 +79,10 @@ class ConcoursController {
             $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
             $payload = $this->apiService->unwrapData($clubsResponse);
             
+            error_log('Clubs response success: ' . ($clubsResponse['success'] ? 'true' : 'false'));
+            error_log('Payload is array: ' . (is_array($payload) ? 'true' : 'false'));
+            error_log('Payload count: ' . (is_array($payload) ? count($payload) : 0));
+            
             if ($clubsResponse['success'] && is_array($payload)) {
                 // Normaliser l'ID de chaque club
                 foreach ($payload as &$club) {
@@ -86,14 +90,24 @@ class ConcoursController {
                         $club['id'] = $club['_id'];
                     }
                 }
+                unset($club); // Libérer la référence
+                
                 // Filtrer les clubs : exclure ceux dont le nameShort se termine par "000"
-                $clubs = array_filter($payload, function($club) {
+                $filtered = array_filter($payload, function($club) {
                     $nameShort = (string)($club['nameShort'] ?? $club['name_short'] ?? '');
                     return $nameShort === '' || substr($nameShort, -3) !== '000';
                 });
+                
+                // Réindexer le tableau pour avoir des clés séquentielles
+                $clubs = array_values($filtered);
+                
+                error_log('Clubs filtrés: ' . count($clubs));
+            } else {
+                error_log('Erreur dans la réponse clubs: ' . ($clubsResponse['message'] ?? 'Unknown error'));
             }
         } catch (Exception $e) {
-            error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
+            error_log('Exception lors de la récupération des clubs: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
         }
 
         $title = 'Créer un concours - Portail Archers de Gémenos';
