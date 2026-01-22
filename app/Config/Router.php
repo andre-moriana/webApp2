@@ -328,13 +328,16 @@ class Router {
         }
         
         error_log("DEBUG ROUTER: Méthode: " . $requestMethod . ", URI: " . $requestUri);
+        error_log("DEBUG ROUTER: basePath: '" . $this->basePath . "'");
 
         // Supprimer le basePath de l'URI
         if ($this->basePath && strpos($requestUri, $this->basePath) === 0) {
             $requestUri = substr($requestUri, strlen($this->basePath));
+            error_log("DEBUG ROUTER: URI après suppression basePath: " . $requestUri);
         }
         
         // Tester chaque route
+        $routeFound = false;
         foreach ($this->routes as $route) {
             if ($route["method"] !== $requestMethod) {
                 continue;
@@ -342,9 +345,11 @@ class Router {
             
             // Utiliser la méthode convertToRegex existante
             $pattern = $this->convertToRegex($route["path"]);
+            error_log("DEBUG ROUTER: Test route " . $route["method"] . " " . $route["path"] . " (regex: $pattern) contre URI: $requestUri");
            
             if (preg_match($pattern, $requestUri, $matches)) {
                 error_log("DEBUG ROUTER: Route trouvée - " . $route["method"] . " " . $route["path"] . " -> " . $route["handler"]);
+                $routeFound = true;
                 
                 // Extraire le contrôleur et la méthode
                 list($controller, $method) = explode("@", $route["handler"]);
@@ -359,7 +364,16 @@ class Router {
                 return;
              }
         }
+        
         // Gérer l'erreur 404
+        error_log("DEBUG ROUTER: AUCUNE ROUTE TROUVÉE pour " . $requestMethod . " " . $requestUri);
+        error_log("DEBUG ROUTER: Routes disponibles pour " . $requestMethod . ":");
+        foreach ($this->routes as $route) {
+            if ($route["method"] === $requestMethod) {
+                error_log("  - " . $route["path"] . " -> " . $route["handler"]);
+            }
+        }
+        
         header("HTTP/1.0 404 Not Found");
         include "app/Views/layouts/header.php";
         include "app/Views/errors/404.php";
@@ -371,8 +385,8 @@ class Router {
         $pattern = preg_replace("/\{([^}]+)\}/", "([^/]+)", $path);
         // Échapper seulement les slashes, pas les parenthèses
         $pattern = str_replace("/", "\/", $pattern);
+        // Ajouter le délimiteur de début et fin
         $regex = "/^" . $pattern . "$/";
-        error_log("DEBUG ROUTER: Convert path '$path' to regex '$regex'");
         return $regex;
     }
     
