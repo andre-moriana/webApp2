@@ -544,9 +544,16 @@ class ApiService {
         // Ajouter le token dans les headers
         $result = $this->makeRequest("users", "GET");
         
-        if ($result["success"] && $result["status_code"] == 200) {
+        error_log('ApiService::getUsers() - Résultat makeRequest: ' . json_encode($result, JSON_UNESCAPED_UNICODE));
+        
+        // Vérifier le succès HTTP (200-299) ou si success est true
+        $isSuccess = ($result["success"] ?? false) && 
+                     (isset($result["status_code"]) ? ($result["status_code"] >= 200 && $result["status_code"] < 300) : true);
+        
+        if ($isSuccess) {
             // Vérifier que la clé "data" existe et n'est pas null
             if (!isset($result["data"]) || $result["data"] === null) {
+                error_log('ApiService::getUsers() - Aucune donnée dans la réponse');
                 return [
                     "success" => false,
                     "data" => ["users" => []],
@@ -556,9 +563,12 @@ class ApiService {
             
             $data = $result["data"];
             
+            error_log('ApiService::getUsers() - Type de data: ' . gettype($data) . ', Est tableau: ' . (is_array($data) ? 'oui' : 'non'));
+            
             if (is_array($data)) {
                 // Format 1: { "users": [...] }
                 if (isset($data["users"]) && is_array($data["users"])) {
+                    error_log('ApiService::getUsers() - Format 1 détecté: { users: [...] }');
                     return [
                         "success" => true,
                         "data" => $data,
@@ -567,21 +577,27 @@ class ApiService {
                 }
                 // Format 2: { "data": [...] }
                 elseif (isset($data["data"]) && is_array($data["data"])) {
+                    error_log('ApiService::getUsers() - Format 2 détecté: { data: [...] }');
                     return [
                         "success" => true,
                         "data" => ["users" => $data["data"]],
                         "message" => "Utilisateurs récupérés avec succès"
                     ];
                 }
-                // Format 3: [...] (tableau direct)
-                elseif (is_array($data) && !empty($data)) {
+                // Format 3: [...] (tableau direct d'utilisateurs)
+                elseif (!empty($data) && isset($data[0])) {
+                    error_log('ApiService::getUsers() - Format 3 détecté: tableau direct, ' . count($data) . ' utilisateurs');
                     return [
                         "success" => true,
                         "data" => ["users" => $data],
                         "message" => "Utilisateurs récupérés avec succès"
                     ];
+                } else {
+                    error_log('ApiService::getUsers() - Format inattendu: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
                 }
             }
+        } else {
+            error_log('ApiService::getUsers() - Échec de la requête: success=' . ($result["success"] ?? 'N/A') . ', status_code=' . ($result["status_code"] ?? 'N/A'));
         }
         
         return [
