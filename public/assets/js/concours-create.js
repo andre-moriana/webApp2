@@ -3,6 +3,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     loadClubs();
     loadDisciplines();
+    loadNiveauChampionnat();
     // loadTypeCompetitions() sera appelée quand une discipline est sélectionnée
     loadTypePublications();
     
@@ -143,6 +144,56 @@ function loadDisciplines() {
     if (addedCount === 0 && disciplines.length > 0) {
         console.error('PROBLÈME: Aucune discipline n\'a pu être ajoutée malgré', disciplines.length, 'disciplines disponibles');
     }
+}
+
+// Charger les niveaux de championnat depuis les données passées par PHP
+function loadNiveauChampionnat() {
+    console.log('=== loadNiveauChampionnat() appelée ===');
+    console.log('window.niveauChampionnatData:', window.niveauChampionnatData);
+    
+    const select = document.getElementById('niveau_championnat');
+    if (!select) {
+        console.error('ERREUR: Select niveau_championnat non trouvé dans le DOM');
+        return;
+    }
+    
+    // Utiliser les données passées depuis PHP
+    const niveaux = window.niveauChampionnatData || [];
+    
+    console.log('Niveaux reçus depuis PHP:', niveaux);
+    console.log('Nombre de niveaux:', niveaux.length);
+    
+    if (!Array.isArray(niveaux)) {
+        console.error('ERREUR: window.niveauChampionnatData n\'est pas un tableau:', typeof niveaux);
+        return;
+    }
+    
+    if (niveaux.length === 0) {
+        console.warn('ATTENTION: Aucun niveau disponible dans window.niveauChampionnatData');
+        return;
+    }
+    
+    // Vider le select (garder seulement l'option par défaut)
+    select.innerHTML = '<option value="">-- Sélectionner --</option>';
+    
+    let addedCount = 0;
+    niveaux.forEach(function(niveau, index) {
+        try {
+            const option = document.createElement('option');
+            // Utiliser abv_niveauchampionnat comme valeur (abréviation) ou idniveau_championnat
+            const value = niveau.abv_niveauchampionnat || niveau.idniveau_championnat || niveau.id || '';
+            const text = niveau.lb_niveauchampionnat || niveau.name || niveau.nom || 'Niveau';
+            
+            option.value = value;
+            option.textContent = text;
+            select.appendChild(option);
+            addedCount++;
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout du niveau', index, ':', error);
+        }
+    });
+    
+    console.log('Niveaux de championnat ajoutés au select:', addedCount);
 }
 
 // Charger les types de compétition depuis les données passées par PHP
