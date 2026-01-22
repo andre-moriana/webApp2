@@ -17,33 +17,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('concoursForm');
     if (form) {
         console.log('Formulaire concoursForm trouvé - Action:', form.action);
+        
+        // Utiliser capture phase pour s'assurer qu'on intercepte avant les autres handlers
         form.addEventListener('submit', function(e) {
             console.log('=== SOUMISSION DU FORMULAIRE ===');
             console.log('Action:', form.action);
             console.log('Method:', form.method);
-            console.log('Form data:', new FormData(form));
+            console.log('Target:', e.target);
+            console.log('CurrentTarget:', e.currentTarget);
             
             // Vérifier que tous les champs requis sont remplis
             const requiredFields = form.querySelectorAll('[required]');
             let isValid = true;
+            const emptyFields = [];
             requiredFields.forEach(function(field) {
-                if (!field.value) {
-                    console.error('Champ requis vide:', field.name);
+                if (!field.value || field.value.trim() === '') {
+                    console.error('Champ requis vide:', field.name, field.id);
+                    emptyFields.push(field.name || field.id || 'champ inconnu');
                     isValid = false;
                 }
             });
             
             if (!isValid) {
-                console.error('Formulaire invalide - soumission annulée');
+                console.error('Formulaire invalide - soumission annulée. Champs vides:', emptyFields);
                 e.preventDefault();
-                alert('Veuillez remplir tous les champs requis');
+                e.stopPropagation();
+                alert('Veuillez remplir tous les champs requis: ' + emptyFields.join(', '));
                 return false;
             }
             
             console.log('Formulaire valide - soumission normale vers:', form.action);
+            console.log('Tous les champs requis sont remplis');
             // Ne pas empêcher la soumission normale du formulaire
             // Le formulaire sera soumis normalement vers /concours/store
-        });
+        }, true); // Utiliser capture phase
     } else {
         console.error('Formulaire concoursForm non trouvé!');
     }
