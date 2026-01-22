@@ -256,22 +256,51 @@ function loadTypeCompetitions(iddiscipline) {
 // Charger les types de publication depuis l'API
 async function loadTypePublications() {
     try {
-        // TODO: Remplacer par l'endpoint réel de l'API
-        const response = await fetch('/api/type-publications');
+        const select = document.getElementById('type_publication_internet');
+        if (!select) {
+            console.warn('Select type_publication_internet non trouvé');
+            return;
+        }
+        
+        // Utiliser l'endpoint concours/type-publications
+        const response = await fetch('/api/concours/type-publications', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        // Vérifier le Content-Type avant de parser JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.warn('Réponse non-JSON reçue pour type-publications:', contentType);
+            return;
+        }
+        
+        if (!response.ok) {
+            console.warn('Erreur HTTP lors du chargement des types de publication:', response.status);
+            return;
+        }
+        
         const data = await response.json();
         
-        const select = document.getElementById('type_publication_internet');
-        if (select && data) {
-            const types = Array.isArray(data) ? data : (data.data || []);
+        // Extraire les données (format { success: true, data: [...] })
+        const types = data.success && data.data ? data.data : (Array.isArray(data) ? data : []);
+        
+        if (types.length > 0) {
             types.forEach(type => {
                 const option = document.createElement('option');
-                option.value = type.id || type._id || type;
+                option.value = type.code || type.id || type._id || type;
                 option.textContent = type.name || type.nom || type;
                 select.appendChild(option);
             });
+            console.log('Types de publication chargés:', types.length);
+        } else {
+            console.warn('Aucun type de publication trouvé');
         }
     } catch (error) {
         console.error('Erreur lors du chargement des types de publication:', error);
+        // Ne pas bloquer l'application si cette fonction échoue
     }
 }
 
