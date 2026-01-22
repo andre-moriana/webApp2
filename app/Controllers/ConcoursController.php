@@ -259,12 +259,16 @@ class ConcoursController {
     // Enregistrement d'un nouveau concours
     public function store()
     {
-        error_log('ConcoursController::store() appelé');
-        error_log('REQUEST_METHOD: ' . $_SERVER['REQUEST_METHOD']);
-        error_log('REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? 'N/A'));
+        // Debug: Afficher dans la session pour voir si la méthode est appelée
+        $_SESSION['debug_concours_store'] = [
+            'called' => true,
+            'method' => $_SERVER['REQUEST_METHOD'] ?? 'N/A',
+            'uri' => $_SERVER['REQUEST_URI'] ?? 'N/A',
+            'timestamp' => date('Y-m-d H:i:s')
+        ];
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            error_log('Erreur: Méthode non POST, redirection vers /concours');
+            $_SESSION['error'] = 'Méthode non autorisée. Méthode reçue: ' . ($_SERVER['REQUEST_METHOD'] ?? 'N/A');
             header('Location: /concours');
             exit();
         }

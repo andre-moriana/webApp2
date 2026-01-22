@@ -60,6 +60,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             console.log('=== FIN DONNÉES ===');
             
+            // Vérifier l'URL finale
+            const finalUrl = new URL(form.action, window.location.origin);
+            console.log('URL finale de soumission:', finalUrl.href);
+            console.log('Pathname:', finalUrl.pathname);
+            
             // Ne PAS appeler preventDefault() - laisser le formulaire se soumettre normalement
         }, true); // Utiliser capture phase
         
