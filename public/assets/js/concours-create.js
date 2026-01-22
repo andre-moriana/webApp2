@@ -62,50 +62,72 @@ function loadClubs() {
 
 // Charger les disciplines depuis les données passées par PHP
 function loadDisciplines() {
-    console.log('loadDisciplines() appelée');
+    console.log('=== loadDisciplines() appelée ===');
     console.log('window.disciplinesData:', window.disciplinesData);
+    console.log('Type de window.disciplinesData:', typeof window.disciplinesData);
+    console.log('Est un tableau?', Array.isArray(window.disciplinesData));
     
     const select = document.getElementById('discipline');
     if (!select) {
-        console.error('Select discipline non trouvé');
+        console.error('ERREUR: Select discipline non trouvé dans le DOM');
         return;
     }
+    console.log('Select discipline trouvé:', select);
     
     // Utiliser les données passées depuis PHP
     const disciplines = window.disciplinesData || [];
     
-    console.log('Disciplines reçues depuis PHP:', disciplines);
+    console.log('Disciplines après || []:', disciplines);
     console.log('Nombre de disciplines:', disciplines.length);
+    console.log('Est un tableau?', Array.isArray(disciplines));
     
     if (!Array.isArray(disciplines)) {
-        console.error('window.disciplinesData n\'est pas un tableau:', typeof disciplines);
+        console.error('ERREUR: window.disciplinesData n\'est pas un tableau:', typeof disciplines);
+        console.error('Valeur complète:', JSON.stringify(disciplines, null, 2));
         return;
     }
     
     if (disciplines.length === 0) {
-        console.warn('Aucune discipline disponible dans window.disciplinesData');
+        console.warn('ATTENTION: Aucune discipline disponible dans window.disciplinesData');
+        console.warn('Vérifiez que la table concour_discipline existe et contient des données');
         return;
     }
     
     // Vider le select (garder seulement l'option par défaut)
     select.innerHTML = '<option value="">-- Sélectionner une discipline --</option>';
+    console.log('Select vidé, ajout des options...');
     
     let addedCount = 0;
+    let errorCount = 0;
     disciplines.forEach((discipline, index) => {
         try {
+            console.log(`Traitement discipline ${index}:`, discipline);
             const option = document.createElement('option');
             // Utiliser iddiscipline comme valeur (ID original) ou id (ID de la table)
-            option.value = discipline.iddiscipline || discipline.id || '';
-            // Utiliser lb_discipline comme texte d'affichage
-            option.textContent = discipline.lb_discipline || discipline.name || discipline.nom || 'Discipline';
+            const value = discipline.iddiscipline || discipline.id || '';
+            const text = discipline.lb_discipline || discipline.name || discipline.nom || 'Discipline';
+            
+            option.value = value;
+            option.textContent = text;
+            
+            console.log(`  -> Option créée: value="${value}", text="${text}"`);
             select.appendChild(option);
             addedCount++;
         } catch (error) {
-            console.error('Erreur lors de l\'ajout de la discipline', index, ':', error, discipline);
+            errorCount++;
+            console.error(`ERREUR lors de l'ajout de la discipline ${index}:`, error);
+            console.error('Discipline problématique:', discipline);
         }
     });
     
+    console.log('=== Résumé ===');
     console.log('Disciplines ajoutées au select:', addedCount, '/', disciplines.length);
+    console.log('Erreurs:', errorCount);
+    console.log('Options finales dans le select:', select.options.length);
+    
+    if (addedCount === 0 && disciplines.length > 0) {
+        console.error('PROBLÈME: Aucune discipline n\'a pu être ajoutée malgré', disciplines.length, 'disciplines disponibles');
+    }
 }
 
 // Charger les types de compétition depuis l'API

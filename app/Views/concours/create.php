@@ -9,10 +9,17 @@
 <script>
 window.clubsData = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
 window.disciplinesData = <?= json_encode($disciplines ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
+console.log('=== DONNÉES DEPUIS PHP ===');
 console.log('Clubs depuis PHP:', window.clubsData);
 console.log('Nombre de clubs:', window.clubsData ? window.clubsData.length : 0);
 console.log('Disciplines depuis PHP:', window.disciplinesData);
+console.log('Type disciplines:', typeof window.disciplinesData);
+console.log('Est tableau disciplines?', Array.isArray(window.disciplinesData));
 console.log('Nombre de disciplines:', window.disciplinesData ? window.disciplinesData.length : 0);
+if (window.disciplinesData && window.disciplinesData.length > 0) {
+    console.log('Première discipline:', window.disciplinesData[0]);
+}
+console.log('=== FIN DONNÉES PHP ===');
 </script>
 <form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>" id="concoursForm">
     
