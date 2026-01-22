@@ -10,74 +10,39 @@ document.addEventListener('DOMContentLoaded', function() {
     setupClubOrganisateur();
 });
 
-// Charger les clubs depuis l'API
-async function loadClubs() {
-    try {
-        const response = await fetch('/api/clubs/list');
-        
-        if (!response.ok) {
-            console.error('Erreur HTTP:', response.status, response.statusText);
-            return;
-        }
-        
-        const data = await response.json();
-        console.log('Données clubs reçues:', data);
-        
-        const select = document.getElementById('club_organisateur');
-        if (!select) {
-            console.error('Select club_organisateur non trouvé');
-            return;
-        }
-        
-        // Extraire les clubs de la réponse
-        let clubs = [];
-        if (Array.isArray(data)) {
-            clubs = data;
-        } else if (data && Array.isArray(data.data)) {
-            clubs = data.data;
-        } else if (data && data.success && Array.isArray(data.data)) {
-            clubs = data.data;
-        } else if (data && data.clubs && Array.isArray(data.clubs)) {
-            clubs = data.clubs;
-        } else if (data && data.data && data.data.clubs && Array.isArray(data.data.clubs)) {
-            clubs = data.data.clubs;
-        }
-        
-        console.log('Clubs extraits:', clubs.length);
-        
-        if (clubs.length === 0) {
-            console.warn('Aucun club trouvé dans la réponse');
-            return;
-        }
-        
-        // Filtrer les clubs : exclure ceux dont le nameShort se termine par "000"
-        const filteredClubs = clubs.filter(club => {
-            const nameShort = (club.nameShort || club.name_short || '').toString();
-            // Exclure les clubs dont le nameShort se termine par "000"
-            return nameShort === '' || !nameShort.endsWith('000');
-        });
-        
-        console.log('Clubs filtrés:', filteredClubs.length);
-        
-        // Vider le select (garder seulement l'option par défaut)
-        select.innerHTML = '<option value="">-- Sélectionner un club --</option>';
-        
-        filteredClubs.forEach(club => {
-            const option = document.createElement('option');
-            option.value = club.id || club._id || '';
-            const clubName = club.name || club.nameShort || 'Club';
-            const clubShort = club.nameShort || club.name_short || '';
-            option.textContent = clubName + (clubShort ? ' (' + clubShort + ')' : '');
-            option.dataset.code = clubShort;
-            option.dataset.name = clubName;
-            select.appendChild(option);
-        });
-        
-        console.log('Clubs ajoutés au select:', select.options.length - 1);
-    } catch (error) {
-        console.error('Erreur lors du chargement des clubs:', error);
-        console.error('Stack:', error.stack);
+// Charger les clubs depuis les données passées par PHP
+function loadClubs() {
+    const select = document.getElementById('club_organisateur');
+    if (!select) {
+        console.error('Select club_organisateur non trouvé');
+        return;
     }
+    
+    // Utiliser les données passées depuis PHP
+    const clubs = window.clubsData || [];
+    
+    console.log('Clubs reçus depuis PHP:', clubs.length);
+    
+    if (clubs.length === 0) {
+        console.warn('Aucun club disponible');
+        return;
+    }
+    
+    // Vider le select (garder seulement l'option par défaut)
+    select.innerHTML = '<option value="">-- Sélectionner un club --</option>';
+    
+    clubs.forEach(club => {
+        const option = document.createElement('option');
+        option.value = club.id || club._id || '';
+        const clubName = club.name || club.nameShort || 'Club';
+        const clubShort = club.nameShort || club.name_short || '';
+        option.textContent = clubName + (clubShort ? ' (' + clubShort + ')' : '');
+        option.dataset.code = clubShort;
+        option.dataset.name = clubName;
+        select.appendChild(option);
+    });
+    
+    console.log('Clubs ajoutés au select:', select.options.length - 1);
 }
 
 // Charger les disciplines depuis l'API

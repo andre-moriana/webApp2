@@ -59,7 +59,10 @@ class ConcoursController {
             header('Location: /login');
             exit;
         }
-         $themes = [];
+        
+        $themes = [];
+        $clubs = [];
+        
         try {
             // Récupérer les thèmes
             $themesResponse = $this->apiService->makeRequest('themes/list', 'GET');
@@ -69,6 +72,28 @@ class ConcoursController {
         } catch (Exception $e) {
             // En cas d'erreur, continuer avec un tableau vide
             error_log('Erreur lors de la récupération des thèmes: ' . $e->getMessage());
+        }
+        
+        try {
+            // Récupérer les clubs
+            $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+            $payload = $this->apiService->unwrapData($clubsResponse);
+            
+            if ($clubsResponse['success'] && is_array($payload)) {
+                // Normaliser l'ID de chaque club
+                foreach ($payload as &$club) {
+                    if (!isset($club['id']) && isset($club['_id'])) {
+                        $club['id'] = $club['_id'];
+                    }
+                }
+                // Filtrer les clubs : exclure ceux dont le nameShort se termine par "000"
+                $clubs = array_filter($payload, function($club) {
+                    $nameShort = (string)($club['nameShort'] ?? $club['name_short'] ?? '');
+                    return $nameShort === '' || substr($nameShort, -3) !== '000';
+                });
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
         }
 
         $title = 'Créer un concours - Portail Archers de Gémenos';
