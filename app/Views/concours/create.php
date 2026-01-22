@@ -1,44 +1,145 @@
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/concours-create.css" rel="stylesheet">
 
-<!-- Formulaire de création/édition d'un concours avec gestion des départs -->
+<!-- Formulaire de création/édition d'un concours -->
 <div class="container-fluid concours-create-container">
 <h1><?= isset($concours) ? 'Éditer' : 'Créer' ?> un concours</h1>
-<form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>">
-    <label>Nom : <input type="text" name="nom" value="<?= $concours->nom ?? '' ?>" required></label>
-    <label>Description : <textarea name="description"><?= $concours->description ?? '' ?></textarea></label>
-    <div class="date-fields-row">
-        <label>Date début : <input type="date" name="date_debut" value="<?= $concours->date_debut ?? '' ?>" required></label>
-        <label>Date fin : <input type="date" name="date_fin" value="<?= $concours->date_fin ?? '' ?>" required></label>
-    </div>
-    <label>Lieu : <input type="text" name="lieu" value="<?= $concours->lieu ?? '' ?>" required></label>
-    <label>Type : <input type="text" name="type" value="<?= $concours->type ?? '' ?>" required></label>
-    <label>Statut : <input type="text" name="statut" value="<?= $concours->statut ?? '' ?>" required></label>
-    <h3>Départs</h3>
-    <div id="departs-list">
-        <?php if (!empty($concours->departs)) foreach ($concours->departs as $i => $depart): ?>
-            <div class="depart-item">
-                <label>Date : <input type="date" name="departs[<?= $i ?>][date]" value="<?= $depart['date'] ?? '' ?>" required></label>
-                <label>Heure : <input type="time" name="departs[<?= $i ?>][heure]" value="<?= $depart['heure'] ?? '' ?>" required></label>
-                <label>Catégorie : <input type="text" name="departs[<?= $i ?>][categorie]" value="<?= $depart['categorie'] ?? '' ?>"></label>
-                <button type="button" onclick="this.parentNode.remove()">Supprimer</button>
+<form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>" id="concoursForm">
+    
+    <!-- Section principale -->
+    <div class="form-section">
+        <!-- Club Organisateur -->
+        <div class="form-group">
+            <label>Club Organisateur :</label>
+            <div class="club-organisateur-fields">
+                <input type="text" id="club_search" name="club_search" placeholder="Rechercher un club..." autocomplete="off">
+                <select id="club_organisateur" name="club_organisateur" required>
+                    <option value="">-- Sélectionner un club --</option>
+                </select>
+                <input type="text" id="club_code" name="club_code" placeholder="###" maxlength="3" style="width: 60px;">
+                <input type="text" id="club_name_display" name="club_name_display" placeholder="Nom du club" readonly>
             </div>
-        <?php endforeach; ?>
+        </div>
+
+        <!-- Discipline -->
+        <div class="form-group">
+            <label>Discipline :</label>
+            <div class="discipline-fields">
+                <input type="text" id="discipline_search" name="discipline_search" placeholder="Rechercher..." autocomplete="off">
+                <select id="discipline" name="discipline" required>
+                    <option value="">-- Sélectionner une discipline --</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Type Compétition -->
+        <div class="form-group">
+            <label>Type Compétition :</label>
+            <div class="type-competition-fields">
+                <input type="text" id="type_competition_search" name="type_competition_search" placeholder="Rechercher..." autocomplete="off">
+                <select id="type_competition" name="type_competition" required>
+                    <option value="">-- Sélectionner un type --</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Niveau Championnat -->
+        <div class="form-group">
+            <label>Niveau Championnat :</label>
+            <div class="niveau-championnat-fields">
+                <select id="niveau_championnat" name="niveau_championnat" required>
+                    <option value="">-- Sélectionner --</option>
+                    <option value="SELECTIF" <?= (isset($concours) && $concours->niveau_championnat == 'SELECTIF') ? 'selected' : '' ?>>SELECTIF</option>
+                    <option value="REGIONAL">REGIONAL</option>
+                    <option value="DEPARTEMENTAL">DEPARTEMENTAL</option>
+                    <option value="NATIONAL">NATIONAL</option>
+                    <option value="INTERNATIONAL">INTERNATIONAL</option>
+                </select>
+                <input type="text" id="niveau_championnat_autre" name="niveau_championnat_autre" placeholder="Autre niveau">
+            </div>
+        </div>
+
+        <!-- Titre Compétition -->
+        <div class="form-group">
+            <label>Titre Compétition :</label>
+            <input type="text" id="titre_competition" name="titre_competition" value="<?= $concours->titre_competition ?? '' ?>" required>
+        </div>
+
+        <!-- Lieu Compétition -->
+        <div class="form-group">
+            <label>Lieu Compétition :</label>
+            <input type="text" id="lieu_competition" name="lieu_competition" value="<?= $concours->lieu_competition ?? '' ?>" required>
+        </div>
+
+        <!-- Dates -->
+        <div class="date-fields-row">
+            <label>Début Compétition : <input type="date" name="date_debut" value="<?= $concours->date_debut ?? '' ?>" required></label>
+            <label>Fin Compétition : <input type="date" name="date_fin" value="<?= $concours->date_fin ?? '' ?>" required></label>
+        </div>
+
+        <!-- Nombre cibles, départ, tireurs -->
+        <div class="numeric-fields-row">
+            <label>Nombre cibles : <input type="number" name="nombre_cibles" value="<?= $concours->nombre_cibles ?? 0 ?>" min="0" required></label>
+            <label>Nombre départ : <input type="number" name="nombre_depart" value="<?= $concours->nombre_depart ?? 1 ?>" min="1" required></label>
+            <label>Nombre tireurs par cibles : <input type="number" name="nombre_tireurs_par_cibles" value="<?= $concours->nombre_tireurs_par_cibles ?? 0 ?>" min="0" required></label>
+        </div>
     </div>
-    <button type="button" onclick="ajouterDepart()">Ajouter un départ</button><br><br>
+
+    <!-- Sections encadrées en bas -->
+    <div class="bottom-sections">
+        <!-- Type Concours -->
+        <div class="section-frame">
+            <h4>Type Concours</h4>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="type_concours" value="ouvert" <?= (!isset($concours) || (isset($concours) && $concours->type_concours == 'ouvert')) ? 'checked' : '' ?>>
+                    Ouvert
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="type_concours" value="ferme" <?= (isset($concours) && $concours->type_concours == 'ferme') ? 'checked' : '' ?>>
+                    Fermé
+                </label>
+            </div>
+            <label class="checkbox-label">
+                <input type="checkbox" name="duel" value="1" <?= (isset($concours) && $concours->duel) ? 'checked' : '' ?>>
+                Duel
+            </label>
+        </div>
+
+        <!-- Division Equipe -->
+        <div class="section-frame">
+            <h4>Division Equipe</h4>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="division_equipe" value="dr" <?= (isset($concours) && $concours->division_equipe == 'dr') ? 'checked' : '' ?>>
+                    DR
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="division_equipe" value="poules_non_filiere" <?= (isset($concours) && $concours->division_equipe == 'poules_non_filiere') ? 'checked' : '' ?>>
+                    Poules Non Filière
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="division_equipe" value="duels_equipes" <?= (!isset($concours) || (isset($concours) && $concours->division_equipe == 'duels_equipes')) ? 'checked' : '' ?>>
+                    Duels Equipes
+                </label>
+            </div>
+        </div>
+
+        <!-- Publication WEB -->
+        <div class="section-frame">
+            <h4>Publication WEB</h4>
+            <label>Code d'authentification :</label>
+            <input type="text" name="code_authentification" value="<?= $concours->code_authentification ?? '' ?>" placeholder="Code d'authentification">
+            <label>Type de publication INTERNET :</label>
+            <select id="type_publication_internet" name="type_publication_internet">
+                <option value="">-- Sélectionner --</option>
+            </select>
+        </div>
+    </div>
+
     <button type="submit">Enregistrer</button>
 </form>
 <a href="/concours">Retour à la liste</a>
 </div>
-<script>
-function ajouterDepart() {
-    var idx = document.querySelectorAll('#departs-list .depart-item').length;
-    var html = `<div class=\"depart-item\">
-        <label>Date : <input type=\"date\" name=\"departs[${idx}][date]\" required></label>
-        <label>Heure : <input type=\"time\" name=\"departs[${idx}][heure]\" required></label>
-        <label>Catégorie : <input type=\"text\" name=\"departs[${idx}][categorie]\"></label>
-        <button type=\"button\" onclick=\"this.parentNode.remove()\">Supprimer</button>
-    </div>`;
-    document.getElementById('departs-list').insertAdjacentHTML('beforeend', html);
-}
-</script>
+
+<script src="/public/assets/js/concours-create.js"></script>

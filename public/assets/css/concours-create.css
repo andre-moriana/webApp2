@@ -28,9 +28,17 @@
     padding: 25px;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    max-width: 600px;
+    max-width: 800px;
     width: 100%;
     border: 1px solid #e9ecef;
+}
+
+.concours-create-container .form-section {
+    margin-bottom: 20px;
+}
+
+.concours-create-container .form-group {
+    margin-bottom: 12px;
 }
 
 .concours-create-container label {
@@ -55,7 +63,11 @@
 .concours-create-container label input[type="text"],
 .concours-create-container label input[type="date"],
 .concours-create-container label input[type="time"],
-.concours-create-container label textarea {
+.concours-create-container label input[type="number"],
+.concours-create-container label textarea,
+.concours-create-container input[type="text"],
+.concours-create-container input[type="number"],
+.concours-create-container select {
     display: block;
     width: 100%;
     padding: 8px 12px;
@@ -64,15 +76,117 @@
     border-radius: 4px;
     font-size: 14px;
     transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.concours-create-container select {
+    background-color: #fff;
+    cursor: pointer;
 }
 
 .concours-create-container label input[type="text"]:focus,
 .concours-create-container label input[type="date"]:focus,
 .concours-create-container label input[type="time"]:focus,
-.concours-create-container label textarea:focus {
+.concours-create-container label input[type="number"]:focus,
+.concours-create-container label textarea:focus,
+.concours-create-container input[type="text"]:focus,
+.concours-create-container input[type="number"]:focus,
+.concours-create-container select:focus {
     outline: none;
     border-color: #14532d;
     box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.1);
+}
+
+/* Champs multiples côte à côte */
+.concours-create-container .club-organisateur-fields,
+.concours-create-container .discipline-fields,
+.concours-create-container .type-competition-fields,
+.concours-create-container .niveau-championnat-fields {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.concours-create-container .club-organisateur-fields input[type="text"],
+.concours-create-container .club-organisateur-fields select,
+.concours-create-container .discipline-fields input[type="text"],
+.concours-create-container .discipline-fields select,
+.concours-create-container .type-competition-fields input[type="text"],
+.concours-create-container .type-competition-fields select,
+.concours-create-container .niveau-championnat-fields select,
+.concours-create-container .niveau-championnat-fields input[type="text"] {
+    flex: 1;
+    margin-top: 0;
+}
+
+.concours-create-container .numeric-fields-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 8px;
+}
+
+.concours-create-container .numeric-fields-row label {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* Sections encadrées en bas */
+.concours-create-container .bottom-sections {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    margin-bottom: 20px;
+}
+
+.concours-create-container .section-frame {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    background: #f8f9fa;
+}
+
+.concours-create-container .section-frame h4 {
+    margin: 0 0 15px 0;
+    color: #14532d;
+    font-size: 1rem;
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+.concours-create-container .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.concours-create-container .radio-label,
+.concours-create-container .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
+.concours-create-container .radio-label input[type="radio"],
+.concours-create-container .checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+}
+
+.concours-create-container .section-frame label:not(.radio-label):not(.checkbox-label) {
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.concours-create-container .section-frame input[type="text"],
+.concours-create-container .section-frame select {
+    margin-top: 0;
 }
 
 .concours-create-container label textarea {
@@ -171,25 +285,44 @@
 @media (max-width: 768px) {
     .concours-create-container form {
         padding: 20px;
+        max-width: 100%;
     }
     
     .concours-create-container .depart-item {
         padding: 15px;
     }
     
-    .concours-create-container .date-fields-row {
+    .concours-create-container .date-fields-row,
+    .concours-create-container .numeric-fields-row {
         flex-direction: column;
         gap: 8px;
     }
     
-    .concours-create-container .date-fields-row label {
+    .concours-create-container .date-fields-row label,
+    .concours-create-container .numeric-fields-row label {
         margin-bottom: 8px;
+    }
+    
+    .concours-create-container .club-organisateur-fields,
+    .concours-create-container .discipline-fields,
+    .concours-create-container .type-competition-fields,
+    .concours-create-container .niveau-championnat-fields {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .concours-create-container .bottom-sections {
+        flex-direction: column;
     }
     
     .concours-create-container label input[type="text"],
     .concours-create-container label input[type="date"],
     .concours-create-container label input[type="time"],
-    .concours-create-container label textarea {
+    .concours-create-container label input[type="number"],
+    .concours-create-container label textarea,
+    .concours-create-container input[type="text"],
+    .concours-create-container input[type="number"],
+    .concours-create-container select {
         font-size: 16px; /* Évite le zoom sur iOS */
     }
 }
