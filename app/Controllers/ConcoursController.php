@@ -351,9 +351,14 @@ class ConcoursController {
             error_log('Données à envoyer à l\'API: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
             
             // L'endpoint est 'concours' (pas 'concours/create') car le routing se fait via PATH_INFO
+            $_SESSION['debug_concours_store']['api_endpoint'] = 'concours';
+            $_SESSION['debug_concours_store']['api_method'] = 'POST';
+            $_SESSION['debug_concours_store']['api_data_sent'] = $data;
+            
             $response = $this->apiService->makeRequest('concours', 'POST', $data);
             
             $_SESSION['debug_concours_store']['api_response'] = $response;
+            $_SESSION['debug_concours_store']['api_response_raw'] = json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             
             // makeRequest retourne { success: bool, data: {...}, status_code: int, message: string }
             // où data contient la réponse JSON de l'API { success: bool, data: {...}, message: string }
