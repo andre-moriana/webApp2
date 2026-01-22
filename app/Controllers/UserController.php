@@ -37,11 +37,6 @@ class UserController {
             if ($response['success'] && isset($response['data']['users']) && !empty($response['data']['users'])) {
                 $users = $response['data']['users'];
                 
-                // Debug temporaire - vérifier les données reçues
-                if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-                    error_log("DEBUG UserController - Premier utilisateur AVANT enrichissement: " . json_encode($users[0] ?? null, JSON_PRETTY_PRINT));
-                }
-                
                 // Enrichir les utilisateurs avec le nom complet du club
                 // Utiliser EXACTEMENT la même méthode que dans show() qui fonctionne
                 try {
