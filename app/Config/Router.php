@@ -404,6 +404,21 @@ class Router {
         return $regex;
     }
     
+    // Méthode de debug pour tester une route
+    public function debugRoute($method, $uri) {
+        $pattern = $this->convertToRegex($uri);
+        foreach ($this->routes as $route) {
+            if ($route["method"] === $method) {
+                $routePattern = $this->convertToRegex($route["path"]);
+                $matches = preg_match($routePattern, $uri);
+                if ($matches) {
+                    return ['found' => true, 'route' => $route, 'pattern' => $routePattern];
+                }
+            }
+        }
+        return ['found' => false, 'tested_uri' => $uri, 'pattern' => $pattern];
+    }
+    
     private function executeHandler($handler, $matches) {
         list($controllerName, $method) = explode("@", $handler);
         
