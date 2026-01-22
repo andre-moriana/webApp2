@@ -17,14 +17,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('concoursForm');
     if (form) {
         console.log('Formulaire concoursForm trouvé - Action:', form.action);
+        console.log('Formulaire concoursForm - Method:', form.method);
+        console.log('Formulaire concoursForm - ID:', form.id);
         
-        // Utiliser capture phase pour s'assurer qu'on intercepte avant les autres handlers
+        // Ajouter un listener avec capture pour s'assurer qu'on intercepte tôt
         form.addEventListener('submit', function(e) {
             console.log('=== SOUMISSION DU FORMULAIRE ===');
+            console.log('Event target:', e.target);
+            console.log('Event currentTarget:', e.currentTarget);
             console.log('Action:', form.action);
             console.log('Method:', form.method);
-            console.log('Target:', e.target);
-            console.log('CurrentTarget:', e.currentTarget);
+            console.log('Form action URL:', new URL(form.action, window.location.origin).href);
             
             // Vérifier que tous les champs requis sont remplis
             const requiredFields = form.querySelectorAll('[required]');
@@ -47,10 +50,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             console.log('Formulaire valide - soumission normale vers:', form.action);
-            console.log('Tous les champs requis sont remplis');
-            // Ne pas empêcher la soumission normale du formulaire
-            // Le formulaire sera soumis normalement vers /concours/store
+            console.log('Tous les champs requis sont remplis - soumission autorisée');
+            
+            // Log de tous les champs du formulaire avant soumission
+            const formData = new FormData(form);
+            console.log('=== DONNÉES DU FORMULAIRE ===');
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ':', value);
+            }
+            console.log('=== FIN DONNÉES ===');
+            
+            // Ne PAS appeler preventDefault() - laisser le formulaire se soumettre normalement
         }, true); // Utiliser capture phase
+        
+        // Test: vérifier si le formulaire peut être soumis manuellement
+        console.log('Test: form.submit existe?', typeof form.submit === 'function');
     } else {
         console.error('Formulaire concoursForm non trouvé!');
     }
