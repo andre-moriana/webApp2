@@ -12,7 +12,7 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                 </h1>
                 <?php if ($_SESSION['user']['is_admin'] ?? false): ?>
                 <div class="btn-group">
-                    <a href="/clubs/create" class="btn btn-primary">
+                    <a href="/concours/create" class="btn btn-primary">
                         <i class="fas fa-plus me-2"></i>Nouveau concours
                     </a>
                 </div>
