@@ -166,13 +166,6 @@ error_log("Session: " . print_r($_SESSION, true));
                                                             }
                                                         }
                                                         
-                                                        // Debug temporaire pour voir les données disponibles
-                                                        if (isset($_GET['debug']) && $_GET['debug'] === '1' && $user['id'] == ($_GET['user_id'] ?? 0)) {
-                                                            error_log("DEBUG user ID " . $user['id'] . " - profileImage: " . ($profileImage ?? 'NULL'));
-                                                            error_log("DEBUG user keys: " . implode(', ', array_keys($user)));
-                                                            error_log("DEBUG user data: " . json_encode($user));
-                                                        }
-                                                        
                                                         if (!empty($profileImage)): 
                                                             // Construire l'URL directe vers le backend (même approche que dans settings.php ligne 54)
                                                             // S'assurer que le chemin commence par /uploads/
