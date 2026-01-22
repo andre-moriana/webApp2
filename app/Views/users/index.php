@@ -118,15 +118,23 @@ error_log("Session: " . print_r($_SESSION, true));
                                             if (!empty($user['status'])) $searchableText .= strtolower($user['status']) . ' ';
                                             if (!empty($user['licenceNumber'])) $searchableText .= strtolower($user['licenceNumber']) . ' ';
                                             if (!empty($user['id'])) $searchableText .= $user['id'] . ' ';
-                                            // Ajouter le club dans la recherche
+                                            // Ajouter le club dans la recherche (nom complet et nom court)
                                             if (isset($user['club'])) {
                                                 if (is_array($user['club'])) {
+                                                    $clubName = $user['club']['name'] ?? '';
                                                     $clubNameShort = $user['club']['nameShort'] ?? $user['club']['name_short'] ?? '';
+                                                    if ($clubName) $searchableText .= strtolower($clubName) . ' ';
                                                     if ($clubNameShort) $searchableText .= strtolower($clubNameShort) . ' ';
                                                 } else {
                                                     $searchableText .= strtolower($user['club']) . ' ';
                                                 }
-                                            } elseif (isset($user['clubNameShort'])) {
+                                            }
+                                            if (isset($user['clubName'])) {
+                                                $searchableText .= strtolower($user['clubName']) . ' ';
+                                            } elseif (isset($user['club_name'])) {
+                                                $searchableText .= strtolower($user['club_name']) . ' ';
+                                            }
+                                            if (isset($user['clubNameShort'])) {
                                                 $searchableText .= strtolower($user['clubNameShort']) . ' ';
                                             } elseif (isset($user['club_name_short'])) {
                                                 $searchableText .= strtolower($user['club_name_short']) . ' ';
@@ -225,22 +233,26 @@ error_log("Session: " . print_r($_SESSION, true));
                                             </td>
                                             <td class="text-nowrap" data-column="club">
                                                 <?php 
-                                                // Récupérer le name_short du club
-                                                $clubNameShort = '';
+                                                // Récupérer le nom complet du club
+                                                $clubName = '';
                                                 if (isset($user['club'])) {
-                                                    // Si club est un objet/tableau avec nameShort
+                                                    // Si club est un objet/tableau avec name
                                                     if (is_array($user['club'])) {
-                                                        $clubNameShort = $user['club']['nameShort'] ?? $user['club']['name_short'] ?? '';
+                                                        $clubName = $user['club']['name'] ?? $user['club']['nameShort'] ?? $user['club']['name_short'] ?? '';
                                                     } else {
-                                                        // Si club est directement le name_short
-                                                        $clubNameShort = $user['club'];
+                                                        // Si club est directement le nom
+                                                        $clubName = $user['club'];
                                                     }
+                                                } elseif (isset($user['clubName'])) {
+                                                    $clubName = $user['clubName'];
+                                                } elseif (isset($user['club_name'])) {
+                                                    $clubName = $user['club_name'];
                                                 } elseif (isset($user['clubNameShort'])) {
-                                                    $clubNameShort = $user['clubNameShort'];
+                                                    $clubName = $user['clubNameShort'];
                                                 } elseif (isset($user['club_name_short'])) {
-                                                    $clubNameShort = $user['club_name_short'];
+                                                    $clubName = $user['club_name_short'];
                                                 }
-                                                echo htmlspecialchars($clubNameShort ?: '-');
+                                                echo htmlspecialchars($clubName ?: '-');
                                                 ?>
                                             </td>
                                             <td class="text-nowrap">
