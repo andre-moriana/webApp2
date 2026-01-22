@@ -18,33 +18,8 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                 </div>
                 <?php endif; ?>
             </div>
-            
-            <?php if (isset($_SESSION['success']) && $_SESSION['success']): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <?php echo htmlspecialchars($_SESSION['success']); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <?php unset($_SESSION['success']); ?>
-            <?php endif; ?>
-            
-            <?php if (isset($_SESSION['error']) && $_SESSION['error']): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <?php echo htmlspecialchars($_SESSION['error']); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <?php unset($_SESSION['error']); ?>
-            <?php endif; ?>
-            
-            <?php if (isset($error) && $error): ?>
-                <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <?php echo htmlspecialchars($error); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            <?php endif; ?>
-            
+           
+
             <?php if (empty($concours)): ?>
                 <div class="card">
                     <div class="card-body text-center py-5">
@@ -184,28 +159,3 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
         </div>
     </div>
 </div>
-<table border="1" cellpadding="8">
-    <tr>
-        <th>Nom</th>
-        <th>Date début</th>
-        <th>Date fin</th>
-        <th>Lieu</th>
-        <th>Type</th>
-        <th>Statut</th>
-        <th>Actions</th>
-    </tr>
-    <?php foreach ($concours as $c): ?>
-    <tr>
-        <td><?= htmlspecialchars($c->nom) ?></td>
-        <td><?= htmlspecialchars($c->date_debut) ?></td>
-        <td><?= htmlspecialchars($c->date_fin) ?></td>
-        <td><?= htmlspecialchars($c->lieu) ?></td>
-        <td><?= htmlspecialchars($c->type) ?></td>
-        <td><?= htmlspecialchars($c->statut) ?></td>
-        <td>
-            <a href="/concours/edit/<?= $c->id ?>">Éditer</a> |
-            <a href="/concours/delete/<?= $c->id ?>" onclick="return confirm('Supprimer ce concours ?')">Supprimer</a>
-        </td>
-    </tr>
-    <?php endforeach; ?>
-</table>
