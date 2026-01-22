@@ -114,9 +114,21 @@ class ConcoursController {
         try {
             // Récupérer les disciplines depuis la table concour_discipline
             $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
-            $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
             
+            error_log('=== RÉCUPÉRATION DISCIPLINES ===');
             error_log('Disciplines response success: ' . ($disciplinesResponse['success'] ? 'true' : 'false'));
+            
+            // makeRequest retourne { success, data: { success, data: [...] } }
+            // Il faut unwrap deux fois
+            $firstUnwrap = $this->apiService->unwrapData($disciplinesResponse);
+            
+            // Si firstUnwrap contient encore { success, data }, unwrap une deuxième fois
+            if (is_array($firstUnwrap) && isset($firstUnwrap['data']) && isset($firstUnwrap['success'])) {
+                $disciplinesPayload = $firstUnwrap['data'];
+            } else {
+                $disciplinesPayload = $firstUnwrap;
+            }
+            
             error_log('Disciplines payload is array: ' . (is_array($disciplinesPayload) ? 'true' : 'false'));
             error_log('Disciplines payload count: ' . (is_array($disciplinesPayload) ? count($disciplinesPayload) : 0));
             
@@ -138,7 +150,6 @@ class ConcoursController {
                 }
             } else {
                 error_log('Erreur dans la réponse disciplines: ' . ($disciplinesResponse['message'] ?? 'Unknown error'));
-                error_log('Réponse complète: ' . json_encode($disciplinesResponse, JSON_UNESCAPED_UNICODE));
             }
         } catch (Exception $e) {
             error_log('Exception lors de la récupération des disciplines: ' . $e->getMessage());
