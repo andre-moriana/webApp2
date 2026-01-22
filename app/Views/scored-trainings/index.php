@@ -74,22 +74,29 @@ $additionalJS = [
                 <h1 class="h3 mb-0">Tirs comptés</h1>
                 <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto">
                     <?php if ($isAdmin || $isCoach || $isDirigeant): ?>
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle w-100 w-sm-auto text-truncate" type="button" data-bs-toggle="dropdown" style="max-width: 200px;">
-                            <i class="fas fa-user"></i> <span><?= htmlspecialchars($selectedUser['name'] ?? 'Utilisateur') ?></span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <?php foreach ($users as $user): ?>
-                            <li>
-                                <a class="dropdown-item" href="?user_id=<?= $user['id'] ?>">
-                                    <?= htmlspecialchars($user['name']) ?>
-                                </a>
-                            </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                    <?php endif; ?>
+                        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 w-100 w-md-auto">
+                    <label for="userSelect" class="form-label mb-0 text-nowrap">Sélectionner un archer :</label>
+                    <select id="userSelect" class="form-select" style="min-width: 200px; width: 100%; max-width: 100%;" onchange="handleUserSelectChange(this)">
+                        <option value="">-- Choisir un archer --</option>
+                        <?php if (!empty($users)): ?>
+                        <?php foreach ($users as $user): ?>
+                        <option value="<?php echo $user['id']; ?>" <?php echo ($selectedUserId == $user['id']) ? 'selected' : ''; ?>>
+                            <?php 
+                            $displayName = $user['name'];
+                            if (!empty($user['firstName'])) {
+                                $displayName .= ' ' . $user['firstName'];
+                            }
+                            echo htmlspecialchars($displayName);
+                            ?>
+                            <?php if (!empty($user['role'])): ?>
+                                (<?php echo htmlspecialchars($user['role']); ?>)
+                            <?php endif; ?>
+                        </option>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
                 </div>
+                <?php endif; ?>
             </div>
 
             <!-- Statistiques -->
