@@ -14,6 +14,7 @@ var disciplinesFromPHP = <?= json_encode($disciplines ?? [], JSON_UNESCAPED_UNIC
 window.clubsData = clubsFromPHP || [];
 window.disciplinesData = disciplinesFromPHP || [];
 window.typeCompetitionsData = <?= json_encode($typeCompetitions ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?> || [];
+window.niveauChampionnatData = <?= json_encode($niveauChampionnat ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?> || [];
 
 console.log('=== DONNÉES DEPUIS PHP ===');
 console.log('Clubs depuis PHP:', window.clubsData);
@@ -85,11 +86,6 @@ setTimeout(function() {
             <div class="niveau-championnat-fields">
                 <select id="niveau_championnat" name="niveau_championnat" required>
                     <option value="">-- Sélectionner --</option>
-                    <option value="SELECTIF" <?= (isset($concours) && $concours->niveau_championnat == 'SELECTIF') ? 'selected' : '' ?>>SELECTIF</option>
-                    <option value="REGIONAL">REGIONAL</option>
-                    <option value="DEPARTEMENTAL">DEPARTEMENTAL</option>
-                    <option value="NATIONAL">NATIONAL</option>
-                    <option value="INTERNATIONAL">INTERNATIONAL</option>
                 </select>
                 <input type="text" id="niveau_championnat_autre" name="niveau_championnat_autre" placeholder="Autre niveau">
             </div>

@@ -64,6 +64,7 @@ class ConcoursController {
         $clubs = [];
         $disciplines = []; // Initialiser à un tableau vide par défaut
         $typeCompetitions = []; // Initialiser à un tableau vide par défaut
+        $niveauChampionnat = []; // Initialiser à un tableau vide par défaut
         
         try {
             // Récupérer les thèmes
@@ -195,6 +196,47 @@ class ConcoursController {
             }
         } catch (Exception $e) {
             error_log('Exception lors de la récupération des types de compétition: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+        }
+        
+        try {
+            // Récupérer les niveaux de championnat depuis la table concour_niveau_championnat
+            $niveauChampionnatResponse = $this->apiService->makeRequest('concours/niveau-championnat', 'GET');
+            
+            error_log('Niveau championnat response success: ' . ($niveauChampionnatResponse['success'] ? 'true' : 'false'));
+            
+            // makeRequest retourne { success, data: { success, data: [...] } }
+            // Il faut unwrap deux fois
+            $firstUnwrap = $this->apiService->unwrapData($niveauChampionnatResponse);
+            
+            // Si firstUnwrap contient encore { success, data }, unwrap une deuxième fois
+            if (is_array($firstUnwrap) && isset($firstUnwrap['data']) && isset($firstUnwrap['success'])) {
+                $niveauChampionnatPayload = $firstUnwrap['data'];
+            } else {
+                $niveauChampionnatPayload = $firstUnwrap;
+            }
+            
+            error_log('Niveau championnat payload is array: ' . (is_array($niveauChampionnatPayload) ? 'true' : 'false'));
+            error_log('Niveau championnat payload count: ' . (is_array($niveauChampionnatPayload) ? count($niveauChampionnatPayload) : 0));
+            
+            if ($niveauChampionnatResponse['success'] && is_array($niveauChampionnatPayload)) {
+                // Normaliser l'ID de chaque niveau
+                foreach ($niveauChampionnatPayload as &$niveau) {
+                    if (!isset($niveau['id']) && isset($niveau['_id'])) {
+                        $niveau['id'] = $niveau['_id'];
+                    }
+                }
+                unset($niveau); // Libérer la référence
+                
+                // Réindexer le tableau pour avoir des clés séquentielles
+                $niveauChampionnat = array_values($niveauChampionnatPayload);
+                
+                error_log('Niveaux de championnat récupérés: ' . count($niveauChampionnat));
+            } else {
+                error_log('Erreur dans la réponse niveau championnat: ' . ($niveauChampionnatResponse['message'] ?? 'Unknown error'));
+            }
+        } catch (Exception $e) {
+            error_log('Exception lors de la récupération des niveaux de championnat: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
         }
 
