@@ -346,6 +346,8 @@ class Router {
             $requestUri = '/';
         }
         
+        error_log("DEBUG ROUTER: URI normalisée finale: '$requestUri'");
+        
         // Tester chaque route
         $routeFound = false;
         foreach ($this->routes as $route) {
@@ -358,7 +360,11 @@ class Router {
             
             // Log détaillé pour les requêtes POST vers /concours/store
             if ($requestMethod === "POST" && strpos($requestUri, "/concours") !== false) {
-                error_log("DEBUG ROUTER: Test route POST - path: '" . $route["path"] . "', pattern: '$pattern', URI: '$requestUri', match: " . (preg_match($pattern, $requestUri) ? 'OUI' : 'NON'));
+                $matches = preg_match($pattern, $requestUri);
+                error_log("DEBUG ROUTER: Test route POST - path: '" . $route["path"] . "', pattern: '$pattern', URI: '$requestUri', match: " . ($matches ? 'OUI' : 'NON'));
+                if ($matches) {
+                    error_log("DEBUG ROUTER: MATCH TROUVÉ! Handler: " . $route["handler"]);
+                }
             }
            
             if (preg_match($pattern, $requestUri, $matches)) {
