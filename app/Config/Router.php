@@ -371,7 +371,9 @@ class Router {
         $pattern = preg_replace("/\{([^}]+)\}/", "([^/]+)", $path);
         // Échapper seulement les slashes, pas les parenthèses
         $pattern = str_replace("/", "\/", $pattern);
-        return "/^" . $pattern . "$/";
+        $regex = "/^" . $pattern . "$/";
+        error_log("DEBUG ROUTER: Convert path '$path' to regex '$regex'");
+        return $regex;
     }
     
     private function executeHandler($handler, $matches) {
