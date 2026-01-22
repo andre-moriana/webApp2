@@ -12,6 +12,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gestion du changement de discipline pour charger les types de compétition
     setupDisciplineChange();
+    
+    // Gestion de la soumission du formulaire
+    const form = document.getElementById('concoursForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Formulaire soumis');
+            // Ne pas empêcher la soumission normale du formulaire
+            // Le formulaire sera soumis normalement vers /concours/store
+        });
+    }
 });
 
 // Configuration du changement de discipline
