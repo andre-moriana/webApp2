@@ -355,6 +355,11 @@ class Router {
             
             // Utiliser la méthode convertToRegex existante
             $pattern = $this->convertToRegex($route["path"]);
+            
+            // Log détaillé pour les requêtes POST vers /concours/store
+            if ($requestMethod === "POST" && strpos($requestUri, "/concours") !== false) {
+                error_log("DEBUG ROUTER: Test route POST - path: '" . $route["path"] . "', pattern: '$pattern', URI: '$requestUri', match: " . (preg_match($pattern, $requestUri) ? 'OUI' : 'NON'));
+            }
            
             if (preg_match($pattern, $requestUri, $matches)) {
                 error_log("DEBUG ROUTER: Route trouvée - " . $route["method"] . " " . $route["path"] . " -> " . $route["handler"]);
@@ -397,20 +402,6 @@ class Router {
         // Ajouter le délimiteur de début et fin
         $regex = "/^" . $pattern . "$/";
         return $regex;
-    }
-    
-    // Méthode de test pour vérifier si une route existe
-    public function testRoute($method, $uri) {
-        $pattern = $this->convertToRegex($uri);
-        foreach ($this->routes as $route) {
-            if ($route["method"] === $method) {
-                $routePattern = $this->convertToRegex($route["path"]);
-                if (preg_match($routePattern, $uri)) {
-                    return ['found' => true, 'route' => $route];
-                }
-            }
-        }
-        return ['found' => false];
     }
     
     private function executeHandler($handler, $matches) {
