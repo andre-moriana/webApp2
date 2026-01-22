@@ -57,7 +57,7 @@
                         </div>
                     </form>
                 </div>
-            </div>s
+            </div>
         </div>
     </div>
 </div>
