@@ -43,7 +43,7 @@ setTimeout(function() {
     }
 }, 100);
 </script>
-<form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>" id="concoursForm">
+<form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>" id="concoursForm" novalidate>
     
     <!-- Section principale -->
     <div class="form-section">
