@@ -30,12 +30,62 @@ class UserController {
         
         $users = [];
         $error = null;
+        $clubsMap = [];
         
         try {
+            // Récupérer la liste des clubs pour enrichir les données utilisateurs
+            try {
+                $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+                if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
+                    foreach ($clubsResponse['data'] as $club) {
+                        $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                        $name = $club['name'] ?? '';
+                        if (!empty($nameShort)) {
+                            $clubsMap[$nameShort] = $name;
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // En cas d'erreur, continuer sans les clubs
+                error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
+            }
+            
             // Essayer de récupérer les utilisateurs depuis l'API
             $response = $this->apiService->getUsers();
             if ($response['success'] && isset($response['data']['users']) && !empty($response['data']['users'])) {
                 $users = $response['data']['users'];
+                
+                // Enrichir les utilisateurs avec le nom complet du club
+                foreach ($users as &$user) {
+                    $clubNameShort = null;
+                    
+                    // Récupérer le name_short du club de l'utilisateur
+                    if (isset($user['club'])) {
+                        if (is_array($user['club'])) {
+                            $clubNameShort = $user['club']['nameShort'] ?? $user['club']['name_short'] ?? null;
+                        } else {
+                            $clubNameShort = $user['club'];
+                        }
+                    } elseif (isset($user['clubId'])) {
+                        // Si on a seulement l'ID, on ne peut pas faire le mapping directement
+                        // On garde tel quel
+                    } elseif (isset($user['clubNameShort'])) {
+                        $clubNameShort = $user['clubNameShort'];
+                    } elseif (isset($user['club_name_short'])) {
+                        $clubNameShort = $user['club_name_short'];
+                    }
+                    
+                    // Si on a trouvé un name_short et qu'on a le nom complet dans la map
+                    if ($clubNameShort && isset($clubsMap[$clubNameShort])) {
+                        $user['clubName'] = $clubsMap[$clubNameShort];
+                        $user['club_name'] = $clubsMap[$clubNameShort];
+                        // Si club est un tableau, ajouter le nom
+                        if (is_array($user['club'] ?? null)) {
+                            $user['club']['name'] = $clubsMap[$clubNameShort];
+                        }
+                    }
+                }
+                unset($user); // Libérer la référence
             } else {
                 $error = 'API backend non accessible - Affichage de données simulées';
             }
