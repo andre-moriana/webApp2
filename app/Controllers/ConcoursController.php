@@ -259,47 +259,98 @@ class ConcoursController {
     // Enregistrement d'un nouveau concours
     public function store()
     {
-         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        // Optionally handle errors here
-        header('Location: /concours');
-        exit();
-    }
-        $nom = $_POST['nom'] ?? '';
-        $description = $_POST['description'] ?? '';
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /concours');
+            exit();
+        }
+        
+        // Récupérer tous les champs du formulaire
+        $titre_competition = $_POST['titre_competition'] ?? '';
+        $lieu_competition = $_POST['lieu_competition'] ?? '';
         $date_debut = $_POST['date_debut'] ?? '';
         $date_fin = $_POST['date_fin'] ?? '';
-        $lieu = $_POST['lieu'] ?? '';
-        $type = $_POST['type'] ?? '';
-        $status = $_POST['status'] ?? '';
+        $club_organisateur = $_POST['club_organisateur'] ?? '';
+        $discipline = $_POST['discipline'] ?? '';
+        $type_competition = $_POST['type_competition'] ?? '';
+        $niveau_championnat = $_POST['niveau_championnat'] ?? '';
+        $niveau_championnat_autre = $_POST['niveau_championnat_autre'] ?? '';
+        $nombre_cibles = $_POST['nombre_cibles'] ?? 0;
+        $nombre_depart = $_POST['nombre_depart'] ?? 1;
+        $nombre_tireurs_par_cibles = $_POST['nombre_tireurs_par_cibles'] ?? 0;
+        $type_concours = $_POST['type_concours'] ?? 'ouvert';
+        $duel = isset($_POST['duel']) ? 1 : 0;
+        $division_equipe = $_POST['division_equipe'] ?? 'duels_equipes';
+        $code_authentification = $_POST['code_authentification'] ?? '';
+        $type_publication_internet = $_POST['type_publication_internet'] ?? '';
         
-        if (empty($name)) {
-            $_SESSION['error'] = 'Le nom du concours est requis';
+        // Validation des champs requis
+        if (empty($titre_competition)) {
+            $_SESSION['error'] = 'Le titre de la compétition est requis';
+            header('Location: /concours/create');
+            exit;
+        }
+        
+        if (empty($date_debut) || empty($date_fin)) {
+            $_SESSION['error'] = 'Les dates de début et de fin sont requises';
+            header('Location: /concours/create');
+            exit;
+        }
+        
+        if (empty($lieu_competition)) {
+            $_SESSION['error'] = 'Le lieu de la compétition est requis';
             header('Location: /concours/create');
             exit;
         }
 
         try {
-            $response = $this->apiService->makeRequest('concours/create', 'POST', [
-                'nom' => $nom,
-                'nameShort' => $nameShort,
-                'description' => $description,
+            // Préparer les données pour l'API
+            // Utiliser titre_competition comme nom pour la compatibilité avec la table actuelle
+            $data = [
+                'nom' => $titre_competition,
+                'description' => '', // Peut être ajouté plus tard si nécessaire
                 'date_debut' => $date_debut,
                 'date_fin' => $date_fin,
-                'lieu' => $lieu,
-                'type' => $type,
-                'status' => $status
-            ]);
+                'lieu' => $lieu_competition,
+                'type' => $type_competition ?? '',
+                'statut' => 'active', // Par défaut
+                // Nouveaux champs (seront ajoutés à la table si nécessaire)
+                'titre_competition' => $titre_competition,
+                'club_organisateur' => $club_organisateur,
+                'discipline' => $discipline,
+                'type_competition' => $type_competition,
+                'niveau_championnat' => $niveau_championnat,
+                'niveau_championnat_autre' => $niveau_championnat_autre,
+                'nombre_cibles' => (int)$nombre_cibles,
+                'nombre_depart' => (int)$nombre_depart,
+                'nombre_tireurs_par_cibles' => (int)$nombre_tireurs_par_cibles,
+                'type_concours' => $type_concours,
+                'duel' => $duel,
+                'division_equipe' => $division_equipe,
+                'code_authentification' => $code_authentification,
+                'type_publication_internet' => $type_publication_internet
+            ];
+            
+            error_log('Données à envoyer à l\'API: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
+            
+            // L'endpoint est 'concours' (pas 'concours/create') car le routing se fait via PATH_INFO
+            $response = $this->apiService->makeRequest('concours', 'POST', $data);
+            
+            error_log('Réponse API: ' . json_encode($response, JSON_UNESCAPED_UNICODE));
             
             if ($response['success']) {
                 $_SESSION['success'] = 'Concours créé avec succès';
                 header('Location: /concours');
                 exit;
             } else {
-                $_SESSION['error'] = $response['message'] ?? 'Erreur lors de la création du concours';
+                $errorMessage = $response['message'] ?? $response['error'] ?? 'Erreur lors de la création du concours';
+                $_SESSION['error'] = $errorMessage;
+                error_log('Erreur lors de la création du concours: ' . $errorMessage);
                 header('Location: /concours/create');
                 exit;
             }
         } catch (Exception $e) {
+            error_log('Exception lors de la création du concours: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
             $_SESSION['error'] = 'Erreur lors de la création du concours: ' . $e->getMessage();
             header('Location: /concours/create');
             exit;

@@ -87,7 +87,6 @@ setTimeout(function() {
                 <select id="niveau_championnat" name="niveau_championnat" required>
                     <option value="">-- Sélectionner --</option>
                 </select>
-                <input type="text" id="niveau_championnat_autre" name="niveau_championnat_autre" placeholder="Autre niveau">
             </div>
         </div>
 
