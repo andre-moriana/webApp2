@@ -7,8 +7,13 @@
 
 <!-- Passer les clubs et disciplines au JavaScript -->
 <script>
-window.clubsData = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
-window.disciplinesData = <?= json_encode($disciplines ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
+// Vérifier que les variables PHP sont définies
+var clubsFromPHP = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
+var disciplinesFromPHP = <?= json_encode($disciplines ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
+
+window.clubsData = clubsFromPHP || [];
+window.disciplinesData = disciplinesFromPHP || [];
+
 console.log('=== DONNÉES DEPUIS PHP ===');
 console.log('Clubs depuis PHP:', window.clubsData);
 console.log('Nombre de clubs:', window.clubsData ? window.clubsData.length : 0);
@@ -18,8 +23,23 @@ console.log('Est tableau disciplines?', Array.isArray(window.disciplinesData));
 console.log('Nombre de disciplines:', window.disciplinesData ? window.disciplinesData.length : 0);
 if (window.disciplinesData && window.disciplinesData.length > 0) {
     console.log('Première discipline:', window.disciplinesData[0]);
+    console.log('Structure première discipline:', Object.keys(window.disciplinesData[0]));
+} else {
+    console.error('PROBLÈME: Aucune discipline dans window.disciplinesData!');
+    console.error('Valeur brute disciplinesFromPHP:', disciplinesFromPHP);
 }
 console.log('=== FIN DONNÉES PHP ===');
+
+// Test immédiat pour voir si le select existe
+setTimeout(function() {
+    var testSelect = document.getElementById('discipline');
+    if (testSelect) {
+        console.log('✅ Select discipline trouvé dans le DOM');
+        console.log('Nombre d\'options actuelles:', testSelect.options.length);
+    } else {
+        console.error('❌ Select discipline NON trouvé dans le DOM');
+    }
+}, 100);
 </script>
 <form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>" id="concoursForm">
     
