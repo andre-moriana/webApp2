@@ -156,24 +156,11 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($clubs as $club): ?>
-                                    <?php 
-                                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                                    $isRegional = substr($nameShort, -5) === '00000';
-                                    $isDepartmental = substr($nameShort, -3) === '000' && !$isRegional;
-                                    $isClub = !$isRegional && !$isDepartmental;
-                                    $clubType = $isRegional ? 'regional' : ($isDepartmental ? 'departmental' : 'club');
-                                    ?>
+                                    <?php foreach ($concours as $concours): ?>
                                     <?php
                                     $user = $_SESSION['user'] ?? [];
                                     $isAdmin = $user['is_admin'] ?? false;
                                     $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
-                                    $userClub = (string)($user['clubId'] ?? $user['club_id'] ?? '');
-                                    // Identifiant à utiliser pour les liens (prend l'id sinon le code court)
-                                    $clubId = $club['id'] ?? $club['_id'] ?? ($club['nameShort'] ?? $club['name_short'] ?? 'MISSING_ID');
-                                    $clubShort = (string)($club['nameShort'] ?? $club['name_short'] ?? '');
-                                    $clubIdStr = (string)$clubId;
-                                    $belongsToClub = $userClub !== '' && ($userClub === $clubIdStr || $userClub === $clubShort);
                                     // La liste est déjà filtrée par club, autoriser le Dirigeant de toute façon
                                     $canEditClub = $isAdmin || $isDirigeant || $belongsToClub;
                                     ?>
@@ -197,7 +184,6 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
         </div>
     </div>
 </div>
-<a href="/concours/create">Créer un concours</a>
 <table border="1" cellpadding="8">
     <tr>
         <th>Nom</th>
