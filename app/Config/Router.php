@@ -331,9 +331,19 @@ class Router {
         error_log("DEBUG ROUTER: basePath: '" . $this->basePath . "'");
 
         // Supprimer le basePath de l'URI
+        $originalUri = $requestUri;
         if ($this->basePath && strpos($requestUri, $this->basePath) === 0) {
             $requestUri = substr($requestUri, strlen($this->basePath));
-            error_log("DEBUG ROUTER: URI après suppression basePath: " . $requestUri);
+            error_log("DEBUG ROUTER: URI après suppression basePath: '$requestUri' (original: '$originalUri')");
+        }
+        
+        // Normaliser l'URI (enlever les slashes en double)
+        $requestUri = preg_replace('#/+#', '/', $requestUri);
+        if ($requestUri !== '/' && substr($requestUri, -1) === '/') {
+            $requestUri = rtrim($requestUri, '/');
+        }
+        if ($requestUri === '') {
+            $requestUri = '/';
         }
         
         // Tester chaque route
@@ -345,7 +355,6 @@ class Router {
             
             // Utiliser la méthode convertToRegex existante
             $pattern = $this->convertToRegex($route["path"]);
-            error_log("DEBUG ROUTER: Test route " . $route["method"] . " " . $route["path"] . " (regex: $pattern) contre URI: $requestUri");
            
             if (preg_match($pattern, $requestUri, $matches)) {
                 error_log("DEBUG ROUTER: Route trouvée - " . $route["method"] . " " . $route["path"] . " -> " . $route["handler"]);
@@ -388,6 +397,20 @@ class Router {
         // Ajouter le délimiteur de début et fin
         $regex = "/^" . $pattern . "$/";
         return $regex;
+    }
+    
+    // Méthode de test pour vérifier si une route existe
+    public function testRoute($method, $uri) {
+        $pattern = $this->convertToRegex($uri);
+        foreach ($this->routes as $route) {
+            if ($route["method"] === $method) {
+                $routePattern = $this->convertToRegex($route["path"]);
+                if (preg_match($routePattern, $uri)) {
+                    return ['found' => true, 'route' => $route];
+                }
+            }
+        }
+        return ['found' => false];
     }
     
     private function executeHandler($handler, $matches) {
