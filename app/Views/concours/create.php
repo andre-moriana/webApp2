@@ -5,11 +5,14 @@
 <div class="container-fluid concours-create-container">
 <h1><?= isset($concours) ? 'Éditer' : 'Créer' ?> un concours</h1>
 
-<!-- Passer les clubs au JavaScript -->
+<!-- Passer les clubs et disciplines au JavaScript -->
 <script>
 window.clubsData = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
+window.disciplinesData = <?= json_encode($disciplines ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
 console.log('Clubs depuis PHP:', window.clubsData);
 console.log('Nombre de clubs:', window.clubsData ? window.clubsData.length : 0);
+console.log('Disciplines depuis PHP:', window.disciplinesData);
+console.log('Nombre de disciplines:', window.disciplinesData ? window.disciplinesData.length : 0);
 </script>
 <form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>" id="concoursForm">
     

@@ -62,6 +62,7 @@ class ConcoursController {
         
         $themes = [];
         $clubs = [];
+        $disciplines = [];
         
         try {
             // Récupérer les thèmes
@@ -107,6 +108,36 @@ class ConcoursController {
             }
         } catch (Exception $e) {
             error_log('Exception lors de la récupération des clubs: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+        }
+        
+        try {
+            // Récupérer les disciplines depuis la table concour_discipline
+            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+            
+            error_log('Disciplines response success: ' . ($disciplinesResponse['success'] ? 'true' : 'false'));
+            error_log('Disciplines payload is array: ' . (is_array($disciplinesPayload) ? 'true' : 'false'));
+            error_log('Disciplines payload count: ' . (is_array($disciplinesPayload) ? count($disciplinesPayload) : 0));
+            
+            if ($disciplinesResponse['success'] && is_array($disciplinesPayload)) {
+                // Normaliser l'ID de chaque discipline
+                foreach ($disciplinesPayload as &$discipline) {
+                    if (!isset($discipline['id']) && isset($discipline['_id'])) {
+                        $discipline['id'] = $discipline['_id'];
+                    }
+                }
+                unset($discipline); // Libérer la référence
+                
+                // Réindexer le tableau pour avoir des clés séquentielles
+                $disciplines = array_values($disciplinesPayload);
+                
+                error_log('Disciplines récupérées: ' . count($disciplines));
+            } else {
+                error_log('Erreur dans la réponse disciplines: ' . ($disciplinesResponse['message'] ?? 'Unknown error'));
+            }
+        } catch (Exception $e) {
+            error_log('Exception lors de la récupération des disciplines: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
         }
 
