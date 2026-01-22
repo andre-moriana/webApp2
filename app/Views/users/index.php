@@ -234,24 +234,36 @@ error_log("Session: " . print_r($_SESSION, true));
                                             </td>
                                             <td class="text-nowrap" data-column="club">
                                                 <?php 
+                                                // Debug temporaire pour le premier utilisateur
+                                                if (isset($_GET['debug']) && $_GET['debug'] === '1' && $user['id'] == ($users[0]['id'] ?? 0)) {
+                                                    error_log("DEBUG Vue - User ID " . $user['id'] . " - Données club: " . json_encode([
+                                                        'clubName' => $user['clubName'] ?? 'NOT SET',
+                                                        'clubNameShort' => $user['clubNameShort'] ?? 'NOT SET',
+                                                        'club_name' => $user['club_name'] ?? 'NOT SET',
+                                                        'club_name_short' => $user['club_name_short'] ?? 'NOT SET',
+                                                        'clubId' => $user['clubId'] ?? 'NOT SET',
+                                                        'club_id' => $user['club_id'] ?? 'NOT SET',
+                                                        'club' => $user['club'] ?? 'NOT SET'
+                                                    ]));
+                                                }
+                                                
                                                 // Récupérer le nom complet du club
-                                                // L'API retourne directement clubName et clubNameShort depuis getAllUsers()
                                                 $displayClub = '';
                                                 
                                                 // Priorité 1: clubName (nom complet)
-                                                if (isset($user['clubName']) && $user['clubName'] !== '' && $user['clubName'] !== null) {
+                                                if (!empty($user['clubName'])) {
                                                     $displayClub = $user['clubName'];
                                                 }
                                                 // Priorité 2: club_name (variante snake_case)
-                                                elseif (isset($user['club_name']) && $user['club_name'] !== '' && $user['club_name'] !== null) {
+                                                elseif (!empty($user['club_name'])) {
                                                     $displayClub = $user['club_name'];
                                                 }
                                                 // Priorité 3: clubNameShort (nom court)
-                                                elseif (isset($user['clubNameShort']) && $user['clubNameShort'] !== '' && $user['clubNameShort'] !== null) {
+                                                elseif (!empty($user['clubNameShort'])) {
                                                     $displayClub = $user['clubNameShort'];
                                                 }
                                                 // Priorité 4: club_name_short (variante snake_case)
-                                                elseif (isset($user['club_name_short']) && $user['club_name_short'] !== '' && $user['club_name_short'] !== null) {
+                                                elseif (!empty($user['club_name_short'])) {
                                                     $displayClub = $user['club_name_short'];
                                                 }
                                                 // Fallback: objet club
@@ -261,6 +273,11 @@ error_log("Session: " . print_r($_SESSION, true));
                                                     } else {
                                                         $displayClub = $user['club'];
                                                     }
+                                                }
+                                                // Dernier fallback: afficher clubId si disponible (pour debug)
+                                                elseif (!empty($user['clubId']) || !empty($user['club_id'])) {
+                                                    // Ne pas afficher l'ID, juste un indicateur qu'il y a un club
+                                                    $displayClub = ''; // On laisse vide pour afficher '-'
                                                 }
                                                 
                                                 echo htmlspecialchars($displayClub ?: '-');
