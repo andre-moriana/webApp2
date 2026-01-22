@@ -62,7 +62,7 @@ class ConcoursController {
         
         $themes = [];
         $clubs = [];
-        $disciplines = [];
+        $disciplines = []; // Initialiser à un tableau vide par défaut
         
         try {
             // Récupérer les thèmes
