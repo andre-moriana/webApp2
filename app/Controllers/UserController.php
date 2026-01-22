@@ -42,104 +42,32 @@ class UserController {
                     error_log("DEBUG UserController - Premier utilisateur AVANT enrichissement: " . json_encode($users[0] ?? null, JSON_PRETTY_PRINT));
                 }
                 
-                // Enrichir les utilisateurs avec le nom complet du club si manquant
-                // Récupérer la liste des clubs pour le mapping
+                // Enrichir les utilisateurs avec le nom complet du club
+                // Utiliser EXACTEMENT la même méthode que dans show() qui fonctionne
                 try {
                     $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
-                    $clubsMap = [];
-                    $clubsData = [];
-                    
-                    // Gérer différents formats de réponse
-                    if ($clubsResponse['success'] && isset($clubsResponse['data'])) {
-                        // Si data est un tableau direct
-                        if (is_array($clubsResponse['data']) && isset($clubsResponse['data'][0])) {
-                            $clubsData = $clubsResponse['data'];
-                        }
-                        // Si data contient une clé 'clubs' ou autre
-                        elseif (is_array($clubsResponse['data']) && isset($clubsResponse['data']['clubs'])) {
-                            $clubsData = $clubsResponse['data']['clubs'];
-                        }
-                        // Sinon utiliser data tel quel
-                        elseif (is_array($clubsResponse['data'])) {
-                            $clubsData = $clubsResponse['data'];
-                        }
-                    }
-                    
-                    // Construire les maps
-                    foreach ($clubsData as $club) {
-                        $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                        $name = $club['name'] ?? '';
-                        if (!empty($nameShort)) {
-                            $clubsMap[$nameShort] = $name;
-                        }
-                    }
-                    
-                    // Créer aussi une map par ID de club et par nameShort
-                    $clubsMapById = [];
                     if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
-                        foreach ($clubsResponse['data'] as $club) {
-                            $clubId = $club['id'] ?? $club['_id'] ?? null;
-                            $name = $club['name'] ?? '';
-                            $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                            if ($clubId) {
-                                $clubsMapById[$clubId] = ['name' => $name, 'nameShort' => $nameShort];
-                            }
-                            // Ajouter aussi dans la map par nameShort si pas déjà présent
-                            if ($nameShort && !isset($clubsMap[$nameShort])) {
-                                $clubsMap[$nameShort] = $name;
+                        // Enrichir chaque utilisateur avec le nom complet du club (même logique que show())
+                        foreach ($users as &$user) {
+                            // Récupérer le clubNameShort de la même manière que dans show()
+                            $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
+                            
+                            if (!empty($clubNameShort)) {
+                                // Chercher le club dans la liste (même logique que show())
+                                foreach ($clubsResponse['data'] as $club) {
+                                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                                    // Comparer exactement comme dans show() - par nameShort
+                                    if ($nameShort === $clubNameShort) {
+                                        $clubName = $club['name'] ?? '';
+                                        if (!empty($clubName)) {
+                                            $user['clubName'] = $clubName;
+                                        }
+                                        break;
+                                    }
+                                }
                             }
                         }
-                    }
-                    
-                    // Enrichir chaque utilisateur avec le nom complet du club
-                    foreach ($users as &$user) {
-                        // Toujours essayer d'enrichir si clubName n'est pas défini
-                        if (empty($user['clubName'])) {
-                            $enriched = false;
-                            
-                            // Méthode 1: Utiliser clubId pour chercher dans la map par ID
-                            if (!empty($user['clubId']) && isset($clubsMapById[$user['clubId']])) {
-                                $user['clubName'] = $clubsMapById[$user['clubId']]['name'];
-                                if (empty($user['clubNameShort'])) {
-                                    $user['clubNameShort'] = $clubsMapById[$user['clubId']]['nameShort'];
-                                }
-                                $enriched = true;
-                            }
-                            // Méthode 2: Utiliser club_id pour chercher dans la map par ID
-                            elseif (!empty($user['club_id']) && isset($clubsMapById[$user['club_id']])) {
-                                $user['clubName'] = $clubsMapById[$user['club_id']]['name'];
-                                if (empty($user['clubNameShort'])) {
-                                    $user['clubNameShort'] = $clubsMapById[$user['club_id']]['nameShort'];
-                                }
-                                $enriched = true;
-                            }
-                            // Méthode 3: Utiliser clubNameShort pour chercher dans la map par nameShort
-                            elseif (!empty($user['clubNameShort']) && isset($clubsMap[$user['clubNameShort']])) {
-                                $user['clubName'] = $clubsMap[$user['clubNameShort']];
-                                $enriched = true;
-                            }
-                            // Méthode 4: Utiliser club_name_short pour chercher dans la map par nameShort
-                            elseif (!empty($user['club_name_short']) && isset($clubsMap[$user['club_name_short']])) {
-                                $user['clubName'] = $clubsMap[$user['club_name_short']];
-                                if (empty($user['clubNameShort'])) {
-                                    $user['clubNameShort'] = $user['club_name_short'];
-                                }
-                                $enriched = true;
-                            }
-                            
-                            // Si on a un clubId mais qu'on n'a pas trouvé le club, logger pour debug
-                            if (!$enriched && (!empty($user['clubId']) || !empty($user['club_id']))) {
-                                $clubId = $user['clubId'] ?? $user['club_id'] ?? 'unknown';
-                                error_log("DEBUG: Utilisateur ID " . ($user['id'] ?? 'unknown') . " a un clubId ($clubId) mais le club n'a pas été trouvé dans la liste");
-                            }
-                        }
-                    }
-                    unset($user); // Libérer la référence
-                    
-                    // Debug temporaire - vérifier les données après enrichissement
-                    if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-                        error_log("DEBUG UserController - Premier utilisateur APRÈS enrichissement: " . json_encode($users[0] ?? null, JSON_PRETTY_PRINT));
-                        error_log("DEBUG UserController - Nombre de clubs dans la map: " . count($clubsMap) . ", Map par ID: " . count($clubsMapById));
+                        unset($user); // Libérer la référence
                     }
                 } catch (Exception $e) {
                     // En cas d'erreur, continuer sans enrichissement
