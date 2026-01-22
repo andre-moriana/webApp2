@@ -234,39 +234,36 @@ error_log("Session: " . print_r($_SESSION, true));
                                             </td>
                                             <td class="text-nowrap" data-column="club">
                                                 <?php 
-                                                // Debug temporaire - à supprimer après vérification
-                                                if (isset($_GET['debug']) && $_GET['debug'] === '1' && $user['id'] == ($_GET['user_id'] ?? 0)) {
-                                                    error_log("DEBUG Club pour user ID " . $user['id'] . ": " . json_encode([
-                                                        'clubName' => $user['clubName'] ?? 'NOT SET',
-                                                        'clubNameShort' => $user['clubNameShort'] ?? 'NOT SET',
-                                                        'club_name' => $user['club_name'] ?? 'NOT SET',
-                                                        'club_name_short' => $user['club_name_short'] ?? 'NOT SET',
-                                                        'clubId' => $user['clubId'] ?? 'NOT SET',
-                                                        'club_id' => $user['club_id'] ?? 'NOT SET',
-                                                        'all_keys' => array_keys($user)
-                                                    ]));
-                                                }
+                                                // Récupérer le nom complet du club
+                                                // L'API retourne directement clubName et clubNameShort depuis getAllUsers()
+                                                $displayClub = '';
                                                 
-                                                // Récupérer le nom complet du club (priorité au nom complet)
-                                                $clubName = '';
-                                                // L'API retourne directement clubName et clubNameShort
-                                                if (!empty($user['clubName'])) {
-                                                    $clubName = $user['clubName'];
-                                                } elseif (!empty($user['club_name'])) {
-                                                    $clubName = $user['club_name'];
-                                                } elseif (!empty($user['clubNameShort'])) {
-                                                    $clubName = $user['clubNameShort'];
-                                                } elseif (!empty($user['club_name_short'])) {
-                                                    $clubName = $user['club_name_short'];
-                                                } elseif (isset($user['club'])) {
-                                                    // Fallback si club est un objet/tableau
+                                                // Priorité 1: clubName (nom complet)
+                                                if (isset($user['clubName']) && $user['clubName'] !== '' && $user['clubName'] !== null) {
+                                                    $displayClub = $user['clubName'];
+                                                }
+                                                // Priorité 2: club_name (variante snake_case)
+                                                elseif (isset($user['club_name']) && $user['club_name'] !== '' && $user['club_name'] !== null) {
+                                                    $displayClub = $user['club_name'];
+                                                }
+                                                // Priorité 3: clubNameShort (nom court)
+                                                elseif (isset($user['clubNameShort']) && $user['clubNameShort'] !== '' && $user['clubNameShort'] !== null) {
+                                                    $displayClub = $user['clubNameShort'];
+                                                }
+                                                // Priorité 4: club_name_short (variante snake_case)
+                                                elseif (isset($user['club_name_short']) && $user['club_name_short'] !== '' && $user['club_name_short'] !== null) {
+                                                    $displayClub = $user['club_name_short'];
+                                                }
+                                                // Fallback: objet club
+                                                elseif (isset($user['club'])) {
                                                     if (is_array($user['club'])) {
-                                                        $clubName = $user['club']['name'] ?? $user['club']['nameShort'] ?? $user['club']['name_short'] ?? '';
+                                                        $displayClub = $user['club']['name'] ?? $user['club']['nameShort'] ?? $user['club']['name_short'] ?? '';
                                                     } else {
-                                                        $clubName = $user['club'];
+                                                        $displayClub = $user['club'];
                                                     }
                                                 }
-                                                echo htmlspecialchars($clubName ?: '-');
+                                                
+                                                echo htmlspecialchars($displayClub ?: '-');
                                                 ?>
                                             </td>
                                             <td class="text-nowrap">

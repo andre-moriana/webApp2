@@ -33,14 +33,40 @@ class UserController {
         
         try {
             // Récupérer les utilisateurs depuis l'API
-            // L'API retourne déjà clubName et clubNameShort grâce à la jointure SQL dans getAllUsers
             $response = $this->apiService->getUsers();
             if ($response['success'] && isset($response['data']['users']) && !empty($response['data']['users'])) {
                 $users = $response['data']['users'];
                 
-                // Debug temporaire - à supprimer après vérification
-                if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-                    error_log("DEBUG UserController - Premier utilisateur: " . json_encode($users[0] ?? null, JSON_PRETTY_PRINT));
+                // Enrichir les utilisateurs avec le nom complet du club si manquant
+                // Récupérer la liste des clubs pour le mapping
+                try {
+                    $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+                    $clubsMap = [];
+                    if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
+                        foreach ($clubsResponse['data'] as $club) {
+                            $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                            $name = $club['name'] ?? '';
+                            if (!empty($nameShort)) {
+                                $clubsMap[$nameShort] = $name;
+                            }
+                        }
+                    }
+                    
+                    // Enrichir chaque utilisateur avec le nom complet du club si manquant
+                    foreach ($users as &$user) {
+                        // Si clubName n'est pas défini mais qu'on a clubNameShort, chercher le nom complet
+                        if (empty($user['clubName']) && !empty($user['clubNameShort']) && isset($clubsMap[$user['clubNameShort']])) {
+                            $user['clubName'] = $clubsMap[$user['clubNameShort']];
+                        }
+                        // Si clubName n'est pas défini mais qu'on a club_name_short, chercher le nom complet
+                        elseif (empty($user['clubName']) && !empty($user['club_name_short']) && isset($clubsMap[$user['club_name_short']])) {
+                            $user['clubName'] = $clubsMap[$user['club_name_short']];
+                        }
+                    }
+                    unset($user); // Libérer la référence
+                } catch (Exception $e) {
+                    // En cas d'erreur, continuer sans enrichissement
+                    error_log('Erreur lors de l\'enrichissement des clubs: ' . $e->getMessage());
                 }
             } else {
                 $error = 'API backend non accessible - Affichage de données simulées';
