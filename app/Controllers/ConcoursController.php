@@ -335,16 +335,34 @@ class ConcoursController {
             // L'endpoint est 'concours' (pas 'concours/create') car le routing se fait via PATH_INFO
             $response = $this->apiService->makeRequest('concours', 'POST', $data);
             
-            error_log('Réponse API: ' . json_encode($response, JSON_UNESCAPED_UNICODE));
+            error_log('Réponse API complète: ' . json_encode($response, JSON_UNESCAPED_UNICODE));
             
-            if ($response['success']) {
-                $_SESSION['success'] = 'Concours créé avec succès';
-                header('Location: /concours');
-                exit;
+            // makeRequest retourne { success: bool, data: {...}, status_code: int, message: string }
+            // où data contient la réponse JSON de l'API { success: bool, data: {...}, message: string }
+            $apiResponse = $response['data'] ?? null;
+            
+            // Vérifier le succès HTTP ET le succès de l'opération dans la réponse API
+            if ($response['success'] && isset($apiResponse) && is_array($apiResponse)) {
+                // La réponse API est dans $response['data']
+                if (isset($apiResponse['success']) && $apiResponse['success']) {
+                    $_SESSION['success'] = $apiResponse['message'] ?? 'Concours créé avec succès';
+                    header('Location: /concours');
+                    exit;
+                } else {
+                    // L'API a retourné une erreur
+                    $errorMessage = $apiResponse['message'] ?? $apiResponse['error'] ?? 'Erreur lors de la création du concours';
+                    $_SESSION['error'] = $errorMessage;
+                    error_log('Erreur API: ' . $errorMessage);
+                    error_log('Réponse API complète: ' . json_encode($apiResponse, JSON_UNESCAPED_UNICODE));
+                    header('Location: /concours/create');
+                    exit;
+                }
             } else {
-                $errorMessage = $response['message'] ?? $response['error'] ?? 'Erreur lors de la création du concours';
+                // Erreur HTTP ou problème de décodage
+                $errorMessage = $response['message'] ?? 'Erreur lors de la communication avec l\'API';
                 $_SESSION['error'] = $errorMessage;
-                error_log('Erreur lors de la création du concours: ' . $errorMessage);
+                error_log('Erreur HTTP ou décodage: ' . $errorMessage);
+                error_log('Code HTTP: ' . ($response['status_code'] ?? 'inconnu'));
                 header('Location: /concours/create');
                 exit;
             }
