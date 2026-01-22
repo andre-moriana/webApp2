@@ -5,6 +5,14 @@
 <div class="container-fluid concours-create-container">
 <h1><?= isset($concours) ? 'Éditer' : 'Créer' ?> un concours</h1>
 
+<?php if (isset($_SESSION['debug_concours_store'])): ?>
+    <div class="alert alert-info">
+        <strong>Debug:</strong> Le contrôleur store() a été appelé !
+        <pre><?= print_r($_SESSION['debug_concours_store'], true) ?></pre>
+    </div>
+    <?php unset($_SESSION['debug_concours_store']); ?>
+<?php endif; ?>
+
 <!-- Passer les clubs et disciplines au JavaScript -->
 <script>
 // Vérifier que les variables PHP sont définies

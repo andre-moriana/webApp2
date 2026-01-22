@@ -371,6 +371,16 @@ class Router {
                 error_log("DEBUG ROUTER: Route trouvée - " . $route["method"] . " " . $route["path"] . " -> " . $route["handler"]);
                 $routeFound = true;
                 
+                // Debug: Stocker dans la session pour vérification
+                $_SESSION['debug_router_match'] = [
+                    'found' => true,
+                    'method' => $route["method"],
+                    'path' => $route["path"],
+                    'handler' => $route["handler"],
+                    'requestUri' => $requestUri,
+                    'pattern' => $pattern
+                ];
+                
                 // Extraire le contrôleur et la méthode
                 list($controller, $method) = explode("@", $route["handler"]);
                 
@@ -391,6 +401,23 @@ class Router {
         foreach ($this->routes as $route) {
             if ($route["method"] === $requestMethod) {
                 error_log("  - " . $route["path"] . " -> " . $route["handler"]);
+            }
+        }
+        
+        // Debug: Stocker dans la session pour vérification
+        $_SESSION['debug_router_404'] = [
+            'found' => false,
+            'method' => $requestMethod,
+            'requestUri' => $requestUri,
+            'availableRoutes' => []
+        ];
+        foreach ($this->routes as $route) {
+            if ($route["method"] === $requestMethod) {
+                $_SESSION['debug_router_404']['availableRoutes'][] = [
+                    'path' => $route["path"],
+                    'handler' => $route["handler"],
+                    'pattern' => $this->convertToRegex($route["path"])
+                ];
             }
         }
         
