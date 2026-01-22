@@ -6,7 +6,7 @@
                 <?php if ($isAdmin || $isCoach || $isDirigeant): ?>
                 <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 w-100 w-md-auto">
                     <label for="userSelect" class="form-label mb-0 text-nowrap">Sélectionner un archer :</label>
-                    <select id="userSelect" class="form-select" style="min-width: 200px; width: 100%; max-width: 100%;" onchange="handleUserSelectChange(this)">
+                    <select id="userSelect" class="form-select" style="min-width: 200px; width: 100%; max-width: 100%;">
                         <option value="">-- Choisir un archer --</option>
                         <?php if (!empty($users)): ?>
                         <?php foreach ($users as $user): ?>
@@ -600,16 +600,6 @@
 <script>
 window.currentUserId = <?php echo isset($selectedUserId) ? $selectedUserId : (isset($actualUserId) ? $actualUserId : 'null'); ?>;
 window.selectedUserId = <?php echo isset($selectedUserId) ? $selectedUserId : 'null'; ?>;
-
-// Fonction globale pour gérer le changement d'utilisateur - recharger la page
-function handleUserSelectChange(selectElement) {
-    const selectedUserId = selectElement.value;
-    let newUrl = '/trainings';
-    if (selectedUserId && selectedUserId !== '' && selectedUserId !== 'null' && selectedUserId !== 'undefined') {
-        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
-    }
-    window.location.href = newUrl;
-}
 </script>
 
 <!-- JavaScript personnalisé -->

@@ -86,14 +86,8 @@ function initializeUserSelection() {
                     e.stopPropagation();
                     e.stopImmediatePropagation();
                     
-                    const selectedUserId = this.value;
-                    let newUrl = '/trainings';
-                    if (selectedUserId && selectedUserId !== '' && selectedUserId !== 'null' && selectedUserId !== 'undefined') {
-                        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
-                    }
-                    
-                    // Forcer le rechargement de la page
-                    window.location.href = newUrl;
+                    // Utiliser la fonction globale handleUserSelectChange
+                    handleUserSelectChange(this);
                 }, true); // Utiliser capture phase
             }
         }
@@ -671,11 +665,22 @@ function deleteSession(sessionId) {
     });
 }
 
+// Fonction globale pour gérer le changement d'utilisateur - recharger la page
+function handleUserSelectChange(selectElement) {
+    const selectedUserId = selectElement.value;
+    let newUrl = '/trainings';
+    if (selectedUserId && selectedUserId !== '' && selectedUserId !== 'null' && selectedUserId !== 'undefined') {
+        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
+    }
+    window.location.href = newUrl;
+}
+
 // Rendre les fonctions globales
 window.startTrainingSession = startTrainingSession;
 window.removeVolley = removeVolley;
 window.updateExerciseStatus = updateExerciseStatus;
 window.saveExerciseStatus = saveExerciseStatus;
+window.handleUserSelectChange = handleUserSelectChange;
 
 // ============================================
 // FRISE CHRONOLOGIQUE HORIZONTALE
