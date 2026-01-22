@@ -1,21 +1,21 @@
 /* Styles pour le formulaire de création/édition de concours */
 
-.container-fluid {
+.concours-create-container {
     padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
+    min-height: calc(100vh - 200px);
 }
 
-h1 {
+.concours-create-container h1 {
     color: #14532d;
     margin-bottom: 20px;
     font-weight: 600;
     text-align: center;
 }
 
-h3 {
+.concours-create-container h3 {
     color: #14532d;
     margin-top: 20px;
     margin-bottom: 15px;
@@ -23,7 +23,7 @@ h3 {
     font-weight: 600;
 }
 
-form {
+.concours-create-container form {
     background: #fff;
     padding: 25px;
     border-radius: 8px;
@@ -33,7 +33,7 @@ form {
     border: 1px solid #e9ecef;
 }
 
-label {
+.concours-create-container label {
     display: block;
     margin-bottom: 12px;
     font-weight: 500;
@@ -41,10 +41,10 @@ label {
     font-size: 14px;
 }
 
-label input[type="text"],
-label input[type="date"],
-label input[type="time"],
-label textarea {
+.concours-create-container label input[type="text"],
+.concours-create-container label input[type="date"],
+.concours-create-container label input[type="time"],
+.concours-create-container label textarea {
     display: block;
     width: 100%;
     padding: 8px 12px;
@@ -55,25 +55,25 @@ label textarea {
     transition: border-color 0.3s;
 }
 
-label input[type="text"]:focus,
-label input[type="date"]:focus,
-label input[type="time"]:focus,
-label textarea:focus {
+.concours-create-container label input[type="text"]:focus,
+.concours-create-container label input[type="date"]:focus,
+.concours-create-container label input[type="time"]:focus,
+.concours-create-container label textarea:focus {
     outline: none;
     border-color: #14532d;
     box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.1);
 }
 
-label textarea {
+.concours-create-container label textarea {
     min-height: 80px;
     resize: vertical;
 }
 
-#departs-list {
+.concours-create-container #departs-list {
     margin-bottom: 15px;
 }
 
-.depart-item {
+.concours-create-container .depart-item {
     background: #f8f9fa;
     padding: 15px;
     margin-bottom: 12px;
@@ -82,15 +82,15 @@ label textarea {
     position: relative;
 }
 
-.depart-item label {
+.concours-create-container .depart-item label {
     margin-bottom: 8px;
 }
 
-.depart-item label:last-of-type {
+.concours-create-container .depart-item label:last-of-type {
     margin-bottom: 10px;
 }
 
-.depart-item button {
+.concours-create-container .depart-item button {
     background-color: #dc3545;
     color: white;
     border: none;
@@ -101,11 +101,11 @@ label textarea {
     transition: background-color 0.3s;
 }
 
-.depart-item button:hover {
+.concours-create-container .depart-item button:hover {
     background-color: #c82333;
 }
 
-button[type="button"][onclick*="ajouterDepart"] {
+.concours-create-container button[type="button"][onclick*="ajouterDepart"] {
     background-color: #14532d;
     color: white;
     border: none;
@@ -118,11 +118,11 @@ button[type="button"][onclick*="ajouterDepart"] {
     margin-bottom: 15px;
 }
 
-button[type="button"][onclick*="ajouterDepart"]:hover {
+.concours-create-container button[type="button"][onclick*="ajouterDepart"]:hover {
     background-color: #0f3f24;
 }
 
-button[type="submit"] {
+.concours-create-container button[type="submit"] {
     background-color: #14532d;
     color: white;
     border: none;
@@ -136,11 +136,11 @@ button[type="submit"] {
     width: 100%;
 }
 
-button[type="submit"]:hover {
+.concours-create-container button[type="submit"]:hover {
     background-color: #0f3f24;
 }
 
-a[href="/concours"] {
+.concours-create-container a[href="/concours"] {
     display: inline-block;
     margin-top: 15px;
     color: #14532d;
@@ -151,25 +151,25 @@ a[href="/concours"] {
     width: 100%;
 }
 
-a[href="/concours"]:hover {
+.concours-create-container a[href="/concours"]:hover {
     color: #0f3f24;
     text-decoration: underline;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    form {
+    .concours-create-container form {
         padding: 20px;
     }
     
-    .depart-item {
+    .concours-create-container .depart-item {
         padding: 15px;
     }
     
-    label input[type="text"],
-    label input[type="date"],
-    label input[type="time"],
-    label textarea {
+    .concours-create-container label input[type="text"],
+    .concours-create-container label input[type="date"],
+    .concours-create-container label input[type="time"],
+    .concours-create-container label textarea {
         font-size: 16px; /* Évite le zoom sur iOS */
     }
 }
