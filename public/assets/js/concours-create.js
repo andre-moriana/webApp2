@@ -17,10 +17,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('concoursForm');
     if (form) {
         form.addEventListener('submit', function(e) {
-            console.log('Formulaire soumis');
+            console.log('Formulaire soumis - Action:', form.action);
+            console.log('Formulaire soumis - Method:', form.method);
             // Ne pas empêcher la soumission normale du formulaire
             // Le formulaire sera soumis normalement vers /concours/store
         });
+    } else {
+        console.error('Formulaire concoursForm non trouvé!');
     }
 });
 
