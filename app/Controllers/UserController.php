@@ -37,6 +37,11 @@ class UserController {
             $response = $this->apiService->getUsers();
             if ($response['success'] && isset($response['data']['users']) && !empty($response['data']['users'])) {
                 $users = $response['data']['users'];
+                
+                // Debug temporaire - à supprimer après vérification
+                if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+                    error_log("DEBUG UserController - Premier utilisateur: " . json_encode($users[0] ?? null, JSON_PRETTY_PRINT));
+                }
             } else {
                 $error = 'API backend non accessible - Affichage de données simulées';
             }

@@ -234,6 +234,19 @@ error_log("Session: " . print_r($_SESSION, true));
                                             </td>
                                             <td class="text-nowrap" data-column="club">
                                                 <?php 
+                                                // Debug temporaire - à supprimer après vérification
+                                                if (isset($_GET['debug']) && $_GET['debug'] === '1' && $user['id'] == ($_GET['user_id'] ?? 0)) {
+                                                    error_log("DEBUG Club pour user ID " . $user['id'] . ": " . json_encode([
+                                                        'clubName' => $user['clubName'] ?? 'NOT SET',
+                                                        'clubNameShort' => $user['clubNameShort'] ?? 'NOT SET',
+                                                        'club_name' => $user['club_name'] ?? 'NOT SET',
+                                                        'club_name_short' => $user['club_name_short'] ?? 'NOT SET',
+                                                        'clubId' => $user['clubId'] ?? 'NOT SET',
+                                                        'club_id' => $user['club_id'] ?? 'NOT SET',
+                                                        'all_keys' => array_keys($user)
+                                                    ]));
+                                                }
+                                                
                                                 // Récupérer le nom complet du club (priorité au nom complet)
                                                 $clubName = '';
                                                 // L'API retourne directement clubName et clubNameShort
