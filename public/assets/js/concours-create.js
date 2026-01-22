@@ -60,43 +60,52 @@ function loadClubs() {
     console.log('Clubs ajoutés au select:', addedCount, '/', clubs.length);
 }
 
-// Charger les disciplines depuis l'API
-async function loadDisciplines() {
-    try {
-        const response = await fetch('/api/concours/disciplines');
-        
-        if (!response.ok) {
-            console.error('Erreur HTTP lors du chargement des disciplines:', response.status, response.statusText);
-            return;
-        }
-        
-        const data = await response.json();
-        console.log('Disciplines reçues:', data);
-        
-        const select = document.getElementById('discipline');
-        if (!select) {
-            console.error('Select discipline non trouvé');
-            return;
-        }
-        
-        // Vider le select (garder seulement l'option par défaut)
-        select.innerHTML = '<option value="">-- Sélectionner une discipline --</option>';
-        
-        if (Array.isArray(data) && data.length > 0) {
-            data.forEach(discipline => {
-                const option = document.createElement('option');
-                option.value = discipline.id || discipline.iddiscipline || '';
-                option.textContent = discipline.name || discipline.nom || discipline.lb_discipline || 'Discipline';
-                select.appendChild(option);
-            });
-            console.log('Disciplines ajoutées au select:', select.options.length - 1);
-        } else {
-            console.warn('Aucune discipline trouvée dans la réponse');
-        }
-    } catch (error) {
-        console.error('Erreur lors du chargement des disciplines:', error);
-        console.error('Stack:', error.stack);
+// Charger les disciplines depuis les données passées par PHP
+function loadDisciplines() {
+    console.log('loadDisciplines() appelée');
+    console.log('window.disciplinesData:', window.disciplinesData);
+    
+    const select = document.getElementById('discipline');
+    if (!select) {
+        console.error('Select discipline non trouvé');
+        return;
     }
+    
+    // Utiliser les données passées depuis PHP
+    const disciplines = window.disciplinesData || [];
+    
+    console.log('Disciplines reçues depuis PHP:', disciplines);
+    console.log('Nombre de disciplines:', disciplines.length);
+    
+    if (!Array.isArray(disciplines)) {
+        console.error('window.disciplinesData n\'est pas un tableau:', typeof disciplines);
+        return;
+    }
+    
+    if (disciplines.length === 0) {
+        console.warn('Aucune discipline disponible dans window.disciplinesData');
+        return;
+    }
+    
+    // Vider le select (garder seulement l'option par défaut)
+    select.innerHTML = '<option value="">-- Sélectionner une discipline --</option>';
+    
+    let addedCount = 0;
+    disciplines.forEach((discipline, index) => {
+        try {
+            const option = document.createElement('option');
+            // Utiliser iddiscipline comme valeur (ID original) ou id (ID de la table)
+            option.value = discipline.iddiscipline || discipline.id || '';
+            // Utiliser lb_discipline comme texte d'affichage
+            option.textContent = discipline.lb_discipline || discipline.name || discipline.nom || 'Discipline';
+            select.appendChild(option);
+            addedCount++;
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout de la discipline', index, ':', error, discipline);
+        }
+    });
+    
+    console.log('Disciplines ajoutées au select:', addedCount, '/', disciplines.length);
 }
 
 // Charger les types de compétition depuis l'API
