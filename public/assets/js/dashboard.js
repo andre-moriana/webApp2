@@ -786,6 +786,7 @@ document.getElementById('reset-events-btn')?.addEventListener('click', function(
 function filterDepartmentalCommitteesByRegional(regionalCommitteeId) {
     // Trouver le conteneur des comités départementaux
     const departmentalContainer = document.querySelector('.col-md-4:nth-child(2) .club-list ul');
+    const countElement = document.getElementById('departmental-committees-count');
     
     if (!departmentalContainer) {
         return;
@@ -800,6 +801,7 @@ function filterDepartmentalCommitteesByRegional(regionalCommitteeId) {
     
     // Parcourir tous les éléments de comités départementaux
     const departmentalItems = departmentalContainer.querySelectorAll('.committee-item');
+    let visibleCount = 0;
     
     departmentalItems.forEach(function(item) {
         const committeeId = item.getAttribute('data-committee-id');
@@ -816,17 +818,24 @@ function filterDepartmentalCommitteesByRegional(regionalCommitteeId) {
             if (departmentalPrefix === regionalPrefix) {
                 // Afficher le comité départemental
                 item.style.display = '';
+                visibleCount++;
             } else {
                 // Masquer le comité départemental
                 item.style.display = 'none';
             }
         }
     });
+    
+    // Mettre à jour le compteur
+    if (countElement) {
+        countElement.textContent = visibleCount;
+    }
 }
 
 // Fonction pour réinitialiser le filtre des comités départementaux
 function resetDepartmentalCommitteesFilter() {
     const departmentalContainer = document.querySelector('.col-md-4:nth-child(2) .club-list ul');
+    const countElement = document.getElementById('departmental-committees-count');
     
     if (!departmentalContainer) {
         return;
@@ -837,4 +846,9 @@ function resetDepartmentalCommitteesFilter() {
     departmentalItems.forEach(function(item) {
         item.style.display = '';
     });
+    
+    // Restaurer le compteur total depuis la variable globale
+    if (countElement && window.totalDepartmentalCommittees !== undefined) {
+        countElement.textContent = window.totalDepartmentalCommittees;
+    }
 }
