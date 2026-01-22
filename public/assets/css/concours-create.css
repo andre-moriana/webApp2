@@ -35,10 +35,21 @@
 
 .concours-create-container label {
     display: block;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     font-weight: 500;
     color: #333;
     font-size: 14px;
+}
+
+.concours-create-container .date-fields-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 8px;
+}
+
+.concours-create-container .date-fields-row label {
+    flex: 1;
+    margin-bottom: 0;
 }
 
 .concours-create-container label input[type="text"],
@@ -164,6 +175,15 @@
     
     .concours-create-container .depart-item {
         padding: 15px;
+    }
+    
+    .concours-create-container .date-fields-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .concours-create-container .date-fields-row label {
+        margin-bottom: 8px;
     }
     
     .concours-create-container label input[type="text"],
