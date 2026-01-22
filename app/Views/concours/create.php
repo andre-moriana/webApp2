@@ -1,4 +1,8 @@
+<!-- CSS personnalisé -->
+<link href="/public/assets/css/concours-create.css" rel="stylesheet">
+
 <!-- Formulaire de création/édition d'un concours avec gestion des départs -->
+<div class="container-fluid">
 <h1><?= isset($concours) ? 'Éditer' : 'Créer' ?> un concours</h1>
 <form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>">
     <label>Nom : <input type="text" name="nom" value="<?= $concours->nom ?? '' ?>" required></label><br>
@@ -22,6 +26,8 @@
     <button type="button" onclick="ajouterDepart()">Ajouter un départ</button><br><br>
     <button type="submit">Enregistrer</button>
 </form>
+<a href="/concours">Retour à la liste</a>
+</div>
 <script>
 function ajouterDepart() {
     var idx = document.querySelectorAll('#departs-list .depart-item').length;
@@ -34,4 +40,3 @@ function ajouterDepart() {
     document.getElementById('departs-list').insertAdjacentHTML('beforeend', html);
 }
 </script>
-<a href="/concours">Retour à la liste</a>

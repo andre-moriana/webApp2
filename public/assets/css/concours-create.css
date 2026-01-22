@@ -1,0 +1,164 @@
+/* Styles pour le formulaire de création/édition de concours */
+
+.container-fluid {
+    padding: 20px;
+}
+
+h1 {
+    color: #14532d;
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+
+h3 {
+    color: #14532d;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+form {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+}
+
+label {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: 500;
+    color: #333;
+}
+
+label input[type="text"],
+label input[type="date"],
+label input[type="time"],
+label textarea {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+label input[type="text"]:focus,
+label input[type="date"]:focus,
+label input[type="time"]:focus,
+label textarea:focus {
+    outline: none;
+    border-color: #14532d;
+    box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.1);
+}
+
+label textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+#departs-list {
+    margin-bottom: 20px;
+}
+
+.depart-item {
+    background: #f8f9fa;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    position: relative;
+}
+
+.depart-item label {
+    margin-bottom: 10px;
+}
+
+.depart-item label:last-of-type {
+    margin-bottom: 15px;
+}
+
+.depart-item button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.depart-item button:hover {
+    background-color: #c82333;
+}
+
+button[type="button"][onclick*="ajouterDepart"] {
+    background-color: #14532d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    margin-bottom: 20px;
+}
+
+button[type="button"][onclick*="ajouterDepart"]:hover {
+    background-color: #0f3f24;
+}
+
+button[type="submit"] {
+    background-color: #14532d;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+button[type="submit"]:hover {
+    background-color: #0f3f24;
+}
+
+a[href="/concours"] {
+    display: inline-block;
+    margin-top: 20px;
+    color: #14532d;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+a[href="/concours"]:hover {
+    color: #0f3f24;
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    form {
+        padding: 20px;
+    }
+    
+    .depart-item {
+        padding: 15px;
+    }
+    
+    label input[type="text"],
+    label input[type="date"],
+    label input[type="time"],
+    label textarea {
+        font-size: 16px; /* Évite le zoom sur iOS */
+    }
+}
