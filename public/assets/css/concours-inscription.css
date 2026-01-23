@@ -1,0 +1,177 @@
+/* Styles pour la page d'inscription aux concours */
+
+.concours-inscription-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.concours-inscription-container h1 {
+    color: #14532d;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.concours-info-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    margin-bottom: 30px;
+    border: 1px solid #e9ecef;
+}
+
+.concours-info-section h2 {
+    color: #14532d;
+    margin-bottom: 15px;
+}
+
+.search-section {
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    margin-bottom: 30px;
+    border: 1px solid #e9ecef;
+}
+
+.search-section h3 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.search-form {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.search-form .form-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-form .form-group:last-child {
+    display: flex;
+    gap: 10px;
+    flex: 2;
+}
+
+.search-form input[type="text"] {
+    flex: 1;
+}
+
+.search-results {
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    margin-bottom: 30px;
+    border: 1px solid #e9ecef;
+}
+
+.search-results h3 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.archer-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border: 1px solid #dee2e6;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.archer-card:hover {
+    background: #e9ecef;
+    border-color: #14532d;
+}
+
+.archer-card.selected {
+    background: #d4edda;
+    border-color: #14532d;
+    border-width: 2px;
+}
+
+.archer-card h4 {
+    margin: 0 0 10px 0;
+    color: #14532d;
+}
+
+.archer-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.archer-info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.archer-info-item strong {
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 3px;
+}
+
+.inscriptions-section {
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    margin-bottom: 30px;
+    border: 1px solid #e9ecef;
+}
+
+.inscriptions-section h3 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.actions-section {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.actions-section .btn {
+    padding: 10px 24px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    display: inline-block;
+}
+
+.actions-section .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.actions-section .btn-secondary:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .search-form {
+        flex-direction: column;
+    }
+    
+    .search-form .form-group {
+        width: 100%;
+    }
+    
+    .archer-info {
+        grid-template-columns: 1fr;
+    }
+}
