@@ -34,6 +34,39 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Délégation d'événements pour les cartes d'archers (plus fiable)
+    // Utiliser le conteneur parent qui existe toujours
+    const searchResultsContainer = document.getElementById('search-results');
+    if (searchResultsContainer) {
+        searchResultsContainer.addEventListener('click', function(e) {
+            console.log('Clic détecté dans search-results, target:', e.target);
+            // Trouver la carte parente
+            const card = e.target.closest('.archer-card');
+            if (card) {
+                e.preventDefault();
+                e.stopPropagation();
+                const archerIndex = card.getAttribute('data-archer-index');
+                console.log('Carte trouvée, index:', archerIndex);
+                console.log('archersList disponible:', !!window.archersList);
+                if (archerIndex !== null && window.archersList && window.archersList[archerIndex]) {
+                    console.log('Clic sur carte via délégation, index:', archerIndex);
+                    const archerData = window.archersList[archerIndex];
+                    console.log('Données archer:', archerData);
+                    selectArcher(archerData, card);
+                } else {
+                    console.error('Données archer introuvables pour index:', archerIndex);
+                    console.error('archersList:', window.archersList);
+                    alert('Erreur: Impossible de récupérer les données de l\'archer. Index: ' + archerIndex);
+                }
+            } else {
+                console.log('Pas de carte trouvée pour le clic');
+            }
+        });
+        console.log('Délégation d\'événements configurée sur search-results');
+    } else {
+        console.error('search-results container introuvable');
+    }
 });
 
 // Fonction de recherche
@@ -102,17 +135,31 @@ function displaySearchResults(archers) {
     
     resultsList.innerHTML = '';
 
-    archers.forEach(archer => {
-        const card = document.createElement('div');
-        card.className = 'archer-card';
-        card.style.cursor = 'pointer'; // Indiquer que c'est cliquable
+    // Initialiser le tableau global pour stocker les archers
+    if (!window.archersList) {
+        window.archersList = [];
+    }
+    window.archersList = []; // Réinitialiser à chaque nouvelle recherche
 
+    archers.forEach((archer, index) => {
         const nom = archer.nom || archer.name || archer.NOM || 'N/A';
         const prenom = archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A';
         const licence = archer.licence_number || archer.licenceNumber || archer.IDLicence || 'N/A';
         const club = archer.club_name || archer.CLUB || 'N/A';
         const dateNaissance = archer.birth_date || archer.birthDate || archer.DATENAISSANCE || 'N/A';
         const genre = archer.gender || archer.GENRE || 'N/A';
+
+        // Stocker l'archer dans le tableau global AVANT de créer la carte
+        window.archersList[index] = archer;
+        console.log('Archer stocké index', index, ':', archer);
+
+        // Créer la carte avec un data-attribute pour stocker l'index
+        const card = document.createElement('div');
+        card.className = 'archer-card';
+        card.style.cursor = 'pointer';
+        card.setAttribute('data-archer-index', index);
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
 
         card.innerHTML = `
             <h4>${nom} ${prenom}</h4>
@@ -136,18 +183,19 @@ function displaySearchResults(archers) {
             </div>
         `;
 
-        // Attacher l'événement après avoir défini le innerHTML
+        // L'événement est géré par délégation au niveau du conteneur parent
+        // Pas besoin d'attacher directement ici, mais on garde pour compatibilité
         card.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Clic sur archer:', archer);
-            selectArcher(archer, card);
+            console.log('Clic direct sur carte, index:', index);
         });
 
         resultsList.appendChild(card);
     });
     
     console.log('displaySearchResults: ' + archers.length + ' archers affichés');
+    console.log('Archers stockés:', window.archersList);
 }
 
 // Sélectionner un archer
