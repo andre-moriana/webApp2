@@ -152,6 +152,9 @@ class Router {
         $this->addRoute("POST", "/groups/{id}/members", "ApiController@addGroupMembers");
         $this->addRoute("DELETE", "/groups/{id}/remove-member/{memberId}", "ApiController@removeGroupMember");
         
+        // Route API pour la recherche d'archers
+        $this->addRoute("GET", "/api/archers/search", "ApiController@searchArchers");
+        
         // Routes API pour les groupes (proxy vers API externe)
         $this->addRoute("GET", "/api/users", "ApiController@users");
         $this->addRoute("POST", "/api/groups/create", "ApiController@createGroup");

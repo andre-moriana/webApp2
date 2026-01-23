@@ -2340,6 +2340,55 @@ class ApiController {
     }
     
     /**
+     * Recherche des archers par licence ou nom
+     */
+    public function searchArchers() {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        
+        try {
+            // Récupérer les paramètres de requête
+            $licence = $_GET['licence'] ?? null;
+            $nom = $_GET['nom'] ?? null;
+            
+            if (empty($licence) && empty($nom)) {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'error' => 'Paramètre "licence" ou "nom" requis'
+                ], 400);
+                return;
+            }
+            
+            // Construire l'endpoint avec les query params
+            $endpoint = 'archers/search';
+            if ($licence) {
+                $endpoint .= '?licence=' . urlencode($licence);
+            } elseif ($nom) {
+                $endpoint .= '?nom=' . urlencode($nom);
+            }
+            
+            $response = $this->apiService->makeRequest($endpoint, 'GET');
+            
+            if ($response['success'] ?? false) {
+                $this->sendJsonResponse($response);
+            } else {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'error' => $response['message'] ?? 'Erreur lors de la recherche'
+                ], $response['status_code'] ?? 500);
+            }
+        } catch (Exception $e) {
+            error_log("ApiController::searchArchers() - Exception: " . $e->getMessage());
+            $this->sendJsonResponse([
+                'success' => false,
+                'error' => 'Erreur lors de la recherche: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
      * Supprime une conversation privée
      */
     public function deletePrivateConversation($userId) {
