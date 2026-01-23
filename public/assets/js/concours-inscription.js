@@ -1,5 +1,8 @@
 // Gestion de l'inscription aux concours
 
+// Variable globale pour stocker l'archer sélectionné
+let selectedArcher = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
     const searchType = document.getElementById('search-type');
@@ -92,12 +95,17 @@ function performSearch() {
 // Afficher les résultats de recherche
 function displaySearchResults(archers) {
     const resultsList = document.getElementById('results-list');
+    if (!resultsList) {
+        console.error('displaySearchResults: results-list introuvable');
+        return;
+    }
+    
     resultsList.innerHTML = '';
 
     archers.forEach(archer => {
         const card = document.createElement('div');
         card.className = 'archer-card';
-        card.onclick = () => selectArcher(archer, card);
+        card.style.cursor = 'pointer'; // Indiquer que c'est cliquable
 
         const nom = archer.nom || archer.name || archer.NOM || 'N/A';
         const prenom = archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A';
@@ -128,12 +136,35 @@ function displaySearchResults(archers) {
             </div>
         `;
 
+        // Attacher l'événement après avoir défini le innerHTML
+        card.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Clic sur archer:', archer);
+            selectArcher(archer, card);
+        });
+
         resultsList.appendChild(card);
     });
+    
+    console.log('displaySearchResults: ' + archers.length + ' archers affichés');
 }
 
 // Sélectionner un archer
 function selectArcher(archer, cardElement) {
+    console.log('selectArcher appelé avec:', archer);
+    
+    if (!archer) {
+        console.error('selectArcher: archer est undefined');
+        alert('Erreur: Aucune information d\'archer disponible');
+        return;
+    }
+    
+    if (!cardElement) {
+        console.error('selectArcher: cardElement est undefined');
+        return;
+    }
+    
     // Retirer la sélection précédente
     document.querySelectorAll('.archer-card').forEach(card => {
         card.classList.remove('selected');
@@ -141,7 +172,15 @@ function selectArcher(archer, cardElement) {
 
     // Sélectionner la nouvelle carte
     cardElement.classList.add('selected');
+    
+    // S'assurer que selectedArcher est accessible globalement
+    if (typeof window !== 'undefined') {
+        window.selectedArcher = archer;
+    }
     selectedArcher = archer;
+
+    console.log('Archer sélectionné:', selectedArcher);
+    console.log('ID archer:', selectedArcher.id || selectedArcher._id);
 
     // Afficher la modale de confirmation
     showConfirmModal(archer);

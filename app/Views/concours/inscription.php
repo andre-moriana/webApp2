@@ -130,10 +130,9 @@
     </div>
 </div>
 
-<script src="/public/assets/js/concours-inscription.js"></script>
 <script>
-// Variables globales
+// Variables globales - doivent être définies avant le chargement du script
 const concoursId = <?= json_encode($concoursId ?? null) ?>;
 const departs = <?= json_encode($departs ?? [], JSON_UNESCAPED_UNICODE) ?>;
-let selectedArcher = null;
 </script>
+<script src="/public/assets/js/concours-inscription.js"></script>
