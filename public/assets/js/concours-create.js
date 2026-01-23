@@ -13,6 +13,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gestion du changement de discipline pour charger les types de compétition
     setupDisciplineChange();
     
+    // Pré-remplir le formulaire si on est en mode édition
+    if (window.concoursData) {
+        prefillFormForEdit();
+    }
+    
     // Gestion de la soumission du formulaire
     const form = document.getElementById('concoursForm');
     if (form) {
@@ -404,4 +409,94 @@ function setupClubOrganisateur() {
             }
         });
     }
+}
+
+// Pré-remplir le formulaire avec les données du concours à éditer
+function prefillFormForEdit() {
+    if (!window.concoursData) {
+        return;
+    }
+    
+    const concours = window.concoursData;
+    console.log('Pré-remplissage du formulaire avec les données du concours:', concours);
+    
+    // Attendre que les selects soient chargés avant de pré-remplir
+    setTimeout(function() {
+        // Club organisateur
+        if (concours.club_organisateur) {
+            const clubSelect = document.getElementById('club_organisateur');
+            if (clubSelect) {
+                clubSelect.value = concours.club_organisateur;
+                // Déclencher l'événement change pour mettre à jour le code et le nom
+                const event = new Event('change', { bubbles: true });
+                clubSelect.dispatchEvent(event);
+            }
+        }
+        
+        // Discipline
+        if (concours.discipline) {
+            const disciplineSelect = document.getElementById('discipline');
+            if (disciplineSelect) {
+                disciplineSelect.value = concours.discipline;
+                // Déclencher le changement de discipline pour charger les types de compétition
+                const event = new Event('change', { bubbles: true });
+                disciplineSelect.dispatchEvent(event);
+            }
+        }
+        
+        // Type compétition (après que la discipline soit sélectionnée)
+        if (concours.type_competition) {
+            setTimeout(function() {
+                const typeCompetitionSelect = document.getElementById('type_competition');
+                if (typeCompetitionSelect) {
+                    typeCompetitionSelect.value = concours.type_competition;
+                }
+            }, 500);
+        }
+        
+        // Niveau championnat
+        if (concours.niveau_championnat) {
+            const niveauSelect = document.getElementById('niveau_championnat');
+            if (niveauSelect) {
+                niveauSelect.value = concours.niveau_championnat;
+            }
+        }
+        
+        // Type concours (radio buttons)
+        if (concours.type_concours) {
+            const typeConcoursRadio = document.querySelector(`input[name="type_concours"][value="${concours.type_concours}"]`);
+            if (typeConcoursRadio) {
+                typeConcoursRadio.checked = true;
+            }
+        }
+        
+        // Duel (checkbox)
+        if (concours.duel) {
+            const duelCheckbox = document.querySelector('input[name="duel"]');
+            if (duelCheckbox) {
+                duelCheckbox.checked = true;
+            }
+        }
+        
+        // Division equipe (radio buttons)
+        if (concours.division_equipe) {
+            const divisionRadio = document.querySelector(`input[name="division_equipe"][value="${concours.division_equipe}"]`);
+            if (divisionRadio) {
+                divisionRadio.checked = true;
+            }
+        }
+        
+        // Type publication internet
+        if (concours.type_publication_internet) {
+            setTimeout(function() {
+                const typePubSelect = document.getElementById('type_publication_internet');
+                if (typePubSelect) {
+                    typePubSelect.value = concours.type_publication_internet;
+                }
+            }, 500);
+        }
+        
+        // Les autres champs (titre, lieu, dates, nombres) sont déjà pré-remplis par PHP
+        console.log('Formulaire pré-rempli avec les données du concours');
+    }, 1000); // Attendre 1 seconde pour que les selects soient chargés
 }
