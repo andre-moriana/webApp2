@@ -459,7 +459,12 @@ function selectArcher(archer, cardElement) {
     // Le XML retourne le club dans club_name (qui vient de CIE), CIE, ou CLUB
     const club = archer.club_name || archer.CIE || archer.CLUB || archer.clubName || 'N/A';
     
-    console.log('Mise à jour des données dans la modale:', { nom, prenom, licence, club });
+    // Extraire les données pour le formulaire d'inscription
+    const saison = (archer.saison || archer.ABREV || '').trim();
+    const typeLicence = (archer.type_licence || '').trim();
+    const creationRenouvellement = (archer.creation_renouvellement || archer.Creation_renouvellement || '').trim();
+    
+    console.log('Mise à jour des données dans la modale:', { nom, prenom, licence, club, saison, typeLicence, creationRenouvellement });
     console.log('Données archer complètes:', archer);
     console.log('Club depuis archer.club_name:', archer.club_name);
     console.log('Club depuis archer.CIE:', archer.CIE);
@@ -497,6 +502,37 @@ function selectArcher(archer, cardElement) {
         console.log('Club mis à jour:', club);
     } else {
         console.error('Span modal-archer-club introuvable');
+    }
+    
+    // Pré-remplir les champs du formulaire d'inscription
+    const saisonInput = document.getElementById('saison');
+    if (saisonInput && saison) {
+        saisonInput.value = saison;
+        console.log('Saison pré-remplie:', saison);
+    }
+    
+    const typeLicenceSelect = document.getElementById('type_licence');
+    if (typeLicenceSelect && typeLicence) {
+        // Nettoyer la valeur (enlever les espaces) et prendre la première lettre en majuscule
+        const cleanedTypeLicence = typeLicence.trim().toUpperCase();
+        const firstLetter = cleanedTypeLicence.length > 0 ? cleanedTypeLicence[0] : '';
+        
+        // Chercher une option qui correspond (A, B, C, L)
+        const options = typeLicenceSelect.options;
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value === firstLetter) {
+                typeLicenceSelect.value = options[i].value;
+                console.log('Type licence pré-rempli:', options[i].value, '(depuis:', typeLicence, ')');
+                break;
+            }
+        }
+    }
+    
+    const creationRenouvellementCheckbox = document.getElementById('creation_renouvellement');
+    if (creationRenouvellementCheckbox) {
+        // Cocher si la valeur existe (R pour Renouvellement, C pour Création, ou toute autre valeur non vide)
+        creationRenouvellementCheckbox.checked = creationRenouvellement.length > 0;
+        console.log('Création/Renouvellement pré-rempli:', creationRenouvellement, 'checked:', creationRenouvellementCheckbox.checked);
     }
     
     // Afficher la modale avec Bootstrap
