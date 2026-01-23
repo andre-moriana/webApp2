@@ -71,6 +71,7 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                         <th class="sortable" data-column="dates" style="cursor: pointer;">
                                             Dates <i class="fas fa-sort ms-1"></i>
                                         </th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -121,6 +122,33 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                             <div><?php echo htmlspecialchars($dateDebut); ?></div>
                                             <div><small class="text-muted"><?php echo htmlspecialchars($dateFin); ?></small></div>
                                         </td>
+                                        <td class="text-nowrap">
+                                            <div class="btn-group" role="group">
+                                                <?php 
+                                                $concoursId = $item['id'] ?? $item['_id'] ?? null;
+                                                if ($concoursId):
+                                                ?>
+                                                <?php if ($isAdmin || $canEditClub): ?>
+                                                <a href="/concours/edit/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-primary" title="Voir/Modifier">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="/concours/edit/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="/concours/delete/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-danger" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce concours ?');">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                                <?php else: ?>
+                                                <a href="/concours/edit/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-primary" title="Voir">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <?php endif; ?>
+                                                <button type="button" class="btn btn-sm btn-outline-success" title="S'inscrire" onclick="inscrireConcours(<?php echo $concoursId; ?>)">
+                                                    <i class="fas fa-user-plus"></i>
+                                                </button>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -134,3 +162,41 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
 </div>
 <link href="/public/assets/css/concours-index.css" rel="stylesheet">
 <script src="/public/assets/js/concours-table.js"></script>
+<script>
+function inscrireConcours(concoursId) {
+    if (!concoursId) {
+        alert('ID du concours manquant');
+        return;
+    }
+    
+    if (!confirm('Voulez-vous vous inscrire à ce concours ?')) {
+        return;
+    }
+    
+    // Appel API pour s'inscrire
+    fetch('/api/concours/' + concoursId + '/inscription', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+            user_id: <?php echo $_SESSION['user']['id'] ?? 'null'; ?>
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Inscription réussie !');
+            location.reload();
+        } else {
+            alert('Erreur lors de l\'inscription: ' + (data.error || data.message || 'Erreur inconnue'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'inscription');
+    });
+}
+</script>
