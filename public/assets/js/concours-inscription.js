@@ -355,11 +355,12 @@ function displaySearchResults(archers) {
     window.archersList = []; // Réinitialiser à chaque nouvelle recherche
 
     archers.forEach((archer, index) => {
-        // IMPORTANT: Le modèle User transforme club_name en clubName (camelCase)
+        // IMPORTANT: Les données viennent du XML, donc chercher club_name et CLUB
         const nom = archer.nom || archer.name || archer.NOM || 'N/A';
         const prenom = archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A';
         const licence = archer.licence_number || archer.licenceNumber || archer.IDLicence || 'N/A';
-        const club = archer.clubName || archer.club_name || archer.CLUB || 'N/A';
+        // Le XML retourne club_name et CLUB, vérifier les deux
+        const club = archer.club_name || archer.CLUB || archer.clubName || 'N/A';
         const dateNaissance = archer.birth_date || archer.birthDate || archer.DATENAISSANCE || 'N/A';
         const genre = archer.gender || archer.GENRE || 'N/A';
 
@@ -451,14 +452,17 @@ function selectArcher(archer, cardElement) {
     }
     
     // Extraire les données de l'archer
-    // IMPORTANT: Le modèle User transforme club_name en clubName (camelCase)
+    // IMPORTANT: Les données viennent du XML, donc chercher club_name et CLUB
     const nom = archer.nom || archer.name || archer.NOM || 'N/A';
     const prenom = archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A';
     const licence = archer.licence_number || archer.licenceNumber || archer.IDLicence || 'N/A';
-    const club = archer.clubName || archer.club_name || archer.CLUB || 'N/A';
+    // Le XML retourne club_name et CLUB, vérifier les deux
+    const club = archer.club_name || archer.CLUB || archer.clubName || 'N/A';
     
     console.log('Mise à jour des données dans la modale:', { nom, prenom, licence, club });
     console.log('Données archer complètes:', archer);
+    console.log('Club depuis archer.club_name:', archer.club_name);
+    console.log('Club depuis archer.CLUB:', archer.CLUB);
     
     // Mettre à jour les spans dans la modale
     const nomSpan = document.getElementById('modal-archer-nom');
