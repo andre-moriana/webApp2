@@ -146,8 +146,5 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
 
 <div class="actions-section">
     <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
-    <?php if (isset($concours->id)): ?>
-        <a href="/concours/edit/<?= htmlspecialchars($concours->id) ?>" class="btn btn-primary">Modifier</a>
-    <?php endif; ?>
 </div>
 </div>
