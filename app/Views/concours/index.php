@@ -56,41 +56,71 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                         <table class="table table-hover" id="concoursTable">
                                 <thead>
                                     <tr>
-                                        <th class="sortable" data-column="nom_competition" style="cursor: pointer;">
-                                            Nom concours <i class="fas fa-sort ms-1"></i>
+                                        <th class="sortable" data-column="club" style="cursor: pointer;">
+                                            Club <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th class="sortable" data-column="lieu" style="cursor: pointer;">
-                                            lieu <i class="fas fa-sort ms-1"></i>
+                                        <th class="sortable" data-column="discipline" style="cursor: pointer;">
+                                            Discipline <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th class="sortable" data-column="type" style="cursor: pointer;">
-                                            type <i class="fas fa-sort ms-1"></i>
+                                        <th class="sortable" data-column="type_competition" style="cursor: pointer;">
+                                            Type compétition <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th class="sortable" data-column="date_debut" style="cursor: pointer;">
-                                            Date de debut <i class="fas fa-sort ms-1"></i>
+                                        <th class="sortable" data-column="titre_lieu" style="cursor: pointer;">
+                                            Titre / Lieu <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th class="sortable" data-column="date_fin" style="cursor: pointer;">
-                                            date de fin <i class="fas fa-sort ms-1"></i>
+                                        <th class="sortable" data-column="dates" style="cursor: pointer;">
+                                            Dates <i class="fas fa-sort ms-1"></i>
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($concours as $concours): ?>
+                                    <?php foreach ($concours as $item): ?>
                                     <?php
                                     $user = $_SESSION['user'] ?? [];
                                     $isAdmin = $user['is_admin'] ?? false;
                                     $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
                                     // La liste est déjà filtrée par club, autoriser le Dirigeant de toute façon
-                                    $canEditClub = $isAdmin || $isDirigeant || $belongsToClub;
+                                    $canEditClub = $isAdmin || $isDirigeant || ($belongsToClub ?? false);
+                                    
+                                    // Colonne 1: Club + agreenum
+                                    $clubName = $item['club_name'] ?? '';
+                                    $agreenum = $item['agreenum'] ?? '';
+                                    $clubDisplay = trim($clubName . ($agreenum ? ' (' . $agreenum . ')' : ''));
+                                    
+                                    // Colonne 2: Discipline
+                                    $disciplineName = $item['discipline_name'] ?? '-';
+                                    
+                                    // Colonne 3: Type compétition
+                                    $typeCompetitionName = $item['type_competition_name'] ?? '-';
+                                    
+                                    // Colonne 4: Titre + Lieu
+                                    $titre = $item['titre_competition'] ?? $item['nom'] ?? '-';
+                                    $lieu = $item['lieu'] ?? $item['lieu_competition'] ?? '-';
+                                    
+                                    // Colonne 5: Dates
+                                    $dateDebut = $item['date_debut'] ?? '-';
+                                    $dateFin = $item['date_fin'] ?? '-';
                                     ?>
-                                    <tr data-club-type="<?php echo $clubType; ?>" data-name-short="<?php echo htmlspecialchars($nameShort); ?>">
-                                        <td data-column="name">
-                                            <strong><?php echo htmlspecialchars($concours['nom_competition'] ?? 'N/A'); ?></strong>
-                                            <br><small class="text-muted">ID: <?php echo htmlspecialchars($concours['id'] ?? $concours['_id'] ?? 'MANQUANT'); ?></small>
+                                    <tr>
+                                        <td data-column="club">
+                                            <?php echo htmlspecialchars($clubDisplay ?: '-'); ?>
                                         </td>
-                                        <td data-column="nameShort"><?php echo htmlspecialchars($concours['lieu'] ?? $concours['lieu'] ?? '-'); ?></td>
-                                        <td data-column="type"><?php echo htmlspecialchars($concours['type'] ?? '-'); ?></td>
-                                        <td data-column="date_debut"><?php echo htmlspecialchars($concours['date_debut'] ?? '-'); ?></td>
-                                        <td data-column="date_fin"><?php echo htmlspecialchars($concours['date_fin'] ?? '-'); ?></td>
+                                        <td data-column="discipline">
+                                            <?php echo htmlspecialchars($disciplineName); ?>
+                                        </td>
+                                        <td data-column="type_competition">
+                                            <?php echo htmlspecialchars($typeCompetitionName); ?>
+                                        </td>
+                                        <td data-column="titre_lieu">
+                                            <strong><?php echo htmlspecialchars($titre); ?></strong>
+                                            <?php if ($lieu && $lieu !== '-'): ?>
+                                                <br><small class="text-muted"><?php echo htmlspecialchars($lieu); ?></small>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td data-column="dates">
+                                            <div><?php echo htmlspecialchars($dateDebut); ?></div>
+                                            <div><small class="text-muted"><?php echo htmlspecialchars($dateFin); ?></small></div>
+                                        </td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>

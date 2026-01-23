@@ -35,7 +35,27 @@ class ConcoursController {
 
         $concours = [];
         $error = null;
+        $clubsMap = []; // Mapping club_organisateur ID -> nom du club
 
+        try {
+            // Récupérer les clubs pour mapper les IDs aux noms
+            $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+            $clubsPayload = $this->apiService->unwrapData($clubsResponse);
+            
+            if ($clubsResponse['success'] && is_array($clubsPayload)) {
+                foreach ($clubsPayload as $club) {
+                    $clubId = $club['id'] ?? $club['_id'] ?? null;
+                    if ($clubId) {
+                        $clubsMap[$clubId] = [
+                            'name' => $club['name'] ?? '',
+                            'nameShort' => $club['nameShort'] ?? $club['name_short'] ?? ''
+                        ];
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
+        }
 
         try {
             // Récupérer les concours depuis l'API
@@ -58,6 +78,19 @@ class ConcoursController {
                     error_log('Format de réponse inattendu pour getConcours(): ' . json_encode($apiResponse, JSON_UNESCAPED_UNICODE));
                     $concours = [];
                 }
+                
+                // Enrichir les concours avec les noms de clubs
+                foreach ($concours as &$c) {
+                    $clubId = $c['club_organisateur'] ?? null;
+                    if ($clubId && isset($clubsMap[$clubId])) {
+                        $c['club_name'] = $clubsMap[$clubId]['name'];
+                        $c['club_nameShort'] = $clubsMap[$clubId]['nameShort'];
+                    } else {
+                        $c['club_name'] = '';
+                        $c['club_nameShort'] = '';
+                    }
+                }
+                unset($c); // Libérer la référence
 
             } 
 
