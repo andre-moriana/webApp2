@@ -147,20 +147,22 @@ function selectArcher(archer, cardElement) {
     showConfirmModal(archer);
 }
 
-// Afficher la modale de confirmation
+// Afficher la modale de confirmation avec formulaire complet
 function showConfirmModal(archer) {
     const modalBody = document.getElementById('confirm-modal-body');
     const nom = archer.nom || archer.name || archer.NOM || 'N/A';
     const prenom = archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A';
     const licence = archer.licence_number || archer.licenceNumber || archer.IDLicence || 'N/A';
     const club = archer.club_name || archer.CLUB || 'N/A';
+    const gender = archer.gender || archer.GENRE || '';
+    const birthDate = archer.birth_date || archer.birthDate || archer.DATENAISSANCE || '';
 
     let departsHtml = '';
     if (departs && departs.length > 0) {
         departsHtml = `
-            <div class="form-group">
-                <label for="depart-select">Départ:</label>
-                <select id="depart-select" class="form-control">
+            <div class="mb-3">
+                <label for="depart-select" class="form-label">N° départ <span class="text-danger">*</span></label>
+                <select id="depart-select" class="form-control" required>
                     <option value="">Sélectionner un départ</option>
                     ${departs.map(depart => `
                         <option value="${depart.id || depart._id || ''}">
@@ -173,13 +175,131 @@ function showConfirmModal(archer) {
     }
 
     modalBody.innerHTML = `
-        <p>Voulez-vous inscrire cet archer au concours ?</p>
-        <div class="archer-summary">
-            <p><strong>Nom:</strong> ${nom} ${prenom}</p>
-            <p><strong>Licence:</strong> ${licence}</p>
-            <p><strong>Club:</strong> ${club}</p>
+        <div class="archer-summary mb-3 p-3 bg-light rounded">
+            <h5>Informations de l'archer</h5>
+            <p class="mb-1"><strong>Nom:</strong> ${nom} ${prenom}</p>
+            <p class="mb-1"><strong>Licence:</strong> ${licence}</p>
+            <p class="mb-1"><strong>Club:</strong> ${club}</p>
+            ${gender ? `<p class="mb-1"><strong>Genre:</strong> ${gender === 'M' || gender === 'Homme' ? 'Homme' : 'Femme'}</p>` : ''}
         </div>
-        ${departsHtml}
+        
+        <form id="inscription-form">
+            <h5 class="mb-3">Informations d'inscription</h5>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="saison" class="form-label">Saison</label>
+                    <input type="text" id="saison" class="form-control" placeholder="Ex: 2024-2025">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="type_certificat_medical" class="form-label">Type Certificat Médical</label>
+                    <select id="type_certificat_medical" class="form-control">
+                        <option value="">Sélectionner</option>
+                        <option value="Compétition">Compétition</option>
+                        <option value="Loisir">Loisir</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="type_licence" class="form-label">Type Licence</label>
+                    <select id="type_licence" class="form-control">
+                        <option value="">Sélectionner</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check mt-4">
+                        <input type="checkbox" id="creation_renouvellement" class="form-check-input">
+                        <label for="creation_renouvellement" class="form-check-label">Création/Renouvellement</label>
+                    </div>
+                </div>
+            </div>
+            
+            ${departsHtml}
+            
+            <h6 class="mt-4 mb-3">Classification et équipement</h6>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="categorie_classement" class="form-label">Catégorie de classement</label>
+                    <input type="text" id="categorie_classement" class="form-control" placeholder="Ex: S3HCL">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
+                    <select id="arme" class="form-control">
+                        <option value="">Sélectionner</option>
+                        <option value="Arc Classique">Arc Classique</option>
+                        <option value="Arc à poulies">Arc à poulies</option>
+                        <option value="Arc nu">Arc nu</option>
+                        <option value="Arc traditionnel">Arc traditionnel</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="form-check mt-4">
+                        <input type="checkbox" id="mobilite_reduite" class="form-check-input">
+                        <label for="mobilite_reduite" class="form-check-label">Mobilité réduite</label>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="distance" class="form-label">Distance</label>
+                    <input type="number" id="distance" class="form-control" min="0" placeholder="Ex: 18">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="numero_tir" class="form-label">N° Tir</label>
+                    <input type="number" id="numero_tir" class="form-control" min="1" placeholder="Ex: 1">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="blason" class="form-label">Blason</label>
+                    <input type="number" id="blason" class="form-control" min="0" placeholder="Ex: 40">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="form-check mt-4">
+                        <input type="checkbox" id="duel" class="form-check-input">
+                        <label for="duel" class="form-check-label">Duel</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check mt-4">
+                        <input type="checkbox" id="trispot" class="form-check-input">
+                        <label for="trispot" class="form-check-label">Trispot</label>
+                    </div>
+                </div>
+            </div>
+            
+            <h6 class="mt-4 mb-3">Paiement</h6>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="tarif_competition" class="form-label">Tarif Compétition</label>
+                    <select id="tarif_competition" class="form-control">
+                        <option value="">Sélectionner</option>
+                        <option value="Tarif standard">Tarif standard</option>
+                        <option value="Tarif réduit">Tarif réduit</option>
+                        <option value="Tarif jeune">Tarif jeune</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="mode_paiement" class="form-label">Mode Paiement</label>
+                    <select id="mode_paiement" class="form-control">
+                        <option value="Non payé">Non payé</option>
+                        <option value="Espèces">Espèces</option>
+                        <option value="Chèque">Chèque</option>
+                        <option value="Carte bancaire">Carte bancaire</option>
+                        <option value="Virement">Virement</option>
+                    </select>
+                </div>
+            </div>
+        </form>
     `;
 
     const modal = new bootstrap.Modal(document.getElementById('confirmInscriptionModal'));
@@ -200,26 +320,56 @@ function submitInscription() {
         return;
     }
 
-    const departSelect = document.getElementById('depart-select');
-    const departId = departSelect ? departSelect.value : null;
+    // Récupérer tous les champs du formulaire
+    const departId = document.getElementById('depart-select')?.value || null;
+    const saison = document.getElementById('saison')?.value || null;
+    const typeCertificatMedical = document.getElementById('type_certificat_medical')?.value || null;
+    const typeLicence = document.getElementById('type_licence')?.value || null;
+    const creationRenouvellement = document.getElementById('creation_renouvellement')?.checked ? 1 : 0;
+    const categorieClassement = document.getElementById('categorie_classement')?.value || null;
+    const arme = document.getElementById('arme')?.value || null;
+    const mobiliteReduite = document.getElementById('mobilite_reduite')?.checked ? 1 : 0;
+    const distance = document.getElementById('distance')?.value ? parseInt(document.getElementById('distance').value) : null;
+    const numeroTir = document.getElementById('numero_tir')?.value ? parseInt(document.getElementById('numero_tir').value) : null;
+    const duel = document.getElementById('duel')?.checked ? 1 : 0;
+    const blason = document.getElementById('blason')?.value ? parseInt(document.getElementById('blason').value) : null;
+    const trispot = document.getElementById('trispot')?.checked ? 1 : 0;
+    const tarifCompetition = document.getElementById('tarif_competition')?.value || null;
+    const modePaiement = document.getElementById('mode_paiement')?.value || 'Non payé';
 
     // Créer un formulaire pour soumettre l'inscription
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = `/concours/${concoursId}/inscription`;
 
-    const userIdInput = document.createElement('input');
-    userIdInput.type = 'hidden';
-    userIdInput.name = 'user_id';
-    userIdInput.value = userId;
-    form.appendChild(userIdInput);
+    // Ajouter tous les champs
+    const fields = {
+        'user_id': userId,
+        'depart_id': departId,
+        'saison': saison,
+        'type_certificat_medical': typeCertificatMedical,
+        'type_licence': typeLicence,
+        'creation_renouvellement': creationRenouvellement,
+        'categorie_classement': categorieClassement,
+        'arme': arme,
+        'mobilite_reduite': mobiliteReduite,
+        'distance': distance,
+        'numero_tir': numeroTir,
+        'duel': duel,
+        'blason': blason,
+        'trispot': trispot,
+        'tarif_competition': tarifCompetition,
+        'mode_paiement': modePaiement
+    };
 
-    if (departId) {
-        const departIdInput = document.createElement('input');
-        departIdInput.type = 'hidden';
-        departIdInput.name = 'depart_id';
-        departIdInput.value = departId;
-        form.appendChild(departIdInput);
+    for (const [name, value] of Object.entries(fields)) {
+        if (value !== null && value !== '') {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            form.appendChild(input);
+        }
     }
 
     document.body.appendChild(form);

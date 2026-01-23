@@ -113,7 +113,7 @@
 
 <!-- Modale pour confirmer l'inscription -->
 <div class="modal fade" id="confirmInscriptionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Confirmer l'inscription</h5>
