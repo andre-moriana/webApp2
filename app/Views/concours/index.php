@@ -151,8 +151,11 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                                     <i class="fas fa-trash"></i>
                                                 </a>
                                                 <?php endif; ?>
-                                                <button type="button" class="btn btn-sm btn-outline-success" title="S'inscrire" onclick="inscrireConcours(<?php echo $concoursId; ?>)">
+                                                <a href="/concours/<?php echo $concoursId; ?>/inscription" class="btn btn-sm btn-outline-success" title="Gérer les inscriptions">
                                                     <i class="fas fa-user-plus"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-info" title="S'inscrire rapidement" onclick="inscrireConcours(<?php echo $concoursId; ?>)">
+                                                    <i class="fas fa-check"></i>
                                                 </button>
                                                 <?php endif; ?>
                                             </div>

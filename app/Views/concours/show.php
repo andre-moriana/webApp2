@@ -156,6 +156,12 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
 
 <div class="actions-section">
     <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
+    <?php if (isset($concours->id) || isset($concours->_id)): ?>
+        <?php $concoursId = $concours->id ?? $concours->_id; ?>
+        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/inscription" class="btn btn-success">
+            <i class="fas fa-user-plus"></i> Gérer les inscriptions
+        </a>
+    <?php endif; ?>
 </div>
 </div>
 
