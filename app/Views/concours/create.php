@@ -31,6 +31,9 @@ window.disciplinesData = disciplinesFromPHP || [];
 window.typeCompetitionsData = <?= json_encode($typeCompetitions ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?> || [];
 window.niveauChampionnatData = <?= json_encode($niveauChampionnat ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?> || [];
 
+// Données du concours à éditer (si en mode édition)
+window.concoursData = <?= isset($concours) ? json_encode($concours, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : 'null' ?>;
+
 </script>
 <form method="post" action="<?= isset($concours) ? '/concours/update/' . $concours->id : '/concours/store' ?>" id="concoursForm" novalidate>
     
