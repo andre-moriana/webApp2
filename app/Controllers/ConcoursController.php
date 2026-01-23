@@ -793,7 +793,17 @@ class ConcoursController {
             header('Location: /concours');
             exit;
         }
-        $concours = $concoursResponse['data'];
+        
+        // Unwrap les données si nécessaire
+        $concours = $this->apiService->unwrapData($concoursResponse);
+        if (is_array($concours) && isset($concours['data']) && isset($concours['success'])) {
+            $concours = $concours['data'];
+        }
+        
+        // Convertir en objet si c'est un tableau pour faciliter l'accès dans la vue
+        if (is_array($concours)) {
+            $concours = (object)$concours;
+        }
 
         // Récupérer les départs du concours
         $departsResponse = $this->apiService->makeRequest("concours/{$concoursId}/departs", 'GET');

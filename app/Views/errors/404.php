@@ -40,15 +40,7 @@
                     <p class="lead text-muted mb-4">
                         Désolé, la page que vous recherchez n'existe pas ou a été déplacée.
                     </p>
-                    
-                    <?php if (isset($_SESSION['debug_router_404'])): ?>
-                    <div class="alert alert-warning mt-4">
-                        <strong>Debug Router:</strong>
-                        <pre><?= print_r($_SESSION['debug_router_404'], true) ?></pre>
-                    </div>
-                    <?php unset($_SESSION['debug_router_404']); ?>
-                    <?php endif; ?>
-                    
+                   
                     <!-- Actions -->
                     <div class="d-grid gap-2 d-md-flex justify-content-md-center">
                         <a href="/dashboard" class="btn btn-primary btn-lg">
