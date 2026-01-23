@@ -54,7 +54,10 @@ function performSearch() {
 
     // Appel API pour rechercher
     const searchParam = type === 'licence' ? 'licence' : 'nom';
-    fetch(`/api/archers/search?${searchParam}=${encodeURIComponent(query)}`, {
+    const url = `/api/archers/search?${searchParam}=${encodeURIComponent(query)}`;
+    console.log('Recherche d\'archer - URL:', url);
+    
+    fetch(url, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -63,8 +66,12 @@ function performSearch() {
         credentials: 'include'
     })
     .then(response => {
+        console.log('Réponse HTTP:', response.status, response.statusText);
         if (!response.ok) {
-            throw new Error('Erreur HTTP: ' + response.status);
+            return response.text().then(text => {
+                console.error('Erreur HTTP - Réponse:', text);
+                throw new Error('Erreur HTTP: ' + response.status + ' - ' + text);
+            });
         }
         return response.json();
     })
