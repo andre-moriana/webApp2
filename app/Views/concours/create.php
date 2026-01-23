@@ -165,4 +165,4 @@ window.concoursData = <?= isset($concours) ? json_encode($concours, JSON_UNESCAP
 <a href="/concours">Retour à la liste</a>
 </div>
 
-<script src="/public/assets/js/concours-create.js"></script>
+<script src="/public/assets/js/concours.js"></script>

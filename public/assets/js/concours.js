@@ -1,9 +1,45 @@
-// Script pour le formulaire de création de concours
+// Script pour le formulaire de création et d'édition de concours
 
 document.addEventListener('DOMContentLoaded', function() {
-    loadClubs();
-    loadDisciplines();
-    loadNiveauChampionnat();
+    // Vérifier si on est sur la page edit (les selects sont déjà remplis en PHP)
+    const clubSelect = document.getElementById('club_organisateur');
+    const disciplineSelect = document.getElementById('discipline');
+    const isEditPage = clubSelect && clubSelect.options.length > 1; // Plus que l'option par défaut
+    
+    if (!isEditPage) {
+        // Page create : charger les selects dynamiquement
+        loadClubs();
+        loadDisciplines();
+        loadNiveauChampionnat();
+    } else {
+        // Page edit : les selects sont déjà remplis en PHP
+        console.log('Page edit détectée - selects déjà remplis');
+        
+        // Charger les types de compétition si une discipline est déjà sélectionnée
+        const selectedDiscipline = disciplineSelect ? disciplineSelect.value : null;
+        if (selectedDiscipline) {
+            console.log('Discipline déjà sélectionnée:', selectedDiscipline);
+            // Charger les types de compétition pour cette discipline
+            // La fonction loadTypeCompetitions gère déjà la sauvegarde et restauration de la valeur
+            loadTypeCompetitions(selectedDiscipline);
+        }
+        
+        // Mettre à jour les champs club_code et club_name_display si un club est sélectionné
+        if (clubSelect && clubSelect.value) {
+            const selectedOption = clubSelect.options[clubSelect.selectedIndex];
+            if (selectedOption) {
+                const clubCodeInput = document.getElementById('club_code');
+                const clubNameDisplay = document.getElementById('club_name_display');
+                if (clubCodeInput && selectedOption.dataset.code) {
+                    clubCodeInput.value = selectedOption.dataset.code;
+                }
+                if (clubNameDisplay && selectedOption.dataset.name) {
+                    clubNameDisplay.value = selectedOption.dataset.name;
+                }
+            }
+        }
+    }
+    
     // loadTypeCompetitions() sera appelée quand une discipline est sélectionnée
     loadTypePublications();
     
@@ -12,14 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gestion du changement de discipline pour charger les types de compétition
     setupDisciplineChange();
-    
-    // Pré-remplir le formulaire si on est en mode édition (après que les selects soient chargés)
-    if (window.concoursData) {
-        // Attendre que les selects soient remplis avant de pré-remplir
-        setTimeout(function() {
-            prefillFormForEdit();
-        }, 1500);
-    }
     
     // Gestion de la soumission du formulaire
     const form = document.getElementById('concoursForm');
@@ -106,6 +134,12 @@ function loadClubs() {
         return;
     }
     
+    // Si le select a déjà des options (page edit), ne pas le recharger
+    if (select.options.length > 1) {
+        console.log('Select club_organisateur déjà rempli (page edit), pas de rechargement');
+        return;
+    }
+    
     // Utiliser les données passées depuis PHP
     const clubs = window.clubsData || [];
     
@@ -158,6 +192,12 @@ function loadDisciplines() {
         return;
     }
     console.log('Select discipline trouvé:', select);
+    
+    // Si le select a déjà des options (page edit), ne pas le recharger
+    if (select.options.length > 1) {
+        console.log('Select discipline déjà rempli (page edit), pas de rechargement');
+        return;
+    }
     
     // Utiliser les données passées depuis PHP
     const disciplines = window.disciplinesData || [];
@@ -226,6 +266,12 @@ function loadNiveauChampionnat() {
         return;
     }
     
+    // Si le select a déjà des options (page edit), ne pas le recharger
+    if (select.options.length > 1) {
+        console.log('Select niveau_championnat déjà rempli (page edit), pas de rechargement');
+        return;
+    }
+    
     // Utiliser les données passées depuis PHP
     const niveaux = window.niveauChampionnatData || [];
     
@@ -278,7 +324,12 @@ function loadTypeCompetitions(iddiscipline) {
         return;
     }
     
+    // Sauvegarder la valeur sélectionnée si elle existe (pour la page edit)
+    const savedValue = select.value;
+    const hasSelectedValue = savedValue && savedValue !== '';
+    
     // Vider le select (garder seulement l'option par défaut)
+    // Même sur la page edit, on recharge pour avoir tous les types de la discipline
     select.innerHTML = '<option value="">-- Sélectionner un type --</option>';
     
     if (!iddiscipline || iddiscipline === '') {
@@ -320,6 +371,22 @@ function loadTypeCompetitions(iddiscipline) {
     });
     
     console.log('Types de compétition ajoutés au select:', addedCount);
+    
+    // Restaurer la valeur sauvegardée si elle existe (pour la page edit)
+    if (hasSelectedValue && savedValue) {
+        // Vérifier que l'option existe avant de la sélectionner
+        const optionExists = Array.from(select.options).some(opt => {
+            const optValue = String(opt.value);
+            const savedValueStr = String(savedValue);
+            return optValue === savedValueStr || opt.value == savedValue;
+        });
+        if (optionExists) {
+            select.value = String(savedValue);
+            console.log('✓ Valeur type_competition restaurée:', savedValue);
+        } else {
+            console.warn('✗ Option type_competition non trouvée pour la valeur:', savedValue);
+        }
+    }
 }
 
 // Charger les types de publication depuis l'API
