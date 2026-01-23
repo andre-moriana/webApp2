@@ -177,6 +177,36 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                 <div id="map-show-container" style="height: 500px; width: 100%; border: 1px solid #ddd; border-radius: 4px;"></div>
             </div>
             <div class="modal-footer">
+                <div class="me-auto">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-route"></i> Créer un itinéraire
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="createItinerary('google'); return false;">
+                                    <i class="fab fa-google"></i> Google Maps
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="createItinerary('osm'); return false;">
+                                    <i class="fas fa-map"></i> OpenStreetMap
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="createItinerary('waze'); return false;">
+                                    <i class="fas fa-car"></i> Waze
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="createItinerary('native'); return false;">
+                                    <i class="fas fa-mobile-alt"></i> Application de navigation
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
             </div>
         </div>
@@ -238,6 +268,52 @@ function initShowMap() {
     setTimeout(function() {
         showMap.invalidateSize();
     }, 100);
+}
+
+// Fonction pour créer un itinéraire
+function createItinerary(service = 'google') {
+    const lat = <?= (float)$concours->lieu_latitude ?>;
+    const lng = <?= (float)$concours->lieu_longitude ?>;
+    const address = <?= json_encode($concours->lieu_competition ?? $concours->lieu ?? '', JSON_UNESCAPED_UNICODE) ?>;
+    
+    let url = '';
+    
+    switch(service) {
+        case 'google':
+            // Google Maps avec itinéraire
+            url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+            break;
+            
+        case 'osm':
+            // OpenStreetMap avec routing
+            url = `https://www.openstreetmap.org/directions?to=${lat},${lng}`;
+            break;
+            
+        case 'waze':
+            // Waze (application mobile ou web)
+            url = `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+            break;
+            
+        case 'native':
+            // Utiliser le protocole de navigation natif (ouvre l'app de navigation par défaut)
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+            
+            if (isIOS) {
+                // iOS - utiliser Apple Maps
+                url = `http://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`;
+            } else {
+                // Android ou autres - utiliser Google Maps
+                url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+            }
+            break;
+            
+        default:
+            url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    }
+    
+    // Ouvrir dans un nouvel onglet
+    window.open(url, '_blank');
 }
 </script>
 <?php endif; ?>
