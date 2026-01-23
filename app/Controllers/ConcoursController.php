@@ -846,7 +846,6 @@ class ConcoursController {
         }
 
         $user_id = $_POST['user_id'] ?? null;
-        $depart_id = $_POST['depart_id'] ?? null;
 
         if (!$user_id) {
             $_SESSION['error'] = 'Utilisateur requis';
@@ -854,11 +853,28 @@ class ConcoursController {
             exit;
         }
 
-        // Appel API pour inscrire
-        $response = $this->apiService->makeRequest("concours/{$concoursId}/inscription", 'POST', [
+        // Préparer toutes les données d'inscription
+        $inscriptionData = [
             'user_id' => $user_id,
-            'depart_id' => $depart_id
-        ]);
+            'depart_id' => $_POST['depart_id'] ?? null,
+            'saison' => $_POST['saison'] ?? null,
+            'type_certificat_medical' => $_POST['type_certificat_medical'] ?? null,
+            'type_licence' => $_POST['type_licence'] ?? null,
+            'creation_renouvellement' => isset($_POST['creation_renouvellement']) ? (int)$_POST['creation_renouvellement'] : 0,
+            'categorie_classement' => $_POST['categorie_classement'] ?? null,
+            'arme' => $_POST['arme'] ?? null,
+            'mobilite_reduite' => isset($_POST['mobilite_reduite']) ? (int)$_POST['mobilite_reduite'] : 0,
+            'distance' => isset($_POST['distance']) && $_POST['distance'] !== '' ? (int)$_POST['distance'] : null,
+            'numero_tir' => isset($_POST['numero_tir']) && $_POST['numero_tir'] !== '' ? (int)$_POST['numero_tir'] : null,
+            'duel' => isset($_POST['duel']) ? (int)$_POST['duel'] : 0,
+            'blason' => isset($_POST['blason']) && $_POST['blason'] !== '' ? (int)$_POST['blason'] : null,
+            'trispot' => isset($_POST['trispot']) ? (int)$_POST['trispot'] : 0,
+            'tarif_competition' => $_POST['tarif_competition'] ?? null,
+            'mode_paiement' => $_POST['mode_paiement'] ?? 'Non payé'
+        ];
+
+        // Appel API pour inscrire
+        $response = $this->apiService->makeRequest("concours/{$concoursId}/inscription", 'POST', $inscriptionData);
 
         if ($response['success']) {
             $_SESSION['success'] = 'Inscription réussie';

@@ -161,6 +161,37 @@
     color: white;
 }
 
+.archer-summary {
+    background: #f8f9fa;
+    border-left: 4px solid #14532d;
+}
+
+#inscription-form h5,
+#inscription-form h6 {
+    color: #14532d;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+#inscription-form .form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+#inscription-form .form-control:focus,
+#inscription-form .form-select:focus {
+    border-color: #14532d;
+    box-shadow: 0 0 0 0.2rem rgba(20, 83, 45, 0.25);
+}
+
+#inscription-form .form-check-input:checked {
+    background-color: #14532d;
+    border-color: #14532d;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .search-form {
