@@ -251,6 +251,9 @@ function selectArcher(archer, cardElement) {
 
 // Afficher la modale de confirmation avec formulaire complet
 function showConfirmModal(archer) {
+    console.log('=== showConfirmModal DÉBUT ===');
+    console.log('Archer reçu:', archer);
+    
     // Vérifier que l'archer est bien défini
     if (!archer) {
         console.error('showConfirmModal: archer est undefined');
@@ -258,23 +261,39 @@ function showConfirmModal(archer) {
         return;
     }
     
+    // Récupérer les éléments de la modale AVANT de modifier le contenu
+    const modalElement = document.getElementById('confirmInscriptionModal');
     const modalBody = document.getElementById('confirm-modal-body');
-    if (!modalBody) {
-        console.error('showConfirmModal: modal-body introuvable');
-        alert('Erreur: Élément modal introuvable');
+    const modalTitle = modalElement ? modalElement.querySelector('.modal-title') : null;
+    
+    if (!modalElement) {
+        console.error('showConfirmModal: Élément modal introuvable');
+        alert('Erreur: Modal introuvable');
         return;
     }
     
-    // Extraire les informations de l'archer avec des valeurs par défaut
-    const nom = archer.nom || archer.name || archer.NOM || 'N/A';
-    const prenom = archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A';
-    const licence = archer.licence_number || archer.licenceNumber || archer.IDLicence || 'N/A';
-    const club = archer.club_name || archer.CLUB || 'N/A';
-    const gender = archer.gender || archer.GENRE || '';
-    const birthDate = archer.birth_date || archer.birthDate || archer.DATENAISSANCE || '';
+    if (!modalBody) {
+        console.error('showConfirmModal: modal-body introuvable');
+        alert('Erreur: Élément modal-body introuvable');
+        return;
+    }
     
-    console.log('showConfirmModal - archer:', archer);
+    // S'assurer que le titre est correct AVANT de modifier le contenu
+    if (modalTitle) {
+        modalTitle.textContent = 'Confirmer l\'inscription';
+        console.log('Titre de la modale défini à "Confirmer l\'inscription"');
+    }
+    
+    // Extraire les informations de l'archer avec des valeurs par défaut
+    const nom = String(archer.nom || archer.name || archer.NOM || 'N/A');
+    const prenom = String(archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A');
+    const licence = String(archer.licence_number || archer.licenceNumber || archer.IDLicence || 'N/A');
+    const club = String(archer.club_name || archer.CLUB || 'N/A');
+    const gender = String(archer.gender || archer.GENRE || '');
+    const birthDate = String(archer.birth_date || archer.birthDate || archer.DATENAISSANCE || '');
+    
     console.log('showConfirmModal - nom:', nom, 'prenom:', prenom);
+    console.log('showConfirmModal - licence:', licence, 'club:', club);
 
     let departsHtml = '';
     if (departs && departs.length > 0) {
@@ -293,7 +312,8 @@ function showConfirmModal(archer) {
         `;
     }
 
-    modalBody.innerHTML = `
+    // Construire le contenu HTML
+    const modalContent = `
         <div class="archer-summary mb-3 p-3 bg-light rounded">
             <h5>Informations de l'archer</h5>
             <p class="mb-1"><strong>Nom:</strong> ${nom} ${prenom}</p>
@@ -421,18 +441,31 @@ function showConfirmModal(archer) {
         </form>
     `;
 
-    // Vérifier que le contenu a bien été défini
-    console.log('Contenu modalBody défini, longueur:', modalBody.innerHTML.length);
+    // Vérifier que le contenu est valide
+    console.log('Contenu HTML généré, longueur:', modalContent.length);
+    console.log('Premiers 200 caractères:', modalContent.substring(0, 200));
     
-    // Initialiser et afficher la modale Bootstrap
-    const modalElement = document.getElementById('confirmInscriptionModal');
-    if (!modalElement) {
-        console.error('showConfirmModal: Élément modal introuvable');
-        alert('Erreur: Modal introuvable');
+    // Définir le contenu
+    try {
+        modalBody.innerHTML = modalContent;
+        console.log('Contenu modalBody défini avec succès');
+        console.log('Vérification - modalBody.innerHTML.length:', modalBody.innerHTML.length);
+    } catch (error) {
+        console.error('Erreur lors de la définition du contenu:', error);
+        alert('Erreur lors de la génération du formulaire: ' + error.message);
         return;
     }
     
+    // Vérifier que le contenu a bien été défini
+    if (!modalBody.innerHTML || modalBody.innerHTML.trim() === '') {
+        console.error('Le contenu de la modale est vide après définition !');
+        alert('Erreur: Impossible de générer le formulaire d\'inscription');
+        return;
+    }
+    
+    // modalElement et modalTitle sont déjà récupérés au début de la fonction
     console.log('Élément modal trouvé:', modalElement);
+    console.log('Titre modal trouvé:', modalTitle);
     
     // Vérifier que Bootstrap est disponible
     if (typeof bootstrap === 'undefined') {
@@ -462,7 +495,32 @@ function showConfirmModal(archer) {
 
 // Fonction séparée pour afficher la modale
 function displayModal(modalElement) {
-    console.log('displayModal appelée');
+    console.log('=== displayModal DÉBUT ===');
+    console.log('modalElement:', modalElement);
+    
+    // S'assurer que le titre de la modale est correct AVANT de créer l'instance
+    const modalTitle = modalElement.querySelector('.modal-title');
+    if (modalTitle) {
+        // Forcer le titre à être une chaîne de caractères
+        modalTitle.textContent = 'Confirmer l\'inscription';
+        modalTitle.innerHTML = 'Confirmer l\'inscription';
+        console.log('Titre de la modale défini à:', modalTitle.textContent);
+    } else {
+        console.warn('Titre de la modale introuvable');
+    }
+    
+    // Vérifier que le contenu est bien présent
+    const modalBody = document.getElementById('confirm-modal-body');
+    if (modalBody) {
+        console.log('Contenu modalBody présent, longueur:', modalBody.innerHTML.length);
+        if (modalBody.innerHTML.trim() === '') {
+            console.error('Le contenu de la modale est vide !');
+            return;
+        }
+    } else {
+        console.error('modalBody introuvable !');
+        return;
+    }
     
     // Vérifier si une instance de modale existe déjà et la détruire
     const existingModal = bootstrap.Modal.getInstance(modalElement);
@@ -479,25 +537,46 @@ function displayModal(modalElement) {
         focus: true
     });
     
-    // S'assurer que le titre de la modale est correct
-    const modalTitle = modalElement.querySelector('.modal-title');
-    if (modalTitle) {
-        modalTitle.textContent = 'Confirmer l\'inscription';
-        console.log('Titre de la modale défini');
-    } else {
-        console.warn('Titre de la modale introuvable');
-    }
-    
     // Afficher la modale
     console.log('Affichage de la modale...');
+    
+    // Écouter l'événement 'show' de Bootstrap pour s'assurer que le titre et le contenu sont corrects
+    modalElement.addEventListener('show.bs.modal', function() {
+        console.log('Événement show.bs.modal déclenché');
+        // Forcer le titre et le contenu juste avant l'affichage
+        const titleEl = modalElement.querySelector('.modal-title');
+        if (titleEl) {
+            titleEl.textContent = 'Confirmer l\'inscription';
+            console.log('Titre forcé à "Confirmer l\'inscription"');
+        }
+        const bodyEl = document.getElementById('confirm-modal-body');
+        if (bodyEl && bodyEl.innerHTML.trim() === '') {
+            console.error('Le contenu est vide lors de l\'affichage !');
+        }
+    }, { once: true });
+    
     try {
         modal.show();
-        console.log('showConfirmModal: Modale affichée avec succès');
+        console.log('modal.show() appelé avec succès');
+        
+        // Forcer immédiatement le titre et vérifier le contenu
+        const titleEl = modalElement.querySelector('.modal-title');
+        if (titleEl) {
+            titleEl.textContent = 'Confirmer l\'inscription';
+            console.log('Titre forcé après show()');
+        }
         
         // Vérifier que la modale est bien visible après un court délai
         setTimeout(() => {
             const isVisible = modalElement.classList.contains('show');
             console.log('Modale visible après 100ms:', isVisible);
+            
+            // Vérifier à nouveau le titre et le contenu
+            const titleCheck = modalElement.querySelector('.modal-title');
+            const bodyCheck = document.getElementById('confirm-modal-body');
+            console.log('Vérification finale - Titre:', titleCheck ? titleCheck.textContent : 'N/A');
+            console.log('Vérification finale - Contenu longueur:', bodyCheck ? bodyCheck.innerHTML.length : 0);
+            
             if (!isVisible) {
                 console.error('La modale n\'est pas visible !');
                 // Essayer de forcer l'affichage manuellement
