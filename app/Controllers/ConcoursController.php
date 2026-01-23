@@ -1,7 +1,8 @@
 
 <?php
 
-require_once __DIR__ . '/../Services/ApiService.php';
+require_once 'app/Config/PermissionHelper.php';
+require_once 'app/Services/PermissionService.php';
 
 class ConcoursController {
     private $apiService;
@@ -20,30 +21,51 @@ class ConcoursController {
             header('Location: /login');
             exit;
         }
+            // Vérifier la permission de voir les utilisateurs
+            $clubId = $_SESSION['user']['clubId'] ?? null;
+            PermissionHelper::requirePermission(
+                PermissionService::RESOURCE_USERS_ALL,
+                PermissionService::ACTION_VIEW,
+                $clubId
+            );
+
+        // Nettoyer les messages d'erreur de session
+        unset($_SESSION['error']);
+        unset($_SESSION['success']);
+
         $concours = [];
+        $error = null;
 
-     //   $response = $this->apiService->getConcours();
-
-        // DEBUG: Afficher l'utilisateur
-        $debugUser = $_SESSION['user'] ?? [];
 
         try {
-            $response = $this->apiService->makeRequest('concours/list', 'GET');
-            $payload = $this->apiService->unwrapData($response);
+            // Récupérer les concours depuis l'API
+            $response = $this->apiService->getConcours();
 
-            if ($response['success'] && is_array($payload)) {
-                 foreach ($payload as &$concours) {
-                    if (!isset($concours['id']) && isset($concours['_id'])) {
-                        $concours['id'] = $concours['_id'];
-                    }
+            // Vérifier le format de la réponse
+            // makeRequest retourne { success: bool, data: {...}, status_code: int }
+            // où data contient la réponse JSON de l'API
+            $apiResponse = $response['data'] ?? null;
+
+            // L'API /concours retourne directement un tableau de concours, pas { concours: [...] }
+            if ($response['success'] && isset($apiResponse) && is_array($apiResponse)) {
+                // Si apiResponse est directement un tableau, l'utiliser
+                if (isset($apiResponse[0]) && is_array($apiResponse[0])) {
+                    $concours = $apiResponse;
+                } elseif (isset($apiResponse['concours']) && is_array($apiResponse['concours'])) {
+                    $concours = $apiResponse['concours'];
+                } else {
+                    // Format inattendu
+                    error_log('Format de réponse inattendu pour getConcours(): ' . json_encode($apiResponse, JSON_UNESCAPED_UNICODE));
+                    $concours = [];
                 }
-                $concours = $payload;
-            } else {
-                $error = $response['message'] ?? 'Erreur lors de la récupération des concours';
-            }
+
+            } 
+
+
         } catch (Exception $e) {
             $error = 'Erreur lors de la récupération des concours: ' . $e->getMessage();
         }
+
         $title = 'Gestion des concours - Portail Arc Training';
         
         // Définir les fichiers JS spécifiques
