@@ -3,6 +3,59 @@
 // Variable globale pour stocker l'archer sélectionné
 let selectedArcher = null;
 
+// DÉFINIR showConfirmModal IMMÉDIATEMENT au début du fichier
+window.showConfirmModal = function(archer) {
+    // ALERTE IMMÉDIATE pour confirmer l'exécution
+    alert('TEST: showConfirmModal s\'exécute !');
+    
+    console.log('=== showConfirmModal DÉBUT ===');
+    console.log('Archer reçu:', archer);
+    
+    if (!archer) {
+        alert('Erreur: Aucune information d\'archer disponible');
+        return;
+    }
+    
+    const modalElement = document.getElementById('confirmInscriptionModal');
+    const modalBody = document.getElementById('confirm-modal-body');
+    const modalTitle = modalElement ? modalElement.querySelector('.modal-title') : null;
+    
+    if (!modalElement || !modalBody) {
+        alert('Erreur: Modal introuvable');
+        return;
+    }
+    
+    // FORCER le titre
+    if (modalTitle) {
+        modalTitle.textContent = 'Confirmer l\'inscription';
+        modalTitle.innerHTML = 'Confirmer l\'inscription';
+    }
+    
+    // Extraire les informations avec String()
+    const nom = String(archer.nom || archer.name || 'N/A');
+    const prenom = String(archer.prenom || archer.first_name || archer.firstName || 'N/A');
+    const licence = String(archer.licence_number || archer.licenceNumber || 'N/A');
+    const club = String(archer.club_name || archer.CLUB || 'N/A');
+    
+    // Contenu simple pour tester
+    modalBody.innerHTML = `
+        <div class="archer-summary mb-3 p-3 bg-light rounded">
+            <h5>Informations de l'archer</h5>
+            <p><strong>Nom:</strong> ${nom} ${prenom}</p>
+            <p><strong>Licence:</strong> ${licence}</p>
+            <p><strong>Club:</strong> ${club}</p>
+        </div>
+    `;
+    
+    // Afficher avec Bootstrap
+    if (typeof bootstrap !== 'undefined') {
+        const existingModal = bootstrap.Modal.getInstance(modalElement);
+        if (existingModal) existingModal.dispose();
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
     const searchType = document.getElementById('search-type');
@@ -246,26 +299,14 @@ function selectArcher(archer, cardElement) {
     console.log('showConfirmModal existe ?', typeof window.showConfirmModal);
     console.log('showConfirmModal dans scope ?', typeof showConfirmModal);
     
-    // Essayer d'appeler la fonction directement - PRIORITÉ À window.showConfirmModal
+    // Appeler DIRECTEMENT window.showConfirmModal sans vérification
+    console.log('APPEL DIRECT DE window.showConfirmModal...');
     try {
-        console.log('Tentative d\'appel direct...');
-        // Essayer window.showConfirmModal d'abord
-        if (typeof window.showConfirmModal === 'function') {
-            console.log('Appel de window.showConfirmModal...');
-            window.showConfirmModal(archer);
-            console.log('window.showConfirmModal appelée avec succès');
-        } else if (typeof showConfirmModal === 'function') {
-            console.log('Appel de showConfirmModal en tant que fonction locale...');
-            showConfirmModal(archer);
-            console.log('showConfirmModal appelée avec succès');
-        } else {
-            console.error('showConfirmModal n\'est pas une fonction !');
-            console.error('Type window.showConfirmModal:', typeof window.showConfirmModal);
-            console.error('Type showConfirmModal:', typeof showConfirmModal);
-            alert('Erreur: La fonction showConfirmModal n\'existe pas');
-        }
+        // Appel direct sans condition
+        window.showConfirmModal(archer);
+        console.log('window.showConfirmModal appelée - retour immédiat');
     } catch (error) {
-        console.error('Erreur lors de l\'appel à showConfirmModal:', error);
+        console.error('ERREUR lors de l\'appel à window.showConfirmModal:', error);
         console.error('Message:', error.message);
         console.error('Stack trace:', error.stack);
         alert('Erreur lors de l\'ouverture de la modale: ' + error.message);
@@ -274,16 +315,8 @@ function selectArcher(archer, cardElement) {
 }
 
 // Afficher la modale de confirmation avec formulaire complet
-// Définir la fonction à la fois localement et globalement pour éviter les problèmes de portée
-window.showConfirmModal = function(archer) {
-    console.log('=== showConfirmModal DÉBUT ===');
-    console.log('Archer reçu:', archer);
-    console.log('Type de archer:', typeof archer);
-    console.log('Archer est un objet ?', archer instanceof Object);
-    
-    // Test immédiat pour voir si la fonction s'exécute
-    console.log('TEST: showConfirmModal s\'exécute !');
-    alert('TEST: showConfirmModal s\'exécute !'); // ALERTE DE TEST
+// Cette fonction est déjà définie au début du fichier, ne pas la redéfinir ici
+// window.showConfirmModal est défini ligne 6
     
     // Vérifier que l'archer est bien défini
     if (!archer) {
