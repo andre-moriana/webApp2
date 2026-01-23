@@ -184,3 +184,36 @@
     position: relative;
     z-index: 1;
 }
+
+/* Styles pour le bouton d'itinéraire */
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-footer .btn-success {
+    background-color: #198754;
+    color: white;
+    border: none;
+}
+
+.modal-footer .btn-success:hover {
+    background-color: #157347;
+    color: white;
+}
+
+.modal-footer .dropdown-menu {
+    min-width: 200px;
+}
+
+.modal-footer .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-footer .dropdown-item i {
+    width: 20px;
+    text-align: center;
+}
