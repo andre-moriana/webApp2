@@ -1,11 +1,6 @@
 <?php
 $title = "Gestion des utilisateurs - Portail Archers de Gémenos";
-
-// Débogage temporaire
-error_log("=== DEBUG SESSION ===");
-error_log("Session: " . print_r($_SESSION, true));
 ?>
-
 <div class="container-fluid">
     <?php if (isset($_SESSION['error'])): ?>
         <div class="alert alert-danger">
