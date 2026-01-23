@@ -39,6 +39,22 @@
     cursor: pointer;
     margin-top: 0.25rem;
 }
+/* Styles pour la colonne Titre/Lieu */
+table#concoursTable td[data-column="titre_lieu"] {
+    max-width: 300px;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+table#concoursTable td[data-column="titre_lieu"] small {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
 @media (max-width: 768px) {
     .card-header .d-flex {
         flex-direction: column;
@@ -53,5 +69,10 @@
         max-width: 100% !important;
         width: 100%;
         margin-bottom: 1rem;
+    }
+    
+    /* Sur mobile, réduire encore plus la largeur */
+    table#concoursTable td[data-column="titre_lieu"] {
+        max-width: 200px;
     }
 }
