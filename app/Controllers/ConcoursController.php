@@ -731,7 +731,19 @@ class ConcoursController {
     // Mise à jour d'un concours
     public function update($id)
     {
+        // Transformer les données comme dans store() pour assurer la cohérence
         $data = $_POST;
+        
+        // Transformer lieu_competition en lieu (comme dans store())
+        if (isset($data['lieu_competition'])) {
+            $data['lieu'] = $data['lieu_competition'];
+        }
+        
+        // Transformer titre_competition en nom si nécessaire
+        if (isset($data['titre_competition']) && !isset($data['nom'])) {
+            $data['nom'] = $data['titre_competition'];
+        }
+        
         $response = $this->apiService->updateConcours($id, $data);
         // Optionally handle errors here
         header('Location: /concours');
