@@ -2372,7 +2372,21 @@ class ApiController {
             $response = $this->apiService->makeRequest($endpoint, 'GET');
             
             if ($response['success'] ?? false) {
-                $this->sendJsonResponse($response);
+                // ApiService enveloppe la réponse dans 'data'
+                // Le backend retourne {success: true, archers: [...]}
+                // On doit extraire les archers de data
+                $backendData = $response['data'] ?? [];
+                
+                // Si le backend a retourné success: true avec archers, on les renvoie directement
+                if (isset($backendData['success']) && isset($backendData['archers'])) {
+                    $this->sendJsonResponse([
+                        'success' => true,
+                        'archers' => $backendData['archers']
+                    ]);
+                } else {
+                    // Fallback: renvoyer la réponse telle quelle
+                    $this->sendJsonResponse($response);
+                }
             } else {
                 $this->sendJsonResponse([
                     'success' => false,
