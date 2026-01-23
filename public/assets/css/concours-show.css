@@ -126,3 +126,43 @@
     margin: 3px 0;
     line-height: 1.4;
 }
+
+.actions-section {
+    max-width: 800px;
+    width: 100%;
+    margin: 20px auto;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.actions-section .btn {
+    padding: 10px 24px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    display: inline-block;
+}
+
+.actions-section .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+}
+
+.actions-section .btn-secondary:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+.actions-section .btn-primary {
+    background-color: #14532d;
+    color: white;
+    border: none;
+}
+
+.actions-section .btn-primary:hover {
+    background-color: #0f3f24;
+    color: white;
+}
