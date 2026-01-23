@@ -231,28 +231,38 @@ function selectArcher(archer, cardElement) {
     // Afficher la modale de confirmation
     console.log('=== Appel de showConfirmModal ===');
     console.log('Archer passé à showConfirmModal:', archer);
+    console.log('Type de archer:', typeof archer);
+    console.log('showConfirmModal est une fonction ?', typeof showConfirmModal);
     
     // Vérifier que la fonction existe
     if (typeof showConfirmModal !== 'function') {
         console.error('showConfirmModal n\'est pas une fonction !');
+        console.error('Type de showConfirmModal:', typeof showConfirmModal);
         alert('Erreur: La fonction showConfirmModal n\'existe pas');
         return;
     }
     
+    console.log('Appel de showConfirmModal maintenant...');
     try {
-        showConfirmModal(archer);
-        console.log('showConfirmModal appelée avec succès');
+        const result = showConfirmModal(archer);
+        console.log('showConfirmModal appelée avec succès, résultat:', result);
     } catch (error) {
         console.error('Erreur lors de l\'appel à showConfirmModal:', error);
         console.error('Stack trace:', error.stack);
         alert('Erreur lors de l\'ouverture de la modale: ' + error.message);
     }
+    console.log('Après l\'appel à showConfirmModal');
 }
 
 // Afficher la modale de confirmation avec formulaire complet
 function showConfirmModal(archer) {
     console.log('=== showConfirmModal DÉBUT ===');
     console.log('Archer reçu:', archer);
+    console.log('Type de archer:', typeof archer);
+    console.log('Archer est un objet ?', archer instanceof Object);
+    
+    // Test immédiat pour voir si la fonction s'exécute
+    console.log('TEST: showConfirmModal s\'exécute !');
     
     // Vérifier que l'archer est bien défini
     if (!archer) {
@@ -281,9 +291,14 @@ function showConfirmModal(archer) {
     // S'assurer que le titre est correct AVANT de modifier le contenu
     if (modalTitle) {
         modalTitle.textContent = 'Confirmer l\'inscription';
+        modalTitle.innerHTML = 'Confirmer l\'inscription';
         console.log('Titre de la modale défini à "Confirmer l\'inscription"');
+        console.log('Vérification titre:', modalTitle.textContent);
+    } else {
+        console.warn('modalTitle introuvable !');
     }
     
+    console.log('Extraction des informations de l\'archer...');
     // Extraire les informations de l'archer avec des valeurs par défaut
     const nom = String(archer.nom || archer.name || archer.NOM || 'N/A');
     const prenom = String(archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A');
@@ -294,6 +309,7 @@ function showConfirmModal(archer) {
     
     console.log('showConfirmModal - nom:', nom, 'prenom:', prenom);
     console.log('showConfirmModal - licence:', licence, 'club:', club);
+    console.log('showConfirmModal - gender:', gender);
 
     let departsHtml = '';
     if (departs && departs.length > 0) {
