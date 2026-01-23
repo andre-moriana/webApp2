@@ -446,6 +446,134 @@ class ConcoursController {
         }
     }
     
+    // Affichage d'un concours (lecture seule)
+    public function show($id)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+        
+        // Nettoyer les messages d'erreur de session
+        unset($_SESSION['error']);
+        unset($_SESSION['success']);
+        
+        $concours = null;
+        $inscriptions = [];
+        $clubs = [];
+        $disciplines = [];
+        $typeCompetitions = [];
+        $niveauChampionnat = [];
+        
+        // Récupérer le concours
+        $response = $this->apiService->getConcoursById($id);
+        if ($response['success'] && isset($response['data'])) {
+            $concours = (object) $response['data'];
+        } else {
+            $_SESSION['error'] = 'Impossible de récupérer le concours.';
+            header('Location: /concours');
+            exit;
+        }
+        
+        // Récupérer les inscriptions
+        try {
+            $inscriptionsResponse = $this->apiService->makeRequest("concours/{$id}/inscriptions", 'GET');
+            if ($inscriptionsResponse['success'] && isset($inscriptionsResponse['data'])) {
+                $inscriptions = is_array($inscriptionsResponse['data']) ? $inscriptionsResponse['data'] : [];
+            } else {
+                // Si la réponse n'est pas dans data, essayer directement
+                $inscriptions = is_array($inscriptionsResponse) && !isset($inscriptionsResponse['success']) 
+                    ? $inscriptionsResponse 
+                    : [];
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des inscriptions: ' . $e->getMessage());
+        }
+        
+        // Charger les données pour afficher les libellés
+        try {
+            // Clubs
+            $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+            $clubsPayload = $this->apiService->unwrapData($clubsResponse);
+            if ($clubsResponse['success'] && is_array($clubsPayload)) {
+                foreach ($clubsPayload as &$club) {
+                    if (!isset($club['id']) && isset($club['_id'])) {
+                        $club['id'] = $club['_id'];
+                    }
+                }
+                unset($club);
+                $clubs = array_values($clubsPayload);
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
+        }
+        
+        try {
+            // Disciplines
+            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+            if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                $disciplinesPayload = $disciplinesPayload['data'];
+            }
+            if ($disciplinesResponse['success'] && is_array($disciplinesPayload)) {
+                foreach ($disciplinesPayload as &$discipline) {
+                    if (!isset($discipline['id']) && isset($discipline['_id'])) {
+                        $discipline['id'] = $discipline['_id'];
+                    }
+                }
+                unset($discipline);
+                $disciplines = array_values($disciplinesPayload);
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des disciplines: ' . $e->getMessage());
+        }
+        
+        try {
+            // Types de compétition
+            $typeCompetitionsResponse = $this->apiService->makeRequest('concours/type-competitions', 'GET');
+            $typeCompetitionsPayload = $this->apiService->unwrapData($typeCompetitionsResponse);
+            if (is_array($typeCompetitionsPayload) && isset($typeCompetitionsPayload['data']) && isset($typeCompetitionsPayload['success'])) {
+                $typeCompetitionsPayload = $typeCompetitionsPayload['data'];
+            }
+            if ($typeCompetitionsResponse['success'] && is_array($typeCompetitionsPayload)) {
+                foreach ($typeCompetitionsPayload as &$typeComp) {
+                    if (!isset($typeComp['id']) && isset($typeComp['_id'])) {
+                        $typeComp['id'] = $typeComp['_id'];
+                    }
+                }
+                unset($typeComp);
+                $typeCompetitions = array_values($typeCompetitionsPayload);
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des types de compétition: ' . $e->getMessage());
+        }
+        
+        try {
+            // Niveaux de championnat
+            $niveauChampionnatResponse = $this->apiService->makeRequest('concours/niveau-championnat', 'GET');
+            $niveauChampionnatPayload = $this->apiService->unwrapData($niveauChampionnatResponse);
+            if (is_array($niveauChampionnatPayload) && isset($niveauChampionnatPayload['data']) && isset($niveauChampionnatPayload['success'])) {
+                $niveauChampionnatPayload = $niveauChampionnatPayload['data'];
+            }
+            if ($niveauChampionnatResponse['success'] && is_array($niveauChampionnatPayload)) {
+                foreach ($niveauChampionnatPayload as &$niveau) {
+                    if (!isset($niveau['id']) && isset($niveau['_id'])) {
+                        $niveau['id'] = $niveau['_id'];
+                    }
+                }
+                unset($niveau);
+                $niveauChampionnat = array_values($niveauChampionnatPayload);
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des niveaux de championnat: ' . $e->getMessage());
+        }
+        
+        $title = 'Détails du concours - Portail Archers de Gémenos';
+        include 'app/Views/layouts/header.php';
+        include 'app/Views/concours/show.php';
+        include 'app/Views/layouts/footer.php';
+    }
+
     // Affichage du formulaire d'édition
     public function edit($id)
     {

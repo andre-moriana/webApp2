@@ -128,19 +128,15 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                                 $concoursId = $item['id'] ?? $item['_id'] ?? null;
                                                 if ($concoursId):
                                                 ?>
-                                                <?php if ($isAdmin || $canEditClub): ?>
-                                                <a href="/concours/edit/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-primary" title="Voir/Modifier">
+                                                <a href="/concours/show/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-primary" title="Voir">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                <?php if ($isAdmin || $canEditClub): ?>
                                                 <a href="/concours/edit/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-secondary" title="Modifier">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <a href="/concours/delete/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-danger" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce concours ?');">
                                                     <i class="fas fa-trash"></i>
-                                                </a>
-                                                <?php else: ?>
-                                                <a href="/concours/edit/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-primary" title="Voir">
-                                                    <i class="fas fa-eye"></i>
                                                 </a>
                                                 <?php endif; ?>
                                                 <button type="button" class="btn btn-sm btn-outline-success" title="S'inscrire" onclick="inscrireConcours(<?php echo $concoursId; ?>)">

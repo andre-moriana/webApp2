@@ -13,6 +13,7 @@ class Router {
         $this->addRoute("GET", "/concours", "ConcoursController@index");
         $this->addRoute("GET", "/concours/create", "ConcoursController@create");
         $this->addRoute("POST", "/concours/store", "ConcoursController@store");
+        $this->addRoute("GET", "/concours/show/{id}", "ConcoursController@show");
         $this->addRoute("GET", "/concours/edit/{id}", "ConcoursController@edit");
         $this->addRoute("POST", "/concours/update/{id}", "ConcoursController@update");
         $this->addRoute("GET", "/concours/delete/{id}", "ConcoursController@delete");
