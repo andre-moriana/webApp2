@@ -19,10 +19,18 @@
     <?php endif; ?>
 
     <!-- Informations du concours -->
+    <?php 
+    // S'assurer que $concours est un objet ou un tableau accessible
+    $concoursTitre = is_object($concours) ? ($concours->titre_competition ?? $concours->nom ?? 'Concours') : ($concours['titre_competition'] ?? $concours['nom'] ?? 'Concours');
+    $concoursLieu = is_object($concours) ? ($concours->lieu_competition ?? $concours->lieu ?? 'Non renseigné') : ($concours['lieu_competition'] ?? $concours['lieu'] ?? 'Non renseigné');
+    $concoursDateDebut = is_object($concours) ? ($concours->date_debut ?? '') : ($concours['date_debut'] ?? '');
+    $concoursDateFin = is_object($concours) ? ($concours->date_fin ?? '') : ($concours['date_fin'] ?? '');
+    $concoursId = is_object($concours) ? ($concours->id ?? $concours->_id ?? null) : ($concours['id'] ?? $concours['_id'] ?? null);
+    ?>
     <div class="concours-info-section">
-        <h2><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?></h2>
-        <p><strong>Lieu:</strong> <?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? 'Non renseigné') ?></p>
-        <p><strong>Dates:</strong> <?= htmlspecialchars($concours->date_debut ?? '') ?> - <?= htmlspecialchars($concours->date_fin ?? '') ?></p>
+        <h2><?= htmlspecialchars($concoursTitre) ?></h2>
+        <p><strong>Lieu:</strong> <?= htmlspecialchars($concoursLieu) ?></p>
+        <p><strong>Dates:</strong> <?= htmlspecialchars($concoursDateDebut) ?> - <?= htmlspecialchars($concoursDateFin) ?></p>
     </div>
 
     <!-- Formulaire de recherche d'archer -->
@@ -98,7 +106,7 @@
     </div>
 
     <div class="actions-section">
-        <a href="/concours/show/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>" class="btn btn-secondary">Retour au concours</a>
+        <a href="/concours/show/<?= htmlspecialchars($concoursId ?? '') ?>" class="btn btn-secondary">Retour au concours</a>
         <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
     </div>
 </div>
@@ -125,7 +133,7 @@
 <script src="/public/assets/js/concours-inscription.js"></script>
 <script>
 // Variables globales
-const concoursId = <?= json_encode($concours->id ?? $concours->_id ?? null) ?>;
+const concoursId = <?= json_encode($concoursId ?? null) ?>;
 const departs = <?= json_encode($departs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 let selectedArcher = null;
 </script>
