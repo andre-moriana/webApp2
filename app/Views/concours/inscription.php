@@ -120,7 +120,143 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="confirm-modal-body">
-                <!-- Contenu dynamique -->
+                <!-- Contenu dynamique rempli par JavaScript -->
+                <div class="archer-summary mb-3 p-3 bg-light rounded">
+                    <h5>Informations de l'archer</h5>
+                    <p class="mb-1"><strong>Nom:</strong> <span id="modal-archer-nom"></span> <span id="modal-archer-prenom"></span></p>
+                    <p class="mb-1"><strong>Licence:</strong> <span id="modal-archer-licence"></span></p>
+                    <p class="mb-1"><strong>Club:</strong> <span id="modal-archer-club"></span></p>
+                </div>
+                
+                <form id="inscription-form">
+                    <h5 class="mb-3">Informations d'inscription</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="saison" class="form-label">Saison</label>
+                            <input type="text" id="saison" class="form-control" placeholder="Ex: 2024-2025">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="type_certificat_medical" class="form-label">Type Certificat Médical</label>
+                            <select id="type_certificat_medical" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="Compétition">Compétition</option>
+                                <option value="Loisir">Loisir</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="type_licence" class="form-label">Type Licence</label>
+                            <select id="type_licence" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" id="creation_renouvellement" class="form-check-input">
+                                <label for="creation_renouvellement" class="form-check-label">Création/Renouvellement</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <?php if (!empty($departs)): ?>
+                    <div class="mb-3">
+                        <label for="depart-select" class="form-label">N° départ <span class="text-danger">*</span></label>
+                        <select id="depart-select" class="form-control" required>
+                            <option value="">Sélectionner un départ</option>
+                            <?php foreach ($departs as $depart): ?>
+                                <option value="<?= htmlspecialchars($depart['id'] ?? $depart['_id'] ?? '') ?>">
+                                    Départ <?= htmlspecialchars($depart['numero'] ?? $depart['numero_depart'] ?? '') ?> - <?= htmlspecialchars($depart['heure'] ?? '') ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <h6 class="mt-4 mb-3">Classification et équipement</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="categorie_classement" class="form-label">Catégorie de classement</label>
+                            <input type="text" id="categorie_classement" class="form-control" placeholder="Ex: S3HCL">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
+                            <select id="arme" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="Arc Classique">Arc Classique</option>
+                                <option value="Arc à poulies">Arc à poulies</option>
+                                <option value="Arc nu">Arc nu</option>
+                                <option value="Arc traditionnel">Arc traditionnel</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" id="mobilite_reduite" class="form-check-input">
+                                <label for="mobilite_reduite" class="form-check-label">Mobilité réduite</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="distance" class="form-label">Distance</label>
+                            <input type="number" id="distance" class="form-control" min="0" placeholder="Ex: 18">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="numero_tir" class="form-label">N° Tir</label>
+                            <input type="number" id="numero_tir" class="form-control" min="1" placeholder="Ex: 1">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="blason" class="form-label">Blason</label>
+                            <input type="number" id="blason" class="form-control" min="0" placeholder="Ex: 40">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" id="duel" class="form-check-input">
+                                <label for="duel" class="form-check-label">Duel</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" id="trispot" class="form-check-input">
+                                <label for="trispot" class="form-check-label">Trispot</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h6 class="mt-4 mb-3">Paiement</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="tarif_competition" class="form-label">Tarif Compétition</label>
+                            <select id="tarif_competition" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="Tarif standard">Tarif standard</option>
+                                <option value="Tarif réduit">Tarif réduit</option>
+                                <option value="Tarif jeune">Tarif jeune</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="mode_paiement" class="form-label">Mode Paiement</label>
+                            <select id="mode_paiement" class="form-control">
+                                <option value="Non payé">Non payé</option>
+                                <option value="Espèces">Espèces</option>
+                                <option value="Chèque">Chèque</option>
+                                <option value="Carte bancaire">Carte bancaire</option>
+                                <option value="Virement">Virement</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>

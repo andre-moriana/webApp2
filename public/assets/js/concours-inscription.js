@@ -441,37 +441,69 @@ function selectArcher(archer, cardElement) {
     console.log('Archer sélectionné:', selectedArcher);
     console.log('ID archer:', selectedArcher.id || selectedArcher._id);
 
-    // Afficher la modale de confirmation
-    console.log('=== Appel de showConfirmModal ===');
-    console.log('Archer passé à showConfirmModal:', archer);
-    console.log('Type de archer:', typeof archer);
-    console.log('showConfirmModal est une fonction ?', typeof showConfirmModal);
-    
-    // Vérifier que la fonction existe
-    if (typeof showConfirmModal !== 'function') {
-        console.error('showConfirmModal n\'est pas une fonction !');
-        console.error('Type de showConfirmModal:', typeof showConfirmModal);
-        alert('Erreur: La fonction showConfirmModal n\'existe pas');
+    // Afficher la modale de confirmation - METTRE À JOUR LES DONNÉES DANS LA MODALE
+    const modalElement = document.getElementById('confirmInscriptionModal');
+    if (!modalElement) {
+        console.error('Modal introuvable');
+        alert('Erreur: Modal introuvable');
         return;
     }
     
-    console.log('Appel de showConfirmModal maintenant...');
-    console.log('showConfirmModal existe ?', typeof window.showConfirmModal);
-    console.log('showConfirmModal dans scope ?', typeof showConfirmModal);
+    // Extraire les données de l'archer
+    const nom = archer.nom || archer.name || archer.NOM || 'N/A';
+    const prenom = archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A';
+    const licence = archer.licence_number || archer.licenceNumber || archer.IDLicence || 'N/A';
+    const club = archer.club_name || archer.CLUB || 'N/A';
     
-    // Appeler DIRECTEMENT window.showConfirmModal sans vérification
-    console.log('APPEL DIRECT DE window.showConfirmModal...');
-    try {
-        // Appel direct sans condition
-        window.showConfirmModal(archer);
-        console.log('window.showConfirmModal appelée - retour immédiat');
-    } catch (error) {
-        console.error('ERREUR lors de l\'appel à window.showConfirmModal:', error);
-        console.error('Message:', error.message);
-        console.error('Stack trace:', error.stack);
-        alert('Erreur lors de l\'ouverture de la modale: ' + error.message);
+    console.log('Mise à jour des données dans la modale:', { nom, prenom, licence, club });
+    
+    // Mettre à jour les spans dans la modale
+    const nomSpan = document.getElementById('modal-archer-nom');
+    const prenomSpan = document.getElementById('modal-archer-prenom');
+    const licenceSpan = document.getElementById('modal-archer-licence');
+    const clubSpan = document.getElementById('modal-archer-club');
+    
+    if (nomSpan) {
+        nomSpan.textContent = nom;
+        console.log('Nom mis à jour:', nom);
+    } else {
+        console.error('Span modal-archer-nom introuvable');
     }
-    console.log('Après l\'appel à showConfirmModal');
+    
+    if (prenomSpan) {
+        prenomSpan.textContent = prenom;
+        console.log('Prénom mis à jour:', prenom);
+    } else {
+        console.error('Span modal-archer-prenom introuvable');
+    }
+    
+    if (licenceSpan) {
+        licenceSpan.textContent = licence;
+        console.log('Licence mise à jour:', licence);
+    } else {
+        console.error('Span modal-archer-licence introuvable');
+    }
+    
+    if (clubSpan) {
+        clubSpan.textContent = club;
+        console.log('Club mis à jour:', club);
+    } else {
+        console.error('Span modal-archer-club introuvable');
+    }
+    
+    // Afficher la modale avec Bootstrap
+    if (typeof bootstrap !== 'undefined') {
+        const existingModal = bootstrap.Modal.getInstance(modalElement);
+        if (existingModal) {
+            existingModal.dispose();
+        }
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+        console.log('Modale affichée');
+    } else {
+        console.error('Bootstrap n\'est pas chargé');
+        alert('Erreur: Bootstrap n\'est pas chargé');
+    }
 }
 
 // Note: showConfirmModal est déjà définie au début du fichier (ligne 7)
