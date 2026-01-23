@@ -17,6 +17,8 @@ class Router {
         $this->addRoute("GET", "/concours/edit/{id}", "ConcoursController@edit");
         $this->addRoute("POST", "/concours/update/{id}", "ConcoursController@update");
         $this->addRoute("GET", "/concours/delete/{id}", "ConcoursController@delete");
+        $this->addRoute("GET", "/concours/{id}/inscription", "ConcoursController@inscription");
+        $this->addRoute("POST", "/concours/{id}/inscription", "ConcoursController@storeInscription");
         // Routes d'authentification
         $this->addRoute("GET", "/login", "AuthController@login");
         $this->addRoute("POST", "/auth/authenticate", "AuthController@authenticate");

@@ -778,6 +778,88 @@ class ConcoursController {
         exit();
     }
 
+    // Page d'inscription à un concours
+    public function inscription($concoursId)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+
+        // Récupérer les informations du concours
+        $concoursResponse = $this->apiService->getConcoursById($concoursId);
+        if (!$concoursResponse['success']) {
+            $_SESSION['error'] = 'Concours introuvable';
+            header('Location: /concours');
+            exit;
+        }
+        $concours = $concoursResponse['data'];
+
+        // Récupérer les départs du concours
+        $departsResponse = $this->apiService->makeRequest("concours/{$concoursId}/departs", 'GET');
+        $departs = $departsResponse['success'] ? ($departsResponse['data'] ?? []) : [];
+
+        // Récupérer les inscriptions existantes
+        $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
+        $inscriptions = $inscriptionsResponse['success'] ? ($inscriptionsResponse['data'] ?? []) : [];
+        
+        // Récupérer les informations complètes des utilisateurs inscrits
+        $userIds = array_column($inscriptions, 'user_id');
+        $usersMap = [];
+        if (!empty($userIds)) {
+            foreach ($userIds as $userId) {
+                if ($userId) {
+                    try {
+                        $userResponse = $this->apiService->makeRequest("users/{$userId}", 'GET');
+                        if ($userResponse['success'] && isset($userResponse['data'])) {
+                            $usersMap[$userId] = $userResponse['data'];
+                        }
+                    } catch (Exception $e) {
+                        // Ignorer les erreurs pour continuer l'affichage
+                    }
+                }
+            }
+        }
+
+        // Inclure header et footer
+        require_once __DIR__ . '/../Views/layouts/header.php';
+        require_once __DIR__ . '/../Views/concours/inscription.php';
+        require_once __DIR__ . '/../Views/layouts/footer.php';
+    }
+
+    // Traitement de l'inscription
+    public function storeInscription($concoursId)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+
+        $user_id = $_POST['user_id'] ?? null;
+        $depart_id = $_POST['depart_id'] ?? null;
+
+        if (!$user_id) {
+            $_SESSION['error'] = 'Utilisateur requis';
+            header("Location: /concours/{$concoursId}/inscription");
+            exit;
+        }
+
+        // Appel API pour inscrire
+        $response = $this->apiService->makeRequest("concours/{$concoursId}/inscription", 'POST', [
+            'user_id' => $user_id,
+            'depart_id' => $depart_id
+        ]);
+
+        if ($response['success']) {
+            $_SESSION['success'] = 'Inscription réussie';
+        } else {
+            $_SESSION['error'] = $response['error'] ?? 'Erreur lors de l\'inscription';
+        }
+
+        header("Location: /concours/{$concoursId}/inscription");
+        exit;
+    }
+
     // Méthode utilitaire pour récupérer les concours via l'API
     // plus de méthode fetchConcoursFromApi : tout passe par ApiService
 }
