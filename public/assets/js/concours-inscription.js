@@ -246,22 +246,22 @@ function selectArcher(archer, cardElement) {
     console.log('showConfirmModal existe ?', typeof window.showConfirmModal);
     console.log('showConfirmModal dans scope ?', typeof showConfirmModal);
     
-    // Essayer d'appeler la fonction directement
+    // Essayer d'appeler la fonction directement - PRIORITÉ À window.showConfirmModal
     try {
         console.log('Tentative d\'appel direct...');
-        // Appel direct
-        if (typeof showConfirmModal === 'function') {
-            console.log('Appel de showConfirmModal en tant que fonction...');
-            showConfirmModal(archer);
-            console.log('showConfirmModal appelée avec succès');
-        } else if (typeof window.showConfirmModal === 'function') {
+        // Essayer window.showConfirmModal d'abord
+        if (typeof window.showConfirmModal === 'function') {
             console.log('Appel de window.showConfirmModal...');
             window.showConfirmModal(archer);
             console.log('window.showConfirmModal appelée avec succès');
+        } else if (typeof showConfirmModal === 'function') {
+            console.log('Appel de showConfirmModal en tant que fonction locale...');
+            showConfirmModal(archer);
+            console.log('showConfirmModal appelée avec succès');
         } else {
             console.error('showConfirmModal n\'est pas une fonction !');
-            console.error('Type:', typeof showConfirmModal);
-            console.error('window.showConfirmModal type:', typeof window.showConfirmModal);
+            console.error('Type window.showConfirmModal:', typeof window.showConfirmModal);
+            console.error('Type showConfirmModal:', typeof showConfirmModal);
             alert('Erreur: La fonction showConfirmModal n\'existe pas');
         }
     } catch (error) {
