@@ -42,17 +42,18 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                 <div class="card">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center flex-wrap">
-                            <div class="d-flex align-items-center gap-3">
-                                <h5 class="card-title mb-0">
-                                    <i class="fas fa-shield-alt me-2"></i>Liste des concours
-                                </h5>
-                                <span class="badge bg-primary" id="clubsCount">
-                                    <?php echo count($concours); ?> concours<?php echo count($concours) > 1 ? 's' : ''; ?>
-                                </span>
-                            </div>
-                  <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover" id="clubsTable">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>Liste des concours
+                            </h5>
+                            <span class="badge bg-primary" id="clubsCount">
+                                <?php echo count($concours); ?> concours<?php echo count($concours) > 1 ? 's' : ''; ?>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="concoursTable">
                                 <thead>
                                     <tr>
                                         <th class="sortable" data-column="nom_competition" style="cursor: pointer;">
