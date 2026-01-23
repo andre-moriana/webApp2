@@ -308,6 +308,7 @@ class ConcoursController {
         $date_debut = $_POST['date_debut'] ?? '';
         $date_fin = $_POST['date_fin'] ?? '';
         $club_organisateur = $_POST['club_organisateur'] ?? '';
+        $club_code = $_POST['club_code'] ?? ''; // nameShort du club
         $discipline = $_POST['discipline'] ?? '';
         $type_competition = $_POST['type_competition'] ?? '';
         $niveau_championnat = $_POST['niveau_championnat'] ?? '';
@@ -365,7 +366,8 @@ class ConcoursController {
                 'duel' => $duel,
                 'division_equipe' => $division_equipe,
                 'code_authentification' => $code_authentification,
-                'type_publication_internet' => $type_publication_internet
+                'type_publication_internet' => $type_publication_internet,
+                'agreenum' => $club_code // nameShort du club organisateur
             ];
             
             // L'endpoint est 'concours' (pas 'concours/create') car le routing se fait via PATH_INFO
