@@ -1,5 +1,6 @@
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/concours-create.css" rel="stylesheet">
+<link href="/public/assets/css/concours-show.css" rel="stylesheet">
 
 <!-- Affichage d'un concours (lecture seule) -->
 <div class="container-fluid concours-create-container">
@@ -151,77 +152,3 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
     <?php endif; ?>
 </div>
 </div>
-
-<style>
-.form-group {
-    margin-bottom: 10px;
-}
-
-.form-group p {
-    margin: 2px 0;
-    padding: 4px 8px;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-    line-height: 1.4;
-}
-
-.form-group label strong {
-    display: block;
-    margin-bottom: 2px;
-    font-size: 0.95em;
-}
-
-.date-fields-row .form-group,
-.numeric-fields-row .form-group {
-    margin-bottom: 8px;
-}
-
-.inscriptions-section {
-    border-top: 2px solid #dee2e6;
-    padding-top: 15px;
-    margin-top: 20px;
-}
-
-.inscriptions-section h2 {
-    margin-bottom: 10px;
-    color: #333;
-    font-size: 1.3em;
-}
-
-.table {
-    margin-top: 10px;
-}
-
-.table th {
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
-    padding: 8px;
-}
-
-.table td {
-    padding: 6px 8px;
-}
-
-.table tbody tr {
-    line-height: 1.3;
-}
-
-.bottom-sections {
-    margin-top: 15px;
-}
-
-.section-frame {
-    margin-bottom: 10px;
-}
-
-.section-frame h4 {
-    margin-bottom: 8px;
-    font-size: 1em;
-}
-
-.section-frame p {
-    margin: 3px 0;
-    line-height: 1.4;
-}
-</style>
