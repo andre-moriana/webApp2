@@ -1,5 +1,7 @@
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/concours-show.css" rel="stylesheet">
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <!-- Affichage d'un concours (lecture seule) -->
 <div class="container-fluid concours-create-container">
@@ -79,10 +81,15 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
     <!-- Lieu Compétition -->
     <div class="form-group">
         <label><strong>Lieu Compétition :</strong></label>
-        <p><?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? 'Non renseigné') ?></p>
-        <?php if (isset($concours->lieu_latitude) && isset($concours->lieu_longitude) && $concours->lieu_latitude && $concours->lieu_longitude): ?>
-            <p><small>Coordonnées GPS : <?= htmlspecialchars($concours->lieu_latitude) ?>, <?= htmlspecialchars($concours->lieu_longitude) ?></small></p>
-        <?php endif; ?>
+        <div class="lieu-display">
+            <p><?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? 'Non renseigné') ?></p>
+            <?php if (isset($concours->lieu_latitude) && isset($concours->lieu_longitude) && $concours->lieu_latitude && $concours->lieu_longitude): ?>
+                <p><small>Coordonnées GPS : <?= htmlspecialchars($concours->lieu_latitude) ?>, <?= htmlspecialchars($concours->lieu_longitude) ?></small></p>
+                <button type="button" class="btn btn-sm btn-primary" id="btn-show-map" onclick="openMapModal()">
+                    <i class="fas fa-map-marker-alt"></i> Afficher sur la carte
+                </button>
+            <?php endif; ?>
+        </div>
     </div>
 
     <!-- Dates -->
@@ -151,3 +158,86 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
     <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
 </div>
 </div>
+
+<!-- Modale pour afficher la carte (lecture seule) -->
+<?php if (isset($concours->lieu_latitude) && isset($concours->lieu_longitude) && $concours->lieu_latitude && $concours->lieu_longitude): ?>
+<div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mapModalLabel">Localisation du concours</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>Adresse :</strong>
+                    <p><?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? 'Non renseigné') ?></p>
+                    <small>Coordonnées GPS : <?= htmlspecialchars($concours->lieu_latitude) ?>, <?= htmlspecialchars($concours->lieu_longitude) ?></small>
+                </div>
+                <div id="map-show-container" style="height: 500px; width: 100%; border: 1px solid #ddd; border-radius: 4px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts pour la carte -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Variables pour la carte en mode affichage
+let showMap = null;
+let showMarker = null;
+
+// Fonction pour ouvrir la modale de la carte
+function openMapModal() {
+    const modalElement = document.getElementById('mapModal');
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Attendre que la modale soit complètement affichée avant d'initialiser la carte
+    modalElement.addEventListener('shown.bs.modal', function onShown() {
+        initShowMap();
+        // Retirer l'écouteur pour éviter les multiples initialisations
+        modalElement.removeEventListener('shown.bs.modal', onShown);
+    }, { once: true });
+    
+    modal.show();
+}
+
+// Initialiser la carte en mode affichage (lecture seule)
+function initShowMap() {
+    // Coordonnées du lieu
+    const lat = <?= (float)$concours->lieu_latitude ?>;
+    const lng = <?= (float)$concours->lieu_longitude ?>;
+    
+    // Si la carte existe déjà, la détruire
+    if (showMap) {
+        showMap.remove();
+        showMap = null;
+        showMarker = null;
+    }
+    
+    // Créer la carte
+    showMap = L.map('map-show-container').setView([lat, lng], 15);
+    
+    // Ajouter la couche de tuiles OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(showMap);
+    
+    // Ajouter un marqueur au lieu
+    showMarker = L.marker([lat, lng]).addTo(showMap);
+    
+    // Ajouter un popup avec l'adresse
+    const address = <?= json_encode($concours->lieu_competition ?? $concours->lieu ?? 'Non renseigné', JSON_UNESCAPED_UNICODE) ?>;
+    showMarker.bindPopup('<strong>' + address + '</strong><br><small>Coordonnées: ' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</small>').openPopup();
+    
+    // Forcer le recalcul de la taille de la carte
+    setTimeout(function() {
+        showMap.invalidateSize();
+    }, 100);
+}
+</script>
+<?php endif; ?>

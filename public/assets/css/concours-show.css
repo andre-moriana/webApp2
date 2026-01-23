@@ -166,3 +166,21 @@
     background-color: #0f3f24;
     color: white;
 }
+
+/* Styles pour l'affichage du lieu avec bouton carte */
+.lieu-display {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.lieu-display button {
+    align-self: flex-start;
+    margin-top: 5px;
+}
+
+/* Styles pour la modale de la carte */
+#map-show-container {
+    position: relative;
+    z-index: 1;
+}
