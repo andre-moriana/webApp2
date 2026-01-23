@@ -289,11 +289,19 @@ function showConfirmModal(archer) {
     }
     
     // S'assurer que le titre est correct AVANT de modifier le contenu
+    // IMPORTANT: Toujours utiliser String() pour éviter [object Object]
     if (modalTitle) {
-        modalTitle.textContent = 'Confirmer l\'inscription';
-        modalTitle.innerHTML = 'Confirmer l\'inscription';
+        const titleText = String('Confirmer l\'inscription');
+        // Vider d'abord le contenu pour éviter les problèmes
+        modalTitle.textContent = '';
+        modalTitle.innerHTML = '';
+        // Puis définir le titre
+        modalTitle.textContent = titleText;
+        modalTitle.innerHTML = titleText;
         console.log('Titre de la modale défini à "Confirmer l\'inscription"');
         console.log('Vérification titre:', modalTitle.textContent);
+        console.log('Type:', typeof modalTitle.textContent);
+        console.log('Valeur brute:', JSON.stringify(modalTitle.textContent));
     } else {
         console.warn('modalTitle introuvable !');
     }
@@ -483,6 +491,21 @@ function showConfirmModal(archer) {
     console.log('Élément modal trouvé:', modalElement);
     console.log('Titre modal trouvé:', modalTitle);
     
+    // FORCER le titre une dernière fois avant d'afficher
+    if (modalTitle) {
+        modalTitle.textContent = 'Confirmer l\'inscription';
+        modalTitle.innerHTML = 'Confirmer l\'inscription';
+        console.log('Titre forcé une dernière fois:', modalTitle.textContent);
+    }
+    
+    // Vérifier que le contenu est toujours présent
+    console.log('Vérification finale du contenu - longueur:', modalBody.innerHTML.length);
+    if (modalBody.innerHTML.trim() === '') {
+        console.error('ERREUR CRITIQUE: Le contenu est vide avant affichage !');
+        alert('Erreur: Impossible de générer le formulaire. Veuillez réessayer.');
+        return;
+    }
+    
     // Vérifier que Bootstrap est disponible
     if (typeof bootstrap === 'undefined') {
         console.error('Bootstrap n\'est pas disponible !');
@@ -514,29 +537,65 @@ function displayModal(modalElement) {
     console.log('=== displayModal DÉBUT ===');
     console.log('modalElement:', modalElement);
     
-    // S'assurer que le titre de la modale est correct AVANT de créer l'instance
+    // Récupérer les éléments
     const modalTitle = modalElement.querySelector('.modal-title');
-    if (modalTitle) {
-        // Forcer le titre à être une chaîne de caractères
-        modalTitle.textContent = 'Confirmer l\'inscription';
-        modalTitle.innerHTML = 'Confirmer l\'inscription';
-        console.log('Titre de la modale défini à:', modalTitle.textContent);
-    } else {
-        console.warn('Titre de la modale introuvable');
-    }
-    
-    // Vérifier que le contenu est bien présent
     const modalBody = document.getElementById('confirm-modal-body');
-    if (modalBody) {
-        console.log('Contenu modalBody présent, longueur:', modalBody.innerHTML.length);
-        if (modalBody.innerHTML.trim() === '') {
-            console.error('Le contenu de la modale est vide !');
-            return;
-        }
-    } else {
-        console.error('modalBody introuvable !');
+    
+    // Vérifier que les éléments existent
+    if (!modalTitle) {
+        console.error('ERREUR: modalTitle introuvable !');
+        alert('Erreur: Titre de la modale introuvable');
         return;
     }
+    
+    if (!modalBody) {
+        console.error('ERREUR: modalBody introuvable !');
+        alert('Erreur: Corps de la modale introuvable');
+        return;
+    }
+    
+    // FORCER le titre à être une chaîne de caractères (pas un objet)
+    modalTitle.textContent = 'Confirmer l\'inscription';
+    modalTitle.innerHTML = 'Confirmer l\'inscription';
+    console.log('Titre de la modale défini à:', modalTitle.textContent);
+    console.log('Type du titre:', typeof modalTitle.textContent);
+    
+    // Vérifier que le contenu est bien présent
+    console.log('Contenu modalBody présent, longueur:', modalBody.innerHTML.length);
+    if (modalBody.innerHTML.trim() === '') {
+        console.error('ERREUR CRITIQUE: Le contenu de la modale est vide !');
+        alert('Erreur: Le formulaire d\'inscription est vide. Veuillez réessayer.');
+        return;
+    }
+    
+    // Vérifier que le contenu ne contient pas [object Object]
+    if (modalBody.innerHTML.includes('[object Object]') || modalBody.innerHTML.includes('[Object Object]')) {
+        console.error('ERREUR: Le contenu contient [object Object] !');
+        console.error('Contenu actuel:', modalBody.innerHTML.substring(0, 500));
+        alert('Erreur: Le formulaire contient des données invalides. Veuillez réessayer.');
+        return;
+    }
+    
+    // Créer un MutationObserver pour surveiller et corriger le titre si nécessaire
+    const titleObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                const currentTitle = modalTitle.textContent;
+                if (currentTitle && (currentTitle.includes('[object Object]') || currentTitle.includes('[Object Object]'))) {
+                    console.warn('MutationObserver: Titre corrompu détecté, correction...');
+                    modalTitle.textContent = 'Confirmer l\'inscription';
+                    modalTitle.innerHTML = 'Confirmer l\'inscription';
+                }
+            }
+        });
+    });
+    
+    // Observer les changements sur le titre
+    titleObserver.observe(modalTitle, {
+        childList: true,
+        characterData: true,
+        subtree: true
+    });
     
     // Vérifier si une instance de modale existe déjà et la détruire
     const existingModal = bootstrap.Modal.getInstance(modalElement);
@@ -562,12 +621,23 @@ function displayModal(modalElement) {
         // Forcer le titre et le contenu juste avant l'affichage
         const titleEl = modalElement.querySelector('.modal-title');
         if (titleEl) {
-            titleEl.textContent = 'Confirmer l\'inscription';
-            console.log('Titre forcé à "Confirmer l\'inscription"');
+            // S'assurer que c'est bien une chaîne
+            const titleText = String('Confirmer l\'inscription');
+            titleEl.textContent = titleText;
+            titleEl.innerHTML = titleText;
+            console.log('Titre forcé à "Confirmer l\'inscription", valeur:', titleEl.textContent);
+            console.log('Type:', typeof titleEl.textContent);
+        } else {
+            console.error('Titre introuvable dans show.bs.modal !');
         }
         const bodyEl = document.getElementById('confirm-modal-body');
-        if (bodyEl && bodyEl.innerHTML.trim() === '') {
-            console.error('Le contenu est vide lors de l\'affichage !');
+        if (bodyEl) {
+            if (bodyEl.innerHTML.trim() === '') {
+                console.error('ERREUR: Le contenu est vide lors de l\'affichage !');
+            }
+            if (bodyEl.innerHTML.includes('[object Object]')) {
+                console.error('ERREUR: Le contenu contient [object Object] lors de l\'affichage !');
+            }
         }
     }, { once: true });
     
@@ -578,8 +648,13 @@ function displayModal(modalElement) {
         // Forcer immédiatement le titre et vérifier le contenu
         const titleEl = modalElement.querySelector('.modal-title');
         if (titleEl) {
-            titleEl.textContent = 'Confirmer l\'inscription';
-            console.log('Titre forcé après show()');
+            const titleText = String('Confirmer l\'inscription');
+            titleEl.textContent = titleText;
+            titleEl.innerHTML = titleText;
+            console.log('Titre forcé après show(), valeur:', titleEl.textContent);
+            console.log('Type:', typeof titleEl.textContent);
+        } else {
+            console.error('Titre introuvable après show() !');
         }
         
         // Vérifier que la modale est bien visible après un court délai
@@ -591,7 +666,50 @@ function displayModal(modalElement) {
             const titleCheck = modalElement.querySelector('.modal-title');
             const bodyCheck = document.getElementById('confirm-modal-body');
             console.log('Vérification finale - Titre:', titleCheck ? titleCheck.textContent : 'N/A');
+            console.log('Vérification finale - Type titre:', titleCheck ? typeof titleCheck.textContent : 'N/A');
             console.log('Vérification finale - Contenu longueur:', bodyCheck ? bodyCheck.innerHTML.length : 0);
+            
+            // Si le titre contient [object Object], le corriger
+            if (titleCheck) {
+                const currentTitle = String(titleCheck.textContent || '');
+                if (currentTitle.includes('[object Object]') || currentTitle.includes('[Object Object]') || currentTitle === 'undefined') {
+                    console.error('ERREUR DÉTECTÉE: Le titre contient [object Object] ou undefined ! Correction...');
+                    console.error('Titre actuel:', currentTitle);
+                    titleCheck.textContent = 'Confirmer l\'inscription';
+                    titleCheck.innerHTML = 'Confirmer l\'inscription';
+                    console.log('Titre corrigé:', titleCheck.textContent);
+                }
+            }
+            
+            // Si le contenu contient [object Object] ou undefined, afficher une erreur
+            if (bodyCheck) {
+                const currentContent = String(bodyCheck.innerHTML || '');
+                if (currentContent.includes('[object Object]') || currentContent.includes('[Object Object]') || currentContent.includes('undefined')) {
+                    console.error('ERREUR DÉTECTÉE: Le contenu contient [object Object] ou undefined !');
+                    console.error('Extrait du contenu:', currentContent.substring(0, 500));
+                    alert('Erreur: Le formulaire contient des données invalides. Veuillez réessayer.');
+                }
+            }
+            
+            // Surveiller et corriger le titre toutes les 100ms pendant 2 secondes
+            let checkCount = 0;
+            const maxChecks = 20; // 2 secondes à 100ms
+            const titleChecker = setInterval(() => {
+                checkCount++;
+                const titleEl = modalElement.querySelector('.modal-title');
+                if (titleEl) {
+                    const currentTitle = String(titleEl.textContent || '');
+                    if (currentTitle.includes('[object Object]') || currentTitle.includes('[Object Object]') || currentTitle === 'undefined') {
+                        console.warn(`Correction automatique du titre (tentative ${checkCount})`);
+                        titleEl.textContent = 'Confirmer l\'inscription';
+                        titleEl.innerHTML = 'Confirmer l\'inscription';
+                    }
+                }
+                if (checkCount >= maxChecks) {
+                    clearInterval(titleChecker);
+                    console.log('Surveillance du titre terminée');
+                }
+            }, 100);
             
             if (!isVisible) {
                 console.error('La modale n\'est pas visible !');
