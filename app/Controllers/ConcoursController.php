@@ -338,6 +338,8 @@ class ConcoursController {
         // Récupérer tous les champs du formulaire
         $titre_competition = $_POST['titre_competition'] ?? '';
         $lieu_competition = $_POST['lieu_competition'] ?? '';
+        $lieu_latitude = $_POST['lieu_latitude'] ?? null;
+        $lieu_longitude = $_POST['lieu_longitude'] ?? null;
         $date_debut = $_POST['date_debut'] ?? '';
         $date_fin = $_POST['date_fin'] ?? '';
         $club_organisateur = $_POST['club_organisateur'] ?? '';
@@ -383,6 +385,8 @@ class ConcoursController {
                 'date_debut' => $date_debut,
                 'date_fin' => $date_fin,
                 'lieu' => $lieu_competition,
+                'lieu_latitude' => $lieu_latitude ? (float)$lieu_latitude : null,
+                'lieu_longitude' => $lieu_longitude ? (float)$lieu_longitude : null,
                 'type' => $type_competition ?? '',
                 'statut' => 'active', // Par défaut
                 // Nouveaux champs (seront ajoutés à la table si nécessaire)
@@ -400,7 +404,9 @@ class ConcoursController {
                 'division_equipe' => $division_equipe,
                 'code_authentification' => $code_authentification,
                 'type_publication_internet' => $type_publication_internet,
-                'agreenum' => $club_code // nameShort du club organisateur
+                'agreenum' => $club_code, // nameShort du club organisateur
+                'lieu_latitude' => $lieu_latitude ? (float)$lieu_latitude : null,
+                'lieu_longitude' => $lieu_longitude ? (float)$lieu_longitude : null
             ];
             
             // L'endpoint est 'concours' (pas 'concours/create') car le routing se fait via PATH_INFO
@@ -737,6 +743,19 @@ class ConcoursController {
         // Transformer lieu_competition en lieu (comme dans store())
         if (isset($data['lieu_competition'])) {
             $data['lieu'] = $data['lieu_competition'];
+        }
+        
+        // Convertir les coordonnées GPS en float si présentes
+        if (isset($data['lieu_latitude']) && $data['lieu_latitude'] !== '') {
+            $data['lieu_latitude'] = (float)$data['lieu_latitude'];
+        } else {
+            $data['lieu_latitude'] = null;
+        }
+        
+        if (isset($data['lieu_longitude']) && $data['lieu_longitude'] !== '') {
+            $data['lieu_longitude'] = (float)$data['lieu_longitude'];
+        } else {
+            $data['lieu_longitude'] = null;
         }
         
         // Transformer titre_competition en nom si nécessaire

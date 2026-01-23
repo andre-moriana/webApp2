@@ -281,6 +281,41 @@
     text-decoration: underline;
 }
 
+/* Styles pour le champ lieu avec bouton carte */
+.lieu-fields {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.lieu-fields input[type="text"] {
+    flex: 1;
+    margin-top: 0;
+}
+
+.lieu-fields button {
+    white-space: nowrap;
+    margin-top: 0;
+}
+
+/* Styles pour la modale de sélection de lieu */
+#map-container {
+    position: relative;
+    z-index: 1;
+}
+
+#selected-address {
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    min-height: 30px;
+}
+
+#selected-coords {
+    font-family: monospace;
+    color: #666;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .concours-create-container form {
