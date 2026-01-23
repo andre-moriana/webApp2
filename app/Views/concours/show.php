@@ -1,5 +1,4 @@
 <!-- CSS personnalisé -->
-<link href="/public/assets/css/concours-create.css" rel="stylesheet">
 <link href="/public/assets/css/concours-show.css" rel="stylesheet">
 
 <!-- Affichage d'un concours (lecture seule) -->
@@ -113,7 +112,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
 </div>
 
 <!-- Liste des inscrits -->
-<div class="inscriptions-section" style="margin-top: 30px;">
+<div class="inscriptions-section">
     <h2>Liste des inscrits</h2>
     
     <?php if (empty($inscriptions)): ?>
@@ -145,10 +144,5 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
     <?php endif; ?>
 </div>
 
-<div style="margin-top: 30px;">
-    <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
-    <?php if (isset($concours->id)): ?>
-        <a href="/concours/edit/<?= htmlspecialchars($concours->id) ?>" class="btn btn-primary">Modifier</a>
-    <?php endif; ?>
-</div>
+
 </div>
