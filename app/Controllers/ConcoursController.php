@@ -452,7 +452,8 @@ class ConcoursController {
         $concours = null;
         $response = $this->apiService->getConcoursById($id);
         if ($response['success'] && isset($response['data'])) {
-            $concours = new Concours($response['data']);
+            // Convertir le tableau en objet pour compatibilité avec la vue qui utilise $concours->id, etc.
+            $concours = (object) $response['data'];
         } else {
             echo '<div class="alert alert-danger">Impossible de contacter l’API concours. Vérifiez la connexion ou l’URL de l’API.</div>';
         }
