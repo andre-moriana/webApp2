@@ -184,12 +184,7 @@ function displaySearchResults(archers) {
         `;
 
         // L'événement est géré par délégation au niveau du conteneur parent
-        // Pas besoin d'attacher directement ici, mais on garde pour compatibilité
-        card.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Clic direct sur carte, index:', index);
-        });
+        // Pas besoin d'attacher directement ici
 
         resultsList.appendChild(card);
     });
@@ -200,7 +195,9 @@ function displaySearchResults(archers) {
 
 // Sélectionner un archer
 function selectArcher(archer, cardElement) {
-    console.log('selectArcher appelé avec:', archer);
+    console.log('=== selectArcher appelé ===');
+    console.log('Archer:', archer);
+    console.log('CardElement:', cardElement);
     
     if (!archer) {
         console.error('selectArcher: archer est undefined');
@@ -220,6 +217,7 @@ function selectArcher(archer, cardElement) {
 
     // Sélectionner la nouvelle carte
     cardElement.classList.add('selected');
+    console.log('Carte sélectionnée visuellement');
     
     // S'assurer que selectedArcher est accessible globalement
     if (typeof window !== 'undefined') {
@@ -231,7 +229,24 @@ function selectArcher(archer, cardElement) {
     console.log('ID archer:', selectedArcher.id || selectedArcher._id);
 
     // Afficher la modale de confirmation
-    showConfirmModal(archer);
+    console.log('=== Appel de showConfirmModal ===');
+    console.log('Archer passé à showConfirmModal:', archer);
+    
+    // Vérifier que la fonction existe
+    if (typeof showConfirmModal !== 'function') {
+        console.error('showConfirmModal n\'est pas une fonction !');
+        alert('Erreur: La fonction showConfirmModal n\'existe pas');
+        return;
+    }
+    
+    try {
+        showConfirmModal(archer);
+        console.log('showConfirmModal appelée avec succès');
+    } catch (error) {
+        console.error('Erreur lors de l\'appel à showConfirmModal:', error);
+        console.error('Stack trace:', error.stack);
+        alert('Erreur lors de l\'ouverture de la modale: ' + error.message);
+    }
 }
 
 // Afficher la modale de confirmation avec formulaire complet
@@ -406,12 +421,8 @@ function showConfirmModal(archer) {
         </form>
     `;
 
-    // S'assurer que le contenu est bien défini avant d'afficher
-    if (!modalBody.innerHTML || modalBody.innerHTML.trim() === '') {
-        console.error('showConfirmModal: Le contenu de la modale est vide');
-        alert('Erreur: Impossible de générer le formulaire d\'inscription');
-        return;
-    }
+    // Vérifier que le contenu a bien été défini
+    console.log('Contenu modalBody défini, longueur:', modalBody.innerHTML.length);
     
     // Initialiser et afficher la modale Bootstrap
     const modalElement = document.getElementById('confirmInscriptionModal');
@@ -421,13 +432,47 @@ function showConfirmModal(archer) {
         return;
     }
     
+    console.log('Élément modal trouvé:', modalElement);
+    
+    // Vérifier que Bootstrap est disponible
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap n\'est pas disponible !');
+        // Essayer d'attendre que Bootstrap soit chargé
+        const checkBootstrap = setInterval(() => {
+            if (typeof bootstrap !== 'undefined') {
+                clearInterval(checkBootstrap);
+                console.log('Bootstrap maintenant disponible, affichage de la modale...');
+                displayModal(modalElement);
+            }
+        }, 100);
+        
+        // Timeout après 5 secondes
+        setTimeout(() => {
+            clearInterval(checkBootstrap);
+            if (typeof bootstrap === 'undefined') {
+                alert('Erreur: Bootstrap n\'est pas chargé. Veuillez recharger la page.');
+                return;
+            }
+        }, 5000);
+        return;
+    }
+    
+    displayModal(modalElement);
+}
+
+// Fonction séparée pour afficher la modale
+function displayModal(modalElement) {
+    console.log('displayModal appelée');
+    
     // Vérifier si une instance de modale existe déjà et la détruire
     const existingModal = bootstrap.Modal.getInstance(modalElement);
     if (existingModal) {
+        console.log('Instance existante trouvée, destruction...');
         existingModal.dispose();
     }
     
     // Créer une nouvelle instance de modale
+    console.log('Création d\'une nouvelle instance de modale...');
     const modal = new bootstrap.Modal(modalElement, {
         backdrop: true,
         keyboard: true,
@@ -438,12 +483,58 @@ function showConfirmModal(archer) {
     const modalTitle = modalElement.querySelector('.modal-title');
     if (modalTitle) {
         modalTitle.textContent = 'Confirmer l\'inscription';
+        console.log('Titre de la modale défini');
+    } else {
+        console.warn('Titre de la modale introuvable');
     }
     
     // Afficher la modale
-    modal.show();
-    
-    console.log('showConfirmModal: Modale affichée avec succès');
+    console.log('Affichage de la modale...');
+    try {
+        modal.show();
+        console.log('showConfirmModal: Modale affichée avec succès');
+        
+        // Vérifier que la modale est bien visible après un court délai
+        setTimeout(() => {
+            const isVisible = modalElement.classList.contains('show');
+            console.log('Modale visible après 100ms:', isVisible);
+            if (!isVisible) {
+                console.error('La modale n\'est pas visible !');
+                // Essayer de forcer l'affichage manuellement
+                modalElement.classList.add('show');
+                modalElement.style.display = 'block';
+                modalElement.setAttribute('aria-hidden', 'false');
+                modalElement.setAttribute('aria-modal', 'true');
+                document.body.classList.add('modal-open');
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                document.body.appendChild(backdrop);
+                console.log('Modale forcée à s\'afficher manuellement');
+            }
+        }, 100);
+    } catch (error) {
+        console.error('Erreur lors de l\'affichage de la modale:', error);
+        console.error('Stack trace:', error.stack);
+        alert('Erreur lors de l\'affichage de la modale: ' + error.message);
+        
+        // Fallback: afficher la modale manuellement
+        console.log('Tentative d\'affichage manuel de la modale...');
+        modalElement.classList.add('show');
+        modalElement.style.display = 'block';
+        modalElement.setAttribute('aria-hidden', 'false');
+        modalElement.setAttribute('aria-modal', 'true');
+        document.body.classList.add('modal-open');
+        const backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade show';
+        backdrop.setAttribute('data-bs-dismiss', 'modal');
+        backdrop.addEventListener('click', function() {
+            modalElement.classList.remove('show');
+            modalElement.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            backdrop.remove();
+        });
+        document.body.appendChild(backdrop);
+    }
 }
 
 // Soumettre l'inscription
