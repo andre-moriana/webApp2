@@ -10,15 +10,18 @@ class Router {
     
     private function defineRoutes() {
         // Routes des concours (protégées)
+        // Routes spécifiques AVANT les routes génériques pour éviter les conflits
         $this->addRoute("GET", "/concours", "ConcoursController@index");
         $this->addRoute("GET", "/concours/create", "ConcoursController@create");
         $this->addRoute("POST", "/concours/store", "ConcoursController@store");
+        // Route d'inscription avant les autres routes avec {id}
+        $this->addRoute("GET", "/concours/{id}/inscription", "ConcoursController@inscription");
+        $this->addRoute("POST", "/concours/{id}/inscription", "ConcoursController@storeInscription");
+        // Routes avec {id} après les routes spécifiques
         $this->addRoute("GET", "/concours/show/{id}", "ConcoursController@show");
         $this->addRoute("GET", "/concours/edit/{id}", "ConcoursController@edit");
         $this->addRoute("POST", "/concours/update/{id}", "ConcoursController@update");
         $this->addRoute("GET", "/concours/delete/{id}", "ConcoursController@delete");
-        $this->addRoute("GET", "/concours/{id}/inscription", "ConcoursController@inscription");
-        $this->addRoute("POST", "/concours/{id}/inscription", "ConcoursController@storeInscription");
         // Routes d'authentification
         $this->addRoute("GET", "/login", "AuthController@login");
         $this->addRoute("POST", "/auth/authenticate", "AuthController@authenticate");
