@@ -111,47 +111,6 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
     </div>
 </div>
 
-<!-- Sections encadrées en bas -->
-<div class="bottom-sections">
-    <!-- Type Concours -->
-    <div class="section-frame">
-        <h4>Type Concours</h4>
-        <p>
-            <strong>Type :</strong> <?= htmlspecialchars(ucfirst($concours->type_concours ?? 'ouvert')) ?>
-        </p>
-        <p>
-            <strong>Duel :</strong> <?= (isset($concours->duel) && ($concours->duel == 1 || $concours->duel === true || $concours->duel === "1")) ? 'Oui' : 'Non' ?>
-        </p>
-    </div>
-
-    <!-- Division Equipe -->
-    <div class="section-frame">
-        <h4>Division Equipe</h4>
-        <p>
-            <?php
-            $divisionLabels = [
-                'dr' => 'DR',
-                'poules_non_filiere' => 'Poules Non Filière',
-                'duels_equipes' => 'Duels Equipes'
-            ];
-            $divisionValue = $concours->division_equipe ?? 'duels_equipes';
-            echo htmlspecialchars($divisionLabels[$divisionValue] ?? ucfirst($divisionValue));
-            ?>
-        </p>
-    </div>
-
-    <!-- Publication WEB -->
-    <div class="section-frame">
-        <h4>Publication WEB</h4>
-        <?php if (isset($concours->code_authentification) && $concours->code_authentification): ?>
-            <p><strong>Code d'authentification :</strong> <?= htmlspecialchars($concours->code_authentification) ?></p>
-        <?php endif; ?>
-        <?php if (isset($concours->type_publication_internet) && $concours->type_publication_internet): ?>
-            <p><strong>Type de publication INTERNET :</strong> <?= htmlspecialchars($concours->type_publication_internet) ?></p>
-        <?php endif; ?>
-    </div>
-</div>
-
 <!-- Liste des inscrits -->
 <div class="inscriptions-section" style="margin-top: 30px;">
     <h2>Liste des inscrits</h2>
@@ -194,35 +153,75 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
 </div>
 
 <style>
+.form-group {
+    margin-bottom: 10px;
+}
+
 .form-group p {
-    margin: 5px 0;
-    padding: 8px;
+    margin: 2px 0;
+    padding: 4px 8px;
     background-color: #f8f9fa;
     border-radius: 4px;
+    line-height: 1.4;
 }
 
 .form-group label strong {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
+    font-size: 0.95em;
+}
+
+.date-fields-row .form-group,
+.numeric-fields-row .form-group {
+    margin-bottom: 8px;
 }
 
 .inscriptions-section {
     border-top: 2px solid #dee2e6;
-    padding-top: 20px;
+    padding-top: 15px;
+    margin-top: 20px;
 }
 
 .inscriptions-section h2 {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     color: #333;
+    font-size: 1.3em;
 }
 
 .table {
-    margin-top: 15px;
+    margin-top: 10px;
 }
 
 .table th {
     background-color: #007bff;
     color: white;
     font-weight: bold;
+    padding: 8px;
+}
+
+.table td {
+    padding: 6px 8px;
+}
+
+.table tbody tr {
+    line-height: 1.3;
+}
+
+.bottom-sections {
+    margin-top: 15px;
+}
+
+.section-frame {
+    margin-bottom: 10px;
+}
+
+.section-frame h4 {
+    margin-bottom: 8px;
+    font-size: 1em;
+}
+
+.section-frame p {
+    margin: 3px 0;
+    line-height: 1.4;
 }
 </style>
