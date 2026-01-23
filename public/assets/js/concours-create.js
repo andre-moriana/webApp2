@@ -13,9 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gestion du changement de discipline pour charger les types de compétition
     setupDisciplineChange();
     
-    // Pré-remplir le formulaire si on est en mode édition
+    // Pré-remplir le formulaire si on est en mode édition (après que les selects soient chargés)
     if (window.concoursData) {
-        prefillFormForEdit();
+        // Attendre que les selects soient remplis avant de pré-remplir
+        setTimeout(function() {
+            prefillFormForEdit();
+        }, 1500);
     }
     
     // Gestion de la soumission du formulaire
@@ -414,89 +417,162 @@ function setupClubOrganisateur() {
 // Pré-remplir le formulaire avec les données du concours à éditer
 function prefillFormForEdit() {
     if (!window.concoursData) {
+        console.log('Aucune donnée de concours à pré-remplir');
         return;
     }
     
     const concours = window.concoursData;
-    console.log('Pré-remplissage du formulaire avec les données du concours:', concours);
+    console.log('=== Pré-remplissage du formulaire avec les données du concours ===');
+    console.log('Données du concours:', concours);
     
-    // Attendre que les selects soient chargés avant de pré-remplir
-    setTimeout(function() {
-        // Club organisateur
-        if (concours.club_organisateur) {
-            const clubSelect = document.getElementById('club_organisateur');
-            if (clubSelect) {
-                clubSelect.value = concours.club_organisateur;
+    // Club organisateur
+    if (concours.club_organisateur) {
+        const clubSelect = document.getElementById('club_organisateur');
+        if (clubSelect) {
+            console.log('Recherche du club_organisateur:', concours.club_organisateur);
+            console.log('Options disponibles:', Array.from(clubSelect.options).map(opt => ({value: opt.value, text: opt.text})));
+            // Vérifier que l'option existe (comparaison flexible avec ==)
+            const optionExists = Array.from(clubSelect.options).some(opt => {
+                const optValue = String(opt.value);
+                const concoursValue = String(concours.club_organisateur);
+                return optValue === concoursValue || opt.value == concours.club_organisateur;
+            });
+            if (optionExists) {
+                clubSelect.value = String(concours.club_organisateur);
+                console.log('✓ Club organisateur défini:', concours.club_organisateur);
+                
+                // Pré-remplir le code du club si disponible (agreenum)
+                if (concours.agreenum) {
+                    const clubCodeInput = document.getElementById('club_code');
+                    if (clubCodeInput) {
+                        clubCodeInput.value = String(concours.agreenum);
+                        console.log('✓ Code club défini:', concours.agreenum);
+                    }
+                }
+                
                 // Déclencher l'événement change pour mettre à jour le code et le nom
                 const event = new Event('change', { bubbles: true });
                 clubSelect.dispatchEvent(event);
+            } else {
+                console.warn('✗ Option club_organisateur non trouvée pour la valeur:', concours.club_organisateur);
+                console.warn('Valeurs disponibles:', Array.from(clubSelect.options).map(opt => opt.value));
             }
         }
-        
-        // Discipline
-        if (concours.discipline) {
-            const disciplineSelect = document.getElementById('discipline');
-            if (disciplineSelect) {
-                disciplineSelect.value = concours.discipline;
+    }
+    
+    // Discipline
+    if (concours.discipline) {
+        const disciplineSelect = document.getElementById('discipline');
+        if (disciplineSelect) {
+            console.log('Recherche de la discipline:', concours.discipline);
+            console.log('Options disponibles:', Array.from(disciplineSelect.options).map(opt => ({value: opt.value, text: opt.text})));
+            // Vérifier que l'option existe (comparaison flexible)
+            const optionExists = Array.from(disciplineSelect.options).some(opt => {
+                const optValue = String(opt.value);
+                const concoursValue = String(concours.discipline);
+                return optValue === concoursValue || opt.value == concours.discipline;
+            });
+            if (optionExists) {
+                disciplineSelect.value = String(concours.discipline);
+                console.log('✓ Discipline définie:', concours.discipline);
                 // Déclencher le changement de discipline pour charger les types de compétition
                 const event = new Event('change', { bubbles: true });
                 disciplineSelect.dispatchEvent(event);
-            }
-        }
-        
-        // Type compétition (après que la discipline soit sélectionnée)
-        if (concours.type_competition) {
-            setTimeout(function() {
-                const typeCompetitionSelect = document.getElementById('type_competition');
-                if (typeCompetitionSelect) {
-                    typeCompetitionSelect.value = concours.type_competition;
+                
+                // Type compétition (après que la discipline soit sélectionnée et les types chargés)
+                if (concours.type_competition) {
+                    setTimeout(function() {
+                        const typeCompetitionSelect = document.getElementById('type_competition');
+                        if (typeCompetitionSelect) {
+                            console.log('Recherche du type_competition:', concours.type_competition);
+                            console.log('Options disponibles:', Array.from(typeCompetitionSelect.options).map(opt => ({value: opt.value, text: opt.text})));
+                            const typeOptionExists = Array.from(typeCompetitionSelect.options).some(opt => {
+                                const optValue = String(opt.value);
+                                const concoursValue = String(concours.type_competition);
+                                return optValue === concoursValue || opt.value == concours.type_competition;
+                            });
+                            if (typeOptionExists) {
+                                typeCompetitionSelect.value = String(concours.type_competition);
+                                console.log('✓ Type compétition défini:', concours.type_competition);
+                            } else {
+                                console.warn('✗ Option type_competition non trouvée pour la valeur:', concours.type_competition);
+                                console.warn('Valeurs disponibles:', Array.from(typeCompetitionSelect.options).map(opt => opt.value));
+                            }
+                        }
+                    }, 1000);
                 }
-            }, 500);
-        }
-        
-        // Niveau championnat
-        if (concours.niveau_championnat) {
-            const niveauSelect = document.getElementById('niveau_championnat');
-            if (niveauSelect) {
-                niveauSelect.value = concours.niveau_championnat;
+            } else {
+                console.warn('✗ Option discipline non trouvée pour la valeur:', concours.discipline);
+                console.warn('Valeurs disponibles:', Array.from(disciplineSelect.options).map(opt => opt.value));
             }
         }
-        
-        // Type concours (radio buttons)
-        if (concours.type_concours) {
-            const typeConcoursRadio = document.querySelector(`input[name="type_concours"][value="${concours.type_concours}"]`);
-            if (typeConcoursRadio) {
-                typeConcoursRadio.checked = true;
+    }
+    
+    // Niveau championnat
+    if (concours.niveau_championnat) {
+        const niveauSelect = document.getElementById('niveau_championnat');
+        if (niveauSelect) {
+            console.log('Recherche du niveau_championnat:', concours.niveau_championnat);
+            console.log('Options disponibles:', Array.from(niveauSelect.options).map(opt => ({value: opt.value, text: opt.text})));
+            // Vérifier que l'option existe (comparaison flexible)
+            const optionExists = Array.from(niveauSelect.options).some(opt => {
+                const optValue = String(opt.value);
+                const concoursValue = String(concours.niveau_championnat);
+                return optValue === concoursValue || opt.value == concours.niveau_championnat;
+            });
+            if (optionExists) {
+                niveauSelect.value = String(concours.niveau_championnat);
+                console.log('✓ Niveau championnat défini:', concours.niveau_championnat);
+            } else {
+                console.warn('✗ Option niveau_championnat non trouvée pour la valeur:', concours.niveau_championnat);
+                console.warn('Valeurs disponibles:', Array.from(niveauSelect.options).map(opt => opt.value));
             }
         }
-        
-        // Duel (checkbox)
-        if (concours.duel) {
-            const duelCheckbox = document.querySelector('input[name="duel"]');
-            if (duelCheckbox) {
-                duelCheckbox.checked = true;
-            }
+    }
+    
+    // Type concours (radio buttons)
+    if (concours.type_concours) {
+        const typeConcoursRadio = document.querySelector(`input[name="type_concours"][value="${concours.type_concours}"]`);
+        if (typeConcoursRadio) {
+            typeConcoursRadio.checked = true;
+            console.log('Type concours défini:', concours.type_concours);
         }
-        
-        // Division equipe (radio buttons)
-        if (concours.division_equipe) {
-            const divisionRadio = document.querySelector(`input[name="division_equipe"][value="${concours.division_equipe}"]`);
-            if (divisionRadio) {
-                divisionRadio.checked = true;
-            }
+    }
+    
+    // Duel (checkbox) - vérifier si c'est 1, true, ou "1"
+    if (concours.duel == 1 || concours.duel === true || concours.duel === "1") {
+        const duelCheckbox = document.querySelector('input[name="duel"]');
+        if (duelCheckbox) {
+            duelCheckbox.checked = true;
+            console.log('Duel coché');
         }
-        
-        // Type publication internet
-        if (concours.type_publication_internet) {
-            setTimeout(function() {
-                const typePubSelect = document.getElementById('type_publication_internet');
-                if (typePubSelect) {
+    }
+    
+    // Division equipe (radio buttons)
+    if (concours.division_equipe) {
+        const divisionRadio = document.querySelector(`input[name="division_equipe"][value="${concours.division_equipe}"]`);
+        if (divisionRadio) {
+            divisionRadio.checked = true;
+            console.log('Division equipe définie:', concours.division_equipe);
+        }
+    }
+    
+    // Type publication internet
+    if (concours.type_publication_internet) {
+        setTimeout(function() {
+            const typePubSelect = document.getElementById('type_publication_internet');
+            if (typePubSelect) {
+                const optionExists = Array.from(typePubSelect.options).some(opt => opt.value == concours.type_publication_internet);
+                if (optionExists) {
                     typePubSelect.value = concours.type_publication_internet;
+                    console.log('Type publication internet défini:', concours.type_publication_internet);
+                } else {
+                    console.warn('Option type_publication_internet non trouvée pour la valeur:', concours.type_publication_internet);
                 }
-            }, 500);
-        }
-        
-        // Les autres champs (titre, lieu, dates, nombres) sont déjà pré-remplis par PHP
-        console.log('Formulaire pré-rempli avec les données du concours');
-    }, 1000); // Attendre 1 seconde pour que les selects soient chargés
+            }
+        }, 1000);
+    }
+    
+    // Les autres champs (titre, lieu, dates, nombres) sont déjà pré-remplis par PHP
+    console.log('=== Fin du pré-remplissage du formulaire ===');
 }
