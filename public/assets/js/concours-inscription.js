@@ -243,11 +243,30 @@ function selectArcher(archer, cardElement) {
     }
     
     console.log('Appel de showConfirmModal maintenant...');
+    console.log('showConfirmModal existe ?', typeof window.showConfirmModal);
+    console.log('showConfirmModal dans scope ?', typeof showConfirmModal);
+    
+    // Essayer d'appeler la fonction directement
     try {
-        const result = showConfirmModal(archer);
-        console.log('showConfirmModal appelée avec succès, résultat:', result);
+        console.log('Tentative d\'appel direct...');
+        // Appel direct
+        if (typeof showConfirmModal === 'function') {
+            console.log('Appel de showConfirmModal en tant que fonction...');
+            showConfirmModal(archer);
+            console.log('showConfirmModal appelée avec succès');
+        } else if (typeof window.showConfirmModal === 'function') {
+            console.log('Appel de window.showConfirmModal...');
+            window.showConfirmModal(archer);
+            console.log('window.showConfirmModal appelée avec succès');
+        } else {
+            console.error('showConfirmModal n\'est pas une fonction !');
+            console.error('Type:', typeof showConfirmModal);
+            console.error('window.showConfirmModal type:', typeof window.showConfirmModal);
+            alert('Erreur: La fonction showConfirmModal n\'existe pas');
+        }
     } catch (error) {
         console.error('Erreur lors de l\'appel à showConfirmModal:', error);
+        console.error('Message:', error.message);
         console.error('Stack trace:', error.stack);
         alert('Erreur lors de l\'ouverture de la modale: ' + error.message);
     }
@@ -255,7 +274,8 @@ function selectArcher(archer, cardElement) {
 }
 
 // Afficher la modale de confirmation avec formulaire complet
-function showConfirmModal(archer) {
+// Définir la fonction à la fois localement et globalement pour éviter les problèmes de portée
+window.showConfirmModal = function(archer) {
     console.log('=== showConfirmModal DÉBUT ===');
     console.log('Archer reçu:', archer);
     console.log('Type de archer:', typeof archer);
@@ -263,6 +283,7 @@ function showConfirmModal(archer) {
     
     // Test immédiat pour voir si la fonction s'exécute
     console.log('TEST: showConfirmModal s\'exécute !');
+    alert('TEST: showConfirmModal s\'exécute !'); // ALERTE DE TEST
     
     // Vérifier que l'archer est bien défini
     if (!archer) {
