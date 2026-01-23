@@ -41,74 +41,10 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                     <i class="fas fa-shield-alt me-2"></i>Liste des concours
                                 </h5>
                                 <span class="badge bg-primary" id="clubsCount">
-                                    <?php echo count($clubs); ?> concours<?php echo count($concours) > 1 ? 's' : ''; ?>
+                                    <?php echo count($concours); ?> concours<?php echo count($concours) > 1 ? 's' : ''; ?>
                                 </span>
                             </div>
-                            <div class="d-flex gap-3 align-items-center flex-wrap">
-                                <div class="input-group" style="max-width: 300px;">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-search"></i>
-                                    </span>
-                                    <input type="text" class="form-control" id="searchClubs" placeholder="Rechercher un club...">
-                                </div>
-                                <div class="d-flex gap-3 align-items-center">
-                                    <div class="input-group" style="max-width: 250px;">
-                                        <label class="input-group-text" for="filterRegional">
-                                            <i class="fas fa-map-marked-alt"></i>
-                                        </label>
-                                        <select class="form-select" id="filterRegional">
-                                            <option value="">Tous les comités régionaux</option>
-                                            <?php
-                                            $regionalClubs = [];
-                                            foreach ($clubs as $club) {
-                                                $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                                                if (substr($nameShort, -5) === '00000') {
-                                                    $regionalClubs[] = $club;
-                                                }
-                                            }
-                                            foreach ($regionalClubs as $club): 
-                                                $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                                            ?>
-                                                <option value="<?php echo htmlspecialchars($nameShort); ?>">
-                                                    <?php echo htmlspecialchars($club['name'] ?? $nameShort); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class="input-group" style="max-width: 250px;">
-                                        <label class="input-group-text" for="filterDepartmental">
-                                            <i class="fas fa-map"></i>
-                                        </label>
-                                        <select class="form-select" id="filterDepartmental">
-                                            <option value="">Tous les comités départementaux</option>
-                                            <?php
-                                            $departmentalClubs = [];
-                                            foreach ($clubs as $club) {
-                                                $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                                                if (substr($nameShort, -3) === '000' && substr($nameShort, -5) !== '00000') {
-                                                    $departmentalClubs[] = $club;
-                                                }
-                                            }
-                                            foreach ($departmentalClubs as $club): 
-                                                $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                                            ?>
-                                                <option value="<?php echo htmlspecialchars($nameShort); ?>">
-                                                    <?php echo htmlspecialchars($club['name'] ?? $nameShort); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="filterClubs" checked>
-                                        <label class="form-check-label" for="filterClubs">
-                                            Clubs
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
+                  <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover" id="clubsTable">
                                 <thead>
