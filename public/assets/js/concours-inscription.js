@@ -149,13 +149,30 @@ function selectArcher(archer, cardElement) {
 
 // Afficher la modale de confirmation avec formulaire complet
 function showConfirmModal(archer) {
+    // Vérifier que l'archer est bien défini
+    if (!archer) {
+        console.error('showConfirmModal: archer est undefined');
+        alert('Erreur: Aucune information d\'archer disponible');
+        return;
+    }
+    
     const modalBody = document.getElementById('confirm-modal-body');
+    if (!modalBody) {
+        console.error('showConfirmModal: modal-body introuvable');
+        alert('Erreur: Élément modal introuvable');
+        return;
+    }
+    
+    // Extraire les informations de l'archer avec des valeurs par défaut
     const nom = archer.nom || archer.name || archer.NOM || 'N/A';
     const prenom = archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A';
     const licence = archer.licence_number || archer.licenceNumber || archer.IDLicence || 'N/A';
     const club = archer.club_name || archer.CLUB || 'N/A';
     const gender = archer.gender || archer.GENRE || '';
     const birthDate = archer.birth_date || archer.birthDate || archer.DATENAISSANCE || '';
+    
+    console.log('showConfirmModal - archer:', archer);
+    console.log('showConfirmModal - nom:', nom, 'prenom:', prenom);
 
     let departsHtml = '';
     if (departs && departs.length > 0) {
@@ -302,8 +319,44 @@ function showConfirmModal(archer) {
         </form>
     `;
 
-    const modal = new bootstrap.Modal(document.getElementById('confirmInscriptionModal'));
+    // S'assurer que le contenu est bien défini avant d'afficher
+    if (!modalBody.innerHTML || modalBody.innerHTML.trim() === '') {
+        console.error('showConfirmModal: Le contenu de la modale est vide');
+        alert('Erreur: Impossible de générer le formulaire d\'inscription');
+        return;
+    }
+    
+    // Initialiser et afficher la modale Bootstrap
+    const modalElement = document.getElementById('confirmInscriptionModal');
+    if (!modalElement) {
+        console.error('showConfirmModal: Élément modal introuvable');
+        alert('Erreur: Modal introuvable');
+        return;
+    }
+    
+    // Vérifier si une instance de modale existe déjà et la détruire
+    const existingModal = bootstrap.Modal.getInstance(modalElement);
+    if (existingModal) {
+        existingModal.dispose();
+    }
+    
+    // Créer une nouvelle instance de modale
+    const modal = new bootstrap.Modal(modalElement, {
+        backdrop: true,
+        keyboard: true,
+        focus: true
+    });
+    
+    // S'assurer que le titre de la modale est correct
+    const modalTitle = modalElement.querySelector('.modal-title');
+    if (modalTitle) {
+        modalTitle.textContent = 'Confirmer l\'inscription';
+    }
+    
+    // Afficher la modale
     modal.show();
+    
+    console.log('showConfirmModal: Modale affichée avec succès');
 }
 
 // Soumettre l'inscription
