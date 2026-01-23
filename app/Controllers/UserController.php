@@ -52,7 +52,7 @@ class UserController {
                 } else {
                     // Format inattendu
                     error_log('Format de réponse inattendu pour getUsers(): ' . json_encode($apiResponse, JSON_UNESCAPED_UNICODE));
-                    $users = [];
+                    $users = []; 
                 }
                 
                 // Si on a des utilisateurs, les enrichir avec le nom complet du club
@@ -96,13 +96,13 @@ class UserController {
                 // L'API n'a pas répondu avec succès
                 error_log('API backend non accessible - success=' . ($response['success'] ? 'true' : 'false') . ', status_code=' . ($response['status_code'] ?? 'N/A'));
                 error_log('Réponse complète: ' . json_encode($response, JSON_UNESCAPED_UNICODE));
-                $error = 'API backend non accessible - Affichage de données simulées';
-                $users = $this->getSimulatedUsers();
+                $error = 'API backend non accessible ';
+                //$users = $this->getSimulatedUsers();
             }
         } catch (Exception $e) {
             // En cas d'erreur, utiliser des données simulées
-            $users = $this->getSimulatedUsers();
-            $error = 'Erreur de connexion à l\'API - Affichage de données simulées';
+            //$users = $this->getSimulatedUsers();
+            $error = 'Erreur de connexion à l\'API ';
         }
         
         $title = 'Gestion des utilisateurs - Portail Archers de Gémenos';
