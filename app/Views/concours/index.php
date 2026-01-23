@@ -2,16 +2,22 @@
 <?php
 $title = "Gestion des concours - Portail Archers de Gémenos";
 ?>
-<link href="/public/assets/css/concours-index.css" rel="stylesheet">
 <div class="container-fluid">
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert alert-danger">
+            <?php 
+            echo htmlspecialchars($_SESSION['error']);
+            unset($_SESSION['error']);
+            ?>
+        </div>
+    <?php endif; ?>
+
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0">
-                    <i class="fas fa-shield-alt me-2"></i>Gestion des concours
-                </h1>
-                <?php if ($_SESSION['user']['is_admin'] ?? false): ?>
-                <div class="btn-group">
+                <h1 class="h3 mb-0">Gestion des concours</h1>
+                <?php if (isset($_SESSION['user']['is_admin']) && (bool)$_SESSION['user']): ?>
+                <div>
                     <a href="/concours/create" class="btn btn-primary">
                         <i class="fas fa-plus me-2"></i>Nouveau concours
                     </a>
@@ -95,3 +101,5 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
         </div>
     </div>
 </div>
+<link href="/public/assets/css/concours-index.css" rel="stylesheet">
+<script src="/public/assets/js/concours-table.js"></script>
