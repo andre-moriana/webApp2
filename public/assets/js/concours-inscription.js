@@ -62,8 +62,14 @@ function performSearch() {
         },
         credentials: 'include'
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur HTTP: ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Réponse de la recherche:', data);
         if (data.success && data.archers && data.archers.length > 0) {
             displaySearchResults(data.archers);
         } else {
@@ -72,7 +78,7 @@ function performSearch() {
     })
     .catch(error => {
         console.error('Erreur lors de la recherche:', error);
-        resultsList.innerHTML = '<p class="alert alert-danger">Erreur lors de la recherche.</p>';
+        resultsList.innerHTML = '<p class="alert alert-danger">Erreur lors de la recherche: ' + error.message + '</p>';
     });
 }
 
