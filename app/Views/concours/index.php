@@ -98,6 +98,18 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                     $titre = $item['titre_competition'] ?? $item['nom'] ?? '-';
                                     $lieu = $item['lieu'] ?? $item['lieu_competition'] ?? '-';
                                     
+                                    // Fonction pour tronquer le texte
+                                    function truncateText($text, $maxLength = 40) {
+                                        if (strlen($text) <= $maxLength) {
+                                            return $text;
+                                        }
+                                        return substr($text, 0, $maxLength) . '...';
+                                    }
+                                    
+                                    // Tronquer le lieu
+                                    $lieuTruncated = ($lieu && $lieu !== '-') ? truncateText($lieu, 40) : $lieu;
+                                    $lieuFull = ($lieu && $lieu !== '-') ? $lieu : '';
+                                    
                                     // Colonne 5: Dates
                                     $dateDebut = $item['date_debut'] ?? '-';
                                     $dateFin = $item['date_fin'] ?? '-';
@@ -112,10 +124,10 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                         <td data-column="type_competition">
                                             <?php echo htmlspecialchars($typeCompetitionName); ?>
                                         </td>
-                                        <td data-column="titre_lieu">
+                                        <td data-column="titre_lieu" style="max-width: 300px;">
                                             <strong><?php echo htmlspecialchars($titre); ?></strong>
                                             <?php if ($lieu && $lieu !== '-'): ?>
-                                                <br><small class="text-muted"><?php echo htmlspecialchars($lieu); ?></small>
+                                                <br><small class="text-muted" title="<?php echo htmlspecialchars($lieuFull); ?>"><?php echo htmlspecialchars($lieuTruncated); ?></small>
                                             <?php endif; ?>
                                         </td>
                                         <td data-column="dates">
