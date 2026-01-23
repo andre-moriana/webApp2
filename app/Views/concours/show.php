@@ -80,6 +80,9 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
     <div class="form-group">
         <label><strong>Lieu Compétition :</strong></label>
         <p><?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? 'Non renseigné') ?></p>
+        <?php if (isset($concours->lieu_latitude) && isset($concours->lieu_longitude) && $concours->lieu_latitude && $concours->lieu_longitude): ?>
+            <p><small>Coordonnées GPS : <?= htmlspecialchars($concours->lieu_latitude) ?>, <?= htmlspecialchars($concours->lieu_longitude) ?></small></p>
+        <?php endif; ?>
     </div>
 
     <!-- Dates -->

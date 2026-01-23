@@ -1,5 +1,8 @@
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/concours-create.css" rel="stylesheet">
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.css" />
 
 <!-- Formulaire de création/édition d'un concours -->
 <div class="container-fluid concours-create-container">
@@ -91,7 +94,15 @@ window.concoursData = <?= isset($concours) ? json_encode($concours, JSON_UNESCAP
         <!-- Lieu Compétition -->
         <div class="form-group">
             <label>Lieu Compétition :</label>
-            <input type="text" id="lieu_competition" name="lieu_competition" value="<?= $concours->lieu_competition ?? '' ?>" required>
+            <div class="lieu-fields">
+                <input type="text" id="lieu_competition" name="lieu_competition" value="<?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? '') ?>" required readonly>
+                <button type="button" class="btn btn-sm btn-primary" id="btn-select-lieu" onclick="openLieuModal()">
+                    <i class="fas fa-map-marker-alt"></i> Sélectionner sur la carte
+                </button>
+            </div>
+            <!-- Champs cachés pour les coordonnées GPS -->
+            <input type="hidden" id="lieu_latitude" name="lieu_latitude" value="<?= htmlspecialchars($concours->lieu_latitude ?? '') ?>">
+            <input type="hidden" id="lieu_longitude" name="lieu_longitude" value="<?= htmlspecialchars($concours->lieu_longitude ?? '') ?>">
         </div>
 
         <!-- Dates -->
@@ -165,4 +176,43 @@ window.concoursData = <?= isset($concours) ? json_encode($concours, JSON_UNESCAP
 <a href="/concours">Retour à la liste</a>
 </div>
 
+<!-- Modale pour sélectionner le lieu sur la carte -->
+<div class="modal fade" id="lieuModal" tabindex="-1" aria-labelledby="lieuModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="lieuModalLabel">Sélectionner le lieu sur la carte</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="lieu-search" class="form-label">Rechercher une adresse :</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="lieu-search" placeholder="Entrez une adresse...">
+                        <button class="btn btn-primary" type="button" id="btn-search-lieu">
+                            <i class="fas fa-search"></i> Rechercher
+                        </button>
+                    </div>
+                </div>
+                <div id="map-container" style="height: 500px; width: 100%; border: 1px solid #ddd; border-radius: 4px;"></div>
+                <div class="mt-3">
+                    <strong>Adresse sélectionnée :</strong>
+                    <div id="selected-address" class="text-muted">Cliquez sur la carte ou recherchez une adresse</div>
+                    <div class="mt-2">
+                        <small>Coordonnées GPS : <span id="selected-coords">-</span></small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm-lieu">Valider</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.js"></script>
 <script src="/public/assets/js/concours.js"></script>
+<script src="/public/assets/js/concours-lieu-map.js"></script>
