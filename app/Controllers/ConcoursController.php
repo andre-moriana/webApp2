@@ -821,11 +821,18 @@ class ConcoursController {
                 if ($userId) {
                     try {
                         $userResponse = $this->apiService->makeRequest("users/{$userId}", 'GET');
-                        if ($userResponse['success'] && isset($userResponse['data'])) {
-                            $usersMap[$userId] = $userResponse['data'];
+                        if ($userResponse['success']) {
+                            // Déballer les données si elles sont dans une structure imbriquée
+                            $userData = $userResponse['data'] ?? $userResponse;
+                            // Si data contient encore { success, data }, déballer une deuxième fois
+                            if (is_array($userData) && isset($userData['data']) && isset($userData['success'])) {
+                                $userData = $userData['data'];
+                            }
+                            $usersMap[$userId] = $userData;
                         }
                     } catch (Exception $e) {
                         // Ignorer les erreurs pour continuer l'affichage
+                        error_log("Erreur lors de la récupération de l'utilisateur $userId: " . $e->getMessage());
                     }
                 }
             }

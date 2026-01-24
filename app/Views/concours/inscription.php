@@ -84,13 +84,34 @@
                         foreach ($inscriptions as $inscription):
                             $userId = $inscription['user_id'] ?? null;
                             $user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
+                            
+                            // Debug: afficher les données disponibles
+                            // error_log("Inscription ID: " . ($inscription['id'] ?? 'N/A'));
+                            // error_log("User ID: " . ($userId ?? 'N/A'));
+                            // error_log("User data: " . json_encode($user));
+                            // error_log("Depart data: " . json_encode([
+                            //     'depart_id' => $inscription['depart_id'] ?? null,
+                            //     'depart_heure' => $inscription['depart_heure'] ?? null,
+                            //     'depart_date' => $inscription['depart_date'] ?? null
+                            // ]));
                         ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
                                 <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($user['club_name'] ?? $user['clubName'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($inscription['depart_id'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($user['club_name'] ?? $user['clubName'] ?? $user['club_name_short'] ?? 'N/A') ?></td>
+                                <td>
+                                    <?php 
+                                    if (!empty($inscription['depart_heure'])) {
+                                        echo htmlspecialchars($inscription['depart_heure']);
+                                        if (!empty($inscription['depart_date'])) {
+                                            echo ' (' . htmlspecialchars($inscription['depart_date']) . ')';
+                                        }
+                                    } else {
+                                        echo htmlspecialchars($inscription['depart_id'] ?? 'N/A');
+                                    }
+                                    ?>
+                                </td>
                                 <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>, <?= htmlspecialchars($userId ?? 'null') ?>)">
