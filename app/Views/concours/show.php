@@ -144,38 +144,10 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                     </thead>
                     <tbody id="inscriptions-list">
                         <?php 
-                        // Debug: Vérifier que $clubs est disponible
-                        error_log("DEBUG show.php: Variable \$clubs définie: " . (isset($clubs) ? 'OUI' : 'NON'));
-                        if (isset($clubs)) {
-                            error_log("DEBUG show.php: Type de \$clubs: " . gettype($clubs));
-                            if (is_array($clubs)) {
-                                error_log("DEBUG show.php: Nombre de clubs: " . count($clubs));
-                                if (count($clubs) > 0) {
-                                    error_log("DEBUG show.php: Premier club: " . json_encode($clubs[0]));
-                                }
-                            }
-                        }
-                        
                         // $usersMap est passé depuis le contrôleur
                         foreach ($inscriptions as $inscription):
                             $userId = $inscription['user_id'] ?? null;
                             $user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
-                            
-                            // Debug temporaire pour voir les données disponibles
-                            if ($user) {
-                                error_log("=== DEBUG SHOW - User data pour userId $userId ===");
-                                error_log("Clés disponibles: " . json_encode(array_keys($user)));
-                                error_log("Club data: " . json_encode([
-                                    'clubName' => $user['clubName'] ?? 'NULL',
-                                    'club_name' => $user['club_name'] ?? 'NULL',
-                                    'clubNameShort' => $user['clubNameShort'] ?? 'NULL',
-                                    'club_name_short' => $user['club_name_short'] ?? 'NULL',
-                                    'clubId' => $user['clubId'] ?? 'NULL',
-                                    'club_id' => $user['club_id'] ?? 'NULL'
-                                ]));
-                            } else {
-                                error_log("=== DEBUG SHOW - User NULL pour userId $userId ===");
-                            }
                        ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
                                 <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
@@ -187,13 +159,15 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                     // Prioriser name_short (nom court) comme demandé
                                     $clubName = $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
                                     
-                                    // Fallback: si toujours pas de nom, essayer de le récupérer depuis $clubs
+                                    // Si toujours pas de nom, essayer de le récupérer depuis $clubs (fallback)
                                     if (empty($clubName)) {
                                         $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
                                         if ($clubId && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
                                             foreach ($clubs as $club) {
                                                 $clubDbId = $club['id'] ?? $club['_id'] ?? null;
+                                                // Comparaison avec conversion en string pour éviter les problèmes de type
                                                 if ($clubDbId && (($clubDbId == $clubId) || ((string)$clubDbId === (string)$clubId))) {
+                                                    // Prioriser name_short (nom court) si disponible
                                                     $clubName = $club['name_short'] ?? $club['nameShort'] ?? $club['name'] ?? null;
                                                     break;
                                                 }
@@ -201,6 +175,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                         }
                                     }
                                     
+                                    // Afficher le nom du club ou N/A
                                     echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
