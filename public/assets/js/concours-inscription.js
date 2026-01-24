@@ -225,10 +225,32 @@ window.showConfirmModal = function(archer) {
         console.log('Modale affichée avec Bootstrap');
         
         // Fonction pour convertir le format XML vers le format base de données
-        const convertCategorieXmlToDb = (categorieXml) => {
-            if (!categorieXml || categorieXml.length < 3) return categorieXml;
+        // Si H ou F n'est pas dans CATEGORIE, utilise SEXE (1=H, 2=F)
+        const convertCategorieXmlToDb = (categorieXml, sexeXml = null) => {
+            if (!categorieXml || categorieXml.length < 2) return categorieXml;
             
-            // Patterns de conversion connus
+            // Vérifier si H ou F est déjà présent dans la catégorie
+            const hasSexe = /[HF]$/i.test(categorieXml);
+            
+            // Si pas de H/F dans CATEGORIE, utiliser SEXE du XML (1=H, 2=F)
+            let sexe = '';
+            if (!hasSexe && sexeXml) {
+                const sexeNum = parseInt(sexeXml);
+                if (sexeNum === 1) {
+                    sexe = 'H';
+                } else if (sexeNum === 2) {
+                    sexe = 'F';
+                }
+                console.log('showConfirmModal - SEXE utilisé depuis XML:', sexeXml, '->', sexe);
+            } else if (hasSexe) {
+                // Extraire H ou F de la catégorie
+                const sexeMatch = categorieXml.match(/([HF])$/i);
+                if (sexeMatch) {
+                    sexe = sexeMatch[1].toUpperCase();
+                }
+            }
+            
+            // Patterns de conversion connus (avec H/F déjà présent)
             const conversions = {
                 'COS3H': 'S3HCO', 'COS3F': 'S3FCO',
                 'COS2H': 'S2HCO', 'COS2F': 'S2FCO',
@@ -242,13 +264,25 @@ window.showConfirmModal = function(archer) {
                 return conversions[categorieXml];
             }
             
-            // Tentative de conversion automatique pour les patterns CO + [Catégorie] + [Sexe]
-            const pattern = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
-            const match = categorieXml.match(pattern);
-            if (match) {
-                const categorie = match[1].toUpperCase();
-                const sexe = match[2].toUpperCase();
-                return categorie + sexe + 'CO';
+            // Si on a un sexe (depuis CATEGORIE ou SEXE), construire la catégorie complète
+            if (sexe) {
+                // Pattern: CO + [Catégorie] (sans H/F à la fin)
+                // Exemple: "COS3" + "H" -> "S3HCO"
+                const pattern = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)$/i;
+                const match = categorieXml.match(pattern);
+                if (match) {
+                    const categorie = match[1].toUpperCase();
+                    return categorie + sexe + 'CO'; // Format: S3HCO
+                }
+                
+                // Pattern: CO + [Catégorie] + [H|F] (déjà présent)
+                const patternWithSexe = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+                const matchWithSexe = categorieXml.match(patternWithSexe);
+                if (matchWithSexe) {
+                    const categorie = matchWithSexe[1].toUpperCase();
+                    const sexeFromCat = matchWithSexe[2].toUpperCase();
+                    return categorie + sexeFromCat + 'CO'; // Format: S3HCO
+                }
             }
             
             return categorieXml;
@@ -260,10 +294,11 @@ window.showConfirmModal = function(archer) {
             const categorieSelect = document.getElementById('categorie_classement');
             if (categorieSelect) {
                 let categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
-                console.log('showConfirmModal - Tentative de pré-remplissage catégorie. Valeur XML originale:', categorieXml);
+                const sexeXml = (archer.sexe || archer.SEXE || '').trim();
+                console.log('showConfirmModal - Tentative de pré-remplissage catégorie. Valeur XML originale:', categorieXml, 'SEXE XML:', sexeXml);
                 
-                // Convertir le format XML si nécessaire
-                const categorieConvertie = convertCategorieXmlToDb(categorieXml);
+                // Convertir le format XML si nécessaire (en passant SEXE si H/F n'est pas dans CATEGORIE)
+                const categorieConvertie = convertCategorieXmlToDb(categorieXml, sexeXml);
                 if (categorieConvertie !== categorieXml) {
                     console.log('showConfirmModal - Conversion format XML -> DB:', categorieXml, '->', categorieConvertie);
                     categorieXml = categorieConvertie;
@@ -650,10 +685,32 @@ function selectArcher(archer, cardElement) {
     
     // Fonction pour convertir le format XML vers le format base de données
     // Exemple: "COS3H" -> "S3HCO" (CO + S3 + H -> S3 + H + CO)
-    const convertCategorieXmlToDb = (categorieXml) => {
-        if (!categorieXml || categorieXml.length < 3) return categorieXml;
+    // Si H ou F n'est pas dans CATEGORIE, utilise SEXE (1=H, 2=F)
+    const convertCategorieXmlToDb = (categorieXml, sexeXml = null) => {
+        if (!categorieXml || categorieXml.length < 2) return categorieXml;
         
-        // Patterns de conversion connus
+        // Vérifier si H ou F est déjà présent dans la catégorie
+        const hasSexe = /[HF]$/i.test(categorieXml);
+        
+        // Si pas de H/F dans CATEGORIE, utiliser SEXE du XML (1=H, 2=F)
+        let sexe = '';
+        if (!hasSexe && sexeXml) {
+            const sexeNum = parseInt(sexeXml);
+            if (sexeNum === 1) {
+                sexe = 'H';
+            } else if (sexeNum === 2) {
+                sexe = 'F';
+            }
+            console.log('SEXE utilisé depuis XML:', sexeXml, '->', sexe);
+        } else if (hasSexe) {
+            // Extraire H ou F de la catégorie
+            const sexeMatch = categorieXml.match(/([HF])$/i);
+            if (sexeMatch) {
+                sexe = sexeMatch[1].toUpperCase();
+            }
+        }
+        
+        // Patterns de conversion connus (avec H/F déjà présent)
         const conversions = {
             'COS3H': 'S3HCO',  // Arc à poulies + Seniors 3 + Hommes
             'COS3F': 'S3FCO',  // Arc à poulies + Seniors 3 + Femmes
@@ -674,14 +731,25 @@ function selectArcher(archer, cardElement) {
             return conversions[categorieXml];
         }
         
-        // Tentative de conversion automatique pour les patterns CO + [Catégorie] + [Sexe]
-        // Pattern: CO + (U11|U13|U15|U18|U21|S1|S2|S3) + (H|F)
-        const pattern = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
-        const match = categorieXml.match(pattern);
-        if (match) {
-            const categorie = match[1].toUpperCase();
-            const sexe = match[2].toUpperCase();
-            return categorie + sexe + 'CO'; // Format: S3HCO
+        // Si on a un sexe (depuis CATEGORIE ou SEXE), construire la catégorie complète
+        if (sexe) {
+            // Pattern: CO + [Catégorie] (sans H/F à la fin)
+            // Exemple: "COS3" + "H" -> "S3HCO"
+            const pattern = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)$/i;
+            const match = categorieXml.match(pattern);
+            if (match) {
+                const categorie = match[1].toUpperCase();
+                return categorie + sexe + 'CO'; // Format: S3HCO
+            }
+            
+            // Pattern: CO + [Catégorie] + [H|F] (déjà présent)
+            const patternWithSexe = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+            const matchWithSexe = categorieXml.match(patternWithSexe);
+            if (matchWithSexe) {
+                const categorie = matchWithSexe[1].toUpperCase();
+                const sexeFromCat = matchWithSexe[2].toUpperCase();
+                return categorie + sexeFromCat + 'CO'; // Format: S3HCO
+            }
         }
         
         // Si aucune conversion trouvée, retourner la valeur originale
@@ -694,10 +762,11 @@ function selectArcher(archer, cardElement) {
         const categorieSelect = document.getElementById('categorie_classement');
         if (categorieSelect) {
             let categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
-            console.log('Tentative de pré-remplissage catégorie. Valeur XML originale:', categorieXml);
+            const sexeXml = (archer.sexe || archer.SEXE || '').trim();
+            console.log('Tentative de pré-remplissage catégorie. Valeur XML originale:', categorieXml, 'SEXE XML:', sexeXml);
             
-            // Convertir le format XML si nécessaire
-            const categorieConvertie = convertCategorieXmlToDb(categorieXml);
+            // Convertir le format XML si nécessaire (en passant SEXE si H/F n'est pas dans CATEGORIE)
+            const categorieConvertie = convertCategorieXmlToDb(categorieXml, sexeXml);
             if (categorieConvertie !== categorieXml) {
                 console.log('Conversion format XML -> DB:', categorieXml, '->', categorieConvertie);
                 categorieXml = categorieConvertie;
