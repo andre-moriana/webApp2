@@ -185,6 +185,12 @@ class Router {
         $this->addRoute("PUT", "/events/{id}", "EventController@update");
         $this->addRoute("DELETE", "/events/{id}", "EventController@destroy");
         
+        // Routes API pour les concours (proxy vers backend)
+        $this->addRoute("GET", "/api/concours/distance-recommandee", "ApiController@proxyConcoursDistanceRecommandee");
+        $this->addRoute("GET", "/api/concours/blason-recommandee", "ApiController@proxyConcoursBlasonRecommandee");
+        $this->addRoute("GET", "/api/concours/{id}/inscription/{userId}", "ApiController@proxyConcoursInscription");
+        $this->addRoute("DELETE", "/api/concours/{id}/inscription/{userId}", "ApiController@proxyConcoursInscription");
+        
         // Routes API (protégées)
         $this->addRoute("GET", "/api/documents", "ApiController@documents");
         $this->addRoute("GET", "/api/documents/user/{id}", "ApiController@userDocuments");
