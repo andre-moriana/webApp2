@@ -496,6 +496,25 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des inscriptions: ' . $e->getMessage());
         }
         
+        // Récupérer les informations complètes des utilisateurs inscrits
+        $userIds = array_column($inscriptions, 'user_id');
+        $usersMap = [];
+        if (!empty($userIds)) {
+            foreach ($userIds as $userId) {
+                if ($userId) {
+                    try {
+                        $userResponse = $this->apiService->makeRequest("users/{$userId}", 'GET');
+                        if ($userResponse['success'] && isset($userResponse['data'])) {
+                            $usersMap[$userId] = $userResponse['data'];
+                        }
+                    } catch (Exception $e) {
+                        // Ignorer les erreurs pour continuer l'affichage
+                        error_log("Erreur lors de la récupération de l'utilisateur $userId: " . $e->getMessage());
+                    }
+                }
+            }
+        }
+        
         // Charger les données pour afficher les libellés
         try {
             // Clubs
