@@ -1229,6 +1229,8 @@ class ConcoursController {
         $inscriptionData = [
             'user_id' => $user_id,
             'numero_depart' => isset($_POST['numero_depart']) && $_POST['numero_depart'] !== '' ? (int)$_POST['numero_depart'] : null,
+            'numero_licence' => $_POST['numero_licence'] ?? null,
+            'id_club' => $_POST['id_club'] ?? null,
             'saison' => $_POST['saison'] ?? null,
             'type_certificat_medical' => $_POST['type_certificat_medical'] ?? null,
             'type_licence' => $_POST['type_licence'] ?? null,
