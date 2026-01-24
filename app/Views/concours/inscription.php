@@ -126,8 +126,8 @@
                                 <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php 
-                                    // Le nom du club est déjà enrichi dans le contrôleur
-                                    $clubName = $inscription['club_name_short'] ?? $inscription['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
+                                    // Afficher le champ "name" (nom complet) du club comme demandé
+                                    $clubName = $inscription['club_name'] ?? $inscription['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
                                     echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
