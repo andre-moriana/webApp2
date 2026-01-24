@@ -34,18 +34,22 @@
     </div>
 
     <!-- Sélection du départ -->
+    <?php 
+    $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null);
+    // Debug: vérifier la valeur
+    // error_log("DEBUG nombre_depart: " . var_export($nombreDepart, true));
+    // error_log("DEBUG concours object: " . var_export($concours, true));
+    ?>
     <div class="depart-selection-section mb-4">
         <h3>Sélectionner un départ</h3>
         <div class="form-group">
             <label for="depart-select-main" class="form-label">N° départ <span class="text-danger">*</span></label>
             <select id="depart-select-main" class="form-control" required name="depart-select-main">
                 <option value="">Sélectionner un départ</option>
-                <?php if (!empty($departs)): ?>
-                    <?php foreach ($departs as $index => $depart): ?>
-                        <option value="<?= htmlspecialchars($depart['id'] ?? $depart['_id'] ?? '') ?>">
-                            Départ <?= ($index + 1) ?> - <?= htmlspecialchars($depart['heure'] ?? '') ?><?= !empty($depart['date']) ? ' (' . htmlspecialchars($depart['date']) . ')' : '' ?>
-                        </option>
-                    <?php endforeach; ?>
+                <?php if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0): ?>
+                    <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): ?>
+                        <option value="<?= $i ?>">Départ <?= $i ?></option>
+                    <?php endfor; ?>
                 <?php else: ?>
                     <option value="" disabled>Aucun départ disponible</option>
                 <?php endif; ?>
