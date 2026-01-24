@@ -184,7 +184,16 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="categorie_classement" class="form-label">Catégorie de classement</label>
-                            <input type="text" id="categorie_classement" class="form-control" placeholder="Ex: S3HCL">
+                            <select id="categorie_classement" class="form-control">
+                                <option value="">Sélectionner une catégorie</option>
+                                <?php if (!empty($categoriesClassement)): ?>
+                                    <?php foreach ($categoriesClassement as $categorie): ?>
+                                        <option value="<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>">
+                                            <?= htmlspecialchars($categorie['lb_categorie_classement'] ?? '') ?> (<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
@@ -271,5 +280,6 @@
 // Variables globales - doivent être définies avant le chargement du script
 const concoursId = <?= json_encode($concoursId ?? null) ?>;
 const departs = <?= json_encode($departs ?? [], JSON_UNESCAPED_UNICODE) ?>;
+const categoriesClassement = <?= json_encode($categoriesClassement ?? [], JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="/public/assets/js/concours-inscription.js"></script>
