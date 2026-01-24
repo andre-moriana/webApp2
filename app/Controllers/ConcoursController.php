@@ -524,6 +524,7 @@ class ConcoursController {
         }
         
         // Charger les données pour afficher les libellés
+        $clubs = []; // Initialiser pour éviter les erreurs si l'API échoue
         try {
             // Clubs
             $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
@@ -539,21 +540,29 @@ class ConcoursController {
                 
                 // Si des utilisateurs n'ont pas de clubName mais ont un club_id, compléter depuis la liste des clubs
                 foreach ($usersMap as $userId => &$userData) {
-                    if (empty($userData['clubName']) && !empty($userData['clubId'])) {
-                        $clubId = $userData['clubId'] ?? $userData['club_id'] ?? null;
-                        if ($clubId) {
-                            foreach ($clubs as $club) {
-                                $clubDbId = $club['id'] ?? $club['_id'] ?? null;
-                                if ($clubDbId == $clubId) {
-                                    $userData['clubName'] = $club['name'] ?? null;
-                                    $userData['clubNameShort'] = $club['name_short'] ?? null;
-                                    break;
-                                }
+                    $clubName = $userData['clubName'] ?? $userData['club_name'] ?? null;
+                    $clubId = $userData['clubId'] ?? $userData['club_id'] ?? null;
+                    
+                    // Si pas de clubName mais un clubId, chercher dans la liste des clubs
+                    if (empty($clubName) && !empty($clubId)) {
+                        error_log("DEBUG show(): User $userId a clubId=$clubId mais pas de clubName, recherche dans " . count($clubs) . " clubs...");
+                        foreach ($clubs as $club) {
+                            $clubDbId = $club['id'] ?? $club['_id'] ?? null;
+                            // Comparaison avec conversion en string pour éviter les problèmes de type
+                            if ($clubDbId && ($clubDbId == $clubId || (string)$clubDbId === (string)$clubId)) {
+                                $userData['clubName'] = $club['name'] ?? null;
+                                $userData['clubNameShort'] = $club['name_short'] ?? null;
+                                error_log("DEBUG show(): Club trouvé pour user $userId: " . ($userData['clubName'] ?? 'NULL'));
+                                break;
                             }
                         }
+                    } else {
+                        error_log("DEBUG show(): User $userId - clubName=" . ($clubName ?? 'NULL') . ", clubId=" . ($clubId ?? 'NULL'));
                     }
                 }
                 unset($userData);
+            } else {
+                error_log("DEBUG show(): Échec de la récupération des clubs - success=" . ($clubsResponse['success'] ?? 'NULL'));
             }
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
