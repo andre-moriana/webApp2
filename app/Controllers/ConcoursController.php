@@ -1229,8 +1229,8 @@ class ConcoursController {
         $inscriptionData = [
             'user_id' => $user_id,
             'numero_depart' => isset($_POST['numero_depart']) && $_POST['numero_depart'] !== '' ? (int)$_POST['numero_depart'] : null,
-            'numero_licence' => $_POST['numero_licence'] ?? null,
-            'id_club' => $_POST['id_club'] ?? null,
+            'numero_licence' => !empty($_POST['numero_licence']) ? $_POST['numero_licence'] : null,
+            'id_club' => !empty($_POST['id_club']) ? $_POST['id_club'] : null,
             'saison' => $_POST['saison'] ?? null,
             'type_certificat_medical' => $_POST['type_certificat_medical'] ?? null,
             'type_licence' => $_POST['type_licence'] ?? null,
@@ -1248,12 +1248,17 @@ class ConcoursController {
         ];
 
         // Appel API pour inscrire
-        $response = $this->apiService->makeRequest("concours/{$concoursId}/inscription", 'POST', $inscriptionData);
+        try {
+            $response = $this->apiService->makeRequest("concours/{$concoursId}/inscription", 'POST', $inscriptionData);
 
-        if ($response['success']) {
-            $_SESSION['success'] = 'Inscription réussie';
-        } else {
-            $_SESSION['error'] = $response['error'] ?? 'Erreur lors de l\'inscription';
+            if ($response['success']) {
+                $_SESSION['success'] = 'Inscription réussie';
+            } else {
+                $errorMessage = $response['error'] ?? $response['message'] ?? $response['data']['error'] ?? $response['data']['message'] ?? 'Erreur lors de l\'inscription';
+                $_SESSION['error'] = $errorMessage;
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Erreur lors de l\'inscription: ' . $e->getMessage();
         }
 
         header("Location: /concours/{$concoursId}/inscription");
