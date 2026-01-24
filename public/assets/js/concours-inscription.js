@@ -224,13 +224,50 @@ window.showConfirmModal = function(archer) {
         modal.show();
         console.log('Modale affichée avec Bootstrap');
         
+        // Fonction pour convertir le format XML vers le format base de données
+        const convertCategorieXmlToDb = (categorieXml) => {
+            if (!categorieXml || categorieXml.length < 3) return categorieXml;
+            
+            // Patterns de conversion connus
+            const conversions = {
+                'COS3H': 'S3HCO', 'COS3F': 'S3FCO',
+                'COS2H': 'S2HCO', 'COS2F': 'S2FCO',
+                'COS1H': 'S1HCO', 'COS1F': 'S1FCO',
+                'COU21H': 'U21HCO', 'COU21F': 'U21FCO',
+                'COU18H': 'U18HCO', 'COU18F': 'U18FCO',
+                'COU15H': 'U15HCO', 'COU15F': 'U15FCO',
+            };
+            
+            if (conversions[categorieXml]) {
+                return conversions[categorieXml];
+            }
+            
+            // Tentative de conversion automatique pour les patterns CO + [Catégorie] + [Sexe]
+            const pattern = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+            const match = categorieXml.match(pattern);
+            if (match) {
+                const categorie = match[1].toUpperCase();
+                const sexe = match[2].toUpperCase();
+                return categorie + sexe + 'CO';
+            }
+            
+            return categorieXml;
+        };
+        
         // Fonction pour pré-remplir les champs catégorie et arme
         const prefillCategorieAndArme = () => {
             // Pré-remplir la catégorie de classement depuis CATEGORIE (correspond à abv_categorie_classement)
             const categorieSelect = document.getElementById('categorie_classement');
             if (categorieSelect) {
-                const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
-                console.log('showConfirmModal - Tentative de pré-remplissage catégorie. Valeur XML:', categorieXml);
+                let categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
+                console.log('showConfirmModal - Tentative de pré-remplissage catégorie. Valeur XML originale:', categorieXml);
+                
+                // Convertir le format XML si nécessaire
+                const categorieConvertie = convertCategorieXmlToDb(categorieXml);
+                if (categorieConvertie !== categorieXml) {
+                    console.log('showConfirmModal - Conversion format XML -> DB:', categorieXml, '->', categorieConvertie);
+                    categorieXml = categorieConvertie;
+                }
                 
                 if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0) {
                     // La valeur CATEGORIE du XML correspond directement à abv_categorie_classement
@@ -245,13 +282,13 @@ window.showConfirmModal = function(archer) {
                         const optionExists = Array.from(categorieSelect.options).some(opt => opt.value === valueToSet);
                         if (optionExists) {
                             categorieSelect.value = valueToSet;
-                            console.log('✓ showConfirmModal - Catégorie pré-remplie:', valueToSet, '(depuis XML CATEGORIE:', categorieXml, ')');
+                            console.log('✓ showConfirmModal - Catégorie pré-remplie:', valueToSet, '(depuis XML CATEGORIE convertie:', categorieXml, ')');
                             console.log('Valeur du select après assignation:', categorieSelect.value);
                         } else {
                             console.warn('✗ showConfirmModal - Option non trouvée dans le select. Valeur recherchée:', valueToSet);
                         }
                     } else {
-                        console.warn('✗ showConfirmModal - Catégorie XML non trouvée. Valeur XML:', categorieXml);
+                        console.warn('✗ showConfirmModal - Catégorie XML non trouvée. Valeur XML (après conversion):', categorieXml);
                     }
                 }
             }
@@ -611,13 +648,61 @@ function selectArcher(archer, cardElement) {
         console.log('Création/Renouvellement pré-rempli:', creationRenouvellement, 'checked:', creationRenouvellementCheckbox.checked);
     }
     
+    // Fonction pour convertir le format XML vers le format base de données
+    // Exemple: "COS3H" -> "S3HCO" (CO + S3 + H -> S3 + H + CO)
+    const convertCategorieXmlToDb = (categorieXml) => {
+        if (!categorieXml || categorieXml.length < 3) return categorieXml;
+        
+        // Patterns de conversion connus
+        const conversions = {
+            'COS3H': 'S3HCO',  // Arc à poulies + Seniors 3 + Hommes
+            'COS3F': 'S3FCO',  // Arc à poulies + Seniors 3 + Femmes
+            'COS2H': 'S2HCO',  // Arc à poulies + Seniors 2 + Hommes
+            'COS2F': 'S2FCO',  // Arc à poulies + Seniors 2 + Femmes
+            'COS1H': 'S1HCO',  // Arc à poulies + Seniors 1 + Hommes
+            'COS1F': 'S1FCO',  // Arc à poulies + Seniors 1 + Femmes
+            'COU21H': 'U21HCO', // Arc à poulies + U21 + Hommes
+            'COU21F': 'U21FCO', // Arc à poulies + U21 + Femmes
+            'COU18H': 'U18HCO', // Arc à poulies + U18 + Hommes
+            'COU18F': 'U18FCO', // Arc à poulies + U18 + Femmes
+            'COU15H': 'U15HCO', // Arc à poulies + U15 + Hommes
+            'COU15F': 'U15FCO', // Arc à poulies + U15 + Femmes
+        };
+        
+        // Vérifier d'abord les conversions directes
+        if (conversions[categorieXml]) {
+            return conversions[categorieXml];
+        }
+        
+        // Tentative de conversion automatique pour les patterns CO + [Catégorie] + [Sexe]
+        // Pattern: CO + (U11|U13|U15|U18|U21|S1|S2|S3) + (H|F)
+        const pattern = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+        const match = categorieXml.match(pattern);
+        if (match) {
+            const categorie = match[1].toUpperCase();
+            const sexe = match[2].toUpperCase();
+            return categorie + sexe + 'CO'; // Format: S3HCO
+        }
+        
+        // Si aucune conversion trouvée, retourner la valeur originale
+        return categorieXml;
+    };
+    
     // Fonction pour pré-remplir les champs catégorie et arme
     const prefillCategorieAndArme = () => {
         // Pré-remplir la catégorie de classement depuis CATEGORIE (correspond à abv_categorie_classement)
         const categorieSelect = document.getElementById('categorie_classement');
         if (categorieSelect) {
-            const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
-            console.log('Tentative de pré-remplissage catégorie. Valeur XML:', categorieXml);
+            let categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
+            console.log('Tentative de pré-remplissage catégorie. Valeur XML originale:', categorieXml);
+            
+            // Convertir le format XML si nécessaire
+            const categorieConvertie = convertCategorieXmlToDb(categorieXml);
+            if (categorieConvertie !== categorieXml) {
+                console.log('Conversion format XML -> DB:', categorieXml, '->', categorieConvertie);
+                categorieXml = categorieConvertie;
+            }
+            
             console.log('CategoriesClassement disponible:', typeof categoriesClassement !== 'undefined', 'Count:', typeof categoriesClassement !== 'undefined' ? categoriesClassement.length : 0);
             
             if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0) {
@@ -633,15 +718,15 @@ function selectArcher(archer, cardElement) {
                     const optionExists = Array.from(categorieSelect.options).some(opt => opt.value === valueToSet);
                     if (optionExists) {
                         categorieSelect.value = valueToSet;
-                        console.log('✓ Catégorie pré-remplie avec succès:', valueToSet, '(depuis XML CATEGORIE:', categorieXml, ')');
+                        console.log('✓ Catégorie pré-remplie avec succès:', valueToSet, '(depuis XML CATEGORIE convertie:', categorieXml, ')');
                         console.log('Valeur du select après assignation:', categorieSelect.value);
                     } else {
                         console.warn('✗ Option non trouvée dans le select. Valeur recherchée:', valueToSet);
                         console.log('Options disponibles:', Array.from(categorieSelect.options).map(opt => opt.value).slice(0, 10).join(', '));
                     }
                 } else {
-                    console.warn('✗ Catégorie XML non trouvée. Valeur XML:', categorieXml);
-                    console.log('Premières catégories disponibles:', categoriesClassement.slice(0, 5).map(c => c.abv_categorie_classement).join(', '));
+                    console.warn('✗ Catégorie XML non trouvée. Valeur XML (après conversion):', categorieXml);
+                    console.log('Premières catégories disponibles:', categoriesClassement.slice(0, 10).map(c => c.abv_categorie_classement).join(', '));
                 }
             } else {
                 console.warn('Impossible de pré-remplir la catégorie. categorieXml:', categorieXml, 'categoriesClassement:', typeof categoriesClassement);
