@@ -102,7 +102,7 @@ window.showConfirmModal = function(archer) {
                 </div>
                 <div class="col-md-6 mb-3">
                     <div class="form-check mt-4">
-                        <input type="checkbox" id="creation_renouvellement" class="form-check-input">
+                        <input type="checkbox" id="creation_renouvellement" class="form-check-input" disabled>
                         <label for="creation_renouvellement" class="form-check-label">Création/Renouvellement</label>
                     </div>
                 </div>
@@ -439,6 +439,16 @@ window.showConfirmModal = function(archer) {
                         break;
                     }
                 }
+            }
+            
+            // Pré-remplir le champ création/renouvellement
+            const creationRenouvellement = (archer.creation_renouvellement || archer.Creation_renouvellement || '').trim();
+            const creationRenouvellementCheckbox = document.getElementById('creation_renouvellement');
+            if (creationRenouvellementCheckbox) {
+                creationRenouvellementCheckbox.disabled = false; // Activer temporairement
+                creationRenouvellementCheckbox.checked = creationRenouvellement.length > 0;
+                creationRenouvellementCheckbox.disabled = true; // Re-désactiver
+                console.log('showConfirmModal - Création/Renouvellement pré-rempli:', creationRenouvellement, 'checked:', creationRenouvellementCheckbox.checked);
             }
         };
         
@@ -796,7 +806,9 @@ function selectArcher(archer, cardElement) {
     const creationRenouvellementCheckbox = document.getElementById('creation_renouvellement');
     if (creationRenouvellementCheckbox) {
         // Cocher si la valeur existe (R pour Renouvellement, C pour Création, ou toute autre valeur non vide)
+        creationRenouvellementCheckbox.disabled = false; // Activer temporairement pour définir la valeur
         creationRenouvellementCheckbox.checked = creationRenouvellement.length > 0;
+        creationRenouvellementCheckbox.disabled = true; // Re-désactiver
         console.log('Création/Renouvellement pré-rempli:', creationRenouvellement, 'checked:', creationRenouvellementCheckbox.checked);
     }
     
@@ -1032,11 +1044,15 @@ function submitInscription() {
     // Activer temporairement les champs disabled pour récupérer leurs valeurs
     const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');
     const typeLicenceSelect = document.getElementById('type_licence');
+    const creationRenouvellementCheckbox = document.getElementById('creation_renouvellement');
     if (typeCertificatMedicalSelect && typeCertificatMedicalSelect.disabled) {
         typeCertificatMedicalSelect.disabled = false;
     }
     if (typeLicenceSelect && typeLicenceSelect.disabled) {
         typeLicenceSelect.disabled = false;
+    }
+    if (creationRenouvellementCheckbox && creationRenouvellementCheckbox.disabled) {
+        creationRenouvellementCheckbox.disabled = false;
     }
     
     // Récupérer tous les champs du formulaire
@@ -1044,6 +1060,7 @@ function submitInscription() {
     const saison = document.getElementById('saison')?.value || null;
     const typeCertificatMedical = document.getElementById('type_certificat_medical')?.value || null;
     const typeLicence = document.getElementById('type_licence')?.value || null;
+    const creationRenouvellement = document.getElementById('creation_renouvellement')?.checked ? 1 : 0;
     
     // Re-désactiver les champs après récupération des valeurs
     if (typeCertificatMedicalSelect) {
@@ -1052,7 +1069,9 @@ function submitInscription() {
     if (typeLicenceSelect) {
         typeLicenceSelect.disabled = true;
     }
-    const creationRenouvellement = document.getElementById('creation_renouvellement')?.checked ? 1 : 0;
+    if (creationRenouvellementCheckbox) {
+        creationRenouvellementCheckbox.disabled = true;
+    }
     const categorieClassement = document.getElementById('categorie_classement')?.value || null;
     const arme = document.getElementById('arme')?.value || null;
     const mobiliteReduite = document.getElementById('mobilite_reduite')?.checked ? 1 : 0;
