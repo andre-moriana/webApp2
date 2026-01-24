@@ -156,7 +156,29 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                 <td>
                                     <?php 
                                     // Utiliser la même logique que dans inscription.php qui fonctionne
-                                    echo htmlspecialchars($user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? 'N/A');
+                                    // Mais aussi vérifier si on peut récupérer depuis $clubs si pas trouvé
+                                    $clubName = $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
+                                    
+                                    // Si toujours pas de nom, essayer de le récupérer depuis $clubs
+                                    if (empty($clubName)) {
+                                        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
+                                        if (!empty($clubId) && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
+                                            foreach ($clubs as $club) {
+                                                $clubDbId = $club['id'] ?? $club['_id'] ?? null;
+                                                if ($clubDbId && (
+                                                    $clubDbId == $clubId || 
+                                                    (string)$clubDbId === (string)$clubId ||
+                                                    (int)$clubDbId === (int)$clubId
+                                                )) {
+                                                    // Prioriser name_short (nom court) si disponible
+                                                    $clubName = $club['name_short'] ?? $club['nameShort'] ?? $club['name'] ?? null;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
                                 <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
