@@ -805,13 +805,6 @@ class ConcoursController {
             $concours = (object)$concours;
         }
 
-        // Récupérer les départs du concours (ils sont déjà inclus dans $concours via findWithDeparts)
-        $departs = [];
-        if (is_object($concours) && isset($concours->departs)) {
-            $departs = $concours->departs;
-        } elseif (is_array($concours) && isset($concours['departs'])) {
-            $departs = $concours['departs'];
-        }
 
         // Récupérer les inscriptions existantes
         $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
@@ -1036,7 +1029,6 @@ class ConcoursController {
         // Préparer toutes les données d'inscription
         $inscriptionData = [
             'user_id' => $user_id,
-            'depart_id' => $_POST['depart_id'] ?? null,
             'saison' => $_POST['saison'] ?? null,
             'type_certificat_medical' => $_POST['type_certificat_medical'] ?? null,
             'type_licence' => $_POST['type_licence'] ?? null,

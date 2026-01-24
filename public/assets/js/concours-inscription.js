@@ -44,22 +44,6 @@ window.showConfirmModal = function(archer) {
     
     // Générer le HTML pour les départs
     let departsHtml = '';
-    if (typeof departs !== 'undefined' && departs && departs.length > 0) {
-        departsHtml = `
-            <div class="mb-3">
-                <label for="depart-select" class="form-label">N° départ <span class="text-danger">*</span></label>
-                <select id="depart-select" class="form-control" required>
-                    <option value="">Sélectionner un départ</option>
-                    ${departs.map(depart => {
-                        const departId = depart.id || depart._id || '';
-                        const departNum = depart.numero || depart.numero_depart || '';
-                        const departHeure = depart.heure || '';
-                        return `<option value="${departId}">Départ ${departNum} - ${departHeure}</option>`;
-                    }).join('')}
-                </select>
-            </div>
-        `;
-    }
     
     // Construire le contenu HTML COMPLET avec tous les champs
     const modalContent = `
@@ -766,26 +750,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchResults = document.getElementById('search-results');
     const resultsList = document.getElementById('results-list');
     
-    // Synchroniser le select principal du départ avec celui de la modale
-    const departSelectMain = document.getElementById('depart-select-main');
-    const departSelectModal = document.getElementById('depart-select');
-    
-    if (departSelectMain && departSelectModal) {
-        // Quand le select principal change, mettre à jour celui de la modale
-        departSelectMain.addEventListener('change', function() {
-            departSelectModal.value = this.value;
-        });
-        
-        // Quand la modale s'ouvre, synchroniser avec le select principal
-        const modalElement = document.getElementById('confirmInscriptionModal');
-        if (modalElement) {
-            modalElement.addEventListener('shown.bs.modal', function() {
-                if (departSelectMain.value) {
-                    departSelectModal.value = departSelectMain.value;
-                }
-            });
-        }
-    }
 
     // Recherche au clic sur le bouton
     if (btnSearch) {
@@ -1563,10 +1527,6 @@ function submitInscription() {
     }
     
     // Récupérer tous les champs du formulaire
-    // Utiliser le select principal (avant la recherche) ou celui de la modale
-    const departSelectMain = document.getElementById('depart-select-main');
-    const departSelectModal = document.getElementById('depart-select');
-    const departId = (departSelectMain?.value || departSelectModal?.value) || null;
     const saison = document.getElementById('saison')?.value || null;
     const typeCertificatMedical = document.getElementById('type_certificat_medical')?.value || null;
     const typeLicence = document.getElementById('type_licence')?.value || null;
@@ -1598,7 +1558,6 @@ function submitInscription() {
     // Ajouter tous les champs
     const fields = {
         'user_id': userId,
-        'depart_id': departId,
         'saison': saison,
         'type_certificat_medical': typeCertificatMedical,
         'type_licence': typeLicence,
