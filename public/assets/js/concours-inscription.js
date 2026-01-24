@@ -252,12 +252,24 @@ window.showConfirmModal = function(archer) {
             
             // Patterns de conversion connus (avec H/F déjà présent)
             const conversions = {
+                // Arc à poulies (CO)
                 'COS3H': 'S3HCO', 'COS3F': 'S3FCO',
                 'COS2H': 'S2HCO', 'COS2F': 'S2FCO',
                 'COS1H': 'S1HCO', 'COS1F': 'S1FCO',
                 'COU21H': 'U21HCO', 'COU21F': 'U21FCO',
                 'COU18H': 'U18HCO', 'COU18F': 'U18FCO',
                 'COU15H': 'U15HCO', 'COU15F': 'U15FCO',
+                'COU13H': 'U13HCO', 'COU13F': 'U13FCO',
+                'COU11H': 'U11HCO', 'COU11F': 'U11FCO',
+                // Arc classique (CL)
+                'CLS3H': 'S3HCL', 'CLS3F': 'S3FCL',
+                'CLS2H': 'S2HCL', 'CLS2F': 'S2FCL',
+                'CLS1H': 'S1HCL', 'CLS1F': 'S1FCL',
+                'CLU21H': 'U21HCL', 'CLU21F': 'U21FCL',
+                'CLU18H': 'U18HCL', 'CLU18F': 'U18FCL',
+                'CLU15H': 'U15HCL', 'CLU15F': 'U15FCL',
+                'CLU13H': 'U13HCL', 'CLU13F': 'U13FCL',
+                'CLU11H': 'U11HCL', 'CLU11F': 'U11FCL',
             };
             
             if (conversions[categorieXml]) {
@@ -266,22 +278,40 @@ window.showConfirmModal = function(archer) {
             
             // Si on a un sexe (depuis CATEGORIE ou SEXE), construire la catégorie complète
             if (sexe) {
-                // Pattern: CO + [Catégorie] (sans H/F à la fin)
+                // Pattern: CO + [Catégorie] (sans H/F à la fin) -> [Catégorie] + [Sexe] + CO
                 // Exemple: "COS3" + "H" -> "S3HCO"
-                const pattern = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)$/i;
-                const match = categorieXml.match(pattern);
-                if (match) {
-                    const categorie = match[1].toUpperCase();
+                const patternCO = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)$/i;
+                const matchCO = categorieXml.match(patternCO);
+                if (matchCO) {
+                    const categorie = matchCO[1].toUpperCase();
                     return categorie + sexe + 'CO'; // Format: S3HCO
                 }
                 
+                // Pattern: CL + [Catégorie] (sans H/F à la fin) -> [Catégorie] + [Sexe] + CL
+                // Exemple: "CLU15" + "F" -> "U15FCL"
+                const patternCL = /^CL(U11|U13|U15|U18|U21|S1|S2|S3)$/i;
+                const matchCL = categorieXml.match(patternCL);
+                if (matchCL) {
+                    const categorie = matchCL[1].toUpperCase();
+                    return categorie + sexe + 'CL'; // Format: U15FCL
+                }
+                
                 // Pattern: CO + [Catégorie] + [H|F] (déjà présent)
-                const patternWithSexe = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
-                const matchWithSexe = categorieXml.match(patternWithSexe);
-                if (matchWithSexe) {
-                    const categorie = matchWithSexe[1].toUpperCase();
-                    const sexeFromCat = matchWithSexe[2].toUpperCase();
+                const patternWithSexeCO = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+                const matchWithSexeCO = categorieXml.match(patternWithSexeCO);
+                if (matchWithSexeCO) {
+                    const categorie = matchWithSexeCO[1].toUpperCase();
+                    const sexeFromCat = matchWithSexeCO[2].toUpperCase();
                     return categorie + sexeFromCat + 'CO'; // Format: S3HCO
+                }
+                
+                // Pattern: CL + [Catégorie] + [H|F] (déjà présent)
+                const patternWithSexeCL = /^CL(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+                const matchWithSexeCL = categorieXml.match(patternWithSexeCL);
+                if (matchWithSexeCL) {
+                    const categorie = matchWithSexeCL[1].toUpperCase();
+                    const sexeFromCat = matchWithSexeCL[2].toUpperCase();
+                    return categorie + sexeFromCat + 'CL'; // Format: U15FCL
                 }
             }
             
@@ -712,18 +742,24 @@ function selectArcher(archer, cardElement) {
         
         // Patterns de conversion connus (avec H/F déjà présent)
         const conversions = {
-            'COS3H': 'S3HCO',  // Arc à poulies + Seniors 3 + Hommes
-            'COS3F': 'S3FCO',  // Arc à poulies + Seniors 3 + Femmes
-            'COS2H': 'S2HCO',  // Arc à poulies + Seniors 2 + Hommes
-            'COS2F': 'S2FCO',  // Arc à poulies + Seniors 2 + Femmes
-            'COS1H': 'S1HCO',  // Arc à poulies + Seniors 1 + Hommes
-            'COS1F': 'S1FCO',  // Arc à poulies + Seniors 1 + Femmes
-            'COU21H': 'U21HCO', // Arc à poulies + U21 + Hommes
-            'COU21F': 'U21FCO', // Arc à poulies + U21 + Femmes
-            'COU18H': 'U18HCO', // Arc à poulies + U18 + Hommes
-            'COU18F': 'U18FCO', // Arc à poulies + U18 + Femmes
-            'COU15H': 'U15HCO', // Arc à poulies + U15 + Hommes
-            'COU15F': 'U15FCO', // Arc à poulies + U15 + Femmes
+            // Arc à poulies (CO)
+            'COS3H': 'S3HCO', 'COS3F': 'S3FCO',
+            'COS2H': 'S2HCO', 'COS2F': 'S2FCO',
+            'COS1H': 'S1HCO', 'COS1F': 'S1FCO',
+            'COU21H': 'U21HCO', 'COU21F': 'U21FCO',
+            'COU18H': 'U18HCO', 'COU18F': 'U18FCO',
+            'COU15H': 'U15HCO', 'COU15F': 'U15FCO',
+            'COU13H': 'U13HCO', 'COU13F': 'U13FCO',
+            'COU11H': 'U11HCO', 'COU11F': 'U11FCO',
+            // Arc classique (CL)
+            'CLS3H': 'S3HCL', 'CLS3F': 'S3FCL',
+            'CLS2H': 'S2HCL', 'CLS2F': 'S2FCL',
+            'CLS1H': 'S1HCL', 'CLS1F': 'S1FCL',
+            'CLU21H': 'U21HCL', 'CLU21F': 'U21FCL',
+            'CLU18H': 'U18HCL', 'CLU18F': 'U18FCL',
+            'CLU15H': 'U15HCL', 'CLU15F': 'U15FCL',
+            'CLU13H': 'U13HCL', 'CLU13F': 'U13FCL',
+            'CLU11H': 'U11HCL', 'CLU11F': 'U11FCL',
         };
         
         // Vérifier d'abord les conversions directes
@@ -733,22 +769,40 @@ function selectArcher(archer, cardElement) {
         
         // Si on a un sexe (depuis CATEGORIE ou SEXE), construire la catégorie complète
         if (sexe) {
-            // Pattern: CO + [Catégorie] (sans H/F à la fin)
+            // Pattern: CO + [Catégorie] (sans H/F à la fin) -> [Catégorie] + [Sexe] + CO
             // Exemple: "COS3" + "H" -> "S3HCO"
-            const pattern = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)$/i;
-            const match = categorieXml.match(pattern);
-            if (match) {
-                const categorie = match[1].toUpperCase();
+            const patternCO = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)$/i;
+            const matchCO = categorieXml.match(patternCO);
+            if (matchCO) {
+                const categorie = matchCO[1].toUpperCase();
                 return categorie + sexe + 'CO'; // Format: S3HCO
             }
             
+            // Pattern: CL + [Catégorie] (sans H/F à la fin) -> [Catégorie] + [Sexe] + CL
+            // Exemple: "CLU15" + "F" -> "U15FCL"
+            const patternCL = /^CL(U11|U13|U15|U18|U21|S1|S2|S3)$/i;
+            const matchCL = categorieXml.match(patternCL);
+            if (matchCL) {
+                const categorie = matchCL[1].toUpperCase();
+                return categorie + sexe + 'CL'; // Format: U15FCL
+            }
+            
             // Pattern: CO + [Catégorie] + [H|F] (déjà présent)
-            const patternWithSexe = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
-            const matchWithSexe = categorieXml.match(patternWithSexe);
-            if (matchWithSexe) {
-                const categorie = matchWithSexe[1].toUpperCase();
-                const sexeFromCat = matchWithSexe[2].toUpperCase();
+            const patternWithSexeCO = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+            const matchWithSexeCO = categorieXml.match(patternWithSexeCO);
+            if (matchWithSexeCO) {
+                const categorie = matchWithSexeCO[1].toUpperCase();
+                const sexeFromCat = matchWithSexeCO[2].toUpperCase();
                 return categorie + sexeFromCat + 'CO'; // Format: S3HCO
+            }
+            
+            // Pattern: CL + [Catégorie] + [H|F] (déjà présent)
+            const patternWithSexeCL = /^CL(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+            const matchWithSexeCL = categorieXml.match(patternWithSexeCL);
+            if (matchWithSexeCL) {
+                const categorie = matchWithSexeCL[1].toUpperCase();
+                const sexeFromCat = matchWithSexeCL[2].toUpperCase();
+                return categorie + sexeFromCat + 'CL'; // Format: U15FCL
             }
         }
         
