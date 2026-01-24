@@ -175,10 +175,10 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                     // Prioriser name_short (nom court) si disponible, sinon name (nom complet)
                                     $clubName = $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
                                     
-                                    // Si toujours pas de clubName mais un clubId, essayer de le récupérer depuis $clubs (si disponible)
-                                    if (empty($clubName) && !empty($user['clubId']) && isset($clubs) && is_array($clubs)) {
+                                    // Si toujours pas de clubName, essayer de le récupérer depuis $clubs (si disponible)
+                                    if (empty($clubName)) {
                                         $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
-                                        if ($clubId) {
+                                        if ($clubId && isset($clubs) && is_array($clubs)) {
                                             foreach ($clubs as $club) {
                                                 $clubDbId = $club['id'] ?? $club['_id'] ?? null;
                                                 if ($clubDbId && ($clubDbId == $clubId || (string)$clubDbId === (string)$clubId)) {
@@ -189,6 +189,13 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                             }
                                         }
                                     }
+                                    
+                                    // Si toujours pas de nom, afficher un message de debug
+                                    if (empty($clubName)) {
+                                        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
+                                        error_log("DEBUG show.php: Pas de nom de club pour user $userId, clubId=" . ($clubId ?? 'NULL'));
+                                    }
+                                    
                                     echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
