@@ -265,7 +265,19 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="numero_tir" class="form-label">N° Tir</label>
-                            <input type="number" id="numero_tir" class="form-control" min="1" placeholder="Ex: 1">
+                            <select id="numero_tir" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <?php 
+                                $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null);
+                                if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0):
+                                    for ($i = 1; $i <= (int)$nombreDepart; $i++):
+                                ?>
+                                    <option value="<?= $i ?>"><?= $i ?></option>
+                                <?php 
+                                    endfor;
+                                endif;
+                                ?>
+                            </select>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="blason" class="form-label">Blason</label>
@@ -330,5 +342,6 @@ const arcs = <?= json_encode($arcs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const distancesTir = <?= json_encode($distancesTir ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const concoursDiscipline = <?= json_encode(is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null)) ?>;
 const concoursTypeCompetition = <?= json_encode(is_object($concours) ? ($concours->type_competition ?? null) : ($concours['type_competition'] ?? null)) ?>;
+const concoursNombreDepart = <?= json_encode(is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null)) ?>;
 </script>
 <script src="/public/assets/js/concours-inscription.js"></script>
