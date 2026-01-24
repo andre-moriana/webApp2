@@ -1767,6 +1767,7 @@ function proceedWithInscriptionSubmission() {
 
     for (const [name, value] of Object.entries(fields)) {
         // Inclure les valeurs même si elles sont 0 ou null pour certains champs numériques
+        // Pour numero_licence et id_club, inclure même si vides (seront null côté serveur)
         if (value !== null && value !== '') {
             const input = document.createElement('input');
             input.type = 'hidden';
@@ -1779,6 +1780,13 @@ function proceedWithInscriptionSubmission() {
             input.type = 'hidden';
             input.name = name;
             input.value = value;
+            form.appendChild(input);
+        } else if ((name === 'numero_licence' || name === 'id_club') && value === null) {
+            // Inclure numero_licence et id_club même s'ils sont null (seront traités côté serveur)
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = '';
             form.appendChild(input);
         }
     }
