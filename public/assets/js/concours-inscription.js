@@ -226,8 +226,12 @@ window.showConfirmModal = function(archer) {
         
         // Fonction pour convertir le format XML vers le format base de données
         // Si H ou F n'est pas dans CATEGORIE, utilise SEXE (1=H, 2=F)
+        // "D" (Dames) est converti en "F" (Femmes)
         const convertCategorieXmlToDb = (categorieXml, sexeXml = null) => {
             if (!categorieXml || categorieXml.length < 2) return categorieXml;
+            
+            // Normaliser "D" (Dames) en "F" (Femmes) dans la catégorie
+            categorieXml = categorieXml.replace(/D$/i, 'F');
             
             // Vérifier si H ou F est déjà présent dans la catégorie
             const hasSexe = /[HF]$/i.test(categorieXml);
@@ -253,23 +257,23 @@ window.showConfirmModal = function(archer) {
             // Patterns de conversion connus (avec H/F déjà présent)
             const conversions = {
                 // Arc à poulies (CO)
-                'COS3H': 'S3HCO', 'COS3F': 'S3FCO',
-                'COS2H': 'S2HCO', 'COS2F': 'S2FCO',
-                'COS1H': 'S1HCO', 'COS1F': 'S1FCO',
-                'COU21H': 'U21HCO', 'COU21F': 'U21FCO',
-                'COU18H': 'U18HCO', 'COU18F': 'U18FCO',
-                'COU15H': 'U15HCO', 'COU15F': 'U15FCO',
-                'COU13H': 'U13HCO', 'COU13F': 'U13FCO',
-                'COU11H': 'U11HCO', 'COU11F': 'U11FCO',
+                'COS3H': 'S3HCO', 'COS3F': 'S3FCO', 'COS3D': 'S3FCO', // D = Dames = F
+                'COS2H': 'S2HCO', 'COS2F': 'S2FCO', 'COS2D': 'S2FCO',
+                'COS1H': 'S1HCO', 'COS1F': 'S1FCO', 'COS1D': 'S1FCO',
+                'COU21H': 'U21HCO', 'COU21F': 'U21FCO', 'COU21D': 'U21FCO',
+                'COU18H': 'U18HCO', 'COU18F': 'U18FCO', 'COU18D': 'U18FCO',
+                'COU15H': 'U15HCO', 'COU15F': 'U15FCO', 'COU15D': 'U15FCO',
+                'COU13H': 'U13HCO', 'COU13F': 'U13FCO', 'COU13D': 'U13FCO',
+                'COU11H': 'U11HCO', 'COU11F': 'U11FCO', 'COU11D': 'U11FCO',
                 // Arc classique (CL)
-                'CLS3H': 'S3HCL', 'CLS3F': 'S3FCL',
-                'CLS2H': 'S2HCL', 'CLS2F': 'S2FCL',
-                'CLS1H': 'S1HCL', 'CLS1F': 'S1FCL',
-                'CLU21H': 'U21HCL', 'CLU21F': 'U21FCL',
-                'CLU18H': 'U18HCL', 'CLU18F': 'U18FCL',
-                'CLU15H': 'U15HCL', 'CLU15F': 'U15FCL',
-                'CLU13H': 'U13HCL', 'CLU13F': 'U13FCL',
-                'CLU11H': 'U11HCL', 'CLU11F': 'U11FCL',
+                'CLS3H': 'S3HCL', 'CLS3F': 'S3FCL', 'CLS3D': 'S3FCL', // D = Dames = F
+                'CLS2H': 'S2HCL', 'CLS2F': 'S2FCL', 'CLS2D': 'S2FCL',
+                'CLS1H': 'S1HCL', 'CLS1F': 'S1FCL', 'CLS1D': 'S1FCL',
+                'CLU21H': 'U21HCL', 'CLU21F': 'U21FCL', 'CLU21D': 'U21FCL',
+                'CLU18H': 'U18HCL', 'CLU18F': 'U18FCL', 'CLU18D': 'U18FCL',
+                'CLU15H': 'U15HCL', 'CLU15F': 'U15FCL', 'CLU15D': 'U15FCL',
+                'CLU13H': 'U13HCL', 'CLU13F': 'U13FCL', 'CLU13D': 'U13FCL',
+                'CLU11H': 'U11HCL', 'CLU11F': 'U11FCL', 'CLU11D': 'U11FCL',
             };
             
             if (conversions[categorieXml]) {
@@ -296,21 +300,29 @@ window.showConfirmModal = function(archer) {
                     return categorie + sexe + 'CL'; // Format: U15FCL
                 }
                 
-                // Pattern: CO + [Catégorie] + [H|F] (déjà présent)
-                const patternWithSexeCO = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+                // Pattern: CO + [Catégorie] + [H|F|D] (déjà présent, D = Dames = F)
+                const patternWithSexeCO = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)([HFD])$/i;
                 const matchWithSexeCO = categorieXml.match(patternWithSexeCO);
                 if (matchWithSexeCO) {
                     const categorie = matchWithSexeCO[1].toUpperCase();
-                    const sexeFromCat = matchWithSexeCO[2].toUpperCase();
+                    let sexeFromCat = matchWithSexeCO[2].toUpperCase();
+                    // Convertir D (Dames) en F (Femmes)
+                    if (sexeFromCat === 'D') {
+                        sexeFromCat = 'F';
+                    }
                     return categorie + sexeFromCat + 'CO'; // Format: S3HCO
                 }
                 
-                // Pattern: CL + [Catégorie] + [H|F] (déjà présent)
-                const patternWithSexeCL = /^CL(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+                // Pattern: CL + [Catégorie] + [H|F|D] (déjà présent, D = Dames = F)
+                const patternWithSexeCL = /^CL(U11|U13|U15|U18|U21|S1|S2|S3)([HFD])$/i;
                 const matchWithSexeCL = categorieXml.match(patternWithSexeCL);
                 if (matchWithSexeCL) {
                     const categorie = matchWithSexeCL[1].toUpperCase();
-                    const sexeFromCat = matchWithSexeCL[2].toUpperCase();
+                    let sexeFromCat = matchWithSexeCL[2].toUpperCase();
+                    // Convertir D (Dames) en F (Femmes)
+                    if (sexeFromCat === 'D') {
+                        sexeFromCat = 'F';
+                    }
                     return categorie + sexeFromCat + 'CL'; // Format: U15FCL
                 }
             }
@@ -716,8 +728,12 @@ function selectArcher(archer, cardElement) {
     // Fonction pour convertir le format XML vers le format base de données
     // Exemple: "COS3H" -> "S3HCO" (CO + S3 + H -> S3 + H + CO)
     // Si H ou F n'est pas dans CATEGORIE, utilise SEXE (1=H, 2=F)
+    // "D" (Dames) est converti en "F" (Femmes)
     const convertCategorieXmlToDb = (categorieXml, sexeXml = null) => {
         if (!categorieXml || categorieXml.length < 2) return categorieXml;
+        
+        // Normaliser "D" (Dames) en "F" (Femmes) dans la catégorie
+        categorieXml = categorieXml.replace(/D$/i, 'F');
         
         // Vérifier si H ou F est déjà présent dans la catégorie
         const hasSexe = /[HF]$/i.test(categorieXml);
@@ -743,23 +759,23 @@ function selectArcher(archer, cardElement) {
         // Patterns de conversion connus (avec H/F déjà présent)
         const conversions = {
             // Arc à poulies (CO)
-            'COS3H': 'S3HCO', 'COS3F': 'S3FCO',
-            'COS2H': 'S2HCO', 'COS2F': 'S2FCO',
-            'COS1H': 'S1HCO', 'COS1F': 'S1FCO',
-            'COU21H': 'U21HCO', 'COU21F': 'U21FCO',
-            'COU18H': 'U18HCO', 'COU18F': 'U18FCO',
-            'COU15H': 'U15HCO', 'COU15F': 'U15FCO',
-            'COU13H': 'U13HCO', 'COU13F': 'U13FCO',
-            'COU11H': 'U11HCO', 'COU11F': 'U11FCO',
+            'COS3H': 'S3HCO', 'COS3F': 'S3FCO', 'COS3D': 'S3FCO', // D = Dames = F
+            'COS2H': 'S2HCO', 'COS2F': 'S2FCO', 'COS2D': 'S2FCO',
+            'COS1H': 'S1HCO', 'COS1F': 'S1FCO', 'COS1D': 'S1FCO',
+            'COU21H': 'U21HCO', 'COU21F': 'U21FCO', 'COU21D': 'U21FCO',
+            'COU18H': 'U18HCO', 'COU18F': 'U18FCO', 'COU18D': 'U18FCO',
+            'COU15H': 'U15HCO', 'COU15F': 'U15FCO', 'COU15D': 'U15FCO',
+            'COU13H': 'U13HCO', 'COU13F': 'U13FCO', 'COU13D': 'U13FCO',
+            'COU11H': 'U11HCO', 'COU11F': 'U11FCO', 'COU11D': 'U11FCO',
             // Arc classique (CL)
-            'CLS3H': 'S3HCL', 'CLS3F': 'S3FCL',
-            'CLS2H': 'S2HCL', 'CLS2F': 'S2FCL',
-            'CLS1H': 'S1HCL', 'CLS1F': 'S1FCL',
-            'CLU21H': 'U21HCL', 'CLU21F': 'U21FCL',
-            'CLU18H': 'U18HCL', 'CLU18F': 'U18FCL',
-            'CLU15H': 'U15HCL', 'CLU15F': 'U15FCL',
-            'CLU13H': 'U13HCL', 'CLU13F': 'U13FCL',
-            'CLU11H': 'U11HCL', 'CLU11F': 'U11FCL',
+            'CLS3H': 'S3HCL', 'CLS3F': 'S3FCL', 'CLS3D': 'S3FCL', // D = Dames = F
+            'CLS2H': 'S2HCL', 'CLS2F': 'S2FCL', 'CLS2D': 'S2FCL',
+            'CLS1H': 'S1HCL', 'CLS1F': 'S1FCL', 'CLS1D': 'S1FCL',
+            'CLU21H': 'U21HCL', 'CLU21F': 'U21FCL', 'CLU21D': 'U21FCL',
+            'CLU18H': 'U18HCL', 'CLU18F': 'U18FCL', 'CLU18D': 'U18FCL',
+            'CLU15H': 'U15HCL', 'CLU15F': 'U15FCL', 'CLU15D': 'U15FCL',
+            'CLU13H': 'U13HCL', 'CLU13F': 'U13FCL', 'CLU13D': 'U13FCL',
+            'CLU11H': 'U11HCL', 'CLU11F': 'U11FCL', 'CLU11D': 'U11FCL',
         };
         
         // Vérifier d'abord les conversions directes
@@ -787,21 +803,29 @@ function selectArcher(archer, cardElement) {
                 return categorie + sexe + 'CL'; // Format: U15FCL
             }
             
-            // Pattern: CO + [Catégorie] + [H|F] (déjà présent)
-            const patternWithSexeCO = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+            // Pattern: CO + [Catégorie] + [H|F|D] (déjà présent, D = Dames = F)
+            const patternWithSexeCO = /^CO(U11|U13|U15|U18|U21|S1|S2|S3)([HFD])$/i;
             const matchWithSexeCO = categorieXml.match(patternWithSexeCO);
             if (matchWithSexeCO) {
                 const categorie = matchWithSexeCO[1].toUpperCase();
-                const sexeFromCat = matchWithSexeCO[2].toUpperCase();
+                let sexeFromCat = matchWithSexeCO[2].toUpperCase();
+                // Convertir D (Dames) en F (Femmes)
+                if (sexeFromCat === 'D') {
+                    sexeFromCat = 'F';
+                }
                 return categorie + sexeFromCat + 'CO'; // Format: S3HCO
             }
             
-            // Pattern: CL + [Catégorie] + [H|F] (déjà présent)
-            const patternWithSexeCL = /^CL(U11|U13|U15|U18|U21|S1|S2|S3)(H|F)$/i;
+            // Pattern: CL + [Catégorie] + [H|F|D] (déjà présent, D = Dames = F)
+            const patternWithSexeCL = /^CL(U11|U13|U15|U18|U21|S1|S2|S3)([HFD])$/i;
             const matchWithSexeCL = categorieXml.match(patternWithSexeCL);
             if (matchWithSexeCL) {
                 const categorie = matchWithSexeCL[1].toUpperCase();
-                const sexeFromCat = matchWithSexeCL[2].toUpperCase();
+                let sexeFromCat = matchWithSexeCL[2].toUpperCase();
+                // Convertir D (Dames) en F (Femmes)
+                if (sexeFromCat === 'D') {
+                    sexeFromCat = 'F';
+                }
                 return categorie + sexeFromCat + 'CL'; // Format: U15FCL
             }
         }
