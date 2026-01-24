@@ -303,5 +303,7 @@ const departs = <?= json_encode($departs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const categoriesClassement = <?= json_encode($categoriesClassement ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const arcs = <?= json_encode($arcs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const distancesTir = <?= json_encode($distancesTir ?? [], JSON_UNESCAPED_UNICODE) ?>;
+const concoursDiscipline = <?= json_encode(is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null)) ?>;
+const concoursTypeCompetition = <?= json_encode(is_object($concours) ? ($concours->type_competition ?? null) : ($concours['type_competition'] ?? null)) ?>;
 </script>
 <script src="/public/assets/js/concours-inscription.js"></script>

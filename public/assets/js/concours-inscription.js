@@ -534,6 +534,53 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.error('search-results container introuvable');
     }
+    
+    // Écouter le changement de catégorie pour sélectionner automatiquement la distance
+    const categorieSelect = document.getElementById('categorie_classement');
+    if (categorieSelect) {
+        categorieSelect.addEventListener('change', function() {
+            const abvCategorie = this.value;
+            if (abvCategorie && concoursDiscipline && concoursTypeCompetition) {
+                // Appeler l'API pour récupérer la distance recommandée
+                const params = new URLSearchParams({
+                    iddiscipline: concoursDiscipline,
+                    idtype_competition: concoursTypeCompetition,
+                    abv_categorie_classement: abvCategorie
+                });
+                
+                fetch(`/api/concours/distance-recommandee?${params.toString()}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        const distanceSelect = document.getElementById('distance');
+                        if (distanceSelect) {
+                            const distanceValeur = data.data.distance_valeur;
+                            // Sélectionner la distance correspondante
+                            for (let i = 0; i < distanceSelect.options.length; i++) {
+                                if (distanceSelect.options[i].value == distanceValeur) {
+                                    distanceSelect.value = distanceValeur;
+                                    console.log('Distance automatiquement sélectionnée:', data.data.lb_distance);
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        console.log('Aucune distance recommandée trouvée pour cette combinaison');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la récupération de la distance recommandée:', error);
+                });
+            }
+        });
+    }
 });
 
 // Fonction de recherche

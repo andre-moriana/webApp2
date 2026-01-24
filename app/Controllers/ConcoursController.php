@@ -919,21 +919,55 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des arcs: ' . $e->getMessage());
         }
 
-        // Récupérer les distances de tir filtrées par discipline
+        // Récupérer les distances de tir filtrées par discipline et type de compétition
         $distancesTir = [];
         try {
-            // Récupérer l'iddiscipline du concours pour filtrer les distances
+            // Récupérer l'iddiscipline et le type_competition du concours pour filtrer les distances
             $iddiscipline = null;
+            $idtype_competition = null;
             if (is_object($concours)) {
                 $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+                $idtype_competition = $concours->type_competition ?? null;
             } elseif (is_array($concours)) {
                 $iddiscipline = $concours['discipline'] ?? $concours['iddiscipline'] ?? null;
+                $idtype_competition = $concours['type_competition'] ?? null;
             }
             
-            // Construire l'URL avec le paramètre iddiscipline si disponible
+            // Récupérer le libellé du type de compétition si idtype_competition est disponible
+            $type_compet = null;
+            if ($idtype_competition) {
+                try {
+                    $typeCompetResponse = $this->apiService->makeRequest('concours/type-competitions', 'GET');
+                    if ($typeCompetResponse['success'] && isset($typeCompetResponse['data'])) {
+                        $typeCompetPayload = $this->apiService->unwrapData($typeCompetResponse);
+                        if (is_array($typeCompetPayload) && isset($typeCompetPayload['data']) && isset($typeCompetPayload['success'])) {
+                            $typeCompetPayload = $typeCompetPayload['data'];
+                        }
+                        if (is_array($typeCompetPayload)) {
+                            foreach ($typeCompetPayload as $tc) {
+                                if (($tc['idformat_competition'] ?? null) == $idtype_competition) {
+                                    $type_compet = $tc['lb_format_competition'] ?? null;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log('Erreur lors de la récupération du type de compétition: ' . $e->getMessage());
+                }
+            }
+            
+            // Construire l'URL avec les paramètres si disponibles
             $endpoint = 'concours/distances-tir';
+            $params = [];
             if ($iddiscipline) {
-                $endpoint .= '?iddiscipline=' . (int)$iddiscipline;
+                $params[] = 'iddiscipline=' . (int)$iddiscipline;
+            }
+            if ($type_compet) {
+                $params[] = 'type_compet=' . urlencode($type_compet);
+            }
+            if (!empty($params)) {
+                $endpoint .= '?' . implode('&', $params);
             }
             
             $distancesResponse = $this->apiService->makeRequest($endpoint, 'GET');
