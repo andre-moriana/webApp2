@@ -606,12 +606,17 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
                 console.error('✗ Input blason non trouvé dans le DOM');
             }
             
-            const distanceValeur = data.data.distance_valeur;
-            const blasonValeur = data.data.blason; // Le blason est maintenant inclus dans la réponse
+            // La réponse peut avoir une structure imbriquée : data.data.data (via ApiService)
+            // ou directement : data.data (réponse directe)
+            const responseData = data.data.data || data.data;
+            
+            const distanceValeur = responseData.distance_valeur;
+            const blasonValeur = responseData.blason; // Le blason est maintenant inclus dans la réponse
             console.log('Données extraites:', {
                 distanceValeur: distanceValeur,
-                lb_distance: data.data.lb_distance,
-                blasonValeur: blasonValeur
+                lb_distance: responseData.lb_distance,
+                blasonValeur: blasonValeur,
+                responseDataStructure: data.data.data ? 'nested' : 'direct'
             });
             
             // Sélectionner la distance correspondante
@@ -624,7 +629,7 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
                 if (optionValue == distanceValeur || optionValue === String(distanceValeur)) {
                     distanceSelect.value = optionValue;
                     distanceFound = true;
-                    console.log('✓✓✓ Distance automatiquement sélectionnée:', data.data.lb_distance, '(valeur:', distanceValeur, ', option value:', optionValue, ')');
+                    console.log('✓✓✓ Distance automatiquement sélectionnée:', responseData.lb_distance, '(valeur:', distanceValeur, ', option value:', optionValue, ')');
                     console.log('Valeur du select après assignation:', distanceSelect.value);
                     
                     // Remplir le blason si disponible dans la réponse
@@ -919,9 +924,24 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data instanceof Response) {
                             return data.json().then(jsonData => {
                                 console.log('Données reçues pour blason (via distance-recommandee):', jsonData);
-                                if (jsonData.success && jsonData.data && jsonData.data.blason) {
-                                    blasonInput.value = jsonData.data.blason;
-                                    console.log('✓✓✓ Blason automatiquement renseigné:', jsonData.data.blason, 'cm pour distance', distance, 'm');
+                                
+                                // La réponse peut avoir une structure imbriquée : data.data.data.blason (via ApiService)
+                                // ou directement : data.data.blason (réponse directe)
+                                let blasonValeur = null;
+                                if (jsonData.success && jsonData.data) {
+                                    // Vérifier d'abord la structure imbriquée (via ApiService)
+                                    if (jsonData.data.data && jsonData.data.data.blason) {
+                                        blasonValeur = jsonData.data.data.blason;
+                                    }
+                                    // Sinon vérifier la structure directe
+                                    else if (jsonData.data.blason) {
+                                        blasonValeur = jsonData.data.blason;
+                                    }
+                                }
+                                
+                                if (blasonValeur) {
+                                    blasonInput.value = blasonValeur;
+                                    console.log('✓✓✓ Blason automatiquement renseigné:', blasonValeur, 'cm pour distance', distance, 'm');
                                 } else {
                                     console.warn('Aucun blason trouvé dans la réponse pour cette distance');
                                 }
@@ -930,19 +950,32 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Sinon, traiter les données normalement
                         console.log('=== Données reçues pour blason ===');
                         console.log('Données complètes:', JSON.stringify(data, null, 2));
-                        console.log('data.success:', data.success);
-                        console.log('data.data:', data.data);
-                        console.log('data.data.blason:', data.data?.blason);
                         
-                        if (data.success && data.data && data.data.blason) {
-                            blasonInput.value = data.data.blason;
-                            console.log('✓✓✓ Blason automatiquement renseigné:', data.data.blason, 'cm pour distance', distance, 'm');
+                        // La réponse peut avoir une structure imbriquée : data.data.data.blason (via ApiService)
+                        // ou directement : data.data.blason (réponse directe)
+                        let blasonValeur = null;
+                        if (data.success && data.data) {
+                            // Vérifier d'abord la structure imbriquée (via ApiService)
+                            if (data.data.data && data.data.data.blason) {
+                                blasonValeur = data.data.data.blason;
+                            }
+                            // Sinon vérifier la structure directe
+                            else if (data.data.blason) {
+                                blasonValeur = data.data.blason;
+                            }
+                        }
+                        
+                        if (blasonValeur) {
+                            blasonInput.value = blasonValeur;
+                            console.log('✓✓✓ Blason automatiquement renseigné:', blasonValeur, 'cm pour distance', distance, 'm');
                         } else {
                             console.warn('Aucun blason trouvé dans la réponse pour cette distance');
                             console.warn('Structure de la réponse:', {
                                 hasSuccess: !!data.success,
                                 hasData: !!data.data,
-                                hasBlason: !!(data.data && data.data.blason),
+                                hasNestedData: !!(data.data && data.data.data),
+                                hasBlasonNested: !!(data.data && data.data.data && data.data.data.blason),
+                                hasBlasonDirect: !!(data.data && data.data.blason),
                                 dataKeys: data.data ? Object.keys(data.data) : 'no data'
                             });
                         }
