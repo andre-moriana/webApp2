@@ -128,13 +128,18 @@
                                     <?php 
                                     // Afficher le champ "name" (nom complet) du club comme demandé
                                     $clubName = $inscription['club_name'] ?? $inscription['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
-                                    
-                                    // Debug temporaire: afficher id_club si le nom n'est pas trouvé
-                                    if (!$clubName && isset($inscription['id_club'])) {
-                                        echo htmlspecialchars('DEBUG: id_club=' . $inscription['id_club']);
-                                    } else {
-                                        echo htmlspecialchars($clubName ?? 'N/A');
+                                    // Si toujours pas de nom, essayer de récupérer depuis les clubs si disponible
+                                    if (!$clubName && isset($inscription['id_club']) && isset($clubs)) {
+                                        $clubId = trim((string)$inscription['id_club']);
+                                        foreach ($clubs as $c) {
+                                            $nameShort = trim((string)($c['nameShort'] ?? $c['name_short'] ?? ''));
+                                            if ($nameShort === $clubId) {
+                                                $clubName = $c['name'] ?? $c['nameShort'] ?? $c['name_short'] ?? null;
+                                                break;
+                                            }
+                                        }
                                     }
+                                    echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
                                 <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
