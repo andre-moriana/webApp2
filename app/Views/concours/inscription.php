@@ -126,15 +126,15 @@
                                 <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php 
-                                    // Debug: vérifier les données disponibles
-                                    // error_log("DEBUG vue inscription - inscription_id: " . ($inscription['id'] ?? 'N/A'));
-                                    // error_log("DEBUG vue inscription - id_club: " . var_export($inscription['id_club'] ?? 'N/A', true));
-                                    // error_log("DEBUG vue inscription - club_name: " . var_export($inscription['club_name'] ?? 'N/A', true));
-                                    // error_log("DEBUG vue inscription - club_name_short: " . var_export($inscription['club_name_short'] ?? 'N/A', true));
-                                    
                                     // Afficher le champ "name" (nom complet) du club comme demandé
                                     $clubName = $inscription['club_name'] ?? $inscription['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
-                                    echo htmlspecialchars($clubName ?? 'N/A');
+                                    
+                                    // Debug temporaire: afficher id_club si le nom n'est pas trouvé
+                                    if (!$clubName && isset($inscription['id_club'])) {
+                                        echo htmlspecialchars('DEBUG: id_club=' . $inscription['id_club']);
+                                    } else {
+                                        echo htmlspecialchars($clubName ?? 'N/A');
+                                    }
                                     ?>
                                 </td>
                                 <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>

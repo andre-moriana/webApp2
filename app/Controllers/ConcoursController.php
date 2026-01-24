@@ -514,16 +514,19 @@ class ConcoursController {
         // Récupérer les inscriptions
         try {
             $inscriptionsResponse = $this->apiService->makeRequest("concours/{$id}/inscriptions", 'GET');
-            if ($inscriptionsResponse['success'] && isset($inscriptionsResponse['data'])) {
-                $inscriptions = is_array($inscriptionsResponse['data']) ? $inscriptionsResponse['data'] : [];
-            } else {
-                // Si la réponse n'est pas dans data, essayer directement
-                $inscriptions = is_array($inscriptionsResponse) && !isset($inscriptionsResponse['success']) 
-                    ? $inscriptionsResponse 
-                    : [];
+            // Utiliser unwrapData pour être cohérent avec les autres appels API
+            $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+            if (!is_array($inscriptions)) {
+                $inscriptions = [];
+            }
+            // Debug: vérifier les données récupérées
+            error_log("DEBUG show() - Nombre d'inscriptions récupérées: " . count($inscriptions));
+            if (!empty($inscriptions)) {
+                error_log("DEBUG show() - Première inscription: " . json_encode($inscriptions[0], JSON_UNESCAPED_UNICODE));
             }
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des inscriptions: ' . $e->getMessage());
+            $inscriptions = [];
         }
         
         // Récupérer les informations complètes des utilisateurs inscrits
@@ -912,8 +915,16 @@ class ConcoursController {
 
         // Récupérer les inscriptions existantes
         $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
-        // ApiService retourne toujours {success: true, data: ...}
-        $inscriptions = $inscriptionsResponse['success'] ? ($inscriptionsResponse['data'] ?? []) : [];
+        // Utiliser unwrapData pour être cohérent avec les autres appels API
+        $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+        if (!is_array($inscriptions)) {
+            $inscriptions = [];
+        }
+        // Debug: vérifier les données récupérées
+        error_log("DEBUG inscription() méthode - Nombre d'inscriptions récupérées: " . count($inscriptions));
+        if (!empty($inscriptions)) {
+            error_log("DEBUG inscription() méthode - Première inscription: " . json_encode($inscriptions[0], JSON_UNESCAPED_UNICODE));
+        }
         
         // Récupérer les informations complètes des utilisateurs inscrits
         $userIds = array_column($inscriptions, 'user_id');
