@@ -156,6 +156,11 @@ class ConcoursController {
                         $clubsMap[(string)$clubId] = $club;
                         $clubsMap[(int)$clubId] = $club;
                     }
+                    // Créer aussi un mapping par name_short (car id_club peut contenir un name_short)
+                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? null;
+                    if ($nameShort) {
+                        $clubsMap[(string)$nameShort] = $club;
+                    }
                 }
                 unset($club);
                 
@@ -173,12 +178,17 @@ class ConcoursController {
         }
         
         // Enrichir les inscriptions avec le nom du club directement
+        // id_club peut contenir soit un ID numérique, soit un name_short
         foreach ($inscriptions as &$inscription) {
             $clubId = $inscription['id_club'] ?? null;
-            if ($clubId && isset($clubsMap[$clubId])) {
-                $club = $clubsMap[$clubId];
-                $inscription['club_name_short'] = $club['nameShort'] ?? $club['name_short'] ?? null;
-                $inscription['club_name'] = $club['name'] ?? null;
+            if ($clubId) {
+                // Chercher dans le mapping (par ID ou par name_short)
+                $club = $clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? $clubsMap[(int)$clubId] ?? null;
+                if ($club) {
+                    // Utiliser le champ "name" (nom complet) comme demandé
+                    $inscription['club_name'] = $club['name'] ?? null;
+                    $inscription['club_name_short'] = $club['nameShort'] ?? $club['name_short'] ?? null;
+                }
             }
         }
         unset($inscription);
