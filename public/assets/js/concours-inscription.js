@@ -825,16 +825,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Récupérer la catégorie et la discipline pour l'appel API
                 const abvCategorie = categorieSelect ? categorieSelect.value : null;
                 
-                if (concoursDiscipline && concoursTypeCompetition && abvCategorie) {
-                    // Utiliser l'endpoint distance-recommandee avec le paramètre distance pour récupérer le blason
-                    const params = new URLSearchParams({
+                if (concoursDiscipline && abvCategorie) {
+                    // Utiliser l'endpoint blason-recommandee pour récupérer le blason
+                    console.log('Changement de distance détecté - récupération du blason pour:', {
                         iddiscipline: concoursDiscipline,
-                        idtype_competition: concoursTypeCompetition,
                         abv_categorie_classement: abvCategorie,
                         distance: distance
                     });
                     
-                    fetch(`/api/concours/distance-recommandee?${params.toString()}`, {
+                    const params = new URLSearchParams({
+                        iddiscipline: concoursDiscipline,
+                        abv_categorie_classement: abvCategorie,
+                        distance: distance
+                    });
+                    
+                    fetch(`/api/concours/blason-recommandee?${params.toString()}`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -843,17 +848,36 @@ document.addEventListener('DOMContentLoaded', function() {
                         credentials: 'include'
                     })
                     .then(response => {
+                        console.log('Réponse blason-recommandee - status:', response.status);
                         if (!response.ok) {
+                            // Si 404, essayer de récupérer le blason via distance-recommandee comme fallback
+                            if (response.status === 404) {
+                                console.warn('Endpoint blason-recommandee retourne 404, tentative avec distance-recommandee...');
+                                return fetch(`/api/concours/distance-recommandee?${new URLSearchParams({
+                                    iddiscipline: concoursDiscipline,
+                                    idtype_competition: concoursTypeCompetition,
+                                    abv_categorie_classement: abvCategorie,
+                                    distance: distance
+                                }).toString()}`, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json'
+                                    },
+                                    credentials: 'include'
+                                });
+                            }
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
                         return response.json();
                     })
                     .then(data => {
+                        console.log('Données reçues pour blason:', data);
                         if (data.success && data.data && data.data.blason) {
                             blasonInput.value = data.data.blason;
-                            console.log('✓ Blason automatiquement renseigné depuis distance-recommandee:', data.data.blason, 'cm pour distance', distance, 'm');
+                            console.log('✓✓✓ Blason automatiquement renseigné:', data.data.blason, 'cm pour distance', distance, 'm');
                         } else {
-                            console.log('Aucun blason trouvé dans la réponse pour cette distance');
+                            console.warn('Aucun blason trouvé dans la réponse pour cette distance');
                         }
                     })
                     .catch(error => {
