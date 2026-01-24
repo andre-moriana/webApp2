@@ -805,9 +805,13 @@ class ConcoursController {
             $concours = (object)$concours;
         }
 
-        // Récupérer les départs du concours
-        $departsResponse = $this->apiService->makeRequest("concours/{$concoursId}/departs", 'GET');
-        $departs = $departsResponse['success'] ? ($departsResponse['data'] ?? []) : [];
+        // Récupérer les départs du concours (ils sont déjà inclus dans $concours via findWithDeparts)
+        $departs = [];
+        if (is_object($concours) && isset($concours->departs)) {
+            $departs = $concours->departs;
+        } elseif (is_array($concours) && isset($concours['departs'])) {
+            $departs = $concours['departs'];
+        }
 
         // Récupérer les inscriptions existantes
         $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');

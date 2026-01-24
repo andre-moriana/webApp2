@@ -34,22 +34,24 @@
     </div>
 
     <!-- Sélection du départ -->
-    <?php if (!empty($departs)): ?>
     <div class="depart-selection-section mb-4">
         <h3>Sélectionner un départ</h3>
         <div class="form-group">
             <label for="depart-select-main" class="form-label">N° départ <span class="text-danger">*</span></label>
             <select id="depart-select-main" class="form-control" required name="depart-select-main">
                 <option value="">Sélectionner un départ</option>
-                <?php foreach ($departs as $index => $depart): ?>
-                    <option value="<?= htmlspecialchars($depart['id'] ?? $depart['_id'] ?? '') ?>">
-                        Départ <?= ($index + 1) ?> - <?= htmlspecialchars($depart['heure'] ?? '') ?><?= !empty($depart['date']) ? ' (' . htmlspecialchars($depart['date']) . ')' : '' ?>
-                    </option>
-                <?php endforeach; ?>
+                <?php if (!empty($departs)): ?>
+                    <?php foreach ($departs as $index => $depart): ?>
+                        <option value="<?= htmlspecialchars($depart['id'] ?? $depart['_id'] ?? '') ?>">
+                            Départ <?= ($index + 1) ?> - <?= htmlspecialchars($depart['heure'] ?? '') ?><?= !empty($depart['date']) ? ' (' . htmlspecialchars($depart['date']) . ')' : '' ?>
+                        </option>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <option value="" disabled>Aucun départ disponible</option>
+                <?php endif; ?>
             </select>
         </div>
     </div>
-    <?php endif; ?>
 
     <!-- Formulaire de recherche d'archer -->
     <div class="search-section">
