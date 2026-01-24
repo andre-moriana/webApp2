@@ -209,10 +209,13 @@
                             <label for="arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
                             <select id="arme" class="form-control">
                                 <option value="">Sélectionner</option>
-                                <option value="Arc Classique">Arc Classique</option>
-                                <option value="Arc à poulies">Arc à poulies</option>
-                                <option value="Arc nu">Arc nu</option>
-                                <option value="Arc traditionnel">Arc traditionnel</option>
+                                <?php if (!empty($arcs)): ?>
+                                    <?php foreach ($arcs as $arc): ?>
+                                        <option value="<?= htmlspecialchars($arc['lb_arc'] ?? '') ?>">
+                                            <?= htmlspecialchars($arc['lb_arc'] ?? '') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </select>
                         </div>
                     </div>
@@ -291,5 +294,6 @@
 const concoursId = <?= json_encode($concoursId ?? null) ?>;
 const departs = <?= json_encode($departs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const categoriesClassement = <?= json_encode($categoriesClassement ?? [], JSON_UNESCAPED_UNICODE) ?>;
+const arcs = <?= json_encode($arcs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="/public/assets/js/concours-inscription.js"></script>
