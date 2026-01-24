@@ -155,58 +155,13 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                 <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php 
-                                    // Fonction helper pour trouver le nom du club
-                                    $findClubName = function($clubId, $clubsList) {
-                                        if (empty($clubId) || !is_array($clubsList) || count($clubsList) === 0) {
-                                            return null;
-                                        }
-                                        
-                                        foreach ($clubsList as $club) {
-                                            $clubDbId = $club['id'] ?? $club['_id'] ?? null;
-                                            if ($clubDbId && (
-                                                $clubDbId == $clubId || 
-                                                (string)$clubDbId === (string)$clubId ||
-                                                (int)$clubDbId === (int)$clubId
-                                            )) {
-                                                // TOUJOURS utiliser name_short (snake_case) ou nameShort (camelCase) en priorité
-                                                // Le formatClub() retourne nameShort (camelCase), mais on vérifie les deux formats
-                                                $name = $club['name_short'] ?? $club['nameShort'] ?? null;
-                                                // Si name_short n'existe pas, utiliser name comme fallback
-                                                if (empty($name)) {
-                                                    $name = $club['name'] ?? null;
-                                                }
-                                                return $name;
-                                            }
-                                        }
-                                        return null;
-                                    };
+                                    // Utiliser directement club_name_short depuis la jointure SQL (priorité)
+                                    // Sinon utiliser club_name, puis les données utilisateur en fallback
+                                    $clubName = $inscription['club_name_short'] ?? $inscription['club_name'] ?? null;
                                     
-                                    $clubName = null;
-                                    
-                                    // 1. Utiliser id_club directement depuis l'inscription si disponible
-                                    $clubId = $inscription['id_club'] ?? null;
-                                    
-                                    // 2. Si id_club est disponible, chercher dans $clubs
-                                    if (!empty($clubId)) {
-                                        $clubName = $findClubName($clubId, $clubs ?? []);
-                                    }
-                                    
-                                    // 3. Si toujours pas trouvé, utiliser club_id de l'utilisateur
-                                    if (empty($clubName)) {
-                                        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
-                                        if (!empty($clubId)) {
-                                            $clubName = $findClubName($clubId, $clubs ?? []);
-                                        }
-                                    }
-                                    
-                                    // 4. Si toujours pas trouvé, utiliser les données utilisateur comme dernier recours
+                                    // Si pas trouvé dans l'inscription, utiliser les données utilisateur
                                     if (empty($clubName)) {
                                         $clubName = $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
-                                    }
-                                    
-                                    // DEBUG TEMPORAIRE - À SUPPRIMER
-                                    if (empty($clubName) && !empty($clubId)) {
-                                        echo '<!-- DEBUG: clubId=' . htmlspecialchars($clubId) . ', clubs count=' . count($clubs ?? []) . ' -->';
                                     }
                                     
                                     echo htmlspecialchars($clubName ?? 'N/A');
