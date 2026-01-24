@@ -172,7 +172,9 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                 <td>
                                     <?php 
                                     // Essayer toutes les variantes possibles pour le nom du club
-                                    $clubName = $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
+                                    // Prioriser name_short (nom court) si disponible, sinon name (nom complet)
+                                    $clubName = $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
+                                    
                                     // Si toujours pas de clubName mais un clubId, essayer de le récupérer depuis $clubs (si disponible)
                                     if (empty($clubName) && !empty($user['clubId']) && isset($clubs) && is_array($clubs)) {
                                         $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
@@ -180,7 +182,8 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                             foreach ($clubs as $club) {
                                                 $clubDbId = $club['id'] ?? $club['_id'] ?? null;
                                                 if ($clubDbId && ($clubDbId == $clubId || (string)$clubDbId === (string)$clubId)) {
-                                                    $clubName = $club['name'] ?? $club['name_short'] ?? null;
+                                                    // Prioriser name_short (nom court) si disponible
+                                                    $clubName = $club['name_short'] ?? $club['nameShort'] ?? $club['name'] ?? null;
                                                     break;
                                                 }
                                             }
