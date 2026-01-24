@@ -540,24 +540,28 @@ class ConcoursController {
                 
                 // Si des utilisateurs n'ont pas de clubName mais ont un club_id, compléter depuis la liste des clubs
                 foreach ($usersMap as $userId => &$userData) {
-                    $clubName = $userData['clubName'] ?? $userData['club_name'] ?? null;
+                    $clubName = $userData['clubName'] ?? $userData['club_name'] ?? $userData['clubNameShort'] ?? $userData['club_name_short'] ?? null;
                     $clubId = $userData['clubId'] ?? $userData['club_id'] ?? null;
                     
                     // Si pas de clubName mais un clubId, chercher dans la liste des clubs
                     if (empty($clubName) && !empty($clubId)) {
-                        error_log("DEBUG show(): User $userId a clubId=$clubId mais pas de clubName, recherche dans " . count($clubs) . " clubs...");
                         foreach ($clubs as $club) {
                             $clubDbId = $club['id'] ?? $club['_id'] ?? null;
                             // Comparaison avec conversion en string pour éviter les problèmes de type
                             if ($clubDbId && ($clubDbId == $clubId || (string)$clubDbId === (string)$clubId)) {
-                                $userData['clubName'] = $club['name'] ?? null;
-                                $userData['clubNameShort'] = $club['name_short'] ?? null;
-                                error_log("DEBUG show(): Club trouvé pour user $userId: " . ($userData['clubName'] ?? 'NULL'));
+                                // Récupérer name_short (prioritaire) ou name
+                                $clubNameShort = $club['name_short'] ?? $club['nameShort'] ?? null;
+                                $clubName = $club['name'] ?? null;
+                                
+                                // Stocker les deux formats
+                                $userData['clubName'] = $clubNameShort ?: $clubName;
+                                $userData['clubNameShort'] = $clubNameShort;
+                                // Garder aussi le format snake_case pour compatibilité
+                                $userData['club_name'] = $clubName;
+                                $userData['club_name_short'] = $clubNameShort;
                                 break;
                             }
                         }
-                    } else {
-                        error_log("DEBUG show(): User $userId - clubName=" . ($clubName ?? 'NULL') . ", clubId=" . ($clubId ?? 'NULL'));
                     }
                 }
                 unset($userData);
