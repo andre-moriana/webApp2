@@ -129,26 +129,54 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
         <p class="alert alert-info">Aucune inscription pour ce concours.</p>
     <?php else: ?>
         <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>ID Inscription</th>
-                        <th>ID Utilisateur</th>
-                        <th>ID Départ</th>
-                        <th>Date d'inscription</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($inscriptions as $inscription): ?>
+        <table class="table table-striped table-bordered">
+                    <thead>
                         <tr>
-                            <td><?= htmlspecialchars($inscription['id'] ?? $inscription['insc_id'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($inscription['user_id'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($inscription['depart_id'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
+                            <th>Nom</th>
+                            <th>Prénom</th>
+                            <th>Numéro de licence</th>
+                            <th>Club</th>
+                            <th>Départ</th>
+                            <th>N°Tir</th>
+                            <th>Date d'inscription</th>
+                            <th>Actions</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody id="inscriptions-list">
+                        <?php 
+                        // $usersMap est passé depuis le contrôleur
+                        foreach ($inscriptions as $inscription):
+                            $userId = $inscription['user_id'] ?? null;
+                            $user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
+                            
+                            // Debug: afficher les données disponibles
+                            // error_log("Inscription ID: " . ($inscription['id'] ?? 'N/A'));
+                            // error_log("User ID: " . ($userId ?? 'N/A'));
+                            // error_log("User data: " . json_encode($user));
+                            // error_log("Depart data: " . json_encode([
+                            //     'depart_id' => $inscription['depart_id'] ?? null,
+                            //     'depart_heure' => $inscription['depart_heure'] ?? null,
+                            //     'depart_date' => $inscription['depart_date'] ?? null
+                            // ]));
+                        ?>
+                            <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
+                                <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
+                                        <i class="fas fa-trash"></i> Retirer
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+
         </div>
         <p><strong>Total d'inscrits :</strong> <?= count($inscriptions) ?></p>
     <?php endif; ?>
