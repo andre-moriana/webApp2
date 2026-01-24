@@ -93,7 +93,6 @@
                             <th>Prénom</th>
                             <th>Numéro de licence</th>
                             <th>Club</th>
-                            <th>Départ</th>
                             <th>N°Tir</th>
                             <th>Date d'inscription</th>
                             <th>Actions</th>
@@ -121,20 +120,6 @@
                                 <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? 'N/A') ?></td>
-                                <td>
-                                    <?php 
-                                    if (!empty($inscription['depart_heure'])) {
-                                        echo htmlspecialchars($inscription['depart_heure']);
-                                        if (!empty($inscription['depart_date'])) {
-                                            echo ' (' . htmlspecialchars($inscription['depart_date']) . ')';
-                                        }
-                                    } elseif (!empty($inscription['depart_id'])) {
-                                        echo 'Départ #' . htmlspecialchars($inscription['depart_id']);
-                                    } else {
-                                        echo 'N/A';
-                                    }
-                                    ?>
-                                </td>
                                 <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td>
@@ -356,7 +341,6 @@
 <script>
 // Variables globales - doivent être définies avant le chargement du script
 const concoursId = <?= json_encode($concoursId ?? null) ?>;
-const departs = <?= json_encode($departs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const categoriesClassement = <?= json_encode($categoriesClassement ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const arcs = <?= json_encode($arcs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const distancesTir = <?= json_encode($distancesTir ?? [], JSON_UNESCAPED_UNICODE) ?>;
