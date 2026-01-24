@@ -226,19 +226,22 @@ window.showConfirmModal = function(archer) {
         
         // Pré-remplir les champs après que la modale soit affichée
         setTimeout(() => {
-            // Pré-remplir la catégorie de classement depuis CATEGORIE
+            // Pré-remplir la catégorie de classement depuis CATEGORIE (correspond à abv_categorie_classement)
             const categorieSelect = document.getElementById('categorie_classement');
             if (categorieSelect) {
-                const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim();
+                const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
                 if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
+                    // La valeur CATEGORIE du XML correspond directement à abv_categorie_classement
                     const categorieFound = categoriesClassement.find(cat => {
-                        const abv = (cat.abv_categorie_classement || '').trim();
+                        const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
                         return abv === categorieXml;
                     });
                     
                     if (categorieFound) {
                         categorieSelect.value = categorieFound.abv_categorie_classement || '';
-                        console.log('Catégorie pré-remplie dans showConfirmModal:', categorieFound.abv_categorie_classement);
+                        console.log('Catégorie pré-remplie dans showConfirmModal:', categorieFound.abv_categorie_classement, '(depuis XML CATEGORIE:', categorieXml, ')');
+                    } else {
+                        console.log('Catégorie XML non trouvée dans showConfirmModal. Valeur XML:', categorieXml);
                     }
                 }
             }
@@ -588,22 +591,23 @@ function selectArcher(archer, cardElement) {
         console.log('Création/Renouvellement pré-rempli:', creationRenouvellement, 'checked:', creationRenouvellementCheckbox.checked);
     }
     
-    // Pré-remplir la catégorie de classement depuis CATEGORIE (abv_categorie_classement)
+    // Pré-remplir la catégorie de classement depuis CATEGORIE (correspond à abv_categorie_classement)
     const categorieClassementSelect = document.getElementById('categorie_classement');
     if (categorieClassementSelect) {
-        const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim();
+        const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
         if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
             // Chercher la catégorie correspondante par abv_categorie_classement
+            // La valeur CATEGORIE du XML correspond directement à abv_categorie_classement
             const categorieFound = categoriesClassement.find(cat => {
-                const abv = (cat.abv_categorie_classement || '').trim();
+                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
                 return abv === categorieXml;
             });
             
             if (categorieFound) {
                 categorieClassementSelect.value = categorieFound.abv_categorie_classement || '';
-                console.log('Catégorie pré-remplie:', categorieFound.abv_categorie_classement, '(depuis XML:', categorieXml, ')');
+                console.log('Catégorie pré-remplie:', categorieFound.abv_categorie_classement, '(depuis XML CATEGORIE:', categorieXml, ')');
             } else {
-                console.log('Catégorie XML non trouvée dans la liste:', categorieXml);
+                console.log('Catégorie XML non trouvée dans la liste. Valeur XML:', categorieXml, '- Catégories disponibles:', categoriesClassement.map(c => c.abv_categorie_classement).join(', '));
             }
         }
     }
@@ -644,19 +648,22 @@ function selectArcher(archer, cardElement) {
         // Attendre que la modale soit complètement affichée avant de pré-remplir les champs
         // (nécessaire car la modale peut être générée dynamiquement)
         setTimeout(() => {
-            // Pré-remplir la catégorie de classement depuis CATEGORIE (abv_categorie_classement)
+            // Pré-remplir la catégorie de classement depuis CATEGORIE (correspond à abv_categorie_classement)
             const categorieSelect = document.getElementById('categorie_classement');
             if (categorieSelect) {
-                const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim();
+                const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
                 if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
+                    // La valeur CATEGORIE du XML correspond directement à abv_categorie_classement
                     const categorieFound = categoriesClassement.find(cat => {
-                        const abv = (cat.abv_categorie_classement || '').trim();
+                        const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
                         return abv === categorieXml;
                     });
                     
                     if (categorieFound) {
                         categorieSelect.value = categorieFound.abv_categorie_classement || '';
-                        console.log('Catégorie pré-remplie dans modale:', categorieFound.abv_categorie_classement);
+                        console.log('Catégorie pré-remplie dans modale:', categorieFound.abv_categorie_classement, '(depuis XML CATEGORIE:', categorieXml, ')');
+                    } else {
+                        console.log('Catégorie XML non trouvée dans modale. Valeur XML:', categorieXml);
                     }
                 }
             }
