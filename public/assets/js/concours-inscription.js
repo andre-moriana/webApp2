@@ -1553,6 +1553,144 @@ function submitInscription() {
     // Récupérer le numéro de départ
     const numeroDepart = document.getElementById('depart-select-main')?.value || document.getElementById('depart-select')?.value || null;
     console.log('numeroDepart récupéré:', numeroDepart);
+    
+    // Vérifier si l'archer est déjà inscrit pour ce départ
+    if (numeroDepart) {
+        checkExistingInscription(userId, numeroDepart, () => {
+            proceedWithInscriptionSubmission();
+        });
+    } else {
+        // Pas de numéro de départ, continuer directement
+        proceedWithInscriptionSubmission();
+    }
+}
+
+// Fonction pour vérifier si l'archer est déjà inscrit pour ce départ
+function checkExistingInscription(userId, numeroDepart, callback) {
+    fetch(`/api/concours/${concoursId}/inscriptions`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        const inscriptions = data.success ? (data.data || []) : [];
+        const dejaInscrit = inscriptions.some(inscription => 
+            inscription.user_id == userId && 
+            inscription.numero_depart == numeroDepart
+        );
+        
+        if (dejaInscrit) {
+            const confirmer = confirm(
+                `⚠️ ATTENTION\n\n` +
+                `Cet archer est déjà inscrit au départ ${numeroDepart} pour ce concours.\n\n` +
+                `Voulez-vous quand même continuer ?\n\n` +
+                `(Si vous continuez, l'inscription sera refusée par le serveur)`
+            );
+            
+            if (!confirmer) {
+                console.log('Inscription annulée par l\'utilisateur');
+                return;
+            }
+        }
+        
+        // Continuer avec la soumission
+        callback();
+    })
+    .catch(error => {
+        console.error('Erreur lors de la vérification des inscriptions:', error);
+        // En cas d'erreur, continuer quand même
+        callback();
+    });
+}
+
+// Fonction pour procéder avec la soumission de l'inscription
+function proceedWithInscriptionSubmission() {
+    if (!selectedArcher) {
+        alert('Aucun archer sélectionné');
+        return;
+    }
+
+    const userId = selectedArcher.id || selectedArcher._id || selectedArcher.ID || null;
+    if (!userId) {
+        console.error('Aucun ID trouvé pour l\'archer sélectionné');
+        alert('Erreur: L\'archer sélectionné n\'a pas d\'ID. Veuillez réessayer la recherche ou contacter l\'administrateur.');
+        return;
+    }
+    
+    console.log('ID utilisateur trouvé:', userId);
+    
+    // Récupérer le numéro de départ
+    const numeroDepart = document.getElementById('depart-select-main')?.value || document.getElementById('depart-select')?.value || null;
+    console.log('numeroDepart récupéré:', numeroDepart);
+    
+    // Vérifier si l'archer est déjà inscrit pour ce départ
+    if (numeroDepart) {
+        // Récupérer les inscriptions existantes pour vérifier
+        fetch(`/api/concours/${concoursId}/inscriptions`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            const inscriptions = data.success ? (data.data || []) : [];
+            const dejaInscrit = inscriptions.some(inscription => 
+                inscription.user_id == userId && 
+                inscription.numero_depart == numeroDepart
+            );
+            
+            if (dejaInscrit) {
+                alert(
+                    `⚠️ ATTENTION\n\n` +
+                    `Cet archer est déjà inscrit au départ ${numeroDepart} pour ce concours.\n\n` +
+                    `Veuillez sélectionner un autre départ ou retirer l'inscription existante avant de continuer.`
+                );
+                console.log('Inscription annulée - archer déjà inscrit pour ce départ');
+                return;
+            }
+            
+            // Continuer avec la soumission
+            proceedWithInscriptionSubmission();
+        })
+        .catch(error => {
+            console.error('Erreur lors de la vérification des inscriptions:', error);
+            // En cas d'erreur, continuer quand même
+            proceedWithInscriptionSubmission();
+        });
+    } else {
+        // Pas de numéro de départ, continuer directement
+        proceedWithInscriptionSubmission();
+    }
+    
+    return; // Sortir de la fonction, proceedWithInscriptionSubmission sera appelé de manière asynchrone
+}
+
+// Fonction pour procéder avec la soumission de l'inscription après vérification
+function proceedWithInscriptionSubmission() {
+    if (!selectedArcher) {
+        alert('Aucun archer sélectionné');
+        return;
+    }
+
+    const userId = selectedArcher.id || selectedArcher._id || selectedArcher.ID || null;
+    if (!userId) {
+        console.error('Aucun ID trouvé pour l\'archer sélectionné');
+        alert('Erreur: L\'archer sélectionné n\'a pas d\'ID. Veuillez réessayer la recherche ou contacter l\'administrateur.');
+        return;
+    }
+    
+    console.log('ID utilisateur trouvé:', userId);
+    
+    // Récupérer le numéro de départ
+    const numeroDepart = document.getElementById('depart-select-main')?.value || document.getElementById('depart-select')?.value || null;
+    console.log('numeroDepart récupéré:', numeroDepart);
 
     // Activer temporairement les champs disabled pour récupérer leurs valeurs
     const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');
