@@ -182,13 +182,23 @@ class ConcoursController {
         foreach ($inscriptions as &$inscription) {
             $clubId = $inscription['id_club'] ?? null;
             if ($clubId) {
+                // Debug: logger la valeur de id_club
+                error_log("DEBUG show - id_club: " . var_export($clubId, true) . ", type: " . gettype($clubId));
+                
                 // Chercher dans le mapping (par ID ou par name_short)
                 $club = $clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? $clubsMap[(int)$clubId] ?? null;
+                
                 if ($club) {
                     // Utiliser le champ "name" (nom complet) comme demandé
                     $inscription['club_name'] = $club['name'] ?? null;
                     $inscription['club_name_short'] = $club['nameShort'] ?? $club['name_short'] ?? null;
+                    error_log("DEBUG show - Club trouvé: name=" . ($club['name'] ?? 'N/A') . ", nameShort=" . ($club['nameShort'] ?? $club['name_short'] ?? 'N/A'));
+                } else {
+                    error_log("DEBUG show - Club NON trouvé pour id_club: " . var_export($clubId, true));
+                    error_log("DEBUG show - Clés disponibles dans clubsMap (premiers 10): " . implode(', ', array_slice(array_keys($clubsMap), 0, 10)));
                 }
+            } else {
+                error_log("DEBUG show - id_club est NULL ou vide");
             }
         }
         unset($inscription);
@@ -536,6 +546,13 @@ class ConcoursController {
             }
         }
         
+        // Debug: vérifier les données des inscriptions avant enrichissement
+        error_log("DEBUG inscription() - Nombre d'inscriptions: " . count($inscriptions));
+        if (!empty($inscriptions)) {
+            error_log("DEBUG inscription() - Première inscription (clés): " . implode(', ', array_keys($inscriptions[0])));
+            error_log("DEBUG inscription() - Première inscription id_club: " . var_export($inscriptions[0]['id_club'] ?? 'N/A', true));
+        }
+        
         // Charger les données pour afficher les libellés
         $clubs = []; // Initialiser pour éviter les erreurs si l'API échoue
         $clubsMap = []; // Mapping clubId -> club pour accès rapide
@@ -544,6 +561,7 @@ class ConcoursController {
             $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
             $clubsPayload = $this->apiService->unwrapData($clubsResponse);
             if ($clubsResponse['success'] && is_array($clubsPayload)) {
+                error_log("DEBUG inscription() - Nombre de clubs récupérés: " . count($clubsPayload));
                 foreach ($clubsPayload as &$club) {
                     if (!isset($club['id']) && isset($club['_id'])) {
                         $club['id'] = $club['_id'];
@@ -559,10 +577,16 @@ class ConcoursController {
                     $nameShort = $club['nameShort'] ?? $club['name_short'] ?? null;
                     if ($nameShort) {
                         $clubsMap[(string)$nameShort] = $club;
+                        // Debug pour vérifier le mapping name_short
+                        if ((string)$nameShort === '1313066') {
+                            error_log("DEBUG inscription() - Club avec nameShort=1313066 trouvé: id=" . ($clubId ?? 'N/A') . ", name=" . ($club['name'] ?? 'N/A'));
+                        }
                     }
                 }
                 unset($club);
                 $clubs = array_values($clubsPayload);
+                error_log("DEBUG inscription() - Taille du clubsMap: " . count($clubsMap));
+                error_log("DEBUG inscription() - Clés dans clubsMap (premiers 20): " . implode(', ', array_slice(array_keys($clubsMap), 0, 20)));
             }
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
@@ -573,13 +597,23 @@ class ConcoursController {
         foreach ($inscriptions as &$inscription) {
             $clubId = $inscription['id_club'] ?? null;
             if ($clubId) {
+                // Debug: logger la valeur de id_club
+                error_log("DEBUG inscription() - id_club: " . var_export($clubId, true) . ", type: " . gettype($clubId));
+                
                 // Chercher dans le mapping (par ID ou par name_short)
                 $club = $clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? $clubsMap[(int)$clubId] ?? null;
+                
                 if ($club) {
                     // Utiliser le champ "name" (nom complet) comme demandé
                     $inscription['club_name'] = $club['name'] ?? null;
                     $inscription['club_name_short'] = $club['nameShort'] ?? $club['name_short'] ?? null;
+                    error_log("DEBUG inscription() - Club trouvé: name=" . ($club['name'] ?? 'N/A') . ", nameShort=" . ($club['nameShort'] ?? $club['name_short'] ?? 'N/A'));
+                } else {
+                    error_log("DEBUG inscription() - Club NON trouvé pour id_club: " . var_export($clubId, true));
+                    error_log("DEBUG inscription() - Clés disponibles dans clubsMap (premiers 10): " . implode(', ', array_slice(array_keys($clubsMap), 0, 10)));
                 }
+            } else {
+                error_log("DEBUG inscription() - id_club est NULL ou vide pour inscription_id: " . ($inscription['id'] ?? 'N/A'));
             }
         }
         unset($inscription);
