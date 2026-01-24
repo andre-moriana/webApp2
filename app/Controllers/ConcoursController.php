@@ -536,6 +536,24 @@ class ConcoursController {
                 }
                 unset($club);
                 $clubs = array_values($clubsPayload);
+                
+                // Si des utilisateurs n'ont pas de clubName mais ont un club_id, compléter depuis la liste des clubs
+                foreach ($usersMap as $userId => &$userData) {
+                    if (empty($userData['clubName']) && !empty($userData['clubId'])) {
+                        $clubId = $userData['clubId'] ?? $userData['club_id'] ?? null;
+                        if ($clubId) {
+                            foreach ($clubs as $club) {
+                                $clubDbId = $club['id'] ?? $club['_id'] ?? null;
+                                if ($clubDbId == $clubId) {
+                                    $userData['clubName'] = $club['name'] ?? null;
+                                    $userData['clubNameShort'] = $club['name_short'] ?? null;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                unset($userData);
             }
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
