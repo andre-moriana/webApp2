@@ -187,14 +187,30 @@ class ConcoursController {
             $clubId = $inscription['id_club'] ?? null;
             if ($clubId) {
                 // Normaliser la valeur (trim, convertir en string)
-                $clubIdNormalized = trim((string)$clubId);
+                $clubIdStr = trim((string)$clubId);
                 
-                // Chercher dans le mapping (par ID ou par name_short)
-                $club = $clubsMap[$clubIdNormalized] 
-                     ?? $clubsMap[(string)$clubId] 
-                     ?? $clubsMap[(int)$clubId] 
-                     ?? $clubsMap[$clubId] 
-                     ?? null;
+                // Chercher dans le mapping (par ID ou par name_short) - essayer toutes les variantes
+                $club = null;
+                if (isset($clubsMap[$clubIdStr])) {
+                    $club = $clubsMap[$clubIdStr];
+                } elseif (isset($clubsMap[(string)$clubId])) {
+                    $club = $clubsMap[(string)$clubId];
+                } elseif (isset($clubsMap[(int)$clubId])) {
+                    $club = $clubsMap[(int)$clubId];
+                } elseif (isset($clubsMap[$clubId])) {
+                    $club = $clubsMap[$clubId];
+                } else {
+                    // Si pas trouvé dans le mapping, chercher directement dans les clubs
+                    if (isset($clubs) && is_array($clubs)) {
+                        foreach ($clubs as $c) {
+                            $nameShort = trim((string)($c['nameShort'] ?? $c['name_short'] ?? ''));
+                            if ($nameShort === $clubIdStr) {
+                                $club = $c;
+                                break;
+                            }
+                        }
+                    }
+                }
                 
                 if ($club) {
                     // Utiliser le champ "name" (nom complet) comme demandé
@@ -586,14 +602,30 @@ class ConcoursController {
             $clubId = $inscription['id_club'] ?? null;
             if ($clubId) {
                 // Normaliser la valeur (trim, convertir en string)
-                $clubIdNormalized = trim((string)$clubId);
+                $clubIdStr = trim((string)$clubId);
                 
-                // Chercher dans le mapping (par ID ou par name_short)
-                $club = $clubsMap[$clubIdNormalized] 
-                     ?? $clubsMap[(string)$clubId] 
-                     ?? $clubsMap[(int)$clubId] 
-                     ?? $clubsMap[$clubId] 
-                     ?? null;
+                // Chercher dans le mapping (par ID ou par name_short) - essayer toutes les variantes
+                $club = null;
+                if (isset($clubsMap[$clubIdStr])) {
+                    $club = $clubsMap[$clubIdStr];
+                } elseif (isset($clubsMap[(string)$clubId])) {
+                    $club = $clubsMap[(string)$clubId];
+                } elseif (isset($clubsMap[(int)$clubId])) {
+                    $club = $clubsMap[(int)$clubId];
+                } elseif (isset($clubsMap[$clubId])) {
+                    $club = $clubsMap[$clubId];
+                } else {
+                    // Si pas trouvé dans le mapping, chercher directement dans les clubs
+                    if (isset($clubs) && is_array($clubs)) {
+                        foreach ($clubs as $c) {
+                            $nameShort = trim((string)($c['nameShort'] ?? $c['name_short'] ?? ''));
+                            if ($nameShort === $clubIdStr) {
+                                $club = $c;
+                                break;
+                            }
+                        }
+                    }
+                }
                 
                 if ($club) {
                     // Utiliser le champ "name" (nom complet) comme demandé
