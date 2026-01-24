@@ -504,16 +504,9 @@ class ConcoursController {
                 if ($userId) {
                     try {
                         $userResponse = $this->apiService->makeRequest("users/{$userId}", 'GET');
-                        if ($userResponse['success']) {
-                            // Déballer les données si elles sont dans une structure imbriquée
-                            $userData = $userResponse['data'] ?? $userResponse;
-                            // Si data contient encore { success, data }, déballer une deuxième fois
-                            if (is_array($userData) && isset($userData['data']) && isset($userData['success'])) {
-                                $userData = $userData['data'];
-                            }
-                            if ($userData && is_array($userData)) {
-                                $usersMap[$userId] = $userData;
-                            }
+                        if ($userResponse['success'] && isset($userResponse['data'])) {
+                            // Utiliser la même logique que dans inscription() qui fonctionne
+                            $usersMap[$userId] = $userResponse['data'];
                         }
                     } catch (Exception $e) {
                         // Ignorer les erreurs pour continuer l'affichage
