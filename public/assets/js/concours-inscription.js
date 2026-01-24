@@ -223,6 +223,46 @@ window.showConfirmModal = function(archer) {
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
         console.log('Modale affichée avec Bootstrap');
+        
+        // Pré-remplir les champs après que la modale soit affichée
+        setTimeout(() => {
+            // Pré-remplir la catégorie de classement depuis CATEGORIE
+            const categorieSelect = document.getElementById('categorie_classement');
+            if (categorieSelect) {
+                const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim();
+                if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
+                    const categorieFound = categoriesClassement.find(cat => {
+                        const abv = (cat.abv_categorie_classement || '').trim();
+                        return abv === categorieXml;
+                    });
+                    
+                    if (categorieFound) {
+                        categorieSelect.value = categorieFound.abv_categorie_classement || '';
+                        console.log('Catégorie pré-remplie dans showConfirmModal:', categorieFound.abv_categorie_classement);
+                    }
+                }
+            }
+            
+            // Pré-remplir l'arme depuis TYPARC
+            const armeSelect = document.getElementById('arme');
+            if (armeSelect) {
+                const typarcXml = (archer.typarc || archer.TYPARC || '').trim();
+                if (typarcXml && typeof arcs !== 'undefined' && arcs) {
+                    const idarc = parseInt(typarcXml);
+                    if (!isNaN(idarc)) {
+                        const arcFound = arcs.find(arc => {
+                            const arcIdarc = parseInt(arc.idarc || 0);
+                            return arcIdarc === idarc;
+                        });
+                        
+                        if (arcFound) {
+                            armeSelect.value = arcFound.lb_arc || '';
+                            console.log('Arme pré-remplie dans showConfirmModal:', arcFound.lb_arc);
+                        }
+                    }
+                }
+            }
+        }, 100);
     } else {
         console.error('Bootstrap n\'est pas disponible');
         alert('Erreur: Bootstrap n\'est pas chargé');
@@ -548,6 +588,49 @@ function selectArcher(archer, cardElement) {
         console.log('Création/Renouvellement pré-rempli:', creationRenouvellement, 'checked:', creationRenouvellementCheckbox.checked);
     }
     
+    // Pré-remplir la catégorie de classement depuis CATEGORIE (abv_categorie_classement)
+    const categorieClassementSelect = document.getElementById('categorie_classement');
+    if (categorieClassementSelect) {
+        const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim();
+        if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
+            // Chercher la catégorie correspondante par abv_categorie_classement
+            const categorieFound = categoriesClassement.find(cat => {
+                const abv = (cat.abv_categorie_classement || '').trim();
+                return abv === categorieXml;
+            });
+            
+            if (categorieFound) {
+                categorieClassementSelect.value = categorieFound.abv_categorie_classement || '';
+                console.log('Catégorie pré-remplie:', categorieFound.abv_categorie_classement, '(depuis XML:', categorieXml, ')');
+            } else {
+                console.log('Catégorie XML non trouvée dans la liste:', categorieXml);
+            }
+        }
+    }
+    
+    // Pré-remplir l'arme depuis TYPARC (idarc) -> mapper vers lb_arc
+    const armeSelect = document.getElementById('arme');
+    if (armeSelect) {
+        const typarcXml = (archer.typarc || archer.TYPARC || '').trim();
+        if (typarcXml && typeof arcs !== 'undefined' && arcs) {
+            // TYPARC contient l'idarc, chercher l'arc correspondant
+            const idarc = parseInt(typarcXml);
+            if (!isNaN(idarc)) {
+                const arcFound = arcs.find(arc => {
+                    const arcIdarc = parseInt(arc.idarc || 0);
+                    return arcIdarc === idarc;
+                });
+                
+                if (arcFound) {
+                    armeSelect.value = arcFound.lb_arc || '';
+                    console.log('Arme pré-remplie:', arcFound.lb_arc, '(depuis XML TYPARC:', typarcXml, 'idarc:', idarc, ')');
+                } else {
+                    console.log('Arc non trouvé pour TYPARC:', typarcXml, 'idarc:', idarc);
+                }
+            }
+        }
+    }
+    
     // Afficher la modale avec Bootstrap
     if (typeof bootstrap !== 'undefined') {
         const existingModal = bootstrap.Modal.getInstance(modalElement);
@@ -557,6 +640,47 @@ function selectArcher(archer, cardElement) {
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
         console.log('Modale affichée');
+        
+        // Attendre que la modale soit complètement affichée avant de pré-remplir les champs
+        // (nécessaire car la modale peut être générée dynamiquement)
+        setTimeout(() => {
+            // Pré-remplir la catégorie de classement depuis CATEGORIE (abv_categorie_classement)
+            const categorieSelect = document.getElementById('categorie_classement');
+            if (categorieSelect) {
+                const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim();
+                if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
+                    const categorieFound = categoriesClassement.find(cat => {
+                        const abv = (cat.abv_categorie_classement || '').trim();
+                        return abv === categorieXml;
+                    });
+                    
+                    if (categorieFound) {
+                        categorieSelect.value = categorieFound.abv_categorie_classement || '';
+                        console.log('Catégorie pré-remplie dans modale:', categorieFound.abv_categorie_classement);
+                    }
+                }
+            }
+            
+            // Pré-remplir l'arme depuis TYPARC (idarc) -> mapper vers lb_arc
+            const armeSelectModal = document.getElementById('arme');
+            if (armeSelectModal) {
+                const typarcXml = (archer.typarc || archer.TYPARC || '').trim();
+                if (typarcXml && typeof arcs !== 'undefined' && arcs) {
+                    const idarc = parseInt(typarcXml);
+                    if (!isNaN(idarc)) {
+                        const arcFound = arcs.find(arc => {
+                            const arcIdarc = parseInt(arc.idarc || 0);
+                            return arcIdarc === idarc;
+                        });
+                        
+                        if (arcFound) {
+                            armeSelectModal.value = arcFound.lb_arc || '';
+                            console.log('Arme pré-remplie dans modale:', arcFound.lb_arc);
+                        }
+                    }
+                }
+            }
+        }, 100);
     } else {
         console.error('Bootstrap n\'est pas chargé');
         alert('Erreur: Bootstrap n\'est pas chargé');
