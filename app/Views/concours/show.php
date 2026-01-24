@@ -148,13 +148,30 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                         foreach ($inscriptions as $inscription):
                             $userId = $inscription['user_id'] ?? null;
                             $user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
-                         
+                            
+                            // Debug temporaire pour voir les données disponibles
+                            // if ($user) {
+                            //     error_log("User data pour userId $userId: " . json_encode(array_keys($user)));
+                            //     error_log("Club data: " . json_encode([
+                            //         'clubName' => $user['clubName'] ?? null,
+                            //         'club_name' => $user['club_name'] ?? null,
+                            //         'clubNameShort' => $user['clubNameShort'] ?? null,
+                            //         'club_name_short' => $user['club_name_short'] ?? null,
+                            //         'club_id' => $user['club_id'] ?? null
+                            //     ]));
+                            // }
                        ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
                                 <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? 'N/A') ?></td>
+                                <td>
+                                    <?php 
+                                    // Essayer toutes les variantes possibles pour le nom du club
+                                    $clubName = $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
+                                    echo htmlspecialchars($clubName ?? 'N/A');
+                                    ?>
+                                </td>
                                 <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
