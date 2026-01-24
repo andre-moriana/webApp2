@@ -224,13 +224,15 @@ window.showConfirmModal = function(archer) {
         modal.show();
         console.log('Modale affichée avec Bootstrap');
         
-        // Pré-remplir les champs après que la modale soit affichée
-        setTimeout(() => {
+        // Fonction pour pré-remplir les champs catégorie et arme
+        const prefillCategorieAndArme = () => {
             // Pré-remplir la catégorie de classement depuis CATEGORIE (correspond à abv_categorie_classement)
             const categorieSelect = document.getElementById('categorie_classement');
             if (categorieSelect) {
                 const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
-                if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
+                console.log('showConfirmModal - Tentative de pré-remplissage catégorie. Valeur XML:', categorieXml);
+                
+                if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0) {
                     // La valeur CATEGORIE du XML correspond directement à abv_categorie_classement
                     const categorieFound = categoriesClassement.find(cat => {
                         const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
@@ -238,10 +240,18 @@ window.showConfirmModal = function(archer) {
                     });
                     
                     if (categorieFound) {
-                        categorieSelect.value = categorieFound.abv_categorie_classement || '';
-                        console.log('Catégorie pré-remplie dans showConfirmModal:', categorieFound.abv_categorie_classement, '(depuis XML CATEGORIE:', categorieXml, ')');
+                        const valueToSet = (categorieFound.abv_categorie_classement || '').trim();
+                        // Vérifier que l'option existe dans le select
+                        const optionExists = Array.from(categorieSelect.options).some(opt => opt.value === valueToSet);
+                        if (optionExists) {
+                            categorieSelect.value = valueToSet;
+                            console.log('✓ showConfirmModal - Catégorie pré-remplie:', valueToSet, '(depuis XML CATEGORIE:', categorieXml, ')');
+                            console.log('Valeur du select après assignation:', categorieSelect.value);
+                        } else {
+                            console.warn('✗ showConfirmModal - Option non trouvée dans le select. Valeur recherchée:', valueToSet);
+                        }
                     } else {
-                        console.log('Catégorie XML non trouvée dans showConfirmModal. Valeur XML:', categorieXml);
+                        console.warn('✗ showConfirmModal - Catégorie XML non trouvée. Valeur XML:', categorieXml);
                     }
                 }
             }
@@ -250,7 +260,7 @@ window.showConfirmModal = function(archer) {
             const armeSelect = document.getElementById('arme');
             if (armeSelect) {
                 const typarcXml = (archer.typarc || archer.TYPARC || '').trim();
-                if (typarcXml && typeof arcs !== 'undefined' && arcs) {
+                if (typarcXml && typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
                     const idarc = parseInt(typarcXml);
                     if (!isNaN(idarc)) {
                         const arcFound = arcs.find(arc => {
@@ -260,12 +270,22 @@ window.showConfirmModal = function(archer) {
                         
                         if (arcFound) {
                             armeSelect.value = arcFound.lb_arc || '';
-                            console.log('Arme pré-remplie dans showConfirmModal:', arcFound.lb_arc);
+                            console.log('✓ showConfirmModal - Arme pré-remplie:', arcFound.lb_arc);
                         }
                     }
                 }
             }
+        };
+        
+        // Pré-remplir après que la modale soit affichée
+        setTimeout(() => {
+            prefillCategorieAndArme();
         }, 100);
+        
+        // Écouter l'événement 'shown.bs.modal' pour s'assurer que la modale est complètement affichée
+        modalElement.addEventListener('shown.bs.modal', function() {
+            prefillCategorieAndArme();
+        }, { once: true });
     } else {
         console.error('Bootstrap n\'est pas disponible');
         alert('Erreur: Bootstrap n\'est pas chargé');
@@ -591,49 +611,73 @@ function selectArcher(archer, cardElement) {
         console.log('Création/Renouvellement pré-rempli:', creationRenouvellement, 'checked:', creationRenouvellementCheckbox.checked);
     }
     
-    // Pré-remplir la catégorie de classement depuis CATEGORIE (correspond à abv_categorie_classement)
-    const categorieClassementSelect = document.getElementById('categorie_classement');
-    if (categorieClassementSelect) {
-        const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
-        if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
-            // Chercher la catégorie correspondante par abv_categorie_classement
-            // La valeur CATEGORIE du XML correspond directement à abv_categorie_classement
-            const categorieFound = categoriesClassement.find(cat => {
-                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                return abv === categorieXml;
-            });
+    // Fonction pour pré-remplir les champs catégorie et arme
+    const prefillCategorieAndArme = () => {
+        // Pré-remplir la catégorie de classement depuis CATEGORIE (correspond à abv_categorie_classement)
+        const categorieSelect = document.getElementById('categorie_classement');
+        if (categorieSelect) {
+            const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
+            console.log('Tentative de pré-remplissage catégorie. Valeur XML:', categorieXml);
+            console.log('CategoriesClassement disponible:', typeof categoriesClassement !== 'undefined', 'Count:', typeof categoriesClassement !== 'undefined' ? categoriesClassement.length : 0);
             
-            if (categorieFound) {
-                categorieClassementSelect.value = categorieFound.abv_categorie_classement || '';
-                console.log('Catégorie pré-remplie:', categorieFound.abv_categorie_classement, '(depuis XML CATEGORIE:', categorieXml, ')');
-            } else {
-                console.log('Catégorie XML non trouvée dans la liste. Valeur XML:', categorieXml, '- Catégories disponibles:', categoriesClassement.map(c => c.abv_categorie_classement).join(', '));
-            }
-        }
-    }
-    
-    // Pré-remplir l'arme depuis TYPARC (idarc) -> mapper vers lb_arc
-    const armeSelect = document.getElementById('arme');
-    if (armeSelect) {
-        const typarcXml = (archer.typarc || archer.TYPARC || '').trim();
-        if (typarcXml && typeof arcs !== 'undefined' && arcs) {
-            // TYPARC contient l'idarc, chercher l'arc correspondant
-            const idarc = parseInt(typarcXml);
-            if (!isNaN(idarc)) {
-                const arcFound = arcs.find(arc => {
-                    const arcIdarc = parseInt(arc.idarc || 0);
-                    return arcIdarc === idarc;
+            if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0) {
+                // La valeur CATEGORIE du XML correspond directement à abv_categorie_classement
+                const categorieFound = categoriesClassement.find(cat => {
+                    const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                    return abv === categorieXml;
                 });
                 
-                if (arcFound) {
-                    armeSelect.value = arcFound.lb_arc || '';
-                    console.log('Arme pré-remplie:', arcFound.lb_arc, '(depuis XML TYPARC:', typarcXml, 'idarc:', idarc, ')');
+                if (categorieFound) {
+                    const valueToSet = (categorieFound.abv_categorie_classement || '').trim();
+                    // Vérifier que l'option existe dans le select
+                    const optionExists = Array.from(categorieSelect.options).some(opt => opt.value === valueToSet);
+                    if (optionExists) {
+                        categorieSelect.value = valueToSet;
+                        console.log('✓ Catégorie pré-remplie avec succès:', valueToSet, '(depuis XML CATEGORIE:', categorieXml, ')');
+                        console.log('Valeur du select après assignation:', categorieSelect.value);
+                    } else {
+                        console.warn('✗ Option non trouvée dans le select. Valeur recherchée:', valueToSet);
+                        console.log('Options disponibles:', Array.from(categorieSelect.options).map(opt => opt.value).slice(0, 10).join(', '));
+                    }
                 } else {
-                    console.log('Arc non trouvé pour TYPARC:', typarcXml, 'idarc:', idarc);
+                    console.warn('✗ Catégorie XML non trouvée. Valeur XML:', categorieXml);
+                    console.log('Premières catégories disponibles:', categoriesClassement.slice(0, 5).map(c => c.abv_categorie_classement).join(', '));
+                }
+            } else {
+                console.warn('Impossible de pré-remplir la catégorie. categorieXml:', categorieXml, 'categoriesClassement:', typeof categoriesClassement);
+            }
+        } else {
+            console.warn('Select categorie_classement introuvable dans le DOM');
+        }
+        
+        // Pré-remplir l'arme depuis TYPARC (idarc) -> mapper vers lb_arc
+        const armeSelect = document.getElementById('arme');
+        if (armeSelect) {
+            const typarcXml = (archer.typarc || archer.TYPARC || '').trim();
+            if (typarcXml && typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
+                // TYPARC contient l'idarc, chercher l'arc correspondant
+                const idarc = parseInt(typarcXml);
+                if (!isNaN(idarc)) {
+                    const arcFound = arcs.find(arc => {
+                        const arcIdarc = parseInt(arc.idarc || 0);
+                        return arcIdarc === idarc;
+                    });
+                    
+                    if (arcFound) {
+                        armeSelect.value = arcFound.lb_arc || '';
+                        console.log('✓ Arme pré-remplie avec succès:', arcFound.lb_arc, '(depuis XML TYPARC:', typarcXml, 'idarc:', idarc, ')');
+                    } else {
+                        console.warn('✗ Arc non trouvé pour TYPARC:', typarcXml, 'idarc:', idarc);
+                    }
                 }
             }
+        } else {
+            console.warn('Select arme introuvable dans le DOM');
         }
-    }
+    };
+    
+    // Pré-remplir immédiatement si le select existe déjà (formulaire statique)
+    prefillCategorieAndArme();
     
     // Afficher la modale avec Bootstrap
     if (typeof bootstrap !== 'undefined') {
@@ -648,46 +692,13 @@ function selectArcher(archer, cardElement) {
         // Attendre que la modale soit complètement affichée avant de pré-remplir les champs
         // (nécessaire car la modale peut être générée dynamiquement)
         setTimeout(() => {
-            // Pré-remplir la catégorie de classement depuis CATEGORIE (correspond à abv_categorie_classement)
-            const categorieSelect = document.getElementById('categorie_classement');
-            if (categorieSelect) {
-                const categorieXml = (archer.categorie || archer.CATEGORIE || '').trim().toUpperCase();
-                if (categorieXml && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
-                    // La valeur CATEGORIE du XML correspond directement à abv_categorie_classement
-                    const categorieFound = categoriesClassement.find(cat => {
-                        const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                        return abv === categorieXml;
-                    });
-                    
-                    if (categorieFound) {
-                        categorieSelect.value = categorieFound.abv_categorie_classement || '';
-                        console.log('Catégorie pré-remplie dans modale:', categorieFound.abv_categorie_classement, '(depuis XML CATEGORIE:', categorieXml, ')');
-                    } else {
-                        console.log('Catégorie XML non trouvée dans modale. Valeur XML:', categorieXml);
-                    }
-                }
-            }
-            
-            // Pré-remplir l'arme depuis TYPARC (idarc) -> mapper vers lb_arc
-            const armeSelectModal = document.getElementById('arme');
-            if (armeSelectModal) {
-                const typarcXml = (archer.typarc || archer.TYPARC || '').trim();
-                if (typarcXml && typeof arcs !== 'undefined' && arcs) {
-                    const idarc = parseInt(typarcXml);
-                    if (!isNaN(idarc)) {
-                        const arcFound = arcs.find(arc => {
-                            const arcIdarc = parseInt(arc.idarc || 0);
-                            return arcIdarc === idarc;
-                        });
-                        
-                        if (arcFound) {
-                            armeSelectModal.value = arcFound.lb_arc || '';
-                            console.log('Arme pré-remplie dans modale:', arcFound.lb_arc);
-                        }
-                    }
-                }
-            }
-        }, 100);
+            prefillCategorieAndArme();
+        }, 200);
+        
+        // Écouter l'événement 'shown.bs.modal' pour s'assurer que la modale est complètement affichée
+        modalElement.addEventListener('shown.bs.modal', function() {
+            prefillCategorieAndArme();
+        }, { once: true });
     } else {
         console.error('Bootstrap n\'est pas chargé');
         alert('Erreur: Bootstrap n\'est pas chargé');
