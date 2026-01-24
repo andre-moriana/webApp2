@@ -928,12 +928,23 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                         }
                         // Sinon, traiter les données normalement
-                        console.log('Données reçues pour blason:', data);
+                        console.log('=== Données reçues pour blason ===');
+                        console.log('Données complètes:', JSON.stringify(data, null, 2));
+                        console.log('data.success:', data.success);
+                        console.log('data.data:', data.data);
+                        console.log('data.data.blason:', data.data?.blason);
+                        
                         if (data.success && data.data && data.data.blason) {
                             blasonInput.value = data.data.blason;
                             console.log('✓✓✓ Blason automatiquement renseigné:', data.data.blason, 'cm pour distance', distance, 'm');
                         } else {
                             console.warn('Aucun blason trouvé dans la réponse pour cette distance');
+                            console.warn('Structure de la réponse:', {
+                                hasSuccess: !!data.success,
+                                hasData: !!data.data,
+                                hasBlason: !!(data.data && data.data.blason),
+                                dataKeys: data.data ? Object.keys(data.data) : 'no data'
+                            });
                         }
                     })
                     .catch(error => {
