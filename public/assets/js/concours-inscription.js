@@ -1515,10 +1515,11 @@ function submitInscription() {
 
     const userId = selectedArcher.id || selectedArcher._id || selectedArcher.ID || null;
     if (!userId) {
-        // Si l'archer n'a pas d'ID (vient du XML), on devra le créer d'abord
+        // Si l'archer n'a pas d'ID, il devrait avoir été créé automatiquement lors de la recherche
+        // Mais si ce n'est pas le cas, afficher un message d'erreur
         console.error('Aucun ID trouvé pour l\'archer sélectionné');
         console.error('Structure complète de l\'archer:', JSON.stringify(selectedArcher, null, 2));
-        alert('Cet archer doit être créé dans la base de données avant de pouvoir être inscrit. L\'archer sélectionné n\'a pas d\'ID.');
+        alert('Erreur: L\'archer sélectionné n\'a pas d\'ID. Veuillez réessayer la recherche ou contacter l\'administrateur.');
         return;
     }
     
