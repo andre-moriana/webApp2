@@ -155,28 +155,34 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                 <td><?= htmlspecialchars($user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php 
-                                    // Le contrôleur devrait déjà avoir rempli clubName et clubNameShort
-                                    // Prioriser name_short (nom court) comme demandé
+                                    // Récupérer le clubId de l'utilisateur
+                                    $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
+                                    
+                                    // Essayer d'abord depuis les données utilisateur
                                     $clubName = $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
                                     
-                                    // Si toujours pas de nom, essayer de le récupérer depuis $clubs (fallback)
-                                    if (empty($clubName)) {
-                                        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
-                                        if ($clubId && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
-                                            foreach ($clubs as $club) {
-                                                $clubDbId = $club['id'] ?? $club['_id'] ?? null;
-                                                // Comparaison avec conversion en string pour éviter les problèmes de type
-                                                if ($clubDbId && (($clubDbId == $clubId) || ((string)$clubDbId === (string)$clubId))) {
-                                                    // Prioriser name_short (nom court) si disponible
-                                                    $clubName = $club['name_short'] ?? $club['nameShort'] ?? $club['name'] ?? null;
-                                                    break;
-                                                }
+                                    // Si pas de nom mais un clubId, chercher dans la liste des clubs
+                                    if (empty($clubName) && !empty($clubId) && isset($clubs) && is_array($clubs)) {
+                                        foreach ($clubs as $club) {
+                                            $clubDbId = $club['id'] ?? $club['_id'] ?? null;
+                                            // Comparaison stricte
+                                            if ($clubDbId && ($clubDbId == $clubId || (string)$clubDbId === (string)$clubId)) {
+                                                // Prioriser name_short (nom court) si disponible
+                                                $clubName = $club['name_short'] ?? $club['nameShort'] ?? $club['name'] ?? null;
+                                                break;
                                             }
                                         }
                                     }
                                     
-                                    // Afficher le nom du club ou N/A
-                                    echo htmlspecialchars($clubName ?? 'N/A');
+                                    // Afficher le nom du club, ou afficher le clubId pour debug si pas de nom
+                                    if (!empty($clubName)) {
+                                        echo htmlspecialchars($clubName);
+                                    } elseif (!empty($clubId)) {
+                                        // Afficher le clubId pour voir si le problème vient de la recherche
+                                        echo htmlspecialchars('Club ID: ' . $clubId);
+                                    } else {
+                                        echo 'N/A';
+                                    }
                                     ?>
                                 </td>
                                 <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
