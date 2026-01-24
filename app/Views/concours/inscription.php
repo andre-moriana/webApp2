@@ -186,12 +186,22 @@
                             <label for="categorie_classement" class="form-label">Catégorie de classement</label>
                             <select id="categorie_classement" class="form-control">
                                 <option value="">Sélectionner une catégorie</option>
-                                <?php if (!empty($categoriesClassement)): ?>
+                                <?php 
+                                // Debug temporaire - à retirer après test
+                                if (!isset($categoriesClassement)) {
+                                    echo '<!-- DEBUG: $categoriesClassement n\'est pas définie -->';
+                                } else {
+                                    echo '<!-- DEBUG: $categoriesClassement count: ' . count($categoriesClassement) . ' -->';
+                                }
+                                if (!empty($categoriesClassement)): ?>
                                     <?php foreach ($categoriesClassement as $categorie): ?>
                                         <option value="<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>">
                                             <?= htmlspecialchars($categorie['lb_categorie_classement'] ?? '') ?> (<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>)
                                         </option>
                                     <?php endforeach; ?>
+                                <?php else: ?>
+                                    <!-- Debug: Aucune catégorie disponible -->
+                                    <?php error_log('DEBUG: Aucune catégorie dans $categoriesClassement'); ?>
                                 <?php endif; ?>
                             </select>
                         </div>
