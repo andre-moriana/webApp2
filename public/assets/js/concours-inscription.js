@@ -42,8 +42,21 @@ window.showConfirmModal = function(archer) {
     
     console.log('Données extraites - nom:', nom, 'prenom:', prenom, 'licence:', licence);
     
-    // Générer le HTML pour les départs
+    // Générer le HTML pour les départs (basé sur nombre_depart du concours)
     let departsHtml = '';
+    if (typeof concoursNombreDepart !== 'undefined' && concoursNombreDepart && concoursNombreDepart > 0) {
+        departsHtml = `
+            <div class="mb-3">
+                <label for="depart-select" class="form-label">N° départ <span class="text-danger">*</span></label>
+                <select id="depart-select" class="form-control" required>
+                    <option value="">Sélectionner un départ</option>
+                    ${Array.from({length: parseInt(concoursNombreDepart)}, (_, i) => 
+                        `<option value="${i + 1}">Départ ${i + 1}</option>`
+                    ).join('')}
+                </select>
+            </div>
+        `;
+    }
     
     // Construire le contenu HTML COMPLET avec tous les champs
     const modalContent = `
@@ -764,6 +777,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 performSearch();
             }
         });
+    }
+    
+    // Synchroniser le select principal du départ avec celui de la modale
+    const departSelectMain = document.getElementById('depart-select-main');
+    const departSelectModal = document.getElementById('depart-select');
+    
+    if (departSelectMain && departSelectModal) {
+        // Quand le select principal change, mettre à jour celui de la modale
+        departSelectMain.addEventListener('change', function() {
+            departSelectModal.value = this.value;
+        });
+        
+        // Quand la modale s'ouvre, synchroniser avec le select principal
+        const modalElement = document.getElementById('confirmInscriptionModal');
+        if (modalElement) {
+            modalElement.addEventListener('shown.bs.modal', function() {
+                if (departSelectMain.value) {
+                    departSelectModal.value = departSelectMain.value;
+                }
+            });
+        }
     }
 
     // Bouton de confirmation d'inscription
@@ -1558,6 +1592,7 @@ function submitInscription() {
     // Ajouter tous les champs
     const fields = {
         'user_id': userId,
+        'numero_depart': numeroDepart ? parseInt(numeroDepart) : null,
         'saison': saison,
         'type_certificat_medical': typeCertificatMedical,
         'type_licence': typeLicence,
