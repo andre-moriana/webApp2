@@ -365,6 +365,29 @@ window.showConfirmModal = function(archer) {
                             categorieSelect.value = valueToSet;
                             console.log('✓ showConfirmModal - Catégorie pré-remplie:', valueToSet, '(depuis XML CATEGORIE convertie:', categorieXml, ')');
                             console.log('Valeur du select après assignation:', categorieSelect.value);
+                            
+                            // Remplir automatiquement la distance et le blason
+                            // Utiliser un délai pour s'assurer que tous les listeners sont attachés
+                            setTimeout(() => {
+                                // Vérifier que les variables globales sont disponibles
+                                if (typeof concoursDiscipline !== 'undefined' && typeof concoursTypeCompetition !== 'undefined' && typeof fillDistanceAndBlasonFromCategorie === 'function') {
+                                    fillDistanceAndBlasonFromCategorie(valueToSet);
+                                    console.log('Remplissage automatique distance et blason déclenché depuis pré-remplissage catégorie');
+                                } else {
+                                    console.warn('Variables globales ou fonction non disponibles, réessai dans 300ms...');
+                                    setTimeout(() => {
+                                        if (typeof concoursDiscipline !== 'undefined' && typeof concoursTypeCompetition !== 'undefined' && typeof fillDistanceAndBlasonFromCategorie === 'function') {
+                                            fillDistanceAndBlasonFromCategorie(valueToSet);
+                                            console.log('Remplissage automatique distance et blason déclenché (2ème tentative)');
+                                        } else {
+                                            // Dernière tentative avec déclenchement d'événement
+                                            const changeEvent = new Event('change', { bubbles: true });
+                                            categorieSelect.dispatchEvent(changeEvent);
+                                            console.log('Événement change déclenché en dernier recours');
+                                        }
+                                    }, 300);
+                                }
+                            }, 300);
                         } else {
                             console.warn('✗ showConfirmModal - Option non trouvée dans le select. Valeur recherchée:', valueToSet);
                         }
@@ -470,6 +493,106 @@ window.showConfirmModal = function(archer) {
     }
 };
 
+// Fonction globale pour remplir automatiquement la distance et le blason selon la catégorie
+function fillDistanceAndBlasonFromCategorie(abvCategorie) {
+    if (!abvCategorie || typeof concoursDiscipline === 'undefined' || typeof concoursTypeCompetition === 'undefined') {
+        console.log('Conditions non remplies pour remplir automatiquement distance et blason:', {
+            abvCategorie: abvCategorie,
+            concoursDiscipline: typeof concoursDiscipline !== 'undefined' ? concoursDiscipline : 'non défini',
+            concoursTypeCompetition: typeof concoursTypeCompetition !== 'undefined' ? concoursTypeCompetition : 'non défini'
+        });
+        return;
+    }
+    
+    console.log('Remplissage automatique distance et blason. Catégorie:', abvCategorie, 'Discipline:', concoursDiscipline, 'Type compétition:', concoursTypeCompetition);
+    
+    // Appeler l'API pour récupérer la distance recommandée
+    const params = new URLSearchParams({
+        iddiscipline: concoursDiscipline,
+        idtype_competition: concoursTypeCompetition,
+        abv_categorie_classement: abvCategorie
+    });
+    
+    fetch(`/api/concours/distance-recommandee?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data) {
+            const distanceSelect = document.getElementById('distance');
+            const blasonInput = document.getElementById('blason');
+            if (distanceSelect) {
+                const distanceValeur = data.data.distance_valeur;
+                // Sélectionner la distance correspondante
+                for (let i = 0; i < distanceSelect.options.length; i++) {
+                    if (distanceSelect.options[i].value == distanceValeur) {
+                        distanceSelect.value = distanceValeur;
+                        console.log('Distance automatiquement sélectionnée:', data.data.lb_distance);
+                        
+                        // Récupérer le blason depuis concour_discipline_categorie
+                        if (blasonInput && concoursDiscipline && abvCategorie) {
+                            getBlasonFromAPI(concoursDiscipline, abvCategorie, distanceValeur)
+                                .then(blason => {
+                                    if (blason) {
+                                        blasonInput.value = blason;
+                                        console.log('Blason automatiquement renseigné depuis concour_discipline_categorie:', blason, 'cm');
+                                    }
+                                });
+                        }
+                        break;
+                    }
+                }
+            }
+        } else {
+            console.log('Aucune distance recommandée trouvée pour cette combinaison');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur lors de la récupération de la distance recommandée:', error);
+    });
+}
+
+// Fonction globale pour récupérer le blason depuis la table concour_discipline_categorie
+function getBlasonFromAPI(iddiscipline, abvCategorie, distance) {
+    if (!iddiscipline || !abvCategorie || !distance) {
+        console.log('Paramètres manquants pour récupérer le blason:', { iddiscipline, abvCategorie, distance });
+        return Promise.resolve(null);
+    }
+    
+    const params = new URLSearchParams({
+        iddiscipline: iddiscipline,
+        abv_categorie_classement: abvCategorie,
+        distance: distance
+    });
+    
+    return fetch(`/api/concours/blason-recommandee?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data && data.data.blason) {
+            return data.data.blason;
+        } else {
+            console.log('Aucun blason trouvé dans la table concour_discipline_categorie pour cette combinaison');
+            return null;
+        }
+    })
+    .catch(error => {
+        console.error('Erreur lors de la récupération du blason:', error);
+        return null;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
     const searchType = document.getElementById('search-type');
@@ -535,42 +658,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('search-results container introuvable');
     }
     
-    // Fonction pour récupérer le blason depuis la table concour_discipline_categorie
-    function getBlasonFromAPI(iddiscipline, abvCategorie, distance) {
-        if (!iddiscipline || !abvCategorie || !distance) {
-            console.log('Paramètres manquants pour récupérer le blason:', { iddiscipline, abvCategorie, distance });
-            return Promise.resolve(null);
-        }
-        
-        const params = new URLSearchParams({
-            iddiscipline: iddiscipline,
-            abv_categorie_classement: abvCategorie,
-            distance: distance
-        });
-        
-        return fetch(`/api/concours/blason-recommandee?${params.toString()}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            credentials: 'include'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data && data.data.blason) {
-                return data.data.blason;
-            } else {
-                console.log('Aucun blason trouvé dans la table concour_discipline_categorie pour cette combinaison');
-                return null;
-            }
-        })
-        .catch(error => {
-            console.error('Erreur lors de la récupération du blason:', error);
-            return null;
-        });
-    }
-    
     // Écouter le changement de distance pour renseigner automatiquement le blason
     const distanceSelect = document.getElementById('distance');
     if (distanceSelect) {
@@ -609,57 +696,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (categorieSelect) {
         categorieSelect.addEventListener('change', function() {
             const abvCategorie = this.value;
-            if (abvCategorie && concoursDiscipline && concoursTypeCompetition) {
-                // Appeler l'API pour récupérer la distance recommandée
-                const params = new URLSearchParams({
-                    iddiscipline: concoursDiscipline,
-                    idtype_competition: concoursTypeCompetition,
-                    abv_categorie_classement: abvCategorie
-                });
-                
-                fetch(`/api/concours/distance-recommandee?${params.toString()}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const distanceSelect = document.getElementById('distance');
-                        const blasonInput = document.getElementById('blason');
-                        if (distanceSelect) {
-                            const distanceValeur = data.data.distance_valeur;
-                            // Sélectionner la distance correspondante
-                            for (let i = 0; i < distanceSelect.options.length; i++) {
-                                if (distanceSelect.options[i].value == distanceValeur) {
-                                    distanceSelect.value = distanceValeur;
-                                    console.log('Distance automatiquement sélectionnée:', data.data.lb_distance);
-                                    
-                                    // Récupérer le blason depuis concour_discipline_categorie
-                                    if (blasonInput && concoursDiscipline && abvCategorie) {
-                                        getBlasonFromAPI(concoursDiscipline, abvCategorie, distanceValeur)
-                                            .then(blason => {
-                                                if (blason) {
-                                                    blasonInput.value = blason;
-                                                    console.log('Blason automatiquement renseigné depuis concour_discipline_categorie:', blason, 'cm');
-                                                }
-                                            });
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        console.log('Aucune distance recommandée trouvée pour cette combinaison');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur lors de la récupération de la distance recommandée:', error);
-                });
-            }
+            console.log('Événement change sur catégorie déclenché. Valeur:', abvCategorie);
+            fillDistanceAndBlasonFromCategorie(abvCategorie);
         });
     }
 });
