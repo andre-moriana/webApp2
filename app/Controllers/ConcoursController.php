@@ -544,6 +544,7 @@ class ConcoursController {
                 }
                 
                 // Compléter les données utilisateur avec les informations du club
+                // TOUJOURS remplir les données du club depuis la liste des clubs pour garantir l'affichage
                 foreach ($usersMap as $userId => &$userData) {
                     // Récupérer le clubId (essayer toutes les variantes possibles)
                     $clubId = $userData['clubId'] ?? $userData['club_id'] ?? null;
@@ -573,7 +574,8 @@ class ConcoursController {
                             $clubNameShort = $club['name_short'] ?? $club['nameShort'] ?? null;
                             $clubNameFull = $club['name'] ?? null;
                             
-                            // Stocker les deux formats - prioriser name_short comme demandé
+                            // TOUJOURS remplir les données même si elles existent déjà (pour garantir l'affichage)
+                            // Prioriser name_short comme demandé
                             $userData['clubName'] = $clubNameShort ?: $clubNameFull;
                             $userData['clubNameShort'] = $clubNameShort;
                             // Garder aussi le format snake_case pour compatibilité
