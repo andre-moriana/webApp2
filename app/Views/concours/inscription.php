@@ -126,50 +126,18 @@
                                 <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php 
-                                    $clubName = null;
+                                    // Utiliser le mapping des clubs créé dans le contrôleur (accès direct, pas de boucle)
+                                    $clubId = $inscription['id_club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
+                                    $club = null;
                                     
-                                    // 1. Utiliser id_club depuis l'inscription pour chercher dans $clubs
-                                    $clubId = $inscription['id_club'] ?? null;
-                                    
-                                    // 2. Si id_club est disponible, chercher dans $clubs
-                                    if (!empty($clubId) && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
-                                        foreach ($clubs as $club) {
-                                            $clubDbId = $club['id'] ?? $club['_id'] ?? null;
-                                            if ($clubDbId && (
-                                                $clubDbId == $clubId || 
-                                                (string)$clubDbId === (string)$clubId ||
-                                                (int)$clubDbId === (int)$clubId
-                                            )) {
-                                                // Utiliser nameShort (camelCase) ou name_short (snake_case) en priorité
-                                                $clubName = $club['nameShort'] ?? $club['name_short'] ?? null;
-                                                // Si name_short n'existe pas, utiliser name comme fallback
-                                                if (empty($clubName)) {
-                                                    $clubName = $club['name'] ?? null;
-                                                }
-                                                break;
-                                            }
-                                        }
+                                    if (!empty($clubId) && isset($clubsMap)) {
+                                        $club = $clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? $clubsMap[(int)$clubId] ?? null;
                                     }
                                     
-                                    // 3. Si toujours pas trouvé, utiliser club_id de l'utilisateur
-                                    if (empty($clubName)) {
-                                        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
-                                        if (!empty($clubId) && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
-                                            foreach ($clubs as $club) {
-                                                $clubDbId = $club['id'] ?? $club['_id'] ?? null;
-                                                if ($clubDbId && (
-                                                    $clubDbId == $clubId || 
-                                                    (string)$clubDbId === (string)$clubId ||
-                                                    (int)$clubDbId === (int)$clubId
-                                                )) {
-                                                    $clubName = $club['nameShort'] ?? $club['name_short'] ?? $club['name'] ?? null;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
+                                    // Utiliser nameShort (camelCase) en priorité, puis name_short, puis name
+                                    $clubName = $club['nameShort'] ?? $club['name_short'] ?? $club['name'] ?? null;
                                     
-                                    // 4. Si toujours pas trouvé, utiliser les données utilisateur comme dernier recours
+                                    // Fallback vers les données utilisateur si pas trouvé
                                     if (empty($clubName)) {
                                         $clubName = $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
                                     }

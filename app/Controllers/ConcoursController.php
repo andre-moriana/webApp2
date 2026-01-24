@@ -137,14 +137,11 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des thèmes: ' . $e->getMessage());
         }
         
+        $clubsMap = []; // Mapping clubId -> club pour accès rapide
         try {
             // Récupérer les clubs
             $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
             $payload = $this->apiService->unwrapData($clubsResponse);
-            
-            error_log('Clubs response success: ' . ($clubsResponse['success'] ? 'true' : 'false'));
-            error_log('Payload is array: ' . (is_array($payload) ? 'true' : 'false'));
-            error_log('Payload count: ' . (is_array($payload) ? count($payload) : 0));
             
             if ($clubsResponse['success'] && is_array($payload)) {
                 // Normaliser l'ID de chaque club
@@ -152,8 +149,15 @@ class ConcoursController {
                     if (!isset($club['id']) && isset($club['_id'])) {
                         $club['id'] = $club['_id'];
                     }
+                    // Créer un mapping pour accès rapide par ID (int et string)
+                    $clubId = $club['id'] ?? $club['_id'] ?? null;
+                    if ($clubId) {
+                        $clubsMap[$clubId] = $club;
+                        $clubsMap[(string)$clubId] = $club;
+                        $clubsMap[(int)$clubId] = $club;
+                    }
                 }
-                unset($club); // Libérer la référence
+                unset($club);
                 
                 // Filtrer les clubs : exclure ceux dont le nameShort se termine par "000"
                 $filtered = array_filter($payload, function($club) {
@@ -163,14 +167,9 @@ class ConcoursController {
                 
                 // Réindexer le tableau pour avoir des clés séquentielles
                 $clubs = array_values($filtered);
-                
-                error_log('Clubs filtrés: ' . count($clubs));
-            } else {
-                error_log('Erreur dans la réponse clubs: ' . ($clubsResponse['message'] ?? 'Unknown error'));
             }
         } catch (Exception $e) {
             error_log('Exception lors de la récupération des clubs: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
         }
         
         try {
@@ -518,6 +517,7 @@ class ConcoursController {
         
         // Charger les données pour afficher les libellés
         $clubs = []; // Initialiser pour éviter les erreurs si l'API échoue
+        $clubsMap = []; // Mapping clubId -> club pour accès rapide
         try {
             // Clubs
             $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
@@ -526,6 +526,13 @@ class ConcoursController {
                 foreach ($clubsPayload as &$club) {
                     if (!isset($club['id']) && isset($club['_id'])) {
                         $club['id'] = $club['_id'];
+                    }
+                    // Créer un mapping pour accès rapide par ID (int et string)
+                    $clubId = $club['id'] ?? $club['_id'] ?? null;
+                    if ($clubId) {
+                        $clubsMap[$clubId] = $club;
+                        $clubsMap[(string)$clubId] = $club;
+                        $clubsMap[(int)$clubId] = $club;
                     }
                 }
                 unset($club);
