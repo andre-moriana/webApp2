@@ -849,42 +849,66 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .then(response => {
                         console.log('Réponse blason-recommandee - status:', response.status);
+                        console.log('Content-Type:', response.headers.get('Content-Type'));
+                        
                         if (!response.ok) {
-                            // Si 404, récupérer les informations de débogage
+                            // Si 404, vérifier si c'est du JSON ou du HTML
                             if (response.status === 404) {
-                                return response.json().then(debugData => {
-                                    console.error('✗✗✗ Endpoint blason-recommandee retourne 404');
-                                    console.error('Informations de débogage:', debugData);
-                                    if (debugData && debugData.debug) {
-                                        console.error('Path exact blason:', debugData.debug.path_exact_blason);
-                                        console.error('Path exact distance:', debugData.debug.path_exact_distance);
-                                        console.error('Path reçu:', debugData.path);
-                                    }
-                                    // Essayer de récupérer le blason via distance-recommandee comme fallback
-                                    console.warn('Tentative avec distance-recommandee...');
-                                    return fetch(`/api/concours/distance-recommandee?${new URLSearchParams({
-                                        iddiscipline: concoursDiscipline,
-                                        idtype_competition: concoursTypeCompetition,
-                                        abv_categorie_classement: abvCategorie,
-                                        distance: distance
-                                    }).toString()}`, {
-                                        method: 'GET',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json'
-                                        },
-                                        credentials: 'include'
-                                    }).then(response => {
-                                        if (!response.ok && response.status === 404) {
-                                            return response.json().then(debugData => {
-                                                console.error('✗✗✗ Endpoint distance-recommandee retourne aussi 404');
-                                                console.error('Informations de débogage distance-recommandee:', debugData);
-                                                throw new Error('Les deux endpoints retournent 404');
-                                            });
+                                const contentType = response.headers.get('Content-Type') || '';
+                                if (contentType.includes('application/json')) {
+                                    // C'est du JSON, parser normalement
+                                    return response.json().then(debugData => {
+                                        console.error('✗✗✗ Endpoint blason-recommandee retourne 404');
+                                        console.error('Informations de débogage:', debugData);
+                                        if (debugData && debugData.debug) {
+                                            console.error('Path exact blason:', debugData.debug.path_exact_blason);
+                                            console.error('Path exact distance:', debugData.debug.path_exact_distance);
+                                            console.error('Path reçu:', debugData.path);
                                         }
-                                        return response;
+                                        // Essayer de récupérer le blason via distance-recommandee comme fallback
+                                        console.warn('Tentative avec distance-recommandee...');
+                                        return fetch(`/api/concours/distance-recommandee?${new URLSearchParams({
+                                            iddiscipline: concoursDiscipline,
+                                            idtype_competition: concoursTypeCompetition,
+                                            abv_categorie_classement: abvCategorie,
+                                            distance: distance
+                                        }).toString()}`, {
+                                            method: 'GET',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json'
+                                            },
+                                            credentials: 'include'
+                                        }).then(response => {
+                                            if (!response.ok && response.status === 404) {
+                                                const contentType2 = response.headers.get('Content-Type') || '';
+                                                if (contentType2.includes('application/json')) {
+                                                    return response.json().then(debugData => {
+                                                        console.error('✗✗✗ Endpoint distance-recommandee retourne aussi 404');
+                                                        console.error('Informations de débogage distance-recommandee:', debugData);
+                                                        throw new Error('Les deux endpoints retournent 404');
+                                                    });
+                                                } else {
+                                                    return response.text().then(html => {
+                                                        console.error('✗✗✗ Endpoint distance-recommandee retourne HTML au lieu de JSON');
+                                                        console.error('Réponse HTML (premiers 500 caractères):', html.substring(0, 500));
+                                                        throw new Error('Endpoint distance-recommandee retourne HTML (routage non fonctionnel)');
+                                                    });
+                                                }
+                                            }
+                                            return response;
+                                        });
                                     });
-                                });
+                                } else {
+                                    // C'est du HTML, le routage ne fonctionne pas
+                                    return response.text().then(html => {
+                                        console.error('✗✗✗✗✗ PROBLÈME DE ROUTAGE: Endpoint blason-recommandee retourne HTML au lieu de JSON');
+                                        console.error('Cela signifie que le routage ne fonctionne pas - l\'endpoint n\'est pas atteint');
+                                        console.error('Réponse HTML (premiers 500 caractères):', html.substring(0, 500));
+                                        console.error('URL appelée:', `/api/concours/blason-recommandee?${params.toString()}`);
+                                        throw new Error('Endpoint blason-recommandee retourne HTML (routage non fonctionnel)');
+                                    });
+                                }
                             }
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
