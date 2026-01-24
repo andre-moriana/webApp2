@@ -566,6 +566,7 @@ class ConcoursController {
                                 $userData['club_name'] = $clubNameFull;
                                 $userData['club_name_short'] = $clubNameShort;
                                 $found = true;
+                                error_log("DEBUG show(): Club trouvé et assigné pour user $userId - clubName=" . ($userData['clubName'] ?? 'NULL') . ", clubNameShort=" . ($userData['clubNameShort'] ?? 'NULL'));
                                 break;
                             }
                         }
