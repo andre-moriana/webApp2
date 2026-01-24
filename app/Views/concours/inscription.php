@@ -159,7 +159,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <div class="form-check mt-4">
-                                <input type="checkbox" id="creation_renouvellement" class="form-check-input">
+                                <input type="checkbox" id="creation_renouvellement" class="form-check-input" disabled>
                                 <label for="creation_renouvellement" class="form-check-label">Création/Renouvellement</label>
                             </div>
                         </div>
