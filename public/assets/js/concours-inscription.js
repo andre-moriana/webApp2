@@ -1746,8 +1746,15 @@ function proceedWithInscriptionSubmission() {
     form.action = `/concours/${concoursId}/inscription`;
 
     // Ajouter tous les champs
-    // Pour numero_depart, convertir en entier seulement si la valeur existe
-    const numeroDepartInt = numeroDepart && numeroDepart !== '' ? parseInt(numeroDepart) : null;
+    // Pour numero_depart, convertir en entier seulement si la valeur existe et est valide
+    let numeroDepartInt = null;
+    if (numeroDepart && numeroDepart !== '' && numeroDepart !== '0') {
+        const parsed = parseInt(numeroDepart);
+        if (!isNaN(parsed) && parsed > 0) {
+            numeroDepartInt = parsed;
+        }
+    }
+    console.log('numeroDepartInt final:', numeroDepartInt);
     
     const fields = {
         'user_id': userId,
@@ -1773,17 +1780,16 @@ function proceedWithInscriptionSubmission() {
     for (const [name, value] of Object.entries(fields)) {
         // Traitement spécial pour numero_depart : toujours l'envoyer s'il a une valeur valide
         if (name === 'numero_depart') {
-            // Vérifier que la valeur est un nombre valide (pas null, pas vide, pas NaN)
-            const numeroDepartValue = value !== null && value !== '' ? parseInt(value) : null;
-            if (numeroDepartValue !== null && !isNaN(numeroDepartValue) && numeroDepartValue > 0) {
+            // Si la valeur est un nombre valide > 0, l'envoyer
+            if (value !== null && value !== '' && !isNaN(value) && parseInt(value) > 0) {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = name;
-                input.value = numeroDepartValue;
+                input.value = parseInt(value); // S'assurer que c'est un entier
                 form.appendChild(input);
-                console.log('numero_depart ajouté au formulaire:', numeroDepartValue);
+                console.log('✓ numero_depart ajouté au formulaire:', parseInt(value));
             } else {
-                console.warn('numero_depart non valide ou vide. Valeur brute:', value, 'Valeur parsée:', numeroDepartValue);
+                console.warn('✗ numero_depart non valide ou vide. Valeur:', value, '- Non envoyé au serveur');
             }
             continue;
         }
