@@ -535,6 +535,75 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('search-results container introuvable');
     }
     
+    // Fonction pour récupérer le blason depuis la table concour_discipline_categorie
+    function getBlasonFromAPI(iddiscipline, abvCategorie, distance) {
+        if (!iddiscipline || !abvCategorie || !distance) {
+            console.log('Paramètres manquants pour récupérer le blason:', { iddiscipline, abvCategorie, distance });
+            return Promise.resolve(null);
+        }
+        
+        const params = new URLSearchParams({
+            iddiscipline: iddiscipline,
+            abv_categorie_classement: abvCategorie,
+            distance: distance
+        });
+        
+        return fetch(`/api/concours/blason-recommandee?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data && data.data.blason) {
+                return data.data.blason;
+            } else {
+                console.log('Aucun blason trouvé dans la table concour_discipline_categorie pour cette combinaison');
+                return null;
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération du blason:', error);
+            return null;
+        });
+    }
+    
+    // Écouter le changement de distance pour renseigner automatiquement le blason
+    const distanceSelect = document.getElementById('distance');
+    if (distanceSelect) {
+        distanceSelect.addEventListener('change', function() {
+            const distance = this.value;
+            const blasonInput = document.getElementById('blason');
+            const categorieSelect = document.getElementById('categorie_classement');
+            
+            if (blasonInput && distance) {
+                // Récupérer la catégorie et la discipline pour l'appel API
+                const abvCategorie = categorieSelect ? categorieSelect.value : null;
+                
+                if (concoursDiscipline && abvCategorie) {
+                    // Utiliser l'API pour récupérer le blason depuis concour_discipline_categorie
+                    getBlasonFromAPI(concoursDiscipline, abvCategorie, distance)
+                        .then(blason => {
+                            if (blason) {
+                                blasonInput.value = blason;
+                                console.log('Blason automatiquement renseigné depuis concour_discipline_categorie:', blason, 'cm pour distance', distance, 'm');
+                            } else {
+                                console.log('Aucun blason trouvé dans la base de données, le champ reste vide');
+                            }
+                        });
+                } else {
+                    console.log('Discipline ou catégorie manquante pour récupérer le blason:', { 
+                        discipline: concoursDiscipline, 
+                        categorie: abvCategorie 
+                    });
+                }
+            }
+        });
+    }
+    
     // Écouter le changement de catégorie pour sélectionner automatiquement la distance
     const categorieSelect = document.getElementById('categorie_classement');
     if (categorieSelect) {
@@ -560,6 +629,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(data => {
                     if (data.success && data.data) {
                         const distanceSelect = document.getElementById('distance');
+                        const blasonInput = document.getElementById('blason');
                         if (distanceSelect) {
                             const distanceValeur = data.data.distance_valeur;
                             // Sélectionner la distance correspondante
@@ -567,6 +637,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (distanceSelect.options[i].value == distanceValeur) {
                                     distanceSelect.value = distanceValeur;
                                     console.log('Distance automatiquement sélectionnée:', data.data.lb_distance);
+                                    
+                                    // Récupérer le blason depuis concour_discipline_categorie
+                                    if (blasonInput && concoursDiscipline && abvCategorie) {
+                                        getBlasonFromAPI(concoursDiscipline, abvCategorie, distanceValeur)
+                                            .then(blason => {
+                                                if (blason) {
+                                                    blasonInput.value = blason;
+                                                    console.log('Blason automatiquement renseigné depuis concour_discipline_categorie:', blason, 'cm');
+                                                }
+                                            });
+                                    }
                                     break;
                                 }
                             }
