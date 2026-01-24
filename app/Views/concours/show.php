@@ -204,6 +204,11 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                         $clubName = $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
                                     }
                                     
+                                    // DEBUG TEMPORAIRE - À SUPPRIMER
+                                    if (empty($clubName) && !empty($clubId)) {
+                                        echo '<!-- DEBUG: clubId=' . htmlspecialchars($clubId) . ', clubs count=' . count($clubs ?? []) . ' -->';
+                                    }
+                                    
                                     echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
