@@ -2446,7 +2446,9 @@ class ApiController {
         try {
             $queryString = $_SERVER['QUERY_STRING'] ?? '';
             $endpoint = "concours/distance-recommandee" . ($queryString ? "?{$queryString}" : "");
+            error_log("Proxy distance-recommandee - Endpoint: " . $endpoint);
             $response = $this->apiService->makeRequest($endpoint, 'GET');
+            error_log("Proxy distance-recommandee - Réponse: " . json_encode($response));
             
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
@@ -2454,6 +2456,7 @@ class ApiController {
                 $this->sendJsonResponse($response, 200);
             }
         } catch (Exception $e) {
+            error_log("Proxy distance-recommandee - Erreur: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
@@ -2473,7 +2476,9 @@ class ApiController {
         try {
             $queryString = $_SERVER['QUERY_STRING'] ?? '';
             $endpoint = "concours/blason-recommandee" . ($queryString ? "?{$queryString}" : "");
+            error_log("Proxy blason-recommandee - Endpoint: " . $endpoint);
             $response = $this->apiService->makeRequest($endpoint, 'GET');
+            error_log("Proxy blason-recommandee - Réponse: " . json_encode($response));
             
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
@@ -2481,6 +2486,7 @@ class ApiController {
                 $this->sendJsonResponse($response, 200);
             }
         } catch (Exception $e) {
+            error_log("Proxy blason-recommandee - Erreur: " . $e->getMessage());
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
