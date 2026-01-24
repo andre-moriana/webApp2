@@ -1507,12 +1507,22 @@ function submitInscription() {
         return;
     }
 
-    const userId = selectedArcher.id || selectedArcher._id || null;
+    console.log('=== submitInscription ===');
+    console.log('selectedArcher:', selectedArcher);
+    console.log('selectedArcher.id:', selectedArcher.id);
+    console.log('selectedArcher._id:', selectedArcher._id);
+    console.log('Toutes les clés de selectedArcher:', Object.keys(selectedArcher));
+
+    const userId = selectedArcher.id || selectedArcher._id || selectedArcher.ID || null;
     if (!userId) {
         // Si l'archer n'a pas d'ID (vient du XML), on devra le créer d'abord
-        alert('Cet archer doit être créé dans la base de données avant de pouvoir être inscrit.');
+        console.error('Aucun ID trouvé pour l\'archer sélectionné');
+        console.error('Structure complète de l\'archer:', JSON.stringify(selectedArcher, null, 2));
+        alert('Cet archer doit être créé dans la base de données avant de pouvoir être inscrit. L\'archer sélectionné n\'a pas d\'ID.');
         return;
     }
+    
+    console.log('ID utilisateur trouvé:', userId);
 
     // Activer temporairement les champs disabled pour récupérer leurs valeurs
     const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');
