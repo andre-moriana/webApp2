@@ -1640,13 +1640,19 @@ function submitInscription() {
 }
 
 // Retirer une inscription
-function removeInscription(inscriptionId, userId) {
+function removeInscription(inscriptionId, userId, numeroDepart = null) {
     if (!confirm('Voulez-vous retirer cet archer de l\'inscription ?')) {
         return;
     }
 
-    // Utiliser la route DELETE avec user_id
-    fetch(`/api/concours/${concoursId}/inscription/${userId}`, {
+    // Construire l'URL avec le numéro de départ si disponible
+    let url = `/api/concours/${concoursId}/inscription/${userId}`;
+    if (numeroDepart !== null && numeroDepart !== undefined) {
+        url += `/${numeroDepart}`;
+    }
+
+    // Utiliser la route DELETE avec user_id et optionnellement numero_depart
+    fetch(url, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
