@@ -919,6 +919,43 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des arcs: ' . $e->getMessage());
         }
 
+        // Récupérer les distances de tir
+        $distancesTir = [];
+        try {
+            $distancesResponse = $this->apiService->makeRequest('concours/distances-tir', 'GET');
+            
+            if ($distancesResponse['success'] && isset($distancesResponse['data'])) {
+                $distancesPayload = $distancesResponse['data'];
+                
+                // Si data contient encore { success, data }, unwrap une deuxième fois
+                if (is_array($distancesPayload) && isset($distancesPayload['data']) && isset($distancesPayload['success'])) {
+                    $distancesPayload = $distancesPayload['data'];
+                }
+                
+                if (is_array($distancesPayload)) {
+                    // Normaliser l'ID de chaque distance
+                    foreach ($distancesPayload as &$distance) {
+                        if (!isset($distance['id']) && isset($distance['_id'])) {
+                            $distance['id'] = $distance['_id'];
+                        }
+                    }
+                    unset($distance);
+                    
+                    // Trier par distance_valeur (ordre croissant)
+                    usort($distancesPayload, function($a, $b) {
+                        $valeurA = (int)($a['distance_valeur'] ?? 0);
+                        $valeurB = (int)($b['distance_valeur'] ?? 0);
+                        return $valeurA <=> $valeurB;
+                    });
+                    
+                    // Réindexer le tableau pour avoir des clés séquentielles
+                    $distancesTir = array_values($distancesPayload);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des distances de tir: ' . $e->getMessage());
+        }
+
         // Inclure header et footer
         require_once __DIR__ . '/../Views/layouts/header.php';
         require_once __DIR__ . '/../Views/concours/inscription.php';

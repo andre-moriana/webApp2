@@ -227,7 +227,16 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="distance" class="form-label">Distance</label>
-                            <input type="number" id="distance" class="form-control" min="0" placeholder="Ex: 18">
+                            <select id="distance" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <?php if (!empty($distancesTir)): ?>
+                                    <?php foreach ($distancesTir as $distance): ?>
+                                        <option value="<?= htmlspecialchars($distance['distance_valeur'] ?? '') ?>">
+                                            <?= htmlspecialchars($distance['lb_distance'] ?? '') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="numero_tir" class="form-label">N° Tir</label>
@@ -293,5 +302,6 @@ const concoursId = <?= json_encode($concoursId ?? null) ?>;
 const departs = <?= json_encode($departs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const categoriesClassement = <?= json_encode($categoriesClassement ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const arcs = <?= json_encode($arcs ?? [], JSON_UNESCAPED_UNICODE) ?>;
+const distancesTir = <?= json_encode($distancesTir ?? [], JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="/public/assets/js/concours-inscription.js"></script>

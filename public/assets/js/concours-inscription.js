@@ -149,7 +149,12 @@ window.showConfirmModal = function(archer) {
                 </div>
                 <div class="col-md-3 mb-3">
                     <label for="distance" class="form-label">Distance</label>
-                    <input type="number" id="distance" class="form-control" min="0" placeholder="Ex: 18">
+                    <select id="distance" class="form-control">
+                        <option value="">Sélectionner</option>
+                        ${typeof distancesTir !== 'undefined' && distancesTir && distancesTir.length > 0 ? distancesTir.map(distance => 
+                            `<option value="${distance.distance_valeur || distance.valeur || ''}">${distance.lb_distance || distance.name || distance.nom || ''}</option>`
+                        ).join('') : ''}
+                    </select>
                 </div>
                 <div class="col-md-3 mb-3">
                     <label for="numero_tir" class="form-label">N° Tir</label>
