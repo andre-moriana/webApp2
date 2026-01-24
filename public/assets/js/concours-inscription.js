@@ -77,14 +77,14 @@ window.showConfirmModal = function(archer) {
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="saison" class="form-label">Saison</label>
-                    <input type="text" id="saison" class="form-control" placeholder="Ex: 2024-2025">
+                    <input type="text" id="saison" class="form-control" placeholder="Ex: 2024-2025" readonly>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="type_certificat_medical" class="form-label">Type Certificat Médical</label>
-                    <select id="type_certificat_medical" class="form-control">
+                    <select id="type_certificat_medical" class="form-control" disabled>
                         <option value="">Sélectionner</option>
                         <option value="Compétition">Compétition</option>
-                        <option value="Loisir">Loisir</option>
+                        <option value="Pratique">Pratique</option>
                     </select>
                 </div>
             </div>
@@ -92,11 +92,12 @@ window.showConfirmModal = function(archer) {
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="type_licence" class="form-label">Type Licence</label>
-                    <select id="type_licence" class="form-control">
+                    <select id="type_licence" class="form-control" disabled>
                         <option value="">Sélectionner</option>
                         <option value="A">A</option>
                         <option value="B">B</option>
                         <option value="C">C</option>
+                        <option value="L">L</option>
                     </select>
                 </div>
                 <div class="col-md-6 mb-3">
@@ -391,13 +392,64 @@ window.showConfirmModal = function(archer) {
             }
         };
         
+        // Pré-remplir les champs depuis le XML (saison, type licence, type certificat médical)
+        const saison = (archer.saison || archer.ABREV || '').trim();
+        const typeLicence = (archer.type_licence || '').trim();
+        const typeCertificatMedical = (archer.type_certificat_medical || archer.CERTIFICAT || archer.TYPE_CERTIFICAT || '').trim();
+        
+        // Fonction pour pré-remplir les champs verrouillés
+        const prefillLockedFields = () => {
+            // Pré-remplir la saison
+            const saisonInput = document.getElementById('saison');
+            if (saisonInput && saison) {
+                saisonInput.value = saison;
+                console.log('showConfirmModal - Saison pré-remplie:', saison);
+            }
+            
+            // Pré-remplir le type de licence
+            const typeLicenceSelect = document.getElementById('type_licence');
+            if (typeLicenceSelect && typeLicence) {
+                const cleanedTypeLicence = typeLicence.trim().toUpperCase();
+                const firstLetter = cleanedTypeLicence.length > 0 ? cleanedTypeLicence[0] : '';
+                const options = typeLicenceSelect.options;
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].value === firstLetter) {
+                        typeLicenceSelect.value = options[i].value;
+                        typeLicenceSelect.disabled = false; // Activer temporairement
+                        typeLicenceSelect.disabled = true; // Re-désactiver
+                        console.log('showConfirmModal - Type licence pré-rempli:', options[i].value);
+                        break;
+                    }
+                }
+            }
+            
+            // Pré-remplir le type de certificat médical
+            const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');
+            if (typeCertificatMedicalSelect && typeCertificatMedical) {
+                const normalizedValue = typeCertificatMedical.trim();
+                const options = typeCertificatMedicalSelect.options;
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].value.toLowerCase() === normalizedValue.toLowerCase() || 
+                        options[i].text.toLowerCase() === normalizedValue.toLowerCase()) {
+                        typeCertificatMedicalSelect.value = options[i].value;
+                        typeCertificatMedicalSelect.disabled = false; // Activer temporairement
+                        typeCertificatMedicalSelect.disabled = true; // Re-désactiver
+                        console.log('showConfirmModal - Type certificat médical pré-rempli:', options[i].value);
+                        break;
+                    }
+                }
+            }
+        };
+        
         // Pré-remplir après que la modale soit affichée
         setTimeout(() => {
+            prefillLockedFields();
             prefillCategorieAndArme();
         }, 100);
         
         // Écouter l'événement 'shown.bs.modal' pour s'assurer que la modale est complètement affichée
         modalElement.addEventListener('shown.bs.modal', function() {
+            prefillLockedFields();
             prefillCategorieAndArme();
         }, { once: true });
     } else {
@@ -653,6 +705,8 @@ function selectArcher(archer, cardElement) {
     const saison = (archer.saison || archer.ABREV || '').trim();
     const typeLicence = (archer.type_licence || '').trim();
     const creationRenouvellement = (archer.creation_renouvellement || archer.Creation_renouvellement || '').trim();
+    // Type de certificat médical depuis le XML (peut être dans CERTIFICAT, TYPE_CERTIFICAT, etc.)
+    const typeCertificatMedical = (archer.type_certificat_medical || archer.CERTIFICAT || archer.TYPE_CERTIFICAT || '').trim();
     
     console.log('Mise à jour des données dans la modale:', { nom, prenom, licence, club, saison, typeLicence, creationRenouvellement });
     console.log('Données archer complètes:', archer);
@@ -712,7 +766,27 @@ function selectArcher(archer, cardElement) {
         for (let i = 0; i < options.length; i++) {
             if (options[i].value === firstLetter) {
                 typeLicenceSelect.value = options[i].value;
+                typeLicenceSelect.disabled = false; // Activer temporairement pour définir la valeur
+                typeLicenceSelect.disabled = true; // Re-désactiver
                 console.log('Type licence pré-rempli:', options[i].value, '(depuis:', typeLicence, ')');
+                break;
+            }
+        }
+    }
+    
+    // Pré-remplir le type de certificat médical
+    const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');
+    if (typeCertificatMedicalSelect && typeCertificatMedical) {
+        // Normaliser la valeur (Compétition, Pratique, Loisir, etc.)
+        const normalizedValue = typeCertificatMedical.trim();
+        const options = typeCertificatMedicalSelect.options;
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value.toLowerCase() === normalizedValue.toLowerCase() || 
+                options[i].text.toLowerCase() === normalizedValue.toLowerCase()) {
+                typeCertificatMedicalSelect.value = options[i].value;
+                typeCertificatMedicalSelect.disabled = false; // Activer temporairement pour définir la valeur
+                typeCertificatMedicalSelect.disabled = true; // Re-désactiver
+                console.log('Type certificat médical pré-rempli:', options[i].value, '(depuis XML:', typeCertificatMedical, ')');
                 break;
             }
         }
@@ -954,11 +1028,29 @@ function submitInscription() {
         return;
     }
 
+    // Activer temporairement les champs disabled pour récupérer leurs valeurs
+    const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');
+    const typeLicenceSelect = document.getElementById('type_licence');
+    if (typeCertificatMedicalSelect && typeCertificatMedicalSelect.disabled) {
+        typeCertificatMedicalSelect.disabled = false;
+    }
+    if (typeLicenceSelect && typeLicenceSelect.disabled) {
+        typeLicenceSelect.disabled = false;
+    }
+    
     // Récupérer tous les champs du formulaire
     const departId = document.getElementById('depart-select')?.value || null;
     const saison = document.getElementById('saison')?.value || null;
     const typeCertificatMedical = document.getElementById('type_certificat_medical')?.value || null;
     const typeLicence = document.getElementById('type_licence')?.value || null;
+    
+    // Re-désactiver les champs après récupération des valeurs
+    if (typeCertificatMedicalSelect) {
+        typeCertificatMedicalSelect.disabled = true;
+    }
+    if (typeLicenceSelect) {
+        typeLicenceSelect.disabled = true;
+    }
     const creationRenouvellement = document.getElementById('creation_renouvellement')?.checked ? 1 : 0;
     const categorieClassement = document.getElementById('categorie_classement')?.value || null;
     const arme = document.getElementById('arme')?.value || null;

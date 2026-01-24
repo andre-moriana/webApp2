@@ -134,14 +134,14 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="saison" class="form-label">Saison</label>
-                            <input type="text" id="saison" class="form-control" placeholder="Ex: 2024-2025">
+                            <input type="text" id="saison" class="form-control" placeholder="Ex: 2024-2025" readonly>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="type_certificat_medical" class="form-label">Type Certificat Médical</label>
-                            <select id="type_certificat_medical" class="form-control">
+                            <select id="type_certificat_medical" class="form-control" disabled>
                                 <option value="">Sélectionner</option>
                                 <option value="Compétition">Compétition</option>
-                                <option value="Loisir">Loisir</option>
+                                <option value="Pratique">Pratique</option>
                             </select>
                         </div>
                     </div>
@@ -149,7 +149,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="type_licence" class="form-label">Type Licence</label>
-                            <select id="type_licence" class="form-control">
+                            <select id="type_licence" class="form-control" disabled>
                                 <option value="">Sélectionner</option>
                                 <option value="A">A</option>
                                 <option value="B">B</option>
