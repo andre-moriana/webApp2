@@ -368,27 +368,39 @@ window.showConfirmModal = function(archer) {
                             
                             // Remplir automatiquement la distance et le blason
                             // Utiliser plusieurs tentatives avec des délais croissants pour s'assurer que tout est prêt
-                            const tryFillDistanceAndBlason = (attempt = 1, maxAttempts = 3) => {
-                                const delay = attempt * 200; // 200ms, 400ms, 600ms
+                            const tryFillDistanceAndBlason = (attempt = 1, maxAttempts = 5) => {
+                                const delay = attempt * 150; // 150ms, 300ms, 450ms, 600ms, 750ms
                                 setTimeout(() => {
+                                    console.log(`Tentative ${attempt}/${maxAttempts} - Vérification des conditions...`);
+                                    console.log('concoursDiscipline:', typeof concoursDiscipline !== 'undefined' ? concoursDiscipline : 'undefined');
+                                    console.log('concoursTypeCompetition:', typeof concoursTypeCompetition !== 'undefined' ? concoursTypeCompetition : 'undefined');
+                                    console.log('fillDistanceAndBlasonFromCategorie:', typeof fillDistanceAndBlasonFromCategorie);
+                                    
                                     if (typeof concoursDiscipline !== 'undefined' && 
+                                        concoursDiscipline !== null &&
                                         typeof concoursTypeCompetition !== 'undefined' && 
+                                        concoursTypeCompetition !== null &&
                                         typeof fillDistanceAndBlasonFromCategorie === 'function') {
+                                        console.log(`✓ Conditions remplies - Appel de fillDistanceAndBlasonFromCategorie avec catégorie: ${valueToSet}`);
                                         fillDistanceAndBlasonFromCategorie(valueToSet);
-                                        console.log(`Remplissage automatique distance et blason déclenché (tentative ${attempt})`);
                                     } else if (attempt < maxAttempts) {
-                                        console.warn(`Variables globales ou fonction non disponibles (tentative ${attempt}/${maxAttempts}), réessai...`);
+                                        console.warn(`✗ Variables globales ou fonction non disponibles (tentative ${attempt}/${maxAttempts}), réessai dans ${delay}ms...`);
                                         tryFillDistanceAndBlason(attempt + 1, maxAttempts);
                                     } else {
                                         // Dernière tentative avec déclenchement d'événement
-                                        console.warn('Dernière tentative: déclenchement de l\'événement change');
-                                        const changeEvent = new Event('change', { bubbles: true });
-                                        categorieSelect.dispatchEvent(changeEvent);
+                                        console.warn('✗ Dernière tentative: déclenchement de l\'événement change sur la catégorie');
+                                        try {
+                                            const changeEvent = new Event('change', { bubbles: true });
+                                            categorieSelect.dispatchEvent(changeEvent);
+                                            console.log('✓ Événement change déclenché sur la catégorie');
+                                        } catch (error) {
+                                            console.error('Erreur lors du déclenchement de l\'événement change:', error);
+                                        }
                                     }
                                 }, delay);
                             };
                             
-                            // Démarrer la première tentative
+                            // Démarrer la première tentative immédiatement
                             tryFillDistanceAndBlason(1);
                         } else {
                             console.warn('✗ showConfirmModal - Option non trouvée dans le select. Valeur recherchée:', valueToSet);
@@ -556,7 +568,8 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
             }
             
             const distanceValeur = data.data.distance_valeur;
-            console.log('Distance recommandée reçue:', distanceValeur, 'lb_distance:', data.data.lb_distance);
+            const blasonValeur = data.data.blason; // Le blason est maintenant inclus dans la réponse
+            console.log('Distance recommandée reçue:', distanceValeur, 'lb_distance:', data.data.lb_distance, 'blason:', blasonValeur);
             
             // Sélectionner la distance correspondante
             let distanceFound = false;
@@ -566,14 +579,18 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
                     distanceFound = true;
                     console.log('✓ Distance automatiquement sélectionnée:', data.data.lb_distance, '(valeur:', distanceValeur, ')');
                     
-                    // Récupérer le blason depuis concour_discipline_categorie
-                    if (blasonInput && concoursDiscipline && abvCategorie) {
-                        console.log('Récupération du blason pour discipline:', concoursDiscipline, 'catégorie:', abvCategorie, 'distance:', distanceValeur);
+                    // Remplir le blason si disponible dans la réponse
+                    if (blasonInput && blasonValeur) {
+                        blasonInput.value = blasonValeur;
+                        console.log('✓ Blason automatiquement renseigné depuis la réponse API:', blasonValeur, 'cm');
+                    } else if (blasonInput && concoursDiscipline && abvCategorie) {
+                        // Fallback: récupérer le blason via l'API séparée si non inclus dans la réponse
+                        console.log('Blason non inclus dans la réponse, récupération via API séparée...');
                         getBlasonFromAPI(concoursDiscipline, abvCategorie, distanceValeur)
                             .then(blason => {
                                 if (blason) {
                                     blasonInput.value = blason;
-                                    console.log('✓ Blason automatiquement renseigné depuis concour_discipline_categorie:', blason, 'cm');
+                                    console.log('✓ Blason récupéré via API séparée:', blason, 'cm');
                                 } else {
                                     console.warn('✗ Aucun blason trouvé pour cette combinaison');
                                 }
@@ -581,12 +598,6 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
                             .catch(error => {
                                 console.error('Erreur lors de la récupération du blason:', error);
                             });
-                    } else {
-                        console.warn('Impossible de récupérer le blason - éléments manquants:', {
-                            blasonInput: !!blasonInput,
-                            concoursDiscipline: concoursDiscipline,
-                            abvCategorie: abvCategorie
-                        });
                     }
                     
                     // Déclencher l'événement change sur le select de distance pour mettre à jour le blason
@@ -724,20 +735,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Récupérer la catégorie et la discipline pour l'appel API
                 const abvCategorie = categorieSelect ? categorieSelect.value : null;
                 
-                if (concoursDiscipline && abvCategorie) {
-                    // Utiliser l'API pour récupérer le blason depuis concour_discipline_categorie
-                    getBlasonFromAPI(concoursDiscipline, abvCategorie, distance)
-                        .then(blason => {
-                            if (blason) {
-                                blasonInput.value = blason;
-                                console.log('Blason automatiquement renseigné depuis concour_discipline_categorie:', blason, 'cm pour distance', distance, 'm');
-                            } else {
-                                console.log('Aucun blason trouvé dans la base de données, le champ reste vide');
-                            }
-                        });
+                if (concoursDiscipline && concoursTypeCompetition && abvCategorie) {
+                    // Utiliser l'endpoint distance-recommandee avec le paramètre distance pour récupérer le blason
+                    const params = new URLSearchParams({
+                        iddiscipline: concoursDiscipline,
+                        idtype_competition: concoursTypeCompetition,
+                        abv_categorie_classement: abvCategorie,
+                        distance: distance
+                    });
+                    
+                    fetch(`/api/concours/distance-recommandee?${params.toString()}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'include'
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success && data.data && data.data.blason) {
+                            blasonInput.value = data.data.blason;
+                            console.log('✓ Blason automatiquement renseigné depuis distance-recommandee:', data.data.blason, 'cm pour distance', distance, 'm');
+                        } else {
+                            console.log('Aucun blason trouvé dans la réponse pour cette distance');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la récupération du blason:', error);
+                    });
                 } else {
-                    console.log('Discipline ou catégorie manquante pour récupérer le blason:', { 
-                        discipline: concoursDiscipline, 
+                    console.log('Discipline, type compétition ou catégorie manquante pour récupérer le blason:', { 
+                        discipline: concoursDiscipline,
+                        typeCompetition: concoursTypeCompetition,
                         categorie: abvCategorie 
                     });
                 }
