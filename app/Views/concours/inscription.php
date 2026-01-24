@@ -93,6 +93,7 @@
                             <th>Prénom</th>
                             <th>Numéro de licence</th>
                             <th>Club</th>
+                            <th>Départ</th>
                             <th>N°Tir</th>
                             <th>Date d'inscription</th>
                             <th>Actions</th>
