@@ -1689,8 +1689,12 @@ function proceedWithInscriptionSubmission() {
     console.log('ID utilisateur trouvé:', userId);
     
     // Récupérer le numéro de départ
-    const numeroDepart = document.getElementById('depart-select-main')?.value || document.getElementById('depart-select')?.value || null;
+    const departSelectMain = document.getElementById('depart-select-main');
+    const departSelectModal = document.getElementById('depart-select');
+    const numeroDepart = departSelectMain?.value || departSelectModal?.value || null;
     console.log('numeroDepart récupéré:', numeroDepart);
+    console.log('depart-select-main value:', departSelectMain?.value);
+    console.log('depart-select value:', departSelectModal?.value);
 
     // Activer temporairement les champs disabled pour récupérer leurs valeurs
     const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');
@@ -1742,9 +1746,12 @@ function proceedWithInscriptionSubmission() {
     form.action = `/concours/${concoursId}/inscription`;
 
     // Ajouter tous les champs
+    // Pour numero_depart, convertir en entier seulement si la valeur existe
+    const numeroDepartInt = numeroDepart && numeroDepart !== '' ? parseInt(numeroDepart) : null;
+    
     const fields = {
         'user_id': userId,
-        'numero_depart': numeroDepart ? parseInt(numeroDepart) : null,
+        'numero_depart': numeroDepartInt,
         'numero_licence': numeroLicence,
         'id_club': idClub,
         'saison': saison,
@@ -1764,6 +1771,23 @@ function proceedWithInscriptionSubmission() {
     };
 
     for (const [name, value] of Object.entries(fields)) {
+        // Traitement spécial pour numero_depart : toujours l'envoyer s'il a une valeur valide
+        if (name === 'numero_depart') {
+            // Vérifier que la valeur est un nombre valide (pas null, pas vide, pas NaN)
+            const numeroDepartValue = value !== null && value !== '' ? parseInt(value) : null;
+            if (numeroDepartValue !== null && !isNaN(numeroDepartValue) && numeroDepartValue > 0) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = numeroDepartValue;
+                form.appendChild(input);
+                console.log('numero_depart ajouté au formulaire:', numeroDepartValue);
+            } else {
+                console.warn('numero_depart non valide ou vide. Valeur brute:', value, 'Valeur parsée:', numeroDepartValue);
+            }
+            continue;
+        }
+        
         // Inclure les valeurs même si elles sont 0 ou null pour certains champs numériques
         // Pour numero_licence et id_club, inclure même si vides (seront null côté serveur)
         if (value !== null && value !== '') {
