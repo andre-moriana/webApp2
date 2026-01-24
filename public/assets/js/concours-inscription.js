@@ -114,7 +114,17 @@ window.showConfirmModal = function(archer) {
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="categorie_classement" class="form-label">Catégorie de classement</label>
-                    <input type="text" id="categorie_classement" class="form-control" placeholder="Ex: S3HCL">
+                    <select id="categorie_classement" class="form-control">
+                        <option value="">Sélectionner une catégorie</option>
+                        ${typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0
+                            ? categoriesClassement.map(cat => {
+                                const abv = cat.abv_categorie_classement || '';
+                                const libelle = cat.lb_categorie_classement || '';
+                                return `<option value="${abv}">${libelle} (${abv})</option>`;
+                            }).join('')
+                            : ''
+                        }
+                    </select>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="arme" class="form-label">Arme (utilisée sur le pas de tir)</label>

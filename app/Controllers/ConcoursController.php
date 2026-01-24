@@ -831,6 +831,27 @@ class ConcoursController {
             }
         }
 
+        // Récupérer les catégories de classement
+        $categoriesClassement = [];
+        try {
+            $categoriesResponse = $this->apiService->makeRequest('concours/categories-classement', 'GET');
+            $categoriesPayload = $this->apiService->unwrapData($categoriesResponse);
+            if (is_array($categoriesPayload) && isset($categoriesPayload['data']) && isset($categoriesPayload['success'])) {
+                $categoriesPayload = $categoriesPayload['data'];
+            }
+            if ($categoriesResponse['success'] && is_array($categoriesPayload)) {
+                foreach ($categoriesPayload as &$categorie) {
+                    if (!isset($categorie['id']) && isset($categorie['_id'])) {
+                        $categorie['id'] = $categorie['_id'];
+                    }
+                }
+                unset($categorie);
+                $categoriesClassement = array_values($categoriesPayload);
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des catégories de classement: ' . $e->getMessage());
+        }
+
         // Inclure header et footer
         require_once __DIR__ . '/../Views/layouts/header.php';
         require_once __DIR__ . '/../Views/concours/inscription.php';
