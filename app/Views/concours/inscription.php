@@ -126,11 +126,50 @@
                                 <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php 
-                                    // Utiliser directement club_name_short depuis la jointure SQL (priorité)
-                                    // Sinon utiliser club_name, puis les données utilisateur en fallback
-                                    $clubName = $inscription['club_name_short'] ?? $inscription['club_name'] ?? null;
+                                    $clubName = null;
                                     
-                                    // Si pas trouvé dans l'inscription, utiliser les données utilisateur
+                                    // 1. Utiliser id_club depuis l'inscription pour chercher dans $clubs
+                                    $clubId = $inscription['id_club'] ?? null;
+                                    
+                                    // 2. Si id_club est disponible, chercher dans $clubs
+                                    if (!empty($clubId) && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
+                                        foreach ($clubs as $club) {
+                                            $clubDbId = $club['id'] ?? $club['_id'] ?? null;
+                                            if ($clubDbId && (
+                                                $clubDbId == $clubId || 
+                                                (string)$clubDbId === (string)$clubId ||
+                                                (int)$clubDbId === (int)$clubId
+                                            )) {
+                                                // Utiliser nameShort (camelCase) ou name_short (snake_case) en priorité
+                                                $clubName = $club['nameShort'] ?? $club['name_short'] ?? null;
+                                                // Si name_short n'existe pas, utiliser name comme fallback
+                                                if (empty($clubName)) {
+                                                    $clubName = $club['name'] ?? null;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // 3. Si toujours pas trouvé, utiliser club_id de l'utilisateur
+                                    if (empty($clubName)) {
+                                        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
+                                        if (!empty($clubId) && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
+                                            foreach ($clubs as $club) {
+                                                $clubDbId = $club['id'] ?? $club['_id'] ?? null;
+                                                if ($clubDbId && (
+                                                    $clubDbId == $clubId || 
+                                                    (string)$clubDbId === (string)$clubId ||
+                                                    (int)$clubDbId === (int)$clubId
+                                                )) {
+                                                    $clubName = $club['nameShort'] ?? $club['name_short'] ?? $club['name'] ?? null;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // 4. Si toujours pas trouvé, utiliser les données utilisateur comme dernier recours
                                     if (empty($clubName)) {
                                         $clubName = $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
                                     }
