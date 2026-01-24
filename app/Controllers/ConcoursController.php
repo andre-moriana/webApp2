@@ -542,35 +542,38 @@ class ConcoursController {
                 unset($club);
                 $clubs = array_values($clubsPayload);
                 
-                // Si des utilisateurs n'ont pas de clubName mais ont un club_id, compléter depuis la liste des clubs
+                // Créer un mapping clubId -> club pour accès rapide
+                $clubsMap = [];
+                foreach ($clubs as $club) {
+                    $clubDbId = $club['id'] ?? $club['_id'] ?? null;
+                    if ($clubDbId) {
+                        $clubsMap[$clubDbId] = $club;
+                        // Aussi indexer par string pour éviter les problèmes de type
+                        $clubsMap[(string)$clubDbId] = $club;
+                    }
+                }
+                
+                // Compléter les données utilisateur avec les informations du club
                 foreach ($usersMap as $userId => &$userData) {
-                    $clubName = $userData['clubName'] ?? $userData['club_name'] ?? $userData['clubNameShort'] ?? $userData['club_name_short'] ?? null;
                     $clubId = $userData['clubId'] ?? $userData['club_id'] ?? null;
                     
-                    // TOUJOURS essayer de récupérer le nom du club depuis la liste des clubs si on a un clubId
-                    // même si clubName existe déjà (pour s'assurer qu'on a les bonnes données)
+                    // TOUJOURS récupérer le nom du club depuis la liste des clubs si on a un clubId
                     if (!empty($clubId)) {
-                        $found = false;
-                        foreach ($clubs as $club) {
-                            $clubDbId = $club['id'] ?? $club['_id'] ?? null;
-                            // Comparaison avec conversion en string pour éviter les problèmes de type
-                            if ($clubDbId && ($clubDbId == $clubId || (string)$clubDbId === (string)$clubId)) {
-                                // Récupérer name_short (prioritaire) ou name
-                                $clubNameShort = $club['name_short'] ?? $club['nameShort'] ?? null;
-                                $clubNameFull = $club['name'] ?? null;
-                                
-                                // Stocker les deux formats - prioriser name_short
-                                $userData['clubName'] = $clubNameShort ?: $clubNameFull;
-                                $userData['clubNameShort'] = $clubNameShort;
-                                // Garder aussi le format snake_case pour compatibilité
-                                $userData['club_name'] = $clubNameFull;
-                                $userData['club_name_short'] = $clubNameShort;
-                                $found = true;
-                                error_log("DEBUG show(): Club trouvé et assigné pour user $userId - clubName=" . ($userData['clubName'] ?? 'NULL') . ", clubNameShort=" . ($userData['clubNameShort'] ?? 'NULL'));
-                                break;
-                            }
-                        }
-                        if (!$found) {
+                        // Chercher dans le mapping
+                        $club = $clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? null;
+                        
+                        if ($club) {
+                            // Récupérer name_short (prioritaire) ou name
+                            $clubNameShort = $club['name_short'] ?? $club['nameShort'] ?? null;
+                            $clubNameFull = $club['name'] ?? null;
+                            
+                            // Stocker les deux formats - prioriser name_short
+                            $userData['clubName'] = $clubNameShort ?: $clubNameFull;
+                            $userData['clubNameShort'] = $clubNameShort;
+                            // Garder aussi le format snake_case pour compatibilité
+                            $userData['club_name'] = $clubNameFull;
+                            $userData['club_name_short'] = $clubNameShort;
+                        } else {
                             error_log("DEBUG show(): Club ID $clubId non trouvé dans la liste des clubs pour user $userId");
                         }
                     } else {
