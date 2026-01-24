@@ -367,27 +367,29 @@ window.showConfirmModal = function(archer) {
                             console.log('Valeur du select après assignation:', categorieSelect.value);
                             
                             // Remplir automatiquement la distance et le blason
-                            // Utiliser un délai pour s'assurer que tous les listeners sont attachés
-                            setTimeout(() => {
-                                // Vérifier que les variables globales sont disponibles
-                                if (typeof concoursDiscipline !== 'undefined' && typeof concoursTypeCompetition !== 'undefined' && typeof fillDistanceAndBlasonFromCategorie === 'function') {
-                                    fillDistanceAndBlasonFromCategorie(valueToSet);
-                                    console.log('Remplissage automatique distance et blason déclenché depuis pré-remplissage catégorie');
-                                } else {
-                                    console.warn('Variables globales ou fonction non disponibles, réessai dans 300ms...');
-                                    setTimeout(() => {
-                                        if (typeof concoursDiscipline !== 'undefined' && typeof concoursTypeCompetition !== 'undefined' && typeof fillDistanceAndBlasonFromCategorie === 'function') {
-                                            fillDistanceAndBlasonFromCategorie(valueToSet);
-                                            console.log('Remplissage automatique distance et blason déclenché (2ème tentative)');
-                                        } else {
-                                            // Dernière tentative avec déclenchement d'événement
-                                            const changeEvent = new Event('change', { bubbles: true });
-                                            categorieSelect.dispatchEvent(changeEvent);
-                                            console.log('Événement change déclenché en dernier recours');
-                                        }
-                                    }, 300);
-                                }
-                            }, 300);
+                            // Utiliser plusieurs tentatives avec des délais croissants pour s'assurer que tout est prêt
+                            const tryFillDistanceAndBlason = (attempt = 1, maxAttempts = 3) => {
+                                const delay = attempt * 200; // 200ms, 400ms, 600ms
+                                setTimeout(() => {
+                                    if (typeof concoursDiscipline !== 'undefined' && 
+                                        typeof concoursTypeCompetition !== 'undefined' && 
+                                        typeof fillDistanceAndBlasonFromCategorie === 'function') {
+                                        fillDistanceAndBlasonFromCategorie(valueToSet);
+                                        console.log(`Remplissage automatique distance et blason déclenché (tentative ${attempt})`);
+                                    } else if (attempt < maxAttempts) {
+                                        console.warn(`Variables globales ou fonction non disponibles (tentative ${attempt}/${maxAttempts}), réessai...`);
+                                        tryFillDistanceAndBlason(attempt + 1, maxAttempts);
+                                    } else {
+                                        // Dernière tentative avec déclenchement d'événement
+                                        console.warn('Dernière tentative: déclenchement de l\'événement change');
+                                        const changeEvent = new Event('change', { bubbles: true });
+                                        categorieSelect.dispatchEvent(changeEvent);
+                                    }
+                                }, delay);
+                            };
+                            
+                            // Démarrer la première tentative
+                            tryFillDistanceAndBlason(1);
                         } else {
                             console.warn('✗ showConfirmModal - Option non trouvée dans le select. Valeur recherchée:', valueToSet);
                         }
@@ -486,6 +488,21 @@ window.showConfirmModal = function(archer) {
         modalElement.addEventListener('shown.bs.modal', function() {
             prefillLockedFields();
             prefillCategorieAndArme();
+            
+            // Après le pré-remplissage, essayer de remplir la distance et le blason
+            setTimeout(() => {
+                const categorieSelect = document.getElementById('categorie_classement');
+                if (categorieSelect && categorieSelect.value) {
+                    console.log('shown.bs.modal - Tentative de remplissage distance et blason pour catégorie:', categorieSelect.value);
+                    if (typeof fillDistanceAndBlasonFromCategorie === 'function') {
+                        fillDistanceAndBlasonFromCategorie(categorieSelect.value);
+                    } else {
+                        // Déclencher l'événement change si la fonction n'est pas encore disponible
+                        const changeEvent = new Event('change', { bubbles: true });
+                        categorieSelect.dispatchEvent(changeEvent);
+                    }
+                }
+            }, 500);
         }, { once: true });
     } else {
         console.error('Bootstrap n\'est pas disponible');
@@ -521,35 +538,72 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
         },
         credentials: 'include'
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Réponse API distance-recommandee:', data);
         if (data.success && data.data) {
             const distanceSelect = document.getElementById('distance');
             const blasonInput = document.getElementById('blason');
-            if (distanceSelect) {
-                const distanceValeur = data.data.distance_valeur;
-                // Sélectionner la distance correspondante
-                for (let i = 0; i < distanceSelect.options.length; i++) {
-                    if (distanceSelect.options[i].value == distanceValeur) {
-                        distanceSelect.value = distanceValeur;
-                        console.log('Distance automatiquement sélectionnée:', data.data.lb_distance);
-                        
-                        // Récupérer le blason depuis concour_discipline_categorie
-                        if (blasonInput && concoursDiscipline && abvCategorie) {
-                            getBlasonFromAPI(concoursDiscipline, abvCategorie, distanceValeur)
-                                .then(blason => {
-                                    if (blason) {
-                                        blasonInput.value = blason;
-                                        console.log('Blason automatiquement renseigné depuis concour_discipline_categorie:', blason, 'cm');
-                                    }
-                                });
-                        }
-                        break;
+            
+            if (!distanceSelect) {
+                console.error('Select de distance non trouvé dans le DOM');
+                return;
+            }
+            
+            const distanceValeur = data.data.distance_valeur;
+            console.log('Distance recommandée reçue:', distanceValeur, 'lb_distance:', data.data.lb_distance);
+            
+            // Sélectionner la distance correspondante
+            let distanceFound = false;
+            for (let i = 0; i < distanceSelect.options.length; i++) {
+                if (distanceSelect.options[i].value == distanceValeur) {
+                    distanceSelect.value = distanceValeur;
+                    distanceFound = true;
+                    console.log('✓ Distance automatiquement sélectionnée:', data.data.lb_distance, '(valeur:', distanceValeur, ')');
+                    
+                    // Récupérer le blason depuis concour_discipline_categorie
+                    if (blasonInput && concoursDiscipline && abvCategorie) {
+                        console.log('Récupération du blason pour discipline:', concoursDiscipline, 'catégorie:', abvCategorie, 'distance:', distanceValeur);
+                        getBlasonFromAPI(concoursDiscipline, abvCategorie, distanceValeur)
+                            .then(blason => {
+                                if (blason) {
+                                    blasonInput.value = blason;
+                                    console.log('✓ Blason automatiquement renseigné depuis concour_discipline_categorie:', blason, 'cm');
+                                } else {
+                                    console.warn('✗ Aucun blason trouvé pour cette combinaison');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Erreur lors de la récupération du blason:', error);
+                            });
+                    } else {
+                        console.warn('Impossible de récupérer le blason - éléments manquants:', {
+                            blasonInput: !!blasonInput,
+                            concoursDiscipline: concoursDiscipline,
+                            abvCategorie: abvCategorie
+                        });
                     }
+                    
+                    // Déclencher l'événement change sur le select de distance pour mettre à jour le blason
+                    setTimeout(() => {
+                        const changeEvent = new Event('change', { bubbles: true });
+                        distanceSelect.dispatchEvent(changeEvent);
+                        console.log('Événement change déclenché sur le select de distance');
+                    }, 100);
+                    
+                    break;
                 }
             }
+            if (!distanceFound) {
+                console.warn('✗ Distance non trouvée dans le select. Valeur recherchée:', distanceValeur, 'Options disponibles:', Array.from(distanceSelect.options).map(opt => opt.value));
+            }
         } else {
-            console.log('Aucune distance recommandée trouvée pour cette combinaison');
+            console.log('✗ Aucune distance recommandée trouvée pour cette combinaison. Réponse:', data);
         }
     })
     .catch(error => {
