@@ -546,6 +546,7 @@ class ConcoursController {
                         // Indexer par int et string pour éviter les problèmes de type
                         $clubsMap[$clubDbId] = $club;
                         $clubsMap[(string)$clubDbId] = $club;
+                        $clubsMap[(int)$clubDbId] = $club;
                     }
                 }
                 
@@ -556,8 +557,23 @@ class ConcoursController {
                     
                     // Si on a un clubId, récupérer le nom du club depuis le mapping
                     if (!empty($clubId)) {
-                        // Chercher dans le mapping (essayer int et string)
-                        $club = $clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? null;
+                        // Chercher dans le mapping (essayer toutes les variantes de type)
+                        $club = $clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? $clubsMap[(int)$clubId] ?? null;
+                        
+                        // Si pas trouvé dans le mapping, chercher dans la liste complète
+                        if (!$club) {
+                            foreach ($clubs as $c) {
+                                $cId = $c['id'] ?? $c['_id'] ?? null;
+                                if ($cId && (
+                                    $cId == $clubId || 
+                                    (string)$cId === (string)$clubId ||
+                                    (int)$cId === (int)$clubId
+                                )) {
+                                    $club = $c;
+                                    break;
+                                }
+                            }
+                        }
                         
                         if ($club) {
                             // Récupérer name_short (prioritaire) ou name
