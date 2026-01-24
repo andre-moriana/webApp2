@@ -954,6 +954,81 @@ class ConcoursController {
             }
         }
         
+        // Charger les données pour afficher les libellés
+        $clubs = []; // Initialiser pour éviter les erreurs si l'API échoue
+        $clubsMap = []; // Mapping clubId -> club pour accès rapide
+        try {
+            // Clubs
+            $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+            $clubsPayload = $this->apiService->unwrapData($clubsResponse);
+            if ($clubsResponse['success'] && is_array($clubsPayload)) {
+                foreach ($clubsPayload as &$club) {
+                    if (!isset($club['id']) && isset($club['_id'])) {
+                        $club['id'] = $club['_id'];
+                    }
+                    // Créer un mapping pour accès rapide par ID (int et string)
+                    $clubId = $club['id'] ?? $club['_id'] ?? null;
+                    if ($clubId) {
+                        $clubsMap[$clubId] = $club;
+                        $clubsMap[(string)$clubId] = $club;
+                        $clubsMap[(int)$clubId] = $club;
+                    }
+                    // Créer aussi un mapping par name_short (car id_club peut contenir un name_short)
+                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? null;
+                    if ($nameShort) {
+                        // Normaliser la valeur (trim, convertir en string)
+                        $nameShortNormalized = trim((string)$nameShort);
+                        $clubsMap[$nameShortNormalized] = $club;
+                        // Aussi avec la valeur originale pour compatibilité
+                        $clubsMap[(string)$nameShort] = $club;
+                    }
+                }
+                unset($club);
+                $clubs = array_values($clubsPayload);
+            }
+        } catch (Exception $e) {
+            // Ignorer les erreurs pour continuer l'affichage
+        }
+        
+        // Enrichir les inscriptions avec le nom du club directement
+        // id_club peut contenir soit un ID numérique, soit un name_short
+        foreach ($inscriptions as &$inscription) {
+            $clubId = $inscription['id_club'] ?? null;
+            if ($clubId) {
+                // Normaliser la valeur (trim, convertir en string)
+                $clubIdStr = trim((string)$clubId);
+                
+                // Chercher dans le mapping (par ID ou par name_short) - essayer toutes les variantes
+                $club = null;
+                if (isset($clubsMap[$clubIdStr])) {
+                    $club = $clubsMap[$clubIdStr];
+                } elseif (isset($clubsMap[(string)$clubId])) {
+                    $club = $clubsMap[(string)$clubId];
+                } elseif (isset($clubsMap[(int)$clubId])) {
+                    $club = $clubsMap[(int)$clubId];
+                } elseif (isset($clubsMap[$clubId])) {
+                    $club = $clubsMap[$clubId];
+                } else {
+                    // Si pas trouvé dans le mapping, chercher directement dans les clubs
+                    if (isset($clubs) && is_array($clubs)) {
+                        foreach ($clubs as $c) {
+                            $nameShort = trim((string)($c['nameShort'] ?? $c['name_short'] ?? ''));
+                            if ($nameShort === $clubIdStr) {
+                                $club = $c;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if ($club) {
+                    // Utiliser le champ "name" (nom complet) comme demandé
+                    $inscription['club_name'] = $club['name'] ?? null;
+                    $inscription['club_name_short'] = $club['nameShort'] ?? $club['name_short'] ?? null;
+                }
+            }
+        }
+        unset($inscription);
 
         // Récupérer les catégories de classement filtrées par discipline
         $categoriesClassement = [];
