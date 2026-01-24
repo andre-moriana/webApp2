@@ -831,22 +831,52 @@ class ConcoursController {
             }
         }
 
-        // Récupérer les catégories de classement
+        // Récupérer les catégories de classement filtrées par discipline
         $categoriesClassement = [];
         try {
-            $categoriesResponse = $this->apiService->makeRequest('concours/categories-classement', 'GET');
-            $categoriesPayload = $this->apiService->unwrapData($categoriesResponse);
-            if (is_array($categoriesPayload) && isset($categoriesPayload['data']) && isset($categoriesPayload['success'])) {
-                $categoriesPayload = $categoriesPayload['data'];
+            // Récupérer l'iddiscipline du concours
+            $iddiscipline = null;
+            if (is_object($concours)) {
+                $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+            } elseif (is_array($concours)) {
+                $iddiscipline = $concours['discipline'] ?? $concours['iddiscipline'] ?? null;
             }
-            if ($categoriesResponse['success'] && is_array($categoriesPayload)) {
-                foreach ($categoriesPayload as &$categorie) {
-                    if (!isset($categorie['id']) && isset($categorie['_id'])) {
-                        $categorie['id'] = $categorie['_id'];
-                    }
+            
+            // Construire l'URL avec le paramètre iddiscipline si disponible
+            $endpoint = 'concours/categories-classement';
+            if ($iddiscipline) {
+                $endpoint .= '?iddiscipline=' . (int)$iddiscipline;
+            }
+            
+            $categoriesResponse = $this->apiService->makeRequest($endpoint, 'GET');
+            
+            if ($categoriesResponse['success'] && isset($categoriesResponse['data'])) {
+                $categoriesPayload = $categoriesResponse['data'];
+                
+                // Si data contient encore { success, data }, unwrap une deuxième fois
+                if (is_array($categoriesPayload) && isset($categoriesPayload['data']) && isset($categoriesPayload['success'])) {
+                    $categoriesPayload = $categoriesPayload['data'];
                 }
-                unset($categorie);
-                $categoriesClassement = array_values($categoriesPayload);
+                
+                if (is_array($categoriesPayload)) {
+                    // Normaliser l'ID de chaque catégorie
+                    foreach ($categoriesPayload as &$categorie) {
+                        if (!isset($categorie['id']) && isset($categorie['_id'])) {
+                            $categorie['id'] = $categorie['_id'];
+                        }
+                    }
+                    unset($categorie);
+                    
+                    // Trier par ordre alphabétique sur lb_categorie_classement
+                    usort($categoriesPayload, function($a, $b) {
+                        $libelleA = $a['lb_categorie_classement'] ?? '';
+                        $libelleB = $b['lb_categorie_classement'] ?? '';
+                        return strcasecmp($libelleA, $libelleB);
+                    });
+                    
+                    // Réindexer le tableau pour avoir des clés séquentielles
+                    $categoriesClassement = array_values($categoriesPayload);
+                }
             }
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des catégories de classement: ' . $e->getMessage());
