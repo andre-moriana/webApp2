@@ -1777,17 +1777,16 @@ function proceedWithInscriptionSubmission() {
     form.submit();
 }
 
-// Retirer une inscription
-function removeInscription(inscriptionId, userId, numeroDepart = null) {
+// Retirer une inscription par ID
+function removeInscription(inscriptionId) {
     if (!confirm('Voulez-vous retirer cet archer de l\'inscription ?')) {
         return;
     }
 
-    // Construire l'URL avec le numéro de départ si disponible
-    let url = `/api/concours/${concoursId}/inscription/${inscriptionId}`;
+    console.log('Suppression de l\'inscription ID:', inscriptionId);
 
-    // Utiliser la route DELETE avec inscription_id
-    fetch(url, {
+    // Utiliser la route DELETE avec l'ID d'inscription
+    fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
@@ -1797,6 +1796,7 @@ function removeInscription(inscriptionId, userId, numeroDepart = null) {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Réponse suppression:', data);
         if (data.success) {
             location.reload();
         } else {
@@ -1805,6 +1805,6 @@ function removeInscription(inscriptionId, userId, numeroDepart = null) {
     })
     .catch(error => {
         console.error('Erreur:', error);
-        alert('Erreur lors de la suppression');
+        alert('Erreur lors de la suppression: ' + error.message);
     });
 }

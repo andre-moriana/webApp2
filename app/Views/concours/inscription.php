@@ -129,7 +129,7 @@
                                 <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>, <?= htmlspecialchars($userId ?? 'null') ?>, <?= htmlspecialchars($inscription['numero_depart'] ?? 'null') ?>)">
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
                                         <i class="fas fa-trash"></i> Retirer
                                     </button>
                                 </td>
