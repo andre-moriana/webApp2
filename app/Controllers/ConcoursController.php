@@ -811,15 +811,8 @@ class ConcoursController {
 
         // Récupérer les inscriptions existantes
         $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
-        // L'endpoint retourne directement un tableau ou un objet {success: true, data: [...]}
-        if (isset($inscriptionsResponse['success']) && $inscriptionsResponse['success']) {
-            $inscriptions = $inscriptionsResponse['data'] ?? [];
-        } elseif (is_array($inscriptionsResponse) && !isset($inscriptionsResponse['success'])) {
-            // Si c'est directement un tableau (format retourné par l'endpoint)
-            $inscriptions = $inscriptionsResponse;
-        } else {
-            $inscriptions = [];
-        }
+        // ApiService retourne toujours {success: true, data: ...}
+        $inscriptions = $inscriptionsResponse['success'] ? ($inscriptionsResponse['data'] ?? []) : [];
         
         // Récupérer les informations complètes des utilisateurs inscrits
         $userIds = array_column($inscriptions, 'user_id');
@@ -829,21 +822,8 @@ class ConcoursController {
                 if ($userId) {
                     try {
                         $userResponse = $this->apiService->makeRequest("users/{$userId}", 'GET');
-                        if ($userResponse['success']) {
-                            // Déballer les données si elles sont dans une structure imbriquée
-                            $userData = $userResponse['data'] ?? $userResponse;
-                            // Si data contient encore { success, data }, déballer une deuxième fois
-                            if (is_array($userData) && isset($userData['data']) && isset($userData['success'])) {
-                                $userData = $userData['data'];
-                            }
-                            // Debug: vérifier les données du club
-                            error_log("DEBUG Club pour user $userId: " . json_encode([
-                                'club_id' => $userData['club_id'] ?? null,
-                                'clubName' => $userData['clubName'] ?? null,
-                                'club_name' => $userData['club_name'] ?? null,
-                                'club_name_short' => $userData['club_name_short'] ?? null
-                            ]));
-                            $usersMap[$userId] = $userData;
+                        if ($userResponse['success'] && isset($userResponse['data'])) {
+                            $usersMap[$userId] = $userResponse['data'];
                         }
                     } catch (Exception $e) {
                         // Ignorer les erreurs pour continuer l'affichage
@@ -853,16 +833,6 @@ class ConcoursController {
             }
         }
         
-        // Debug: vérifier les données des inscriptions et des départs
-        error_log("DEBUG Inscriptions: " . json_encode(array_map(function($ins) {
-            return [
-                'id' => $ins['id'] ?? null,
-                'user_id' => $ins['user_id'] ?? null,
-                'depart_id' => $ins['depart_id'] ?? null,
-                'depart_heure' => $ins['depart_heure'] ?? null,
-                'depart_date' => $ins['depart_date'] ?? null
-            ];
-        }, $inscriptions)));
 
         // Récupérer les catégories de classement filtrées par discipline
         $categoriesClassement = [];

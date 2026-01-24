@@ -99,36 +99,18 @@
                                 <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php 
-                                    // Essayer toutes les variantes possibles pour le nom du club
-                                    $clubName = $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
-                                    echo htmlspecialchars($clubName ?? 'N/A');
-                                    // Debug temporaire
-                                    if (empty($clubName) && !empty($user)) {
-                                        error_log("DEBUG Club manquant pour user ID " . ($userId ?? 'N/A') . ": " . json_encode(array_keys($user)));
-                                    }
-                                    ?>
-                                </td>
-                                <td>
-                                    <?php 
-                                    // Afficher l'heure et la date du départ si disponibles
-                                    $departHeure = $inscription['depart_heure'] ?? null;
-                                    $departDate = $inscription['depart_date'] ?? null;
-                                    if (!empty($departHeure)) {
-                                        echo htmlspecialchars($departHeure);
-                                        if (!empty($departDate)) {
-                                            echo ' (' . htmlspecialchars($departDate) . ')';
+                                    if (!empty($inscription['depart_heure'])) {
+                                        echo htmlspecialchars($inscription['depart_heure']);
+                                        if (!empty($inscription['depart_date'])) {
+                                            echo ' (' . htmlspecialchars($inscription['depart_date']) . ')';
                                         }
                                     } elseif (!empty($inscription['depart_id'])) {
-                                        // Si on a un depart_id mais pas les infos, afficher l'ID
                                         echo 'Départ #' . htmlspecialchars($inscription['depart_id']);
                                     } else {
                                         echo 'N/A';
-                                    }
-                                    // Debug temporaire
-                                    if (empty($departHeure) && !empty($inscription['depart_id'])) {
-                                        error_log("DEBUG Depart manquant pour inscription ID " . ($inscription['id'] ?? 'N/A') . ": depart_id=" . ($inscription['depart_id'] ?? 'null') . ", depart_heure=" . ($departHeure ?? 'null'));
                                     }
                                     ?>
                                 </td>
