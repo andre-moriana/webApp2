@@ -1726,6 +1726,18 @@ function proceedWithInscriptionSubmission() {
     const tarifCompetition = document.getElementById('tarif_competition')?.value || null;
     const modePaiement = document.getElementById('mode_paiement')?.value || 'Non payé';
 
+    // Récupérer numero_licence et id_club depuis selectedArcher
+    const numeroLicence = selectedArcher.licence_number || selectedArcher.licenceNumber || selectedArcher.IDLicence || null;
+    // id_club peut être le name_short du club (ex: "1313066")
+    // Essayer d'abord les champs directs, puis les champs du club
+    const idClub = selectedArcher.id_club || selectedArcher.club_id || selectedArcher.clubId || 
+                   selectedArcher.club_name_short || selectedArcher.clubNameShort || 
+                   selectedArcher.nameShort || selectedArcher.CIE || null; 
+    
+    console.log('numero_licence récupéré:', numeroLicence);
+    console.log('id_club récupéré:', idClub);
+    console.log('selectedArcher complet:', selectedArcher);
+
     // Créer un formulaire pour soumettre l'inscription
     const form = document.createElement('form');
     form.method = 'POST';
@@ -1735,6 +1747,8 @@ function proceedWithInscriptionSubmission() {
     const fields = {
         'user_id': userId,
         'numero_depart': numeroDepart ? parseInt(numeroDepart) : null,
+        'numero_licence': numeroLicence,
+        'id_club': idClub,
         'saison': saison,
         'type_certificat_medical': typeCertificatMedical,
         'type_licence': typeLicence,
