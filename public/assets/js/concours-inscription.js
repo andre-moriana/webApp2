@@ -1728,8 +1728,9 @@ function proceedWithInscriptionSubmission() {
 
     // Récupérer numero_licence et id_club depuis selectedArcher
     const numeroLicence = selectedArcher.licence_number || selectedArcher.licenceNumber || selectedArcher.IDLicence || null;
-    // id_club doit être le club_id de la table users (ID numérique du club)
-    const idClub = selectedArcher.club_id || selectedArcher.clubId || null; 
+    // id_club doit être le name_short du club (ex: "0657108" avec zéro initial)
+    // Priorité: id_club, club_name_short, clubNameShort, AGREMENTNR
+    const idClub = selectedArcher.id_club || selectedArcher.club_name_short || selectedArcher.clubNameShort || selectedArcher.AGREMENTNR || null; 
     
     console.log('numero_licence récupéré:', numeroLicence);
     console.log('id_club récupéré:', idClub);
