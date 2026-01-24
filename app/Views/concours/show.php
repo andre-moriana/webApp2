@@ -152,32 +152,51 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
                                 <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php 
-                                    // Utiliser la même logique que dans inscription.php qui fonctionne
-                                    $clubName = $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
+                                    // Utiliser id_club directement depuis l'inscription si disponible
+                                    $clubId = $inscription['id_club'] ?? null;
                                     
-                                    // Si toujours pas de nom, essayer de le récupérer depuis $clubs (fallback)
-                                    if (empty($clubName)) {
-                                        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
-                                        if (!empty($clubId) && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
-                                            foreach ($clubs as $club) {
-                                                $clubDbId = $club['id'] ?? $club['_id'] ?? null;
-                                                if ($clubDbId && (
-                                                    $clubDbId == $clubId || 
-                                                    (string)$clubDbId === (string)$clubId ||
-                                                    (int)$clubDbId === (int)$clubId
-                                                )) {
-                                                    // Prioriser name_short (nom court) si disponible
-                                                    $clubName = $club['name_short'] ?? $club['nameShort'] ?? $club['name'] ?? null;
-                                                    break;
+                                    // Si id_club est disponible, chercher le nom du club dans $clubs
+                                    if (!empty($clubId) && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
+                                        foreach ($clubs as $club) {
+                                            $clubDbId = $club['id'] ?? $club['_id'] ?? null;
+                                            if ($clubDbId && (
+                                                $clubDbId == $clubId || 
+                                                (string)$clubDbId === (string)$clubId ||
+                                                (int)$clubDbId === (int)$clubId
+                                            )) {
+                                                // Prioriser name_short (nom court) si disponible
+                                                $clubName = $club['name_short'] ?? $club['nameShort'] ?? $club['name'] ?? null;
+                                                echo htmlspecialchars($clubName ?? 'N/A');
+                                                break;
+                                            }
+                                        }
+                                        if (!isset($clubName)) {
+                                            echo 'N/A';
+                                        }
+                                    } else {
+                                        // Fallback: utiliser les données utilisateur si id_club n'est pas disponible
+                                        $clubName = $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
+                                        if (empty($clubName)) {
+                                            $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
+                                            if (!empty($clubId) && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
+                                                foreach ($clubs as $club) {
+                                                    $clubDbId = $club['id'] ?? $club['_id'] ?? null;
+                                                    if ($clubDbId && (
+                                                        $clubDbId == $clubId || 
+                                                        (string)$clubDbId === (string)$clubId ||
+                                                        (int)$clubDbId === (int)$clubId
+                                                    )) {
+                                                        $clubName = $club['name_short'] ?? $club['nameShort'] ?? $club['name'] ?? null;
+                                                        break;
+                                                    }
                                                 }
                                             }
                                         }
+                                        echo htmlspecialchars($clubName ?? 'N/A');
                                     }
-                                    
-                                    echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
                                 <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
