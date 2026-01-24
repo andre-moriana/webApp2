@@ -74,6 +74,7 @@
                             <th>Numéro de licence</th>
                             <th>Club</th>
                             <th>Départ</th>
+                            <th>N°Tir</th>
                             <th>Date d'inscription</th>
                             <th>Actions</th>
                         </tr>
@@ -114,6 +115,7 @@
                                     }
                                     ?>
                                 </td>
+                                <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>, <?= htmlspecialchars($userId ?? 'null') ?>)">
