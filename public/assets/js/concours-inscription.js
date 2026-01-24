@@ -130,10 +130,13 @@ window.showConfirmModal = function(archer) {
                     <label for="arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
                     <select id="arme" class="form-control">
                         <option value="">Sélectionner</option>
-                        <option value="Arc Classique">Arc Classique</option>
-                        <option value="Arc à poulies">Arc à poulies</option>
-                        <option value="Arc nu">Arc nu</option>
-                        <option value="Arc traditionnel">Arc traditionnel</option>
+                        ${typeof arcs !== 'undefined' && arcs && arcs.length > 0
+                            ? arcs.map(arc => {
+                                const libelle = arc.lb_arc || '';
+                                return `<option value="${libelle}">${libelle}</option>`;
+                            }).join('')
+                            : ''
+                        }
                     </select>
                 </div>
             </div>

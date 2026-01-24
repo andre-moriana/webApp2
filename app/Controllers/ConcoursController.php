@@ -882,6 +882,43 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des catégories de classement: ' . $e->getMessage());
         }
 
+        // Récupérer les arcs
+        $arcs = [];
+        try {
+            $arcsResponse = $this->apiService->makeRequest('concours/arcs', 'GET');
+            
+            if ($arcsResponse['success'] && isset($arcsResponse['data'])) {
+                $arcsPayload = $arcsResponse['data'];
+                
+                // Si data contient encore { success, data }, unwrap une deuxième fois
+                if (is_array($arcsPayload) && isset($arcsPayload['data']) && isset($arcsPayload['success'])) {
+                    $arcsPayload = $arcsPayload['data'];
+                }
+                
+                if (is_array($arcsPayload)) {
+                    // Normaliser l'ID de chaque arc
+                    foreach ($arcsPayload as &$arc) {
+                        if (!isset($arc['id']) && isset($arc['_id'])) {
+                            $arc['id'] = $arc['_id'];
+                        }
+                    }
+                    unset($arc);
+                    
+                    // Trier par ordre alphabétique sur lb_arc
+                    usort($arcsPayload, function($a, $b) {
+                        $libelleA = $a['lb_arc'] ?? '';
+                        $libelleB = $b['lb_arc'] ?? '';
+                        return strcasecmp($libelleA, $libelleB);
+                    });
+                    
+                    // Réindexer le tableau pour avoir des clés séquentielles
+                    $arcs = array_values($arcsPayload);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des arcs: ' . $e->getMessage());
+        }
+
         // Inclure header et footer
         require_once __DIR__ . '/../Views/layouts/header.php';
         require_once __DIR__ . '/../Views/concours/inscription.php';
