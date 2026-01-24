@@ -395,7 +395,8 @@ window.showConfirmModal = function(archer) {
         // Pré-remplir les champs depuis le XML (saison, type licence, type certificat médical)
         const saison = (archer.saison || archer.ABREV || '').trim();
         const typeLicence = (archer.type_licence || '').trim();
-        const typeCertificatMedical = (archer.type_certificat_medical || archer.CERTIFICAT || archer.TYPE_CERTIFICAT || '').trim();
+        // Type de certificat médical depuis le champ XML <certificat_medical>
+        const typeCertificatMedical = (archer.type_certificat_medical || archer.certificat_medical || '').trim();
         
         // Fonction pour pré-remplir les champs verrouillés
         const prefillLockedFields = () => {
@@ -705,8 +706,8 @@ function selectArcher(archer, cardElement) {
     const saison = (archer.saison || archer.ABREV || '').trim();
     const typeLicence = (archer.type_licence || '').trim();
     const creationRenouvellement = (archer.creation_renouvellement || archer.Creation_renouvellement || '').trim();
-    // Type de certificat médical depuis le XML (peut être dans CERTIFICAT, TYPE_CERTIFICAT, etc.)
-    const typeCertificatMedical = (archer.type_certificat_medical || archer.CERTIFICAT || archer.TYPE_CERTIFICAT || '').trim();
+    // Type de certificat médical depuis le champ XML <certificat_medical>
+    const typeCertificatMedical = (archer.type_certificat_medical || archer.certificat_medical || '').trim();
     
     console.log('Mise à jour des données dans la modale:', { nom, prenom, licence, club, saison, typeLicence, creationRenouvellement });
     console.log('Données archer complètes:', archer);
