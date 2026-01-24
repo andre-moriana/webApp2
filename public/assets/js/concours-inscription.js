@@ -158,7 +158,13 @@ window.showConfirmModal = function(archer) {
                 </div>
                 <div class="col-md-3 mb-3">
                     <label for="numero_tir" class="form-label">N° Tir</label>
-                    <input type="number" id="numero_tir" class="form-control" min="1" placeholder="Ex: 1">
+                    <select id="numero_tir" class="form-control">
+                        <option value="">Sélectionner</option>
+                        ${concoursNombreDepart && concoursNombreDepart > 0 ? 
+                            Array.from({length: parseInt(concoursNombreDepart)}, (_, i) => 
+                                `<option value="${i + 1}">${i + 1}</option>`
+                            ).join('') : ''}
+                    </select>
                 </div>
                 <div class="col-md-3 mb-3">
                     <label for="blason" class="form-label">Blason</label>
