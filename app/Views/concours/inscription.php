@@ -125,10 +125,11 @@
                                 <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>, <?= htmlspecialchars($userId ?? 'null') ?>)">
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>, <?= htmlspecialchars($userId ?? 'null') ?>, <?= htmlspecialchars($inscription['numero_depart'] ?? 'null') ?>)">
                                         <i class="fas fa-trash"></i> Retirer
                                     </button>
                                 </td>
