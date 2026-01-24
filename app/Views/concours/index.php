@@ -172,7 +172,6 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
     </div>
 </div>
 <link href="/public/assets/css/concours-index.css" rel="stylesheet">
-<script src="/public/assets/js/concours-table.js"></script>
 <script>
 function inscrireConcours(concoursId) {
     if (!concoursId) {
