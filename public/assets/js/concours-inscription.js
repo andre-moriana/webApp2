@@ -1784,12 +1784,9 @@ function removeInscription(inscriptionId, userId, numeroDepart = null) {
     }
 
     // Construire l'URL avec le numéro de départ si disponible
-    let url = `/api/concours/${concoursId}/inscription/${userId}`;
-    if (numeroDepart !== null && numeroDepart !== undefined) {
-        url += `/${numeroDepart}`;
-    }
+    let url = `/api/concours/${concoursId}/inscription/${inscriptionId}`;
 
-    // Utiliser la route DELETE avec user_id et optionnellement numero_depart
+    // Utiliser la route DELETE avec inscription_id
     fetch(url, {
         method: 'DELETE',
         headers: {
