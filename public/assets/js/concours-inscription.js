@@ -1729,8 +1729,8 @@ function proceedWithInscriptionSubmission() {
     // Récupérer numero_licence et id_club depuis selectedArcher
     const numeroLicence = selectedArcher.licence_number || selectedArcher.licenceNumber || selectedArcher.IDLicence || null;
     // id_club peut être le name_short du club (ex: "1313066")
-    // Essayer d'abord les champs directs, puis les champs du club
-    const idClub = selectedArcher.id_club || selectedArcher.club_id || selectedArcher.clubId || 
+    // Priorité: AGREMENTNR (name_short depuis XML), puis les autres champs
+    const idClub = selectedArcher.AGREMENTNR || selectedArcher.id_club || selectedArcher.club_id || selectedArcher.clubId || 
                    selectedArcher.club_name_short || selectedArcher.clubNameShort || 
                    selectedArcher.nameShort || selectedArcher.CIE || null; 
     
