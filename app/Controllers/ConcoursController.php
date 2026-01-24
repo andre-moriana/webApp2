@@ -172,6 +172,17 @@ class ConcoursController {
             error_log('Exception lors de la récupération des clubs: ' . $e->getMessage());
         }
         
+        // Enrichir les inscriptions avec le nom du club directement
+        foreach ($inscriptions as &$inscription) {
+            $clubId = $inscription['id_club'] ?? null;
+            if ($clubId && isset($clubsMap[$clubId])) {
+                $club = $clubsMap[$clubId];
+                $inscription['club_name_short'] = $club['nameShort'] ?? $club['name_short'] ?? null;
+                $inscription['club_name'] = $club['name'] ?? null;
+            }
+        }
+        unset($inscription);
+        
         try {
             // Récupérer les disciplines depuis la table concour_discipline
             error_log('=== RÉCUPÉRATION DISCIPLINES - Début ===');
@@ -541,6 +552,17 @@ class ConcoursController {
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
         }
+        
+        // Enrichir les inscriptions avec le nom du club directement
+        foreach ($inscriptions as &$inscription) {
+            $clubId = $inscription['id_club'] ?? null;
+            if ($clubId && isset($clubsMap[$clubId])) {
+                $club = $clubsMap[$clubId];
+                $inscription['club_name_short'] = $club['nameShort'] ?? $club['name_short'] ?? null;
+                $inscription['club_name'] = $club['name'] ?? null;
+            }
+        }
+        unset($inscription);
         
         try {
             // Disciplines

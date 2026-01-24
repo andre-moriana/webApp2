@@ -155,22 +155,8 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                 <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php 
-                                    // Utiliser le mapping des clubs créé dans le contrôleur (accès direct, pas de boucle)
-                                    $clubId = $inscription['id_club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
-                                    $club = null;
-                                    
-                                    if (!empty($clubId) && isset($clubsMap)) {
-                                        $club = $clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? $clubsMap[(int)$clubId] ?? null;
-                                    }
-                                    
-                                    // Utiliser nameShort (camelCase) en priorité, puis name_short, puis name
-                                    $clubName = $club['nameShort'] ?? $club['name_short'] ?? $club['name'] ?? null;
-                                    
-                                    // Fallback vers les données utilisateur si pas trouvé
-                                    if (empty($clubName)) {
-                                        $clubName = $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
-                                    }
-                                    
+                                    // Le nom du club est déjà enrichi dans le contrôleur
+                                    $clubName = $inscription['club_name_short'] ?? $inscription['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
                                     echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
