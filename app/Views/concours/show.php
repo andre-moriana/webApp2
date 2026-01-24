@@ -156,10 +156,9 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                 <td>
                                     <?php 
                                     // Utiliser la même logique que dans inscription.php qui fonctionne
-                                    // Mais aussi vérifier si on peut récupérer depuis $clubs si pas trouvé
                                     $clubName = $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
                                     
-                                    // Si toujours pas de nom, essayer de le récupérer depuis $clubs
+                                    // Si toujours pas de nom, essayer de le récupérer depuis $clubs (fallback)
                                     if (empty($clubName)) {
                                         $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
                                         if (!empty($clubId) && isset($clubs) && is_array($clubs) && count($clubs) > 0) {

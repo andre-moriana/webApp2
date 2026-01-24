@@ -530,61 +530,6 @@ class ConcoursController {
                 }
                 unset($club);
                 $clubs = array_values($clubsPayload);
-                
-                // Créer un mapping clubId -> club pour accès rapide (indexé par int et string)
-                $clubsMap = [];
-                foreach ($clubs as $club) {
-                    $clubDbId = $club['id'] ?? $club['_id'] ?? null;
-                    if ($clubDbId) {
-                        // Indexer par int et string pour éviter les problèmes de type
-                        $clubsMap[$clubDbId] = $club;
-                        $clubsMap[(string)$clubDbId] = $club;
-                        $clubsMap[(int)$clubDbId] = $club;
-                    }
-                }
-                
-                // Compléter les données utilisateur avec les informations du club
-                // TOUJOURS remplir les données du club depuis la liste des clubs pour garantir l'affichage
-                foreach ($usersMap as $userId => &$userData) {
-                    // Récupérer le clubId (essayer toutes les variantes possibles)
-                    $clubId = $userData['clubId'] ?? $userData['club_id'] ?? null;
-                    
-                    // Si on a un clubId, récupérer le nom du club depuis le mapping
-                    if (!empty($clubId)) {
-                        // Chercher dans le mapping (essayer toutes les variantes de type)
-                        $club = $clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? $clubsMap[(int)$clubId] ?? null;
-                        
-                        // Si pas trouvé dans le mapping, chercher dans la liste complète
-                        if (!$club) {
-                            foreach ($clubs as $c) {
-                                $cId = $c['id'] ?? $c['_id'] ?? null;
-                                if ($cId && (
-                                    $cId == $clubId || 
-                                    (string)$cId === (string)$clubId ||
-                                    (int)$cId === (int)$clubId
-                                )) {
-                                    $club = $c;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        if ($club) {
-                            // Récupérer name_short (prioritaire) ou name
-                            $clubNameShort = $club['name_short'] ?? $club['nameShort'] ?? null;
-                            $clubNameFull = $club['name'] ?? null;
-                            
-                            // TOUJOURS remplir les données même si elles existent déjà (pour garantir l'affichage)
-                            // Prioriser name_short comme demandé
-                            $userData['clubName'] = $clubNameShort ?: $clubNameFull;
-                            $userData['clubNameShort'] = $clubNameShort;
-                            // Garder aussi le format snake_case pour compatibilité
-                            $userData['club_name'] = $clubNameFull;
-                            $userData['club_name_short'] = $clubNameShort;
-                        }
-                    }
-                }
-                unset($userData);
             }
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des clubs: ' . $e->getMessage());
