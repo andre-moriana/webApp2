@@ -148,17 +148,8 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                         foreach ($inscriptions as $inscription):
                             $userId = $inscription['user_id'] ?? null;
                             $user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
-                            
-                            // Debug: afficher les données disponibles
-                            // error_log("Inscription ID: " . ($inscription['id'] ?? 'N/A'));
-                            // error_log("User ID: " . ($userId ?? 'N/A'));
-                            // error_log("User data: " . json_encode($user));
-                            // error_log("Depart data: " . json_encode([
-                            //     'depart_id' => $inscription['depart_id'] ?? null,
-                            //     'depart_heure' => $inscription['depart_heure'] ?? null,
-                            //     'depart_date' => $inscription['depart_date'] ?? null
-                            // ]));
-                        ?>
+                         
+                       ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
                                 <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
@@ -351,3 +342,9 @@ function createItinerary(service = 'google') {
 }
 </script>
 <?php endif; ?>
+
+<script>
+// Variables globales pour la page show
+const concoursIdShow = <?= json_encode($concours->id ?? $concours->_id ?? $id ?? null) ?>;
+</script>
+<script src="/public/assets/js/concours-show.js"></script>
