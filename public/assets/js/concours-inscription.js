@@ -1549,6 +1549,10 @@ function submitInscription() {
     }
     
     console.log('ID utilisateur trouvé:', userId);
+    
+    // Récupérer le numéro de départ
+    const numeroDepart = document.getElementById('depart-select-main')?.value || document.getElementById('depart-select')?.value || null;
+    console.log('numeroDepart récupéré:', numeroDepart);
 
     // Activer temporairement les champs disabled pour récupérer leurs valeurs
     const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');
@@ -1610,7 +1614,15 @@ function submitInscription() {
     };
 
     for (const [name, value] of Object.entries(fields)) {
+        // Inclure les valeurs même si elles sont 0 ou null pour certains champs numériques
         if (value !== null && value !== '') {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            form.appendChild(input);
+        } else if (value === 0 || value === '0') {
+            // Inclure les valeurs 0 pour les champs numériques (mobilite_reduite, duel, trispot)
             const input = document.createElement('input');
             input.type = 'hidden';
             input.name = name;
@@ -1618,8 +1630,12 @@ function submitInscription() {
             form.appendChild(input);
         }
     }
-
+    
+    console.log('Formulaire créé avec les champs:', Object.fromEntries(Array.from(form.querySelectorAll('input')).map(input => [input.name, input.value])));
+    console.log('Formulaire prêt à être soumis. Action:', form.action);
+    
     document.body.appendChild(form);
+    console.log('Formulaire ajouté au DOM, soumission...');
     form.submit();
 }
 
