@@ -919,10 +919,24 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des arcs: ' . $e->getMessage());
         }
 
-        // Récupérer les distances de tir
+        // Récupérer les distances de tir filtrées par discipline
         $distancesTir = [];
         try {
-            $distancesResponse = $this->apiService->makeRequest('concours/distances-tir', 'GET');
+            // Récupérer l'iddiscipline du concours pour filtrer les distances
+            $iddiscipline = null;
+            if (is_object($concours)) {
+                $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+            } elseif (is_array($concours)) {
+                $iddiscipline = $concours['discipline'] ?? $concours['iddiscipline'] ?? null;
+            }
+            
+            // Construire l'URL avec le paramètre iddiscipline si disponible
+            $endpoint = 'concours/distances-tir';
+            if ($iddiscipline) {
+                $endpoint .= '?iddiscipline=' . (int)$iddiscipline;
+            }
+            
+            $distancesResponse = $this->apiService->makeRequest($endpoint, 'GET');
             
             if ($distancesResponse['success'] && isset($distancesResponse['data'])) {
                 $distancesPayload = $distancesResponse['data'];
