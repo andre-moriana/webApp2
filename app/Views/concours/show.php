@@ -183,21 +183,17 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                 <td><?= htmlspecialchars($user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php 
-                                    // Récupérer le clubId de l'utilisateur
-                                    $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
-                                    
-                                    // Essayer d'abord depuis les données utilisateur (qui devraient déjà être remplies par le contrôleur)
+                                    // Le contrôleur devrait déjà avoir rempli clubName et clubNameShort
+                                    // Prioriser name_short (nom court) comme demandé
                                     $clubName = $user['clubNameShort'] ?? $user['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? null;
                                     
-                                    // Si pas de nom mais un clubId, chercher dans la liste des clubs
-                                    if (empty($clubName) && !empty($clubId)) {
-                                        // Vérifier que $clubs est défini et est un tableau
-                                        if (isset($clubs) && is_array($clubs) && count($clubs) > 0) {
+                                    // Fallback: si toujours pas de nom, essayer de le récupérer depuis $clubs
+                                    if (empty($clubName)) {
+                                        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
+                                        if ($clubId && isset($clubs) && is_array($clubs) && count($clubs) > 0) {
                                             foreach ($clubs as $club) {
                                                 $clubDbId = $club['id'] ?? $club['_id'] ?? null;
-                                                // Comparaison stricte avec conversion en string
                                                 if ($clubDbId && (($clubDbId == $clubId) || ((string)$clubDbId === (string)$clubId))) {
-                                                    // Prioriser name_short (nom court) si disponible
                                                     $clubName = $club['name_short'] ?? $club['nameShort'] ?? $club['name'] ?? null;
                                                     break;
                                                 }
@@ -205,7 +201,6 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                                         }
                                     }
                                     
-                                    // Afficher le nom du club ou N/A
                                     echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
