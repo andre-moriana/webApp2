@@ -1,26 +1,35 @@
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/concours-inscription.css" rel="stylesheet">
 <style>
-/* FORCER les couleurs de piquet avec spécificité maximale */
+/* FORCER les couleurs de piquet - Spécificité maximale */
 #inscriptions-table tbody tr[data-piquet="rouge"],
 #inscriptions-table tbody tr.piquet-rouge,
 table.table tbody tr[data-piquet="rouge"],
-table.table tbody tr.piquet-rouge {
+table.table tbody tr.piquet-rouge,
+table tbody tr[data-piquet="rouge"],
+table tbody tr.piquet-rouge {
     background-color: #ffe0e0 !important;
+    background: #ffe0e0 !important;
 }
 
 #inscriptions-table tbody tr[data-piquet="bleu"],
 #inscriptions-table tbody tr.piquet-bleu,
 table.table tbody tr[data-piquet="bleu"],
-table.table tbody tr.piquet-bleu {
+table.table tbody tr.piquet-bleu,
+table tbody tr[data-piquet="bleu"],
+table tbody tr.piquet-bleu {
     background-color: #e0e8ff !important;
+    background: #e0e8ff !important;
 }
 
 #inscriptions-table tbody tr[data-piquet="blanc"],
 #inscriptions-table tbody tr.piquet-blanc,
 table.table tbody tr[data-piquet="blanc"],
-table.table tbody tr.piquet-blanc {
+table.table tbody tr.piquet-blanc,
+table tbody tr[data-piquet="blanc"],
+table tbody tr.piquet-blanc {
     background-color: #f5f5f5 !important;
+    background: #f5f5f5 !important;
 }
 </style>
 
@@ -144,84 +153,51 @@ table.table tbody tr.piquet-blanc {
                             $user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
                             
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
-                            $piquetColor = $inscription['piquet'] ?? null;
-                            
-                            // DEBUG: Vérifier la valeur brute
-                            error_log("DEBUG PIQUET - Valeur brute: " . var_export($inscription['piquet'], true));
-                            
-                            $rowClass = '';
+                            $piquetColorRaw = $inscription['piquet'] ?? null;
+                            $piquetColor = null;
                             $rowStyle = '';
-                            $dataPiquet = '';
                             
-                            if ($piquetColor && $piquetColor !== '') {
-                                // Nettoyer et normaliser la couleur (enlever les espaces, convertir en minuscule)
-                                $piquetColor = trim(strtolower($piquetColor));
-                                
-                                // DEBUG
-                                error_log("DEBUG PIQUET - Après normalisation: " . $piquetColor);
-                                
-                                // Ajouter une classe CSS selon la couleur du piquet
+                            if ($piquetColorRaw && $piquetColorRaw !== '') {
+                                $piquetColor = trim(strtolower($piquetColorRaw));
                                 $rowClass = 'piquet-' . $piquetColor;
-                                
-                                // Ajouter un attribut data-piquet pour JavaScript
                                 $dataPiquet = ' data-piquet="' . htmlspecialchars($piquetColor) . '"';
                                 
-                                // FORCER le style inline avec !important
-                                $colorMap = [
-                                    'rouge' => '#ffe0e0',
-                                    'bleu' => '#e0e8ff',
-                                    'blanc' => '#f5f5f5'
-                                ];
-                                
-                                if (isset($colorMap[$piquetColor])) {
-                                    // Style inline FORCÉ - SANS htmlspecialchars pour le style
-                                    $rowStyle = ' style="background-color: ' . $colorMap[$piquetColor] . ' !important;"';
-                                    error_log("DEBUG PIQUET - Style généré: " . $rowStyle);
-                                } else {
-                                    error_log("DEBUG PIQUET - Couleur non trouvée dans colorMap: " . $piquetColor);
+                                // APPLIQUER LE STYLE INLINE DIRECTEMENT
+                                $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                                if (isset($colors[$piquetColor])) {
+                                    $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
                                 }
                             } else {
-                                error_log("DEBUG PIQUET - piquetColor est vide ou null");
+                                $rowClass = '';
+                                $dataPiquet = '';
                             }
                         ?>
-                            <?php
-                            // FORCER le style si piquet existe
-                            if (!empty($rowStyle)) {
-                                // Le style est déjà dans $rowStyle
-                            } elseif (!empty($inscription['piquet'])) {
-                                $piquetRaw = trim(strtolower($inscription['piquet']));
-                                $colorMap = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
-                                if (isset($colorMap[$piquetRaw])) {
-                                    $rowStyle = ' style="background-color: ' . $colorMap[$piquetRaw] . ' !important;"';
-                                }
-                            }
-                            ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
-                                <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
-                                <td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>>
                                     <?php 
                                     // Afficher le champ "name" (nom complet) du club comme demandé
                                     $clubName = $inscription['club_name'] ?? $inscription['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
                                     echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
-                                <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <?php if ($isNature3DOrCampagne): ?>
                                     <?php 
                                     // Récupérer la couleur du piquet pour l'affichage
                                     $piquetDisplay = $inscription['piquet'] ?? null;
                                     $piquetDisplay = $piquetDisplay ? ucfirst(trim(strtolower($piquetDisplay))) : 'N/A';
                                     ?>
-                                    <td class="piquet-value"><?= htmlspecialchars($piquetDisplay) ?></td>
+                                    <td class="piquet-value"<?= $rowStyle ?>><?= htmlspecialchars($piquetDisplay) ?></td>
                                 <?php else: ?>
-                                    <td><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
-                                    <td><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
                                 <?php endif; ?>
-                                <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
-                                <td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
                                         <i class="fas fa-trash"></i> Retirer
                                     </button>
