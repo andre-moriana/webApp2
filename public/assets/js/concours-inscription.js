@@ -2247,8 +2247,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) {
                     // Essayer de lire le message d'erreur depuis la réponse
                     return response.json().then(data => {
-                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
-                    }).catch(() => {
+                        console.error('Réponse d\'erreur complète:', data);
+                        const errorMsg = data.error || data.message || `HTTP error! status: ${response.status}`;
+                        if (data.debug) {
+                            console.error('Debug info:', data.debug);
+                        }
+                        throw new Error(errorMsg);
+                    }).catch(err => {
+                        if (err.message) {
+                            throw err;
+                        }
                         throw new Error(`HTTP error! status: ${response.status}`);
                     });
                 }
@@ -2270,6 +2278,10 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Erreur lors de la mise à jour:', error);
+                // Afficher plus de détails dans la console
+                console.error('URL:', `/api/concours/${concoursId}/inscription/${inscriptionId}`);
+                console.error('Method:', 'PUT');
+                console.error('UpdateData:', updateData);
                 alert('Erreur lors de la mise à jour: ' + (error.message || 'Erreur inconnue'));
             });
         });
