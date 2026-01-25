@@ -1250,6 +1250,14 @@ class ConcoursController {
             exit;
         }
         
+        // Vérifier que le numero_tir n'est pas supérieur au numero_depart
+        if ($numero_tir !== null && $numero_tir > $numero_depart) {
+            $_SESSION['error'] = "Le numéro de tir ($numero_tir) ne peut pas être supérieur au numéro de départ ($numero_depart).";
+            error_log("ERREUR VALIDATION - numero_tir ($numero_tir) > numero_depart ($numero_depart)");
+            header("Location: /concours/{$concoursId}/inscription");
+            exit;
+        }
+        
         // Vérifier si l'archer n'est pas déjà inscrit pour le même numéro de départ OU le même numéro de tir
         // Un archer ne peut pas être inscrit 2 fois pour le même départ
         // Un archer ne peut pas être inscrit 2 fois pour le même numéro de tir
