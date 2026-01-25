@@ -1260,6 +1260,19 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des distances de tir: ' . $e->getMessage());
         }
 
+        // Préparer les départs pour la modale d'édition
+        $departs = [];
+        $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null);
+        if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0) {
+            for ($i = 1; $i <= (int)$nombreDepart; $i++) {
+                $departs[] = [
+                    'numero' => $i,
+                    'heure' => '', // Peut être enrichi plus tard si nécessaire
+                    'date' => '' // Peut être enrichi plus tard si nécessaire
+                ];
+            }
+        }
+
         // Inclure header et footer
         require_once __DIR__ . '/../Views/layouts/header.php';
         require_once __DIR__ . '/../Views/concours/inscription.php';
