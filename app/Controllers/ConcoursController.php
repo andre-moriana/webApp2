@@ -1224,7 +1224,11 @@ class ConcoursController {
             header("Location: /concours/{$concoursId}/inscription");
             exit;
         }
-
+        if (!isset($_POST['numero_depart']) || $_POST['numero_depart'] === '') {
+            $_SESSION['error'] = 'Numéro de départ requis';
+            header("Location: /concours/{$concoursId}/inscription");
+            exit;
+        }
         // Préparer toutes les données d'inscription
         $inscriptionData = [
             'user_id' => $user_id,
