@@ -193,41 +193,47 @@
 }
 
 /* Styles pour les lignes colorées selon la couleur du piquet (disciplines 3D, Nature et Campagne) */
-/* Spécificité maximale pour surcharger table-striped de Bootstrap */
-.table.table-striped > tbody > tr.piquet-rouge,
-.table.table-striped > tbody > tr.piquet-rouge:nth-child(odd),
-.table.table-striped > tbody > tr.piquet-rouge:nth-child(even),
-.table.table-striped > tbody > tr.piquet-rouge:nth-of-type(odd),
-.table.table-striped > tbody > tr.piquet-rouge:nth-of-type(even) {
+/* Styles pour toutes les tables, avec ou sans table-striped */
+#inscriptions-table tbody tr.piquet-rouge,
+#inscriptions-table tbody tr.piquet-rouge:nth-child(odd),
+#inscriptions-table tbody tr.piquet-rouge:nth-child(even),
+table.table tbody tr.piquet-rouge,
+table.table tbody tr.piquet-rouge:nth-child(odd),
+table.table tbody tr.piquet-rouge:nth-child(even) {
     background-color: #ffe0e0 !important; /* Rouge pastel */
 }
 
-.table.table-striped > tbody > tr.piquet-bleu,
-.table.table-striped > tbody > tr.piquet-bleu:nth-child(odd),
-.table.table-striped > tbody > tr.piquet-bleu:nth-child(even),
-.table.table-striped > tbody > tr.piquet-bleu:nth-of-type(odd),
-.table.table-striped > tbody > tr.piquet-bleu:nth-of-type(even) {
+#inscriptions-table tbody tr.piquet-bleu,
+#inscriptions-table tbody tr.piquet-bleu:nth-child(odd),
+#inscriptions-table tbody tr.piquet-bleu:nth-child(even),
+table.table tbody tr.piquet-bleu,
+table.table tbody tr.piquet-bleu:nth-child(odd),
+table.table tbody tr.piquet-bleu:nth-child(even) {
     background-color: #e0e8ff !important; /* Bleu pastel */
 }
 
-.table.table-striped > tbody > tr.piquet-blanc,
-.table.table-striped > tbody > tr.piquet-blanc:nth-child(odd),
-.table.table-striped > tbody > tr.piquet-blanc:nth-child(even),
-.table.table-striped > tbody > tr.piquet-blanc:nth-of-type(odd),
-.table.table-striped > tbody > tr.piquet-blanc:nth-of-type(even) {
+#inscriptions-table tbody tr.piquet-blanc,
+#inscriptions-table tbody tr.piquet-blanc:nth-child(odd),
+#inscriptions-table tbody tr.piquet-blanc:nth-child(even),
+table.table tbody tr.piquet-blanc,
+table.table tbody tr.piquet-blanc:nth-child(odd),
+table.table tbody tr.piquet-blanc:nth-child(even) {
     background-color: #f5f5f5 !important; /* Blanc/Gris très clair pastel */
 }
 
 /* Assurer que les lignes colorées restent visibles au survol */
-.table.table-striped > tbody > tr.piquet-rouge:hover {
+#inscriptions-table tbody tr.piquet-rouge:hover,
+table.table tbody tr.piquet-rouge:hover {
     background-color: #ffcccc !important;
 }
 
-.table.table-striped > tbody > tr.piquet-bleu:hover {
+#inscriptions-table tbody tr.piquet-bleu:hover,
+table.table tbody tr.piquet-bleu:hover {
     background-color: #ccd9ff !important;
 }
 
-.table.table-striped > tbody > tr.piquet-blanc:hover {
+#inscriptions-table tbody tr.piquet-blanc:hover,
+table.table tbody tr.piquet-blanc:hover {
     background-color: #e8e8e8 !important;
 }
 
