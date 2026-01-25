@@ -480,7 +480,11 @@ table tbody tr.piquet-blanc {
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit-creation_renouvellement" class="form-label">Création/Renouvellement</label>
-                            <input type="number" id="edit-creation_renouvellement" class="form-control" min="0">
+                            <select id="edit-creation_renouvellement" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="C">Création</option>
+                                <option value="R">Renouvellement</option>
+                            </select>
                         </div>
                     </div>
                     
