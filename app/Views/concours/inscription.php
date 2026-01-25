@@ -123,9 +123,22 @@
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
                             $piquetColor = $inscription['piquet'] ?? null;
                             $rowClass = '';
-                            if ($piquetColor) {
+                            $rowStyle = '';
+                            if ($piquetColor && $piquetColor !== '') {
+                                // Nettoyer et normaliser la couleur (enlever les espaces, convertir en minuscule)
+                                $piquetColor = trim(strtolower($piquetColor));
                                 // Ajouter une classe CSS selon la couleur du piquet
-                                $rowClass = 'piquet-' . strtolower($piquetColor);
+                                $rowClass = 'piquet-' . $piquetColor;
+                                
+                                // Ajouter aussi un style inline comme solution de secours
+                                $colorMap = [
+                                    'rouge' => '#ffe0e0',
+                                    'bleu' => '#e0e8ff',
+                                    'blanc' => '#f5f5f5'
+                                ];
+                                if (isset($colorMap[$piquetColor])) {
+                                    $rowStyle = ' style="background-color: ' . $colorMap[$piquetColor] . ' !important;"';
+                                }
                             }
                             
                             // Debug: afficher les données disponibles
@@ -138,7 +151,7 @@
                             //     'depart_date' => $inscription['depart_date'] ?? null
                             // ]));
                         ?>
-                            <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>" class="<?= htmlspecialchars($rowClass) ?>">
+                            <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $rowStyle ?>>
                                 <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
