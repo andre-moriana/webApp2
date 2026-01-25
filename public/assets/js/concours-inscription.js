@@ -2250,11 +2250,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Envoyer la requête de mise à jour
+            // Utiliser PUT avec X-HTTP-Method-Override pour les serveurs qui ne supportent pas PUT
             fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-HTTP-Method-Override': 'PUT'
                 },
                 credentials: 'include',
                 body: JSON.stringify(updateData)
