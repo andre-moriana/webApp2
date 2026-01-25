@@ -141,7 +141,7 @@
                                     'blanc' => '#f5f5f5'
                                 ];
                                 if (isset($colorMap[$piquetColor])) {
-                                    // Style inline FORCÉ avec !important
+                                    // Style inline FORCÉ avec !important - format direct sans htmlspecialchars pour le style
                                     $rowStyle = ' style="background-color: ' . $colorMap[$piquetColor] . ' !important;"';
                                 }
                             }
@@ -417,62 +417,5 @@ const concoursTypeCompetition = <?= json_encode(is_object($concours) ? ($concour
 const concoursNombreDepart = <?= json_encode(is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null)) ?>;
 const disciplineAbv = <?= json_encode($disciplineAbv ?? null) ?>;
 const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)) ?>;
-</script>
-<script>
-// SOLUTION SIMPLE - Appliquer la couleur une seule fois
-(function() {
-    const colorMap = {
-        'rouge': '#ffe0e0',
-        'bleu': '#e0e8ff',
-        'blanc': '#f5f5f5'
-    };
-    
-    function colorerLignes() {
-        const rows = document.querySelectorAll('#inscriptions-table tbody tr, table.table tbody tr');
-        
-        rows.forEach(function(row) {
-            // Vérifier d'abord data-piquet
-            let piquetValue = null;
-            if (row.hasAttribute('data-piquet')) {
-                piquetValue = row.getAttribute('data-piquet').toLowerCase().trim();
-            } else {
-                // Sinon lire la colonne Piquet
-                const table = row.closest('table');
-                if (table) {
-                    const headers = table.querySelectorAll('thead th');
-                    let piquetIndex = -1;
-                    for (let i = 0; i < headers.length; i++) {
-                        if (headers[i].textContent.trim().toLowerCase() === 'piquet') {
-                            piquetIndex = i;
-                            break;
-                        }
-                    }
-                    if (piquetIndex >= 0) {
-                        const cells = row.querySelectorAll('td');
-                        if (cells.length > piquetIndex) {
-                            piquetValue = cells[piquetIndex].textContent.trim().toLowerCase();
-                        }
-                    }
-                }
-            }
-            
-            if (piquetValue && colorMap[piquetValue]) {
-                // Appliquer la couleur directement
-                row.style.backgroundColor = colorMap[piquetValue];
-                row.style.setProperty('background-color', colorMap[piquetValue], 'important');
-            }
-        });
-    }
-    
-    // Exécuter après chargement
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', colorerLignes);
-    } else {
-        colorerLignes();
-    }
-    
-    // Une seule fois après un court délai
-    setTimeout(colorerLignes, 200);
-})();
 </script>
 <script src="/public/assets/js/concours-inscription.js"></script>
