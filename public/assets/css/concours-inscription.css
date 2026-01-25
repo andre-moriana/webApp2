@@ -193,28 +193,28 @@
 }
 
 /* Styles pour les lignes colorées selon la couleur du piquet (disciplines 3D, Nature et Campagne) */
-.piquet-rouge {
+table.table tbody tr.piquet-rouge {
     background-color: #ffe0e0 !important; /* Rouge pastel */
 }
 
-.piquet-bleu {
+table.table tbody tr.piquet-bleu {
     background-color: #e0e8ff !important; /* Bleu pastel */
 }
 
-.piquet-blanc {
+table.table tbody tr.piquet-blanc {
     background-color: #f5f5f5 !important; /* Blanc/Gris très clair pastel */
 }
 
 /* Assurer que les lignes colorées restent visibles au survol */
-.piquet-rouge:hover {
+table.table tbody tr.piquet-rouge:hover {
     background-color: #ffcccc !important;
 }
 
-.piquet-bleu:hover {
+table.table tbody tr.piquet-bleu:hover {
     background-color: #ccd9ff !important;
 }
 
-.piquet-blanc:hover {
+table.table tbody tr.piquet-blanc:hover {
     background-color: #e8e8e8 !important;
 }
 
