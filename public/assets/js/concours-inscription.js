@@ -2250,9 +2250,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Envoyer la requête de mise à jour
-            // Utiliser POST avec _method=PUT pour contourner les problèmes de routage
-            console.log('Début du fetch PUT vers:', `/api/concours/${concoursId}/inscription/${inscriptionId}`);
-            const dataToSend = { ...updateData, _method: 'PUT' };
+            console.log('Début du fetch POST vers:', `/api/concours/${concoursId}/inscription/${inscriptionId}`);
             fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
                 method: 'POST',
                 headers: {
@@ -2260,7 +2258,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Accept': 'application/json'
                 },
                 credentials: 'include',
-                body: JSON.stringify(dataToSend)
+                body: JSON.stringify(updateData)
             })
             .then(response => {
                 console.log('Fetch réussi, traitement de la réponse...');
