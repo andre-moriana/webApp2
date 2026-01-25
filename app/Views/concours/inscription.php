@@ -137,19 +137,12 @@
                                     'blanc' => '#f5f5f5'
                                 ];
                                 if (isset($colorMap[$piquetColor])) {
-                                    $rowStyle = ' style="background-color: ' . $colorMap[$piquetColor] . ' !important;"';
+                                    $rowStyle = ' style="background-color: ' . htmlspecialchars($colorMap[$piquetColor]) . ' !important;"';
                                 }
+                                
+                                // Debug: vérifier que la classe et le style sont bien générés
+                                error_log("DEBUG Piquet - Valeur brute: " . var_export($inscription['piquet'], true) . " -> Normalisée: " . $piquetColor . " -> Classe: " . $rowClass . " -> Style: " . $rowStyle);
                             }
-                            
-                            // Debug: afficher les données disponibles
-                            // error_log("Inscription ID: " . ($inscription['id'] ?? 'N/A'));
-                            // error_log("User ID: " . ($userId ?? 'N/A'));
-                            // error_log("User data: " . json_encode($user));
-                            // error_log("Depart data: " . json_encode([
-                            //     'depart_id' => $inscription['depart_id'] ?? null,
-                            //     'depart_heure' => $inscription['depart_heure'] ?? null,
-                            //     'depart_date' => $inscription['depart_date'] ?? null
-                            // ]));
                         ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $rowStyle ?>>
                                 <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
@@ -422,5 +415,29 @@ const concoursTypeCompetition = <?= json_encode(is_object($concours) ? ($concour
 const concoursNombreDepart = <?= json_encode(is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null)) ?>;
 const disciplineAbv = <?= json_encode($disciplineAbv ?? null) ?>;
 const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)) ?>;
+</script>
+<script>
+// Forcer l'application des couleurs de piquet après le chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    const colorMap = {
+        'rouge': '#ffe0e0',
+        'bleu': '#e0e8ff',
+        'blanc': '#f5f5f5'
+    };
+    
+    // Appliquer les couleurs aux lignes avec classe piquet-*
+    document.querySelectorAll('tr[class*="piquet-"]').forEach(function(row) {
+        const classes = row.className.split(' ');
+        for (let cls of classes) {
+            if (cls.startsWith('piquet-')) {
+                const color = cls.replace('piquet-', '');
+                if (colorMap[color]) {
+                    row.style.setProperty('background-color', colorMap[color], 'important');
+                    console.log('Couleur appliquée:', color, 'à la ligne', row);
+                }
+            }
+        }
+    });
+});
 </script>
 <script src="/public/assets/js/concours-inscription.js"></script>
