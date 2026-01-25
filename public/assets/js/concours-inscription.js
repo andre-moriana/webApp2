@@ -1929,137 +1929,152 @@ window.editInscription = function(inscriptionId) {
     console.log('concoursId:', concoursId);
     console.log('inscriptionId:', inscriptionId);
     
-    // Récupérer les données de l'inscription
-    fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        credentials: 'include'
-    })
-    .then(response => {
-        console.log('Réponse HTTP status:', response.status);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Données brutes reçues de l\'API:', JSON.stringify(data, null, 2));
+    // Ouvrir la modale d'abord
+    const modalElement = document.getElementById('editInscriptionModal');
+    if (!modalElement) {
+        alert('Erreur: La modale d\'édition est introuvable');
+        return;
+    }
+    
+    // Stocker l'ID de l'inscription dans le formulaire
+    const form = document.getElementById('edit-inscription-form');
+    if (form) {
+        form.dataset.inscriptionId = inscriptionId;
+    }
+    
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Attendre que la modale soit complètement affichée avant de charger les données
+    modalElement.addEventListener('shown.bs.modal', function onShown() {
+        console.log('Modale affichée, chargement des données...');
         
-        // Extraire l'inscription selon le format de réponse
-        let inscription = null;
-        if (data.success && data.data) {
-            inscription = data.data;
-        } else if (data.data && !data.success) {
-            inscription = data.data;
-        } else if (data.id) {
-            // La réponse est directement l'inscription
-            inscription = data;
-        } else {
-            console.error('Format de réponse inattendu:', data);
-            alert('Erreur: Format de réponse inattendu de l\'API');
-            return;
-        }
-        
-        if (!inscription) {
-            console.error('Aucune donnée d\'inscription trouvée');
-            alert('Erreur: Aucune donnée d\'inscription trouvée');
-            return;
-        }
-        
-        console.log('Inscription extraite:', JSON.stringify(inscription, null, 2));
-        
-        // Fonction helper pour définir une valeur de manière sécurisée
-        const setValue = (id, value) => {
-            const element = document.getElementById(id);
-            if (!element) {
-                console.warn(`✗ Élément ${id} non trouvé dans le DOM`);
-                return false;
+        // Récupérer les données de l'inscription
+        fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            console.log('Réponse HTTP status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Données brutes reçues de l\'API:', JSON.stringify(data, null, 2));
             
-            try {
-                if (element.type === 'checkbox') {
-                    const checked = value == 1 || value === true || value === '1' || value === 1;
-                    element.checked = checked;
-                    console.log(`✓ ${id} (checkbox) = ${checked} (valeur originale: ${value})`);
-                } else {
-                    const stringValue = (value !== null && value !== undefined) ? String(value) : '';
-                    element.value = stringValue;
-                    console.log(`✓ ${id} = "${stringValue}" (valeur originale: ${value})`);
-                }
-                return true;
-            } catch (error) {
-                console.error(`Erreur lors de la définition de ${id}:`, error);
-                return false;
-            }
-        };
-        
-        // Fonction pour remplir tous les champs
-        const fillForm = () => {
-            console.log('--- Remplissage du formulaire ---');
-            setValue('edit-saison', inscription.saison);
-            setValue('edit-type_certificat_medical', inscription.type_certificat_medical);
-            setValue('edit-type_licence', inscription.type_licence);
-            setValue('edit-creation_renouvellement', inscription.creation_renouvellement);
-            setValue('edit-depart-select', inscription.numero_depart);
-            setValue('edit-categorie_classement', inscription.categorie_classement);
-            setValue('edit-arme', inscription.arme);
-            setValue('edit-mobilite_reduite', inscription.mobilite_reduite);
-            
-            if (isNature3DOrCampagne) {
-                setValue('edit-piquet', inscription.piquet);
+            // Extraire l'inscription selon le format de réponse
+            let inscription = null;
+            if (data.success && data.data) {
+                inscription = data.data;
+            } else if (data.data && !data.success) {
+                inscription = data.data;
+            } else if (data.id) {
+                // La réponse est directement l'inscription
+                inscription = data;
             } else {
-                setValue('edit-distance', inscription.distance);
-                setValue('edit-blason', inscription.blason);
-                setValue('edit-duel', inscription.duel);
-                setValue('edit-trispot', inscription.trispot);
+                console.error('Format de réponse inattendu:', data);
+                alert('Erreur: Format de réponse inattendu de l\'API');
+                modal.hide();
+                return;
             }
             
-            setValue('edit-numero_tir', inscription.numero_tir);
-            setValue('edit-tarif_competition', inscription.tarif_competition);
-            setValue('edit-mode_paiement', inscription.mode_paiement || 'Non payé');
-        };
-        
-        // Remplir le formulaire une première fois
-        fillForm();
-        
-        // Stocker l'ID de l'inscription pour la mise à jour
-        const form = document.getElementById('edit-inscription-form');
-        if (form) {
-            form.dataset.inscriptionId = inscriptionId;
-            console.log('✓ ID d\'inscription stocké dans le formulaire:', inscriptionId);
-        } else {
-            console.error('✗ Formulaire edit-inscription-form non trouvé');
-        }
-        
-        // Ouvrir la modale
-        const modalElement = document.getElementById('editInscriptionModal');
-        if (!modalElement) {
-            alert('Erreur: La modale d\'édition est introuvable');
-            return;
-        }
-        
-        const modal = new bootstrap.Modal(modalElement);
-        
-        // Attendre que la modale soit complètement affichée pour re-remplir
-        modalElement.addEventListener('shown.bs.modal', function onShown() {
-            console.log('Modale affichée, re-remplissage des champs...');
-            // Re-remplir après un court délai pour s'assurer que Bootstrap a fini
+            if (!inscription) {
+                console.error('Aucune donnée d\'inscription trouvée');
+                alert('Erreur: Aucune donnée d\'inscription trouvée');
+                modal.hide();
+                return;
+            }
+            
+            console.log('Inscription extraite:', JSON.stringify(inscription, null, 2));
+            
+            // Fonction helper pour définir une valeur de manière sécurisée
+            const setValue = (id, value) => {
+                const element = document.getElementById(id);
+                if (!element) {
+                    console.warn(`✗ Élément ${id} non trouvé dans le DOM`);
+                    return false;
+                }
+                
+                try {
+                    if (element.type === 'checkbox') {
+                        const checked = value == 1 || value === true || value === '1' || value === 1;
+                        element.checked = checked;
+                        console.log(`✓ ${id} (checkbox) = ${checked} (valeur originale: ${value})`);
+                    } else if (element.tagName === 'SELECT') {
+                        // Pour les select, essayer de trouver l'option correspondante
+                        const stringValue = (value !== null && value !== undefined) ? String(value) : '';
+                        element.value = stringValue;
+                        // Si la valeur n'existe pas dans les options, essayer de la forcer
+                        if (element.value !== stringValue && stringValue !== '') {
+                            // Créer une option temporaire si nécessaire
+                            const option = document.createElement('option');
+                            option.value = stringValue;
+                            option.textContent = stringValue;
+                            element.appendChild(option);
+                            element.value = stringValue;
+                        }
+                        console.log(`✓ ${id} (select) = "${stringValue}" (valeur originale: ${value})`);
+                    } else {
+                        const stringValue = (value !== null && value !== undefined) ? String(value) : '';
+                        element.value = stringValue;
+                        console.log(`✓ ${id} = "${stringValue}" (valeur originale: ${value})`);
+                    }
+                    return true;
+                } catch (error) {
+                    console.error(`Erreur lors de la définition de ${id}:`, error);
+                    return false;
+                }
+            };
+            
+            // Fonction pour remplir tous les champs
+            const fillForm = () => {
+                console.log('--- Remplissage du formulaire ---');
+                setValue('edit-saison', inscription.saison);
+                setValue('edit-type_certificat_medical', inscription.type_certificat_medical);
+                setValue('edit-type_licence', inscription.type_licence);
+                setValue('edit-creation_renouvellement', inscription.creation_renouvellement);
+                setValue('edit-depart-select', inscription.numero_depart);
+                setValue('edit-categorie_classement', inscription.categorie_classement);
+                setValue('edit-arme', inscription.arme);
+                setValue('edit-mobilite_reduite', inscription.mobilite_reduite);
+                
+                if (isNature3DOrCampagne) {
+                    setValue('edit-piquet', inscription.piquet);
+                } else {
+                    setValue('edit-distance', inscription.distance);
+                    setValue('edit-blason', inscription.blason);
+                    setValue('edit-duel', inscription.duel);
+                    setValue('edit-trispot', inscription.trispot);
+                }
+                
+                setValue('edit-numero_tir', inscription.numero_tir);
+                setValue('edit-tarif_competition', inscription.tarif_competition);
+                setValue('edit-mode_paiement', inscription.mode_paiement || 'Non payé');
+                
+                console.log('--- Formulaire rempli ---');
+            };
+            
+            // Remplir le formulaire après un court délai pour s'assurer que tous les éléments sont prêts
             setTimeout(() => {
                 fillForm();
-            }, 50);
-            modalElement.removeEventListener('shown.bs.modal', onShown);
-        }, { once: true });
+            }, 100);
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération:', error);
+            alert('Erreur lors de la récupération de l\'inscription: ' + error.message);
+            modal.hide();
+        });
         
-        console.log('Ouverture de la modale...');
-        modal.show();
-    })
-    .catch(error => {
-        console.error('Erreur lors de la récupération:', error);
-        alert('Erreur lors de la récupération de l\'inscription: ' + error.message);
-    });
+        modalElement.removeEventListener('shown.bs.modal', onShown);
+    }, { once: true });
+    
+    console.log('Ouverture de la modale...');
+    modal.show();
 };
 
 // Gestionnaire pour le bouton de confirmation d'édition
