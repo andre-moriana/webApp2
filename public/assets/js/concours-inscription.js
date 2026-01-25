@@ -1918,12 +1918,8 @@ function removeInscription(inscriptionId) {
     });
 }
 
-// Fonction pour éditer une inscription - basée sur la même logique que showConfirmModal
+// Fonction pour éditer une inscription - EXACTEMENT comme showConfirmModal
 window.editInscription = function(inscriptionId) {
-    console.log('=== ÉDITION INSCRIPTION ===');
-    console.log('concoursId:', concoursId);
-    console.log('inscriptionId:', inscriptionId);
-    
     if (!concoursId || !inscriptionId) {
         alert('Erreur: Informations manquantes');
         return;
@@ -1941,7 +1937,7 @@ window.editInscription = function(inscriptionId) {
         form.dataset.inscriptionId = inscriptionId;
     }
     
-    // Charger les données AVANT d'ouvrir la modale (comme showConfirmModal)
+    // Charger les données AVANT d'ouvrir la modale (comme showConfirmModal reçoit l'archer)
     fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
         method: 'GET',
         headers: {
@@ -1957,100 +1953,100 @@ window.editInscription = function(inscriptionId) {
         return response.json();
     })
     .then(data => {
-        console.log('Données reçues de l\'API:', data);
-        
-        // Extraire l'inscription selon le format de réponse
+        // Extraire l'inscription
         let inscription = null;
         if (data.success && data.data) {
-            inscription = data.data;
-        } else if (data.data && !data.success) {
             inscription = data.data;
         } else if (data.id) {
             inscription = data;
         } else {
-            console.error('Format de réponse inattendu:', data);
-            alert('Erreur: Format de réponse inattendu de l\'API');
+            alert('Erreur: Format de réponse inattendu');
             return;
         }
         
         if (!inscription) {
-            console.error('Aucune donnée d\'inscription trouvée');
-            alert('Erreur: Aucune donnée d\'inscription trouvée');
+            alert('Erreur: Aucune donnée trouvée');
             return;
         }
         
-        console.log('Inscription à charger:', inscription);
-        
-        // Fonction helper pour définir une valeur (identique à showConfirmModal)
-        const setValue = (id, value) => {
-            const element = document.getElementById(id);
-            if (!element) {
-                console.warn(`✗ Élément ${id} non trouvé`);
-                return false;
-            }
-            
-            try {
-                if (element.type === 'checkbox') {
-                    element.checked = value == 1 || value === true || value === '1' || value === 1;
-                } else {
-                    const stringValue = (value !== null && value !== undefined) ? String(value) : '';
-                    element.value = stringValue;
-                }
-                return true;
-            } catch (error) {
-                console.error(`Erreur lors de la définition de ${id}:`, error);
-                return false;
-            }
-        };
-        
-        // Fonction pour remplir tous les champs
+        // Fonction pour remplir les champs (comme prefillLockedFields dans showConfirmModal)
         const fillForm = () => {
-            setValue('edit-saison', inscription.saison);
-            setValue('edit-type_certificat_medical', inscription.type_certificat_medical);
-            setValue('edit-type_licence', inscription.type_licence);
-            setValue('edit-creation_renouvellement', inscription.creation_renouvellement);
-            setValue('edit-depart-select', inscription.numero_depart);
-            setValue('edit-categorie_classement', inscription.categorie_classement);
-            setValue('edit-arme', inscription.arme);
-            setValue('edit-mobilite_reduite', inscription.mobilite_reduite);
+            // Remplir les champs text/select
+            const saisonInput = document.getElementById('edit-saison');
+            if (saisonInput) saisonInput.value = inscription.saison || '';
+            
+            const typeCertificatSelect = document.getElementById('edit-type_certificat_medical');
+            if (typeCertificatSelect) typeCertificatSelect.value = inscription.type_certificat_medical || '';
+            
+            const typeLicenceSelect = document.getElementById('edit-type_licence');
+            if (typeLicenceSelect) typeLicenceSelect.value = inscription.type_licence || '';
+            
+            const creationRenouvellementInput = document.getElementById('edit-creation_renouvellement');
+            if (creationRenouvellementInput) creationRenouvellementInput.value = inscription.creation_renouvellement || '';
+            
+            const departSelect = document.getElementById('edit-depart-select');
+            if (departSelect) departSelect.value = inscription.numero_depart || '';
+            
+            const categorieSelect = document.getElementById('edit-categorie_classement');
+            if (categorieSelect) categorieSelect.value = inscription.categorie_classement || '';
+            
+            const armeSelect = document.getElementById('edit-arme');
+            if (armeSelect) armeSelect.value = inscription.arme || '';
+            
+            const mobiliteReduiteCheckbox = document.getElementById('edit-mobilite_reduite');
+            if (mobiliteReduiteCheckbox) mobiliteReduiteCheckbox.checked = inscription.mobilite_reduite == 1 || inscription.mobilite_reduite === true;
             
             if (isNature3DOrCampagne) {
-                setValue('edit-piquet', inscription.piquet);
+                const piquetSelect = document.getElementById('edit-piquet');
+                if (piquetSelect) piquetSelect.value = inscription.piquet || '';
             } else {
-                setValue('edit-distance', inscription.distance);
-                setValue('edit-blason', inscription.blason);
-                setValue('edit-duel', inscription.duel);
-                setValue('edit-trispot', inscription.trispot);
+                const distanceSelect = document.getElementById('edit-distance');
+                if (distanceSelect) distanceSelect.value = inscription.distance || '';
+                
+                const blasonInput = document.getElementById('edit-blason');
+                if (blasonInput) blasonInput.value = inscription.blason || '';
+                
+                const duelCheckbox = document.getElementById('edit-duel');
+                if (duelCheckbox) duelCheckbox.checked = inscription.duel == 1 || inscription.duel === true;
+                
+                const trispotCheckbox = document.getElementById('edit-trispot');
+                if (trispotCheckbox) trispotCheckbox.checked = inscription.trispot == 1 || inscription.trispot === true;
             }
             
-            setValue('edit-numero_tir', inscription.numero_tir);
-            setValue('edit-tarif_competition', inscription.tarif_competition);
-            setValue('edit-mode_paiement', inscription.mode_paiement || 'Non payé');
+            const numeroTirSelect = document.getElementById('edit-numero_tir');
+            if (numeroTirSelect) numeroTirSelect.value = inscription.numero_tir || '';
+            
+            const tarifSelect = document.getElementById('edit-tarif_competition');
+            if (tarifSelect) tarifSelect.value = inscription.tarif_competition || '';
+            
+            const modePaiementSelect = document.getElementById('edit-mode_paiement');
+            if (modePaiementSelect) modePaiementSelect.value = inscription.mode_paiement || 'Non payé';
         };
         
         // Ouvrir la modale (comme showConfirmModal)
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const existingModal = bootstrap.Modal.getInstance(modalElement);
+            if (existingModal) {
+                existingModal.dispose();
+            }
             const modal = new bootstrap.Modal(modalElement);
+            modal.show();
             
-            // Remplir après que la modale soit affichée (comme showConfirmModal)
+            // Pré-remplir après que la modale soit affichée (EXACTEMENT comme showConfirmModal ligne 525-528)
             setTimeout(() => {
                 fillForm();
             }, 100);
             
-            // Écouter l'événement 'shown.bs.modal' pour s'assurer que la modale est complètement affichée
+            // Écouter l'événement 'shown.bs.modal' (EXACTEMENT comme showConfirmModal ligne 531-553)
             modalElement.addEventListener('shown.bs.modal', function() {
                 fillForm();
             }, { once: true });
-            
-            modal.show();
         } else {
-            console.error('Bootstrap n\'est pas disponible');
             alert('Erreur: Bootstrap n\'est pas chargé');
         }
     })
     .catch(error => {
-        console.error('Erreur lors de la récupération:', error);
-        alert('Erreur lors de la récupération de l\'inscription: ' + error.message);
+        alert('Erreur lors de la récupération: ' + error.message);
     });
 };
 
