@@ -44,7 +44,7 @@
         <h3>Sélectionner un départ</h3>
         <div class="form-group">
             <label for="depart-select-main" class="form-label">N° départ <span class="text-danger">*</span></label>
-            <select id="depart-select-main" class="form-control" required name="depart-select-main">
+            <select id="depart-select-main" class="form-control" required name="numero_depart">
                 <option value="">Sélectionner un départ</option>
                 <?php if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0): ?>
                     <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): ?>
