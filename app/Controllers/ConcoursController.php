@@ -1329,6 +1329,75 @@ class ConcoursController {
                 exit; // IMPORTANT: Sortir immédiatement, ne pas continuer vers l'appel API
             }
             
+            // Vérifier que le numero_tir du départ suivant n'est pas inférieur au numero_tir du départ précédent
+            // (seulement si numero_tir est fourni dans la nouvelle inscription)
+            if ($numero_tir !== null) {
+                // Récupérer toutes les inscriptions de cet archer pour ce concours, triées par numero_depart
+                $inscriptionsArcher = [];
+                foreach ($inscriptions as $inscription) {
+                    $insc_user_id = isset($inscription['user_id']) ? (int)$inscription['user_id'] : null;
+                    if ($insc_user_id === (int)$user_id) {
+                        $insc_numero_depart = null;
+                        $insc_numero_tir = null;
+                        
+                        if (isset($inscription['numero_depart']) && $inscription['numero_depart'] !== '' && $inscription['numero_depart'] !== null) {
+                            $insc_numero_depart = (int)$inscription['numero_depart'];
+                        }
+                        
+                        if (isset($inscription['numero_tir']) && $inscription['numero_tir'] !== '' && $inscription['numero_tir'] !== null) {
+                            $insc_numero_tir = (int)$inscription['numero_tir'];
+                        }
+                        
+                        // Ne garder que les inscriptions avec un numero_depart et un numero_tir valides
+                        if ($insc_numero_depart !== null && $insc_numero_tir !== null) {
+                            $inscriptionsArcher[] = [
+                                'numero_depart' => $insc_numero_depart,
+                                'numero_tir' => $insc_numero_tir
+                            ];
+                        }
+                    }
+                }
+                
+                // Trier les inscriptions par numero_depart
+                usort($inscriptionsArcher, function($a, $b) {
+                    return $a['numero_depart'] <=> $b['numero_depart'];
+                });
+                
+                error_log("Inscriptions de l'archer triées par départ: " . json_encode($inscriptionsArcher));
+                
+                // Vérifier que le numero_tir du nouveau départ n'est pas inférieur au numero_tir du départ précédent
+                foreach ($inscriptionsArcher as $insc) {
+                    // Si on trouve un départ précédent (numero_depart < nouveau numero_depart)
+                    if ($insc['numero_depart'] < $numero_depart) {
+                        // Vérifier que le numero_tir du nouveau départ n'est pas inférieur
+                        if ($numero_tir < $insc['numero_tir']) {
+                            $doublonDetecte = true;
+                            $messageErreur = "Le numéro de tir du départ $numero_depart ($numero_tir) ne peut pas être inférieur au numéro de tir du départ {$insc['numero_depart']} ({$insc['numero_tir']}).";
+                            error_log("DOUBLON DÉTECTÉ - Numéro de tir inférieur: départ $numero_depart (tir $numero_tir) < départ {$insc['numero_depart']} (tir {$insc['numero_tir']})");
+                            break;
+                        }
+                    }
+                    // Si on trouve un départ suivant (numero_depart > nouveau numero_depart)
+                    elseif ($insc['numero_depart'] > $numero_depart) {
+                        // Vérifier que le numero_tir du départ suivant n'est pas inférieur au nouveau numero_tir
+                        if ($insc['numero_tir'] < $numero_tir) {
+                            $doublonDetecte = true;
+                            $messageErreur = "Le numéro de tir du départ {$insc['numero_depart']} ({$insc['numero_tir']}) ne peut pas être inférieur au numéro de tir du départ $numero_depart ($numero_tir).";
+                            error_log("DOUBLON DÉTECTÉ - Numéro de tir inférieur: départ {$insc['numero_depart']} (tir {$insc['numero_tir']}) < départ $numero_depart (tir $numero_tir)");
+                            break;
+                        }
+                    }
+                }
+                
+                // Si une violation a été détectée, bloquer l'inscription
+                if ($doublonDetecte) {
+                    error_log("BLOCAGE DE L'INSCRIPTION - Numéro de tir inférieur détecté");
+                    $_SESSION['error'] = $messageErreur;
+                    header("Location: /concours/{$concoursId}/inscription");
+                    exit; // IMPORTANT: Sortir immédiatement, ne pas continuer vers l'appel API
+                }
+            }
+            
             error_log("Aucun doublon détecté - poursuite de l'inscription");
         } catch (Exception $e) {
             // En cas d'erreur lors de la récupération des inscriptions, bloquer l'inscription pour sécurité
