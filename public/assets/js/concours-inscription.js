@@ -1939,35 +1939,55 @@ window.editInscription = function(inscriptionId) {
         if (data.success && data.data) {
             const inscription = data.data;
             
-            // Remplir le formulaire d'édition
-            document.getElementById('edit-saison').value = inscription.saison || '';
-            document.getElementById('edit-type_certificat_medical').value = inscription.type_certificat_medical || '';
-            document.getElementById('edit-type_licence').value = inscription.type_licence || '';
-            document.getElementById('edit-creation_renouvellement').value = inscription.creation_renouvellement || '';
-            document.getElementById('edit-depart-select').value = inscription.numero_depart || '';
-            document.getElementById('edit-categorie_classement').value = inscription.categorie_classement || '';
-            document.getElementById('edit-arme').value = inscription.arme || '';
-            document.getElementById('edit-mobilite_reduite').checked = inscription.mobilite_reduite == 1 || inscription.mobilite_reduite === true;
+            // Fonction helper pour définir une valeur de manière sécurisée
+            const setValue = (id, value) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = value == 1 || value === true;
+                    } else {
+                        element.value = value || '';
+                    }
+                }
+            };
+            
+            // Remplir le formulaire d'édition avec vérifications
+            setValue('edit-saison', inscription.saison);
+            setValue('edit-type_certificat_medical', inscription.type_certificat_medical);
+            setValue('edit-type_licence', inscription.type_licence);
+            setValue('edit-creation_renouvellement', inscription.creation_renouvellement);
+            setValue('edit-depart-select', inscription.numero_depart);
+            setValue('edit-categorie_classement', inscription.categorie_classement);
+            setValue('edit-arme', inscription.arme);
+            setValue('edit-mobilite_reduite', inscription.mobilite_reduite);
             
             if (isNature3DOrCampagne) {
-                document.getElementById('edit-piquet').value = inscription.piquet || '';
+                setValue('edit-piquet', inscription.piquet);
             } else {
-                document.getElementById('edit-distance').value = inscription.distance || '';
-                document.getElementById('edit-blason').value = inscription.blason || '';
-                document.getElementById('edit-duel').checked = inscription.duel == 1 || inscription.duel === true;
-                document.getElementById('edit-trispot').checked = inscription.trispot == 1 || inscription.trispot === true;
+                setValue('edit-distance', inscription.distance);
+                setValue('edit-blason', inscription.blason);
+                setValue('edit-duel', inscription.duel);
+                setValue('edit-trispot', inscription.trispot);
             }
             
-            document.getElementById('edit-numero_tir').value = inscription.numero_tir || '';
-            document.getElementById('edit-tarif_competition').value = inscription.tarif_competition || '';
-            document.getElementById('edit-mode_paiement').value = inscription.mode_paiement || 'Non payé';
+            setValue('edit-numero_tir', inscription.numero_tir);
+            setValue('edit-tarif_competition', inscription.tarif_competition);
+            setValue('edit-mode_paiement', inscription.mode_paiement || 'Non payé');
             
             // Stocker l'ID de l'inscription pour la mise à jour
-            document.getElementById('edit-inscription-form').dataset.inscriptionId = inscriptionId;
+            const form = document.getElementById('edit-inscription-form');
+            if (form) {
+                form.dataset.inscriptionId = inscriptionId;
+            }
             
             // Ouvrir la modale
-            const modal = new bootstrap.Modal(document.getElementById('editInscriptionModal'));
-            modal.show();
+            const modalElement = document.getElementById('editInscriptionModal');
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } else {
+                alert('Erreur: La modale d\'édition est introuvable');
+            }
         } else {
             alert('Erreur lors de la récupération de l\'inscription: ' + (data.error || 'Erreur inconnue'));
         }
@@ -1991,28 +2011,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            // Fonction helper pour récupérer une valeur de manière sécurisée
+            const getValue = (id) => {
+                const element = document.getElementById(id);
+                return element ? element.value : null;
+            };
+            
+            const getChecked = (id) => {
+                const element = document.getElementById(id);
+                return element ? element.checked : false;
+            };
+            
             // Récupérer les valeurs du formulaire
             const updateData = {
-                saison: document.getElementById('edit-saison').value || null,
-                type_certificat_medical: document.getElementById('edit-type_certificat_medical').value || null,
-                type_licence: document.getElementById('edit-type_licence').value || null,
-                creation_renouvellement: document.getElementById('edit-creation_renouvellement').value ? parseInt(document.getElementById('edit-creation_renouvellement').value) : 0,
-                numero_depart: document.getElementById('edit-depart-select').value ? parseInt(document.getElementById('edit-depart-select').value) : null,
-                categorie_classement: document.getElementById('edit-categorie_classement').value || null,
-                arme: document.getElementById('edit-arme').value || null,
-                mobilite_reduite: document.getElementById('edit-mobilite_reduite').checked ? 1 : 0,
-                numero_tir: document.getElementById('edit-numero_tir').value ? parseInt(document.getElementById('edit-numero_tir').value) : null,
-                tarif_competition: document.getElementById('edit-tarif_competition').value || null,
-                mode_paiement: document.getElementById('edit-mode_paiement').value || 'Non payé'
+                saison: getValue('edit-saison') || null,
+                type_certificat_medical: getValue('edit-type_certificat_medical') || null,
+                type_licence: getValue('edit-type_licence') || null,
+                creation_renouvellement: getValue('edit-creation_renouvellement') ? parseInt(getValue('edit-creation_renouvellement')) : 0,
+                numero_depart: getValue('edit-depart-select') ? parseInt(getValue('edit-depart-select')) : null,
+                categorie_classement: getValue('edit-categorie_classement') || null,
+                arme: getValue('edit-arme') || null,
+                mobilite_reduite: getChecked('edit-mobilite_reduite') ? 1 : 0,
+                numero_tir: getValue('edit-numero_tir') ? parseInt(getValue('edit-numero_tir')) : null,
+                tarif_competition: getValue('edit-tarif_competition') || null,
+                mode_paiement: getValue('edit-mode_paiement') || 'Non payé'
             };
             
             if (isNature3DOrCampagne) {
-                updateData.piquet = document.getElementById('edit-piquet').value || null;
+                const piquetValue = getValue('edit-piquet');
+                if (piquetValue !== null) {
+                    updateData.piquet = piquetValue || null;
+                }
             } else {
-                updateData.distance = document.getElementById('edit-distance').value ? parseInt(document.getElementById('edit-distance').value) : null;
-                updateData.blason = document.getElementById('edit-blason').value ? parseInt(document.getElementById('edit-blason').value) : null;
-                updateData.duel = document.getElementById('edit-duel').checked ? 1 : 0;
-                updateData.trispot = document.getElementById('edit-trispot').checked ? 1 : 0;
+                const distanceValue = getValue('edit-distance');
+                const blasonValue = getValue('edit-blason');
+                if (distanceValue !== null) {
+                    updateData.distance = distanceValue ? parseInt(distanceValue) : null;
+                }
+                if (blasonValue !== null) {
+                    updateData.blason = blasonValue ? parseInt(blasonValue) : null;
+                }
+                updateData.duel = getChecked('edit-duel') ? 1 : 0;
+                updateData.trispot = getChecked('edit-trispot') ? 1 : 0;
             }
             
             // Envoyer la requête de mise à jour
