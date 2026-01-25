@@ -1118,6 +1118,38 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des arcs: ' . $e->getMessage());
         }
 
+        // Récupérer l'abréviation de la discipline pour déterminer si c'est 3D, Nature ou Campagne
+        $disciplineAbv = null;
+        try {
+            $iddiscipline = null;
+            if (is_object($concours)) {
+                $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+            } elseif (is_array($concours)) {
+                $iddiscipline = $concours['discipline'] ?? $concours['iddiscipline'] ?? null;
+            }
+            
+            if ($iddiscipline) {
+                // Récupérer toutes les disciplines pour trouver l'abv_discipline
+                $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+                $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+                if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                    $disciplinesPayload = $disciplinesPayload['data'];
+                }
+                
+                if (is_array($disciplinesPayload)) {
+                    foreach ($disciplinesPayload as $discipline) {
+                        $discId = $discipline['iddiscipline'] ?? $discipline['id'] ?? null;
+                        if ($discId == $iddiscipline || (string)$discId === (string)$iddiscipline) {
+                            $disciplineAbv = $discipline['abv_discipline'] ?? null;
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération de l\'abréviation de la discipline: ' . $e->getMessage());
+        }
+        
         // Récupérer les distances de tir filtrées par discipline et type de compétition
         $distancesTir = [];
         try {
@@ -1416,6 +1448,42 @@ class ConcoursController {
             exit; // IMPORTANT: Sortir immédiatement
         }
         
+        // Récupérer l'abréviation de la discipline pour déterminer si on utilise piquet ou distance
+        $disciplineAbv = null;
+        try {
+            $concoursResponse = $this->apiService->getConcoursById($concoursId);
+            if ($concoursResponse['success']) {
+                $concoursData = $this->apiService->unwrapData($concoursResponse);
+                if (is_array($concoursData) && isset($concoursData['data']) && isset($concoursData['success'])) {
+                    $concoursData = $concoursData['data'];
+                }
+                
+                $iddiscipline = is_object($concoursData) ? ($concoursData->discipline ?? $concoursData->iddiscipline ?? null) : ($concoursData['discipline'] ?? $concoursData['iddiscipline'] ?? null);
+                
+                if ($iddiscipline) {
+                    $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+                    $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+                    if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                        $disciplinesPayload = $disciplinesPayload['data'];
+                    }
+                    
+                    if (is_array($disciplinesPayload)) {
+                        foreach ($disciplinesPayload as $discipline) {
+                            $discId = $discipline['iddiscipline'] ?? $discipline['id'] ?? null;
+                            if ($discId == $iddiscipline || (string)$discId === (string)$iddiscipline) {
+                                $disciplineAbv = $discipline['abv_discipline'] ?? null;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération de l\'abréviation de la discipline: ' . $e->getMessage());
+        }
+        
+        $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true);
+        
         // Préparer toutes les données d'inscription
         $inscriptionData = [
             'user_id' => $user_id,
@@ -1429,14 +1497,22 @@ class ConcoursController {
             'categorie_classement' => $_POST['categorie_classement'] ?? null,
             'arme' => $_POST['arme'] ?? null,
             'mobilite_reduite' => isset($_POST['mobilite_reduite']) ? (int)$_POST['mobilite_reduite'] : 0,
-            'distance' => isset($_POST['distance']) && $_POST['distance'] !== '' ? (int)$_POST['distance'] : null,
             'numero_tir' => $numero_tir,
             'duel' => isset($_POST['duel']) ? (int)$_POST['duel'] : 0,
-            'blason' => isset($_POST['blason']) && $_POST['blason'] !== '' ? (int)$_POST['blason'] : null,
             'trispot' => isset($_POST['trispot']) ? (int)$_POST['trispot'] : 0,
             'tarif_competition' => $_POST['tarif_competition'] ?? null,
             'mode_paiement' => $_POST['mode_paiement'] ?? 'Non payé'
         ];
+        
+        // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason
+        if ($isNature3DOrCampagne) {
+            $inscriptionData['piquet'] = !empty($_POST['piquet']) ? $_POST['piquet'] : null;
+            // Pas de champ blason pour ces disciplines
+        } else {
+            // Pour les autres disciplines : utiliser distance et blason
+            $inscriptionData['distance'] = isset($_POST['distance']) && $_POST['distance'] !== '' ? (int)$_POST['distance'] : null;
+            $inscriptionData['blason'] = isset($_POST['blason']) && $_POST['blason'] !== '' ? (int)$_POST['blason'] : null;
+        }
 
         // VÉRIFICATION FINALE : Ne JAMAIS appeler l'API si un doublon a été détecté
         if ($doublonDetecte === true) {

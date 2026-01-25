@@ -260,6 +260,10 @@
                         </div>
                     </div>
                     
+                    <?php
+                    // Déterminer si c'est une discipline 3D, Nature ou Campagne (abv_discipline = "3", "N" ou "C")
+                    $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true);
+                    ?>
                     <div class="row">
                         <div class="col-md-3 mb-3">
                             <div class="form-check mt-4">
@@ -267,19 +271,33 @@
                                 <label for="mobilite_reduite" class="form-check-label">Mobilité réduite</label>
                             </div>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="distance" class="form-label">Distance</label>
-                            <select id="distance" class="form-control">
-                                <option value="">Sélectionner</option>
-                                <?php if (!empty($distancesTir)): ?>
-                                    <?php foreach ($distancesTir as $distance): ?>
-                                        <option value="<?= htmlspecialchars($distance['distance_valeur'] ?? '') ?>">
-                                            <?= htmlspecialchars($distance['lb_distance'] ?? '') ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </select>
-                        </div>
+                        <?php if ($isNature3DOrCampagne): ?>
+                            <!-- Pour les disciplines 3D, Nature et Campagne : afficher Piquet au lieu de Distance -->
+                            <div class="col-md-3 mb-3">
+                                <label for="piquet" class="form-label">Piquet</label>
+                                <select id="piquet" name="piquet" class="form-control">
+                                    <option value="">Sélectionner</option>
+                                    <option value="rouge">Rouge</option>
+                                    <option value="bleu">Bleu</option>
+                                    <option value="blanc">Blanc</option>
+                                </select>
+                            </div>
+                        <?php else: ?>
+                            <!-- Pour les autres disciplines : afficher Distance normalement -->
+                            <div class="col-md-3 mb-3">
+                                <label for="distance" class="form-label">Distance</label>
+                                <select id="distance" class="form-control">
+                                    <option value="">Sélectionner</option>
+                                    <?php if (!empty($distancesTir)): ?>
+                                        <?php foreach ($distancesTir as $distance): ?>
+                                            <option value="<?= htmlspecialchars($distance['distance_valeur'] ?? '') ?>">
+                                                <?= htmlspecialchars($distance['lb_distance'] ?? '') ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                        <?php endif; ?>
                         <div class="col-md-3 mb-3">
                             <label for="numero_tir" class="form-label">N° Tir</label>
                             <select id="numero_tir" class="form-control">
@@ -296,10 +314,13 @@
                                 ?>
                             </select>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="blason" class="form-label">Blason</label>
-                            <input type="number" id="blason" class="form-control" min="0" placeholder="Ex: 40">
-                        </div>
+                        <?php if (!$isNature3DOrCampagne): ?>
+                            <!-- Le champ Blason n'existe pas pour les disciplines 3D, Nature et Campagne -->
+                            <div class="col-md-3 mb-3">
+                                <label for="blason" class="form-label">Blason</label>
+                                <input type="number" id="blason" class="form-control" min="0" placeholder="Ex: 40">
+                            </div>
+                        <?php endif; ?>
                     </div>
                     
                     <div class="row">
@@ -359,5 +380,7 @@ const distancesTir = <?= json_encode($distancesTir ?? [], JSON_UNESCAPED_UNICODE
 const concoursDiscipline = <?= json_encode(is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null)) ?>;
 const concoursTypeCompetition = <?= json_encode(is_object($concours) ? ($concours->type_competition ?? null) : ($concours['type_competition'] ?? null)) ?>;
 const concoursNombreDepart = <?= json_encode(is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null)) ?>;
+const disciplineAbv = <?= json_encode($disciplineAbv ?? null) ?>;
+const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)) ?>;
 </script>
 <script src="/public/assets/js/concours-inscription.js"></script>

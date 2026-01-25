@@ -144,15 +144,28 @@ window.showConfirmModal = function(archer) {
                         <label for="mobilite_reduite" class="form-check-label">Mobilité réduite</label>
                     </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label for="distance" class="form-label">Distance</label>
-                    <select id="distance" class="form-control">
-                        <option value="">Sélectionner</option>
-                        ${typeof distancesTir !== 'undefined' && distancesTir && distancesTir.length > 0 ? distancesTir.map(distance => 
-                            `<option value="${distance.distance_valeur || distance.valeur || ''}">${distance.lb_distance || distance.name || distance.nom || ''}</option>`
-                        ).join('') : ''}
-                    </select>
-                </div>
+                ${typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne ? 
+                    // Pour les disciplines 3D, Nature et Campagne : afficher Piquet
+                    `<div class="col-md-3 mb-3">
+                        <label for="piquet" class="form-label">Piquet</label>
+                        <select id="piquet" name="piquet" class="form-control">
+                            <option value="">Sélectionner</option>
+                            <option value="rouge">Rouge</option>
+                            <option value="bleu">Bleu</option>
+                            <option value="blanc">Blanc</option>
+                        </select>
+                    </div>` :
+                    // Pour les autres disciplines : afficher Distance
+                    `<div class="col-md-3 mb-3">
+                        <label for="distance" class="form-label">Distance</label>
+                        <select id="distance" class="form-control">
+                            <option value="">Sélectionner</option>
+                            ${typeof distancesTir !== 'undefined' && distancesTir && distancesTir.length > 0 ? distancesTir.map(distance => 
+                                `<option value="${distance.distance_valeur || distance.valeur || ''}">${distance.lb_distance || distance.name || distance.nom || ''}</option>`
+                            ).join('') : ''}
+                        </select>
+                    </div>`
+                }
                 <div class="col-md-3 mb-3">
                     <label for="numero_tir" class="form-label">N° Tir</label>
                     <select id="numero_tir" class="form-control">
@@ -163,10 +176,15 @@ window.showConfirmModal = function(archer) {
                             ).join('') : ''}
                     </select>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label for="blason" class="form-label">Blason</label>
-                    <input type="number" id="blason" class="form-control" min="0" placeholder="Ex: 40">
-                </div>
+                ${typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne ? 
+                    // Pas de champ Blason pour les disciplines 3D, Nature et Campagne
+                    '' :
+                    // Pour les autres disciplines : afficher Blason
+                    `<div class="col-md-3 mb-3">
+                        <label for="blason" class="form-label">Blason</label>
+                        <input type="number" id="blason" class="form-control" min="0" placeholder="Ex: 40">
+                    </div>`
+                }
             </div>
             
             <div class="row">
@@ -592,13 +610,23 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
         console.log('Données complètes:', JSON.stringify(data, null, 2));
         
         if (data.success && data.data) {
-            const distanceSelect = document.getElementById('distance');
-            const blasonInput = document.getElementById('blason');
+            const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+            const distanceSelect = !isNature ? document.getElementById('distance') : null;
+            const piquetSelect = isNature ? document.getElementById('piquet') : null;
+            const blasonInput = !isNature ? document.getElementById('blason') : null;
             
             console.log('Éléments DOM:', {
                 distanceSelect: !!distanceSelect,
-                blasonInput: !!blasonInput
+                piquetSelect: !!piquetSelect,
+                blasonInput: !!blasonInput,
+                isNature: isNature
             });
+            
+            // Pour les disciplines 3D, Nature et Campagne, on ne remplit pas distance/blason
+            if (isNature) {
+                console.log('Discipline 3D/Nature/Campagne détectée - pas de remplissage automatique distance/blason');
+                return;
+            }
             
             if (!distanceSelect) {
                 console.error('✗ Select de distance non trouvé dans le DOM');
@@ -726,14 +754,18 @@ function getBlasonFromAPI(iddiscipline, abvCategorie, distance) {
 // Fonction de test pour vérifier et forcer le remplissage
 function testAndForceFillDistanceBlason() {
     console.log('=== TEST: Vérification du remplissage automatique ===');
+    const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
     const categorieSelect = document.getElementById('categorie_classement');
-    const distanceSelect = document.getElementById('distance');
-    const blasonInput = document.getElementById('blason');
+    const distanceSelect = !isNature ? document.getElementById('distance') : null;
+    const piquetSelect = isNature ? document.getElementById('piquet') : null;
+    const blasonInput = !isNature ? document.getElementById('blason') : null;
     
     console.log('Éléments DOM:', {
         categorieSelect: !!categorieSelect,
         distanceSelect: !!distanceSelect,
+        piquetSelect: !!piquetSelect,
         blasonInput: !!blasonInput,
+        isNature: isNature,
         categorieValue: categorieSelect ? categorieSelect.value : 'N/A'
     });
     
@@ -741,6 +773,12 @@ function testAndForceFillDistanceBlason() {
         concoursDiscipline: typeof concoursDiscipline !== 'undefined' ? concoursDiscipline : 'undefined',
         concoursTypeCompetition: typeof concoursTypeCompetition !== 'undefined' ? concoursTypeCompetition : 'undefined'
     });
+    
+    // Pour les disciplines 3D, Nature et Campagne, on ne remplit pas distance/blason
+    if (isNature) {
+        console.log('Discipline 3D/Nature/Campagne détectée - pas de remplissage automatique distance/blason');
+        return;
+    }
     
     if (categorieSelect && categorieSelect.value && 
         typeof concoursDiscipline !== 'undefined' && concoursDiscipline !== null &&
@@ -843,9 +881,10 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('search-results container introuvable');
     }
     
-    // Écouter le changement de distance pour renseigner automatiquement le blason
-    const distanceSelect = document.getElementById('distance');
-    if (distanceSelect) {
+    // Écouter le changement de distance pour renseigner automatiquement le blason (seulement pour les disciplines non-3D/Nature/Campagne)
+    const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+    const distanceSelect = !isNature ? document.getElementById('distance') : null;
+    if (distanceSelect && !isNature) {
         distanceSelect.addEventListener('change', function() {
             const distance = this.value;
             const blasonInput = document.getElementById('blason');
@@ -1722,10 +1761,15 @@ function proceedWithInscriptionSubmission() {
     const categorieClassement = document.getElementById('categorie_classement')?.value || null;
     const arme = document.getElementById('arme')?.value || null;
     const mobiliteReduite = document.getElementById('mobilite_reduite')?.checked ? 1 : 0;
-    const distance = document.getElementById('distance')?.value ? parseInt(document.getElementById('distance').value) : null;
+    
+    // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason
+    const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+    const distance = !isNature && document.getElementById('distance')?.value ? parseInt(document.getElementById('distance').value) : null;
+    const piquet = isNature ? (document.getElementById('piquet')?.value || null) : null;
+    const blason = !isNature && document.getElementById('blason')?.value ? parseInt(document.getElementById('blason').value) : null;
+    
     const numeroTir = document.getElementById('numero_tir')?.value ? parseInt(document.getElementById('numero_tir').value) : null;
     const duel = document.getElementById('duel')?.checked ? 1 : 0;
-    const blason = document.getElementById('blason')?.value ? parseInt(document.getElementById('blason').value) : null;
     const trispot = document.getElementById('trispot')?.checked ? 1 : 0;
     const tarifCompetition = document.getElementById('tarif_competition')?.value || null;
     const modePaiement = document.getElementById('mode_paiement')?.value || 'Non payé';
@@ -1756,6 +1800,7 @@ function proceedWithInscriptionSubmission() {
     }
     console.log('numeroDepartInt final:', numeroDepartInt);
     
+    // Construire les champs selon le type de discipline
     const fields = {
         'user_id': userId,
         'numero_depart': numeroDepartInt,
@@ -1768,14 +1813,20 @@ function proceedWithInscriptionSubmission() {
         'categorie_classement': categorieClassement,
         'arme': arme,
         'mobilite_reduite': mobiliteReduite,
-        'distance': distance,
         'numero_tir': numeroTir,
         'duel': duel,
-        'blason': blason,
         'trispot': trispot,
         'tarif_competition': tarifCompetition,
         'mode_paiement': modePaiement
     };
+    
+    // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason
+    if (isNature) {
+        fields['piquet'] = piquet;
+    } else {
+        fields['distance'] = distance;
+        fields['blason'] = blason;
+    }
 
     for (const [name, value] of Object.entries(fields)) {
         // Traitement spécial pour numero_depart : toujours l'envoyer s'il a une valeur valide
