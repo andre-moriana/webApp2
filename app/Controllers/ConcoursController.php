@@ -696,6 +696,31 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des niveaux de championnat: ' . $e->getMessage());
         }
         
+        // Récupérer l'abréviation de la discipline pour déterminer si c'est 3D, Nature ou Campagne
+        $disciplineAbv = null;
+        try {
+            $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+            if ($iddiscipline) {
+                $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+                $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+                if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                    $disciplinesPayload = $disciplinesPayload['data'];
+                }
+                
+                if (is_array($disciplinesPayload)) {
+                    foreach ($disciplinesPayload as $discipline) {
+                        $discId = $discipline['iddiscipline'] ?? $discipline['id'] ?? null;
+                        if ($discId == $iddiscipline || (string)$discId === (string)$iddiscipline) {
+                            $disciplineAbv = $discipline['abv_discipline'] ?? null;
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // Ignorer les erreurs
+        }
+        
         $title = 'Détails du concours - Portail Archers de Gémenos';
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/show.php';
@@ -1511,7 +1536,6 @@ class ConcoursController {
             } else {
                 $inscriptionData['piquet'] = null;
             }
-            error_log("DEBUG piquet: " . var_export($inscriptionData['piquet'], true));
             // Pas de champ blason, duel ni trispot pour ces disciplines
         } else {
             // Pour les autres disciplines : utiliser distance, blason, duel et trispot

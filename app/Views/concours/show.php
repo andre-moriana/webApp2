@@ -148,6 +148,10 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
 </div>
 
 <!-- Liste des inscrits -->
+<?php
+// Déterminer si c'est une discipline 3D, Nature ou Campagne (abv_discipline = "3", "N" ou "C")
+$isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true);
+?>
 <div class="inscriptions-section">
     <h2>Liste des inscrits</h2>
     
@@ -164,6 +168,12 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                             <th>Club</th>
                             <th>Départ</th>
                             <th>N°Tir</th>
+                            <?php if ($isNature3DOrCampagne): ?>
+                                <th>Piquet</th>
+                            <?php else: ?>
+                                <th>Distance</th>
+                                <th>Blason</th>
+                            <?php endif; ?>
                             <th>Date d'inscription</th>
                             <th>Actions</th>
                         </tr>
@@ -174,22 +184,41 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
                         foreach ($inscriptions as $inscription):
                             $userId = $inscription['user_id'] ?? null;
                             $user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
+                            
+                            // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
+                            $piquetColorRaw = $inscription['piquet'] ?? null;
+                            $piquetColor = null;
+                            $rowStyle = '';
+                            
+                            if ($piquetColorRaw && $piquetColorRaw !== '') {
+                                $piquetColor = trim(strtolower($piquetColorRaw));
+                                $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                                if (isset($colors[$piquetColor])) {
+                                    $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
+                                }
+                            }
                        ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
-                                <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
-                                <td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>>
                                     <?php 
                                     // Afficher le champ "name" (nom complet) du club comme demandé
                                     $clubName = $inscription['club_name'] ?? $inscription['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
                                     echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
-                                <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
-                                <td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
+                                <?php if ($isNature3DOrCampagne): ?>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($piquetColor ? ucfirst($piquetColor) : 'N/A') ?></td>
+                                <?php else: ?>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
+                                <?php endif; ?>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
                                         <i class="fas fa-trash"></i> Retirer
                                     </button>
