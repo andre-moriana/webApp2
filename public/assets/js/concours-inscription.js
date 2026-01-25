@@ -2044,21 +2044,26 @@ window.editInscription = function(inscriptionId) {
                 
                 const creationRenouvellementSelect = document.getElementById('edit-creation_renouvellement');
                 if (creationRenouvellementSelect) {
-                    // Convertir la valeur numérique en lettre (0 ou null = '', 1 = 'C', 2 = 'R' ou directement 'C'/'R')
+                    // Le champ est maintenant CHAR en base - accepter "C" ou "R" directement
                     let creationRenouvellementValue = '';
                     const rawValue = inscription.creation_renouvellement;
                     
-                    if (rawValue !== null && rawValue !== undefined) {
+                    if (rawValue !== null && rawValue !== undefined && rawValue !== '') {
                         if (typeof rawValue === 'string') {
                             // Si c'est déjà une chaîne, utiliser directement (C ou R)
-                            creationRenouvellementValue = rawValue.toUpperCase().trim();
+                            const trimmed = rawValue.toUpperCase().trim();
+                            if (trimmed === 'C' || trimmed === 'R') {
+                                creationRenouvellementValue = trimmed;
+                            }
                         } else if (typeof rawValue === 'number') {
-                            // Si c'est un nombre, convertir : 1 = C, 2 = R, 0 ou autre = ''
+                            // Gérer les anciennes valeurs numériques (migration depuis INT vers CHAR)
+                            // 1 = C, 2 = R, 0 ou autre = '' (valeur invalide, sera NULL en base)
                             if (rawValue === 1) {
                                 creationRenouvellementValue = 'C';
                             } else if (rawValue === 2) {
                                 creationRenouvellementValue = 'R';
                             }
+                            // 0 ou autre valeur numérique = '' (sera NULL en base)
                         }
                     }
                     
@@ -2070,10 +2075,17 @@ window.editInscription = function(inscriptionId) {
                 
                 const departSelect = document.getElementById('edit-depart-select');
                 if (departSelect) {
-                    departSelect.value = inscription.numero_depart || '';
+                    // numero_depart est un entier, mais les options du select utilisent (index + 1)
+                    const numeroDepart = inscription.numero_depart;
+                    if (numeroDepart !== null && numeroDepart !== undefined && numeroDepart !== '') {
+                        departSelect.value = numeroDepart.toString();
+                    } else {
+                        departSelect.value = '';
+                    }
                     console.log('departSelect.value défini à:', departSelect.value, '(inscription.numero_depart:', inscription.numero_depart, ')');
                 } else {
-                    console.error('edit-depart-select non trouvé');
+                    // Le champ peut ne pas exister si $departs est vide - ce n'est pas une erreur critique
+                    console.warn('edit-depart-select non trouvé (peut être normal si aucun départ disponible)');
                 }
                 
                 const categorieSelect = document.getElementById('edit-categorie_classement');
@@ -2230,8 +2242,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 credentials: 'include',
                 body: JSON.stringify(updateData)
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Réponse PUT reçue, status:', response.status);
+                if (!response.ok) {
+                    // Essayer de lire le message d'erreur depuis la réponse
+                    return response.json().then(data => {
+                        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                    }).catch(() => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Données de mise à jour reçues:', data);
                 if (data.success) {
                     // Fermer la modale
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editInscriptionModal'));
@@ -2245,8 +2269,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Erreur:', error);
-                alert('Erreur lors de la mise à jour: ' + error.message);
+                console.error('Erreur lors de la mise à jour:', error);
+                alert('Erreur lors de la mise à jour: ' + (error.message || 'Erreur inconnue'));
             });
         });
     }
