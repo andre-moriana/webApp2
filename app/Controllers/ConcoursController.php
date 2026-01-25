@@ -1229,10 +1229,52 @@ class ConcoursController {
             header("Location: /concours/{$concoursId}/inscription");
             exit;
         }
+        
+        // Récupérer les valeurs normalisées
+        $numero_depart = isset($_POST['numero_depart']) && $_POST['numero_depart'] !== '' ? (int)$_POST['numero_depart'] : null;
+        $numero_tir = isset($_POST['numero_tir']) && $_POST['numero_tir'] !== '' ? (int)$_POST['numero_tir'] : null;
+        
+        // Vérifier si l'archer n'est pas déjà inscrit pour le même numéro de départ et numéro de tir
+        try {
+            $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
+            $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+            
+            if (is_array($inscriptions)) {
+                foreach ($inscriptions as $inscription) {
+                    // Vérifier si c'est le même utilisateur
+                    if (isset($inscription['user_id']) && (int)$inscription['user_id'] === (int)$user_id) {
+                        $insc_numero_depart = isset($inscription['numero_depart']) ? (int)$inscription['numero_depart'] : null;
+                        $insc_numero_tir = isset($inscription['numero_tir']) ? (int)$inscription['numero_tir'] : null;
+                        
+                        // Si les deux valeurs sont fournies, vérifier la combinaison exacte
+                        if ($numero_depart !== null && $numero_tir !== null) {
+                            if ($insc_numero_depart === $numero_depart && $insc_numero_tir === $numero_tir) {
+                                $_SESSION['error'] = "Cet archer est déjà inscrit au départ $numero_depart avec le numéro de tir $numero_tir pour ce concours.";
+                                header("Location: /concours/{$concoursId}/inscription");
+                                exit;
+                            }
+                        } elseif ($numero_depart !== null) {
+                            // Si seulement le numéro de départ est fourni, vérifier uniquement le numéro de départ
+                            // (pour compatibilité avec les anciennes inscriptions qui n'ont pas de numéro de tir)
+                            if ($insc_numero_depart === $numero_depart && ($insc_numero_tir === null || $insc_numero_tir === 0)) {
+                                $_SESSION['error'] = "Cet archer est déjà inscrit au départ $numero_depart pour ce concours.";
+                                header("Location: /concours/{$concoursId}/inscription");
+                                exit;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // En cas d'erreur lors de la récupération des inscriptions, logger mais continuer
+            // (pour ne pas bloquer l'inscription si la vérification échoue)
+            error_log("Erreur lors de la vérification de doublon: " . $e->getMessage());
+        }
+        
         // Préparer toutes les données d'inscription
         $inscriptionData = [
             'user_id' => $user_id,
-            'numero_depart' => isset($_POST['numero_depart']) && $_POST['numero_depart'] !== '' ? (int)$_POST['numero_depart'] : null,
+            'numero_depart' => $numero_depart,
             'numero_licence' => !empty($_POST['numero_licence']) ? $_POST['numero_licence'] : null,
             'id_club' => !empty($_POST['id_club']) ? $_POST['id_club'] : null,
             'saison' => $_POST['saison'] ?? null,
@@ -1243,7 +1285,7 @@ class ConcoursController {
             'arme' => $_POST['arme'] ?? null,
             'mobilite_reduite' => isset($_POST['mobilite_reduite']) ? (int)$_POST['mobilite_reduite'] : 0,
             'distance' => isset($_POST['distance']) && $_POST['distance'] !== '' ? (int)$_POST['distance'] : null,
-            'numero_tir' => isset($_POST['numero_tir']) && $_POST['numero_tir'] !== '' ? (int)$_POST['numero_tir'] : null,
+            'numero_tir' => $numero_tir,
             'duel' => isset($_POST['duel']) ? (int)$_POST['duel'] : 0,
             'blason' => isset($_POST['blason']) && $_POST['blason'] !== '' ? (int)$_POST['blason'] : null,
             'trispot' => isset($_POST['trispot']) ? (int)$_POST['trispot'] : 0,
