@@ -1250,8 +1250,9 @@ class ConcoursController {
             exit;
         }
         
-        // Vérifier si l'archer n'est pas déjà inscrit pour le même numéro de départ
-        // Un archer ne peut pas être inscrit 2 fois pour le même départ (peu importe le numero_tir)
+        // Vérifier si l'archer n'est pas déjà inscrit pour le même numéro de départ OU le même numéro de tir
+        // Un archer ne peut pas être inscrit 2 fois pour le même départ
+        // Un archer ne peut pas être inscrit 2 fois pour le même numéro de tir
         $doublonDetecte = false;
         $messageErreur = '';
         
@@ -1302,12 +1303,20 @@ class ConcoursController {
                 
                 error_log("Inscription existante trouvée - user_id: $insc_user_id, numero_depart: " . var_export($insc_numero_depart, true) . ", numero_tir: " . var_export($insc_numero_tir, true));
                 
-                // Vérifier uniquement le numero_depart : un archer ne peut pas être inscrit 2 fois pour le même départ
-                // Peu importe le numero_tir
-                if ($insc_numero_depart === $numero_depart) {
+                // Vérifier le numero_depart : un archer ne peut pas être inscrit 2 fois pour le même départ
+                if ($insc_numero_depart !== null && $insc_numero_depart === $numero_depart) {
                     $doublonDetecte = true;
                     $messageErreur = "Cet archer est déjà inscrit au départ $numero_depart pour ce concours.";
                     error_log("DOUBLON DÉTECTÉ - L'archer est déjà inscrit au départ $numero_depart");
+                    break; // Sortir de la boucle
+                }
+                
+                // Vérifier le numero_tir : un archer ne peut pas être inscrit 2 fois pour le même numéro de tir
+                // (seulement si numero_tir est fourni dans la nouvelle inscription)
+                if ($numero_tir !== null && $insc_numero_tir !== null && $insc_numero_tir === $numero_tir) {
+                    $doublonDetecte = true;
+                    $messageErreur = "Cet archer est déjà inscrit avec le numéro de tir $numero_tir pour ce concours.";
+                    error_log("DOUBLON DÉTECTÉ - L'archer est déjà inscrit avec le numéro de tir $numero_tir");
                     break; // Sortir de la boucle
                 }
             }
