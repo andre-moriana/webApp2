@@ -2233,13 +2233,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Envoyer la requête de mise à jour
-            // Essayer d'abord avec PUT, puis avec POST si nécessaire
+            // Essayer d'abord avec PUT directement
             fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-HTTP-Method-Override': 'PUT'
+                    'Accept': 'application/json'
                 },
                 credentials: 'include',
                 body: JSON.stringify(updateData)
