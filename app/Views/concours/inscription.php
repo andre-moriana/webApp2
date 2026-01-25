@@ -323,20 +323,23 @@
                         <?php endif; ?>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="form-check mt-4">
-                                <input type="checkbox" id="duel" class="form-check-input">
-                                <label for="duel" class="form-check-label">Duel</label>
+                    <?php if (!$isNature3DOrCampagne): ?>
+                        <!-- Les champs Duel et Trispot n'existent pas pour les disciplines 3D, Nature et Campagne -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    <input type="checkbox" id="duel" class="form-check-input">
+                                    <label for="duel" class="form-check-label">Duel</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    <input type="checkbox" id="trispot" class="form-check-input">
+                                    <label for="trispot" class="form-check-label">Trispot</label>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="form-check mt-4">
-                                <input type="checkbox" id="trispot" class="form-check-input">
-                                <label for="trispot" class="form-check-label">Trispot</label>
-                            </div>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                     
                     <h6 class="mt-4 mb-3">Paiement</h6>
                     

@@ -187,20 +187,24 @@ window.showConfirmModal = function(archer) {
                 }
             </div>
             
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <div class="form-check mt-4">
-                        <input type="checkbox" id="duel" class="form-check-input">
-                        <label for="duel" class="form-check-label">Duel</label>
+            ${typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne ? 
+                // Les champs Duel et Trispot n'existent pas pour les disciplines 3D, Nature et Campagne
+                '' :
+                `<div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" id="duel" class="form-check-input">
+                            <label for="duel" class="form-check-label">Duel</label>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <div class="form-check mt-4">
-                        <input type="checkbox" id="trispot" class="form-check-input">
-                        <label for="trispot" class="form-check-label">Trispot</label>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" id="trispot" class="form-check-input">
+                            <label for="trispot" class="form-check-label">Trispot</label>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </div>`
+            }
             
             <h6 class="mt-4 mb-3">Paiement</h6>
             
@@ -1769,8 +1773,11 @@ function proceedWithInscriptionSubmission() {
     const blason = !isNature && document.getElementById('blason')?.value ? parseInt(document.getElementById('blason').value) : null;
     
     const numeroTir = document.getElementById('numero_tir')?.value ? parseInt(document.getElementById('numero_tir').value) : null;
-    const duel = document.getElementById('duel')?.checked ? 1 : 0;
-    const trispot = document.getElementById('trispot')?.checked ? 1 : 0;
+    
+    // Pour les disciplines 3D, Nature et Campagne : les champs duel et trispot n'existent pas
+    const duel = !isNature && document.getElementById('duel') ? (document.getElementById('duel').checked ? 1 : 0) : null;
+    const trispot = !isNature && document.getElementById('trispot') ? (document.getElementById('trispot').checked ? 1 : 0) : null;
+    
     const tarifCompetition = document.getElementById('tarif_competition')?.value || null;
     const modePaiement = document.getElementById('mode_paiement')?.value || 'Non payé';
 
@@ -1814,18 +1821,19 @@ function proceedWithInscriptionSubmission() {
         'arme': arme,
         'mobilite_reduite': mobiliteReduite,
         'numero_tir': numeroTir,
-        'duel': duel,
-        'trispot': trispot,
         'tarif_competition': tarifCompetition,
         'mode_paiement': modePaiement
     };
     
-    // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason
+    // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason, pas de duel/trispot
     if (isNature) {
         fields['piquet'] = piquet;
+        // Pas de duel ni trispot pour ces disciplines
     } else {
         fields['distance'] = distance;
         fields['blason'] = blason;
+        fields['duel'] = duel;
+        fields['trispot'] = trispot;
     }
 
     for (const [name, value] of Object.entries(fields)) {
