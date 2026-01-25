@@ -104,10 +104,36 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
         </div>
     </div>
 
-    <!-- Nombre cibles, départ, tireurs -->
+    <!-- Nombre cibles/pelotons, départ, tireurs -->
+    <?php
+    // Fonction helper pour déterminer si c'est un concours de type nature 3D ou campagne
+    function isNature3DOrCampagneShow($disciplineId, $disciplines) {
+        if (!$disciplineId || !is_array($disciplines)) {
+            return false;
+        }
+        foreach ($disciplines as $discipline) {
+            $id = $discipline['iddiscipline'] ?? $discipline['id'] ?? null;
+            if ($id == $disciplineId || (string)$id === (string)$disciplineId) {
+                $name = strtolower($discipline['lb_discipline'] ?? $discipline['name'] ?? '');
+                return (strpos($name, 'nature') !== false || 
+                        strpos($name, '3d') !== false || 
+                        strpos($name, 'campagne') !== false);
+            }
+        }
+        return false;
+    }
+    
+    // Récupérer l'ID de la discipline
+    $selectedDisciplineId = $concours->discipline ?? null;
+    $isNature3DOrCampagne = isNature3DOrCampagneShow($selectedDisciplineId, $disciplines ?? []);
+    
+    // Labels conditionnels
+    $labelCibles = $isNature3DOrCampagne ? 'Nombre pelotons' : 'Nombre cibles';
+    $labelTireurs = $isNature3DOrCampagne ? 'Nombre tireurs par peloton' : 'Nombre tireurs par cibles';
+    ?>
     <div class="numeric-fields-row">
         <div class="form-group">
-            <label><strong>Nombre cibles :</strong></label>
+            <label><strong><?= htmlspecialchars($labelCibles) ?> :</strong></label>
             <p><?= htmlspecialchars($concours->nombre_cibles ?? 0) ?></p>
         </div>
         <div class="form-group">
@@ -115,7 +141,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
             <p><?= htmlspecialchars($concours->nombre_depart ?? 1) ?></p>
         </div>
         <div class="form-group">
-            <label><strong>Nombre tireurs par cibles :</strong></label>
+            <label><strong><?= htmlspecialchars($labelTireurs) ?> :</strong></label>
             <p><?= htmlspecialchars($concours->nombre_tireurs_par_cibles ?? 0) ?></p>
         </div>
     </div>
