@@ -17,6 +17,9 @@ class Router {
         // Route d'inscription avant les autres routes avec {id}
         $this->addRoute("GET", "/concours/{id}/inscription", "ConcoursController@inscription");
         $this->addRoute("POST", "/concours/{id}/inscription", "ConcoursController@storeInscription");
+        // Route pour la mise à jour d'inscription (POST avec X-HTTP-Method-Override ou PUT)
+        $this->addRoute("POST", "/concours/{id}/inscription/{inscriptionId}/update", "ConcoursController@updateInscription");
+        $this->addRoute("PUT", "/concours/{id}/inscription/{inscriptionId}/update", "ConcoursController@updateInscription");
         // Routes avec {id} après les routes spécifiques
         $this->addRoute("GET", "/concours/show/{id}", "ConcoursController@show");
         $this->addRoute("GET", "/concours/edit/{id}", "ConcoursController@edit");
@@ -190,6 +193,10 @@ class Router {
         $this->addRoute("GET", "/api/concours/blason-recommandee", "ApiController@proxyConcoursBlasonRecommandee");
         $this->addRoute("GET", "/api/concours/{id}/inscription/{userId}", "ApiController@proxyConcoursInscription");
         $this->addRoute("DELETE", "/api/concours/{id}/inscription/{userId}", "ApiController@proxyConcoursInscription");
+        // Route pour la mise à jour d'inscription (POST avec X-HTTP-Method-Override: PUT ou PUT direct)
+        $this->addRoute("POST", "/api/concours/{id}/inscription/{inscriptionId}", "ApiController@proxyConcoursInscriptionUpdate");
+        $this->addRoute("PUT", "/api/concours/{id}/inscription/{inscriptionId}", "ApiController@proxyConcoursInscriptionUpdate");
+        $this->addRoute("PATCH", "/api/concours/{id}/inscription/{inscriptionId}", "ApiController@proxyConcoursInscriptionUpdate");
         
         // Routes API (protégées)
         $this->addRoute("GET", "/api/documents", "ApiController@documents");

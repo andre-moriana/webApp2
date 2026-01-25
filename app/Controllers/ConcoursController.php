@@ -1587,6 +1587,65 @@ class ConcoursController {
         exit;
     }
 
+    /**
+     * Met à jour une inscription de concours
+     */
+    public function updateInscription($concoursId, $inscriptionId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Content-Type: application/json');
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Non authentifié']);
+            exit;
+        }
+
+        // Vérifier les permissions
+        $clubId = $_SESSION['user']['clubId'] ?? null;
+        PermissionHelper::requirePermission(
+            PermissionService::RESOURCE_USERS_ALL,
+            PermissionService::ACTION_VIEW,
+            $clubId
+        );
+
+        header('Content-Type: application/json');
+
+        try {
+            // Récupérer les données JSON
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+
+            if (!$data) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Données invalides']);
+                exit;
+            }
+
+            // Appel API pour mettre à jour l'inscription
+            $response = $this->apiService->makeRequest("concours/{$concoursId}/inscription/{$inscriptionId}", 'PUT', $data);
+
+            if ($response['success']) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Inscription mise à jour avec succès',
+                    'data' => $response['data'] ?? null
+                ]);
+            } else {
+                $errorMessage = $response['error'] ?? $response['message'] ?? $response['data']['error'] ?? $response['data']['message'] ?? 'Erreur lors de la mise à jour';
+                http_response_code($response['status_code'] ?? 500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => $errorMessage
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur lors de la mise à jour: ' . $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
     // Méthode utilitaire pour récupérer les concours via l'API
     // plus de méthode fetchConcoursFromApi : tout passe par ApiService
 }

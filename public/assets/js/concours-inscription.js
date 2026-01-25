@@ -2249,14 +2249,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateData.trispot = getChecked('edit-trispot') ? 1 : 0;
             }
             
-            // Envoyer la requête de mise à jour
-            // Utiliser POST avec X-HTTP-Method-Override: PUT car certains serveurs ne gèrent pas bien PUT
-            fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+            // Envoyer la requête de mise à jour via le contrôleur PHP (pas directement à l'API)
+            fetch(`/concours/${concoursId}/inscription/${inscriptionId}/update`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-HTTP-Method-Override': 'PUT'
+                    'Accept': 'application/json'
                 },
                 credentials: 'include',
                 body: JSON.stringify(updateData)
