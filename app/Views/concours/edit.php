@@ -117,7 +117,7 @@ window.niveauChampionnatData = <?= json_encode($niveauChampionnat ?? [], JSON_UN
         <div class="form-group">
             <label>Niveau Championnat :</label>
             <div class="niveau-championnat-fields">
-                <select id="niveau_championnat" name="niveau_championnat" required>
+                <select id="niveau_championnat" name="niveau_championnat">
                     <option value="">-- Sélectionner --</option>
                     <?php if (isset($niveauChampionnat) && is_array($niveauChampionnat)): ?>
                         <?php foreach ($niveauChampionnat as $niveau): ?>
