@@ -1231,77 +1231,106 @@ class ConcoursController {
         }
         
         // Récupérer les valeurs normalisées
-        $numero_depart = isset($_POST['numero_depart']) && $_POST['numero_depart'] !== '' ? (int)$_POST['numero_depart'] : null;
-        $numero_tir = isset($_POST['numero_tir']) && $_POST['numero_tir'] !== '' ? (int)$_POST['numero_tir'] : null;
+        // Pour numero_depart : doit être fourni et non vide
+        $numero_depart = null;
+        if (isset($_POST['numero_depart']) && $_POST['numero_depart'] !== '' && $_POST['numero_depart'] !== null) {
+            $numero_depart = (int)$_POST['numero_depart'];
+        }
         
-        // Vérifier si l'archer n'est pas déjà inscrit pour le même numéro de départ et numéro de tir
+        // Pour numero_tir : peut être 0, donc on vérifie seulement si la clé existe
+        $numero_tir = null;
+        if (isset($_POST['numero_tir']) && $_POST['numero_tir'] !== '' && $_POST['numero_tir'] !== null) {
+            $numero_tir = (int)$_POST['numero_tir'];
+        }
+        
+        // Vérifier que numero_depart est fourni (déjà vérifié plus haut, mais on double-vérifie)
+        if ($numero_depart === null) {
+            $_SESSION['error'] = 'Numéro de départ requis';
+            header("Location: /concours/{$concoursId}/inscription");
+            exit;
+        }
+        
+        // Vérifier si l'archer n'est pas déjà inscrit pour le même numéro de départ ET le même numéro de tir
+        // On doit vérifier que cette combinaison exacte n'existe pas déjà pour cet archer
         try {
             $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
             
             // Vérifier que la réponse est valide
             if (!$inscriptionsResponse || !isset($inscriptionsResponse['success']) || !$inscriptionsResponse['success']) {
-                error_log("Erreur lors de la récupération des inscriptions pour la vérification de doublon");
-                // Continuer même si la récupération échoue
-            } else {
-                $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+                error_log("Erreur lors de la récupération des inscriptions pour la vérification de doublon - Réponse invalide");
+                // Si on ne peut pas vérifier, on bloque l'inscription pour sécurité
+                $_SESSION['error'] = 'Impossible de vérifier les inscriptions existantes. Veuillez réessayer.';
+                header("Location: /concours/{$concoursId}/inscription");
+                exit;
+            }
+            
+            $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+            
+            // Normaliser $inscriptions si nécessaire
+            if (!is_array($inscriptions)) {
+                $inscriptions = [];
+            }
+            
+            // Log pour déboguer
+            error_log("=== VÉRIFICATION DOUBLON ===");
+            error_log("user_id: $user_id, numero_depart: " . var_export($numero_depart, true) . ", numero_tir: " . var_export($numero_tir, true));
+            error_log("Nombre d'inscriptions existantes: " . count($inscriptions));
+            
+            // Parcourir toutes les inscriptions existantes pour cet archer
+            foreach ($inscriptions as $inscription) {
+                // Vérifier si c'est le même utilisateur
+                $insc_user_id = isset($inscription['user_id']) ? (int)$inscription['user_id'] : null;
                 
-                // Normaliser $inscriptions si nécessaire
-                if (!is_array($inscriptions)) {
-                    $inscriptions = [];
+                if ($insc_user_id !== (int)$user_id) {
+                    continue; // Ce n'est pas le même utilisateur, passer à la suivante
                 }
                 
-                // Log pour déboguer
-                error_log("Vérification doublon - user_id: $user_id, numero_depart: " . ($numero_depart ?? 'null') . ", numero_tir: " . ($numero_tir ?? 'null'));
-                error_log("Nombre d'inscriptions existantes: " . count($inscriptions));
+                // Normaliser les valeurs de l'inscription existante
+                $insc_numero_depart = null;
+                $insc_numero_tir = null;
                 
-                foreach ($inscriptions as $inscription) {
-                    // Vérifier si c'est le même utilisateur
-                    $insc_user_id = isset($inscription['user_id']) ? (int)$inscription['user_id'] : null;
-                    
-                    if ($insc_user_id === (int)$user_id) {
-                        // Normaliser les valeurs de l'inscription existante
-                        $insc_numero_depart = null;
-                        $insc_numero_tir = null;
-                        
-                        if (isset($inscription['numero_depart']) && $inscription['numero_depart'] !== '' && $inscription['numero_depart'] !== null) {
-                            $insc_numero_depart = (int)$inscription['numero_depart'];
+                if (isset($inscription['numero_depart']) && $inscription['numero_depart'] !== '' && $inscription['numero_depart'] !== null) {
+                    $insc_numero_depart = (int)$inscription['numero_depart'];
+                }
+                
+                if (isset($inscription['numero_tir']) && $inscription['numero_tir'] !== '' && $inscription['numero_tir'] !== null) {
+                    $insc_numero_tir = (int)$inscription['numero_tir'];
+                }
+                
+                error_log("Inscription existante trouvée - user_id: $insc_user_id, numero_depart: " . var_export($insc_numero_depart, true) . ", numero_tir: " . var_export($insc_numero_tir, true));
+                
+                // Vérifier la combinaison exacte numero_depart + numero_tir
+                // On vérifie d'abord que numero_depart correspond
+                if ($insc_numero_depart === $numero_depart) {
+                    // Si numero_tir est fourni dans la nouvelle inscription
+                    if ($numero_tir !== null) {
+                        // Vérifier que numero_tir correspond aussi
+                        if ($insc_numero_tir === $numero_tir) {
+                            error_log("DOUBLON DÉTECTÉ - Combinaison exacte numero_depart=$numero_depart + numero_tir=$numero_tir");
+                            $_SESSION['error'] = "Cet archer est déjà inscrit au départ $numero_depart avec le numéro de tir $numero_tir pour ce concours.";
+                            header("Location: /concours/{$concoursId}/inscription");
+                            exit;
                         }
-                        
-                        if (isset($inscription['numero_tir']) && $inscription['numero_tir'] !== '' && $inscription['numero_tir'] !== null) {
-                            $insc_numero_tir = (int)$inscription['numero_tir'];
-                        }
-                        
-                        // Log pour déboguer
-                        error_log("Inscription existante - user_id: $insc_user_id, numero_depart: " . ($insc_numero_depart ?? 'null') . ", numero_tir: " . ($insc_numero_tir ?? 'null'));
-                        
-                        // Si les deux valeurs sont fournies, vérifier la combinaison exacte
-                        if ($numero_depart !== null && $numero_tir !== null) {
-                            if ($insc_numero_depart === $numero_depart && $insc_numero_tir === $numero_tir) {
-                                error_log("DOUBLON DÉTECTÉ - Combinaison numero_depart + numero_tir");
-                                $_SESSION['error'] = "Cet archer est déjà inscrit au départ $numero_depart avec le numéro de tir $numero_tir pour ce concours.";
-                                header("Location: /concours/{$concoursId}/inscription");
-                                exit;
-                            }
-                        } elseif ($numero_depart !== null) {
-                            // Si seulement le numéro de départ est fourni, vérifier uniquement le numéro de départ
-                            // (pour compatibilité avec les anciennes inscriptions qui n'ont pas de numéro de tir)
-                            if ($insc_numero_depart === $numero_depart && ($insc_numero_tir === null || $insc_numero_tir === 0)) {
-                                error_log("DOUBLON DÉTECTÉ - Seulement numero_depart");
-                                $_SESSION['error'] = "Cet archer est déjà inscrit au départ $numero_depart pour ce concours.";
-                                header("Location: /concours/{$concoursId}/inscription");
-                                exit;
-                            }
+                    } else {
+                        // Si numero_tir n'est pas fourni dans la nouvelle inscription, vérifier que l'inscription existante n'a pas de numero_tir
+                        if ($insc_numero_tir === null || $insc_numero_tir === 0) {
+                            error_log("DOUBLON DÉTECTÉ - Seulement numero_depart=$numero_depart (sans numero_tir)");
+                            $_SESSION['error'] = "Cet archer est déjà inscrit au départ $numero_depart pour ce concours.";
+                            header("Location: /concours/{$concoursId}/inscription");
+                            exit;
                         }
                     }
                 }
-                
-                error_log("Aucun doublon détecté - poursuite de l'inscription");
             }
+            
+            error_log("Aucun doublon détecté - poursuite de l'inscription");
         } catch (Exception $e) {
-            // En cas d'erreur lors de la récupération des inscriptions, logger mais continuer
-            // (pour ne pas bloquer l'inscription si la vérification échoue)
-            error_log("Erreur lors de la vérification de doublon: " . $e->getMessage());
+            // En cas d'erreur lors de la récupération des inscriptions, bloquer l'inscription pour sécurité
+            error_log("ERREUR lors de la vérification de doublon: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
+            $_SESSION['error'] = 'Erreur lors de la vérification des inscriptions existantes. Veuillez réessayer.';
+            header("Location: /concours/{$concoursId}/inscription");
+            exit;
         }
         
         // Préparer toutes les données d'inscription
