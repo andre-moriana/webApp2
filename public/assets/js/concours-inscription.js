@@ -2246,33 +2246,48 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => {
                 console.log('Réponse PUT reçue, status:', response.status);
+                // Vérifier le Content-Type pour savoir si c'est du JSON ou du HTML
+                const contentType = response.headers.get('content-type') || '';
+                const isJson = contentType.includes('application/json');
+                
                 if (!response.ok) {
                     // Essayer de lire le message d'erreur depuis la réponse
-                    return response.json().then(data => {
-                        console.error('Réponse d\'erreur complète:', JSON.stringify(data, null, 2));
-                        const errorMsg = data.error || data.message || `HTTP error! status: ${response.status}`;
-                        if (data.debug) {
-                            console.error('Debug info:', JSON.stringify(data.debug, null, 2));
-                        }
-                        // Afficher les détails dans l'alerte aussi
-                        let fullErrorMsg = errorMsg;
-                        if (data.path) {
-                            fullErrorMsg += `\nPath: ${data.path}`;
-                        }
-                        if (data.method) {
-                            fullErrorMsg += `\nMethod: ${data.method}`;
-                        }
-                        if (data.debug && data.debug.pattern_match) {
-                            fullErrorMsg += `\nPattern match: ${data.debug.pattern_match}`;
-                        }
-                        throw new Error(fullErrorMsg);
-                    }).catch(err => {
-                        if (err.message) {
-                            throw err;
-                        }
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    if (isJson) {
+                        return response.json().then(data => {
+                            console.error('Réponse d\'erreur complète:', JSON.stringify(data, null, 2));
+                            const errorMsg = data.error || data.message || `HTTP error! status: ${response.status}`;
+                            if (data.debug) {
+                                console.error('Debug info:', JSON.stringify(data.debug, null, 2));
+                            }
+                            // Afficher les détails dans l'alerte aussi
+                            let fullErrorMsg = errorMsg;
+                            if (data.path) {
+                                fullErrorMsg += `\nPath: ${data.path}`;
+                            }
+                            if (data.method) {
+                                fullErrorMsg += `\nMethod: ${data.method}`;
+                            }
+                            if (data.debug && data.debug.pattern_match) {
+                                fullErrorMsg += `\nPattern match: ${data.debug.pattern_match}`;
+                            }
+                            throw new Error(fullErrorMsg);
+                        });
+                    } else {
+                        // Si ce n'est pas du JSON, c'est probablement du HTML (erreur PHP)
+                        return response.text().then(html => {
+                            console.error('Réponse HTML reçue au lieu de JSON:', html.substring(0, 500));
+                            throw new Error(`Erreur serveur (${response.status}): Le serveur a retourné du HTML au lieu de JSON. Vérifiez les erreurs PHP.`);
+                        });
+                    }
+                }
+                
+                if (!isJson) {
+                    return response.text().then(html => {
+                        console.error('Réponse HTML reçue au lieu de JSON:', html.substring(0, 500));
+                        throw new Error('Le serveur a retourné du HTML au lieu de JSON');
                     });
                 }
+                
                 return response.json();
             })
             .then(data => {
