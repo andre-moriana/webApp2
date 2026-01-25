@@ -1918,7 +1918,7 @@ function removeInscription(inscriptionId) {
     });
 }
 
-// Fonction pour éditer une inscription - EXACTEMENT comme showConfirmModal
+// Fonction pour éditer une inscription - Charge les données AVANT d'ouvrir la modale
 window.editInscription = function(inscriptionId) {
     if (!concoursId || !inscriptionId) {
         alert('Erreur: Informations manquantes');
@@ -1937,7 +1937,7 @@ window.editInscription = function(inscriptionId) {
         form.dataset.inscriptionId = inscriptionId;
     }
     
-    // Charger les données AVANT d'ouvrir la modale (comme showConfirmModal reçoit l'archer)
+    // CHARGER LES DONNÉES AVANT d'ouvrir la modale
     fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
         method: 'GET',
         headers: {
@@ -1969,75 +1969,76 @@ window.editInscription = function(inscriptionId) {
             return;
         }
         
-        // Fonction pour remplir les champs (comme prefillLockedFields dans showConfirmModal)
-        const fillForm = () => {
-            // Remplir les champs text/select
-            const saisonInput = document.getElementById('edit-saison');
-            if (saisonInput) saisonInput.value = inscription.saison || '';
-            
-            const typeCertificatSelect = document.getElementById('edit-type_certificat_medical');
-            if (typeCertificatSelect) typeCertificatSelect.value = inscription.type_certificat_medical || '';
-            
-            const typeLicenceSelect = document.getElementById('edit-type_licence');
-            if (typeLicenceSelect) typeLicenceSelect.value = inscription.type_licence || '';
-            
-            const creationRenouvellementInput = document.getElementById('edit-creation_renouvellement');
-            if (creationRenouvellementInput) creationRenouvellementInput.value = inscription.creation_renouvellement || '';
-            
-            const departSelect = document.getElementById('edit-depart-select');
-            if (departSelect) departSelect.value = inscription.numero_depart || '';
-            
-            const categorieSelect = document.getElementById('edit-categorie_classement');
-            if (categorieSelect) categorieSelect.value = inscription.categorie_classement || '';
-            
-            const armeSelect = document.getElementById('edit-arme');
-            if (armeSelect) armeSelect.value = inscription.arme || '';
-            
-            const mobiliteReduiteCheckbox = document.getElementById('edit-mobilite_reduite');
-            if (mobiliteReduiteCheckbox) mobiliteReduiteCheckbox.checked = inscription.mobilite_reduite == 1 || inscription.mobilite_reduite === true;
-            
-            if (isNature3DOrCampagne) {
-                const piquetSelect = document.getElementById('edit-piquet');
-                if (piquetSelect) piquetSelect.value = inscription.piquet || '';
-            } else {
-                const distanceSelect = document.getElementById('edit-distance');
-                if (distanceSelect) distanceSelect.value = inscription.distance || '';
-                
-                const blasonInput = document.getElementById('edit-blason');
-                if (blasonInput) blasonInput.value = inscription.blason || '';
-                
-                const duelCheckbox = document.getElementById('edit-duel');
-                if (duelCheckbox) duelCheckbox.checked = inscription.duel == 1 || inscription.duel === true;
-                
-                const trispotCheckbox = document.getElementById('edit-trispot');
-                if (trispotCheckbox) trispotCheckbox.checked = inscription.trispot == 1 || inscription.trispot === true;
-            }
-            
-            const numeroTirSelect = document.getElementById('edit-numero_tir');
-            if (numeroTirSelect) numeroTirSelect.value = inscription.numero_tir || '';
-            
-            const tarifSelect = document.getElementById('edit-tarif_competition');
-            if (tarifSelect) tarifSelect.value = inscription.tarif_competition || '';
-            
-            const modePaiementSelect = document.getElementById('edit-mode_paiement');
-            if (modePaiementSelect) modePaiementSelect.value = inscription.mode_paiement || 'Non payé';
-        };
-        
-        // Ouvrir la modale (comme showConfirmModal)
+        // MAINTENANT que les données sont chargées, ouvrir la modale et remplir
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
             const existingModal = bootstrap.Modal.getInstance(modalElement);
             if (existingModal) {
                 existingModal.dispose();
             }
             const modal = new bootstrap.Modal(modalElement);
+            
+            // Fonction pour remplir les champs
+            const fillForm = () => {
+                const saisonInput = document.getElementById('edit-saison');
+                if (saisonInput) saisonInput.value = inscription.saison || '';
+                
+                const typeCertificatSelect = document.getElementById('edit-type_certificat_medical');
+                if (typeCertificatSelect) typeCertificatSelect.value = inscription.type_certificat_medical || '';
+                
+                const typeLicenceSelect = document.getElementById('edit-type_licence');
+                if (typeLicenceSelect) typeLicenceSelect.value = inscription.type_licence || '';
+                
+                const creationRenouvellementInput = document.getElementById('edit-creation_renouvellement');
+                if (creationRenouvellementInput) creationRenouvellementInput.value = inscription.creation_renouvellement || '';
+                
+                const departSelect = document.getElementById('edit-depart-select');
+                if (departSelect) departSelect.value = inscription.numero_depart || '';
+                
+                const categorieSelect = document.getElementById('edit-categorie_classement');
+                if (categorieSelect) categorieSelect.value = inscription.categorie_classement || '';
+                
+                const armeSelect = document.getElementById('edit-arme');
+                if (armeSelect) armeSelect.value = inscription.arme || '';
+                
+                const mobiliteReduiteCheckbox = document.getElementById('edit-mobilite_reduite');
+                if (mobiliteReduiteCheckbox) mobiliteReduiteCheckbox.checked = inscription.mobilite_reduite == 1 || inscription.mobilite_reduite === true;
+                
+                if (isNature3DOrCampagne) {
+                    const piquetSelect = document.getElementById('edit-piquet');
+                    if (piquetSelect) piquetSelect.value = inscription.piquet || '';
+                } else {
+                    const distanceSelect = document.getElementById('edit-distance');
+                    if (distanceSelect) distanceSelect.value = inscription.distance || '';
+                    
+                    const blasonInput = document.getElementById('edit-blason');
+                    if (blasonInput) blasonInput.value = inscription.blason || '';
+                    
+                    const duelCheckbox = document.getElementById('edit-duel');
+                    if (duelCheckbox) duelCheckbox.checked = inscription.duel == 1 || inscription.duel === true;
+                    
+                    const trispotCheckbox = document.getElementById('edit-trispot');
+                    if (trispotCheckbox) trispotCheckbox.checked = inscription.trispot == 1 || inscription.trispot === true;
+                }
+                
+                const numeroTirSelect = document.getElementById('edit-numero_tir');
+                if (numeroTirSelect) numeroTirSelect.value = inscription.numero_tir || '';
+                
+                const tarifSelect = document.getElementById('edit-tarif_competition');
+                if (tarifSelect) tarifSelect.value = inscription.tarif_competition || '';
+                
+                const modePaiementSelect = document.getElementById('edit-mode_paiement');
+                if (modePaiementSelect) modePaiementSelect.value = inscription.mode_paiement || 'Non payé';
+            };
+            
+            // Ouvrir la modale
             modal.show();
             
-            // Pré-remplir après que la modale soit affichée (EXACTEMENT comme showConfirmModal ligne 525-528)
+            // Remplir après que la modale soit affichée
             setTimeout(() => {
                 fillForm();
             }, 100);
             
-            // Écouter l'événement 'shown.bs.modal' (EXACTEMENT comme showConfirmModal ligne 531-553)
+            // Re-remplir quand la modale est complètement affichée
             modalElement.addEventListener('shown.bs.modal', function() {
                 fillForm();
             }, { once: true });
