@@ -1968,7 +1968,7 @@ window.editInscription = function(inscriptionId) {
         let inscription = null;
         if (data.success && data.data) {
             inscription = data.data;
-            console.log('Inscription extraite depuis data.data');
+            console.log('Inscription extraite depuis data.data:', inscription);
         } else if (data.id) {
             inscription = data;
             console.log('Inscription extraite directement depuis data');
@@ -1984,7 +1984,27 @@ window.editInscription = function(inscriptionId) {
             return;
         }
         
-        console.log('Inscription à charger:', inscription);
+        // Vérifier que inscription n'est pas encore un objet avec success/data
+        if (inscription && typeof inscription === 'object' && inscription.success && inscription.data) {
+            console.log('Inscription contient encore success/data, extraction supplémentaire...');
+            inscription = inscription.data;
+        }
+        
+        console.log('Inscription finale à charger:', inscription);
+        console.log('Type de inscription:', typeof inscription);
+        console.log('Valeurs de l\'inscription:', {
+            id: inscription.id,
+            saison: inscription.saison,
+            type_certificat_medical: inscription.type_certificat_medical,
+            type_licence: inscription.type_licence,
+            numero_depart: inscription.numero_depart,
+            categorie_classement: inscription.categorie_classement,
+            arme: inscription.arme,
+            piquet: inscription.piquet,
+            distance: inscription.distance,
+            blason: inscription.blason,
+            numero_tir: inscription.numero_tir
+        });
         
         // MAINTENANT que les données sont chargées, ouvrir la modale et remplir
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
@@ -1998,55 +2018,102 @@ window.editInscription = function(inscriptionId) {
             // Fonction pour remplir les champs
             const fillForm = () => {
                 console.log('=== fillForm appelée ===');
+                console.log('inscription dans fillForm:', inscription);
+                console.log('inscription.saison:', inscription.saison);
+                console.log('inscription.numero_depart:', inscription.numero_depart);
+                
                 const saisonInput = document.getElementById('edit-saison');
-                if (saisonInput) saisonInput.value = inscription.saison || '';
+                if (saisonInput) {
+                    saisonInput.value = inscription.saison || '';
+                    console.log('saisonInput.value défini à:', saisonInput.value);
+                } else {
+                    console.error('edit-saison non trouvé');
+                }
                 
                 const typeCertificatSelect = document.getElementById('edit-type_certificat_medical');
-                if (typeCertificatSelect) typeCertificatSelect.value = inscription.type_certificat_medical || '';
+                if (typeCertificatSelect) {
+                    typeCertificatSelect.value = inscription.type_certificat_medical || '';
+                    console.log('typeCertificatSelect.value défini à:', typeCertificatSelect.value);
+                }
                 
                 const typeLicenceSelect = document.getElementById('edit-type_licence');
-                if (typeLicenceSelect) typeLicenceSelect.value = inscription.type_licence || '';
+                if (typeLicenceSelect) {
+                    typeLicenceSelect.value = inscription.type_licence || '';
+                    console.log('typeLicenceSelect.value défini à:', typeLicenceSelect.value);
+                }
                 
                 const creationRenouvellementInput = document.getElementById('edit-creation_renouvellement');
-                if (creationRenouvellementInput) creationRenouvellementInput.value = inscription.creation_renouvellement || '';
+                if (creationRenouvellementInput) {
+                    creationRenouvellementInput.value = inscription.creation_renouvellement || '';
+                }
                 
                 const departSelect = document.getElementById('edit-depart-select');
-                if (departSelect) departSelect.value = inscription.numero_depart || '';
+                if (departSelect) {
+                    departSelect.value = inscription.numero_depart || '';
+                    console.log('departSelect.value défini à:', departSelect.value, '(inscription.numero_depart:', inscription.numero_depart, ')');
+                } else {
+                    console.error('edit-depart-select non trouvé');
+                }
                 
                 const categorieSelect = document.getElementById('edit-categorie_classement');
-                if (categorieSelect) categorieSelect.value = inscription.categorie_classement || '';
+                if (categorieSelect) {
+                    categorieSelect.value = inscription.categorie_classement || '';
+                }
                 
                 const armeSelect = document.getElementById('edit-arme');
-                if (armeSelect) armeSelect.value = inscription.arme || '';
+                if (armeSelect) {
+                    armeSelect.value = inscription.arme || '';
+                }
                 
                 const mobiliteReduiteCheckbox = document.getElementById('edit-mobilite_reduite');
-                if (mobiliteReduiteCheckbox) mobiliteReduiteCheckbox.checked = inscription.mobilite_reduite == 1 || inscription.mobilite_reduite === true;
+                if (mobiliteReduiteCheckbox) {
+                    mobiliteReduiteCheckbox.checked = inscription.mobilite_reduite == 1 || inscription.mobilite_reduite === true;
+                }
                 
                 if (isNature3DOrCampagne) {
                     const piquetSelect = document.getElementById('edit-piquet');
-                    if (piquetSelect) piquetSelect.value = inscription.piquet || '';
+                    if (piquetSelect) {
+                        piquetSelect.value = inscription.piquet || '';
+                        console.log('piquetSelect.value défini à:', piquetSelect.value);
+                    }
                 } else {
                     const distanceSelect = document.getElementById('edit-distance');
-                    if (distanceSelect) distanceSelect.value = inscription.distance || '';
+                    if (distanceSelect) {
+                        distanceSelect.value = inscription.distance || '';
+                    }
                     
                     const blasonInput = document.getElementById('edit-blason');
-                    if (blasonInput) blasonInput.value = inscription.blason || '';
+                    if (blasonInput) {
+                        blasonInput.value = inscription.blason || '';
+                    }
                     
                     const duelCheckbox = document.getElementById('edit-duel');
-                    if (duelCheckbox) duelCheckbox.checked = inscription.duel == 1 || inscription.duel === true;
+                    if (duelCheckbox) {
+                        duelCheckbox.checked = inscription.duel == 1 || inscription.duel === true;
+                    }
                     
                     const trispotCheckbox = document.getElementById('edit-trispot');
-                    if (trispotCheckbox) trispotCheckbox.checked = inscription.trispot == 1 || inscription.trispot === true;
+                    if (trispotCheckbox) {
+                        trispotCheckbox.checked = inscription.trispot == 1 || inscription.trispot === true;
+                    }
                 }
                 
                 const numeroTirSelect = document.getElementById('edit-numero_tir');
-                if (numeroTirSelect) numeroTirSelect.value = inscription.numero_tir || '';
+                if (numeroTirSelect) {
+                    numeroTirSelect.value = inscription.numero_tir || '';
+                }
                 
                 const tarifSelect = document.getElementById('edit-tarif_competition');
-                if (tarifSelect) tarifSelect.value = inscription.tarif_competition || '';
+                if (tarifSelect) {
+                    tarifSelect.value = inscription.tarif_competition || '';
+                }
                 
                 const modePaiementSelect = document.getElementById('edit-mode_paiement');
-                if (modePaiementSelect) modePaiementSelect.value = inscription.mode_paiement || 'Non payé';
+                if (modePaiementSelect) {
+                    modePaiementSelect.value = inscription.mode_paiement || 'Non payé';
+                }
+                
+                console.log('=== fillForm terminée ===');
             };
             
             // Ouvrir la modale
