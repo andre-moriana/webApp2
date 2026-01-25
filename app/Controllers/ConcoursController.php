@@ -1498,20 +1498,20 @@ class ConcoursController {
             'arme' => $_POST['arme'] ?? null,
             'mobilite_reduite' => isset($_POST['mobilite_reduite']) ? (int)$_POST['mobilite_reduite'] : 0,
             'numero_tir' => $numero_tir,
-            'duel' => isset($_POST['duel']) ? (int)$_POST['duel'] : 0,
-            'trispot' => isset($_POST['trispot']) ? (int)$_POST['trispot'] : 0,
             'tarif_competition' => $_POST['tarif_competition'] ?? null,
             'mode_paiement' => $_POST['mode_paiement'] ?? 'Non payé'
         ];
         
-        // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason
+        // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason, pas de duel/trispot
         if ($isNature3DOrCampagne) {
             $inscriptionData['piquet'] = !empty($_POST['piquet']) ? $_POST['piquet'] : null;
-            // Pas de champ blason pour ces disciplines
+            // Pas de champ blason, duel ni trispot pour ces disciplines
         } else {
-            // Pour les autres disciplines : utiliser distance et blason
+            // Pour les autres disciplines : utiliser distance, blason, duel et trispot
             $inscriptionData['distance'] = isset($_POST['distance']) && $_POST['distance'] !== '' ? (int)$_POST['distance'] : null;
             $inscriptionData['blason'] = isset($_POST['blason']) && $_POST['blason'] !== '' ? (int)$_POST['blason'] : null;
+            $inscriptionData['duel'] = isset($_POST['duel']) ? (int)$_POST['duel'] : 0;
+            $inscriptionData['trispot'] = isset($_POST['trispot']) ? (int)$_POST['trispot'] : 0;
         }
 
         // VÉRIFICATION FINALE : Ne JAMAIS appeler l'API si un doublon a été détecté
