@@ -1504,7 +1504,14 @@ class ConcoursController {
         
         // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason, pas de duel/trispot
         if ($isNature3DOrCampagne) {
-            $inscriptionData['piquet'] = !empty($_POST['piquet']) ? $_POST['piquet'] : null;
+            // Le champ piquet doit être envoyé même s'il est vide (sera null côté base)
+            // Utiliser isset pour vérifier l'existence, et accepter les chaînes vides
+            if (isset($_POST['piquet'])) {
+                $inscriptionData['piquet'] = $_POST['piquet'] !== '' ? $_POST['piquet'] : null;
+            } else {
+                $inscriptionData['piquet'] = null;
+            }
+            error_log("DEBUG piquet: " . var_export($inscriptionData['piquet'], true));
             // Pas de champ blason, duel ni trispot pour ces disciplines
         } else {
             // Pour les autres disciplines : utiliser distance, blason, duel et trispot
