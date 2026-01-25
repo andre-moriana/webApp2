@@ -1753,7 +1753,24 @@ function proceedWithInscriptionSubmission() {
     const saison = document.getElementById('saison')?.value || null;
     const typeCertificatMedical = document.getElementById('type_certificat_medical')?.value || null;
     const typeLicence = document.getElementById('type_licence')?.value || null;
-    const creationRenouvellement = document.getElementById('creation_renouvellement')?.value || null;
+    // Normaliser creation_renouvellement pour être "C" ou "R" (le champ est maintenant CHAR en base)
+    let creationRenouvellement = document.getElementById('creation_renouvellement')?.value || null;
+    if (creationRenouvellement !== null && creationRenouvellement !== '') {
+        const value = String(creationRenouvellement).trim().toUpperCase();
+        // Convertir les anciennes valeurs numériques (1 = C, 2 = R) ou utiliser directement C/R
+        if (value === '1' || value === 'C') {
+            creationRenouvellement = 'C';
+        } else if (value === '2' || value === 'R') {
+            creationRenouvellement = 'R';
+        } else if (value !== 'C' && value !== 'R') {
+            // Si la valeur n'est ni C ni R, la mettre à null
+            creationRenouvellement = null;
+        } else {
+            creationRenouvellement = value;
+        }
+    } else {
+        creationRenouvellement = null;
+    }
     
     // Re-désactiver les champs après récupération des valeurs
     if (typeCertificatMedicalSelect) {

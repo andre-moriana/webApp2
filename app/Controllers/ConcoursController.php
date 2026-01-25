@@ -1531,7 +1531,9 @@ class ConcoursController {
             'saison' => $_POST['saison'] ?? null,
             'type_certificat_medical' => $_POST['type_certificat_medical'] ?? null,
             'type_licence' => $_POST['type_licence'] ?? null,
-            'creation_renouvellement' => isset($_POST['creation_renouvellement']) ? (int)$_POST['creation_renouvellement'] : 0,
+            'creation_renouvellement' => isset($_POST['creation_renouvellement']) && $_POST['creation_renouvellement'] !== '' ? 
+                (in_array(strtoupper(trim($_POST['creation_renouvellement'])), ['C', 'R'], true) ? 
+                    strtoupper(trim($_POST['creation_renouvellement'])) : null) : null,
             'categorie_classement' => $_POST['categorie_classement'] ?? null,
             'arme' => $_POST['arme'] ?? null,
             'mobilite_reduite' => isset($_POST['mobilite_reduite']) ? (int)$_POST['mobilite_reduite'] : 0,
