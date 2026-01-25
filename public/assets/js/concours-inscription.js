@@ -2233,11 +2233,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Envoyer la requête de mise à jour
+            // Utiliser POST avec X-HTTP-Method-Override si PUT ne fonctionne pas
             fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-HTTP-Method-Override': 'PUT'
                 },
                 credentials: 'include',
                 body: JSON.stringify(updateData)
@@ -2247,12 +2249,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) {
                     // Essayer de lire le message d'erreur depuis la réponse
                     return response.json().then(data => {
-                        console.error('Réponse d\'erreur complète:', data);
+                        console.error('Réponse d\'erreur complète:', JSON.stringify(data, null, 2));
                         const errorMsg = data.error || data.message || `HTTP error! status: ${response.status}`;
                         if (data.debug) {
-                            console.error('Debug info:', data.debug);
+                            console.error('Debug info:', JSON.stringify(data.debug, null, 2));
                         }
-                        throw new Error(errorMsg);
+                        // Afficher les détails dans l'alerte aussi
+                        let fullErrorMsg = errorMsg;
+                        if (data.path) {
+                            fullErrorMsg += `\nPath: ${data.path}`;
+                        }
+                        if (data.method) {
+                            fullErrorMsg += `\nMethod: ${data.method}`;
+                        }
+                        if (data.debug && data.debug.pattern_match) {
+                            fullErrorMsg += `\nPattern match: ${data.debug.pattern_match}`;
+                        }
+                        throw new Error(fullErrorMsg);
                     }).catch(err => {
                         if (err.message) {
                             throw err;
