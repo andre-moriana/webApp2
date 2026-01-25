@@ -75,8 +75,18 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($concours as $item): ?>
                                     <?php
+                                    // Fonction pour tronquer le texte (déclarée une seule fois avant la boucle)
+                                    if (!function_exists('truncateText')) {
+                                        function truncateText($text, $maxLength = 40) {
+                                            if (strlen($text) <= $maxLength) {
+                                                return $text;
+                                            }
+                                            return substr($text, 0, $maxLength) . '...';
+                                        }
+                                    }
+                                    
+                                    foreach ($concours as $item):
                                     $user = $_SESSION['user'] ?? [];
                                     $isAdmin = $user['is_admin'] ?? false;
                                     $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
@@ -97,14 +107,6 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                     // Colonne 4: Titre + Lieu
                                     $titre = $item['titre_competition'] ?? $item['nom'] ?? '-';
                                     $lieu = $item['lieu'] ?? $item['lieu_competition'] ?? '-';
-                                    
-                                    // Fonction pour tronquer le texte
-                                    function truncateText($text, $maxLength = 40) {
-                                        if (strlen($text) <= $maxLength) {
-                                            return $text;
-                                        }
-                                        return substr($text, 0, $maxLength) . '...';
-                                    }
                                     
                                     // Tronquer le lieu
                                     $lieuTruncated = ($lieu && $lieu !== '-') ? truncateText($lieu, 40) : $lieu;
