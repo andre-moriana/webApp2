@@ -159,7 +159,7 @@
                                 <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <?php if ($isNature3DOrCampagne): ?>
-                                    <td><?= htmlspecialchars(ucfirst($piquetColor ?? 'N/A')) ?></td>
+                                    <td class="piquet-value"><?= htmlspecialchars(ucfirst($piquetColor ?? 'N/A')) ?></td>
                                 <?php else: ?>
                                     <td><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
                                     <td><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
@@ -418,7 +418,7 @@ const disciplineAbv = <?= json_encode($disciplineAbv ?? null) ?>;
 const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)) ?>;
 </script>
 <script>
-// FORCER l'application des couleurs de piquet - Solution définitive
+// SOLUTION ULTIME - Lire directement la colonne Piquet et appliquer la couleur
 (function() {
     const colorMap = {
         'rouge': '#ffe0e0',
@@ -426,74 +426,58 @@ const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($
         'blanc': '#f5f5f5'
     };
     
-    function forceApplyColors() {
-        const table = document.getElementById('inscriptions-table');
-        if (!table) return;
+    function colorerLignes() {
+        // Trouver toutes les lignes du tableau
+        const rows = document.querySelectorAll('#inscriptions-table tbody tr, table.table tbody tr');
         
-        const rows = table.querySelectorAll('tbody tr');
         rows.forEach(function(row) {
-            let piquetColor = null;
+            // Chercher la cellule avec "Piquet" dans le header pour trouver l'index
+            const table = row.closest('table');
+            if (!table) return;
             
-            // 1. Vérifier data-piquet
-            if (row.hasAttribute('data-piquet')) {
-                piquetColor = row.getAttribute('data-piquet').toLowerCase().trim();
-            }
-            
-            // 2. Vérifier les classes
-            if (!piquetColor) {
-                const classes = row.className.split(' ');
-                for (let cls of classes) {
-                    if (cls.startsWith('piquet-')) {
-                        piquetColor = cls.replace('piquet-', '').toLowerCase().trim();
-                        break;
-                    }
+            const headers = table.querySelectorAll('thead th');
+            let piquetIndex = -1;
+            for (let i = 0; i < headers.length; i++) {
+                if (headers[i].textContent.trim().toLowerCase() === 'piquet') {
+                    piquetIndex = i;
+                    break;
                 }
             }
             
-            // 3. Vérifier la colonne Piquet
-            if (!piquetColor) {
-                const cells = row.querySelectorAll('td');
-                if (cells.length > 6) {
-                    const cellText = cells[6].textContent.trim().toLowerCase();
-                    if (['rouge', 'bleu', 'blanc'].includes(cellText)) {
-                        piquetColor = cellText;
-                    }
-                }
-            }
+            if (piquetIndex === -1) return;
             
-            // APPLIQUER LA COULEUR DE FORCE
-            if (piquetColor && colorMap[piquetColor]) {
-                // Méthode 1: cssText (remplace tout)
-                row.style.cssText = 'background-color: ' + colorMap[piquetColor] + ' !important;';
-                // Méthode 2: setProperty avec important
-                row.style.setProperty('background-color', colorMap[piquetColor], 'important');
-                // Méthode 3: Attribut style direct
-                row.setAttribute('style', 'background-color: ' + colorMap[piquetColor] + ' !important;');
+            // Lire la valeur de la colonne Piquet
+            const cells = row.querySelectorAll('td');
+            if (cells.length > piquetIndex) {
+                const piquetValue = cells[piquetIndex].textContent.trim().toLowerCase();
+                
+                if (colorMap[piquetValue]) {
+                    // FORCER la couleur avec toutes les méthodes possibles
+                    row.style.cssText = 'background-color: ' + colorMap[piquetValue] + ' !important;';
+                    row.style.setProperty('background-color', colorMap[piquetValue], 'important');
+                    row.setAttribute('style', 'background-color: ' + colorMap[piquetValue] + ' !important;');
+                    console.log('COULEUR APPLIQUÉE:', piquetValue, '->', colorMap[piquetValue], 'sur la ligne:', row);
+                }
             }
         });
     }
     
     // Exécuter immédiatement
-    forceApplyColors();
+    colorerLignes();
     
-    // Exécuter après DOMContentLoaded
+    // Exécuter après chargement
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', forceApplyColors);
+        document.addEventListener('DOMContentLoaded', colorerLignes);
     }
     
-    // Exécuter plusieurs fois pour surcharger Bootstrap
-    [50, 100, 200, 500, 1000, 2000].forEach(function(delay) {
-        setTimeout(forceApplyColors, delay);
-    });
+    // Exécuter plusieurs fois
+    [10, 50, 100, 200, 500, 1000].forEach(delay => setTimeout(colorerLignes, delay));
     
-    // Observer les changements du DOM
-    const observer = new MutationObserver(function() {
-        forceApplyColors();
-    });
-    
-    const table = document.getElementById('inscriptions-table');
+    // Observer les changements
+    const observer = new MutationObserver(colorerLignes);
+    const table = document.getElementById('inscriptions-table') || document.querySelector('table.table');
     if (table) {
-        observer.observe(table, { childList: true, subtree: true });
+        observer.observe(table, { childList: true, subtree: true, attributes: true });
     }
 })();
 </script>
