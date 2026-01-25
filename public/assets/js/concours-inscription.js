@@ -2250,13 +2250,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Envoyer la requête de mise à jour
-            // Utiliser POST avec X-HTTP-Method-Override pour contourner les limitations serveur
             fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-HTTP-Method-Override': 'PUT'
+                    'Accept': 'application/json'
                 },
                 credentials: 'include',
                 body: JSON.stringify(updateData)
