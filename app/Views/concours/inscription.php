@@ -198,6 +198,9 @@ table tbody tr.piquet-blanc {
                                 <?php endif; ?>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
+                                    <button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
+                                        <i class="fas fa-edit"></i> Éditer
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
                                         <i class="fas fa-trash"></i> Retirer
                                     </button>
@@ -432,6 +435,201 @@ table tbody tr.piquet-blanc {
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                 <button type="button" class="btn btn-primary" id="btn-confirm-inscription">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modale pour éditer une inscription -->
+<div class="modal fade" id="editInscriptionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Éditer l'inscription</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="edit-modal-body">
+                <form id="edit-inscription-form">
+                    <h5 class="mb-3">Informations d'inscription</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-saison" class="form-label">Saison</label>
+                            <input type="text" id="edit-saison" class="form-control" placeholder="Ex: 2024-2025">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-type_certificat_medical" class="form-label">Type Certificat Médical</label>
+                            <select id="edit-type_certificat_medical" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="Compétition">Compétition</option>
+                                <option value="Pratique">Pratique</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-type_licence" class="form-label">Type Licence</label>
+                            <select id="edit-type_licence" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="L">L</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-creation_renouvellement" class="form-label">Création/Renouvellement</label>
+                            <input type="number" id="edit-creation_renouvellement" class="form-control" min="0">
+                        </div>
+                    </div>
+                    
+                    <?php if (!empty($departs)): ?>
+                    <div class="mb-3">
+                        <label for="edit-depart-select" class="form-label">N° départ</label>
+                        <select id="edit-depart-select" class="form-control">
+                            <option value="">Sélectionner un départ</option>
+                            <?php foreach ($departs as $index => $depart): ?>
+                                <option value="<?= ($index + 1) ?>">
+                                    Départ <?= ($index + 1) ?> - <?= htmlspecialchars($depart['heure'] ?? '') ?><?= !empty($depart['date']) ? ' (' . htmlspecialchars($depart['date']) . ')' : '' ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <h6 class="mt-4 mb-3">Classification et équipement</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-categorie_classement" class="form-label">Catégorie de classement</label>
+                            <select id="edit-categorie_classement" class="form-control">
+                                <option value="">Sélectionner une catégorie</option>
+                                <?php if (!empty($categoriesClassement)): ?>
+                                    <?php foreach ($categoriesClassement as $categorie): ?>
+                                        <option value="<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>">
+                                            <?= htmlspecialchars($categorie['lb_categorie_classement'] ?? '') ?> (<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
+                            <select id="edit-arme" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <?php if (!empty($arcs)): ?>
+                                    <?php foreach ($arcs as $arc): ?>
+                                        <option value="<?= htmlspecialchars($arc['lb_arc'] ?? '') ?>">
+                                            <?= htmlspecialchars($arc['lb_arc'] ?? '') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" id="edit-mobilite_reduite" class="form-check-input">
+                                <label for="edit-mobilite_reduite" class="form-check-label">Mobilité réduite</label>
+                            </div>
+                        </div>
+                        <?php if ($isNature3DOrCampagne): ?>
+                            <div class="col-md-3 mb-3">
+                                <label for="edit-piquet" class="form-label">Piquet</label>
+                                <select id="edit-piquet" name="piquet" class="form-control">
+                                    <option value="">Sélectionner</option>
+                                    <option value="rouge">Rouge</option>
+                                    <option value="bleu">Bleu</option>
+                                    <option value="blanc">Blanc</option>
+                                </select>
+                            </div>
+                        <?php else: ?>
+                            <div class="col-md-3 mb-3">
+                                <label for="edit-distance" class="form-label">Distance</label>
+                                <select id="edit-distance" class="form-control">
+                                    <option value="">Sélectionner</option>
+                                    <?php if (!empty($distancesTir)): ?>
+                                        <?php foreach ($distancesTir as $distance): ?>
+                                            <option value="<?= htmlspecialchars($distance['distance_valeur'] ?? '') ?>">
+                                                <?= htmlspecialchars($distance['lb_distance'] ?? '') ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                        <?php endif; ?>
+                        <div class="col-md-3 mb-3">
+                            <label for="edit-numero_tir" class="form-label">N° Tir</label>
+                            <select id="edit-numero_tir" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <?php 
+                                $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null);
+                                if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0):
+                                    for ($i = 1; $i <= (int)$nombreDepart; $i++):
+                                ?>
+                                    <option value="<?= $i ?>"><?= $i ?></option>
+                                <?php 
+                                    endfor;
+                                endif;
+                                ?>
+                            </select>
+                        </div>
+                        <?php if (!$isNature3DOrCampagne): ?>
+                            <div class="col-md-3 mb-3">
+                                <label for="edit-blason" class="form-label">Blason</label>
+                                <input type="number" id="edit-blason" class="form-control" min="0" placeholder="Ex: 40">
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <?php if (!$isNature3DOrCampagne): ?>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    <input type="checkbox" id="edit-duel" class="form-check-input">
+                                    <label for="edit-duel" class="form-check-label">Duel</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    <input type="checkbox" id="edit-trispot" class="form-check-input">
+                                    <label for="edit-trispot" class="form-check-label">Trispot</label>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <h6 class="mt-4 mb-3">Paiement</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-tarif_competition" class="form-label">Tarif Compétition</label>
+                            <select id="edit-tarif_competition" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="Tarif standard">Tarif standard</option>
+                                <option value="Tarif réduit">Tarif réduit</option>
+                                <option value="Tarif jeune">Tarif jeune</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-mode_paiement" class="form-label">Mode Paiement</label>
+                            <select id="edit-mode_paiement" class="form-control">
+                                <option value="Non payé">Non payé</option>
+                                <option value="Espèces">Espèces</option>
+                                <option value="Chèque">Chèque</option>
+                                <option value="Carte bancaire">Carte bancaire</option>
+                                <option value="Virement">Virement</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm-edit">Enregistrer</button>
             </div>
         </div>
     </div>
