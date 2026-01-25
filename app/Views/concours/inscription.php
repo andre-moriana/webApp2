@@ -84,6 +84,10 @@
     </div>
 
     <!-- Liste des inscrits -->
+    <?php
+    // Déterminer si c'est une discipline 3D, Nature ou Campagne (abv_discipline = "3", "N" ou "C")
+    $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true);
+    ?>
     <div class="inscriptions-section">
         <h3>Archers inscrits</h3>
         <?php if (empty($inscriptions)): ?>
@@ -99,6 +103,12 @@
                             <th>Club</th>
                             <th>Départ</th>
                             <th>N°Tir</th>
+                            <?php if ($isNature3DOrCampagne): ?>
+                                <th>Piquet</th>
+                            <?php else: ?>
+                                <th>Distance</th>
+                                <th>Blason</th>
+                            <?php endif; ?>
                             <th>Date d'inscription</th>
                             <th>Actions</th>
                         </tr>
@@ -110,6 +120,14 @@
                             $userId = $inscription['user_id'] ?? null;
                             $user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
                             
+                            // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
+                            $piquetColor = $inscription['piquet'] ?? null;
+                            $rowClass = '';
+                            if ($piquetColor) {
+                                // Ajouter une classe CSS selon la couleur du piquet
+                                $rowClass = 'piquet-' . strtolower($piquetColor);
+                            }
+                            
                             // Debug: afficher les données disponibles
                             // error_log("Inscription ID: " . ($inscription['id'] ?? 'N/A'));
                             // error_log("User ID: " . ($userId ?? 'N/A'));
@@ -120,7 +138,7 @@
                             //     'depart_date' => $inscription['depart_date'] ?? null
                             // ]));
                         ?>
-                            <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
+                            <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>" class="<?= htmlspecialchars($rowClass) ?>">
                                 <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
@@ -133,6 +151,12 @@
                                 </td>
                                 <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
+                                <?php if ($isNature3DOrCampagne): ?>
+                                    <td><?= htmlspecialchars(ucfirst($piquetColor ?? 'N/A')) ?></td>
+                                <?php else: ?>
+                                    <td><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
+                                <?php endif; ?>
                                 <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
