@@ -2233,9 +2233,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Envoyer la requête de mise à jour
-            // Utiliser POST avec X-HTTP-Method-Override si PUT ne fonctionne pas
+            // Essayer d'abord avec PUT, puis avec POST si nécessaire
             fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
-                method: 'PUT',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
