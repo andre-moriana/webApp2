@@ -1934,20 +1934,35 @@ window.editInscription = function(inscriptionId) {
         },
         credentials: 'include'
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Données reçues de l\'API:', data);
+        
         if (data.success && data.data) {
             const inscription = data.data;
+            console.log('Inscription à charger:', inscription);
             
             // Fonction helper pour définir une valeur de manière sécurisée
             const setValue = (id, value) => {
                 const element = document.getElementById(id);
                 if (element) {
                     if (element.type === 'checkbox') {
-                        element.checked = value == 1 || value === true;
+                        element.checked = value == 1 || value === true || value === '1';
+                        console.log(`✓ ${id} (checkbox) = ${element.checked}`);
                     } else {
-                        element.value = value || '';
+                        const stringValue = value !== null && value !== undefined ? String(value) : '';
+                        element.value = stringValue;
+                        console.log(`✓ ${id} = ${stringValue}`);
                     }
+                    return true;
+                } else {
+                    console.warn(`✗ Élément ${id} non trouvé`);
+                    return false;
                 }
             };
             
@@ -1980,15 +1995,44 @@ window.editInscription = function(inscriptionId) {
                 form.dataset.inscriptionId = inscriptionId;
             }
             
-            // Ouvrir la modale
+            // Ouvrir la modale après avoir rempli les champs
             const modalElement = document.getElementById('editInscriptionModal');
             if (modalElement) {
                 const modal = new bootstrap.Modal(modalElement);
+                // Attendre que la modale soit complètement affichée
+                modalElement.addEventListener('shown.bs.modal', function onShown() {
+                    // Forcer la mise à jour des valeurs après l'affichage de la modale
+                    setTimeout(() => {
+                        setValue('edit-saison', inscription.saison);
+                        setValue('edit-type_certificat_medical', inscription.type_certificat_medical);
+                        setValue('edit-type_licence', inscription.type_licence);
+                        setValue('edit-creation_renouvellement', inscription.creation_renouvellement);
+                        setValue('edit-depart-select', inscription.numero_depart);
+                        setValue('edit-categorie_classement', inscription.categorie_classement);
+                        setValue('edit-arme', inscription.arme);
+                        setValue('edit-mobilite_reduite', inscription.mobilite_reduite);
+                        
+                        if (isNature3DOrCampagne) {
+                            setValue('edit-piquet', inscription.piquet);
+                        } else {
+                            setValue('edit-distance', inscription.distance);
+                            setValue('edit-blason', inscription.blason);
+                            setValue('edit-duel', inscription.duel);
+                            setValue('edit-trispot', inscription.trispot);
+                        }
+                        
+                        setValue('edit-numero_tir', inscription.numero_tir);
+                        setValue('edit-tarif_competition', inscription.tarif_competition);
+                        setValue('edit-mode_paiement', inscription.mode_paiement || 'Non payé');
+                    }, 100);
+                    modalElement.removeEventListener('shown.bs.modal', onShown);
+                }, { once: true });
                 modal.show();
             } else {
                 alert('Erreur: La modale d\'édition est introuvable');
             }
         } else {
+            console.error('Erreur dans la réponse:', data);
             alert('Erreur lors de la récupération de l\'inscription: ' + (data.error || 'Erreur inconnue'));
         }
     })
