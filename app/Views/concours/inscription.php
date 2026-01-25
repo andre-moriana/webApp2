@@ -162,7 +162,7 @@ table tbody tr.piquet-blanc {
                                 $rowClass = 'piquet-' . $piquetColor;
                                 $dataPiquet = ' data-piquet="' . htmlspecialchars($piquetColor) . '"';
                                 
-                                // APPLIQUER LE STYLE INLINE DIRECTEMENT
+                                // Appliquer le style inline
                                 $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
                                 if (isset($colors[$piquetColor])) {
                                     $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
