@@ -1252,6 +1252,9 @@ class ConcoursController {
         
         // Vérifier si l'archer n'est pas déjà inscrit pour le même numéro de départ ET le même numéro de tir
         // On doit vérifier que cette combinaison exacte n'existe pas déjà pour cet archer
+        $doublonDetecte = false;
+        $messageErreur = '';
+        
         try {
             $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
             
@@ -1306,21 +1309,29 @@ class ConcoursController {
                     if ($numero_tir !== null) {
                         // Vérifier que numero_tir correspond aussi
                         if ($insc_numero_tir === $numero_tir) {
+                            $doublonDetecte = true;
+                            $messageErreur = "Cet archer est déjà inscrit au départ $numero_depart avec le numéro de tir $numero_tir pour ce concours.";
                             error_log("DOUBLON DÉTECTÉ - Combinaison exacte numero_depart=$numero_depart + numero_tir=$numero_tir");
-                            $_SESSION['error'] = "Cet archer est déjà inscrit au départ $numero_depart avec le numéro de tir $numero_tir pour ce concours.";
-                            header("Location: /concours/{$concoursId}/inscription");
-                            exit;
+                            break; // Sortir de la boucle
                         }
                     } else {
                         // Si numero_tir n'est pas fourni dans la nouvelle inscription, vérifier que l'inscription existante n'a pas de numero_tir
                         if ($insc_numero_tir === null || $insc_numero_tir === 0) {
+                            $doublonDetecte = true;
+                            $messageErreur = "Cet archer est déjà inscrit au départ $numero_depart pour ce concours.";
                             error_log("DOUBLON DÉTECTÉ - Seulement numero_depart=$numero_depart (sans numero_tir)");
-                            $_SESSION['error'] = "Cet archer est déjà inscrit au départ $numero_depart pour ce concours.";
-                            header("Location: /concours/{$concoursId}/inscription");
-                            exit;
+                            break; // Sortir de la boucle
                         }
                     }
                 }
+            }
+            
+            // Si un doublon a été détecté, bloquer l'inscription
+            if ($doublonDetecte) {
+                error_log("BLOCAGE DE L'INSCRIPTION - Doublon détecté");
+                $_SESSION['error'] = $messageErreur;
+                header("Location: /concours/{$concoursId}/inscription");
+                exit; // IMPORTANT: Sortir immédiatement, ne pas continuer vers l'appel API
             }
             
             error_log("Aucun doublon détecté - poursuite de l'inscription");
@@ -1330,7 +1341,7 @@ class ConcoursController {
             error_log("Stack trace: " . $e->getTraceAsString());
             $_SESSION['error'] = 'Erreur lors de la vérification des inscriptions existantes. Veuillez réessayer.';
             header("Location: /concours/{$concoursId}/inscription");
-            exit;
+            exit; // IMPORTANT: Sortir immédiatement
         }
         
         // Préparer toutes les données d'inscription
@@ -1355,7 +1366,16 @@ class ConcoursController {
             'mode_paiement' => $_POST['mode_paiement'] ?? 'Non payé'
         ];
 
-        // Appel API pour inscrire
+        // VÉRIFICATION FINALE : Ne JAMAIS appeler l'API si un doublon a été détecté
+        if ($doublonDetecte === true) {
+            error_log("ERREUR CRITIQUE: Tentative d'appel API alors qu'un doublon a été détecté ! Blocage immédiat.");
+            $_SESSION['error'] = $messageErreur ?: 'Cet archer est déjà inscrit avec cette combinaison pour ce concours.';
+            header("Location: /concours/{$concoursId}/inscription");
+            exit; // ARRÊT IMMÉDIAT - Ne pas continuer
+        }
+
+        // Appel API pour inscrire (seulement si aucun doublon n'a été détecté)
+        error_log("APPEL API - Aucun doublon détecté, procédure d'inscription");
         try {
             $response = $this->apiService->makeRequest("concours/{$concoursId}/inscription", 'POST', $inscriptionData);
 
