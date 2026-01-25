@@ -1,5 +1,28 @@
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/concours-inscription.css" rel="stylesheet">
+<style>
+/* FORCER les couleurs de piquet avec spécificité maximale */
+#inscriptions-table tbody tr[data-piquet="rouge"],
+#inscriptions-table tbody tr.piquet-rouge,
+table.table tbody tr[data-piquet="rouge"],
+table.table tbody tr.piquet-rouge {
+    background-color: #ffe0e0 !important;
+}
+
+#inscriptions-table tbody tr[data-piquet="bleu"],
+#inscriptions-table tbody tr.piquet-bleu,
+table.table tbody tr[data-piquet="bleu"],
+table.table tbody tr.piquet-bleu {
+    background-color: #e0e8ff !important;
+}
+
+#inscriptions-table tbody tr[data-piquet="blanc"],
+#inscriptions-table tbody tr.piquet-blanc,
+table.table tbody tr[data-piquet="blanc"],
+table.table tbody tr.piquet-blanc {
+    background-color: #f5f5f5 !important;
+}
+</style>
 
 <div class="container-fluid concours-inscription-container">
     <h1>Inscription au concours</h1>
@@ -122,12 +145,21 @@
                             
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
                             $piquetColor = $inscription['piquet'] ?? null;
+                            
+                            // DEBUG: Vérifier la valeur brute
+                            error_log("DEBUG PIQUET - Valeur brute: " . var_export($inscription['piquet'], true));
+                            
                             $rowClass = '';
                             $rowStyle = '';
                             $dataPiquet = '';
+                            
                             if ($piquetColor && $piquetColor !== '') {
                                 // Nettoyer et normaliser la couleur (enlever les espaces, convertir en minuscule)
                                 $piquetColor = trim(strtolower($piquetColor));
+                                
+                                // DEBUG
+                                error_log("DEBUG PIQUET - Après normalisation: " . $piquetColor);
+                                
                                 // Ajouter une classe CSS selon la couleur du piquet
                                 $rowClass = 'piquet-' . $piquetColor;
                                 
@@ -140,12 +172,30 @@
                                     'bleu' => '#e0e8ff',
                                     'blanc' => '#f5f5f5'
                                 ];
+                                
                                 if (isset($colorMap[$piquetColor])) {
-                                    // Style inline FORCÉ avec !important - format direct sans htmlspecialchars pour le style
+                                    // Style inline FORCÉ - SANS htmlspecialchars pour le style
                                     $rowStyle = ' style="background-color: ' . $colorMap[$piquetColor] . ' !important;"';
+                                    error_log("DEBUG PIQUET - Style généré: " . $rowStyle);
+                                } else {
+                                    error_log("DEBUG PIQUET - Couleur non trouvée dans colorMap: " . $piquetColor);
                                 }
+                            } else {
+                                error_log("DEBUG PIQUET - piquetColor est vide ou null");
                             }
                         ?>
+                            <?php
+                            // FORCER le style si piquet existe
+                            if (!empty($rowStyle)) {
+                                // Le style est déjà dans $rowStyle
+                            } elseif (!empty($inscription['piquet'])) {
+                                $piquetRaw = trim(strtolower($inscription['piquet']));
+                                $colorMap = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                                if (isset($colorMap[$piquetRaw])) {
+                                    $rowStyle = ' style="background-color: ' . $colorMap[$piquetRaw] . ' !important;"';
+                                }
+                            }
+                            ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
                                 <td><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
@@ -160,7 +210,12 @@
                                 <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <?php if ($isNature3DOrCampagne): ?>
-                                    <td class="piquet-value"><?= htmlspecialchars(ucfirst($piquetColor ?? 'N/A')) ?></td>
+                                    <?php 
+                                    // Récupérer la couleur du piquet pour l'affichage
+                                    $piquetDisplay = $inscription['piquet'] ?? null;
+                                    $piquetDisplay = $piquetDisplay ? ucfirst(trim(strtolower($piquetDisplay))) : 'N/A';
+                                    ?>
+                                    <td class="piquet-value"><?= htmlspecialchars($piquetDisplay) ?></td>
                                 <?php else: ?>
                                     <td><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
                                     <td><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
