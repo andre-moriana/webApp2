@@ -2250,6 +2250,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Envoyer la requête de mise à jour
+            console.log('Début du fetch PUT vers:', `/api/concours/${concoursId}/inscription/${inscriptionId}`);
             fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
                 method: 'PUT',
                 headers: {
@@ -2260,6 +2261,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(updateData)
             })
             .then(response => {
+                console.log('Fetch réussi, traitement de la réponse...');
                 console.log('Réponse PUT reçue, status:', response.status);
                 console.log('Content-Type:', response.headers.get('content-type'));
                 // Vérifier le Content-Type pour savoir si c'est du JSON ou du HTML
