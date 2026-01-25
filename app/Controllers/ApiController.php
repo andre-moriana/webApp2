@@ -2528,5 +2528,47 @@ class ApiController {
             ], 500);
         }
     }
+    
+    /**
+     * Proxy pour /api/concours/{id}/inscription/{inscriptionId} - Mise à jour d'inscription
+     */
+    public function proxyConcoursInscriptionUpdate($concoursId, $inscriptionId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            // Vérifier le header X-HTTP-Method-Override pour les serveurs qui convertissent PUT en POST
+            $overrideMethod = $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] ?? $_SERVER['HTTP_X_HTTP_METHOD'] ?? null;
+            if ($overrideMethod && strtoupper($overrideMethod) === 'PUT') {
+                $method = 'PUT';
+            }
+            
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $endpoint = "concours/{$concoursId}/inscription/{$inscriptionId}" . ($queryString ? "?{$queryString}" : "");
+            
+            $data = null;
+            if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH') {
+                $input = file_get_contents('php://input');
+                $data = json_decode($input, true);
+            }
+            
+            // Utiliser PUT pour la mise à jour
+            $response = $this->apiService->makeRequest($endpoint, 'PUT', $data);
+            
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour de l\'inscription: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 ?>
