@@ -2042,15 +2042,28 @@ window.editInscription = function(inscriptionId) {
                     console.log('typeLicenceSelect.value défini à:', typeLicenceSelect.value);
                 }
                 
-                const creationRenouvellementInput = document.getElementById('edit-creation_renouvellement');
-                if (creationRenouvellementInput) {
-                    // Gérer le cas où la valeur est 0 (qui est falsy mais valide)
+                const creationRenouvellementSelect = document.getElementById('edit-creation_renouvellement');
+                if (creationRenouvellementSelect) {
+                    // Convertir la valeur numérique en lettre (0 ou null = '', 1 = 'C', 2 = 'R' ou directement 'C'/'R')
                     let creationRenouvellementValue = '';
-                    if (inscription.creation_renouvellement !== null && inscription.creation_renouvellement !== undefined) {
-                        creationRenouvellementValue = String(inscription.creation_renouvellement);
+                    const rawValue = inscription.creation_renouvellement;
+                    
+                    if (rawValue !== null && rawValue !== undefined) {
+                        if (typeof rawValue === 'string') {
+                            // Si c'est déjà une chaîne, utiliser directement (C ou R)
+                            creationRenouvellementValue = rawValue.toUpperCase().trim();
+                        } else if (typeof rawValue === 'number') {
+                            // Si c'est un nombre, convertir : 1 = C, 2 = R, 0 ou autre = ''
+                            if (rawValue === 1) {
+                                creationRenouvellementValue = 'C';
+                            } else if (rawValue === 2) {
+                                creationRenouvellementValue = 'R';
+                            }
+                        }
                     }
-                    creationRenouvellementInput.value = creationRenouvellementValue;
-                    console.log('creationRenouvellementInput.value défini à:', creationRenouvellementInput.value, '(inscription.creation_renouvellement:', inscription.creation_renouvellement, ')');
+                    
+                    creationRenouvellementSelect.value = creationRenouvellementValue;
+                    console.log('creationRenouvellementSelect.value défini à:', creationRenouvellementSelect.value, '(inscription.creation_renouvellement:', inscription.creation_renouvellement, ')');
                 } else {
                     console.error('edit-creation_renouvellement non trouvé');
                 }
@@ -2179,7 +2192,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 saison: getValue('edit-saison') || null,
                 type_certificat_medical: getValue('edit-type_certificat_medical') || null,
                 type_licence: getValue('edit-type_licence') || null,
-                creation_renouvellement: getValue('edit-creation_renouvellement') ? parseInt(getValue('edit-creation_renouvellement')) : 0,
+                creation_renouvellement: getValue('edit-creation_renouvellement') || null,
                 numero_depart: getValue('edit-depart-select') ? parseInt(getValue('edit-depart-select')) : null,
                 categorie_classement: getValue('edit-categorie_classement') || null,
                 arme: getValue('edit-arme') || null,
