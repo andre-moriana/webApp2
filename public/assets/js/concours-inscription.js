@@ -2044,7 +2044,15 @@ window.editInscription = function(inscriptionId) {
                 
                 const creationRenouvellementInput = document.getElementById('edit-creation_renouvellement');
                 if (creationRenouvellementInput) {
-                    creationRenouvellementInput.value = inscription.creation_renouvellement || '';
+                    // Gérer le cas où la valeur est 0 (qui est falsy mais valide)
+                    let creationRenouvellementValue = '';
+                    if (inscription.creation_renouvellement !== null && inscription.creation_renouvellement !== undefined) {
+                        creationRenouvellementValue = String(inscription.creation_renouvellement);
+                    }
+                    creationRenouvellementInput.value = creationRenouvellementValue;
+                    console.log('creationRenouvellementInput.value défini à:', creationRenouvellementInput.value, '(inscription.creation_renouvellement:', inscription.creation_renouvellement, ')');
+                } else {
+                    console.error('edit-creation_renouvellement non trouvé');
                 }
                 
                 const departSelect = document.getElementById('edit-depart-select');
