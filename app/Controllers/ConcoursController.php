@@ -1591,22 +1591,30 @@ class ConcoursController {
      * Met à jour une inscription de concours
      */
     public function updateInscription($concoursId, $inscriptionId) {
+        header('Content-Type: application/json');
+        
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            header('Content-Type: application/json');
             http_response_code(401);
             echo json_encode(['success' => false, 'error' => 'Non authentifié']);
             exit;
         }
 
-        // Vérifier les permissions
-        $clubId = $_SESSION['user']['clubId'] ?? null;
-        PermissionHelper::requirePermission(
-            PermissionService::RESOURCE_USERS_ALL,
-            PermissionService::ACTION_VIEW,
-            $clubId
-        );
-
-        header('Content-Type: application/json');
+        // Vérifier les permissions (même que pour l'inscription)
+        try {
+            $clubId = $_SESSION['user']['clubId'] ?? null;
+            PermissionHelper::requirePermission(
+                PermissionService::RESOURCE_USERS_ALL,
+                PermissionService::ACTION_VIEW,
+                $clubId
+            );
+        } catch (Exception $e) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Permissions insuffisantes: ' . $e->getMessage()
+            ]);
+            exit;
+        }
 
         try {
             // Récupérer les données JSON
@@ -1622,25 +1630,68 @@ class ConcoursController {
             // Appel API pour mettre à jour l'inscription
             $response = $this->apiService->makeRequest("concours/{$concoursId}/inscription/{$inscriptionId}", 'PUT', $data);
 
-            if ($response['success']) {
+            // Vérifier le statut HTTP de la réponse
+            $statusCode = $response['status_code'] ?? 200;
+            
+            // Vérifier si la réponse contient success dans data (format BackendPHP)
+            $apiSuccess = false;
+            if (isset($response['data']['success'])) {
+                $apiSuccess = $response['data']['success'];
+            } elseif (isset($response['success'])) {
+                $apiSuccess = $response['success'];
+            } else {
+                // Si pas de success explicite, vérifier le code HTTP
+                $apiSuccess = ($statusCode >= 200 && $statusCode < 300);
+            }
+            
+            $isSuccess = $apiSuccess && ($statusCode >= 200 && $statusCode < 300);
+
+            if ($isSuccess) {
+                // Si la réponse contient déjà un message, l'utiliser
+                $message = $response['data']['message'] ?? $response['message'] ?? 'Inscription mise à jour avec succès';
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Inscription mise à jour avec succès',
+                    'message' => $message,
                     'data' => $response['data'] ?? null
                 ]);
             } else {
-                $errorMessage = $response['error'] ?? $response['message'] ?? $response['data']['error'] ?? $response['data']['message'] ?? 'Erreur lors de la mise à jour';
-                http_response_code($response['status_code'] ?? 500);
+                // Extraire le message d'erreur de différentes façons
+                $errorMessage = 'Erreur lors de la mise à jour';
+                
+                // Vérifier d'abord dans data (format BackendPHP)
+                if (isset($response['data']['error'])) {
+                    $errorMessage = $response['data']['error'];
+                } elseif (isset($response['data']['message'])) {
+                    $errorMessage = $response['data']['message'];
+                } elseif (isset($response['error'])) {
+                    $errorMessage = $response['error'];
+                } elseif (isset($response['message'])) {
+                    $errorMessage = $response['message'];
+                } elseif (isset($response['data']) && is_string($response['data'])) {
+                    $errorMessage = $response['data'];
+                }
+                
+                // Si c'est une erreur HTTP, l'indiquer
+                if ($statusCode >= 400) {
+                    $errorMessage = "Erreur HTTP {$statusCode}: " . $errorMessage;
+                }
+                
+                http_response_code($statusCode >= 400 ? $statusCode : 500);
                 echo json_encode([
                     'success' => false,
-                    'error' => $errorMessage
+                    'error' => $errorMessage,
+                    'status_code' => $statusCode,
+                    'debug' => [
+                        'response_structure' => $response
+                    ]
                 ]);
             }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'error' => 'Erreur lors de la mise à jour: ' . $e->getMessage()
+                'error' => 'Erreur lors de la mise à jour: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
         exit;
