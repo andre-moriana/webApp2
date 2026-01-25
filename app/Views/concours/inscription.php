@@ -134,7 +134,7 @@
                                 // Ajouter un attribut data-piquet pour JavaScript
                                 $dataPiquet = ' data-piquet="' . htmlspecialchars($piquetColor) . '"';
                                 
-                                // Ajouter aussi un style inline comme solution de secours
+                                // FORCER le style inline avec !important
                                 $colorMap = [
                                     'rouge' => '#ffe0e0',
                                     'bleu' => '#e0e8ff',
@@ -418,59 +418,83 @@ const disciplineAbv = <?= json_encode($disciplineAbv ?? null) ?>;
 const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)) ?>;
 </script>
 <script>
-// Forcer l'application des couleurs de piquet après le chargement de la page
-function applyPiquetColors() {
+// FORCER l'application des couleurs de piquet - Solution définitive
+(function() {
     const colorMap = {
         'rouge': '#ffe0e0',
         'bleu': '#e0e8ff',
         'blanc': '#f5f5f5'
     };
     
-    // Appliquer les couleurs aux lignes avec classe piquet-* ou attribut data-piquet
-    const table = document.getElementById('inscriptions-table');
-    if (!table) return;
-    
-    const rows = table.querySelectorAll('tbody tr');
-    rows.forEach(function(row, index) {
-        let piquetColor = null;
+    function forceApplyColors() {
+        const table = document.getElementById('inscriptions-table');
+        if (!table) return;
         
-        // Vérifier l'attribut data-piquet d'abord
-        if (row.hasAttribute('data-piquet')) {
-            piquetColor = row.getAttribute('data-piquet').toLowerCase().trim();
-        } else {
-            // Sinon, chercher dans les classes
-            const classes = row.className.split(' ');
-            for (let cls of classes) {
-                if (cls.startsWith('piquet-')) {
-                    piquetColor = cls.replace('piquet-', '').toLowerCase().trim();
-                    break;
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(function(row) {
+            let piquetColor = null;
+            
+            // 1. Vérifier data-piquet
+            if (row.hasAttribute('data-piquet')) {
+                piquetColor = row.getAttribute('data-piquet').toLowerCase().trim();
+            }
+            
+            // 2. Vérifier les classes
+            if (!piquetColor) {
+                const classes = row.className.split(' ');
+                for (let cls of classes) {
+                    if (cls.startsWith('piquet-')) {
+                        piquetColor = cls.replace('piquet-', '').toLowerCase().trim();
+                        break;
+                    }
                 }
             }
-        }
-        
-        if (piquetColor && colorMap[piquetColor]) {
-            // Forcer l'application avec setProperty et important
-            row.style.cssText = 'background-color: ' + colorMap[piquetColor] + ' !important;';
-            console.log('Couleur appliquée:', piquetColor, 'à la ligne', index, row);
-        } else {
-            // Pour les lignes sans piquet, appliquer un style alterné si nécessaire
-            if (index % 2 === 1) {
-                row.style.cssText = 'background-color: rgba(0,0,0,.05) !important;';
+            
+            // 3. Vérifier la colonne Piquet
+            if (!piquetColor) {
+                const cells = row.querySelectorAll('td');
+                if (cells.length > 6) {
+                    const cellText = cells[6].textContent.trim().toLowerCase();
+                    if (['rouge', 'bleu', 'blanc'].includes(cellText)) {
+                        piquetColor = cellText;
+                    }
+                }
             }
-        }
+            
+            // APPLIQUER LA COULEUR DE FORCE
+            if (piquetColor && colorMap[piquetColor]) {
+                // Méthode 1: cssText (remplace tout)
+                row.style.cssText = 'background-color: ' + colorMap[piquetColor] + ' !important;';
+                // Méthode 2: setProperty avec important
+                row.style.setProperty('background-color', colorMap[piquetColor], 'important');
+                // Méthode 3: Attribut style direct
+                row.setAttribute('style', 'background-color: ' + colorMap[piquetColor] + ' !important;');
+            }
+        });
+    }
+    
+    // Exécuter immédiatement
+    forceApplyColors();
+    
+    // Exécuter après DOMContentLoaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', forceApplyColors);
+    }
+    
+    // Exécuter plusieurs fois pour surcharger Bootstrap
+    [50, 100, 200, 500, 1000, 2000].forEach(function(delay) {
+        setTimeout(forceApplyColors, delay);
     });
-}
-
-// Exécuter immédiatement et après le chargement
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyPiquetColors);
-} else {
-    applyPiquetColors();
-}
-
-// Réappliquer après des délais pour surcharger Bootstrap
-setTimeout(applyPiquetColors, 50);
-setTimeout(applyPiquetColors, 200);
-setTimeout(applyPiquetColors, 500);
+    
+    // Observer les changements du DOM
+    const observer = new MutationObserver(function() {
+        forceApplyColors();
+    });
+    
+    const table = document.getElementById('inscriptions-table');
+    if (table) {
+        observer.observe(table, { childList: true, subtree: true });
+    }
+})();
 </script>
 <script src="/public/assets/js/concours-inscription.js"></script>
