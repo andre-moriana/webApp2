@@ -1917,3 +1917,132 @@ function removeInscription(inscriptionId) {
         alert('Erreur lors de la suppression: ' + error.message);
     });
 }
+
+// Fonction pour éditer une inscription
+window.editInscription = function(inscriptionId) {
+    if (!concoursId || !inscriptionId) {
+        alert('Erreur: Informations manquantes');
+        return;
+    }
+    
+    // Récupérer les données de l'inscription
+    fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data) {
+            const inscription = data.data;
+            
+            // Remplir le formulaire d'édition
+            document.getElementById('edit-saison').value = inscription.saison || '';
+            document.getElementById('edit-type_certificat_medical').value = inscription.type_certificat_medical || '';
+            document.getElementById('edit-type_licence').value = inscription.type_licence || '';
+            document.getElementById('edit-creation_renouvellement').value = inscription.creation_renouvellement || '';
+            document.getElementById('edit-depart-select').value = inscription.numero_depart || '';
+            document.getElementById('edit-categorie_classement').value = inscription.categorie_classement || '';
+            document.getElementById('edit-arme').value = inscription.arme || '';
+            document.getElementById('edit-mobilite_reduite').checked = inscription.mobilite_reduite == 1 || inscription.mobilite_reduite === true;
+            
+            if (isNature3DOrCampagne) {
+                document.getElementById('edit-piquet').value = inscription.piquet || '';
+            } else {
+                document.getElementById('edit-distance').value = inscription.distance || '';
+                document.getElementById('edit-blason').value = inscription.blason || '';
+                document.getElementById('edit-duel').checked = inscription.duel == 1 || inscription.duel === true;
+                document.getElementById('edit-trispot').checked = inscription.trispot == 1 || inscription.trispot === true;
+            }
+            
+            document.getElementById('edit-numero_tir').value = inscription.numero_tir || '';
+            document.getElementById('edit-tarif_competition').value = inscription.tarif_competition || '';
+            document.getElementById('edit-mode_paiement').value = inscription.mode_paiement || 'Non payé';
+            
+            // Stocker l'ID de l'inscription pour la mise à jour
+            document.getElementById('edit-inscription-form').dataset.inscriptionId = inscriptionId;
+            
+            // Ouvrir la modale
+            const modal = new bootstrap.Modal(document.getElementById('editInscriptionModal'));
+            modal.show();
+        } else {
+            alert('Erreur lors de la récupération de l\'inscription: ' + (data.error || 'Erreur inconnue'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la récupération de l\'inscription: ' + error.message);
+    });
+};
+
+// Gestionnaire pour le bouton de confirmation d'édition
+document.addEventListener('DOMContentLoaded', function() {
+    const btnConfirmEdit = document.getElementById('btn-confirm-edit');
+    if (btnConfirmEdit) {
+        btnConfirmEdit.addEventListener('click', function() {
+            const form = document.getElementById('edit-inscription-form');
+            const inscriptionId = form.dataset.inscriptionId;
+            
+            if (!concoursId || !inscriptionId) {
+                alert('Erreur: Informations manquantes');
+                return;
+            }
+            
+            // Récupérer les valeurs du formulaire
+            const updateData = {
+                saison: document.getElementById('edit-saison').value || null,
+                type_certificat_medical: document.getElementById('edit-type_certificat_medical').value || null,
+                type_licence: document.getElementById('edit-type_licence').value || null,
+                creation_renouvellement: document.getElementById('edit-creation_renouvellement').value ? parseInt(document.getElementById('edit-creation_renouvellement').value) : 0,
+                numero_depart: document.getElementById('edit-depart-select').value ? parseInt(document.getElementById('edit-depart-select').value) : null,
+                categorie_classement: document.getElementById('edit-categorie_classement').value || null,
+                arme: document.getElementById('edit-arme').value || null,
+                mobilite_reduite: document.getElementById('edit-mobilite_reduite').checked ? 1 : 0,
+                numero_tir: document.getElementById('edit-numero_tir').value ? parseInt(document.getElementById('edit-numero_tir').value) : null,
+                tarif_competition: document.getElementById('edit-tarif_competition').value || null,
+                mode_paiement: document.getElementById('edit-mode_paiement').value || 'Non payé'
+            };
+            
+            if (isNature3DOrCampagne) {
+                updateData.piquet = document.getElementById('edit-piquet').value || null;
+            } else {
+                updateData.distance = document.getElementById('edit-distance').value ? parseInt(document.getElementById('edit-distance').value) : null;
+                updateData.blason = document.getElementById('edit-blason').value ? parseInt(document.getElementById('edit-blason').value) : null;
+                updateData.duel = document.getElementById('edit-duel').checked ? 1 : 0;
+                updateData.trispot = document.getElementById('edit-trispot').checked ? 1 : 0;
+            }
+            
+            // Envoyer la requête de mise à jour
+            fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(updateData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Fermer la modale
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editInscriptionModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                    // Recharger la page pour afficher les modifications
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la mise à jour: ' + (data.error || 'Erreur inconnue'));
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la mise à jour: ' + error.message);
+            });
+        });
+    }
+});
