@@ -79,7 +79,7 @@ window.concoursData = <?= isset($concours) ? json_encode($concours, JSON_UNESCAP
         <div class="form-group">
             <label>Niveau Championnat :</label>
             <div class="niveau-championnat-fields">
-                <select id="niveau_championnat" name="niveau_championnat" required>
+                <select id="niveau_championnat" name="niveau_championnat">
                     <option value="">-- Sélectionner --</option>
                 </select>
             </div>
