@@ -161,11 +161,11 @@ window.niveauChampionnatData = <?= json_encode($niveauChampionnat ?? [], JSON_UN
             <label>Fin Compétition : <input type="date" name="date_fin" value="<?= htmlspecialchars($concours->date_fin ?? '') ?>" required></label>
         </div>
 
-        <!-- Nombre cibles, départ, tireurs -->
+        <!-- Nombre cibles/pelotons, départ, tireurs -->
         <div class="numeric-fields-row">
-            <label>Nombre cibles : <input type="number" name="nombre_cibles" value="<?= htmlspecialchars($concours->nombre_cibles ?? 0) ?>" min="0" required></label>
+            <label id="label_nombre_cibles">Nombre cibles : <input type="number" name="nombre_cibles" id="nombre_cibles" value="<?= htmlspecialchars($concours->nombre_cibles ?? 0) ?>" min="0" required></label>
             <label>Nombre départ : <input type="number" name="nombre_depart" value="<?= htmlspecialchars($concours->nombre_depart ?? 1) ?>" min="1" required></label>
-            <label>Nombre tireurs par cibles : <input type="number" name="nombre_tireurs_par_cibles" value="<?= htmlspecialchars($concours->nombre_tireurs_par_cibles ?? 0) ?>" min="0" required></label>
+            <label id="label_nombre_tireurs">Nombre tireurs par cibles : <input type="number" name="nombre_tireurs_par_cibles" id="nombre_tireurs_par_cibles" value="<?= htmlspecialchars($concours->nombre_tireurs_par_cibles ?? 0) ?>" min="0" required></label>
         </div>
     </div>
 

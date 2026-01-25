@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Charger les types de compétition pour cette discipline
             // La fonction loadTypeCompetitions gère déjà la sauvegarde et restauration de la valeur
             loadTypeCompetitions(selectedDiscipline);
+            // Mettre à jour les labels selon le type de discipline
+            updateLabelsForDiscipline(selectedDiscipline);
         }
         
         // Mettre à jour les champs club_code et club_name_display si un club est sélectionné
@@ -112,6 +114,77 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Configuration du changement de discipline
+// Fonction helper pour déterminer si c'est un concours de type nature 3D ou campagne
+function isNature3DOrCampagne(disciplineId) {
+    if (!disciplineId || !window.disciplinesData || !Array.isArray(window.disciplinesData)) {
+        return false;
+    }
+    const discipline = window.disciplinesData.find(function(d) {
+        const id = d.iddiscipline || d.id;
+        return id == disciplineId || String(id) === String(disciplineId);
+    });
+    if (!discipline) {
+        return false;
+    }
+    const name = (discipline.lb_discipline || discipline.name || '').toLowerCase();
+    return name.includes('nature') || name.includes('3d') || name.includes('campagne');
+}
+
+// Fonction pour mettre à jour les labels selon le type de concours
+function updateLabelsForDiscipline(disciplineId) {
+    const isNature = isNature3DOrCampagne(disciplineId);
+    
+    // Mettre à jour le label "Nombre cibles" / "Nombre pelotons"
+    const labelCibles = document.getElementById('label_nombre_cibles');
+    if (labelCibles) {
+        const input = document.getElementById('nombre_cibles');
+        if (input) {
+            // Sauvegarder la valeur et les attributs de l'input
+            const value = input.value;
+            const min = input.getAttribute('min');
+            const required = input.hasAttribute('required');
+            
+            // Remplacer le contenu du label
+            const labelText = (isNature ? 'Nombre pelotons' : 'Nombre cibles') + ' :';
+            const newInput = document.createElement('input');
+            newInput.type = 'number';
+            newInput.name = 'nombre_cibles';
+            newInput.id = 'nombre_cibles';
+            newInput.value = value;
+            if (min) newInput.setAttribute('min', min);
+            if (required) newInput.setAttribute('required', 'required');
+            
+            labelCibles.textContent = labelText + ' ';
+            labelCibles.appendChild(newInput);
+        }
+    }
+    
+    // Mettre à jour le label "Nombre tireurs par cibles" / "Nombre tireurs par peloton"
+    const labelTireurs = document.getElementById('label_nombre_tireurs');
+    if (labelTireurs) {
+        const input = document.getElementById('nombre_tireurs_par_cibles');
+        if (input) {
+            // Sauvegarder la valeur et les attributs de l'input
+            const value = input.value;
+            const min = input.getAttribute('min');
+            const required = input.hasAttribute('required');
+            
+            // Remplacer le contenu du label
+            const labelText = (isNature ? 'Nombre tireurs par peloton' : 'Nombre tireurs par cibles') + ' :';
+            const newInput = document.createElement('input');
+            newInput.type = 'number';
+            newInput.name = 'nombre_tireurs_par_cibles';
+            newInput.id = 'nombre_tireurs_par_cibles';
+            newInput.value = value;
+            if (min) newInput.setAttribute('min', min);
+            if (required) newInput.setAttribute('required', 'required');
+            
+            labelTireurs.textContent = labelText + ' ';
+            labelTireurs.appendChild(newInput);
+        }
+    }
+}
+
 function setupDisciplineChange() {
     const disciplineSelect = document.getElementById('discipline');
     if (disciplineSelect) {
@@ -119,7 +192,14 @@ function setupDisciplineChange() {
             const selectedDisciplineId = this.value;
             console.log('Discipline changée:', selectedDisciplineId);
             loadTypeCompetitions(selectedDisciplineId);
+            // Mettre à jour les labels selon le type de discipline
+            updateLabelsForDiscipline(selectedDisciplineId);
         });
+        
+        // Mettre à jour les labels au chargement si une discipline est déjà sélectionnée
+        if (disciplineSelect.value) {
+            updateLabelsForDiscipline(disciplineSelect.value);
+        }
     }
 }
 
