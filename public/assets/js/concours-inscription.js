@@ -1920,23 +1920,32 @@ function removeInscription(inscriptionId) {
 
 // Fonction pour éditer une inscription - Charge les données AVANT d'ouvrir la modale
 window.editInscription = function(inscriptionId) {
+    console.log('=== editInscription APPELÉE ===');
+    console.log('inscriptionId:', inscriptionId);
+    console.log('concoursId:', concoursId);
+    
     if (!concoursId || !inscriptionId) {
+        console.error('Erreur: Informations manquantes');
         alert('Erreur: Informations manquantes');
         return;
     }
     
     const modalElement = document.getElementById('editInscriptionModal');
     if (!modalElement) {
+        console.error('Erreur: La modale d\'édition est introuvable');
         alert('Erreur: La modale d\'édition est introuvable');
         return;
     }
+    console.log('Modale trouvée');
     
     // Stocker l'ID de l'inscription dans le formulaire
     const form = document.getElementById('edit-inscription-form');
     if (form) {
         form.dataset.inscriptionId = inscriptionId;
+        console.log('ID stocké dans le formulaire:', inscriptionId);
     }
     
+    console.log('Début du fetch pour charger les données...');
     // CHARGER LES DONNÉES AVANT d'ouvrir la modale
     fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
         method: 'GET',
@@ -1947,30 +1956,39 @@ window.editInscription = function(inscriptionId) {
         credentials: 'include'
     })
     .then(response => {
+        console.log('Réponse reçue, status:', response.status);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
     })
     .then(data => {
+        console.log('Données JSON reçues:', data);
         // Extraire l'inscription
         let inscription = null;
         if (data.success && data.data) {
             inscription = data.data;
+            console.log('Inscription extraite depuis data.data');
         } else if (data.id) {
             inscription = data;
+            console.log('Inscription extraite directement depuis data');
         } else {
+            console.error('Format de réponse inattendu:', data);
             alert('Erreur: Format de réponse inattendu');
             return;
         }
         
         if (!inscription) {
+            console.error('Aucune inscription trouvée');
             alert('Erreur: Aucune donnée trouvée');
             return;
         }
         
+        console.log('Inscription à charger:', inscription);
+        
         // MAINTENANT que les données sont chargées, ouvrir la modale et remplir
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            console.log('Bootstrap disponible, ouverture de la modale...');
             const existingModal = bootstrap.Modal.getInstance(modalElement);
             if (existingModal) {
                 existingModal.dispose();
@@ -1979,6 +1997,7 @@ window.editInscription = function(inscriptionId) {
             
             // Fonction pour remplir les champs
             const fillForm = () => {
+                console.log('=== fillForm appelée ===');
                 const saisonInput = document.getElementById('edit-saison');
                 if (saisonInput) saisonInput.value = inscription.saison || '';
                 
@@ -2031,22 +2050,27 @@ window.editInscription = function(inscriptionId) {
             };
             
             // Ouvrir la modale
+            console.log('Ouverture de la modale...');
             modal.show();
             
             // Remplir après que la modale soit affichée
             setTimeout(() => {
+                console.log('setTimeout 100ms - remplissage du formulaire');
                 fillForm();
             }, 100);
             
             // Re-remplir quand la modale est complètement affichée
             modalElement.addEventListener('shown.bs.modal', function() {
+                console.log('shown.bs.modal - remplissage du formulaire');
                 fillForm();
             }, { once: true });
         } else {
+            console.error('Bootstrap n\'est pas disponible');
             alert('Erreur: Bootstrap n\'est pas chargé');
         }
     })
     .catch(error => {
+        console.error('Erreur lors de la récupération:', error);
         alert('Erreur lors de la récupération: ' + error.message);
     });
 };
