@@ -2250,9 +2250,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Envoyer la requête de mise à jour
-            console.log('Début du fetch POST vers:', `/api/concours/${concoursId}/inscription/${inscriptionId}`);
             fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
@@ -2261,15 +2260,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(updateData)
             })
             .then(response => {
-                console.log('Fetch réussi, traitement de la réponse...');
                 console.log('Réponse PUT reçue, status:', response.status);
-                console.log('Content-Type:', response.headers.get('content-type'));
                 // Vérifier le Content-Type pour savoir si c'est du JSON ou du HTML
                 const contentType = response.headers.get('content-type') || '';
                 const isJson = contentType.includes('application/json');
                 
                 if (!response.ok) {
-                    console.error('Réponse non OK, status:', response.status);
                     // Essayer de lire le message d'erreur depuis la réponse
                     if (isJson) {
                         return response.json().then(data => {
@@ -2325,15 +2321,11 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Erreur lors de la mise à jour:', error);
-                console.error('Type d\'erreur:', typeof error);
-                console.error('Message d\'erreur:', error?.message);
-                console.error('Stack:', error?.stack);
                 // Afficher plus de détails dans la console
                 console.error('URL:', `/api/concours/${concoursId}/inscription/${inscriptionId}`);
                 console.error('Method:', 'PUT');
                 console.error('UpdateData:', updateData);
-                const errorMessage = error?.message || error?.toString() || 'Erreur inconnue';
-                alert('Erreur lors de la mise à jour: ' + errorMessage);
+                alert('Erreur lors de la mise à jour: ' + (error.message || 'Erreur inconnue'));
             });
         });
     }
