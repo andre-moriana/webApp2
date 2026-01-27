@@ -159,6 +159,25 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                                 <button type="button" class="btn btn-sm btn-outline-info" title="S'inscrire rapidement" onclick="inscrireConcours(<?php echo $concoursId; ?>)">
                                                     <i class="fas fa-check"></i>
                                                 </button>
+                                                <?php 
+                                                // Afficher le bouton plan de cible uniquement pour les disciplines S, T, I, H
+                                                $disciplineId = $item['discipline'] ?? $item['iddiscipline'] ?? null;
+                                                $abv_discipline = null;
+                                                if ($disciplineId && isset($disciplines) && is_array($disciplines)) {
+                                                    foreach ($disciplines as $disc) {
+                                                        $discId = $disc['iddiscipline'] ?? $disc['id'] ?? null;
+                                                        if ($discId == $disciplineId || (string)$discId === (string)$disciplineId) {
+                                                            $abv_discipline = $disc['abv_discipline'] ?? null;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                if ($abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H'])): 
+                                                ?>
+                                                <a href="/concours/<?php echo $concoursId; ?>/plan-cible" class="btn btn-sm btn-outline-warning" title="Voir le plan de cible">
+                                                    <i class="fas fa-bullseye"></i>
+                                                </a>
+                                                <?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
