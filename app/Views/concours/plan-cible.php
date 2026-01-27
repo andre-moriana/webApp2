@@ -86,11 +86,9 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         $plansParCible[$cible][] = $plan;
                     }
                     
-                    // Trier par numéro de cible
-                    ksort($plansParCible);
-                    
-                    // Afficher chaque cible (pas de tir)
-                    foreach ($plansParCible as $numeroCible => $ciblePlans): 
+                    // Afficher toutes les cibles de 1 à nombre_cibles, même si elles n'ont pas de plans
+                    for ($numeroCible = 1; $numeroCible <= $nombreCibles; $numeroCible++):
+                        $ciblePlans = $plansParCible[$numeroCible] ?? []; 
                         // Trier les plans par position (A, B, C, D...)
                         usort($ciblePlans, function($a, $b) {
                             $posA = $a['position_archer'] ?? '';
@@ -119,14 +117,33 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             }
                         }
                         
-                        // Déterminer le type de disposition selon le blason
+                        // Déterminer le type de disposition selon le blason ou par défaut selon le numéro de cible
                         $dispositionType = 'default'; // Par défaut, disposition verticale
-                        if ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true) {
-                            $dispositionType = 'trispot'; // A C B D de gauche à droite
-                        } elseif ($blasonCible == 60 || $blasonCible === '60') {
-                            $dispositionType = 'blason60'; // 2 blasons: A-C gauche, B-D droite
-                        } elseif ($blasonCible == 40 || $blasonCible === '40') {
-                            $dispositionType = 'blason40'; // 4 blasons: A B haut, C D bas
+                        
+                        // Si le blason n'est pas défini, utiliser les valeurs par défaut selon le numéro de cible
+                        if ($blasonCible === null && $trispotCible === null) {
+                            if ($numeroCible >= 1 && $numeroCible <= 2) {
+                                // Cibles 1-2 : blason 60 par défaut
+                                $blasonCible = 60;
+                                $dispositionType = 'blason60';
+                            } elseif ($numeroCible >= 3 && $numeroCible <= 10) {
+                                // Cibles 3-10 : blason 40 par défaut
+                                $blasonCible = 40;
+                                $dispositionType = 'blason40';
+                            } elseif ($numeroCible >= 11 && $numeroCible <= 14) {
+                                // Cibles 11-14 : trispot par défaut
+                                $trispotCible = 1;
+                                $dispositionType = 'trispot';
+                            }
+                        } else {
+                            // Utiliser les valeurs définies dans les plans
+                            if ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true) {
+                                $dispositionType = 'trispot'; // A C B D de gauche à droite
+                            } elseif ($blasonCible == 60 || $blasonCible === '60') {
+                                $dispositionType = 'blason60'; // 2 blasons: A-C gauche, B-D droite
+                            } elseif ($blasonCible == 40 || $blasonCible === '40') {
+                                $dispositionType = 'blason40'; // 4 blasons: A B haut, C D bas
+                            }
                         }
                         
                         // Créer un tableau associatif position => plan
@@ -139,13 +156,13 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         // Définir l'ordre d'affichage selon le type de disposition
                         $ordrePositions = [];
                         if ($dispositionType === 'blason60') {
-                            // Blason 60: A-C gauche, B-D droite
+                            // Blason 60: A-C gauche, B-D droite (2 blasons par cible)
                             $ordrePositions = ['A', 'C', 'B', 'D'];
                         } elseif ($dispositionType === 'blason40') {
-                            // Blason 40: A B haut, C D bas
+                            // Blason 40: A B haut, C D bas (4 blasons par cible)
                             $ordrePositions = ['A', 'B', 'C', 'D'];
                         } elseif ($dispositionType === 'trispot') {
-                            // Trispot: A C B D de gauche à droite
+                            // Trispot: A C B D de gauche à droite (4 blasons par cible)
                             $ordrePositions = ['A', 'C', 'B', 'D'];
                         } else {
                             // Ordre par défaut (A, B, C, D...)
@@ -153,33 +170,51 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 $ordrePositions[] = chr(64 + $i);
                             }
                         }
+                        
+                        // Limiter le nombre de positions selon le type de blason
+                        if ($dispositionType === 'blason60') {
+                            // Blason 60 : 4 positions (A, B, C, D) mais 2 blasons physiques
+                            // A-C à gauche, B-D à droite
+                            $ordrePositions = ['A', 'C', 'B', 'D'];
+                        } elseif ($dispositionType === 'blason40' || $dispositionType === 'trispot') {
+                            // Blason 40 et Trispot : 4 blasons (A, B, C, D)
+                            $ordrePositions = array_slice($ordrePositions, 0, 4);
+                        }
                     ?>
                     <div class="pas-de-tir">
                         <div class="pas-de-tir-header">
                             <h3>Cible <?= htmlspecialchars($numeroCible) ?></h3>
-                            <?php if ($blasonCible !== null || $distanceCible !== null): ?>
-                                <div class="pas-de-tir-info">
-                                    <?php if ($blasonCible !== null): ?>
-                                        <i class="fas fa-bullseye"></i> Blason <?= htmlspecialchars($blasonCible) ?>
-                                    <?php endif; ?>
-                                    <?php if ($blasonCible !== null && $distanceCible !== null): ?>
-                                        <span> - </span>
-                                    <?php endif; ?>
-                                    <?php if ($distanceCible !== null): ?>
-                                        <i class="fas fa-ruler"></i> <?= htmlspecialchars($distanceCible) ?>m
-                                    <?php endif; ?>
-                                    <?php if ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true): ?>
-                                        <span> - Trispot</span>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
+                            <div class="pas-de-tir-info">
+                                <?php if ($blasonCible !== null): ?>
+                                    <i class="fas fa-bullseye"></i> Blason <?= htmlspecialchars($blasonCible) ?>
+                                <?php elseif ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true): ?>
+                                    <i class="fas fa-bullseye"></i> Trispot
+                                <?php endif; ?>
+                                <?php if ($blasonCible !== null && $distanceCible !== null): ?>
+                                    <span> - </span>
+                                <?php endif; ?>
+                                <?php if ($distanceCible !== null): ?>
+                                    <i class="fas fa-ruler"></i> <?= htmlspecialchars($distanceCible) ?>m
+                                <?php endif; ?>
+                            </div>
                         </div>
                         
                         <div class="blasons-container blasons-<?= htmlspecialchars($dispositionType) ?>">
                             <?php
                             // Afficher les positions dans l'ordre défini
                             foreach ($ordrePositions as $position) {
+                                // Récupérer le plan pour cette position, ou créer un plan vide si elle n'existe pas
                                 $plan = $plansParPosition[$position] ?? null;
+                                if ($plan === null) {
+                                    // Créer un plan vide pour cette position
+                                    $plan = [
+                                        'numero_cible' => $numeroCible,
+                                        'position_archer' => $position,
+                                        'user_id' => null,
+                                        'blason' => $blasonCible,
+                                        'distance' => $distanceCible
+                                    ];
+                                }
                                 $userId = $plan['user_id'] ?? null;
                                 $isAssigne = $userId !== null;
                                 
@@ -208,18 +243,23 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     }
                                 }
                             ?>
+                            <?php
+                                // Utiliser le blason et la distance du plan, ou ceux de la cible par défaut
+                                $planBlason = $plan['blason'] ?? $blasonCible;
+                                $planDistance = $plan['distance'] ?? $distanceCible;
+                            ?>
                             <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>" data-position="<?= htmlspecialchars($position) ?>">
                                 <div class="blason-numero"><?= htmlspecialchars($numeroCible) ?></div>
                                 <div class="blason-position"><?= htmlspecialchars($position) ?></div>
                                 
-                                <?php if ($blasonCible !== null): ?>
-                                    <div class="blason-taille"><?= htmlspecialchars($blasonCible) ?></div>
+                                <?php if ($planBlason !== null): ?>
+                                    <div class="blason-taille"><?= htmlspecialchars($planBlason) ?></div>
                                 <?php else: ?>
                                     <div class="blason-taille" style="font-size: 0.9em; color: #adb5bd;">-</div>
                                 <?php endif; ?>
                                 
-                                <?php if ($distanceCible !== null): ?>
-                                    <div class="blason-distance"><?= htmlspecialchars($distanceCible) ?>m</div>
+                                <?php if ($planDistance !== null): ?>
+                                    <div class="blason-distance"><?= htmlspecialchars($planDistance) ?>m</div>
                                 <?php endif; ?>
                                 
                                 <?php if ($isAssigne): ?>
