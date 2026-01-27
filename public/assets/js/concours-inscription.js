@@ -1073,6 +1073,18 @@ document.addEventListener('DOMContentLoaded', function() {
             btnAssign.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Assignation...';
         }
         
+        const requestData = {
+            numero_depart: parseInt(numeroDepart),
+            numero_cible: parseInt(numeroCible),
+            position_archer: positionArcher,
+            user_id: parseInt(userId),
+            id_club: idClub,
+            blason: blason ? parseInt(blason) : null,
+            distance: distance ? parseInt(distance) : null
+        };
+        
+        console.log('Assignation cible - Données envoyées:', requestData);
+        
         fetch(`/api/concours/${concoursId}/plan-cible/assign`, {
             method: 'POST',
             headers: {
@@ -1080,25 +1092,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Accept': 'application/json'
             },
             credentials: 'include',
-            body: JSON.stringify({
-                numero_depart: parseInt(numeroDepart),
-                numero_cible: parseInt(numeroCible),
-                position_archer: positionArcher,
-                user_id: parseInt(userId),
-                id_club: idClub,
-                blason: blason ? parseInt(blason) : null,
-                distance: distance ? parseInt(distance) : null
-            })
+            body: JSON.stringify(requestData)
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Assignation cible - Status:', response.status, 'Content-Type:', response.headers.get('content-type'));
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    console.error('Assignation cible - Réponse non-JSON:', text.substring(0, 500));
+                    throw new Error('La réponse n\'est pas au format JSON: ' + text.substring(0, 200));
+                });
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Assignation cible - Données reçues:', data);
             if (data.success) {
                 const message = data.data?.message || data.message || 'Archer assigné à la cible avec succès';
                 alert(message);
                 // Recharger les cibles pour mettre à jour l'affichage
                 loadCiblesForDepart(numeroDepart);
             } else {
-                alert('Erreur: ' + (data.error || data.message || 'Erreur inconnue'));
+                const errorMsg = data.error || data.message || 'Erreur inconnue';
+                console.error('Assignation cible - Erreur:', errorMsg);
+                alert('Erreur: ' + errorMsg);
             }
             
             if (btnAssign) {
@@ -1108,7 +1125,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Erreur lors de l\'assignation:', error);
-            alert('Erreur lors de l\'assignation: ' + error.message);
+            console.error('Stack trace:', error.stack);
+            alert('Erreur lors de l\'assignation: ' + (error.message || 'Erreur inconnue'));
             
             if (btnAssign) {
                 btnAssign.disabled = false;
