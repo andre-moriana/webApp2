@@ -92,8 +92,39 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 return strcmp($posA, $posB);
                             });
                         ?>
+                        <?php
+                        // Récupérer le blason et la distance de cette cible (toutes les positions ont les mêmes valeurs)
+                        $blasonCible = null;
+                        $distanceCible = null;
+                        foreach ($ciblePlans as $plan) {
+                            if (isset($plan['blason']) && $plan['blason'] !== null) {
+                                $blasonCible = $plan['blason'];
+                            }
+                            if (isset($plan['distance']) && $plan['distance'] !== null) {
+                                $distanceCible = $plan['distance'];
+                            }
+                            if ($blasonCible !== null && $distanceCible !== null) {
+                                break;
+                            }
+                        }
+                        ?>
                         <tr>
-                            <td><strong>Cible <?= htmlspecialchars($numeroCible) ?></strong></td>
+                            <td>
+                                <strong>Cible <?= htmlspecialchars($numeroCible) ?></strong>
+                                <?php if ($blasonCible !== null || $distanceCible !== null): ?>
+                                    <br><small class="text-muted">
+                                        <?php if ($blasonCible !== null): ?>
+                                            <i class="fas fa-bullseye"></i> Blason: <?= htmlspecialchars($blasonCible) ?>
+                                        <?php endif; ?>
+                                        <?php if ($blasonCible !== null && $distanceCible !== null): ?>
+                                            <br>
+                                        <?php endif; ?>
+                                        <?php if ($distanceCible !== null): ?>
+                                            <i class="fas fa-ruler"></i> Distance: <?= htmlspecialchars($distanceCible) ?>m
+                                        <?php endif; ?>
+                                    </small>
+                                <?php endif; ?>
+                            </td>
                             <?php
                             // Créer un tableau associatif position => plan pour faciliter l'accès
                             $plansParPosition = [];

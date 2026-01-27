@@ -829,6 +829,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Quand le select principal change, mettre à jour celui de la modale
         departSelectMain.addEventListener('change', function() {
             departSelectModal.value = this.value;
+            // Charger les cibles pour ce départ si nécessaire
+            if (typeof needsPlanCible !== 'undefined' && needsPlanCible) {
+                loadCiblesForDepart(this.value);
+            }
         });
         
         // Quand la modale s'ouvre, synchroniser avec le select principal
@@ -841,6 +845,234 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+    
+    // Gestion du plan de cible pour les disciplines S, T, I, H
+    const needsPlanCible = typeof disciplineAbv !== 'undefined' && ['S', 'T', 'I', 'H'].includes(disciplineAbv);
+    let ciblesData = null;
+    
+    // Fonction pour charger les cibles disponibles pour un départ
+    function loadCiblesForDepart(numeroDepart) {
+        if (!needsPlanCible || !numeroDepart) {
+            const planCibleSection = document.getElementById('plan-cible-selection');
+            if (planCibleSection) {
+                planCibleSection.style.display = 'none';
+            }
+            return;
+        }
+        
+        const planCibleSection = document.getElementById('plan-cible-selection');
+        if (!planCibleSection) return;
+        
+        planCibleSection.style.display = 'block';
+        
+        // Réinitialiser les selects
+        const cibleSelect = document.getElementById('numero_cible');
+        const positionSelect = document.getElementById('position_archer');
+        const btnAssign = document.getElementById('btn-assign-cible');
+        const cibleInfo = document.getElementById('cible-info');
+        
+        if (cibleSelect) cibleSelect.innerHTML = '<option value="">Sélectionner une cible</option>';
+        if (positionSelect) positionSelect.innerHTML = '<option value="">Sélectionner une position</option>';
+        if (btnAssign) btnAssign.disabled = true;
+        if (cibleInfo) cibleInfo.textContent = '';
+        
+        // Charger les cibles disponibles
+        fetch(`/api/concours/${concoursId}/plan-cible/${numeroDepart}/cibles`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data && data.data.cibles) {
+                ciblesData = data.data.cibles;
+                
+                // Remplir le select des cibles
+                if (cibleSelect) {
+                    ciblesData.forEach(cible => {
+                        const option = document.createElement('option');
+                        option.value = cible.numero_cible;
+                        option.textContent = `Cible ${cible.numero_cible}`;
+                        if (cible.blason) {
+                            option.textContent += ` (Blason: ${cible.blason})`;
+                        }
+                        if (cible.distance) {
+                            const distanceLabel = distancesTir.find(d => d.distance_valeur == cible.distance);
+                            if (distanceLabel) {
+                                option.textContent += ` - ${distanceLabel.lb_distance}`;
+                            }
+                        }
+                        cibleSelect.appendChild(option);
+                    });
+                }
+            } else {
+                console.error('Erreur lors du chargement des cibles:', data.error || 'Erreur inconnue');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des cibles:', error);
+        });
+    }
+    
+    // Fonction pour charger les positions disponibles pour une cible
+    function loadPositionsForCible(numeroCible) {
+        const positionSelect = document.getElementById('position_archer');
+        const btnAssign = document.getElementById('btn-assign-cible');
+        const cibleInfo = document.getElementById('cible-info');
+        
+        if (!positionSelect || !ciblesData) return;
+        
+        positionSelect.innerHTML = '<option value="">Sélectionner une position</option>';
+        if (btnAssign) btnAssign.disabled = true;
+        
+        const cible = ciblesData.find(c => c.numero_cible == numeroCible);
+        if (!cible) return;
+        
+        // Afficher les informations de la cible
+        if (cibleInfo) {
+            let info = '';
+            if (cible.blason) {
+                info += `Blason: ${cible.blason}`;
+            }
+            if (cible.distance) {
+                const distanceLabel = distancesTir.find(d => d.distance_valeur == cible.distance);
+                if (distanceLabel) {
+                    if (info) info += ' - ';
+                    info += `Distance: ${distanceLabel.lb_distance}`;
+                }
+            }
+            cibleInfo.textContent = info;
+        }
+        
+        // Remplir le select des positions libres
+        if (cible.positions_libres && cible.positions_libres.length > 0) {
+            cible.positions_libres.forEach(position => {
+                const option = document.createElement('option');
+                option.value = position;
+                option.textContent = `Position ${position}`;
+                positionSelect.appendChild(option);
+            });
+        } else {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Aucune position libre';
+            option.disabled = true;
+            positionSelect.appendChild(option);
+        }
+    }
+    
+    // Fonction pour assigner un archer à une position de cible
+    function assignArcherToCible() {
+        if (!selectedArcher) {
+            alert('Aucun archer sélectionné');
+            return;
+        }
+        
+        const userId = selectedArcher.id || selectedArcher._id || selectedArcher.ID || null;
+        if (!userId) {
+            alert('Erreur: L\'archer sélectionné n\'a pas d\'ID');
+            return;
+        }
+        
+        const numeroDepart = document.getElementById('depart-select-main')?.value || document.getElementById('depart-select')?.value || null;
+        const numeroCible = document.getElementById('numero_cible')?.value || null;
+        const positionArcher = document.getElementById('position_archer')?.value || null;
+        const blason = document.getElementById('blason')?.value || null;
+        const distance = document.getElementById('distance')?.value || null;
+        const idClub = selectedArcher.id_club || selectedArcher.club_id || selectedArcher.IDClub || null;
+        
+        if (!numeroDepart || !numeroCible || !positionArcher) {
+            alert('Veuillez sélectionner un départ, une cible et une position');
+            return;
+        }
+        
+        const btnAssign = document.getElementById('btn-assign-cible');
+        if (btnAssign) {
+            btnAssign.disabled = true;
+            btnAssign.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Assignation...';
+        }
+        
+        fetch(`/api/concours/${concoursId}/plan-cible/assign`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                numero_depart: parseInt(numeroDepart),
+                numero_cible: parseInt(numeroCible),
+                position_archer: positionArcher,
+                user_id: parseInt(userId),
+                id_club: idClub,
+                blason: blason ? parseInt(blason) : null,
+                distance: distance ? parseInt(distance) : null
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Archer assigné à la cible avec succès');
+                // Recharger les cibles pour mettre à jour l'affichage
+                loadCiblesForDepart(numeroDepart);
+            } else {
+                alert('Erreur: ' + (data.error || data.message || 'Erreur inconnue'));
+            }
+            
+            if (btnAssign) {
+                btnAssign.disabled = false;
+                btnAssign.innerHTML = '<i class="fas fa-bullseye"></i> Assigner à la cible';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors de l\'assignation:', error);
+            alert('Erreur lors de l\'assignation: ' + error.message);
+            
+            if (btnAssign) {
+                btnAssign.disabled = false;
+                btnAssign.innerHTML = '<i class="fas fa-bullseye"></i> Assigner à la cible';
+            }
+        });
+    }
+    
+    // Écouter les changements sur le select de cible
+    const cibleSelect = document.getElementById('numero_cible');
+    if (cibleSelect) {
+        cibleSelect.addEventListener('change', function() {
+            loadPositionsForCible(this.value);
+        });
+    }
+    
+    // Écouter les changements sur le select de position
+    const positionSelect = document.getElementById('position_archer');
+    if (positionSelect) {
+        positionSelect.addEventListener('change', function() {
+            const btnAssign = document.getElementById('btn-assign-cible');
+            if (btnAssign) {
+                btnAssign.disabled = !this.value || !selectedArcher;
+            }
+        });
+    }
+    
+    // Écouter le clic sur le bouton d'assignation
+    const btnAssignCible = document.getElementById('btn-assign-cible');
+    if (btnAssignCible) {
+        btnAssignCible.addEventListener('click', assignArcherToCible);
+    }
+    
+    // Écouter les changements sur selectedArcher pour activer/désactiver le bouton
+    const originalShowConfirmModal = window.showConfirmModal;
+    window.showConfirmModal = function(archer) {
+        originalShowConfirmModal(archer);
+        const positionSelect = document.getElementById('position_archer');
+        const btnAssign = document.getElementById('btn-assign-cible');
+        if (positionSelect && btnAssign) {
+            btnAssign.disabled = !positionSelect.value || !selectedArcher;
+        }
+    };
 
     // Bouton de confirmation d'inscription
     const btnConfirmInscription = document.getElementById('btn-confirm-inscription');
