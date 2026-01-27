@@ -1005,7 +1005,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Afficher les informations de la cible
         if (cibleInfo) {
             let info = '';
-            if (cible.blason) {
+            if (cible.is_trispot) {
+                info += 'Trispot';
+            } else if (cible.blason) {
                 info += `Blason: ${cible.blason}`;
             }
             if (cible.distance) {
@@ -1023,7 +1025,12 @@ document.addEventListener('DOMContentLoaded', function() {
             cible.positions_libres.forEach(position => {
                 const option = document.createElement('option');
                 option.value = position;
-                option.textContent = `Position ${position}`;
+                // Pour les trispots, afficher un message indiquant que toutes les positions de la colonne seront assignées
+                if (cible.is_trispot) {
+                    option.textContent = `Colonne ${position} (positions ${position}1, ${position}2, ${position}3)`;
+                } else {
+                    option.textContent = `Position ${position}`;
+                }
                 positionSelect.appendChild(option);
             });
         } else {
@@ -1086,7 +1093,8 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Archer assigné à la cible avec succès');
+                const message = data.data?.message || data.message || 'Archer assigné à la cible avec succès';
+                alert(message);
                 // Recharger les cibles pour mettre à jour l'affichage
                 loadCiblesForDepart(numeroDepart);
             } else {
