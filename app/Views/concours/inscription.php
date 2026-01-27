@@ -396,6 +396,7 @@ table tbody tr.piquet-blanc {
                                     <i class="fas fa-info-circle"></i> 
                                     <strong>Plan de cible :</strong> 
                                     Sélectionnez une cible et une position pour assigner l'archer. 
+                                    <strong>Pour les trispots (cibles 11-14) :</strong> sélectionnez une colonne (A, B, C ou D) - les 3 positions verticales de cette colonne seront automatiquement assignées au même archer.
                                     Si le plan de cible n'existe pas encore, créez-le depuis la page de détails du concours.
                                 </div>
                             </div>
