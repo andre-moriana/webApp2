@@ -164,9 +164,15 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             // Blason 40: A B haut, C D bas (4 blasons par cible)
                             $ordrePositions = ['A', 'B', 'C', 'D'];
                         } elseif ($dispositionType === 'trispot') {
-                            // Trispot: afficher seulement 4 colonnes (A, C, B, D)
-                            // Chaque colonne regroupe les 3 positions (A1-A3, C1-C3, B1-B3, D1-D3)
-                            $ordrePositions = ['A', 'C', 'B', 'D'];
+                            // Trispot: grille 3 lignes x 4 colonnes (ordre: A, C, B, D)
+                            // 12 positions : A1-A3, C1-C3, B1-B3, D1-D3
+                            // Chaque colonne est affectée à un seul archer
+                            $ordrePositions = [];
+                            foreach (['A', 'C', 'B', 'D'] as $colonne) {
+                                for ($ligne = 1; $ligne <= 3; $ligne++) {
+                                    $ordrePositions[] = $colonne . $ligne;
+                                }
+                            }
                         } else {
                             // Ordre par défaut (A, B, C, D...)
                             for ($i = 1; $i <= $nombreTireursParCibles; $i++) {
@@ -205,44 +211,41 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             <?php
                             // Afficher les positions dans l'ordre défini
                             foreach ($ordrePositions as $position) {
-                                // Pour les trispots, $position est maintenant la colonne (A, B, C, D) au lieu de A1, A2, etc.
+                                // Pour les trispots, extraire la colonne de la position (A1 -> A)
                                 $colonne = null;
-                                if ($dispositionType === 'trispot') {
-                                    $colonne = $position; // Pour trispot, position = colonne directement
-                                } elseif ($dispositionType === 'trispot' && preg_match('/^([A-D])(\d+)$/', $position, $matches)) {
+                                if ($dispositionType === 'trispot' && preg_match('/^([A-D])(\d+)$/', $position, $matches)) {
                                     $colonne = $matches[1];
                                 }
                                 
-                                // Pour les trispots, récupérer les plans des 3 positions de la colonne
+                                // Pour les trispots, récupérer le user_id de la colonne (toutes les positions de la colonne ont le même)
                                 $plan = null;
                                 $userIdTrispot = null;
                                 if ($dispositionType === 'trispot' && $colonne !== null) {
-                                    // Récupérer les plans pour les 3 positions de cette colonne
-                                    $plansColonne = [];
+                                    // Récupérer le plan pour cette position spécifique (A1, A2, A3, etc.)
+                                    $plan = $plansParPosition[$position] ?? null;
+                                    
+                                    // Récupérer le user_id de la colonne (vérifier les 3 positions de la colonne)
                                     for ($ligne = 1; $ligne <= 3; $ligne++) {
                                         $posTrispot = $colonne . $ligne;
                                         $planPos = $plansParPosition[$posTrispot] ?? null;
-                                        if ($planPos) {
-                                            $plansColonne[] = $planPos;
-                                            // Si une position est assignée, récupérer le user_id (toutes doivent avoir le même)
-                                            if ($planPos['user_id'] !== null) {
-                                                $userIdTrispot = $planPos['user_id'];
-                                            }
+                                        if ($planPos && $planPos['user_id'] !== null) {
+                                            $userIdTrispot = $planPos['user_id'];
+                                            break; // Toutes les positions ont le même user_id
                                         }
                                     }
-                                    // Utiliser le premier plan pour les informations de base (blason, distance)
-                                    if (!empty($plansColonne)) {
-                                        $plan = $plansColonne[0];
-                                        $plan['user_id'] = $userIdTrispot; // Utiliser le user_id de la colonne
-                                    } else {
-                                        // Créer un plan vide pour cette colonne
+                                    
+                                    // Si pas de plan trouvé, créer un plan vide pour cette position
+                                    if ($plan === null) {
                                         $plan = [
                                             'numero_cible' => $numeroCible,
-                                            'position_archer' => $colonne,
-                                            'user_id' => null,
+                                            'position_archer' => $position,
+                                            'user_id' => $userIdTrispot, // Utiliser le user_id de la colonne
                                             'blason' => $blasonCible,
                                             'distance' => $distanceCible
                                         ];
+                                    } else {
+                                        // Mettre à jour le user_id avec celui de la colonne
+                                        $plan['user_id'] = $userIdTrispot;
                                     }
                                 } else {
                                     // Pour les blasons normaux, récupérer le plan normalement
@@ -293,7 +296,12 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 }
                                 
                                 $userId = $plan['user_id'] ?? null;
-                                $isAssigne = $userId !== null || !empty($userIdsBlason);
+                                // Pour les trispots, utiliser $userIdTrispot pour déterminer si assigné
+                                if ($dispositionType === 'trispot') {
+                                    $isAssigne = $userIdTrispot !== null;
+                                } else {
+                                    $isAssigne = $userId !== null || !empty($userIdsBlason);
+                                }
                                 
                                 // Récupérer les informations de l'utilisateur
                                 $userNom = '';
@@ -411,20 +419,12 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                         $positionsBlason = 'B, D';
                                     }
                                 }
-                                
-                                // Pour les trispots, afficher la colonne avec les 3 positions
-                                $positionDisplay = $position;
-                                if ($dispositionType === 'trispot' && $colonne !== null) {
-                                    $positionDisplay = $colonne . '1-' . $colonne . '3';
-                                }
                             ?>
                             <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>">
                                 <div class="blason-numero"><?= htmlspecialchars($numeroCible) ?></div>
                                 <div class="blason-position">
                                     <?php if ($dispositionType === 'blason60' && !empty($positionsBlason)): ?>
                                         <?= htmlspecialchars($positionsBlason) ?>
-                                    <?php elseif ($dispositionType === 'trispot'): ?>
-                                        <?= htmlspecialchars($colonne) ?>
                                     <?php else: ?>
                                         <?= htmlspecialchars($position) ?>
                                     <?php endif; ?>

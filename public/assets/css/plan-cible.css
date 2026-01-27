@@ -179,54 +179,113 @@
     grid-column: 2;
 }
 
-/* Disposition pour trispot : 4 colonnes en ligne (A, C, B, D) */
+/* Disposition pour trispot : grille 3 lignes x 4 colonnes (A, C, B, D) */
 .blasons-container.blasons-trispot {
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 colonnes : A, C, B, D */
+    grid-template-rows: repeat(3, 1fr); /* 3 lignes */
+    gap: 10px;
     width: 100%;
-    max-width: 500px;
+    max-width: 400px;
     margin: 0 auto;
-    justify-content: center;
-    align-items: center;
+    align-items: center; /* Centrer verticalement les blasons */
     flex: 1;
     min-height: 0;
 }
 
 .blasons-container.blasons-trispot .blason-item {
-    width: 130px; /* Taille standard */
-    height: 130px; /* Taille standard */
-    margin-bottom: 0;
+    width: 65px; /* Taille divisée par 2 : 130px / 2 = 65px */
+    height: 65px; /* Taille divisée par 2 : 130px / 2 = 65px */
+    margin-bottom: 0; /* Pas de marge supplémentaire en grille */
+    justify-self: center; /* Centrer horizontalement chaque blason dans sa cellule */
+    align-self: center; /* Centrer verticalement chaque blason dans sa cellule */
+}
+
+/* Positionner les blasons dans la grille selon leur position */
+/* Ordre des colonnes : A, C, B, D */
+/* Colonne 1 : A (lignes 1, 2, 3) */
+.blasons-container.blasons-trispot .blason-item[data-position="A1"] {
+    grid-column: 1;
+    grid-row: 1;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="A2"] {
+    grid-column: 1;
+    grid-row: 2;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="A3"] {
+    grid-column: 1;
+    grid-row: 3;
+}
+
+/* Colonne 2 : C (lignes 1, 2, 3) */
+.blasons-container.blasons-trispot .blason-item[data-position="C1"] {
+    grid-column: 2;
+    grid-row: 1;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="C2"] {
+    grid-column: 2;
+    grid-row: 2;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="C3"] {
+    grid-column: 2;
+    grid-row: 3;
+}
+/* Colonne 3 : B (lignes 1, 2, 3) */
+.blasons-container.blasons-trispot .blason-item[data-position="B1"] {
+    grid-column: 3;
+    grid-row: 1;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="B2"] {
+    grid-column: 3;
+    grid-row: 2;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="B3"] {
+    grid-column: 3;
+    grid-row: 3;
+}
+
+/* Colonne 4 : D (lignes 1, 2, 3) */
+.blasons-container.blasons-trispot .blason-item[data-position="D1"] {
+    grid-column: 4;
+    grid-row: 1;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="D2"] {
+    grid-column: 4;
+    grid-row: 2;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="D3"] {
+    grid-column: 4;
+    grid-row: 3;
 }
 
 .blasons-container.blasons-trispot .blason-taille {
-    font-size: 2em; /* Taille normale */
+    font-size: 1em; /* Réduire la taille de la police du blason */
 }
 
 .blasons-container.blasons-trispot .blason-distance {
-    font-size: 0.8em; /* Taille normale */
+    font-size: 0.7em; /* Réduire la taille de la police de la distance */
 }
 
 .blasons-container.blasons-trispot .blason-nom {
-    font-size: 0.8em; /* Taille normale */
-    bottom: -30px; /* Position normale */
-    max-width: 150px; /* Largeur normale */
+    font-size: 0.7em; /* Réduire la taille de la police du nom */
+    bottom: -20px; /* Ajuster la position */
+    max-width: 100px; /* Réduire la largeur max */
 }
 
 .blasons-container.blasons-trispot .blason-numero {
-    width: 28px; /* Taille normale */
-    height: 28px;
-    font-size: 0.85em;
-    top: -8px;
-    left: -8px;
+    width: 20px; /* Réduire la taille du badge numéro */
+    height: 20px;
+    font-size: 0.7em;
+    top: -5px;
+    left: -5px;
 }
 
 .blasons-container.blasons-trispot .blason-position {
-    width: 24px; /* Taille normale */
-    height: 24px;
-    font-size: 0.8em;
-    top: 5px;
-    right: 5px;
+    width: 18px; /* Réduire la taille du badge position */
+    height: 18px;
+    font-size: 0.7em;
+    top: 3px;
+    right: 3px;
 }
 
 .blason-item {
@@ -432,28 +491,28 @@
     }
     
     .blasons-container.blasons-trispot {
-        max-width: 350px;
+        max-width: 120px;
         gap: 10px;
     }
     
     .blasons-container.blasons-trispot .blason-item {
-        width: 80px;
-        height: 80px;
+        width: 50px;
+        height: 50px;
     }
     
     .blasons-container.blasons-trispot .blason-taille {
-        font-size: 1.5em;
+        font-size: 0.8em;
     }
     
     .blasons-container.blasons-trispot .blason-numero {
-        width: 20px;
-        height: 20px;
-        font-size: 0.7em;
+        width: 16px;
+        height: 16px;
+        font-size: 0.6em;
     }
     
     .blasons-container.blasons-trispot .blason-position {
-        width: 18px;
-        height: 18px;
-        font-size: 0.7em;
+        width: 14px;
+        height: 14px;
+        font-size: 0.6em;
     }
 }
