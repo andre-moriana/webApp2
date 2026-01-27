@@ -92,6 +92,20 @@ class ApiService {
             }
             return $this->makeRequest("concours/{$id}", "DELETE");
         }
+
+        public function createPlanCible($concoursId, $data = []) {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
+            }
+            return $this->makeRequest("concours/{$concoursId}/plan-cible", "POST", $data);
+        }
+
+        public function getPlanCible($concoursId) {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
+            }
+            return $this->makeRequest("concours/{$concoursId}/plan-cible", "GET");
+        }
     
     /**
      * Vérifie et rafraîchit le token si nécessaire avant chaque requête

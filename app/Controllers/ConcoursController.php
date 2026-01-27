@@ -468,7 +468,59 @@ class ConcoursController {
             if ($response['success'] && isset($apiResponse) && is_array($apiResponse)) {
                 // La réponse API est dans $response['data']
                 if (isset($apiResponse['success']) && $apiResponse['success']) {
-                    $_SESSION['success'] = $apiResponse['message'] ?? 'Concours créé avec succès';
+                    $concoursId = $apiResponse['data']['id'] ?? null;
+                    
+                    // Créer automatiquement les plans de cible si la discipline est S, T, I ou H
+                    if ($concoursId && $discipline && $nombre_cibles > 0 && $nombre_tireurs_par_cibles > 0) {
+                        try {
+                            // Récupérer l'abréviation de la discipline
+                            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+                            $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+                            if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                                $disciplinesPayload = $disciplinesPayload['data'];
+                            }
+                            
+                            $abv_discipline = null;
+                            if (is_array($disciplinesPayload)) {
+                                foreach ($disciplinesPayload as $disc) {
+                                    $discId = $disc['iddiscipline'] ?? $disc['id'] ?? null;
+                                    if ($discId == $discipline || (string)$discId === (string)$discipline) {
+                                        $abv_discipline = $disc['abv_discipline'] ?? null;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            // Créer les plans de cible si la discipline est S, T, I ou H
+                            if ($abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H'])) {
+                                $planData = [
+                                    'nombre_cibles' => (int)$nombre_cibles,
+                                    'nombre_depart' => (int)$nombre_depart,
+                                    'nombre_tireurs_par_cibles' => (int)$nombre_tireurs_par_cibles
+                                ];
+                                
+                                $planResponse = $this->apiService->createPlanCible($concoursId, $planData);
+                                
+                                if ($planResponse['success']) {
+                                    $planMessage = $planResponse['data']['message'] ?? 'Plans de cible créés avec succès';
+                                    $_SESSION['success'] = ($apiResponse['message'] ?? 'Concours créé avec succès') . '. ' . $planMessage;
+                                } else {
+                                    // Ne pas bloquer la création du concours si les plans échouent
+                                    $_SESSION['success'] = ($apiResponse['message'] ?? 'Concours créé avec succès') . '. Attention: Les plans de cible n\'ont pas pu être créés automatiquement.';
+                                    error_log('Erreur lors de la création automatique des plans de cible: ' . ($planResponse['error'] ?? 'Erreur inconnue'));
+                                }
+                            } else {
+                                $_SESSION['success'] = $apiResponse['message'] ?? 'Concours créé avec succès';
+                            }
+                        } catch (Exception $e) {
+                            // Ne pas bloquer la création du concours si les plans échouent
+                            $_SESSION['success'] = ($apiResponse['message'] ?? 'Concours créé avec succès') . '. Attention: Les plans de cible n\'ont pas pu être créés automatiquement.';
+                            error_log('Exception lors de la création automatique des plans de cible: ' . $e->getMessage());
+                        }
+                    } else {
+                        $_SESSION['success'] = $apiResponse['message'] ?? 'Concours créé avec succès';
+                    }
+                    
                     header('Location: /concours');
                     exit;
                 } else {
