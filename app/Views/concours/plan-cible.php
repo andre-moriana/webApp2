@@ -150,15 +150,26 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 // Récupérer les informations de l'utilisateur
                                 $userNom = '';
                                 $userPrenom = '';
-                                if ($isAssigne && isset($usersMap[$userId])) {
-                                    $user = $usersMap[$userId];
-                                    $userNom = is_array($user) ? ($user['nom'] ?? $user['NOM'] ?? '') : ($user->nom ?? $user->NOM ?? '');
-                                    $userPrenom = is_array($user) ? ($user['prenom'] ?? $user['PRENOM'] ?? '') : ($user->prenom ?? $user->PRENOM ?? '');
-                                }
+                                $nomComplet = '';
                                 
-                                $nomComplet = trim($userPrenom . ' ' . $userNom);
-                                if (empty($nomComplet)) {
-                                    $nomComplet = 'User ID: ' . $userId;
+                                if ($isAssigne) {
+                                    if (isset($usersMap[$userId])) {
+                                        $user = $usersMap[$userId];
+                                        // Gérer les différents formats de données utilisateur
+                                        if (is_array($user)) {
+                                            $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
+                                            $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
+                                        } else {
+                                            $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
+                                            $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
+                                        }
+                                        $nomComplet = trim($userPrenom . ' ' . $userNom);
+                                    }
+                                    
+                                    // Si le nom n'a pas pu être récupéré, utiliser l'ID
+                                    if (empty($nomComplet)) {
+                                        $nomComplet = 'ID: ' . $userId;
+                                    }
                                 }
                             ?>
                             <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>">
