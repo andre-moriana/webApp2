@@ -129,22 +129,80 @@
     grid-column: 2;
 }
 
-/* Disposition pour trispot : 3 blasons verticaux (A, B, C) */
+/* Disposition pour trispot : grille 3 lignes x 4 colonnes (A, B, C, D) */
 .blasons-container.blasons-trispot {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 colonnes : A, B, C, D */
+    grid-template-rows: repeat(3, 1fr); /* 3 lignes */
+    gap: 10px;
     width: 100%;
-    align-items: center;
-    max-width: 200px;
+    max-width: 400px;
     margin: 0 auto;
 }
 
 .blasons-container.blasons-trispot .blason-item {
-    flex: 0 0 auto;
     width: 65px; /* Taille divisée par 2 : 130px / 2 = 65px */
     height: 65px; /* Taille divisée par 2 : 130px / 2 = 65px */
-    margin-bottom: 15px; /* Réduire aussi la marge */
+    margin-bottom: 0; /* Pas de marge supplémentaire en grille */
+    justify-self: center; /* Centrer chaque blason dans sa cellule */
+}
+
+/* Positionner les blasons dans la grille selon leur position */
+/* Ordre des colonnes : A, C, B, D */
+/* Colonne 1 : A (lignes 1, 2, 3) */
+.blasons-container.blasons-trispot .blason-item[data-position="A1"] {
+    grid-column: 1;
+    grid-row: 1;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="A2"] {
+    grid-column: 1;
+    grid-row: 2;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="A3"] {
+    grid-column: 1;
+    grid-row: 3;
+}
+
+/* Colonne 2 : C (lignes 1, 2, 3) */
+.blasons-container.blasons-trispot .blason-item[data-position="C1"] {
+    grid-column: 2;
+    grid-row: 1;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="C2"] {
+    grid-column: 2;
+    grid-row: 2;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="C3"] {
+    grid-column: 2;
+    grid-row: 3;
+}
+
+/* Colonne 3 : B (lignes 1, 2, 3) */
+.blasons-container.blasons-trispot .blason-item[data-position="B1"] {
+    grid-column: 3;
+    grid-row: 1;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="B2"] {
+    grid-column: 3;
+    grid-row: 2;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="B3"] {
+    grid-column: 3;
+    grid-row: 3;
+}
+
+/* Colonne 4 : D (lignes 1, 2, 3) */
+.blasons-container.blasons-trispot .blason-item[data-position="D1"] {
+    grid-column: 4;
+    grid-row: 1;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="D2"] {
+    grid-column: 4;
+    grid-row: 2;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="D3"] {
+    grid-column: 4;
+    grid-row: 3;
 }
 
 .blasons-container.blasons-trispot .blason-taille {
