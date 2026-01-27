@@ -162,8 +162,14 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             // Blason 40: A B haut, C D bas (4 blasons par cible)
                             $ordrePositions = ['A', 'B', 'C', 'D'];
                         } elseif ($dispositionType === 'trispot') {
-                            // Trispot: 3 blasons verticaux (A, B, C)
-                            $ordrePositions = ['A', 'B', 'C'];
+                            // Trispot: grille 3 lignes x 4 colonnes (ordre: A, C, B, D)
+                            // 12 positions : A1-A3, C1-C3, B1-B3, D1-D3
+                            $ordrePositions = [];
+                            foreach (['A', 'C', 'B', 'D'] as $colonne) {
+                                for ($ligne = 1; $ligne <= 3; $ligne++) {
+                                    $ordrePositions[] = $colonne . $ligne;
+                                }
+                            }
                         } else {
                             // Ordre par défaut (A, B, C, D...)
                             for ($i = 1; $i <= $nombreTireursParCibles; $i++) {
@@ -180,8 +186,8 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             // Blason 40 : 4 blasons (A, B, C, D)
                             $ordrePositions = array_slice($ordrePositions, 0, 4);
                         } elseif ($dispositionType === 'trispot') {
-                            // Trispot : 3 blasons verticaux (A, B, C)
-                            $ordrePositions = ['A', 'B', 'C'];
+                            // Trispot : grille 3 lignes x 4 colonnes (12 blasons)
+                            // Les positions sont déjà définies ci-dessus
                         }
                     ?>
                     <div class="pas-de-tir">
