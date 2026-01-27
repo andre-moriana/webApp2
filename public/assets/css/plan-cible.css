@@ -129,20 +129,52 @@
     grid-column: 2;
 }
 
-/* Disposition pour trispot : 4 blasons par cible (A C B D de gauche à droite) */
+/* Disposition pour trispot : 3 blasons verticaux (A, B, C) */
 .blasons-container.blasons-trispot {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 15px;
     width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-    max-width: 600px;
+    align-items: center;
+    max-width: 200px;
     margin: 0 auto;
 }
 
 .blasons-container.blasons-trispot .blason-item {
     flex: 0 0 auto;
+    width: 65px; /* Taille divisée par 2 : 130px / 2 = 65px */
+    height: 65px; /* Taille divisée par 2 : 130px / 2 = 65px */
+    margin-bottom: 15px; /* Réduire aussi la marge */
+}
+
+.blasons-container.blasons-trispot .blason-taille {
+    font-size: 1em; /* Réduire la taille de la police du blason */
+}
+
+.blasons-container.blasons-trispot .blason-distance {
+    font-size: 0.7em; /* Réduire la taille de la police de la distance */
+}
+
+.blasons-container.blasons-trispot .blason-nom {
+    font-size: 0.7em; /* Réduire la taille de la police du nom */
+    bottom: -20px; /* Ajuster la position */
+    max-width: 100px; /* Réduire la largeur max */
+}
+
+.blasons-container.blasons-trispot .blason-numero {
+    width: 20px; /* Réduire la taille du badge numéro */
+    height: 20px;
+    font-size: 0.7em;
+    top: -5px;
+    left: -5px;
+}
+
+.blasons-container.blasons-trispot .blason-position {
+    width: 18px; /* Réduire la taille du badge position */
+    height: 18px;
+    font-size: 0.7em;
+    top: 3px;
+    right: 3px;
 }
 
 .blason-item {
@@ -347,12 +379,28 @@
     }
     
     .blasons-container.blasons-trispot {
-        max-width: 100%;
+        max-width: 120px;
         gap: 10px;
     }
     
     .blasons-container.blasons-trispot .blason-item {
-        width: 100px;
-        height: 100px;
+        width: 50px;
+        height: 50px;
+    }
+    
+    .blasons-container.blasons-trispot .blason-taille {
+        font-size: 0.8em;
+    }
+    
+    .blasons-container.blasons-trispot .blason-numero {
+        width: 16px;
+        height: 16px;
+        font-size: 0.6em;
+    }
+    
+    .blasons-container.blasons-trispot .blason-position {
+        width: 14px;
+        height: 14px;
+        font-size: 0.6em;
     }
 }
