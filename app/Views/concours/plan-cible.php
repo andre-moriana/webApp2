@@ -101,6 +101,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         // Récupérer le blason et la distance de cette cible
                         $blasonCible = null;
                         $distanceCible = null;
+                        $trispotCible = null;
                         foreach ($ciblePlans as $plan) {
                             if (isset($plan['blason']) && $plan['blason'] !== null) {
                                 $blasonCible = $plan['blason'];
@@ -108,9 +109,24 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             if (isset($plan['distance']) && $plan['distance'] !== null) {
                                 $distanceCible = $plan['distance'];
                             }
+                            // Vérifier si c'est un trispot depuis trispotMap
+                            $cibleKey = $numeroDepart . '_' . $numeroCible;
+                            if (isset($trispotMap[$cibleKey])) {
+                                $trispotCible = $trispotMap[$cibleKey];
+                            }
                             if ($blasonCible !== null && $distanceCible !== null) {
                                 break;
                             }
+                        }
+                        
+                        // Déterminer le type de disposition selon le blason
+                        $dispositionType = 'default'; // Par défaut, disposition verticale
+                        if ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true) {
+                            $dispositionType = 'trispot'; // A C B D de gauche à droite
+                        } elseif ($blasonCible == 60 || $blasonCible === '60') {
+                            $dispositionType = 'blason60'; // 2 blasons: A-C gauche, B-D droite
+                        } elseif ($blasonCible == 40 || $blasonCible === '40') {
+                            $dispositionType = 'blason40'; // 4 blasons: A B haut, C D bas
                         }
                         
                         // Créer un tableau associatif position => plan
@@ -118,6 +134,24 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         foreach ($ciblePlans as $plan) {
                             $position = $plan['position_archer'] ?? '';
                             $plansParPosition[$position] = $plan;
+                        }
+                        
+                        // Définir l'ordre d'affichage selon le type de disposition
+                        $ordrePositions = [];
+                        if ($dispositionType === 'blason60') {
+                            // Blason 60: A-C gauche, B-D droite
+                            $ordrePositions = ['A', 'C', 'B', 'D'];
+                        } elseif ($dispositionType === 'blason40') {
+                            // Blason 40: A B haut, C D bas
+                            $ordrePositions = ['A', 'B', 'C', 'D'];
+                        } elseif ($dispositionType === 'trispot') {
+                            // Trispot: A C B D de gauche à droite
+                            $ordrePositions = ['A', 'C', 'B', 'D'];
+                        } else {
+                            // Ordre par défaut (A, B, C, D...)
+                            for ($i = 1; $i <= $nombreTireursParCibles; $i++) {
+                                $ordrePositions[] = chr(64 + $i);
+                            }
                         }
                     ?>
                     <div class="pas-de-tir">
@@ -134,15 +168,17 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     <?php if ($distanceCible !== null): ?>
                                         <i class="fas fa-ruler"></i> <?= htmlspecialchars($distanceCible) ?>m
                                     <?php endif; ?>
+                                    <?php if ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true): ?>
+                                        <span> - Trispot</span>
+                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
                         </div>
                         
-                        <div class="blasons-container">
+                        <div class="blasons-container blasons-<?= htmlspecialchars($dispositionType) ?>">
                             <?php
-                            // Afficher chaque position (A, B, C, D, etc.)
-                            for ($i = 1; $i <= $nombreTireursParCibles; $i++) {
-                                $position = chr(64 + $i); // 1->A, 2->B, etc.
+                            // Afficher les positions dans l'ordre défini
+                            foreach ($ordrePositions as $position) {
                                 $plan = $plansParPosition[$position] ?? null;
                                 $userId = $plan['user_id'] ?? null;
                                 $isAssigne = $userId !== null;
@@ -172,7 +208,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     }
                                 }
                             ?>
-                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>">
+                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>" data-position="<?= htmlspecialchars($position) ?>">
                                 <div class="blason-numero"><?= htmlspecialchars($numeroCible) ?></div>
                                 <div class="blason-position"><?= htmlspecialchars($position) ?></div>
                                 

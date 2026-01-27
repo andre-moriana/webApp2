@@ -67,6 +67,84 @@
     align-items: center;
 }
 
+/* Disposition pour blason 60 : 2 blasons par cible (A-C gauche, B-D droite) */
+.blasons-container.blasons-blason60 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 15px;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.blasons-container.blasons-blason60 .blason-item[data-position="A"],
+.blasons-container.blasons-blason60 .blason-item[data-position="C"] {
+    grid-column: 1;
+}
+
+.blasons-container.blasons-blason60 .blason-item[data-position="B"],
+.blasons-container.blasons-blason60 .blason-item[data-position="D"] {
+    grid-column: 2;
+}
+
+.blasons-container.blasons-blason60 .blason-item[data-position="A"],
+.blasons-container.blasons-blason60 .blason-item[data-position="B"] {
+    grid-row: 1;
+}
+
+.blasons-container.blasons-blason60 .blason-item[data-position="C"],
+.blasons-container.blasons-blason60 .blason-item[data-position="D"] {
+    grid-row: 2;
+}
+
+/* Disposition pour blason 40 : 4 blasons par cible (A B haut, C D bas) */
+.blasons-container.blasons-blason40 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 15px;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.blasons-container.blasons-blason40 .blason-item[data-position="A"],
+.blasons-container.blasons-blason40 .blason-item[data-position="B"] {
+    grid-row: 1;
+}
+
+.blasons-container.blasons-blason40 .blason-item[data-position="C"],
+.blasons-container.blasons-blason40 .blason-item[data-position="D"] {
+    grid-row: 2;
+}
+
+.blasons-container.blasons-blason40 .blason-item[data-position="A"],
+.blasons-container.blasons-blason40 .blason-item[data-position="C"] {
+    grid-column: 1;
+}
+
+.blasons-container.blasons-blason40 .blason-item[data-position="B"],
+.blasons-container.blasons-blason40 .blason-item[data-position="D"] {
+    grid-column: 2;
+}
+
+/* Disposition pour trispot : 4 blasons par cible (A C B D de gauche à droite) */
+.blasons-container.blasons-trispot {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.blasons-container.blasons-trispot .blason-item {
+    flex: 0 0 auto;
+}
+
 .blason-item {
     position: relative;
     width: 130px;
@@ -260,5 +338,21 @@
     
     .blason-taille {
         font-size: 1.5em;
+    }
+    
+    .blasons-container.blasons-blason60,
+    .blasons-container.blasons-blason40 {
+        max-width: 250px;
+        gap: 10px;
+    }
+    
+    .blasons-container.blasons-trispot {
+        max-width: 100%;
+        gap: 10px;
+    }
+    
+    .blasons-container.blasons-trispot .blason-item {
+        width: 100px;
+        height: 100px;
     }
 }
