@@ -6,6 +6,10 @@
     overflow-y: hidden;
     padding: 20px 0;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 50%, #f8f9fa 100%);
+    border-radius: 8px;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .plan-cible-scroll {
@@ -13,19 +17,25 @@
     flex-direction: row;
     min-width: max-content;
     gap: 30px;
-    padding: 20px;
+    padding: 20px 40px;
 }
 
 .pas-de-tir {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 200px;
-    padding: 15px;
-    background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 2px solid #dee2e6;
+    min-width: 220px;
+    padding: 20px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    border: 3px solid #dee2e6;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pas-de-tir:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .pas-de-tir-header {
@@ -59,32 +69,50 @@
 
 .blason-item {
     position: relative;
-    width: 120px;
-    height: 120px;
+    width: 130px;
+    height: 130px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    border: 3px solid #495057;
+    border: 4px solid #495057;
     background: #ffffff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 30px;
 }
 
 .blason-item:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    transform: scale(1.08);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    z-index: 10;
 }
 
 .blason-item.libre {
     background: linear-gradient(135deg, #e9ecef 0%, #ced4da 100%);
     border-color: #adb5bd;
+    opacity: 0.7;
 }
 
 .blason-item.assigne {
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #d4edda 40%, #c3e6cb 100%);
     border-color: #28a745;
+    border-width: 5px;
+    position: relative;
+}
+
+.blason-item.assigne::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    height: 60%;
+    border-radius: 50%;
+    border: 2px solid rgba(40, 167, 69, 0.3);
+    pointer-events: none;
 }
 
 .blason-numero {
@@ -106,31 +134,39 @@
 }
 
 .blason-taille {
-    font-size: 1.8em;
+    font-size: 2em;
     font-weight: bold;
-    color: #495057;
+    color: #212529;
     margin-bottom: 5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    z-index: 2;
 }
 
 .blason-distance {
-    font-size: 0.75em;
-    color: #6c757d;
+    font-size: 0.8em;
+    color: #495057;
     margin-top: 5px;
+    font-weight: 500;
+    z-index: 2;
 }
 
 .blason-nom {
     position: absolute;
-    bottom: -25px;
+    bottom: -30px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 0.75em;
+    font-size: 0.8em;
     font-weight: 600;
     color: #212529;
     white-space: nowrap;
-    max-width: 140px;
+    max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 3px 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .blason-position {
