@@ -132,19 +132,21 @@
 /* Disposition pour trispot : grille 3 lignes x 4 colonnes (A, B, C, D) */
 .blasons-container.blasons-trispot {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 colonnes : A, B, C, D */
+    grid-template-columns: repeat(4, 1fr); /* 4 colonnes : A, C, B, D */
     grid-template-rows: repeat(3, 1fr); /* 3 lignes */
     gap: 10px;
     width: 100%;
     max-width: 400px;
     margin: 0 auto;
+    align-items: center; /* Centrer verticalement les blasons */
 }
 
 .blasons-container.blasons-trispot .blason-item {
     width: 65px; /* Taille divisée par 2 : 130px / 2 = 65px */
     height: 65px; /* Taille divisée par 2 : 130px / 2 = 65px */
     margin-bottom: 0; /* Pas de marge supplémentaire en grille */
-    justify-self: center; /* Centrer chaque blason dans sa cellule */
+    justify-self: center; /* Centrer horizontalement chaque blason dans sa cellule */
+    align-self: center; /* Centrer verticalement chaque blason dans sa cellule */
 }
 
 /* Positionner les blasons dans la grille selon leur position */
