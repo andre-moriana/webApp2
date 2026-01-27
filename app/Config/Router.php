@@ -386,6 +386,15 @@ class Router {
             // Utiliser la méthode convertToRegex existante
             $pattern = $this->convertToRegex($route["path"]);
             
+            // Log détaillé pour les requêtes vers plan-cible
+            if (strpos($requestUri, "/plan-cible") !== false || strpos($route["path"], "/plan-cible") !== false) {
+                $testMatch = preg_match($pattern, $requestUri);
+                error_log("DEBUG ROUTER PLAN-CIBLE: Test route - method: $requestMethod, path: '" . $route["path"] . "', pattern: '$pattern', URI: '$requestUri', match: " . ($testMatch ? 'OUI' : 'NON'));
+                if ($testMatch) {
+                    error_log("DEBUG ROUTER PLAN-CIBLE: MATCH TROUVÉ! Handler: " . $route["handler"]);
+                }
+            }
+            
             // Log détaillé pour les requêtes POST vers /concours/store
             if ($requestMethod === "POST" && strpos($requestUri, "/concours") !== false) {
                 $matches = preg_match($pattern, $requestUri);
