@@ -145,6 +145,34 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_champio
             <p><?= htmlspecialchars($concours->nombre_tireurs_par_cibles ?? 0) ?></p>
         </div>
     </div>
+    
+    <!-- Bouton pour créer les plans de cible (uniquement pour les disciplines S, T, I, H) -->
+    <?php
+    // Vérifier si la discipline est S, T, I ou H
+    $abv_discipline_show = null;
+    if ($selectedDisciplineId && is_array($disciplines)) {
+        foreach ($disciplines as $disc) {
+            $discId = $disc['iddiscipline'] ?? $disc['id'] ?? null;
+            if ($discId == $selectedDisciplineId || (string)$discId === (string)$selectedDisciplineId) {
+                $abv_discipline_show = $disc['abv_discipline'] ?? null;
+                break;
+            }
+        }
+    }
+    
+    $canCreatePlanCible = in_array($abv_discipline_show, ['S', 'T', 'I', 'H']) && 
+                          ($concours->nombre_cibles ?? 0) > 0 && 
+                          ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
+    ?>
+    
+    <?php if ($canCreatePlanCible): ?>
+    <div class="form-group" style="margin-top: 20px;">
+        <button type="button" class="btn btn-primary" id="btn-create-plan-cible" onclick="createPlanCible()">
+            <i class="fas fa-bullseye"></i> Créer le plan de cible
+        </button>
+        <div id="plan-cible-message" style="margin-top: 10px;"></div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- Liste des inscrits -->
@@ -408,5 +436,7 @@ function createItinerary(service = 'google') {
 <script>
 // Variables globales pour la page show
 const concoursIdShow = <?= json_encode($concours->id ?? $concours->_id ?? $id ?? null) ?>;
+// Données du concours pour JavaScript
+const concoursDataShow = <?= json_encode($concours, JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="/public/assets/js/concours-show.js"></script>
