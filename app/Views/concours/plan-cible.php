@@ -273,7 +273,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             <?php } ?>
                         </div>
                     </div>
-                    <?php endforeach; ?>
+                    <?php endfor; ?>
                 </div>
             </div>
         </div>
