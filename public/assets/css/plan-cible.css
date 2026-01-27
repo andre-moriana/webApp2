@@ -408,6 +408,39 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Container pour les positions multiples (blasons 60) */
+.blason-positions-container {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
+
+/* Badges de position dans le container (pour blasons 60) */
+.blason-positions-container .blason-position {
+    position: relative;
+    top: 0;
+    right: 0;
+    width: 30px;
+    height: 30px;
+    font-size: 0.9em;
+}
+
+/* Ajustement pour les blasons 60 */
+.blason-item.blason-60-size .blason-positions-container {
+    top: 5px;
+    right: 5px;
+}
+
+.blason-item.blason-60-size .blason-positions-container .blason-position {
+    width: 35px;
+    height: 35px;
+    font-size: 1em;
+}
+
 /* Styles pour le scroll horizontal */
 .plan-cible-container::-webkit-scrollbar {
     height: 12px;

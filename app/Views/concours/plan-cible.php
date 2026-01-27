@@ -410,25 +410,30 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 $planDistance = $plan['distance'] ?? $distanceCible;
                             ?>
                             <?php
-                                // Pour les blasons 60, afficher les positions sur le blason
-                                $positionsBlason = '';
+                                // Pour les blasons 60, déterminer quelles positions afficher
+                                $positionsBlason = [];
                                 if ($dispositionType === 'blason60') {
                                     if ($position === 'A') {
-                                        $positionsBlason = 'A, C';
+                                        // Blason gauche : A et C (affichés séparément)
+                                        $positionsBlason = ['A', 'C'];
                                     } elseif ($position === 'B') {
-                                        $positionsBlason = 'B, D';
+                                        // Blason droit : B et D (affichés séparément)
+                                        $positionsBlason = ['B', 'D'];
                                     }
                                 }
                             ?>
                             <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>">
                                 <div class="blason-numero"><?= htmlspecialchars($numeroCible) ?></div>
-                                <div class="blason-position">
-                                    <?php if ($dispositionType === 'blason60' && !empty($positionsBlason)): ?>
-                                        <?= htmlspecialchars($positionsBlason) ?>
-                                    <?php else: ?>
-                                        <?= htmlspecialchars($position) ?>
-                                    <?php endif; ?>
-                                </div>
+                                <?php if ($dispositionType === 'blason60' && !empty($positionsBlason)): ?>
+                                    <!-- Pour les blasons 60, afficher deux badges séparés -->
+                                    <div class="blason-positions-container">
+                                        <?php foreach ($positionsBlason as $pos): ?>
+                                            <div class="blason-position"><?= htmlspecialchars($pos) ?></div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="blason-position"><?= htmlspecialchars($position) ?></div>
+                                <?php endif; ?>
                                 
                                 <?php if ($planBlason !== null): ?>
                                     <div class="blason-taille"><?= htmlspecialchars($planBlason) ?></div>
