@@ -440,12 +440,24 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     <div class="blason-distance"><?= htmlspecialchars($planDistance) ?>m</div>
                                 <?php endif; ?>
                                 
-                                <?php if ($isAssigne || ($dispositionType === 'blason60' && !empty($nomComplet) && $nomComplet !== 'Libre')): ?>
-                                    <div class="blason-nom" title="<?= htmlspecialchars($nomComplet) ?>">
-                                        <?= htmlspecialchars($nomComplet) ?>
-                                    </div>
-                                <?php else: ?>
-                                    <div class="blason-nom" style="color: #adb5bd;">Libre</div>
+                                <?php
+                                // Pour les trispots, afficher le nom seulement sur la première position de chaque colonne (A1, C1, B1, D1)
+                                $afficherNom = true;
+                                if ($dispositionType === 'trispot' && $colonne !== null && preg_match('/^([A-D])(\d+)$/', $position, $matches)) {
+                                    $ligne = (int)$matches[2];
+                                    // Afficher le nom seulement si c'est la première ligne (ligne 1)
+                                    $afficherNom = ($ligne === 1);
+                                }
+                                ?>
+                                
+                                <?php if ($afficherNom): ?>
+                                    <?php if ($isAssigne || ($dispositionType === 'blason60' && !empty($nomComplet) && $nomComplet !== 'Libre')): ?>
+                                        <div class="blason-nom" title="<?= htmlspecialchars($nomComplet) ?>">
+                                            <?= htmlspecialchars($nomComplet) ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="blason-nom" style="color: #adb5bd;">Libre</div>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                             <?php } ?>
