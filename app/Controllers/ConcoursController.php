@@ -1884,6 +1884,38 @@ class ConcoursController {
             $plans = [];
         }
         
+        // Récupérer les noms des utilisateurs assignés aux positions
+        $usersMap = [];
+        if (!empty($plans)) {
+            $userIds = [];
+            foreach ($plans as $departPlans) {
+                if (is_array($departPlans)) {
+                    foreach ($departPlans as $plan) {
+                        $userId = $plan['user_id'] ?? null;
+                        if ($userId && !in_array($userId, $userIds)) {
+                            $userIds[] = $userId;
+                        }
+                    }
+                }
+            }
+            
+            // Récupérer les informations des utilisateurs
+            foreach ($userIds as $userId) {
+                try {
+                    $userResponse = $this->apiService->makeRequest("users/{$userId}", 'GET');
+                    if ($userResponse['success'] && isset($userResponse['data'])) {
+                        $userData = $this->apiService->unwrapData($userResponse);
+                        if (is_array($userData) && isset($userData['data']) && isset($userData['success'])) {
+                            $userData = $userData['data'];
+                        }
+                        $usersMap[$userId] = $userData;
+                    }
+                } catch (Exception $e) {
+                    error_log('Erreur lors de la récupération de l\'utilisateur ' . $userId . ': ' . $e->getMessage());
+                }
+            }
+        }
+        
         $title = 'Plan de cible - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/plan-cible.php';
