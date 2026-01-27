@@ -1,7 +1,16 @@
 /* CSS pour l'affichage visuel du plan de cible */
 
+.plan-depart-section {
+    width: 100%;
+    overflow: visible;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
 .plan-cible-container {
     width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
     padding: 20px 0;
@@ -10,6 +19,19 @@
     background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 50%, #f8f9fa 100%);
     border-radius: 8px;
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* S'assurer que le conteneur parent n'empêche pas le scroll */
+.concours-create-container .plan-depart-section {
+    max-width: 100%;
+    overflow: visible;
+}
+
+.concours-create-container .plan-cible-container {
+    max-width: 100%;
 }
 
 .plan-cible-scroll {
@@ -18,6 +40,7 @@
     min-width: max-content;
     gap: 30px;
     padding: 20px 40px;
+    align-items: flex-start;
 }
 
 .pas-de-tir {
