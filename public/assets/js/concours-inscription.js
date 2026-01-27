@@ -889,6 +889,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (cibleInfo) cibleInfo.textContent = '';
         
         // Charger les cibles disponibles
+        console.log('Chargement des cibles pour concours:', concoursId, 'départ:', numeroDepart);
         fetch(`/api/concours/${concoursId}/plan-cible/${numeroDepart}/cibles`, {
             method: 'GET',
             headers: {
@@ -897,31 +898,62 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             credentials: 'include'
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Réponse chargement cibles - Status:', response.status, 'Content-Type:', response.headers.get('content-type'));
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Réponse non-OK:', text);
+                    throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+                });
+            }
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    console.error('Réponse non-JSON:', text.substring(0, 500));
+                    throw new Error('La réponse n\'est pas au format JSON: ' + text.substring(0, 200));
+                });
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.success && data.data && data.data.cibles) {
-                ciblesData = data.data.cibles;
-                
-                // Remplir le select des cibles
-                if (cibleSelect) {
-                    ciblesData.forEach(cible => {
-                        const option = document.createElement('option');
-                        option.value = cible.numero_cible;
-                        option.textContent = `Cible ${cible.numero_cible}`;
-                        if (cible.blason) {
-                            option.textContent += ` (Blason: ${cible.blason})`;
-                        }
-                        if (cible.distance) {
-                            const distanceLabel = distancesTir.find(d => d.distance_valeur == cible.distance);
-                            if (distanceLabel) {
-                                option.textContent += ` - ${distanceLabel.lb_distance}`;
-                            }
-                        }
-                        cibleSelect.appendChild(option);
-                    });
+            console.log('Données reçues:', data);
+            if (data.success) {
+                // Vérifier si data.data existe et contient cibles
+                if (data.data && Array.isArray(data.data.cibles)) {
+                    ciblesData = data.data.cibles;
+                    console.log('Cibles chargées:', ciblesData.length);
                     
-                    // Si aucune cible n'est disponible, afficher un message
-                    if (ciblesData.length === 0) {
+                    // Remplir le select des cibles
+                    if (cibleSelect) {
+                        ciblesData.forEach(cible => {
+                            const option = document.createElement('option');
+                            option.value = cible.numero_cible;
+                            option.textContent = `Cible ${cible.numero_cible}`;
+                            if (cible.blason) {
+                                option.textContent += ` (Blason: ${cible.blason})`;
+                            }
+                            if (cible.distance) {
+                                const distanceLabel = distancesTir.find(d => d.distance_valeur == cible.distance);
+                                if (distanceLabel) {
+                                    option.textContent += ` - ${distanceLabel.lb_distance}`;
+                                }
+                            }
+                            cibleSelect.appendChild(option);
+                        });
+                        
+                        // Si aucune cible n'est disponible, afficher un message
+                        if (ciblesData.length === 0) {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = 'Aucune cible disponible - Créez d\'abord le plan de cible';
+                            option.disabled = true;
+                            cibleSelect.appendChild(option);
+                        }
+                    }
+                } else {
+                    // Plan de cible n'existe pas encore
+                    console.log('Aucun plan de cible créé pour ce départ');
+                    if (cibleSelect) {
                         const option = document.createElement('option');
                         option.value = '';
                         option.textContent = 'Aucune cible disponible - Créez d\'abord le plan de cible';
@@ -930,12 +962,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             } else {
-                console.error('Erreur lors du chargement des cibles:', data.error || 'Erreur inconnue');
+                const errorMsg = data.error || data.message || 'Erreur inconnue';
+                console.error('Erreur lors du chargement des cibles:', errorMsg, 'Données complètes:', data);
                 // Afficher un message d'erreur dans le select
                 if (cibleSelect) {
                     const option = document.createElement('option');
                     option.value = '';
-                    option.textContent = 'Erreur: ' + (data.error || 'Impossible de charger les cibles');
+                    option.textContent = 'Erreur: ' + errorMsg;
                     option.disabled = true;
                     cibleSelect.appendChild(option);
                 }
@@ -943,11 +976,12 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Erreur lors du chargement des cibles:', error);
+            console.error('Stack trace:', error.stack);
             // Afficher un message d'erreur dans le select
             if (cibleSelect) {
                 const option = document.createElement('option');
                 option.value = '';
-                option.textContent = 'Erreur: Impossible de charger les cibles';
+                option.textContent = 'Erreur: ' + (error.message || 'Impossible de charger les cibles');
                 option.disabled = true;
                 cibleSelect.appendChild(option);
             }

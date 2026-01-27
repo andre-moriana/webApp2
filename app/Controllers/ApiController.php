@@ -2610,6 +2610,8 @@ class ApiController {
      * Proxy pour /api/concours/{id}/plan-cible/{depart}/cibles - Récupère les cibles disponibles
      */
     public function proxyConcoursPlanCibleCibles($concoursId, $depart) {
+        error_log("proxyConcoursPlanCibleCibles appelé avec concoursId: $concoursId, depart: $depart");
+        
         if (!$this->isAuthenticated()) {
             $this->sendUnauthenticatedResponse();
             return;
@@ -2620,17 +2622,30 @@ class ApiController {
             $queryString = $_SERVER['QUERY_STRING'] ?? '';
             $endpoint = "concours/{$concoursId}/plan-cible/{$depart}/cibles" . ($queryString ? "?{$queryString}" : "");
             
+            error_log("Appel API endpoint: $endpoint");
+            
             $response = $this->apiService->makeRequest($endpoint, $method);
+            
+            error_log("Réponse API: " . json_encode($response, JSON_UNESCAPED_UNICODE));
             
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
             } else {
-                $this->sendJsonResponse($response, 200);
+                // Si pas de success, vérifier s'il y a une erreur
+                $errorMessage = $response['error'] ?? $response['message'] ?? 'Erreur inconnue';
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'error' => $errorMessage,
+                    'data' => $response
+                ], $response['status_code'] ?? 500);
             }
         } catch (Exception $e) {
+            error_log("Exception dans proxyConcoursPlanCibleCibles: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             $this->sendJsonResponse([
                 'success' => false,
-                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+                'error' => 'Erreur lors de l\'appel API: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
     }
