@@ -156,8 +156,10 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         // Définir l'ordre d'affichage selon le type de disposition
                         $ordrePositions = [];
                         if ($dispositionType === 'blason60') {
-                            // Blason 60: A-C gauche, B-D droite (2 blasons par cible)
-                            $ordrePositions = ['A', 'C', 'B', 'D'];
+                            // Blason 60: 2 blasons physiques seulement
+                            // Blason gauche: A et C (afficher seulement A)
+                            // Blason droit: B et D (afficher seulement B)
+                            $ordrePositions = ['A', 'B'];
                         } elseif ($dispositionType === 'blason40') {
                             // Blason 40: A B haut, C D bas (4 blasons par cible)
                             $ordrePositions = ['A', 'B', 'C', 'D'];
@@ -178,11 +180,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         }
                         
                         // Limiter le nombre de positions selon le type de blason
-                        if ($dispositionType === 'blason60') {
-                            // Blason 60 : 4 positions (A, B, C, D) mais 2 blasons physiques
-                            // A-C à gauche, B-D à droite
-                            $ordrePositions = ['A', 'C', 'B', 'D'];
-                        } elseif ($dispositionType === 'blason40') {
+                        if ($dispositionType === 'blason40') {
                             // Blason 40 : 4 blasons (A, B, C, D)
                             $ordrePositions = array_slice($ordrePositions, 0, 4);
                         } elseif ($dispositionType === 'trispot') {
@@ -212,6 +210,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             <?php
                             // Afficher les positions dans l'ordre défini
                             foreach ($ordrePositions as $position) {
+                                // Pour les blasons 60, A et C partagent le même blason (gauche), B et D partagent le même blason (droit)
                                 // Pour les trispots, les positions A1-A3, B1-B3, C1-C3, D1-D3 partagent le même user_id
                                 // Extraire la colonne (A, B, C, D) de la position
                                 $colonne = null;
@@ -221,6 +220,16 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 
                                 // Récupérer le plan pour cette position, ou créer un plan vide si elle n'existe pas
                                 $plan = $plansParPosition[$position] ?? null;
+                                
+                                // Pour les blasons 60, si on affiche A, chercher aussi C (même blason gauche)
+                                // Si on affiche B, chercher aussi D (même blason droit)
+                                if ($plan === null && $dispositionType === 'blason60') {
+                                    if ($position === 'A') {
+                                        $plan = $plansParPosition['C'] ?? null;
+                                    } elseif ($position === 'B') {
+                                        $plan = $plansParPosition['D'] ?? null;
+                                    }
+                                }
                                 
                                 // Pour les trispots, si cette position n'existe pas, chercher dans les autres positions de la même colonne
                                 if ($plan === null && $dispositionType === 'trispot' && $colonne !== null) {
@@ -243,15 +252,90 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                         'distance' => $distanceCible
                                     ];
                                 }
+                                
+                                // Pour les blasons 60, récupérer les user_id de toutes les positions du même blason
+                                $userIdsBlason = [];
+                                if ($dispositionType === 'blason60') {
+                                    if ($position === 'A') {
+                                        // Blason gauche : A et C
+                                        if (isset($plansParPosition['A']) && $plansParPosition['A']['user_id']) {
+                                            $userIdsBlason[] = $plansParPosition['A']['user_id'];
+                                        }
+                                        if (isset($plansParPosition['C']) && $plansParPosition['C']['user_id']) {
+                                            $userIdsBlason[] = $plansParPosition['C']['user_id'];
+                                        }
+                                    } elseif ($position === 'B') {
+                                        // Blason droit : B et D
+                                        if (isset($plansParPosition['B']) && $plansParPosition['B']['user_id']) {
+                                            $userIdsBlason[] = $plansParPosition['B']['user_id'];
+                                        }
+                                        if (isset($plansParPosition['D']) && $plansParPosition['D']['user_id']) {
+                                            $userIdsBlason[] = $plansParPosition['D']['user_id'];
+                                        }
+                                    }
+                                }
+                                
                                 $userId = $plan['user_id'] ?? null;
-                                $isAssigne = $userId !== null;
+                                $isAssigne = $userId !== null || !empty($userIdsBlason);
                                 
                                 // Récupérer les informations de l'utilisateur
                                 $userNom = '';
                                 $userPrenom = '';
                                 $nomComplet = '';
+                                $nomsArchers = []; // Pour les blasons 60, stocker tous les noms
                                 
-                                if ($isAssigne) {
+                                if ($dispositionType === 'blason60') {
+                                    // Pour les blasons 60, récupérer les noms de tous les archers du même blason
+                                    if ($position === 'A') {
+                                        // Blason gauche : A et C
+                                        foreach (['A', 'C'] as $pos) {
+                                            $planPos = $plansParPosition[$pos] ?? null;
+                                            if ($planPos && $planPos['user_id']) {
+                                                $uid = $planPos['user_id'];
+                                                if (isset($usersMap[$uid])) {
+                                                    $user = $usersMap[$uid];
+                                                    if (is_array($user)) {
+                                                        $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
+                                                        $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
+                                                    } else {
+                                                        $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
+                                                        $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
+                                                    }
+                                                    $nom = trim($userPrenom . ' ' . $userNom);
+                                                    if (!empty($nom)) {
+                                                        $nomsArchers[] = $nom;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } elseif ($position === 'B') {
+                                        // Blason droit : B et D
+                                        foreach (['B', 'D'] as $pos) {
+                                            $planPos = $plansParPosition[$pos] ?? null;
+                                            if ($planPos && $planPos['user_id']) {
+                                                $uid = $planPos['user_id'];
+                                                if (isset($usersMap[$uid])) {
+                                                    $user = $usersMap[$uid];
+                                                    if (is_array($user)) {
+                                                        $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
+                                                        $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
+                                                    } else {
+                                                        $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
+                                                        $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
+                                                    }
+                                                    $nom = trim($userPrenom . ' ' . $userNom);
+                                                    if (!empty($nom)) {
+                                                        $nomsArchers[] = $nom;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    $nomComplet = implode(', ', array_unique($nomsArchers));
+                                    if (empty($nomComplet)) {
+                                        $nomComplet = 'Libre';
+                                    }
+                                } elseif ($isAssigne) {
                                     if (isset($usersMap[$userId])) {
                                         $user = $usersMap[$userId];
                                         // Gérer les différents formats de données utilisateur
@@ -276,9 +360,26 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 $planBlason = $plan['blason'] ?? $blasonCible;
                                 $planDistance = $plan['distance'] ?? $distanceCible;
                             ?>
-                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>" data-position="<?= htmlspecialchars($position) ?>">
+                            <?php
+                                // Pour les blasons 60, afficher les positions sur le blason
+                                $positionsBlason = '';
+                                if ($dispositionType === 'blason60') {
+                                    if ($position === 'A') {
+                                        $positionsBlason = 'A, C';
+                                    } elseif ($position === 'B') {
+                                        $positionsBlason = 'B, D';
+                                    }
+                                }
+                            ?>
+                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>">
                                 <div class="blason-numero"><?= htmlspecialchars($numeroCible) ?></div>
-                                <div class="blason-position"><?= htmlspecialchars($position) ?></div>
+                                <div class="blason-position">
+                                    <?php if ($dispositionType === 'blason60' && !empty($positionsBlason)): ?>
+                                        <?= htmlspecialchars($positionsBlason) ?>
+                                    <?php else: ?>
+                                        <?= htmlspecialchars($position) ?>
+                                    <?php endif; ?>
+                                </div>
                                 
                                 <?php if ($planBlason !== null): ?>
                                     <div class="blason-taille"><?= htmlspecialchars($planBlason) ?></div>
@@ -290,7 +391,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     <div class="blason-distance"><?= htmlspecialchars($planDistance) ?>m</div>
                                 <?php endif; ?>
                                 
-                                <?php if ($isAssigne): ?>
+                                <?php if ($isAssigne || ($dispositionType === 'blason60' && !empty($nomComplet) && $nomComplet !== 'Libre')): ?>
                                     <div class="blason-nom" title="<?= htmlspecialchars($nomComplet) ?>">
                                         <?= htmlspecialchars($nomComplet) ?>
                                     </div>

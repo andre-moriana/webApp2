@@ -92,33 +92,46 @@
 
 /* Disposition pour blason 60 : 2 blasons par cible (A-C gauche, B-D droite) */
 .blasons-container.blasons-blason60 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 15px;
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
     width: 100%;
-    max-width: 300px;
+    max-width: 500px;
     margin: 0 auto;
+    justify-content: center;
+    align-items: center;
 }
 
-.blasons-container.blasons-blason60 .blason-item[data-position="A"],
-.blasons-container.blasons-blason60 .blason-item[data-position="C"] {
-    grid-column: 1;
+/* Taille des blasons 60 : 1.25x plus gros */
+.blason-item.blason-60-size {
+    width: 162.5px !important; /* 130px * 1.25 = 162.5px */
+    height: 162.5px !important;
 }
 
-.blasons-container.blasons-blason60 .blason-item[data-position="B"],
-.blasons-container.blasons-blason60 .blason-item[data-position="D"] {
-    grid-column: 2;
+.blason-item.blason-60-size .blason-taille {
+    font-size: 2.5em !important; /* 2em * 1.25 = 2.5em */
 }
 
-.blasons-container.blasons-blason60 .blason-item[data-position="A"],
-.blasons-container.blasons-blason60 .blason-item[data-position="B"] {
-    grid-row: 1;
+.blason-item.blason-60-size .blason-distance {
+    font-size: 1em !important; /* 0.8em * 1.25 = 1em */
 }
 
-.blasons-container.blasons-blason60 .blason-item[data-position="C"],
-.blasons-container.blasons-blason60 .blason-item[data-position="D"] {
-    grid-row: 2;
+.blason-item.blason-60-size .blason-nom {
+    font-size: 1em !important; /* 0.8em * 1.25 = 1em */
+    bottom: -35px !important;
+    max-width: 180px !important;
+}
+
+.blason-item.blason-60-size .blason-numero {
+    width: 35px !important; /* 28px * 1.25 = 35px */
+    height: 35px !important;
+    font-size: 1em !important;
+}
+
+.blason-item.blason-60-size .blason-position {
+    width: 30px !important; /* 24px * 1.25 = 30px */
+    height: 30px !important;
+    font-size: 1em !important;
 }
 
 /* Disposition pour blason 40 : 4 blasons par cible (A B haut, C D bas) */
