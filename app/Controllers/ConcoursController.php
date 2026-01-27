@@ -1884,16 +1884,40 @@ class ConcoursController {
             $plans = [];
         }
         
-        // Récupérer les noms des utilisateurs assignés aux positions
+        // Récupérer les noms des utilisateurs assignés aux positions et les informations de trispot
         $usersMap = [];
+        $trispotMap = []; // Map pour stocker les informations trispot par cible (clé: "depart_cible")
         if (!empty($plans)) {
             $userIds = [];
-            foreach ($plans as $departPlans) {
+            foreach ($plans as $numeroDepartLoop => $departPlans) {
                 if (is_array($departPlans)) {
                     foreach ($departPlans as $plan) {
                         $userId = $plan['user_id'] ?? null;
                         if ($userId && !in_array($userId, $userIds)) {
                             $userIds[] = $userId;
+                        }
+                        
+                        // Récupérer l'information trispot depuis les inscriptions si un utilisateur est assigné
+                        if ($userId && isset($plan['numero_depart']) && isset($plan['numero_cible'])) {
+                            $cibleKey = $plan['numero_depart'] . '_' . $plan['numero_cible'];
+                            if (!isset($trispotMap[$cibleKey])) {
+                                try {
+                                    // Récupérer l'inscription de l'utilisateur pour ce concours
+                                    $inscriptionResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscription/{$userId}", 'GET');
+                                    if ($inscriptionResponse['success'] && isset($inscriptionResponse['data'])) {
+                                        $inscriptionData = $this->apiService->unwrapData($inscriptionResponse);
+                                        if (is_array($inscriptionData) && isset($inscriptionData['data']) && isset($inscriptionData['success'])) {
+                                            $inscriptionData = $inscriptionData['data'];
+                                        }
+                                        // Stocker l'information trispot pour cette cible
+                                        if (isset($inscriptionData['trispot'])) {
+                                            $trispotMap[$cibleKey] = $inscriptionData['trispot'];
+                                        }
+                                    }
+                                } catch (Exception $e) {
+                                    error_log('Erreur lors de la récupération de l\'inscription pour trispot: ' . $e->getMessage());
+                                }
+                            }
                         }
                     }
                 }
