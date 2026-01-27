@@ -17,6 +17,8 @@ class Router {
         // Route d'inscription avant les autres routes avec {id}
         $this->addRoute("GET", "/concours/{id}/inscription", "ConcoursController@inscription");
         $this->addRoute("POST", "/concours/{id}/inscription", "ConcoursController@storeInscription");
+        // Route pour le plan de cible
+        $this->addRoute("GET", "/concours/{id}/plan-cible", "ConcoursController@planCible");
         // Route pour la mise à jour d'inscription (POST avec X-HTTP-Method-Override ou PUT)
         $this->addRoute("POST", "/concours/{id}/inscription/{inscriptionId}/update", "ConcoursController@updateInscription");
         $this->addRoute("PUT", "/concours/{id}/inscription/{inscriptionId}/update", "ConcoursController@updateInscription");

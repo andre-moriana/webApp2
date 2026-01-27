@@ -36,6 +36,27 @@ class ConcoursController {
         $concours = [];
         $error = null;
         $clubsMap = []; // Mapping club_organisateur ID -> nom du club
+        $disciplines = []; // Pour vérifier les abréviations de discipline
+
+        try {
+            // Récupérer les disciplines pour vérifier les abréviations
+            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+            if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                $disciplinesPayload = $disciplinesPayload['data'];
+            }
+            if ($disciplinesResponse['success'] && is_array($disciplinesPayload)) {
+                foreach ($disciplinesPayload as &$discipline) {
+                    if (!isset($discipline['id']) && isset($discipline['_id'])) {
+                        $discipline['id'] = $discipline['_id'];
+                    }
+                }
+                unset($discipline);
+                $disciplines = array_values($disciplinesPayload);
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des disciplines: ' . $e->getMessage());
+        }
 
         try {
             // Récupérer les clubs pour mapper les IDs aux noms
@@ -100,6 +121,29 @@ class ConcoursController {
         }
 
         $title = 'Gestion des concours - Portail Arc Training';
+        
+        // Récupérer les disciplines pour vérifier les abréviations dans la vue
+        try {
+            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+            if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                $disciplinesPayload = $disciplinesPayload['data'];
+            }
+            if ($disciplinesResponse['success'] && is_array($disciplinesPayload)) {
+                foreach ($disciplinesPayload as &$discipline) {
+                    if (!isset($discipline['id']) && isset($discipline['_id'])) {
+                        $discipline['id'] = $discipline['_id'];
+                    }
+                }
+                unset($discipline);
+                $disciplines = array_values($disciplinesPayload);
+            } else {
+                $disciplines = [];
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des disciplines: ' . $e->getMessage());
+            $disciplines = [];
+        }
         
         // Définir les fichiers JS spécifiques
         //$additionalJS = ['/public/assets/js/clubs-table.js'];
@@ -1751,4 +1795,98 @@ class ConcoursController {
 
     // Méthode utilitaire pour récupérer les concours via l'API
     // plus de méthode fetchConcoursFromApi : tout passe par ApiService
+
+    // Affichage du plan de cible d'un concours
+    public function planCible($concoursId)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+        
+        // Nettoyer les messages d'erreur de session
+        unset($_SESSION['error']);
+        unset($_SESSION['success']);
+        
+        $concours = null;
+        $plans = [];
+        $disciplines = [];
+        
+        // Récupérer le concours
+        $response = $this->apiService->getConcoursById($concoursId);
+        if ($response['success'] && isset($response['data'])) {
+            $concours = (object) $response['data'];
+        } else {
+            $_SESSION['error'] = 'Impossible de récupérer le concours.';
+            header('Location: /concours');
+            exit;
+        }
+        
+        // Récupérer l'abréviation de la discipline pour vérifier si on peut afficher le plan
+        try {
+            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+            if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                $disciplinesPayload = $disciplinesPayload['data'];
+            }
+            if ($disciplinesResponse['success'] && is_array($disciplinesPayload)) {
+                foreach ($disciplinesPayload as &$discipline) {
+                    if (!isset($discipline['id']) && isset($discipline['_id'])) {
+                        $discipline['id'] = $discipline['_id'];
+                    }
+                }
+                unset($discipline);
+                $disciplines = array_values($disciplinesPayload);
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des disciplines: ' . $e->getMessage());
+        }
+        
+        // Vérifier que la discipline est S, T, I ou H
+        $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+        $abv_discipline = null;
+        
+        if ($iddiscipline && is_array($disciplines)) {
+            foreach ($disciplines as $disc) {
+                $discId = $disc['iddiscipline'] ?? $disc['id'] ?? null;
+                if ($discId == $iddiscipline || (string)$discId === (string)$iddiscipline) {
+                    $abv_discipline = $disc['abv_discipline'] ?? null;
+                    break;
+                }
+            }
+        }
+        
+        if (!in_array($abv_discipline, ['S', 'T', 'I', 'H'])) {
+            $_SESSION['error'] = "Les plans de cible ne sont disponibles que pour les disciplines S, T, I et H. Discipline actuelle: " . ($abv_discipline ?? 'inconnue');
+            header('Location: /concours/show/' . $concoursId);
+            exit;
+        }
+        
+        // Récupérer les plans de cible
+        try {
+            $plansResponse = $this->apiService->getPlanCible($concoursId);
+            if ($plansResponse['success']) {
+                $plans = $this->apiService->unwrapData($plansResponse);
+                // Si les données sont encore encapsulées, les extraire
+                if (is_array($plans) && isset($plans['data']) && isset($plans['success'])) {
+                    $plans = $plans['data'];
+                }
+                // Si plans n'est pas un tableau, initialiser à vide
+                if (!is_array($plans)) {
+                    $plans = [];
+                }
+            } else {
+                $plans = [];
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des plans de cible: ' . $e->getMessage());
+            $_SESSION['error'] = 'Erreur lors de la récupération des plans de cible: ' . $e->getMessage();
+            $plans = [];
+        }
+        
+        $title = 'Plan de cible - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
+        include 'app/Views/layouts/header.php';
+        include 'app/Views/concours/plan-cible.php';
+        include 'app/Views/layouts/footer.php';
+    }
 }
