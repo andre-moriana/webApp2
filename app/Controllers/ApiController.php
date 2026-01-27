@@ -2626,9 +2626,20 @@ class ApiController {
             
             $response = $this->apiService->makeRequest($endpoint, $method);
             
-            error_log("Réponse API: " . json_encode($response, JSON_UNESCAPED_UNICODE));
+            error_log("Réponse API brute: " . json_encode($response, JSON_UNESCAPED_UNICODE));
+            
+            // Déballer la réponse si elle est encapsulée
+            if (isset($response['data']) && isset($response['data']['data'])) {
+                $response = $response['data'];
+            }
+            
+            error_log("Réponse API après déballage: " . json_encode($response, JSON_UNESCAPED_UNICODE));
             
             if (isset($response['success'])) {
+                // S'assurer que la structure data.data.cibles existe
+                if (isset($response['data']) && is_array($response['data'])) {
+                    error_log("Nombre de cibles dans la réponse: " . (isset($response['data']['cibles']) ? count($response['data']['cibles']) : 'N/A'));
+                }
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
             } else {
                 // Si pas de success, vérifier s'il y a une erreur
