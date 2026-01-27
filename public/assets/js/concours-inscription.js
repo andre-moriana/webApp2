@@ -42,18 +42,16 @@ window.showConfirmModal = function(archer) {
     
     console.log('Données extraites - nom:', nom, 'prenom:', prenom, 'licence:', licence);
     
-    // Générer le HTML pour les départs (basé sur nombre_depart du concours)
+    // Générer le HTML pour afficher le départ sélectionné (basé sur nombre_depart du concours)
     let departsHtml = '';
     if (typeof concoursNombreDepart !== 'undefined' && concoursNombreDepart && concoursNombreDepart > 0) {
         departsHtml = `
             <div class="mb-3">
-                <label for="depart-select" class="form-label">N° départ <span class="text-danger">*</span></label>
-                <select id="depart-select" class="form-control" required>
-                    <option value="">Sélectionner un départ</option>
-                    ${Array.from({length: parseInt(concoursNombreDepart)}, (_, i) => 
-                        `<option value="${i + 1}">Départ ${i + 1}</option>`
-                    ).join('')}
-                </select>
+                <!-- Le numéro de départ est sélectionné dans la page principale -->
+                <label class="form-label">N° départ</label>
+                <div class="form-control bg-light" style="pointer-events: none;">
+                    <span id="modal-depart-display-js">Sélectionné dans la page principale</span>
+                </div>
             </div>
         `;
     }
@@ -821,26 +819,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Synchroniser le select principal du départ avec celui de la modale
+    // Mettre à jour l'affichage du départ dans la modale quand elle s'ouvre
     const departSelectMain = document.getElementById('depart-select-main');
-    const departSelectModal = document.getElementById('depart-select');
     
-    if (departSelectMain && departSelectModal) {
-        // Quand le select principal change, mettre à jour celui de la modale
+    if (departSelectMain) {
+        // Quand le select principal change, charger les cibles si nécessaire
         departSelectMain.addEventListener('change', function() {
-            departSelectModal.value = this.value;
             // Charger les cibles pour ce départ si nécessaire
             if (typeof needsPlanCible !== 'undefined' && needsPlanCible) {
                 loadCiblesForDepart(this.value);
             }
         });
         
-        // Quand la modale s'ouvre, synchroniser avec le select principal
+        // Quand la modale s'ouvre, afficher le départ sélectionné
         const modalElement = document.getElementById('confirmInscriptionModal');
         if (modalElement) {
             modalElement.addEventListener('shown.bs.modal', function() {
+                // Mettre à jour l'affichage dans la modale (si l'élément existe)
+                const modalDepartDisplay = document.getElementById('modal-depart-display');
+                const modalDepartDisplayJs = document.getElementById('modal-depart-display-js');
+                
                 if (departSelectMain.value) {
-                    departSelectModal.value = departSelectMain.value;
+                    const departText = 'Départ ' + departSelectMain.value;
+                    if (modalDepartDisplay) modalDepartDisplay.textContent = departText;
+                    if (modalDepartDisplayJs) modalDepartDisplayJs.textContent = departText;
+                } else {
+                    const noDepartText = 'Aucun départ sélectionné';
+                    if (modalDepartDisplay) modalDepartDisplay.textContent = noDepartText;
+                    if (modalDepartDisplayJs) modalDepartDisplayJs.textContent = noDepartText;
                 }
             });
         }
@@ -1008,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const numeroDepart = document.getElementById('depart-select-main')?.value || document.getElementById('depart-select')?.value || null;
+        const numeroDepart = document.getElementById('depart-select-main')?.value || null;
         const numeroCible = document.getElementById('numero_cible')?.value || null;
         const positionArcher = document.getElementById('position_archer')?.value || null;
         const blason = document.getElementById('blason')?.value || null;
@@ -1890,7 +1896,7 @@ function submitInscription() {
     console.log('ID utilisateur trouvé:', userId);
     
     // Récupérer le numéro de départ
-    const numeroDepart = document.getElementById('depart-select-main')?.value || document.getElementById('depart-select')?.value || null;
+    const numeroDepart = document.getElementById('depart-select-main')?.value || null;
     console.log('numeroDepart récupéré:', numeroDepart);
     
     // Vérifier si l'archer est déjà inscrit pour ce départ
@@ -1963,7 +1969,7 @@ function proceedWithInscriptionSubmission() {
     console.log('ID utilisateur trouvé:', userId);
     
     // Récupérer le numéro de départ
-    const numeroDepart = document.getElementById('depart-select-main')?.value || document.getElementById('depart-select')?.value || null;
+    const numeroDepart = document.getElementById('depart-select-main')?.value || null;
     console.log('numeroDepart récupéré:', numeroDepart);
     
     // Vérifier si l'archer est déjà inscrit pour ce départ
@@ -2029,11 +2035,9 @@ function proceedWithInscriptionSubmission() {
     
     // Récupérer le numéro de départ
     const departSelectMain = document.getElementById('depart-select-main');
-    const departSelectModal = document.getElementById('depart-select');
-    const numeroDepart = departSelectMain?.value || departSelectModal?.value || null;
+    const numeroDepart = departSelectMain?.value || null;
     console.log('numeroDepart récupéré:', numeroDepart);
     console.log('depart-select-main value:', departSelectMain?.value);
-    console.log('depart-select value:', departSelectModal?.value);
 
     // Activer temporairement les champs disabled pour récupérer leurs valeurs
     const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');

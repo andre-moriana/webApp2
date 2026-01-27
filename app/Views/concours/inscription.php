@@ -271,19 +271,14 @@ table tbody tr.piquet-blanc {
                         </div>
                     </div>
                     
-                    <?php if (!empty($departs)): ?>
+                    <!-- Le numéro de départ est sélectionné dans la page principale, pas besoin de le redemander ici -->
                     <div class="mb-3">
-                        <label for="depart-select" class="form-label">N° départ <span class="text-danger">*</span></label>
-                        <select id="depart-select" class="form-control" required>
-                            <option value="">Sélectionner un départ</option>
-                            <?php foreach ($departs as $index => $depart): ?>
-                                <option value="<?= htmlspecialchars($depart['id'] ?? $depart['_id'] ?? '') ?>">
-                                    Départ <?= ($index + 1) ?> - <?= htmlspecialchars($depart['heure'] ?? '') ?><?= !empty($depart['date']) ? ' (' . htmlspecialchars($depart['date']) . ')' : '' ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label class="form-label">N° départ</label>
+                        <div class="form-control bg-light" style="pointer-events: none;">
+                            <span id="modal-depart-display">Sélectionné dans la page principale</span>
+                        </div>
+                        <small class="form-text text-muted">Le numéro de départ est sélectionné en haut de la page</small>
                     </div>
-                    <?php endif; ?>
                     
                     <h6 class="mt-4 mb-3">Classification et équipement</h6>
                     
