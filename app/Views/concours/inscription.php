@@ -389,6 +389,40 @@ table tbody tr.piquet-blanc {
                         <?php endif; ?>
                     </div>
                     
+                    <?php 
+                    // Vérifier si le concours nécessite un plan de cible (disciplines S, T, I, H)
+                    $needsPlanCible = isset($disciplineAbv) && in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
+                    ?>
+                    <?php if ($needsPlanCible): ?>
+                        <!-- Sélection de cible et position dans le plan de cible -->
+                        <div class="row mt-3" id="plan-cible-selection" style="display: none;">
+                            <div class="col-md-12 mb-3">
+                                <h6 class="mb-3">Sélection de la cible et position</h6>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="numero_cible" class="form-label">Cible</label>
+                                <select id="numero_cible" class="form-control">
+                                    <option value="">Sélectionner une cible</option>
+                                </select>
+                                <small class="form-text text-muted" id="cible-info"></small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="position_archer" class="form-label">Position</label>
+                                <select id="position_archer" class="form-control">
+                                    <option value="">Sélectionner une position</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <button type="button" id="btn-assign-cible" class="btn btn-primary btn-block" disabled>
+                                        <i class="fas fa-bullseye"></i> Assigner à la cible
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    
                     <?php if (!$isNature3DOrCampagne): ?>
                         <!-- Les champs Duel et Trispot n'existent pas pour les disciplines 3D, Nature et Campagne -->
                         <div class="row">
