@@ -2570,5 +2570,40 @@ class ApiController {
             ], 500);
         }
     }
+    
+    /**
+     * Proxy pour /api/concours/{id}/plan-cible - Gestion des plans de cible
+     */
+    public function proxyConcoursPlanCible($concoursId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $endpoint = "concours/{$concoursId}/plan-cible" . ($queryString ? "?{$queryString}" : "");
+            
+            $data = null;
+            if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH') {
+                $input = file_get_contents('php://input');
+                $data = json_decode($input, true);
+            }
+            
+            $response = $this->apiService->makeRequest($endpoint, $method, $data);
+            
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 ?>

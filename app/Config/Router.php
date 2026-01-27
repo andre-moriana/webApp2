@@ -193,6 +193,8 @@ class Router {
         // Routes API pour les concours (proxy vers backend)
         $this->addRoute("GET", "/api/concours/distance-recommandee", "ApiController@proxyConcoursDistanceRecommandee");
         $this->addRoute("GET", "/api/concours/blason-recommandee", "ApiController@proxyConcoursBlasonRecommandee");
+        $this->addRoute("GET", "/api/concours/{id}/plan-cible", "ApiController@proxyConcoursPlanCible");
+        $this->addRoute("POST", "/api/concours/{id}/plan-cible", "ApiController@proxyConcoursPlanCible");
         $this->addRoute("GET", "/api/concours/{id}/inscription/{userId}", "ApiController@proxyConcoursInscription");
         $this->addRoute("DELETE", "/api/concours/{id}/inscription/{userId}", "ApiController@proxyConcoursInscription");
         // Route pour la mise à jour d'inscription (POST avec X-HTTP-Method-Override: PUT ou PUT direct)

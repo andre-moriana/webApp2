@@ -43,7 +43,22 @@ function createPlanCible() {
         credentials: 'include',
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => {
+        // Vérifier le Content-Type avant de parser le JSON
+        const contentType = response.headers.get('content-type');
+        console.log('Content-Type de la réponse:', contentType);
+        console.log('Status de la réponse:', response.status);
+        
+        if (!contentType || !contentType.includes('application/json')) {
+            // Si ce n'est pas du JSON, lire comme texte pour voir ce qui est retourné
+            return response.text().then(text => {
+                console.error('Réponse non-JSON reçue:', text.substring(0, 500));
+                throw new Error('La réponse du serveur n\'est pas au format JSON. Réponse: ' + text.substring(0, 200));
+            });
+        }
+        
+        return response.json();
+    })
     .then(result => {
         console.log('Réponse création plan de cible:', result);
         
