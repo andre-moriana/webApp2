@@ -850,6 +850,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const needsPlanCible = typeof disciplineAbv !== 'undefined' && ['S', 'T', 'I', 'H'].includes(disciplineAbv);
     let ciblesData = null;
     
+    console.log('Plan de cible - needsPlanCible:', needsPlanCible, 'disciplineAbv:', typeof disciplineAbv !== 'undefined' ? disciplineAbv : 'undefined');
+    
     // Fonction pour charger les cibles disponibles pour un départ
     function loadCiblesForDepart(numeroDepart) {
         if (!needsPlanCible || !numeroDepart) {
@@ -861,8 +863,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const planCibleSection = document.getElementById('plan-cible-selection');
-        if (!planCibleSection) return;
+        if (!planCibleSection) {
+            console.warn('Section plan-cible-selection non trouvée dans le DOM');
+            return;
+        }
         
+        // Toujours afficher la section si un départ est sélectionné
         planCibleSection.style.display = 'block';
         
         // Réinitialiser les selects
@@ -907,13 +913,38 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         cibleSelect.appendChild(option);
                     });
+                    
+                    // Si aucune cible n'est disponible, afficher un message
+                    if (ciblesData.length === 0) {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'Aucune cible disponible - Créez d\'abord le plan de cible';
+                        option.disabled = true;
+                        cibleSelect.appendChild(option);
+                    }
                 }
             } else {
                 console.error('Erreur lors du chargement des cibles:', data.error || 'Erreur inconnue');
+                // Afficher un message d'erreur dans le select
+                if (cibleSelect) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Erreur: ' + (data.error || 'Impossible de charger les cibles');
+                    option.disabled = true;
+                    cibleSelect.appendChild(option);
+                }
             }
         })
         .catch(error => {
             console.error('Erreur lors du chargement des cibles:', error);
+            // Afficher un message d'erreur dans le select
+            if (cibleSelect) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Erreur: Impossible de charger les cibles';
+                option.disabled = true;
+                cibleSelect.appendChild(option);
+            }
         });
     }
     
@@ -1073,6 +1104,39 @@ document.addEventListener('DOMContentLoaded', function() {
             btnAssign.disabled = !positionSelect.value || !selectedArcher;
         }
     };
+    
+    // Vérifier si un départ est déjà sélectionné au chargement de la page
+    // Utiliser DOMContentLoaded pour s'assurer que le DOM est prêt
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            if (needsPlanCible) {
+                const departSelectMain = document.getElementById('depart-select-main');
+                if (departSelectMain && departSelectMain.value) {
+                    console.log('Départ déjà sélectionné au chargement:', departSelectMain.value);
+                    // Un départ est déjà sélectionné, charger les cibles
+                    loadCiblesForDepart(departSelectMain.value);
+                } else {
+                    console.log('Aucun départ sélectionné au chargement');
+                }
+            } else {
+                console.log('Plan de cible non nécessaire pour cette discipline');
+            }
+        });
+    } else {
+        // DOM déjà chargé
+        if (needsPlanCible) {
+            const departSelectMain = document.getElementById('depart-select-main');
+            if (departSelectMain && departSelectMain.value) {
+                console.log('Départ déjà sélectionné:', departSelectMain.value);
+                // Un départ est déjà sélectionné, charger les cibles
+                loadCiblesForDepart(departSelectMain.value);
+            } else {
+                console.log('Aucun départ sélectionné');
+            }
+        } else {
+            console.log('Plan de cible non nécessaire pour cette discipline');
+        }
+    }
 
     // Bouton de confirmation d'inscription
     const btnConfirmInscription = document.getElementById('btn-confirm-inscription');

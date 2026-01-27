@@ -396,6 +396,14 @@ table tbody tr.piquet-blanc {
                     <?php if ($needsPlanCible): ?>
                         <!-- Sélection de cible et position dans le plan de cible -->
                         <div class="row mt-3" id="plan-cible-selection" style="display: none;">
+                            <div class="col-md-12 mb-2">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> 
+                                    <strong>Plan de cible :</strong> 
+                                    Sélectionnez une cible et une position pour assigner l'archer. 
+                                    Si le plan de cible n'existe pas encore, créez-le depuis la page de détails du concours.
+                                </div>
+                            </div>
                             <div class="col-md-12 mb-3">
                                 <h6 class="mb-3">Sélection de la cible et position</h6>
                             </div>
