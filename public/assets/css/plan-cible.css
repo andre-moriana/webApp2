@@ -47,8 +47,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: flex-start;
     width: 280px;
-    min-height: 400px;
+    height: 400px;
     padding: 20px;
     background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
     border-radius: 12px;
@@ -56,6 +57,8 @@
     border: 3px solid #dee2e6;
     transition: transform 0.2s, box-shadow 0.2s;
     flex-shrink: 0;
+    overflow: visible;
+    box-sizing: border-box;
 }
 
 .pas-de-tir:hover {
@@ -66,9 +69,10 @@
 .pas-de-tir-header {
     width: 100%;
     text-align: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
     border-bottom: 2px solid #495057;
+    flex-shrink: 0;
 }
 
 .pas-de-tir-header h3 {
@@ -90,6 +94,9 @@
     gap: 15px;
     width: 100%;
     align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Disposition pour blason 60 : 2 blasons par cible (A-C gauche, B-D droite) */
@@ -102,6 +109,8 @@
     margin: 0 auto;
     justify-content: center;
     align-items: center;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Taille des blasons 60 : 1.25x plus gros */
@@ -145,6 +154,9 @@
     width: 100%;
     max-width: 300px;
     margin: 0 auto;
+    flex: 1;
+    min-height: 0;
+    align-items: center;
 }
 
 .blasons-container.blasons-blason40 .blason-item[data-position="A"],
@@ -177,6 +189,8 @@
     max-width: 400px;
     margin: 0 auto;
     align-items: center; /* Centrer verticalement les blasons */
+    flex: 1;
+    min-height: 0;
 }
 
 .blasons-container.blasons-trispot .blason-item {
@@ -459,7 +473,7 @@
 @media (max-width: 768px) {
     .pas-de-tir {
         width: 200px;
-        min-height: 350px;
+        height: 350px;
     }
     
     .blason-item {
