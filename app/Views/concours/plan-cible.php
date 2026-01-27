@@ -212,8 +212,27 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             <?php
                             // Afficher les positions dans l'ordre défini
                             foreach ($ordrePositions as $position) {
+                                // Pour les trispots, les positions A1-A3, B1-B3, C1-C3, D1-D3 partagent le même user_id
+                                // Extraire la colonne (A, B, C, D) de la position
+                                $colonne = null;
+                                if ($dispositionType === 'trispot' && preg_match('/^([A-D])(\d+)$/', $position, $matches)) {
+                                    $colonne = $matches[1];
+                                }
+                                
                                 // Récupérer le plan pour cette position, ou créer un plan vide si elle n'existe pas
                                 $plan = $plansParPosition[$position] ?? null;
+                                
+                                // Pour les trispots, si cette position n'existe pas, chercher dans les autres positions de la même colonne
+                                if ($plan === null && $dispositionType === 'trispot' && $colonne !== null) {
+                                    for ($ligne = 1; $ligne <= 3; $ligne++) {
+                                        $posAlternate = $colonne . $ligne;
+                                        if (isset($plansParPosition[$posAlternate])) {
+                                            $plan = $plansParPosition[$posAlternate];
+                                            break;
+                                        }
+                                    }
+                                }
+                                
                                 if ($plan === null) {
                                     // Créer un plan vide pour cette position
                                     $plan = [
