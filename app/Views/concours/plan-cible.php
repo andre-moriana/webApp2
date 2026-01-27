@@ -1,5 +1,6 @@
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/concours-show.css" rel="stylesheet">
+<link href="/public/assets/css/plan-cible.css" rel="stylesheet">
 
 <!-- Affichage du plan de cible d'un concours -->
 <div class="container-fluid concours-create-container">
@@ -50,50 +51,54 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
         </a>
     </div>
 <?php else: ?>
+    <!-- Légende -->
+    <div class="plan-cible-legend">
+        <h4><i class="fas fa-info-circle"></i> Légende</h4>
+        <div class="legend-items">
+            <div class="legend-item">
+                <div class="legend-color assigne"></div>
+                <span>Position assignée</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color libre"></div>
+                <span>Position libre</span>
+            </div>
+        </div>
+    </div>
+    
     <?php foreach ($plans as $numeroDepart => $departPlans): ?>
-        <div class="plan-depart-section" style="margin-bottom: 30px;">
-            <h2>Départ <?= htmlspecialchars($numeroDepart) ?></h2>
+        <div class="plan-depart-section" style="margin-bottom: 40px;">
+            <h2 style="margin-bottom: 20px;">
+                <i class="fas fa-flag"></i> Départ <?= htmlspecialchars($numeroDepart) ?>
+            </h2>
             
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>Cible</th>
-                            <?php
-                            // Générer les en-têtes de colonnes pour les positions (A, B, C, D, etc.)
-                            for ($i = 1; $i <= $nombreTireursParCibles; $i++) {
-                                $position = chr(64 + $i); // 1->A, 2->B, etc.
-                                echo '<th>Position ' . htmlspecialchars($position) . '</th>';
-                            }
-                            ?>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        // Grouper les plans par cible
-                        $plansParCible = [];
-                        foreach ($departPlans as $plan) {
-                            $cible = $plan['numero_cible'] ?? 0;
-                            if (!isset($plansParCible[$cible])) {
-                                $plansParCible[$cible] = [];
-                            }
-                            $plansParCible[$cible][] = $plan;
+            <!-- Container avec scroll horizontal -->
+            <div class="plan-cible-container">
+                <div class="plan-cible-scroll">
+                    <?php
+                    // Grouper les plans par cible
+                    $plansParCible = [];
+                    foreach ($departPlans as $plan) {
+                        $cible = $plan['numero_cible'] ?? 0;
+                        if (!isset($plansParCible[$cible])) {
+                            $plansParCible[$cible] = [];
                         }
+                        $plansParCible[$cible][] = $plan;
+                    }
+                    
+                    // Trier par numéro de cible
+                    ksort($plansParCible);
+                    
+                    // Afficher chaque cible (pas de tir)
+                    foreach ($plansParCible as $numeroCible => $ciblePlans): 
+                        // Trier les plans par position (A, B, C, D...)
+                        usort($ciblePlans, function($a, $b) {
+                            $posA = $a['position_archer'] ?? '';
+                            $posB = $b['position_archer'] ?? '';
+                            return strcmp($posA, $posB);
+                        });
                         
-                        // Trier par numéro de cible
-                        ksort($plansParCible);
-                        
-                        // Afficher chaque cible
-                        foreach ($plansParCible as $numeroCible => $ciblePlans): 
-                            // Trier les plans par position (A, B, C, D...)
-                            usort($ciblePlans, function($a, $b) {
-                                $posA = $a['position_archer'] ?? '';
-                                $posB = $b['position_archer'] ?? '';
-                                return strcmp($posA, $posB);
-                            });
-                        ?>
-                        <?php
-                        // Récupérer le blason et la distance de cette cible (toutes les positions ont les mêmes valeurs)
+                        // Récupérer le blason et la distance de cette cible
                         $blasonCible = null;
                         $distanceCible = null;
                         foreach ($ciblePlans as $plan) {
@@ -107,52 +112,82 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 break;
                             }
                         }
-                        ?>
-                        <tr>
-                            <td>
-                                <strong>Cible <?= htmlspecialchars($numeroCible) ?></strong>
-                                <?php if ($blasonCible !== null || $distanceCible !== null): ?>
-                                    <br><small class="text-muted">
-                                        <?php if ($blasonCible !== null): ?>
-                                            <i class="fas fa-bullseye"></i> Blason: <?= htmlspecialchars($blasonCible) ?>
-                                        <?php endif; ?>
-                                        <?php if ($blasonCible !== null && $distanceCible !== null): ?>
-                                            <br>
-                                        <?php endif; ?>
-                                        <?php if ($distanceCible !== null): ?>
-                                            <i class="fas fa-ruler"></i> Distance: <?= htmlspecialchars($distanceCible) ?>m
-                                        <?php endif; ?>
-                                    </small>
-                                <?php endif; ?>
-                            </td>
+                        
+                        // Créer un tableau associatif position => plan
+                        $plansParPosition = [];
+                        foreach ($ciblePlans as $plan) {
+                            $position = $plan['position_archer'] ?? '';
+                            $plansParPosition[$position] = $plan;
+                        }
+                    ?>
+                    <div class="pas-de-tir">
+                        <div class="pas-de-tir-header">
+                            <h3>Cible <?= htmlspecialchars($numeroCible) ?></h3>
+                            <?php if ($blasonCible !== null || $distanceCible !== null): ?>
+                                <div class="pas-de-tir-info">
+                                    <?php if ($blasonCible !== null): ?>
+                                        <i class="fas fa-bullseye"></i> Blason <?= htmlspecialchars($blasonCible) ?>
+                                    <?php endif; ?>
+                                    <?php if ($blasonCible !== null && $distanceCible !== null): ?>
+                                        <span> - </span>
+                                    <?php endif; ?>
+                                    <?php if ($distanceCible !== null): ?>
+                                        <i class="fas fa-ruler"></i> <?= htmlspecialchars($distanceCible) ?>m
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="blasons-container">
                             <?php
-                            // Créer un tableau associatif position => plan pour faciliter l'accès
-                            $plansParPosition = [];
-                            foreach ($ciblePlans as $plan) {
-                                $position = $plan['position_archer'] ?? '';
-                                $plansParPosition[$position] = $plan;
-                            }
-                            
                             // Afficher chaque position (A, B, C, D, etc.)
                             for ($i = 1; $i <= $nombreTireursParCibles; $i++) {
                                 $position = chr(64 + $i); // 1->A, 2->B, etc.
                                 $plan = $plansParPosition[$position] ?? null;
                                 $userId = $plan['user_id'] ?? null;
+                                $isAssigne = $userId !== null;
                                 
-                                echo '<td>';
-                                if ($userId) {
-                                    echo '<span class="badge bg-success">Assigné</span><br>';
-                                    echo '<small>User ID: ' . htmlspecialchars($userId) . '</small>';
-                                } else {
-                                    echo '<span class="badge bg-secondary">Libre</span>';
+                                // Récupérer les informations de l'utilisateur
+                                $userNom = '';
+                                $userPrenom = '';
+                                if ($isAssigne && isset($usersMap[$userId])) {
+                                    $user = $usersMap[$userId];
+                                    $userNom = is_array($user) ? ($user['nom'] ?? $user['NOM'] ?? '') : ($user->nom ?? $user->NOM ?? '');
+                                    $userPrenom = is_array($user) ? ($user['prenom'] ?? $user['PRENOM'] ?? '') : ($user->prenom ?? $user->PRENOM ?? '');
                                 }
-                                echo '</td>';
-                            }
+                                
+                                $nomComplet = trim($userPrenom . ' ' . $userNom);
+                                if (empty($nomComplet)) {
+                                    $nomComplet = 'User ID: ' . $userId;
+                                }
                             ?>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>">
+                                <div class="blason-numero"><?= htmlspecialchars($numeroCible) ?></div>
+                                <div class="blason-position"><?= htmlspecialchars($position) ?></div>
+                                
+                                <?php if ($blasonCible !== null): ?>
+                                    <div class="blason-taille"><?= htmlspecialchars($blasonCible) ?></div>
+                                <?php else: ?>
+                                    <div class="blason-taille" style="font-size: 0.9em; color: #adb5bd;">-</div>
+                                <?php endif; ?>
+                                
+                                <?php if ($distanceCible !== null): ?>
+                                    <div class="blason-distance"><?= htmlspecialchars($distanceCible) ?>m</div>
+                                <?php endif; ?>
+                                
+                                <?php if ($isAssigne): ?>
+                                    <div class="blason-nom" title="<?= htmlspecialchars($nomComplet) ?>">
+                                        <?= htmlspecialchars($nomComplet) ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="blason-nom" style="color: #adb5bd;">Libre</div>
+                                <?php endif; ?>
+                            </div>
+                            <?php } ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
     <?php endforeach; ?>

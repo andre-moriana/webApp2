@@ -1,0 +1,228 @@
+/* CSS pour l'affichage visuel du plan de cible */
+
+.plan-cible-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 20px 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.plan-cible-scroll {
+    display: flex;
+    flex-direction: row;
+    min-width: max-content;
+    gap: 30px;
+    padding: 20px;
+}
+
+.pas-de-tir {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 200px;
+    padding: 15px;
+    background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 2px solid #dee2e6;
+}
+
+.pas-de-tir-header {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #495057;
+}
+
+.pas-de-tir-header h3 {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #495057;
+}
+
+.pas-de-tir-info {
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.blasons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    align-items: center;
+}
+
+.blason-item {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 3px solid #495057;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.blason-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.blason-item.libre {
+    background: linear-gradient(135deg, #e9ecef 0%, #ced4da 100%);
+    border-color: #adb5bd;
+}
+
+.blason-item.assigne {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #28a745;
+}
+
+.blason-numero {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    width: 28px;
+    height: 28px;
+    background: #495057;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.85em;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.blason-taille {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+.blason-distance {
+    font-size: 0.75em;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.blason-nom {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #212529;
+    white-space: nowrap;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+.blason-position {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8em;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Styles pour le scroll horizontal */
+.plan-cible-container::-webkit-scrollbar {
+    height: 12px;
+}
+
+.plan-cible-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.plan-cible-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.plan-cible-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Légende */
+.plan-cible-legend {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.plan-cible-legend h4 {
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.legend-items {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #495057;
+}
+
+.legend-color.libre {
+    background: linear-gradient(135deg, #e9ecef 0%, #ced4da 100%);
+}
+
+.legend-color.assigne {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pas-de-tir {
+        min-width: 160px;
+    }
+    
+    .blason-item {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .blason-taille {
+        font-size: 1.5em;
+    }
+}
