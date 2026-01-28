@@ -122,8 +122,12 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         
                         // Si le blason n'est pas défini, utiliser les valeurs par défaut selon le numéro de cible
                         if ($blasonCible === null && $trispotCible === null) {
-                            if ($numeroCible >= 1 && $numeroCible <= 2) {
-                                // Cibles 1-2 : blason 60 par défaut
+                            if ($numeroCible = 1 ) {
+                                // Cibles 1 : blason 80 par défaut
+                                $blasonCible = 80;
+                                $dispositionType = 'blason80';
+                            } elseif $numeroCible = 2){
+                                // Cibles 2 : blason 60 par défaut
                                 $blasonCible = 60;
                                 $dispositionType = 'blason60';
                             } elseif ($numeroCible >= 3 && $numeroCible <= 10) {
@@ -139,6 +143,8 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             // Utiliser les valeurs définies dans les plans
                             if ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true) {
                                 $dispositionType = 'trispot'; // A C B D de gauche à droite
+                            } elseif ($blasonCible == 80 || $blasonCible === '80') {
+                                $dispositionType = 'blason80'; // 1 blasons: A-B-C-D
                             } elseif ($blasonCible == 60 || $blasonCible === '60') {
                                 $dispositionType = 'blason60'; // 2 blasons: A-C gauche, B-D droite
                             } elseif ($blasonCible == 40 || $blasonCible === '40') {
@@ -155,7 +161,10 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         
                         // Définir l'ordre d'affichage selon le type de disposition
                         $ordrePositions = [];
-                        if ($dispositionType === 'blason60') {
+                        if ($dispositionType === 'blason80') {
+                            // Blason 80: 1 blason phusique seulement
+                           $ordrePositions = ['A', 'B', 'C', 'D'];
+                        }elseif ($dispositionType === 'blason60') {
                             // Blason 60: 2 blasons physiques seulement
                             // Blason gauche: A et C (afficher seulement A)
                             // Blason droit: B et D (afficher seulement B)
