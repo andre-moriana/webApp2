@@ -113,12 +113,42 @@
     min-height: 0;
 }
 
+/* Taille des blasons 80 : 1.50x plus gros */
+.blason-item.blason-80-size {
+    width: 195px !important; /* 130px * 1.5 = 195px */
+    height: 195px !important;
+}
+.blason-item.blason-80-size .blason-taille {
+    font-size: 3em !important; /* 2em * 1.5 = 3em */
+}
+
+.blason-item.blason-80-size .blason-distance {
+    font-size: 1.2em !important; /* 0.8em * 1.5 = 1.2em */
+}
+
+.blason-item.blason-80-size .blason-nom {
+    font-size: 1.2em !important; /* 0.8em * 1.5 = 1.2em */
+    bottom: -35px !important;
+    max-width: 180px !important;
+}
+
+.blason-item.blason-80-size .blason-numero {
+    width: 42px !important; /* 28px * 1.5 = 42px */
+    height: 42px !important;
+    font-size: 1em !important;
+}
+
+.blason-item.blason-80-size .blason-position {
+    width: 36px !important; /* 24px * 1.5 = 36px */
+    height: 36px !important;
+    font-size: 1em !important;
+}
+
 /* Taille des blasons 60 : 1.25x plus gros */
 .blason-item.blason-60-size {
     width: 162.5px !important; /* 130px * 1.25 = 162.5px */
     height: 162.5px !important;
 }
-
 .blason-item.blason-60-size .blason-taille {
     font-size: 2.5em !important; /* 2em * 1.25 = 2.5em */
 }
