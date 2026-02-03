@@ -385,7 +385,34 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 $userNom = '';
                                 $userPrenom = '';
                                 $nomComplet = '';
-                                $nomsArchers = []; // Pour les blasons 60, stocker tous les noms
+                                $nomsArchers = [];
+                                
+                                // Pour les blasons 60, stocker tous les noms
+                                if ($dispositionType === 'blason80') {
+                                    // Pour les blasons 60, récupérer les noms de tous les archers du même blason
+                                    if ($position === 'A') {
+                                        // Blason gauche : A et C
+                                        foreach (['A', 'B','C','D'] as $pos) {
+                                            $planPos = $plansParPosition[$pos] ?? null;
+                                            if ($planPos && $planPos['user_id']) {
+                                                $uid = $planPos['user_id'];
+                                                if (isset($usersMap[$uid])) {
+                                                    $user = $usersMap[$uid];
+                                                    if (is_array($user)) {
+                                                        $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
+                                                        $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
+                                                    } else {
+                                                        $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
+                                                        $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
+                                                    }
+                                                    $nom = trim($userPrenom . ' ' . $userNom);
+                                                    if (!empty($nom)) {
+                                                        $nomsArchers[] = $nom;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 
                                 if ($dispositionType === 'blason60') {
                                     // Pour les blasons 60, récupérer les noms de tous les archers du même blason
@@ -490,6 +517,12 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             <?php
                                 // Pour les blasons 60, déterminer quelles positions afficher
                                 $positionsBlason = [];
+                                if ($dispositionType === 'blason80') {
+                                    if ($position === 'A') {
+                                        // Blason gauche : A et C (affichés séparément)
+                                        $positionsBlason = ['A', 'B', 'C', 'D'];
+                                    }
+                                }    
                                 if ($dispositionType === 'blason60') {
                                     if ($position === 'A') {
                                         // Blason gauche : A et C (affichés séparément)
