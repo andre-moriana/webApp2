@@ -169,12 +169,16 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         $blasonCible = null;
                         $distanceCible = null;
                         $trispotCible = null;
+                        $cibleHasAssigned = false;
                         foreach ($ciblePlans as $plan) {
                             if (isset($plan['blason']) && $plan['blason'] !== null) {
                                 $blasonCible = $plan['blason'];
                             }
                             if (isset($plan['distance']) && $plan['distance'] !== null) {
                                 $distanceCible = $plan['distance'];
+                            }
+                            if (isset($plan['user_id']) && $plan['user_id'] !== null) {
+                                $cibleHasAssigned = true;
                             }
                             // Vérifier si c'est un trispot depuis trispotMap
                             $cibleKey = $numeroDepart . '_' . $numeroCible;
@@ -595,14 +599,17 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 <input type="hidden" name="numero_depart" value="<?= htmlspecialchars($numeroDepart) ?>">
                                 <input type="hidden" name="numero_cible" value="<?= htmlspecialchars($numeroCible) ?>">
                                 <label for="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="font-weight: 500; margin-right: 8px;">Type de blason :</label>
-                                <select name="blason_type" id="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="display: inline-block; width: auto;">
+                                <select name="blason_type" id="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="display: inline-block; width: auto;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>
                                     <option value="80" <?= ($blasonCible == 80 || $blasonCible === '80') ? 'selected' : '' ?>>Blason 80</option>
                                     <option value="60" <?= ($blasonCible == 60 || $blasonCible === '60') ? 'selected' : '' ?>>Blason 60</option>
                                     <option value="40" <?= ($blasonCible == 40 || $blasonCible === '40') ? 'selected' : '' ?>>Blason 40</option>
                                     <option value="T40" <?= ($dispositionType === 'trispot') ? 'selected' : '' ?>>T40 (Trispot 40)</option>
                                 </select>
-                                <button type="submit" class="btn btn-sm btn-outline-primary" style="margin-left: 8px;">Enregistrer</button>
+                                <button type="submit" class="btn btn-sm btn-outline-primary" style="margin-left: 8px;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>Enregistrer</button>
                             </form>
+                            <?php if ($cibleHasAssigned): ?>
+                                <div class="text-muted" style="margin-top: 6px; font-size: 0.9em;">Type de blason verrouillé : une ou plusieurs positions sont déjà assignées.</div>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php endfor; ?>
