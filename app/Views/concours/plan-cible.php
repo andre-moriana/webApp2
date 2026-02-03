@@ -603,7 +603,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     <option value="80" <?= ($blasonCible == 80 || $blasonCible === '80') ? 'selected' : '' ?>>Blason 80</option>
                                     <option value="60" <?= ($blasonCible == 60 || $blasonCible === '60') ? 'selected' : '' ?>>Blason 60</option>
                                     <option value="40" <?= ($blasonCible == 40 || $blasonCible === '40') ? 'selected' : '' ?>>Blason 40</option>
-                                    <option value="T40" <?= ($dispositionType === 'trispot') ? 'selected' : '' ?>>T40 (Trispot 40)</option>
+                                    <option value="T40" <?= ($blasonCible === 'T40') ? 'selected' : '' ?>>T40 (Trispot 40)</option>
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-outline-primary" style="margin-left: 8px;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>Enregistrer</button>
                             </form>
