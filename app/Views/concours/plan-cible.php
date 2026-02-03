@@ -126,7 +126,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 // Cibles 1 : blason 80 par défaut
                                 $blasonCible = 80;
                                 $dispositionType = 'blason80';
-                            } elseif $numeroCible = 2){
+                            } elseif ($numeroCible = 2){
                                 // Cibles 2 : blason 60 par défaut
                                 $blasonCible = 60;
                                 $dispositionType = 'blason60';
