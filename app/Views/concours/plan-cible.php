@@ -413,7 +413,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                             }
                                         }
                                     }
-                                
+                                }
                                 if ($dispositionType === 'blason60') {
                                     // Pour les blasons 60, récupérer les noms de tous les archers du même blason
                                     if ($position === 'A') {
