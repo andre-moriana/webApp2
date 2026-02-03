@@ -474,6 +474,22 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </div>
+                            <!-- Sélecteur de type de blason sous chaque cible -->
+                            <div class="blason-type-select" style="margin-top: 10px; text-align: center;">
+                                <form method="post" action="/concours/plan-cible-type-blason">
+                                    <input type="hidden" name="concours_id" value="<?= htmlspecialchars($concoursId) ?>">
+                                    <input type="hidden" name="numero_depart" value="<?= htmlspecialchars($numeroDepart) ?>">
+                                    <input type="hidden" name="numero_cible" value="<?= htmlspecialchars($numeroCible) ?>">
+                                    <label for="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="font-weight: 500; margin-right: 8px;">Type de blason :</label>
+                                    <select name="blason_type" id="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="display: inline-block; width: auto;">
+                                        <option value="80" <?= ($blasonCible == 80 || $blasonCible === '80') ? 'selected' : '' ?>>Blason 80</option>
+                                        <option value="60" <?= ($blasonCible == 60 || $blasonCible === '60') ? 'selected' : '' ?>>Blason 60</option>
+                                        <option value="40" <?= ($blasonCible == 40 || $blasonCible === '40') ? 'selected' : '' ?>>Blason 40</option>
+                                        <option value="T40" <?= ($dispositionType === 'trispot') ? 'selected' : '' ?>>T40 (Trispot 40)</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" style="margin-left: 8px;">Enregistrer</button>
+                                </form>
+                            </div>
                             <?php } ?>
                         </div>
                     </div>
