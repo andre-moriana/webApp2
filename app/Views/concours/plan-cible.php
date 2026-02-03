@@ -61,23 +61,34 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
         if (btn && msg) {
             btn.addEventListener('click', function() {
                 var concoursId = btn.getAttribute('data-concours-id');
+                var nombreCibles = parseInt(btn.getAttribute('data-nombre-cibles'), 10) || 0;
+                var nombreDepart = parseInt(btn.getAttribute('data-nombre-depart'), 10) || 1;
+                var nombreTireurs = parseInt(btn.getAttribute('data-nombre-tireurs'), 10) || 0;
+                // Affichage des valeurs dans la page pour vérification
+                msg.innerHTML = '<div class="alert alert-info">' +
+                    '<strong>Vérification des valeurs envoyées :</strong><br>' +
+                    'Concours ID : ' + concoursId + '<br>' +
+                    'Nombre de cibles : ' + nombreCibles + '<br>' +
+                    'Nombre de départs : ' + nombreDepart + '<br>' +
+                    'Nombre d\'archers par cible : ' + nombreTireurs +
+                    '</div>';
                 if (!concoursId) { alert('ID du concours manquant'); return; }
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
-                msg.innerHTML = '';
-                fetch('/api/concours/' + concoursId + '/plan-cible', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        nombre_cibles: parseInt(btn.getAttribute('data-nombre-cibles'), 10) || 0,
-                        nombre_depart: parseInt(btn.getAttribute('data-nombre-depart'), 10) || 1,
-                        nombre_tireurs_par_cibles: parseInt(btn.getAttribute('data-nombre-tireurs'), 10) || 0
+                setTimeout(function() {
+                    fetch('/api/concours/' + concoursId + '/plan-cible', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            nombre_cibles: nombreCibles,
+                            nombre_depart: nombreDepart,
+                            nombre_tireurs_par_cibles: nombreTireurs
+                        })
                     })
-                })
-                .then(function(r) {
-                    var ct = r.headers.get('content-type');
-                    if (!ct || ct.indexOf('application/json') === -1) {
+                    .then(function(r) {
+                        var ct = r.headers.get('content-type');
+                        if (!ct || ct.indexOf('application/json') === -1) {
                         return r.text().then(function(t) { throw new Error('Réponse non-JSON'); });
                     }
                     return r.json();
