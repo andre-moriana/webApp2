@@ -1945,4 +1945,53 @@ class ConcoursController {
         include 'app/Views/concours/plan-cible.php';
         include 'app/Views/layouts/footer.php';
     }
+
+    public function planCibleTypeBlason()
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+
+        $concoursId = $_POST['concours_id'] ?? null;
+        $numeroDepart = $_POST['numero_depart'] ?? null;
+        $numeroCible = $_POST['numero_cible'] ?? null;
+        $blasonType = $_POST['blason_type'] ?? null;
+
+        if (!$concoursId || !$numeroDepart || !$numeroCible || !$blasonType) {
+            $_SESSION['error'] = 'Paramètres manquants pour enregistrer le type de blason.';
+            header('Location: /concours/' . urlencode((string)$concoursId) . '/plan-cible');
+            exit;
+        }
+
+        try {
+            $payload = [
+                'concours_id' => (int)$concoursId,
+                'numero_depart' => (int)$numeroDepart,
+                'numero_cible' => (int)$numeroCible,
+                'blason_type' => $blasonType
+            ];
+
+            $response = $this->apiService->makeRequest('concours/plan-cible-type-blason', 'POST', $payload);
+
+            $success = false;
+            if (isset($response['success'])) {
+                $success = (bool)$response['success'];
+            } elseif (isset($response['data']['success'])) {
+                $success = (bool)$response['data']['success'];
+            }
+
+            if ($success) {
+                $_SESSION['success'] = 'Type de blason enregistré avec succès.';
+            } else {
+                $errorMsg = $response['error'] ?? ($response['message'] ?? ($response['data']['error'] ?? 'Erreur lors de l\'enregistrement.'));
+                $_SESSION['error'] = $errorMsg;
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Erreur lors de l\'enregistrement du type de blason: ' . $e->getMessage();
+        }
+
+        header('Location: /concours/' . urlencode((string)$concoursId) . '/plan-cible');
+        exit;
+    }
 }
