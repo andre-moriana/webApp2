@@ -75,20 +75,19 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                 if (!concoursId) { alert('ID du concours manquant'); return; }
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
-                setTimeout(function() {
-                    fetch('/api/concours/' + concoursId + '/plan-cible', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({
-                            nombre_cibles: nombreCibles,
-                            nombre_depart: nombreDepart,
-                            nombre_tireurs_par_cibles: nombreTireurs
-                        })
+                fetch('/api/concours/' + concoursId + '/plan-cible', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        nombre_cibles: nombreCibles,
+                        nombre_depart: nombreDepart,
+                        nombre_tireurs_par_cibles: nombreTireurs
                     })
-                    .then(function(r) {
-                        var ct = r.headers.get('content-type');
-                        if (!ct || ct.indexOf('application/json') === -1) {
+                })
+                .then(function(r) {
+                    var ct = r.headers.get('content-type');
+                    if (!ct || ct.indexOf('application/json') === -1) {
                         return r.text().then(function(t) { throw new Error('Réponse non-JSON'); });
                     }
                     return r.json();
