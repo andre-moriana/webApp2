@@ -232,7 +232,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         $ordrePositions = [];
                         if ($dispositionType === 'blason80') {
                             // Blason 80: 1 blason phusique seulement
-                           $ordrePositions = ['A', 'B', 'C', 'D'];
+                           $ordrePositions = ['A'];
                         }elseif ($dispositionType === 'blason60') {
                             // Blason 60: 2 blasons physiques seulement
                             // Blason gauche: A et C (afficher seulement A)
