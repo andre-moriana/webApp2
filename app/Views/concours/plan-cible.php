@@ -533,7 +533,9 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     }
                                 }
                             ?>
-                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>">
+                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>
+                             <?= $dispositionType === 'blason80' ? 'blason-80-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>">
+                             <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>">
                                 <div class="blason-numero"><?= htmlspecialchars($numeroCible) ?></div>
                                 <?php if ($dispositionType === 'blason80' && !empty($positionsBlason)): ?>
                                     <!-- Pour les blasons 60, afficher deux badges séparés -->
