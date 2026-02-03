@@ -93,16 +93,24 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                     return r.json();
                 })
                 .then(function(result) {
+                    console.log('Réponse du serveur:', result);
                     var ok = (result.data && result.data.success) || result.success;
                     if (ok) {
                         window.location.href = '/concours/' + concoursId + '/plan-cible';
                     } else {
-                        msg.innerHTML = '<div class="alert alert-danger">' + (result.message || result.error || result.data && (result.data.message || result.data.error) || 'Erreur') + '</div>';
+                        var errorMsg = result.message || result.error || (result.data && (result.data.message || result.data.error)) || 'Erreur inconnue';
+                        var fullErrorMsg = '<div class="alert alert-danger"><strong>Erreur:</strong> ' + errorMsg + '</div>';
+                        
+                        // Afficher aussi la réponse JSON complète pour déboguer
+                        fullErrorMsg += '<div class="alert alert-warning" style="margin-top: 10px;"><strong>Réponse JSON complète:</strong><pre>' + JSON.stringify(result, null, 2) + '</pre></div>';
+                        
+                        msg.innerHTML = fullErrorMsg;
                         btn.disabled = false;
                         btn.innerHTML = '<i class="fas fa-bullseye"></i> Créer le plan de cible';
                     }
                 })
                 .catch(function(err) {
+                    console.error('Erreur de requête:', err);
                     msg.innerHTML = '<div class="alert alert-danger">Erreur : ' + (err.message || 'réseau') + '</div>';
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-bullseye"></i> Créer le plan de cible';
