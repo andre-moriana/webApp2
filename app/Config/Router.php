@@ -342,6 +342,10 @@ class Router {
             strpos($path, '/update') !== false) {
             $specificity += 15;
         }
+        // Priorité à plan-cible pour éviter le conflit avec /concours/{id}/inscription
+        if (strpos($path, '/plan-cible') !== false) {
+            $specificity += 25;
+        }
         return $specificity;
     }
     
