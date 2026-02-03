@@ -215,7 +215,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             }
                         } else {
                             // Utiliser les valeurs définies dans les plans
-                            if ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true) {
+                            if ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true || $blasonCible === 'T40') {
                                 $dispositionType = 'trispot'; // A C B D de gauche à droite
                             } elseif ($blasonCible == 80 || $blasonCible === '80') {
                                 $dispositionType = 'blason80'; // 1 blasons: A-B-C-D
@@ -268,9 +268,9 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         <div class="pas-de-tir-header">
                             <h3>Cible <?= htmlspecialchars($numeroCible) ?></h3>
                             <div class="pas-de-tir-info">
-                                <?php if ($blasonCible !== null): ?>
+                                <?php if ($blasonCible !== null && $blasonCible !== 'T40'): ?>
                                     <i class="fas fa-bullseye"></i> Blason <?= htmlspecialchars($blasonCible) ?>
-                                <?php elseif ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true): ?>
+                                <?php elseif ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true || $blasonCible === 'T40'): ?>
                                     <i class="fas fa-bullseye"></i> Trispot
                                 <?php endif; ?>
                                 <?php if ($blasonCible !== null && $distanceCible !== null): ?>
@@ -567,15 +567,16 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     </div>
                                 <?php endif; ?>
                                 <?php if ($dispositionType !== 'blason60' && $dispositionType !== 'blason80'): ?>
+                                    <!-- Position standard (pour trispot et autres) -->   
                                     <div class="blason-position"><?= htmlspecialchars($position) ?></div>
                                 <?php endif; ?>
-                                
+                                <!-- Taille du blason -->                                
                                 <?php if ($planBlason !== null): ?>
                                     <div class="blason-taille"><?= htmlspecialchars($planBlason) ?></div>
                                 <?php else: ?>
                                     <div class="blason-taille" style="font-size: 0.9em; color: #adb5bd;">-</div>
                                 <?php endif; ?>
-                                
+                                <!-- Distance -->
                                 <?php if ($planDistance !== null): ?>
                                     <div class="blason-distance"><?= htmlspecialchars($planDistance) ?>m</div>
                                 <?php endif; ?>
