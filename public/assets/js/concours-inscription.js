@@ -1047,8 +1047,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== Plan de cible - MODALE D'ÉDITION =====
     let ciblesDataEdit = null;
 
-    function loadCiblesForDepartEdit(numeroDepart) {
-        console.log('loadCiblesForDepartEdit appelée avec numéro de départ:', numeroDepart);
+    function loadCiblesForDepartEdit(numeroDepart, existingNumeroCible = null, existingPosition = null) {
+        console.log('loadCiblesForDepartEdit appelée avec numéro de départ:', numeroDepart, 'cible existante:', existingNumeroCible, 'position existante:', existingPosition);
 
         const planCibleSection = document.getElementById('edit-plan-cible-selection');
         if (!planCibleSection) {
@@ -1130,6 +1130,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             option.disabled = true;
                             cibleSelect.appendChild(option);
                         }
+
+                        // Pré-sélectionner la cible existante si elle existe
+                        if (existingNumeroCible) {
+                            cibleSelect.value = existingNumeroCible;
+                            console.log('Cible pré-sélectionnée:', existingNumeroCible);
+                            // Charger les positions pour cette cible
+                            loadPositionsForCibleEdit(existingNumeroCible, existingPosition);
+                        }
                     }
                 } else {
                     console.log('Aucun plan de cible créé pour ce départ (édition)');
@@ -1169,7 +1177,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Exposer pour un appel depuis la modale d'édition
     window.loadCiblesForDepartEdit = loadCiblesForDepartEdit;
 
-    function loadPositionsForCibleEdit(numeroCible) {
+    function loadPositionsForCibleEdit(numeroCible, existingPosition = null) {
         const positionSelect = document.getElementById('edit-position_archer');
         const btnAssign = document.getElementById('edit-btn-assign-cible');
         const cibleInfo = document.getElementById('edit-cible-info');
@@ -1199,8 +1207,24 @@ document.addEventListener('DOMContentLoaded', function() {
             cibleInfo.textContent = info;
         }
 
+        // Ajouter la position existante en premier si elle existe (même si occupée, car c'est la position actuelle de l'archer)
+        if (existingPosition) {
+            const option = document.createElement('option');
+            option.value = existingPosition;
+            if (cible.is_trispot) {
+                option.textContent = `Colonne ${existingPosition} (positions ${existingPosition}1, ${existingPosition}2, ${existingPosition}3) - Position actuelle`;
+            } else {
+                option.textContent = `Position ${existingPosition} - Position actuelle`;
+            }
+            positionSelect.appendChild(option);
+        }
+
         if (cible.positions_libres && cible.positions_libres.length > 0) {
             cible.positions_libres.forEach(position => {
+                // Ne pas ajouter la position existante deux fois
+                if (existingPosition && position == existingPosition) {
+                    return;
+                }
                 const option = document.createElement('option');
                 option.value = position;
                 if (cible.is_trispot) {
@@ -1210,7 +1234,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 positionSelect.appendChild(option);
             });
-        } else {
+        }
+
+        // Pré-sélectionner la position existante
+        if (existingPosition) {
+            positionSelect.value = existingPosition;
+            console.log('Position pré-sélectionnée:', existingPosition);
+        }
+        
+        // Si aucune position (ni existante ni libre)
+        if (!existingPosition && (!cible.positions_libres || cible.positions_libres.length === 0)) {
             const option = document.createElement('option');
             option.value = '';
             option.textContent = 'Aucune position libre';
@@ -2673,7 +2706,11 @@ window.editInscription = function(inscriptionId) {
                     editPlanSection.style.display = 'block';
                 }
                 if (departValue && typeof window.loadCiblesForDepartEdit === 'function') {
-                    setTimeout(() => window.loadCiblesForDepartEdit(departValue), 0);
+                    // Passer les valeurs existantes de numero_cible et position_archer
+                    const existingCible = inscription.numero_cible || null;
+                    const existingPosition = inscription.position_archer || null;
+                    console.log('Chargement cibles avec valeurs existantes - cible:', existingCible, 'position:', existingPosition);
+                    setTimeout(() => window.loadCiblesForDepartEdit(departValue, existingCible, existingPosition), 0);
                 } else if (departValue) {
                     console.warn('loadCiblesForDepartEdit non disponible');
                 }
