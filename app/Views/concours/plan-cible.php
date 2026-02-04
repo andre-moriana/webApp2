@@ -190,6 +190,11 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             }
                         }
                         
+                        // Verrouiller le blason si : 1) Une position a un archer affecté OU 2) Le blason/distance ont déjà été définis
+                        if (!$cibleHasAssigned && ($blasonCible !== null || $distanceCible !== null)) {
+                            $cibleHasAssigned = true;
+                        }
+                        
                         // Déterminer le type de disposition selon le blason ou par défaut selon le numéro de cible
                         $dispositionType = 'default'; // Par défaut, disposition verticale
                         
