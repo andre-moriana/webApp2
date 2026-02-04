@@ -2,10 +2,16 @@
 
 // Variable globale pour stocker l'archer sélectionné
 let selectedArcher = null;
-// Sécuriser needsPlanCible si non défini côté page
-const needsPlanCible = typeof window !== 'undefined' && typeof window.needsPlanCible !== 'undefined'
-    ? window.needsPlanCible
-    : false;
+// Déterminer si le plan de cible est requis (évalué au moment d'usage)
+const getNeedsPlanCible = () => {
+    if (typeof window !== 'undefined' && typeof window.needsPlanCible !== 'undefined') {
+        return window.needsPlanCible;
+    }
+    if (typeof disciplineAbv !== 'undefined') {
+        return ['S', 'T', 'I', 'H'].includes(disciplineAbv);
+    }
+    return false;
+};
 
 // DÉFINIR showConfirmModal IMMÉDIATEMENT au début du fichier
 window.showConfirmModal = function(archer) {
@@ -830,7 +836,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Quand le select principal change, charger les cibles si nécessaire
         departSelectMain.addEventListener('change', function() {
             // Charger les cibles pour ce départ si nécessaire
-            if (typeof needsPlanCible !== 'undefined' && needsPlanCible) {
+            if (getNeedsPlanCible()) {
                 loadCiblesForDepart(this.value);
             }
         });
@@ -857,7 +863,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Gestion du plan de cible pour les disciplines S, T, I, H
-    const needsPlanCible = typeof disciplineAbv !== 'undefined' && ['S', 'T', 'I', 'H'].includes(disciplineAbv);
+    const needsPlanCible = getNeedsPlanCible();
+    if (typeof window !== 'undefined') {
+        window.needsPlanCible = needsPlanCible;
+    }
     let ciblesData = null;
     let abortControllerCibles = null;
     let abortControllerCiblesEdit = null;
@@ -2384,8 +2393,9 @@ function proceedWithInscriptionSubmission() {
     console.log('numeroDepartInt final:', numeroDepartInt);
     
     // Récupérer le numéro de cible et la position si applicable
-    const numeroCible = needsPlanCible ? (document.getElementById('numero_cible')?.value || null) : null;
-    const positionArcher = needsPlanCible ? (document.getElementById('position_archer')?.value || null) : null;
+    const needsPlanCibleNow = getNeedsPlanCible();
+    const numeroCible = needsPlanCibleNow ? (document.getElementById('numero_cible')?.value || null) : null;
+    const positionArcher = needsPlanCibleNow ? (document.getElementById('position_archer')?.value || null) : null;
     
     // Construire les champs selon le type de discipline
     const fields = {
