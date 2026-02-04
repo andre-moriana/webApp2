@@ -855,12 +855,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gestion du plan de cible pour les disciplines S, T, I, H
     const needsPlanCible = typeof disciplineAbv !== 'undefined' && ['S', 'T', 'I', 'H'].includes(disciplineAbv);
     let ciblesData = null;
+    let abortControllerCibles = null;
+    let abortControllerCiblesEdit = null;
     
     console.log('Plan de cible - needsPlanCible:', needsPlanCible, 'disciplineAbv:', typeof disciplineAbv !== 'undefined' ? disciplineAbv : 'undefined');
     
     // Fonction pour charger les cibles disponibles pour un départ
     function loadCiblesForDepart(numeroDepart) {
         console.log('loadCiblesForDepart appelée avec numéro de départ:', numeroDepart);
+        
+        // Annuler la requête précédente si elle existe
+        if (abortControllerCibles) {
+            abortControllerCibles.abort();
+        }
+        abortControllerCibles = new AbortController();
         
         if (!needsPlanCible || !numeroDepart) {
             const planCibleSection = document.getElementById('plan-cible-selection');
@@ -898,7 +906,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            credentials: 'include'
+            credentials: 'include',
+            signal: abortControllerCibles.signal
         })
         .then(response => {
             console.log('Réponse chargement cibles - Status:', response.status, 'Content-Type:', response.headers.get('content-type'));
@@ -977,6 +986,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
+            // Ignorer les erreurs d'abort (annulation de requête)
+            if (error.name === 'AbortError') {
+                console.log('Chargement des cibles annulé (une nouvelle requête a été lancée)');
+                return;
+            }
             console.error('Erreur lors du chargement des cibles:', error);
             console.error('Stack trace:', error.stack);
             // Afficher un message d'erreur dans le select
@@ -1050,6 +1064,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function loadCiblesForDepartEdit(numeroDepart, existingNumeroCible = null, existingPosition = null) {
         console.log('loadCiblesForDepartEdit appelée avec numéro de départ:', numeroDepart, 'cible existante:', existingNumeroCible, 'position existante:', existingPosition);
 
+        // Annuler la requête précédente si elle existe
+        if (abortControllerCiblesEdit) {
+            abortControllerCiblesEdit.abort();
+        }
+        abortControllerCiblesEdit = new AbortController();
+
         const planCibleSection = document.getElementById('edit-plan-cible-selection');
         if (!planCibleSection) {
             console.warn('Section edit-plan-cible-selection non trouvée dans le DOM');
@@ -1080,7 +1100,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            credentials: 'include'
+            credentials: 'include',
+            signal: abortControllerCiblesEdit.signal
         })
         .then(response => {
             console.log('Réponse chargement cibles (édition) - Status:', response.status, 'Content-Type:', response.headers.get('content-type'));
@@ -1162,6 +1183,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
+            // Ignorer les erreurs d'abort (annulation de requête)
+            if (error.name === 'AbortError') {
+                console.log('Chargement des cibles (édition) annulé (une nouvelle requête a été lancée)');
+                return;
+            }
             console.error('Erreur lors du chargement des cibles (édition):', error);
             console.error('Stack trace:', error.stack);
             if (cibleSelect) {
