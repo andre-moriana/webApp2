@@ -2412,6 +2412,10 @@ function proceedWithInscriptionSubmission() {
     }
     console.log('numeroDepartInt final:', numeroDepartInt);
     
+    // Récupérer le numéro de cible et la position si applicable
+    const numeroCible = needsPlanCible ? (document.getElementById('numero_cible')?.value || null) : null;
+    const positionArcher = needsPlanCible ? (document.getElementById('position_archer')?.value || null) : null;
+    
     // Construire les champs selon le type de discipline
     const fields = {
         'user_id': userId,
@@ -2427,7 +2431,9 @@ function proceedWithInscriptionSubmission() {
         'mobilite_reduite': mobiliteReduite,
         'numero_tir': numeroTir,
         'tarif_competition': tarifCompetition,
-        'mode_paiement': modePaiement
+        'mode_paiement': modePaiement,
+        'numero_cible': numeroCible ? parseInt(numeroCible) : null,
+        'position_archer': positionArcher
     };
     
     // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason, pas de duel/trispot
