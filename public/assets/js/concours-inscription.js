@@ -2,6 +2,10 @@
 
 // Variable globale pour stocker l'archer sélectionné
 let selectedArcher = null;
+// Sécuriser needsPlanCible si non défini côté page
+const needsPlanCible = typeof window !== 'undefined' && typeof window.needsPlanCible !== 'undefined'
+    ? window.needsPlanCible
+    : false;
 
 // DÉFINIR showConfirmModal IMMÉDIATEMENT au début du fichier
 window.showConfirmModal = function(archer) {
@@ -2234,7 +2238,13 @@ function checkExistingInscription(userId, numeroDepart, callback) {
         },
         credentials: 'include'
     })
-    .then(response => response.json())
+    .then(response => {
+        const contentType = response.headers.get('content-type') || '';
+        if (!response.ok || !contentType.includes('application/json')) {
+            throw new Error('Réponse non-JSON ou erreur HTTP');
+        }
+        return response.json();
+    })
     .then(data => {
         const inscriptions = data.success ? (data.data || []) : [];
         const dejaInscrit = inscriptions.some(inscription => 
