@@ -1168,6 +1168,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Exposer pour un appel depuis la modale d'édition
+    window.loadCiblesForDepartEdit = loadCiblesForDepartEdit;
+
     function loadPositionsForCibleEdit(numeroCible) {
         const positionSelect = document.getElementById('edit-position_archer');
         const btnAssign = document.getElementById('edit-btn-assign-cible');
@@ -2663,6 +2666,15 @@ window.editInscription = function(inscriptionId) {
                 } else {
                     // Le champ peut ne pas exister si $departs est vide - ce n'est pas une erreur critique
                     console.warn('edit-depart-select non trouvé (peut être normal si aucun départ disponible)');
+                }
+
+                // Fallback: si le select de départ n'existe pas, charger quand même via le numero_depart
+                if ((!departSelect || !departSelect.value) && inscription.numero_depart) {
+                    if (typeof window.loadCiblesForDepartEdit === 'function') {
+                        window.loadCiblesForDepartEdit(inscription.numero_depart);
+                    } else {
+                        console.warn('loadCiblesForDepartEdit non disponible');
+                    }
                 }
                 
                 const categorieSelect = document.getElementById('edit-categorie_classement');
