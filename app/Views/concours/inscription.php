@@ -416,14 +416,6 @@ table tbody tr.piquet-blanc {
                                     <option value="">Sélectionner une position</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">&nbsp;</label>
-                                <div>
-                                    <button type="button" id="btn-assign-cible" class="btn btn-primary btn-block" disabled>
-                                        <i class="fas fa-bullseye"></i> Assigner à la cible
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     <?php endif; ?>
                     
@@ -674,14 +666,6 @@ table tbody tr.piquet-blanc {
                                 <select id="edit-position_archer" class="form-control">
                                     <option value="">Sélectionner une position</option>
                                 </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">&nbsp;</label>
-                                <div>
-                                    <button type="button" id="edit-btn-assign-cible" class="btn btn-primary btn-block" disabled>
-                                        <i class="fas fa-bullseye"></i> Assigner à la cible
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     <?php endif; ?>
