@@ -400,6 +400,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 $userNom = '';
                                 $userPrenom = '';
                                 $nomComplet = '';
+                                $clubComplet = '';
                                 $nomsArchers = [];
                                 
                                 // Pour les blasons 80, stocker tous les noms
@@ -488,9 +489,11 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                         if (is_array($user)) {
                                             $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
                                             $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
+                                            $clubComplet = $user['nom_club'] ?? $user['club_name'] ?? $user['club'] ?? '';
                                         } else {
                                             $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
                                             $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
+                                            $clubComplet = $user->nom_club ?? $user->club_name ?? $user->club ?? '';
                                         }
                                         $nomComplet = trim($userPrenom . ' ' . $userNom);
                                     }
@@ -506,9 +509,11 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                         if (is_array($user)) {
                                             $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
                                             $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
+                                            $clubComplet = $user['nom_club'] ?? $user['club_name'] ?? $user['club'] ?? '';
                                         } else {
                                             $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
                                             $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
+                                            $clubComplet = $user->nom_club ?? $user->club_name ?? $user->club ?? '';
                                         }
                                         $nomComplet = trim($userPrenom . ' ' . $userNom);
                                     }
@@ -594,7 +599,10 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 <?php if ($afficherNom): ?>
                                     <?php if ($isAssigne || ($dispositionType === 'blason60' && !empty($nomComplet) && $nomComplet !== 'Libre')): ?>
                                         <div class="blason-nom" title="<?= htmlspecialchars($nomComplet) ?>">
-                                            <?= htmlspecialchars($nomComplet) ?>
+                                            <div class="blason-archer-name"><?= htmlspecialchars($nomComplet) ?></div>
+                                            <?php if (!empty($clubComplet)): ?>
+                                                <div class="blason-archer-club"><?= htmlspecialchars($clubComplet) ?></div>
+                                            <?php endif; ?>
                                         </div>
                                     <?php else: ?>
                                         <div class="blason-nom" style="color: #adb5bd;">Libre</div>

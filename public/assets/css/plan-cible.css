@@ -128,7 +128,7 @@
 
 .blason-item.blason-80-size .blason-nom {
     font-size: 1.2em !important; /* 0.8em * 1.5 = 1.2em */
-    bottom: -35px !important;
+    bottom: -65px !important;
     max-width: 180px !important;
 }
 
@@ -159,7 +159,7 @@
 
 .blason-item.blason-60-size .blason-nom {
     font-size: 1em !important; /* 0.8em * 1.25 = 1em */
-    bottom: -35px !important;
+    bottom: -65px !important;
     max-width: 180px !important;
 }
 
@@ -403,21 +403,43 @@
 
 .blason-nom {
     position: absolute;
-    bottom: -30px;
+    bottom: -50px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 0.8em;
+    font-size: 0.75em;
     font-weight: 600;
     color: #212529;
-    white-space: nowrap;
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    max-width: 140px;
     text-align: center;
     background: rgba(255, 255, 255, 0.95);
-    padding: 3px 8px;
+    padding: 4px 6px;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1.2;
+}
+
+.blason-archer-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.blason-archer-club {
+    font-weight: 400;
+    font-size: 0.85em;
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
 }
 
 .blason-position {
