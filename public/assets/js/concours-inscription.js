@@ -2666,13 +2666,15 @@ window.editInscription = function(inscriptionId) {
                     console.warn('edit-depart-select non trouvé (peut être normal si aucun départ disponible)');
                 }
 
-                // Forcer le chargement des cibles si un départ est connu
+                // Forcer l'affichage + chargement des cibles si un départ est connu
                 const departValue = departSelect?.value || inscription.numero_depart || null;
-                if (departValue && typeof window.loadCiblesForDepartEdit === 'function') {
-                    window.loadCiblesForDepartEdit(departValue);
+                const editPlanSection = document.getElementById('edit-plan-cible-selection');
+                if (editPlanSection && departValue) {
+                    editPlanSection.style.display = 'block';
                 }
-
-                if (departValue && typeof window.loadCiblesForDepartEdit !== 'function') {
+                if (departValue && typeof window.loadCiblesForDepartEdit === 'function') {
+                    setTimeout(() => window.loadCiblesForDepartEdit(departValue), 0);
+                } else if (departValue) {
                     console.warn('loadCiblesForDepartEdit non disponible');
                 }
                 
