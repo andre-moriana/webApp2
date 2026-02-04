@@ -856,7 +856,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const needsPlanCible = typeof disciplineAbv !== 'undefined' && ['S', 'T', 'I', 'H'].includes(disciplineAbv);
     let ciblesData = null;
     
-    console.log('Plan de cible - needsPlanCible:', needsPlanCible, 'disciplineAbv:', typeof disciplineAbv !== 'undefined' ? disciplineAbv : 'undefined');
+    console.log('Plan de cible - needsPlanCible:', needsPlanCible, numeroDepart, 'disciplineAbv:', typeof disciplineAbv !== 'undefined' ? disciplineAbv : 'undefined');
     
     // Fonction pour charger les cibles disponibles pour un départ
     function loadCiblesForDepart(numeroDepart) {

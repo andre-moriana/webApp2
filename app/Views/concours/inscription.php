@@ -646,7 +646,6 @@ table tbody tr.piquet-blanc {
                     <?php 
                     // Vérifier si le concours nécessite un plan de cible (disciplines S, T, I, H)
                     $needsPlanCible = isset($disciplineAbv) && in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
-                    print_r($needsPlanCible);
                     ?>
                     <?php if ($needsPlanCible): ?>
                         <!-- Sélection de cible et position dans le plan de cible -->
