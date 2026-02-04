@@ -390,7 +390,7 @@ table tbody tr.piquet-blanc {
                     ?>
                     <?php if ($needsPlanCible): ?>
                         <!-- Sélection de cible et position dans le plan de cible -->
-                        <div class="row mt-3" id="plan-cible-selection" style="display: none;">
+                        <div class="row mt-3" id="edit-plan-cible-selection" style="display: none;">
                             <div class="col-md-12 mb-2">
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle"></i> 
@@ -404,22 +404,22 @@ table tbody tr.piquet-blanc {
                                 <h6 class="mb-3">Sélection de la cible et position</h6>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="numero_cible" class="form-label">Cible</label>
-                                <select id="numero_cible" class="form-control">
+                                <label for="edit-numero_cible" class="form-label">Cible</label>
+                                <select id="edit-numero_cible" class="form-control">
                                     <option value="">Sélectionner une cible</option>
                                 </select>
-                                <small class="form-text text-muted" id="cible-info"></small>
+                                <small class="form-text text-muted" id="edit-cible-info"></small>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="position_archer" class="form-label">Position</label>
-                                <select id="position_archer" class="form-control">
+                                <label for="edit-position_archer" class="form-label">Position</label>
+                                <select id="edit-position_archer" class="form-control">
                                     <option value="">Sélectionner une position</option>
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">&nbsp;</label>
                                 <div>
-                                    <button type="button" id="btn-assign-cible" class="btn btn-primary btn-block" disabled>
+                                    <button type="button" id="edit-btn-assign-cible" class="btn btn-primary btn-block" disabled>
                                         <i class="fas fa-bullseye"></i> Assigner à la cible
                                     </button>
                                 </div>

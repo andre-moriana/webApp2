@@ -1043,6 +1043,180 @@ document.addEventListener('DOMContentLoaded', function() {
             positionSelect.appendChild(option);
         }
     }
+
+    // ===== Plan de cible - MODALE D'ÉDITION =====
+    let ciblesDataEdit = null;
+
+    function loadCiblesForDepartEdit(numeroDepart) {
+        console.log('loadCiblesForDepartEdit appelée avec numéro de départ:', numeroDepart);
+
+        const planCibleSection = document.getElementById('edit-plan-cible-selection');
+        if (!needsPlanCible || !numeroDepart) {
+            if (planCibleSection) {
+                planCibleSection.style.display = 'none';
+            }
+            return;
+        }
+
+        if (!planCibleSection) {
+            console.warn('Section edit-plan-cible-selection non trouvée dans le DOM');
+            return;
+        }
+
+        planCibleSection.style.display = 'block';
+
+        const cibleSelect = document.getElementById('edit-numero_cible');
+        const positionSelect = document.getElementById('edit-position_archer');
+        const btnAssign = document.getElementById('edit-btn-assign-cible');
+        const cibleInfo = document.getElementById('edit-cible-info');
+
+        if (cibleSelect) cibleSelect.innerHTML = '<option value="">Sélectionner une cible</option>';
+        if (positionSelect) positionSelect.innerHTML = '<option value="">Sélectionner une position</option>';
+        if (btnAssign) btnAssign.disabled = true;
+        if (cibleInfo) cibleInfo.textContent = '';
+
+        console.log('Chargement des cibles (édition) pour concours:', concoursId, 'départ:', numeroDepart);
+        fetch(`/api/concours/${concoursId}/plan-cible/${numeroDepart}/cibles`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            console.log('Réponse chargement cibles (édition) - Status:', response.status, 'Content-Type:', response.headers.get('content-type'));
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Réponse non-OK:', text);
+                    throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+                });
+            }
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    console.error('Réponse non-JSON:', text.substring(0, 500));
+                    throw new Error('La réponse n\'est pas au format JSON: ' + text.substring(0, 200));
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Données reçues (édition):', data);
+            if (data.success) {
+                if (data.data && Array.isArray(data.data.cibles)) {
+                    ciblesDataEdit = data.data.cibles;
+                    console.log('Cibles chargées (édition):', ciblesDataEdit.length);
+
+                    if (cibleSelect) {
+                        ciblesDataEdit.forEach(cible => {
+                            const option = document.createElement('option');
+                            option.value = cible.numero_cible;
+                            option.textContent = `Cible ${cible.numero_cible}`;
+                            if (cible.blason) {
+                                option.textContent += ` (Blason: ${cible.blason})`;
+                            }
+                            if (cible.distance) {
+                                const distanceLabel = distancesTir.find(d => d.distance_valeur == cible.distance);
+                                if (distanceLabel) {
+                                    option.textContent += ` - ${distanceLabel.lb_distance}`;
+                                }
+                            }
+                            cibleSelect.appendChild(option);
+                        });
+
+                        if (ciblesDataEdit.length === 0) {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = 'Aucune cible disponible - Créez d\'abord le plan de cible';
+                            option.disabled = true;
+                            cibleSelect.appendChild(option);
+                        }
+                    }
+                } else {
+                    console.log('Aucun plan de cible créé pour ce départ (édition)');
+                    if (cibleSelect) {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'Aucune cible disponible - Créez d\'abord le plan de cible';
+                        option.disabled = true;
+                        cibleSelect.appendChild(option);
+                    }
+                }
+            } else {
+                const errorMsg = data.error || data.message || 'Erreur inconnue';
+                console.error('Erreur lors du chargement des cibles (édition):', errorMsg, 'Données complètes:', data);
+                if (cibleSelect) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Erreur: ' + errorMsg;
+                    option.disabled = true;
+                    cibleSelect.appendChild(option);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des cibles (édition):', error);
+            console.error('Stack trace:', error.stack);
+            if (cibleSelect) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Erreur: ' + (error.message || 'Impossible de charger les cibles');
+                option.disabled = true;
+                cibleSelect.appendChild(option);
+            }
+        });
+    }
+
+    function loadPositionsForCibleEdit(numeroCible) {
+        const positionSelect = document.getElementById('edit-position_archer');
+        const btnAssign = document.getElementById('edit-btn-assign-cible');
+        const cibleInfo = document.getElementById('edit-cible-info');
+
+        if (!positionSelect || !ciblesDataEdit) return;
+
+        positionSelect.innerHTML = '<option value="">Sélectionner une position</option>';
+        if (btnAssign) btnAssign.disabled = true;
+
+        const cible = ciblesDataEdit.find(c => c.numero_cible == numeroCible);
+        if (!cible) return;
+
+        if (cibleInfo) {
+            let info = '';
+            if (cible.is_trispot) {
+                info += 'Trispot';
+            } else if (cible.blason) {
+                info += `Blason: ${cible.blason}`;
+            }
+            if (cible.distance) {
+                const distanceLabel = distancesTir.find(d => d.distance_valeur == cible.distance);
+                if (distanceLabel) {
+                    if (info) info += ' - ';
+                    info += `Distance: ${distanceLabel.lb_distance}`;
+                }
+            }
+            cibleInfo.textContent = info;
+        }
+
+        if (cible.positions_libres && cible.positions_libres.length > 0) {
+            cible.positions_libres.forEach(position => {
+                const option = document.createElement('option');
+                option.value = position;
+                if (cible.is_trispot) {
+                    option.textContent = `Colonne ${position} (positions ${position}1, ${position}2, ${position}3)`;
+                } else {
+                    option.textContent = `Position ${position}`;
+                }
+                positionSelect.appendChild(option);
+            });
+        } else {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Aucune position libre';
+            option.disabled = true;
+            positionSelect.appendChild(option);
+        }
+    }
     
     // Fonction pour assigner un archer à une position de cible
     function assignArcherToCible() {
@@ -1152,6 +1326,24 @@ document.addEventListener('DOMContentLoaded', function() {
             const btnAssign = document.getElementById('btn-assign-cible');
             if (btnAssign) {
                 btnAssign.disabled = !this.value || !selectedArcher;
+            }
+        });
+    }
+
+    // Écouter les changements sur le select de cible (édition)
+    const editCibleSelect = document.getElementById('edit-numero_cible');
+    if (editCibleSelect) {
+        editCibleSelect.addEventListener('change', function() {
+            loadPositionsForCibleEdit(this.value);
+        });
+    }
+
+    // Écouter le changement de départ dans la modale d'édition
+    const editDepartSelect = document.getElementById('edit-depart-select');
+    if (editDepartSelect) {
+        editDepartSelect.addEventListener('change', function() {
+            if (needsPlanCible) {
+                loadCiblesForDepartEdit(this.value);
             }
         });
     }
@@ -2462,6 +2654,12 @@ window.editInscription = function(inscriptionId) {
                         departSelect.value = '';
                     }
                     console.log('departSelect.value défini à:', departSelect.value, '(inscription.numero_depart:', inscription.numero_depart, ')');
+
+                    // Déclencher le chargement des cibles pour la modale d'édition
+                    if (departSelect.value) {
+                        const changeEvent = new Event('change', { bubbles: true });
+                        departSelect.dispatchEvent(changeEvent);
+                    }
                 } else {
                     // Le champ peut ne pas exister si $departs est vide - ce n'est pas une erreur critique
                     console.warn('edit-depart-select non trouvé (peut être normal si aucun départ disponible)');
