@@ -171,22 +171,22 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         $trispotCible = null;
                         $cibleHasAssigned = false;
                         foreach ($ciblePlans as $plan) {
+                            // Vérifier si un archer est assigné à cette position
+                            if (isset($plan['user_id']) && $plan['user_id'] !== null) {
+                                $cibleHasAssigned = true;
+                            }
+                            
                             if (isset($plan['blason']) && $plan['blason'] !== null) {
                                 $blasonCible = $plan['blason'];
                             }
                             if (isset($plan['distance']) && $plan['distance'] !== null) {
                                 $distanceCible = $plan['distance'];
                             }
-                            if (isset($plan['user_id']) && $plan['user_id'] !== null) {
-                                $cibleHasAssigned = true;
-                            }
+                            
                             // Vérifier si c'est un trispot depuis trispotMap
                             $cibleKey = $numeroDepart . '_' . $numeroCible;
                             if (isset($trispotMap[$cibleKey])) {
                                 $trispotCible = $trispotMap[$cibleKey];
-                            }
-                            if ($blasonCible !== null && $distanceCible !== null) {
-                                break;
                             }
                         }
                         
