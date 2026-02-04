@@ -2833,6 +2833,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 type_licence: getValue('edit-type_licence') || null,
                 creation_renouvellement: getValue('edit-creation_renouvellement') || null,
                 numero_depart: getValue('edit-depart-select') ? parseInt(getValue('edit-depart-select')) : null,
+                numero_cible: getValue('edit-numero_cible') ? parseInt(getValue('edit-numero_cible')) : null,
+                position_archer: getValue('edit-position_archer') || null,
                 categorie_classement: getValue('edit-categorie_classement') || null,
                 arme: getValue('edit-arme') || null,
                 mobilite_reduite: getChecked('edit-mobilite_reduite') ? 1 : 0,
