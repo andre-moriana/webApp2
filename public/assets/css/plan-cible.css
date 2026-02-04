@@ -49,8 +49,8 @@
     align-items: center;
     justify-content: flex-start;
     width: 480px;
-    height: 580px;
-    padding: 20px 20px 80px 20px;
+    height: 620px;
+    padding: 20px 20px 100px 20px;
     background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
@@ -127,9 +127,9 @@
 }
 
 .blason-item.blason-80-size .blason-nom {
-    font-size: 1.2em !important; /* 0.8em * 1.5 = 1.2em */
-    bottom: -90px !important;
-    max-width: 180px !important;
+    font-size: 0.95em !important;
+    bottom: -100px !important;
+    max-width: 170px !important;
 }
 
 .blason-item.blason-80-size .blason-numero {
@@ -158,9 +158,9 @@
 }
 
 .blason-item.blason-60-size .blason-nom {
-    font-size: 1em !important; /* 0.8em * 1.25 = 1em */
-    bottom: -90px !important;
-    max-width: 180px !important;
+    font-size: 0.85em !important;
+    bottom: -100px !important;
+    max-width: 170px !important;
 }
 
 .blason-item.blason-60-size .blason-numero {
@@ -403,23 +403,23 @@
 
 .blason-nom {
     position: absolute;
-    bottom: -75px;
+    bottom: -85px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 0.75em;
+    font-size: 0.7em;
     font-weight: 600;
     color: #212529;
     white-space: normal;
-    max-width: 140px;
+    max-width: 130px;
     text-align: center;
     background: rgba(255, 255, 255, 0.95);
-    padding: 5px 6px;
+    padding: 3px 5px;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    line-height: 1.3;
+    gap: 2px;
+    line-height: 1.2;
 }
 
 .blason-archer-name {
@@ -427,13 +427,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
+    font-size: 0.95em;
 }
 
 .blason-archer-club {
     font-weight: 400;
-    font-size: 0.85em;
+    font-size: 0.75em;
     color: #666;
     overflow: hidden;
     text-overflow: ellipsis;

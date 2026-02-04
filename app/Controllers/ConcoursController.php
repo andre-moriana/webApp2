@@ -1932,6 +1932,23 @@ class ConcoursController {
                         if (is_array($userData) && isset($userData['data']) && isset($userData['success'])) {
                             $userData = $userData['data'];
                         }
+                        
+                        // Si pas de clubName, essayer de récupérer le club depuis ses données de club_id ou club
+                        if (empty($userData['clubName']) && (isset($userData['club']) || isset($userData['club_id']))) {
+                            try {
+                                $clubId = $userData['club_id'] ?? $userData['club'] ?? null;
+                                if ($clubId) {
+                                    $clubResponse = $this->apiService->makeRequest("clubs/{$clubId}", 'GET');
+                                    if ($clubResponse['success'] && isset($clubResponse['data'])) {
+                                        $clubData = $clubResponse['data'];
+                                        $userData['clubName'] = $clubData['name'] ?? $clubData['nom'] ?? '';
+                                    }
+                                }
+                            } catch (Exception $e) {
+                                error_log('Erreur lors de la récupération du club pour l\'utilisateur ' . $userId . ': ' . $e->getMessage());
+                            }
+                        }
+                        
                         $usersMap[$userId] = $userData;
                     }
                 } catch (Exception $e) {
