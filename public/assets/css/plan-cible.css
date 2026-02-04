@@ -49,8 +49,8 @@
     align-items: center;
     justify-content: flex-start;
     width: 480px;
-    height: 500px;
-    padding: 20px;
+    height: 580px;
+    padding: 20px 20px 80px 20px;
     background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
@@ -128,7 +128,7 @@
 
 .blason-item.blason-80-size .blason-nom {
     font-size: 1.2em !important; /* 0.8em * 1.5 = 1.2em */
-    bottom: -65px !important;
+    bottom: -90px !important;
     max-width: 180px !important;
 }
 
@@ -159,7 +159,7 @@
 
 .blason-item.blason-60-size .blason-nom {
     font-size: 1em !important; /* 0.8em * 1.25 = 1em */
-    bottom: -65px !important;
+    bottom: -90px !important;
     max-width: 180px !important;
 }
 
@@ -403,7 +403,7 @@
 
 .blason-nom {
     position: absolute;
-    bottom: -50px;
+    bottom: -75px;
     left: 50%;
     transform: translateX(-50%);
     font-size: 0.75em;
@@ -413,13 +413,13 @@
     max-width: 140px;
     text-align: center;
     background: rgba(255, 255, 255, 0.95);
-    padding: 4px 6px;
+    padding: 5px 6px;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    line-height: 1.2;
+    gap: 3px;
+    line-height: 1.3;
 }
 
 .blason-archer-name {
