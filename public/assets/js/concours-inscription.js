@@ -1051,15 +1051,13 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('loadCiblesForDepartEdit appelée avec numéro de départ:', numeroDepart);
 
         const planCibleSection = document.getElementById('edit-plan-cible-selection');
-        if (!needsPlanCible || !numeroDepart) {
-            if (planCibleSection) {
-                planCibleSection.style.display = 'none';
-            }
+        if (!planCibleSection) {
+            console.warn('Section edit-plan-cible-selection non trouvée dans le DOM');
             return;
         }
 
-        if (!planCibleSection) {
-            console.warn('Section edit-plan-cible-selection non trouvée dans le DOM');
+        if (!numeroDepart) {
+            planCibleSection.style.display = 'none';
             return;
         }
 
@@ -2668,13 +2666,14 @@ window.editInscription = function(inscriptionId) {
                     console.warn('edit-depart-select non trouvé (peut être normal si aucun départ disponible)');
                 }
 
-                // Fallback: si le select de départ n'existe pas, charger quand même via le numero_depart
-                if ((!departSelect || !departSelect.value) && inscription.numero_depart) {
-                    if (typeof window.loadCiblesForDepartEdit === 'function') {
-                        window.loadCiblesForDepartEdit(inscription.numero_depart);
-                    } else {
-                        console.warn('loadCiblesForDepartEdit non disponible');
-                    }
+                // Forcer le chargement des cibles si un départ est connu
+                const departValue = departSelect?.value || inscription.numero_depart || null;
+                if (departValue && typeof window.loadCiblesForDepartEdit === 'function') {
+                    window.loadCiblesForDepartEdit(departValue);
+                }
+
+                if (departValue && typeof window.loadCiblesForDepartEdit !== 'function') {
+                    console.warn('loadCiblesForDepartEdit non disponible');
                 }
                 
                 const categorieSelect = document.getElementById('edit-categorie_classement');
