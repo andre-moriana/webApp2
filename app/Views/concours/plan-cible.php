@@ -553,7 +553,16 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     }
                                 }
                             ?>
-                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason80' ? 'blason-80-size' : '' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>">
+                            <?php
+                                $tooltipText = '';
+                                if ($isAssigne || ($dispositionType === 'blason60' && !empty($nomComplet) && $nomComplet !== 'Libre')) {
+                                    $tooltipText = $nomComplet;
+                                    if (!empty($clubComplet)) {
+                                        $tooltipText .= ' - ' . $clubComplet;
+                                    }
+                                }
+                            ?>
+                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason80' ? 'blason-80-size' : '' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>"<?= !empty($tooltipText) ? ' title="' . htmlspecialchars($tooltipText) . '"' : '' ?>>
                                 <div class="blason-numero"><?= htmlspecialchars($numeroCible) ?></div>
                                 <?php if ($dispositionType === 'blason80' && !empty($positionsBlason)): ?>
                                     <!-- Pour les blasons 60, afficher deux badges séparés -->
@@ -596,17 +605,8 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 }
                                 ?>
                                 
-                                <?php if ($afficherNom): ?>
-                                    <?php if ($isAssigne || ($dispositionType === 'blason60' && !empty($nomComplet) && $nomComplet !== 'Libre')): ?>
-                                        <div class="blason-nom" title="<?= htmlspecialchars($nomComplet) ?>">
-                                            <div class="blason-archer-name"><?= htmlspecialchars($nomComplet) ?></div>
-                                            <?php if (!empty($clubComplet)): ?>
-                                                <div class="blason-archer-club"><?= htmlspecialchars($clubComplet) ?></div>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php else: ?>
-                                        <div class="blason-nom" style="color: #adb5bd;">Libre</div>
-                                    <?php endif; ?>
+                                <?php if ($afficherNom && ($isAssigne || ($dispositionType === 'blason60' && !empty($nomComplet) && $nomComplet !== 'Libre'))): ?>
+                                    <span class="visually-hidden"><?= htmlspecialchars($tooltipText) ?></span>
                                 <?php endif; ?>
                             </div>
                             <?php } ?>
