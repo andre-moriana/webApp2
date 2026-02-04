@@ -489,11 +489,11 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                         if (is_array($user)) {
                                             $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
                                             $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
-                                            $clubComplet = $user['nom_club'] ?? $user['club_name'] ?? $user['club'] ?? '';
+                                            $clubComplet = $user['clubName'] ?? $user['club_name'] ?? $user['nom_club'] ?? $user['club'] ?? '';
                                         } else {
                                             $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
                                             $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
-                                            $clubComplet = $user->nom_club ?? $user->club_name ?? $user->club ?? '';
+                                            $clubComplet = $user->clubName ?? $user->club_name ?? $user->nom_club ?? $user->club ?? '';
                                         }
                                         $nomComplet = trim($userPrenom . ' ' . $userNom);
                                     }
@@ -509,11 +509,11 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                         if (is_array($user)) {
                                             $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
                                             $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
-                                            $clubComplet = $user['nom_club'] ?? $user['club_name'] ?? $user['club'] ?? '';
+                                            $clubComplet = $user['clubName'] ?? $user['club_name'] ?? $user['nom_club'] ?? $user['club'] ?? '';
                                         } else {
                                             $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
                                             $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
-                                            $clubComplet = $user->nom_club ?? $user->club_name ?? $user->club ?? '';
+                                            $clubComplet = $user->clubName ?? $user->club_name ?? $user->nom_club ?? $user->club ?? '';
                                         }
                                         $nomComplet = trim($userPrenom . ' ' . $userNom);
                                     }
