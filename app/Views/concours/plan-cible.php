@@ -288,17 +288,6 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         
                         <div class="blasons-container blasons-<?= htmlspecialchars($dispositionType) ?>">
                             <?php
-                            // Pour les trispots, afficher les en-têtes des colonnes (numéros des blasons)
-                            if ($dispositionType === 'trispot') {
-                                $colonnesTrispot = ['A' => 1, 'C' => 2, 'B' => 3, 'D' => 4];
-                                foreach ($colonnesTrispot as $col => $blasonNum) {
-                                    echo '<div class="trispot-column-header" data-column="' . htmlspecialchars($col) . '">';
-                                    echo '<strong>Blason ' . htmlspecialchars($blasonNum) . '</strong>';
-                                    echo '</div>';
-                                }
-                            }
-                            ?>
-                            <?php
                             // Afficher les positions dans l'ordre défini
                             foreach ($ordrePositions as $position) {
                                 // Pour les trispots, extraire la colonne de la position (A1 -> A)
