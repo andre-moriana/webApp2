@@ -614,17 +614,17 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         
                         <!-- Sélecteur de type de blason SOUS la cible (en dehors de la boucle des positions) -->
                         <div class="blason-type-select" style="margin-top: 10px; text-align: center;">
-                            <form method="post" action="/concours/plan-cible-type-blason">
+                            <form method="post" action="/concours/plan-cible-type-blason" class="blason-type-form">
                                 <input type="hidden" name="concours_id" value="<?= htmlspecialchars($concoursId) ?>">
                                 <input type="hidden" name="numero_depart" value="<?= htmlspecialchars($numeroDepart) ?>">
                                 <input type="hidden" name="numero_cible" value="<?= htmlspecialchars($numeroCible) ?>">
-                                <input type="hidden" name="trispot" value="<?= htmlspecialchars($trispot) ?>">
+                                <input type="hidden" name="trispot" value="<?= htmlspecialchars($trispot ? '1' : '0') ?>" class="trispot-flag">
                                 <label for="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="font-weight: 500; margin-right: 8px;">Type de blason :</label>
-                                <select name="blason_type" id="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="display: inline-block; width: auto;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>
-                                    <option value="80" <?= ($blasonCible == 80 ) ? 'selected' : '' ?>>Blason 80</option>
-                                    <option value="60" <?= ($blasonCible == 60 ) ? 'selected' : '' ?>>Blason 60</option>
-                                    <option value="40" <?= ($blasonCible == 40 ) ? 'selected' : '' ?>>Blason 40</option>
-                                    <option value="40" <?= ($blasonCible === '40' && $trispot) ? 'selected' : '' ?>>Trispot 40</option>
+                                <select name="blason_type" class="blason-type-select-dropdown" id="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="display: inline-block; width: auto;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>
+                                    <option value="80" data-trispot="0" <?= ($blasonCible == 80 && !$trispot) ? 'selected' : '' ?>>Blason 80</option>
+                                    <option value="60" data-trispot="0" <?= ($blasonCible == 60 && !$trispot) ? 'selected' : '' ?>>Blason 60</option>
+                                    <option value="40" data-trispot="0" <?= ($blasonCible == 40 && !$trispot) ? 'selected' : '' ?>>Blason 40</option>
+                                    <option value="40" data-trispot="1" <?= ($blasonCible == 40 && $trispot) ? 'selected' : '' ?>>Trispot 40</option>
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-outline-primary" style="margin-left: 8px;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>Enregistrer</button>
                             </form>
@@ -649,3 +649,26 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
     </a>
 </div>
 </div>
+
+<script>
+// Mettre à jour le flag trispot quand on change la sélection du type de blason
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdowns = document.querySelectorAll('.blason-type-select-dropdown');
+    
+    dropdowns.forEach(function(dropdown) {
+        dropdown.addEventListener('change', function() {
+            // Trouver le formulaire parent et le input trispot
+            const form = this.closest('.blason-type-form');
+            const trispotInput = form.querySelector('.trispot-flag');
+            const selectedOption = this.options[this.selectedIndex];
+            const trispotValue = selectedOption.getAttribute('data-trispot');
+            
+            // Mettre à jour la valeur du flag trispot
+            if (trispotValue !== null) {
+                trispotInput.value = trispotValue;
+                console.log('✓ Flag trispot mis à jour à:', trispotValue);
+            }
+        });
+    });
+});
+</script>

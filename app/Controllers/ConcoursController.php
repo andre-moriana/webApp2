@@ -1964,6 +1964,7 @@ class ConcoursController {
         $numeroDepart = $_POST['numero_depart'] ?? null;
         $numeroCible = $_POST['numero_cible'] ?? null;
         $blasonType = $_POST['blason_type'] ?? null;
+        $trispot = $_POST['trispot'] ?? '0';
 
         if (!$concoursId || !$numeroDepart || !$numeroCible || !$blasonType) {
             $_SESSION['error'] = 'Paramètres manquants pour enregistrer le type de blason.';
@@ -1976,7 +1977,8 @@ class ConcoursController {
                 'concours_id' => (int)$concoursId,
                 'numero_depart' => (int)$numeroDepart,
                 'numero_cible' => (int)$numeroCible,
-                'blason_type' => $blasonType
+                'blason_type' => $blasonType,
+                'trispot' => (int)$trispot
             ];
 
             $response = $this->apiService->makeRequest('concours/plan-cible-type-blason', 'POST', $payload);
