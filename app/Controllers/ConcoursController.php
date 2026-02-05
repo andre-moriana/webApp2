@@ -1634,6 +1634,8 @@ class ConcoursController {
             'arme' => $_POST['arme'] ?? null,
             'mobilite_reduite' => isset($_POST['mobilite_reduite']) ? (int)$_POST['mobilite_reduite'] : 0,
             'numero_tir' => $numero_tir,
+            'numero_cible' => isset($_POST['numero_cible']) && $_POST['numero_cible'] !== '' ? (int)$_POST['numero_cible'] : null,
+            'position_archer' => isset($_POST['position_archer']) && $_POST['position_archer'] !== '' ? $_POST['position_archer'] : null,
             'tarif_competition' => $_POST['tarif_competition'] ?? null,
             'mode_paiement' => $_POST['mode_paiement'] ?? 'Non payé'
         ];
