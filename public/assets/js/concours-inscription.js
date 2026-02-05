@@ -1153,6 +1153,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Cibles chargées (édition):', ciblesDataEdit.length);
 
                     if (cibleSelect) {
+                        if (existingNumeroCible) {
+                            cibleSelect.dataset.currentCible = existingNumeroCible.toString();
+                        } else {
+                            delete cibleSelect.dataset.currentCible;
+                        }
+
                         ciblesDataEdit.forEach(cible => {
                             const option = document.createElement('option');
                             option.value = cible.numero_cible;
@@ -1191,7 +1197,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         // Pré-sélectionner la cible existante si elle existe
                         if (existingNumeroCible) {
-                            cibleSelect.value = existingNumeroCible;
+                            const currentValue = existingNumeroCible.toString();
+                            const currentOption = cibleSelect.querySelector(`option[value="${currentValue}"]`);
+                            if (currentOption) {
+                                currentOption.disabled = false;
+                                currentOption.style.color = '';
+                            }
+                            cibleSelect.value = currentValue;
                             console.log('Cible pré-sélectionnée:', existingNumeroCible);
                             // Charger les positions pour cette cible
                             loadPositionsForCibleEdit(existingNumeroCible, existingPosition);
@@ -1533,6 +1545,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const filterCibles = () => {
             const isTrispotChecked = editTrispotCheckbox.checked;
             const options = editCibleSelect.querySelectorAll('option');
+            const currentCible = editCibleSelect.dataset.currentCible || null;
             
             options.forEach(option => {
                 if (option.value === '') return; // Garder l'option vide
@@ -1544,8 +1557,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 let shouldDisable = false;
                 
+                // Toujours garder la cible actuelle sélectionnable
+                if (currentCible && option.value == currentCible) {
+                    shouldDisable = false;
+                }
                 // Si la cible est vide, toujours permettre
-                if (!isCibleEmpty) {
+                else if (!isCibleEmpty) {
                     // Si archer trispot: bloquer les cibles non-trispot et les cibles occupées par non-trispot
                     if (isTrispotChecked) {
                         if (!isTrispotCible || occupiedByNonTrispot) {
