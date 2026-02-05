@@ -324,6 +324,16 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                         }
                                     }
                                     
+                                    // DEBUG: Afficher les infos en HTML pour vérifier
+                                    if ($position === 'A1') {
+                                        echo "<!-- DEBUG - Position: $position, colonne: $colonne, plan exists: " . ($plan ? 'YES' : 'NO') . " -->";
+                                        if ($plan) {
+                                            echo "<!-- DEBUG - Plan[A1] user_id=" . ($plan['user_id'] ?? 'NULL') . " -->";
+                                        }
+                                        echo "<!-- DEBUG - userIdTrispot: $userIdTrispot -->";
+                                        echo "<!-- DEBUG - plansParPosition keys: " . implode(', ', array_keys($plansParPosition)) . " -->";
+                                    }
+                                    
                                     // Si pas de plan trouvé, créer un plan vide pour cette position
                                     if ($plan === null) {
                                         $plan = [
