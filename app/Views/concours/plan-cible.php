@@ -287,13 +287,6 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         </div>
                         
                         <div class="blasons-container blasons-<?= htmlspecialchars($dispositionType) ?>">
-                            <script>
-                            console.log('========== CIBLE <?= $numeroCible ?> ==========');
-                            console.log('dispositionType: <?= $dispositionType ?>');
-                            console.log('ciblePlans count: <?= count($ciblePlans ?? []) ?>');
-                            console.log('plansParPosition count: <?= count($plansParPosition ?? []) ?>');
-                            console.log('ordrePositions: <?= json_encode($ordrePositions ?? []) ?>');
-                            </script>
                             <?php
                             // Pour les trispots, afficher les en-têtes des colonnes (numéros des blasons)
                             if ($dispositionType === 'trispot') {
@@ -321,6 +314,12 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     // Récupérer le plan pour cette position spécifique (A1, A2, A3, etc.)
                                     $plan = $plansParPosition[$position] ?? null;
                                     
+                                    // Chercher d'abord par position complète (A1, A2, A3)
+                                    // Si pas trouvé, chercher par colonne seule (A, C, B, D) pour compatibilité
+                                    if (!$plan && isset($plansParPosition[$colonne])) {
+                                        $plan = $plansParPosition[$colonne];
+                                    }
+                                    
                                     // Récupérer le user_id de la colonne (vérifier les 3 positions de la colonne)
                                     for ($ligne = 1; $ligne <= 3; $ligne++) {
                                         $posTrispot = $colonne . $ligne;
@@ -328,6 +327,14 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                         if ($planPos && $planPos['user_id'] !== null) {
                                             $userIdTrispot = $planPos['user_id'];
                                             break; // Toutes les positions ont le même user_id
+                                        }
+                                    }
+                                    
+                                    // Si pas trouvé par positions complètes, essayer par colonne seule
+                                    if ($userIdTrispot === null && isset($plansParPosition[$colonne])) {
+                                        $planPos = $plansParPosition[$colonne];
+                                        if ($planPos && $planPos['user_id'] !== null) {
+                                            $userIdTrispot = $planPos['user_id'];
                                         }
                                     }
                                     
@@ -613,8 +620,15 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     </div>
                                 <?php endif; ?>
                                 <?php if ($dispositionType !== 'blason60' && $dispositionType !== 'blason80'): ?>
-                                    <!-- Position standard (pour trispot et autres) -->   
-                                    <div class="blason-position"><?= htmlspecialchars($position) ?></div>
+                                    <!-- Position standard (pour trispot et autres) -->
+                                    <?php 
+                                    // Pour les trispots, afficher seulement la colonne (A, C, B, D)
+                                    $positionDisplay = $position;
+                                    if ($dispositionType === 'trispot' && $colonne !== null) {
+                                        $positionDisplay = $colonne;
+                                    }
+                                    ?>
+                                    <div class="blason-position"><?= htmlspecialchars($positionDisplay) ?></div>
                                 <?php endif; ?>
                                 <!-- Taille du blason -->                                
                                 <?php if ($planBlason !== null): ?>
