@@ -1902,26 +1902,11 @@ class ConcoursController {
                             $userIds[] = $userId;
                         }
                         
-                        // Récupérer l'information trispot depuis les inscriptions si un utilisateur est assigné
-                        if ($userId && isset($plan['numero_depart']) && isset($plan['numero_cible'])) {
+                        // Récupérer l'information trispot directement depuis le plan (concours_plan_cible)
+                        if (isset($plan['numero_depart']) && isset($plan['numero_cible'])) {
                             $cibleKey = $plan['numero_depart'] . '_' . $plan['numero_cible'];
-                            if (!isset($trispotMap[$cibleKey])) {
-                                try {
-                                    // Récupérer l'inscription de l'utilisateur pour ce concours
-                                    $inscriptionResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscription/{$userId}", 'GET');
-                                    if ($inscriptionResponse['success'] && isset($inscriptionResponse['data'])) {
-                                        $inscriptionData = $this->apiService->unwrapData($inscriptionResponse);
-                                        if (is_array($inscriptionData) && isset($inscriptionData['data']) && isset($inscriptionData['success'])) {
-                                            $inscriptionData = $inscriptionData['data'];
-                                        }
-                                        // Stocker l'information trispot pour cette cible
-                                        if (isset($inscriptionData['trispot'])) {
-                                            $trispotMap[$cibleKey] = $inscriptionData['trispot'];
-                                        }
-                                    }
-                                } catch (Exception $e) {
-                                    error_log('Erreur lors de la récupération de l\'inscription pour trispot: ' . $e->getMessage());
-                                }
+                            if (!isset($trispotMap[$cibleKey]) && isset($plan['trispot'])) {
+                                $trispotMap[$cibleKey] = $plan['trispot'];
                             }
                         }
                     }
