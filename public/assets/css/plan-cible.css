@@ -213,7 +213,7 @@
 .blasons-container.blasons-trispot {
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* 4 colonnes : A, C, B, D */
-    grid-template-rows: auto repeat(3, 1fr); /* 1ère ligne pour en-têtes, puis 3 lignes pour blasons */
+    grid-template-rows: auto repeat(3, 1fr); /* 1ère ligne pour en-têtes (auto), puis 3 lignes pour blasons */
     gap: 10px;
     width: 100%;
     max-width: 400px;
