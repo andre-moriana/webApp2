@@ -266,7 +266,11 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                     ?>
                     <div class="pas-de-tir">
                         <div class="pas-de-tir-header">
-                            <h3>Cible <?= htmlspecialchars($numeroCible) ?></h3>
+                            <?php if ($dispositionType === 'trispot'): ?>
+                                <h3>Cible <?= htmlspecialchars($numeroCible) ?> - Trispot (4 Blasons 40)</h3>
+                            <?php else: ?>
+                                <h3>Cible <?= htmlspecialchars($numeroCible) ?></h3>
+                            <?php endif; ?>
                             <div class="pas-de-tir-info">
                                 <?php if ($blasonCible !== null && $blasonCible !== 'T40'): ?>
                                     <i class="fas fa-bullseye"></i> Blason <?= htmlspecialchars($blasonCible) ?>
@@ -283,6 +287,17 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         </div>
                         
                         <div class="blasons-container blasons-<?= htmlspecialchars($dispositionType) ?>">
+                            <?php
+                            // Pour les trispots, afficher les en-têtes des colonnes (numéros des blasons)
+                            if ($dispositionType === 'trispot') {
+                                $colonnesTrispot = ['A' => 1, 'C' => 2, 'B' => 3, 'D' => 4];
+                                foreach ($colonnesTrispot as $col => $blasonNum) {
+                                    echo '<div class="trispot-column-header" data-column="' . htmlspecialchars($col) . '">';
+                                    echo '<strong>Blason ' . htmlspecialchars($blasonNum) . '</strong>';
+                                    echo '</div>';
+                                }
+                            }
+                            ?>
                             <?php
                             // Afficher les positions dans l'ordre défini
                             foreach ($ordrePositions as $position) {
@@ -563,7 +578,17 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 }
                             ?>
                             <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason80' ? 'blason-80-size' : '' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>"<?= !empty($tooltipText) ? ' title="' . htmlspecialchars($tooltipText) . '"' : '' ?>>
-                                <div class="blason-numero"><?= htmlspecialchars($numeroCible) ?></div>
+                                <?php if ($dispositionType === 'trispot'): ?>
+                                    <!-- Pour les trispots, afficher le numéro du blason (1, 2, 3) au lieu du numéro de la cible -->
+                                    <?php
+                                    // Mapper les colonnes (A, C, B, D) aux numéros de blason (1, 2, 3, 4)
+                                    $blasonTrispotMap = ['A' => 1, 'C' => 2, 'B' => 3, 'D' => 4];
+                                    $blasonNumber = isset($blasonTrispotMap[$colonne]) ? $blasonTrispotMap[$colonne] : '?';
+                                    ?>
+                                    <div class="blason-numero"><?= htmlspecialchars($blasonNumber) ?></div>
+                                <?php else: ?>
+                                    <div class="blason-numero"><?= htmlspecialchars($numeroCible) ?></div>
+                                <?php endif; ?>
                                 <?php if ($dispositionType === 'blason80' && !empty($positionsBlason)): ?>
                                     <!-- Pour les blasons 60, afficher deux badges séparés -->
                                     <div class="blason-positions-container">

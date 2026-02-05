@@ -213,7 +213,7 @@
 .blasons-container.blasons-trispot {
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* 4 colonnes : A, C, B, D */
-    grid-template-rows: repeat(3, 1fr); /* 3 lignes */
+    grid-template-rows: auto repeat(3, 1fr); /* 1ère ligne pour en-têtes, puis 3 lignes pour blasons */
     gap: 10px;
     width: 100%;
     max-width: 400px;
@@ -233,59 +233,59 @@
 
 /* Positionner les blasons dans la grille selon leur position */
 /* Ordre des colonnes : A, C, B, D */
-/* Colonne 1 : A (lignes 1, 2, 3) */
+/* Colonne 1 : A (lignes 2, 3, 4 - ligne 1 réservée aux en-têtes) */
 .blasons-container.blasons-trispot .blason-item[data-position="A1"] {
     grid-column: 1;
-    grid-row: 1;
+    grid-row: 2;
 }
 .blasons-container.blasons-trispot .blason-item[data-position="A2"] {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
 }
 .blasons-container.blasons-trispot .blason-item[data-position="A3"] {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 4;
 }
 
-/* Colonne 2 : C (lignes 1, 2, 3) */
+/* Colonne 2 : C (lignes 2, 3, 4 - ligne 1 réservée aux en-têtes) */
 .blasons-container.blasons-trispot .blason-item[data-position="C1"] {
     grid-column: 2;
-    grid-row: 1;
+    grid-row: 2;
 }
 .blasons-container.blasons-trispot .blason-item[data-position="C2"] {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 3;
 }
 .blasons-container.blasons-trispot .blason-item[data-position="C3"] {
     grid-column: 2;
-    grid-row: 3;
+    grid-row: 4;
 }
-/* Colonne 3 : B (lignes 1, 2, 3) */
+/* Colonne 3 : B (lignes 2, 3, 4 - ligne 1 réservée aux en-têtes) */
 .blasons-container.blasons-trispot .blason-item[data-position="B1"] {
     grid-column: 3;
-    grid-row: 1;
+    grid-row: 2;
 }
 .blasons-container.blasons-trispot .blason-item[data-position="B2"] {
     grid-column: 3;
-    grid-row: 2;
+    grid-row: 3;
 }
 .blasons-container.blasons-trispot .blason-item[data-position="B3"] {
     grid-column: 3;
-    grid-row: 3;
+    grid-row: 4;
 }
 
-/* Colonne 4 : D (lignes 1, 2, 3) */
+/* Colonne 4 : D (lignes 2, 3, 4 - ligne 1 réservée aux en-têtes) */
 .blasons-container.blasons-trispot .blason-item[data-position="D1"] {
-    grid-column: 4;
-    grid-row: 1;
-}
-.blasons-container.blasons-trispot .blason-item[data-position="D2"] {
     grid-column: 4;
     grid-row: 2;
 }
-.blasons-container.blasons-trispot .blason-item[data-position="D3"] {
+.blasons-container.blasons-trispot .blason-item[data-position="D2"] {
     grid-column: 4;
     grid-row: 3;
+}
+.blasons-container.blasons-trispot .blason-item[data-position="D3"] {
+    grid-column: 4;
+    grid-row: 4;
 }
 
 .blasons-container.blasons-trispot .blason-taille {
@@ -316,6 +316,35 @@
     font-size: 0.7em;
     top: 3px;
     right: 3px;
+}
+
+/* En-têtes de colonnes pour les trispots */
+.blasons-container.blasons-trispot .trispot-column-header {
+    grid-column: auto;
+    grid-row: 0; /* Position au-dessus de la grille */
+    text-align: center;
+    font-weight: bold;
+    color: #495057;
+    font-size: 0.9em;
+    padding: 8px 0;
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 5px;
+}
+
+.blasons-container.blasons-trispot .trispot-column-header[data-column="A"] {
+    grid-column: 1;
+}
+
+.blasons-container.blasons-trispot .trispot-column-header[data-column="C"] {
+    grid-column: 2;
+}
+
+.blasons-container.blasons-trispot .trispot-column-header[data-column="B"] {
+    grid-column: 3;
+}
+
+.blasons-container.blasons-trispot .trispot-column-header[data-column="D"] {
+    grid-column: 4;
 }
 
 .blason-item {
