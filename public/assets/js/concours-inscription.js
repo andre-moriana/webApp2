@@ -1086,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== Plan de cible - MODALE D'ÉDITION =====
     let ciblesDataEdit = null;
 
-    function loadCiblesForDepartEdit(numeroDepart, existingNumeroCible = null, existingPosition = null) {
+    function loadCiblesForDepartEdit(numeroDepart, existingNumeroCible = null, existingPosition = null, callback = null) {
         console.log('loadCiblesForDepartEdit appelée avec numéro de départ:', numeroDepart, 'cible existante:', existingNumeroCible, 'position existante:', existingPosition);
 
         // Annuler la requête précédente si elle existe
@@ -1198,8 +1198,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         
                         // Appeler le callback si fourni (pour remplir les autres champs après chargement cibles)
-                        if (typeof arguments[3] === 'function') {
-                            arguments[3]();
+                        if (callback && typeof callback === 'function') {
+                            callback();
                         }
                     }
                 } else {
