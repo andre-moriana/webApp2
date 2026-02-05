@@ -209,13 +209,13 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 $dispositionType = 'blason40';
                             } elseif ($numeroCible >= 11 && $numeroCible <= 14) {
                                 // Cibles 11-14 : trispot par défaut
-                                $blasonCible = 'T40';
+                                $blasonCible = '40';
                                 $trispotCible = 1;
                                 $dispositionType = 'trispot';
                             }
                         } else {
                             // Utiliser les valeurs définies dans les plans
-                            if ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true || $blasonCible === 'T40') {
+                            if ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true ) {
                                 $dispositionType = 'trispot'; // A C B D de gauche à droite
                             } elseif ($blasonCible == 80 || $blasonCible === '80') {
                                 $dispositionType = 'blason80'; // 1 blasons: A-B-C-D
@@ -618,12 +618,13 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 <input type="hidden" name="concours_id" value="<?= htmlspecialchars($concoursId) ?>">
                                 <input type="hidden" name="numero_depart" value="<?= htmlspecialchars($numeroDepart) ?>">
                                 <input type="hidden" name="numero_cible" value="<?= htmlspecialchars($numeroCible) ?>">
+                                <input type="hidden" name="trispot" value="<?= htmlspecialchars($trispot) ?>">
                                 <label for="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="font-weight: 500; margin-right: 8px;">Type de blason :</label>
                                 <select name="blason_type" id="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="display: inline-block; width: auto;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>
-                                    <option value="80" <?= ($blasonCible == 80 || $blasonCible === '80') ? 'selected' : '' ?>>Blason 80</option>
-                                    <option value="60" <?= ($blasonCible == 60 || $blasonCible === '60') ? 'selected' : '' ?>>Blason 60</option>
-                                    <option value="40" <?= ($blasonCible == 40 || $blasonCible === '40') ? 'selected' : '' ?>>Blason 40</option>
-                                    <option value="T40" <?= ($blasonCible === 'T40') ? 'selected' : '' ?>>T40 (Trispot 40)</option>
+                                    <option value="80" <?= ($blasonCible == 80 ) ? 'selected' : '' ?>>Blason 80</option>
+                                    <option value="60" <?= ($blasonCible == 60 ) ? 'selected' : '' ?>>Blason 60</option>
+                                    <option value="40" <?= ($blasonCible == 40 ) ? 'selected' : '' ?>>Blason 40</option>
+                                    <option value="40" <?= ($blasonCible === '40' && $trispot) ? 'selected' : '' ?>>Trispot 40)</option>
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-outline-primary" style="margin-left: 8px;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>Enregistrer</button>
                             </form>
