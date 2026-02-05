@@ -618,13 +618,13 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 <input type="hidden" name="concours_id" value="<?= htmlspecialchars($concoursId) ?>">
                                 <input type="hidden" name="numero_depart" value="<?= htmlspecialchars($numeroDepart) ?>">
                                 <input type="hidden" name="numero_cible" value="<?= htmlspecialchars($numeroCible) ?>">
-                                <input type="hidden" name="trispot" value="<?= htmlspecialchars($trispot ? '1' : '0') ?>" class="trispot-flag">
+                                <input type="hidden" name="trispot" value="<?= htmlspecialchars($trispotCible ? '1' : '0') ?>" class="trispot-flag">
                                 <label for="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="font-weight: 500; margin-right: 8px;">Type de blason :</label>
                                 <select name="blason_type" class="blason-type-select-dropdown" id="blason-type-<?= htmlspecialchars($numeroDepart) ?>-<?= htmlspecialchars($numeroCible) ?>" style="display: inline-block; width: auto;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>
-                                    <option value="80" data-trispot="0" <?= ($blasonCible == 80 && !$trispot) ? 'selected' : '' ?>>Blason 80</option>
-                                    <option value="60" data-trispot="0" <?= ($blasonCible == 60 && !$trispot) ? 'selected' : '' ?>>Blason 60</option>
-                                    <option value="40" data-trispot="0" <?= ($blasonCible == 40 && !$trispot) ? 'selected' : '' ?>>Blason 40</option>
-                                    <option value="40" data-trispot="1" <?= ($blasonCible == 40 && $trispot) ? 'selected' : '' ?>>Trispot 40</option>
+                                    <option value="80" data-trispot="0" <?= ($blasonCible == 80 && !$trispotCible) ? 'selected' : '' ?>>Blason 80</option>
+                                    <option value="60" data-trispot="0" <?= ($blasonCible == 60 && !$trispotCible) ? 'selected' : '' ?>>Blason 60</option>
+                                    <option value="40" data-trispot="0" <?= ($blasonCible == 40 && !$trispotCible) ? 'selected' : '' ?>>Blason 40</option>
+                                    <option value="40" data-trispot="1" <?= ($blasonCible == 40 && $trispotCible) ? 'selected' : '' ?>>Trispot 40</option>
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-outline-primary" style="margin-left: 8px;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>Enregistrer</button>
                             </form>
