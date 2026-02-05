@@ -1067,11 +1067,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const option = document.createElement('option');
                 option.value = position;
                 // Pour les trispots, afficher un message indiquant que toutes les positions de la colonne seront assignées
-                if (cible.is_trispot) {
-                    option.textContent = `Colonne ${position} (positions ${position}1, ${position}2, ${position}3)`;
-                } else {
-                    option.textContent = `Position ${position}`;
-                }
+                option.textContent = `Position ${position}`;
                 positionSelect.appendChild(option);
             });
         } else {
