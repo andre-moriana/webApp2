@@ -320,16 +320,24 @@
 
 .blason-archer-name {
     position: absolute;
-    bottom: -25px;
+    bottom: -28px;
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
-    font-size: 0.75em;
+    font-size: 0.8em;
     color: #212529;
     font-weight: 500;
-    max-width: 120px;
+    max-width: 150px;
     text-overflow: ellipsis;
     overflow: hidden;
+    text-align: center;
+}
+
+/* Pour les trispots, nom plus petit et plus près */
+.blasons-container.blasons-trispot .blason-archer-name {
+    font-size: 0.7em;
+    bottom: -25px;
+    max-width: 120px;
 }
 
 /* En-têtes de colonnes pour les trispots */
