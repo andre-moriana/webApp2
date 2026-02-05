@@ -1196,6 +1196,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Charger les positions pour cette cible
                             loadPositionsForCibleEdit(existingNumeroCible, existingPosition);
                         }
+                        
+                        // Appeler le callback si fourni (pour remplir les autres champs après chargement cibles)
+                        if (typeof arguments[3] === 'function') {
+                            arguments[3]();
+                        }
                     }
                 } else {
                     console.log('Aucun plan de cible créé pour ce départ (édition)');
@@ -2877,16 +2882,8 @@ window.editInscription = function(inscriptionId) {
                 if (editPlanSection && departValue) {
                     editPlanSection.style.display = 'block';
                 }
-                if (departValue && typeof window.loadCiblesForDepartEdit === 'function') {
-                    // Passer les valeurs existantes de numero_cible et position_archer
-                    const existingCible = inscription.numero_cible || null;
-                    const existingPosition = inscription.position_archer || null;
-                    console.log('Chargement cibles avec valeurs existantes - cible:', existingCible, 'position:', existingPosition);
-                    setTimeout(() => window.loadCiblesForDepartEdit(departValue, existingCible, existingPosition), 0);
-                } else if (departValue) {
-                    console.warn('loadCiblesForDepartEdit non disponible');
-                }
                 
+                // Remplir d'abord les champs non-liés au plan de cible
                 const categorieSelect = document.getElementById('edit-categorie_classement');
                 if (categorieSelect) {
                     categorieSelect.value = inscription.categorie_classement || '';
@@ -2943,6 +2940,34 @@ window.editInscription = function(inscriptionId) {
                 const modePaiementSelect = document.getElementById('edit-mode_paiement');
                 if (modePaiementSelect) {
                     modePaiementSelect.value = inscription.mode_paiement || 'Non payé';
+                }
+                
+                // Charger les cibles APRÈS avoir rempli les autres champs
+                if (departValue && typeof window.loadCiblesForDepartEdit === 'function') {
+                    // Passer les valeurs existantes de numero_cible et position_archer
+                    const existingCible = inscription.numero_cible || null;
+                    const existingPosition = inscription.position_archer || null;
+                    console.log('Chargement cibles avec valeurs existantes - cible:', existingCible, 'position:', existingPosition);
+                    
+                    // Callback pour ré-appliquer les valeurs après chargement
+                    const afterLoadCallback = () => {
+                        console.log('Callback après chargement cibles - réapplication des valeurs');
+                        if (!isNature3DOrCampagne) {
+                            const distanceSelect = document.getElementById('edit-distance');
+                            if (distanceSelect) {
+                                distanceSelect.value = inscription.distance || '';
+                            }
+                            
+                            const blasonInput = document.getElementById('edit-blason');
+                            if (blasonInput) {
+                                blasonInput.value = inscription.blason || '';
+                            }
+                        }
+                    };
+                    
+                    setTimeout(() => window.loadCiblesForDepartEdit(departValue, existingCible, existingPosition, afterLoadCallback), 0);
+                } else if (departValue) {
+                    console.warn('loadCiblesForDepartEdit non disponible');
                 }
                 
                 console.log('=== fillForm terminée ===');
