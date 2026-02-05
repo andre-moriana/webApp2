@@ -953,6 +953,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             const option = document.createElement('option');
                             option.value = cible.numero_cible;
                             option.textContent = `Cible ${cible.numero_cible}`;
+                            
+                            // Ajouter l'attribut data-trispot
+                            if (cible.trispot == 1 || cible.trispot === '1' || cible.trispot === true) {
+                                option.setAttribute('data-trispot', '1');
+                            } else {
+                                option.setAttribute('data-trispot', '0');
+                            }
+                            
                             if (cible.blason) {
                                 option.textContent += ` (Blason: ${cible.blason})`;
                             }
@@ -1145,6 +1153,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             const option = document.createElement('option');
                             option.value = cible.numero_cible;
                             option.textContent = `Cible ${cible.numero_cible}`;
+                            
+                            // Ajouter l'attribut data-trispot
+                            if (cible.trispot == 1 || cible.trispot === '1' || cible.trispot === true) {
+                                option.setAttribute('data-trispot', '1');
+                            } else {
+                                option.setAttribute('data-trispot', '0');
+                            }
+                            
                             if (cible.blason) {
                                 option.textContent += ` (Blason: ${cible.blason})`;
                             }
@@ -1392,6 +1408,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Filtrer les cibles selon la case trispot
+    const trispotCheckbox = document.getElementById('trispot');
+    if (trispotCheckbox && cibleSelect) {
+        trispotCheckbox.addEventListener('change', function() {
+            const isTrispotChecked = this.checked;
+            const options = cibleSelect.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') return; // Garder l'option vide
+                
+                const isTrispotCible = option.getAttribute('data-trispot') === '1';
+                
+                // Si trispot coché: autoriser seulement les cibles trispot
+                // Si trispot décoché: autoriser seulement les cibles non-trispot
+                if ((isTrispotChecked && !isTrispotCible) || (!isTrispotChecked && isTrispotCible)) {
+                    option.disabled = true;
+                    option.style.color = '#ccc';
+                } else {
+                    option.disabled = false;
+                    option.style.color = '';
+                }
+            });
+            
+            // Réinitialiser la sélection si la cible actuelle n'est plus valide
+            const selectedOption = cibleSelect.options[cibleSelect.selectedIndex];
+            if (selectedOption && selectedOption.disabled) {
+                cibleSelect.value = '';
+                const positionSelect = document.getElementById('position_archer');
+                if (positionSelect) {
+                    positionSelect.innerHTML = '<option value="">Sélectionnez d\'abord une cible</option>';
+                }
+            }
+        });
+    }
+    
     // Écouter les changements sur le select de position
     const positionSelect = document.getElementById('position_archer');
     if (positionSelect) {
@@ -1408,6 +1459,41 @@ document.addEventListener('DOMContentLoaded', function() {
     if (editCibleSelect) {
         editCibleSelect.addEventListener('change', function() {
             loadPositionsForCibleEdit(this.value);
+        });
+    }
+    
+    // Filtrer les cibles selon la case trispot (édition)
+    const editTrispotCheckbox = document.getElementById('edit-trispot');
+    if (editTrispotCheckbox && editCibleSelect) {
+        editTrispotCheckbox.addEventListener('change', function() {
+            const isTrispotChecked = this.checked;
+            const options = editCibleSelect.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') return; // Garder l'option vide
+                
+                const isTrispotCible = option.getAttribute('data-trispot') === '1';
+                
+                // Si trispot coché: autoriser seulement les cibles trispot
+                // Si trispot décoché: autoriser seulement les cibles non-trispot
+                if ((isTrispotChecked && !isTrispotCible) || (!isTrispotChecked && isTrispotCible)) {
+                    option.disabled = true;
+                    option.style.color = '#ccc';
+                } else {
+                    option.disabled = false;
+                    option.style.color = '';
+                }
+            });
+            
+            // Réinitialiser la sélection si la cible actuelle n'est plus valide
+            const selectedOption = editCibleSelect.options[editCibleSelect.selectedIndex];
+            if (selectedOption && selectedOption.disabled) {
+                editCibleSelect.value = '';
+                const positionSelect = document.getElementById('edit-position_archer');
+                if (positionSelect) {
+                    positionSelect.innerHTML = '<option value="">Sélectionnez d\'abord une cible</option>';
+                }
+            }
         });
     }
 
