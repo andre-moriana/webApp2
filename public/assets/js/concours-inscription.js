@@ -961,6 +961,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 option.setAttribute('data-trispot', '0');
                             }
                             
+                            // Ajouter les attributs d'occupation
+                            option.setAttribute('data-occupied-trispot', cible.occupied_by_trispot ? '1' : '0');
+                            option.setAttribute('data-occupied-non-trispot', cible.occupied_by_non_trispot ? '1' : '0');
+                            
                             if (cible.blason) {
                                 option.textContent += ` (Blason: ${cible.blason})`;
                             }
@@ -1160,6 +1164,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             } else {
                                 option.setAttribute('data-trispot', '0');
                             }
+                            
+                            // Ajouter les attributs d'occupation
+                            option.setAttribute('data-occupied-trispot', cible.occupied_by_trispot ? '1' : '0');
+                            option.setAttribute('data-occupied-non-trispot', cible.occupied_by_non_trispot ? '1' : '0');
                             
                             if (cible.blason) {
                                 option.textContent += ` (Blason: ${cible.blason})`;
@@ -1419,10 +1427,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (option.value === '') return; // Garder l'option vide
                 
                 const isTrispotCible = option.getAttribute('data-trispot') === '1';
+                const occupiedByTrispot = option.getAttribute('data-occupied-trispot') === '1';
+                const occupiedByNonTrispot = option.getAttribute('data-occupied-non-trispot') === '1';
                 
-                // Si trispot coché: autoriser seulement les cibles trispot
-                // Si trispot décoché: autoriser seulement les cibles non-trispot
-                if ((isTrispotChecked && !isTrispotCible) || (!isTrispotChecked && isTrispotCible)) {
+                let shouldDisable = false;
+                
+                // Si archer trispot: bloquer les cibles non-trispot et les cibles occupées par non-trispot
+                if (isTrispotChecked) {
+                    if (!isTrispotCible || occupiedByNonTrispot) {
+                        shouldDisable = true;
+                    }
+                } 
+                // Si archer non-trispot: bloquer les cibles trispot et les cibles occupées par trispot
+                else {
+                    if (isTrispotCible || occupiedByTrispot) {
+                        shouldDisable = true;
+                    }
+                }
+                
+                if (shouldDisable) {
                     option.disabled = true;
                     option.style.color = '#ccc';
                 } else {
@@ -1473,10 +1496,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (option.value === '') return; // Garder l'option vide
                 
                 const isTrispotCible = option.getAttribute('data-trispot') === '1';
+                const occupiedByTrispot = option.getAttribute('data-occupied-trispot') === '1';
+                const occupiedByNonTrispot = option.getAttribute('data-occupied-non-trispot') === '1';
                 
-                // Si trispot coché: autoriser seulement les cibles trispot
-                // Si trispot décoché: autoriser seulement les cibles non-trispot
-                if ((isTrispotChecked && !isTrispotCible) || (!isTrispotChecked && isTrispotCible)) {
+                let shouldDisable = false;
+                
+                // Si archer trispot: bloquer les cibles non-trispot et les cibles occupées par non-trispot
+                if (isTrispotChecked) {
+                    if (!isTrispotCible || occupiedByNonTrispot) {
+                        shouldDisable = true;
+                    }
+                } 
+                // Si archer non-trispot: bloquer les cibles trispot et les cibles occupées par trispot
+                else {
+                    if (isTrispotCible || occupiedByTrispot) {
+                        shouldDisable = true;
+                    }
+                }
+                
+                if (shouldDisable) {
                     option.disabled = true;
                     option.style.color = '#ccc';
                 } else {
