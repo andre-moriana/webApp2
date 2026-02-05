@@ -1337,38 +1337,57 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Récupérer le blason et la distance de l'archer sélectionné
-        const archerBlason = selectedArcher.blason || document.getElementById('blason')?.value || null;
-        const archerDistance = selectedArcher.distance || document.getElementById('distance')?.value || null;
-        const idClub = selectedArcher.id_club || selectedArcher.club_id || selectedArcher.IDClub || null;
-        
         const btnAssign = document.getElementById('btn-assign-cible');
         if (btnAssign) {
             btnAssign.disabled = true;
-            btnAssign.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Assignation...';
+            btnAssign.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Récupération des données...';
         }
         
-        const requestData = {
-            numero_depart: parseInt(numeroDepart),
-            numero_cible: parseInt(numeroCible),
-            position_archer: positionArcher,
-            user_id: parseInt(userId),
-            id_club: idClub,
-            blason: archerBlason ? parseInt(archerBlason) : null,
-            distance: archerDistance ? parseInt(archerDistance) : null,
-            trispot: selectedArcher.trispot || false
-        };
-        
-        console.log('Assignation cible - Données envoyées:', requestData);
-        
-        fetch(`/api/concours/${concoursId}/plan-cible/assign`, {
-            method: 'POST',
+        // Récupérer d'abord l'inscription de l'archer pour obtenir son blason/distance/trispot
+        fetch(`/api/concours/${concoursId}/inscriptions`, {
+            method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            credentials: 'include',
-            body: JSON.stringify(requestData)
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Trouver l'inscription de cet archer pour ce départ
+            const inscription = data.inscriptions?.find(ins => 
+                ins.user_id == userId && ins.numero_depart == numeroDepart
+            );
+            
+            if (!inscription) {
+                throw new Error('Aucune inscription trouvée pour cet archer sur ce départ');
+            }
+            
+            const requestData = {
+                numero_depart: parseInt(numeroDepart),
+                numero_cible: parseInt(numeroCible),
+                position_archer: positionArcher,
+                user_id: parseInt(userId),
+                id_club: inscription.id_club || null,
+                blason: inscription.blason ? parseInt(inscription.blason) : null,
+                distance: inscription.distance ? parseInt(inscription.distance) : null,
+                trispot: inscription.trispot == 1 || inscription.trispot === '1' || inscription.trispot === true
+            };
+            
+            console.log('Assignation cible - Données envoyées:', requestData);
+            
+            if (btnAssign) {
+                btnAssign.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Assignation...';
+            }
+            
+            return fetch(`/api/concours/${concoursId}/plan-cible/assign`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(requestData)
+            });
         })
         .then(response => {
             console.log('Assignation cible - Status:', response.status, 'Content-Type:', response.headers.get('content-type'));
