@@ -1430,19 +1430,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isTrispotCible = option.getAttribute('data-trispot') === '1';
                 const occupiedByTrispot = option.getAttribute('data-occupied-trispot') === '1';
                 const occupiedByNonTrispot = option.getAttribute('data-occupied-non-trispot') === '1';
+                const isCibleEmpty = !occupiedByTrispot && !occupiedByNonTrispot;
                 
                 let shouldDisable = false;
                 
-                // Si archer trispot: bloquer les cibles non-trispot et les cibles occupées par non-trispot
-                if (isTrispotChecked) {
-                    if (!isTrispotCible || occupiedByNonTrispot) {
-                        shouldDisable = true;
-                    }
-                } 
-                // Si archer non-trispot: bloquer les cibles trispot et les cibles occupées par trispot
-                else {
-                    if (isTrispotCible || occupiedByTrispot) {
-                        shouldDisable = true;
+                // Si la cible est vide, toujours permettre
+                if (!isCibleEmpty) {
+                    // Si archer trispot: bloquer les cibles non-trispot et les cibles occupées par non-trispot
+                    if (isTrispotChecked) {
+                        if (!isTrispotCible || occupiedByNonTrispot) {
+                            shouldDisable = true;
+                        }
+                    } 
+                    // Si archer non-trispot: bloquer les cibles trispot et les cibles occupées par trispot
+                    else {
+                        if (isTrispotCible || occupiedByTrispot) {
+                            shouldDisable = true;
+                        }
                     }
                 }
                 
@@ -1509,19 +1513,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isTrispotCible = option.getAttribute('data-trispot') === '1';
                 const occupiedByTrispot = option.getAttribute('data-occupied-trispot') === '1';
                 const occupiedByNonTrispot = option.getAttribute('data-occupied-non-trispot') === '1';
+                const isCibleEmpty = !occupiedByTrispot && !occupiedByNonTrispot;
                 
                 let shouldDisable = false;
                 
-                // Si archer trispot: bloquer les cibles non-trispot et les cibles occupées par non-trispot
-                if (isTrispotChecked) {
-                    if (!isTrispotCible || occupiedByNonTrispot) {
-                        shouldDisable = true;
-                    }
-                } 
-                // Si archer non-trispot: bloquer les cibles trispot et les cibles occupées par trispot
-                else {
-                    if (isTrispotCible || occupiedByTrispot) {
-                        shouldDisable = true;
+                // Si la cible est vide, toujours permettre
+                if (!isCibleEmpty) {
+                    // Si archer trispot: bloquer les cibles non-trispot et les cibles occupées par non-trispot
+                    if (isTrispotChecked) {
+                        if (!isTrispotCible || occupiedByNonTrispot) {
+                            shouldDisable = true;
+                        }
+                    } 
+                    // Si archer non-trispot: bloquer les cibles trispot et les cibles occupées par trispot
+                    else {
+                        if (isTrispotCible || occupiedByTrispot) {
+                            shouldDisable = true;
+                        }
                     }
                 }
                 
