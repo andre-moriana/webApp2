@@ -630,6 +630,11 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 }
                                 ?>
                                 
+                                <!-- Nom de l'archer -->
+                                <?php if ($afficherNom && $isAssigne && !empty($nomComplet) && $nomComplet !== 'Libre'): ?>
+                                    <div class="blason-archer-name"><?= htmlspecialchars($nomComplet) ?></div>
+                                <?php endif; ?>
+                                
                                 <?php if ($afficherNom && ($isAssigne || ($dispositionType === 'blason60' && !empty($nomComplet) && $nomComplet !== 'Libre'))): ?>
                                     <span class="visually-hidden"><?= htmlspecialchars($tooltipText) ?></span>
                                 <?php endif; ?>
