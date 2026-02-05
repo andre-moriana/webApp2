@@ -287,6 +287,13 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         </div>
                         
                         <div class="blasons-container blasons-<?= htmlspecialchars($dispositionType) ?>">
+                            <script>
+                            console.log('========== CIBLE <?= $numeroCible ?> ==========');
+                            console.log('dispositionType: <?= $dispositionType ?>');
+                            console.log('ciblePlans count: <?= count($ciblePlans ?? []) ?>');
+                            console.log('plansParPosition count: <?= count($plansParPosition ?? []) ?>');
+                            console.log('ordrePositions: <?= json_encode($ordrePositions ?? []) ?>');
+                            </script>
                             <?php
                             // Pour les trispots, afficher les en-têtes des colonnes (numéros des blasons)
                             if ($dispositionType === 'trispot') {
@@ -322,16 +329,6 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                             $userIdTrispot = $planPos['user_id'];
                                             break; // Toutes les positions ont le même user_id
                                         }
-                                    }
-                                    
-                                    // DEBUG: Afficher les infos en HTML pour vérifier
-                                    if ($position === 'A1') {
-                                        echo "<!-- DEBUG - Position: $position, colonne: $colonne, plan exists: " . ($plan ? 'YES' : 'NO') . " -->";
-                                        if ($plan) {
-                                            echo "<!-- DEBUG - Plan[A1] user_id=" . ($plan['user_id'] ?? 'NULL') . " -->";
-                                        }
-                                        echo "<!-- DEBUG - userIdTrispot: $userIdTrispot -->";
-                                        echo "<!-- DEBUG - plansParPosition keys: " . implode(', ', array_keys($plansParPosition)) . " -->";
                                     }
                                     
                                     // Si pas de plan trouvé, créer un plan vide pour cette position
@@ -588,7 +585,6 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 }
                             ?>
                             <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason80' ? 'blason-80-size' : '' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>"<?= !empty($tooltipText) ? ' title="' . htmlspecialchars($tooltipText) . '"' : '' ?>>
-                                <!-- DEBUG: position=<?= $position ?> | dispositionType=<?= $dispositionType ?> | isAssigne=<?= $isAssigne ? '1' : '0' ?> | userIdTrispot=<?= $userIdTrispot ?? 'NULL' ?> -->
                                 <?php if ($dispositionType === 'trispot'): ?>
                                     <!-- Pour les trispots, afficher le numéro du blason (1, 2, 3) au lieu du numéro de la cible -->
                                     <?php
