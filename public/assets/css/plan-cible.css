@@ -320,8 +320,7 @@
 
 /* En-têtes de colonnes pour les trispots */
 .blasons-container.blasons-trispot .trispot-column-header {
-    grid-column: auto;
-    grid-row: 0; /* Position au-dessus de la grille */
+    grid-row: 1; /* Première ligne (en-têtes) */
     text-align: center;
     font-weight: bold;
     color: #495057;
