@@ -2445,6 +2445,17 @@ function proceedWithInscriptionSubmission() {
             continue;
         }
         
+        // Traitement spécial pour numero_cible et position_archer : les ajouter même s'ils sont null/vides
+        if (name === 'numero_cible' || name === 'position_archer') {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value || '';
+            form.appendChild(input);
+            console.log('✓ ' + name + ' ajouté au formulaire:', value);
+            continue;
+        }
+        
         // Inclure les valeurs même si elles sont 0 ou null pour certains champs numériques
         // Pour numero_licence et id_club, inclure même si vides (seront null côté serveur)
         if (value !== null && value !== '') {
