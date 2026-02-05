@@ -1419,8 +1419,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Filtrer les cibles selon la case trispot
     const trispotCheckbox = document.getElementById('trispot');
     if (trispotCheckbox && cibleSelect) {
-        trispotCheckbox.addEventListener('change', function() {
-            const isTrispotChecked = this.checked;
+        // Fonction pour filtrer les cibles
+        const filterCibles = () => {
+            const isTrispotChecked = trispotCheckbox.checked;
             const options = cibleSelect.querySelectorAll('option');
             
             options.forEach(option => {
@@ -1463,7 +1464,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     positionSelect.innerHTML = '<option value="">Sélectionnez d\'abord une cible</option>';
                 }
             }
+        };
+        
+        // Appliquer le filtre au changement de la checkbox
+        trispotCheckbox.addEventListener('change', filterCibles);
+        
+        // Observer les changements dans le select pour appliquer le filtre automatiquement
+        const observer = new MutationObserver(() => {
+            filterCibles();
         });
+        observer.observe(cibleSelect, { childList: true });
     }
     
     // Écouter les changements sur le select de position
@@ -1488,8 +1498,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Filtrer les cibles selon la case trispot (édition)
     const editTrispotCheckbox = document.getElementById('edit-trispot');
     if (editTrispotCheckbox && editCibleSelect) {
-        editTrispotCheckbox.addEventListener('change', function() {
-            const isTrispotChecked = this.checked;
+        // Fonction pour filtrer les cibles
+        const filterCibles = () => {
+            const isTrispotChecked = editTrispotCheckbox.checked;
             const options = editCibleSelect.querySelectorAll('option');
             
             options.forEach(option => {
@@ -1532,7 +1543,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     positionSelect.innerHTML = '<option value="">Sélectionnez d\'abord une cible</option>';
                 }
             }
+        };
+        
+        // Appliquer le filtre au changement de la checkbox
+        editTrispotCheckbox.addEventListener('change', filterCibles);
+        
+        // Observer les changements dans le select pour appliquer le filtre automatiquement
+        const observer = new MutationObserver(() => {
+            filterCibles();
         });
+        observer.observe(editCibleSelect, { childList: true });
     }
 
     // Écouter le changement de départ dans la modale d'édition
