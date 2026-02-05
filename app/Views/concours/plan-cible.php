@@ -588,6 +588,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 }
                             ?>
                             <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason80' ? 'blason-80-size' : '' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>"<?= !empty($tooltipText) ? ' title="' . htmlspecialchars($tooltipText) . '"' : '' ?>>
+                                <!-- DEBUG: position=<?= $position ?> | dispositionType=<?= $dispositionType ?> | isAssigne=<?= $isAssigne ? '1' : '0' ?> | userIdTrispot=<?= $userIdTrispot ?? 'NULL' ?> -->
                                 <?php if ($dispositionType === 'trispot'): ?>
                                     <!-- Pour les trispots, afficher le numéro du blason (1, 2, 3) au lieu du numéro de la cible -->
                                     <?php
