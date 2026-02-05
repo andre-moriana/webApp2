@@ -227,6 +227,9 @@ class ConcoursController {
         
         // Enrichir les inscriptions avec le nom du club directement
         // id_club peut contenir soit un ID numérique, soit un name_short
+        if (!isset($inscriptions) || !is_array($inscriptions)) {
+            $inscriptions = [];
+        }
         foreach ($inscriptions as &$inscription) {
             $clubId = $inscription['id_club'] ?? null;
             if ($clubId) {
