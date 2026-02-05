@@ -1331,14 +1331,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const numeroDepart = document.getElementById('depart-select-main')?.value || null;
         const numeroCible = document.getElementById('numero_cible')?.value || null;
         const positionArcher = document.getElementById('position_archer')?.value || null;
-        const blason = document.getElementById('blason')?.value || null;
-        const distance = document.getElementById('distance')?.value || null;
-        const idClub = selectedArcher.id_club || selectedArcher.club_id || selectedArcher.IDClub || null;
         
         if (!numeroDepart || !numeroCible || !positionArcher) {
             alert('Veuillez sélectionner un départ, une cible et une position');
             return;
         }
+        
+        // Récupérer le blason et la distance de l'archer sélectionné
+        const archerBlason = selectedArcher.blason || document.getElementById('blason')?.value || null;
+        const archerDistance = selectedArcher.distance || document.getElementById('distance')?.value || null;
+        const idClub = selectedArcher.id_club || selectedArcher.club_id || selectedArcher.IDClub || null;
         
         const btnAssign = document.getElementById('btn-assign-cible');
         if (btnAssign) {
@@ -1352,8 +1354,9 @@ document.addEventListener('DOMContentLoaded', function() {
             position_archer: positionArcher,
             user_id: parseInt(userId),
             id_club: idClub,
-            blason: blason ? parseInt(blason) : null,
-            distance: distance ? parseInt(distance) : null
+            blason: archerBlason ? parseInt(archerBlason) : null,
+            distance: archerDistance ? parseInt(archerDistance) : null,
+            trispot: selectedArcher.trispot || false
         };
         
         console.log('Assignation cible - Données envoyées:', requestData);
