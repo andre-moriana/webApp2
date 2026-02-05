@@ -318,6 +318,20 @@
     right: 3px;
 }
 
+.blason-archer-name {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 0.75em;
+    color: #212529;
+    font-weight: 500;
+    max-width: 120px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
 /* En-têtes de colonnes pour les trispots */
 .blasons-container.blasons-trispot .trispot-column-header {
     grid-row: 1; /* Première ligne (en-têtes) */
