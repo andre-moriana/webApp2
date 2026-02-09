@@ -2660,6 +2660,69 @@ class ApiController {
             ], 500);
         }
     }
+
+    /**
+     * Proxy pour /api/concours/{id}/plan-cible/{depart}/archers-dispo - Liste les archers disponibles
+     */
+    public function proxyConcoursPlanCibleArchersDispo($concoursId, $depart) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $endpoint = "concours/{$concoursId}/plan-cible/{$depart}/archers-dispo" . ($queryString ? "?{$queryString}" : "");
+
+            $response = $this->apiService->makeRequest($endpoint, $method);
+
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Proxy pour /api/concours/{id}/plan-cible/{depart}/liberer - Libere une position
+     */
+    public function proxyConcoursPlanCibleLiberer($concoursId, $depart) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            $endpoint = "concours/{$concoursId}/plan-cible/{$depart}/liberer";
+
+            $data = null;
+            if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH') {
+                $input = file_get_contents('php://input');
+                $data = json_decode($input, true);
+            }
+
+            $response = $this->apiService->makeRequest($endpoint, $method, $data);
+
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     
     /**
      * Proxy pour /api/concours/{id}/plan-cible/assign - Assigne un archer à une position
