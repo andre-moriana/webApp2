@@ -413,8 +413,11 @@ class UserImportController {
 
         $bowCode = substr($value, 0, 2);
         $genderCode = substr($value, -1);
-        $ageCode = substr($value, 2, -1);
-
+        if len($value) > 4) {
+            $ageCode = substr($value, 3, -1);
+        } else {
+            $ageCode = substr($value, 2, -1);
+        }
         $bowType = $this->convertBowType($bowCode);
         $ageCategory = $this->convertAgeCategory($ageCode);
         $normalizedAge = !empty($ageCategory) ? $ageCategory : $ageCode;
@@ -798,6 +801,7 @@ class UserImportController {
         // Basé sur la table de correspondance fournie
         $mapping = [
             '0' => 'DECOUVERTE',
+            '1' => 'U11',
             '2' => 'U13 - BENJAMINS',
             '3' => 'U15 - MINIMES',
             '4' => 'U18 - CADETS',
