@@ -1048,18 +1048,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
+            if (!shouldDisable && selectedBlason !== null && cible.blason !== null && cible.blason !== undefined && cible.blason !== '') {
+                const cibleBlason = parseInt(cible.blason, 10);
+                if (Number.isNaN(cibleBlason) || cibleBlason !== selectedBlason) {
+                    shouldDisable = true;
+                }
+            }
+
             if (!isCibleEmpty && !shouldDisable) {
                 if (selectedTrispot !== null) {
                     if (selectedTrispot === 1 && occupiedByNonTrispot) {
                         shouldDisable = true;
                     } else if (selectedTrispot === 0 && occupiedByTrispot) {
-                        shouldDisable = true;
-                    }
-                }
-
-                if (!shouldDisable && selectedBlason !== null && cible.blason !== null && cible.blason !== undefined && cible.blason !== '') {
-                    const cibleBlason = parseInt(cible.blason, 10);
-                    if (Number.isNaN(cibleBlason) || cibleBlason !== selectedBlason) {
                         shouldDisable = true;
                     }
                 }
