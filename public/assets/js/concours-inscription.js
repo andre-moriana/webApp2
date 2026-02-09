@@ -1064,7 +1064,15 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             credentials: 'include'
         })
-        .then(response => response.json())
+        .then(response => {
+            const contentType = response.headers.get('content-type') || '';
+            if (!response.ok || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    throw new Error('Reponse non-JSON: ' + text.substring(0, 200));
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             const inscriptions = getInscriptionsFromResponse(data);
             const filtered = inscriptions.filter(inscription => String(inscription.numero_depart) === String(numeroDepart));
