@@ -2177,6 +2177,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (blasonValeur) {
                                     blasonInput.value = blasonValeur;
                                     console.log('✓✓✓ Blason automatiquement renseigné:', blasonValeur, 'cm pour distance', distance, 'm');
+                                    if (typeof window !== 'undefined' && typeof window.applyCibleFilters === 'function') {
+                                        window.applyCibleFilters();
+                                    }
                                 } else {
                                     console.warn('Aucun blason trouvé dans la réponse pour cette distance');
                                 }
@@ -2203,6 +2206,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (blasonValeur) {
                             blasonInput.value = blasonValeur;
                             console.log('✓✓✓ Blason automatiquement renseigné:', blasonValeur, 'cm pour distance', distance, 'm');
+                            if (typeof window !== 'undefined' && typeof window.applyCibleFilters === 'function') {
+                                window.applyCibleFilters();
+                            }
                         } else {
                             console.warn('Aucun blason trouvé dans la réponse pour cette distance');
                             console.warn('Structure de la réponse:', {
