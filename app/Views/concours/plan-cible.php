@@ -850,10 +850,23 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             credentials: 'include'
         })
-        .then(response => response.json())
+        .then(response => {
+            const contentType = response.headers.get('content-type') || '';
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+                });
+            }
+            if (!contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    throw new Error(`Reponse non-JSON: ${text.substring(0, 200)}`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (!data.success || !Array.isArray(data.data)) {
-                setListMessage('Impossible de charger les archers.', 'danger');
+                setListMessage(data.error || 'Impossible de charger les archers.', 'danger');
                 return;
             }
             const archers = data.data;
@@ -880,8 +893,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 listContainer.appendChild(item);
             });
         })
-        .catch(() => {
-            setListMessage('Erreur lors du chargement des archers.', 'danger');
+        .catch((error) => {
+            setListMessage(error.message || 'Erreur lors du chargement des archers.', 'danger');
         });
     };
 
