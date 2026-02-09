@@ -870,12 +870,384 @@ document.addEventListener('DOMContentLoaded', function() {
     let ciblesData = null;
     let abortControllerCibles = null;
     let abortControllerCiblesEdit = null;
+    let currentDepartForCibles = null;
+    let currentDepartForCiblesEdit = null;
+    const inscriptionsCacheByDepart = {};
+    const inscriptionsLoadingByDepart = {};
+
+    const normalizeClubId = (value) => {
+        if (value === null || value === undefined) {
+            return null;
+        }
+        const normalized = String(value).trim();
+        return normalized === '' ? null : normalized;
+    };
+
+    const getSelectedArcherClubId = () => {
+        if (!selectedArcher) {
+            return null;
+        }
+        const clubId = selectedArcher.id_club || selectedArcher.club_name_short || selectedArcher.clubNameShort || selectedArcher.AGREMENTNR || null;
+        return normalizeClubId(clubId);
+    };
+
+    const getSelectedBlasonValue = () => {
+        const blasonInput = document.getElementById('blason');
+        if (!blasonInput || blasonInput.value === '') {
+            return null;
+        }
+        const parsed = parseInt(blasonInput.value, 10);
+        return Number.isNaN(parsed) ? null : parsed;
+    };
+
+    const getSelectedTrispotValue = () => {
+        const trispotCheckbox = document.getElementById('trispot');
+        if (!trispotCheckbox) {
+            return null;
+        }
+        return trispotCheckbox.checked ? 1 : 0;
+    };
+
+    const getInscriptionsFromResponse = (data) => {
+        if (Array.isArray(data)) {
+            return data;
+        }
+        if (data && data.success && Array.isArray(data.data)) {
+            return data.data;
+        }
+        if (data && data.data && Array.isArray(data.data.data)) {
+            return data.data.data;
+        }
+        return [];
+    };
+
+    const fetchInscriptionsForDepart = (numeroDepart) => {
+        if (!numeroDepart) {
+            return Promise.resolve([]);
+        }
+        if (inscriptionsCacheByDepart[numeroDepart]) {
+            return Promise.resolve(inscriptionsCacheByDepart[numeroDepart]);
+        }
+        if (inscriptionsLoadingByDepart[numeroDepart]) {
+            return inscriptionsLoadingByDepart[numeroDepart];
+        }
+
+        const promise = fetch(`/api/concours/${concoursId}/inscriptions`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            const inscriptions = getInscriptionsFromResponse(data);
+            const filtered = inscriptions.filter(inscription => String(inscription.numero_depart) === String(numeroDepart));
+            inscriptionsCacheByDepart[numeroDepart] = filtered;
+            delete inscriptionsLoadingByDepart[numeroDepart];
+            return filtered;
+        })
+        .catch(error => {
+            console.warn('Impossible de charger les inscriptions pour le filtrage des cibles:', error);
+            delete inscriptionsLoadingByDepart[numeroDepart];
+            return [];
+        });
+
+        inscriptionsLoadingByDepart[numeroDepart] = promise;
+        return promise;
+    };
+
+    const countSameClubOnCible = (cible, inscriptions, selectedClub) => {
+        if (!cible || !Array.isArray(cible.positions) || !selectedClub) {
+            return 0;
+        }
+        const occupantUserIds = new Set();
+        cible.positions.forEach(position => {
+            if (position.user_id !== null && position.user_id !== undefined) {
+                occupantUserIds.add(String(position.user_id));
+            }
+        });
+
+        let count = 0;
+        inscriptions.forEach(inscription => {
+            if (!occupantUserIds.has(String(inscription.user_id))) {
+                return;
+            }
+            const clubId = normalizeClubId(inscription.id_club);
+            if (clubId && clubId === selectedClub) {
+                count += 1;
+            }
+        });
+
+        return count;
+    };
+
+    const countSameClubOnCibleEdit = (cible, inscriptions, selectedClub, currentUserId) => {
+        if (!cible || !Array.isArray(cible.positions) || !selectedClub) {
+            return 0;
+        }
+        const occupantUserIds = new Set();
+        cible.positions.forEach(position => {
+            if (position.user_id !== null && position.user_id !== undefined) {
+                occupantUserIds.add(String(position.user_id));
+            }
+        });
+
+        let count = 0;
+        inscriptions.forEach(inscription => {
+            if (!occupantUserIds.has(String(inscription.user_id))) {
+                return;
+            }
+            if (currentUserId !== null && String(inscription.user_id) === String(currentUserId)) {
+                return;
+            }
+            const clubId = normalizeClubId(inscription.id_club);
+            if (clubId && clubId === selectedClub) {
+                count += 1;
+            }
+        });
+
+        return count;
+    };
+
+    const applyCibleFilters = () => {
+        const cibleSelect = document.getElementById('numero_cible');
+        if (!cibleSelect || !ciblesData) {
+            return;
+        }
+
+        const inscriptionsDepart = inscriptionsCacheByDepart[currentDepartForCibles] || [];
+        const selectedClub = getSelectedArcherClubId();
+        const selectedBlason = getSelectedBlasonValue();
+        const selectedTrispot = getSelectedTrispotValue();
+
+        const options = cibleSelect.querySelectorAll('option');
+        options.forEach(option => {
+            if (option.value === '') {
+                return;
+            }
+
+            const cible = ciblesData.find(item => String(item.numero_cible) === String(option.value));
+            if (!cible) {
+                return;
+            }
+
+            const occupiedByTrispot = option.getAttribute('data-occupied-trispot') === '1';
+            const occupiedByNonTrispot = option.getAttribute('data-occupied-non-trispot') === '1';
+            const isCibleEmpty = !occupiedByTrispot && !occupiedByNonTrispot;
+
+            let shouldDisable = false;
+
+            if (!isCibleEmpty) {
+                if (selectedTrispot !== null) {
+                    if (selectedTrispot === 1 && occupiedByNonTrispot) {
+                        shouldDisable = true;
+                    } else if (selectedTrispot === 0 && occupiedByTrispot) {
+                        shouldDisable = true;
+                    }
+                }
+
+                if (!shouldDisable && cible.blason !== null && cible.blason !== undefined && cible.blason !== '') {
+                    const cibleBlason = parseInt(cible.blason, 10);
+                    if (selectedBlason === null || Number.isNaN(cibleBlason) || cibleBlason !== selectedBlason) {
+                        shouldDisable = true;
+                    }
+                }
+
+                if (!shouldDisable && selectedClub) {
+                    const sameClubCount = countSameClubOnCible(cible, inscriptionsDepart, selectedClub);
+                    if (sameClubCount >= 3) {
+                        shouldDisable = true;
+                    }
+                }
+            }
+
+            if (shouldDisable) {
+                option.disabled = true;
+                option.style.color = '#ccc';
+            } else {
+                option.disabled = false;
+                option.style.color = '';
+            }
+        });
+
+        const selectedOption = cibleSelect.options[cibleSelect.selectedIndex];
+        if (selectedOption && selectedOption.disabled) {
+            cibleSelect.value = '';
+            const positionSelect = document.getElementById('position_archer');
+            if (positionSelect) {
+                positionSelect.innerHTML = '<option value="">Sélectionnez d\'abord une cible</option>';
+            }
+        }
+    };
+
+    const ensureCibleFilterNote = () => {
+        const planCibleSection = document.getElementById('plan-cible-selection');
+        if (!planCibleSection) {
+            return;
+        }
+        const cibleSelect = document.getElementById('numero_cible');
+        if (!cibleSelect) {
+            return;
+        }
+        const existingNote = document.getElementById('cible-filter-note');
+        if (existingNote) {
+            return;
+        }
+        const note = document.createElement('div');
+        note.id = 'cible-filter-note';
+        note.className = 'form-text text-muted';
+        note.textContent = 'Les cibles incompatibles sont desactivees (blason, trispot, limite club).';
+        const parent = cibleSelect.parentElement;
+        if (parent) {
+            parent.appendChild(note);
+        }
+    };
+
+    const getEditInscription = () => {
+        if (typeof window === 'undefined') {
+            return null;
+        }
+        return window.currentEditInscription || null;
+    };
+
+    const getEditClubId = () => {
+        const inscription = getEditInscription();
+        if (!inscription) {
+            return null;
+        }
+        return normalizeClubId(inscription.id_club || inscription.club_name_short || inscription.clubNameShort || inscription.AGREMENTNR || null);
+    };
+
+    const getEditBlasonValue = () => {
+        const blasonInput = document.getElementById('edit-blason');
+        if (!blasonInput || blasonInput.value === '') {
+            return null;
+        }
+        const parsed = parseInt(blasonInput.value, 10);
+        return Number.isNaN(parsed) ? null : parsed;
+    };
+
+    const getEditTrispotValue = () => {
+        const trispotCheckbox = document.getElementById('edit-trispot');
+        if (!trispotCheckbox) {
+            return null;
+        }
+        return trispotCheckbox.checked ? 1 : 0;
+    };
+
+    const applyEditCibleFilters = () => {
+        const editCibleSelect = document.getElementById('edit-numero_cible');
+        if (!editCibleSelect || !ciblesDataEdit) {
+            return;
+        }
+
+        const inscriptionsDepart = inscriptionsCacheByDepart[currentDepartForCiblesEdit] || [];
+        const selectedClub = getEditClubId();
+        const selectedBlason = getEditBlasonValue();
+        const selectedTrispot = getEditTrispotValue();
+        const currentCible = editCibleSelect.dataset.currentCible || null;
+        const currentInscription = getEditInscription();
+        const currentUserId = currentInscription ? currentInscription.user_id : null;
+
+        const options = editCibleSelect.querySelectorAll('option');
+        options.forEach(option => {
+            if (option.value === '') {
+                return;
+            }
+
+            const cible = ciblesDataEdit.find(item => String(item.numero_cible) === String(option.value));
+            if (!cible) {
+                return;
+            }
+
+            let shouldDisable = false;
+            if (currentCible && option.value == currentCible) {
+                shouldDisable = false;
+            } else {
+                const occupiedByTrispot = option.getAttribute('data-occupied-trispot') === '1';
+                const occupiedByNonTrispot = option.getAttribute('data-occupied-non-trispot') === '1';
+                const isCibleEmpty = !occupiedByTrispot && !occupiedByNonTrispot;
+
+                if (!isCibleEmpty) {
+                    if (selectedTrispot !== null) {
+                        if (selectedTrispot === 1 && occupiedByNonTrispot) {
+                            shouldDisable = true;
+                        } else if (selectedTrispot === 0 && occupiedByTrispot) {
+                            shouldDisable = true;
+                        }
+                    }
+
+                    if (!shouldDisable && cible.blason !== null && cible.blason !== undefined && cible.blason !== '') {
+                        const cibleBlason = parseInt(cible.blason, 10);
+                        if (selectedBlason === null || Number.isNaN(cibleBlason) || cibleBlason !== selectedBlason) {
+                            shouldDisable = true;
+                        }
+                    }
+
+                    if (!shouldDisable && selectedClub) {
+                        const sameClubCount = countSameClubOnCibleEdit(cible, inscriptionsDepart, selectedClub, currentUserId);
+                        if (sameClubCount >= 3) {
+                            shouldDisable = true;
+                        }
+                    }
+                }
+            }
+
+            if (shouldDisable) {
+                option.disabled = true;
+                option.style.color = '#ccc';
+            } else {
+                option.disabled = false;
+                option.style.color = '';
+            }
+        });
+
+        const selectedOption = editCibleSelect.options[editCibleSelect.selectedIndex];
+        if (selectedOption && selectedOption.disabled) {
+            editCibleSelect.value = '';
+            const positionSelect = document.getElementById('edit-position_archer');
+            if (positionSelect) {
+                positionSelect.innerHTML = '<option value="">Sélectionnez d\'abord une cible</option>';
+            }
+        }
+    };
+
+    const ensureEditCibleFilterNote = () => {
+        const planCibleSection = document.getElementById('edit-plan-cible-selection');
+        if (!planCibleSection) {
+            return;
+        }
+        const cibleSelect = document.getElementById('edit-numero_cible');
+        if (!cibleSelect) {
+            return;
+        }
+        const existingNote = document.getElementById('edit-cible-filter-note');
+        if (existingNote) {
+            return;
+        }
+        const note = document.createElement('div');
+        note.id = 'edit-cible-filter-note';
+        note.className = 'form-text text-muted';
+        note.textContent = 'Les cibles incompatibles sont desactivees (blason, trispot, limite club).';
+        const parent = cibleSelect.parentElement;
+        if (parent) {
+            parent.appendChild(note);
+        }
+    };
+
+    if (typeof window !== 'undefined') {
+        window.applyCibleFilters = applyCibleFilters;
+        window.applyEditCibleFilters = applyEditCibleFilters;
+    }
     
     console.log('Plan de cible - needsPlanCible:', needsPlanCible, 'disciplineAbv:', typeof disciplineAbv !== 'undefined' ? disciplineAbv : 'undefined');
     
     // Fonction pour charger les cibles disponibles pour un départ
     function loadCiblesForDepart(numeroDepart) {
         console.log('loadCiblesForDepart appelée avec numéro de départ:', numeroDepart);
+        currentDepartForCibles = numeroDepart;
         
         // Annuler la requête précédente si elle existe
         if (abortControllerCibles) {
@@ -899,6 +1271,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Toujours afficher la section si un départ est sélectionné
         planCibleSection.style.display = 'block';
+
+        ensureCibleFilterNote();
         
         // Réinitialiser les selects
         const cibleSelect = document.getElementById('numero_cible');
@@ -986,6 +1360,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             cibleSelect.appendChild(option);
                         }
                     }
+                    fetchInscriptionsForDepart(numeroDepart).then(() => {
+                        applyCibleFilters();
+                    });
                 } else {
                     // Plan de cible n'existe pas encore
                     console.log('Aucun plan de cible créé pour ce départ');
@@ -1084,6 +1461,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadCiblesForDepartEdit(numeroDepart, existingNumeroCible = null, existingPosition = null, callback = null) {
         console.log('loadCiblesForDepartEdit appelée avec numéro de départ:', numeroDepart, 'cible existante:', existingNumeroCible, 'position existante:', existingPosition);
+        currentDepartForCiblesEdit = numeroDepart;
 
         // Annuler la requête précédente si elle existe
         if (abortControllerCiblesEdit) {
@@ -1103,6 +1481,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         planCibleSection.style.display = 'block';
+
+        ensureEditCibleFilterNote();
 
         const cibleSelect = document.getElementById('edit-numero_cible');
         const positionSelect = document.getElementById('edit-position_archer');
@@ -1210,6 +1590,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             callback();
                         }
                     }
+                    fetchInscriptionsForDepart(numeroDepart).then(() => {
+                        applyEditCibleFilters();
+                    });
                 } else {
                     console.log('Aucun plan de cible créé pour ce départ (édition)');
                     if (cibleSelect) {
@@ -1456,53 +1839,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (trispotCheckbox && cibleSelect) {
         // Fonction pour filtrer les cibles
         const filterCibles = () => {
-            const isTrispotChecked = trispotCheckbox.checked;
-            const options = cibleSelect.querySelectorAll('option');
-            
-            options.forEach(option => {
-                if (option.value === '') return; // Garder l'option vide
-                
-                const isTrispotCible = option.getAttribute('data-trispot') === '1';
-                const occupiedByTrispot = option.getAttribute('data-occupied-trispot') === '1';
-                const occupiedByNonTrispot = option.getAttribute('data-occupied-non-trispot') === '1';
-                const isCibleEmpty = !occupiedByTrispot && !occupiedByNonTrispot;
-                
-                let shouldDisable = false;
-                
-                // Si la cible est vide, toujours permettre
-                if (!isCibleEmpty) {
-                    // Si archer trispot: bloquer les cibles non-trispot et les cibles occupées par non-trispot
-                    if (isTrispotChecked) {
-                        if (!isTrispotCible || occupiedByNonTrispot) {
-                            shouldDisable = true;
-                        }
-                    } 
-                    // Si archer non-trispot: bloquer les cibles trispot et les cibles occupées par trispot
-                    else {
-                        if (isTrispotCible || occupiedByTrispot) {
-                            shouldDisable = true;
-                        }
-                    }
-                }
-                
-                if (shouldDisable) {
-                    option.disabled = true;
-                    option.style.color = '#ccc';
-                } else {
-                    option.disabled = false;
-                    option.style.color = '';
-                }
-            });
-            
-            // Réinitialiser la sélection si la cible actuelle n'est plus valide
-            const selectedOption = cibleSelect.options[cibleSelect.selectedIndex];
-            if (selectedOption && selectedOption.disabled) {
-                cibleSelect.value = '';
-                const positionSelect = document.getElementById('position_archer');
-                if (positionSelect) {
-                    positionSelect.innerHTML = '<option value="">Sélectionnez d\'abord une cible</option>';
-                }
-            }
+            applyCibleFilters();
         };
         
         // Appliquer le filtre au changement de la checkbox
@@ -1513,6 +1850,22 @@ document.addEventListener('DOMContentLoaded', function() {
             filterCibles();
         });
         observer.observe(cibleSelect, { childList: true });
+
+        const blasonInput = document.getElementById('blason');
+        if (blasonInput) {
+            blasonInput.addEventListener('change', filterCibles);
+            blasonInput.addEventListener('input', filterCibles);
+        }
+
+        const categorieSelect = document.getElementById('categorie_classement');
+        if (categorieSelect) {
+            categorieSelect.addEventListener('change', filterCibles);
+        }
+
+        const distanceSelect = document.getElementById('distance');
+        if (distanceSelect) {
+            distanceSelect.addEventListener('change', filterCibles);
+        }
     }
     
     // Écouter les changements sur le select de position
@@ -1539,58 +1892,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (editTrispotCheckbox && editCibleSelect) {
         // Fonction pour filtrer les cibles
         const filterCibles = () => {
-            const isTrispotChecked = editTrispotCheckbox.checked;
-            const options = editCibleSelect.querySelectorAll('option');
-            const currentCible = editCibleSelect.dataset.currentCible || null;
-            
-            options.forEach(option => {
-                if (option.value === '') return; // Garder l'option vide
-                
-                const isTrispotCible = option.getAttribute('data-trispot') === '1';
-                const occupiedByTrispot = option.getAttribute('data-occupied-trispot') === '1';
-                const occupiedByNonTrispot = option.getAttribute('data-occupied-non-trispot') === '1';
-                const isCibleEmpty = !occupiedByTrispot && !occupiedByNonTrispot;
-                
-                let shouldDisable = false;
-                
-                // Toujours garder la cible actuelle sélectionnable
-                if (currentCible && option.value == currentCible) {
-                    shouldDisable = false;
-                }
-                // Si la cible est vide, toujours permettre
-                else if (!isCibleEmpty) {
-                    // Si archer trispot: bloquer les cibles non-trispot et les cibles occupées par non-trispot
-                    if (isTrispotChecked) {
-                        if (!isTrispotCible || occupiedByNonTrispot) {
-                            shouldDisable = true;
-                        }
-                    } 
-                    // Si archer non-trispot: bloquer les cibles trispot et les cibles occupées par trispot
-                    else {
-                        if (isTrispotCible || occupiedByTrispot) {
-                            shouldDisable = true;
-                        }
-                    }
-                }
-                
-                if (shouldDisable) {
-                    option.disabled = true;
-                    option.style.color = '#ccc';
-                } else {
-                    option.disabled = false;
-                    option.style.color = '';
-                }
-            });
-            
-            // Réinitialiser la sélection si la cible actuelle n'est plus valide
-            const selectedOption = editCibleSelect.options[editCibleSelect.selectedIndex];
-            if (selectedOption && selectedOption.disabled) {
-                editCibleSelect.value = '';
-                const positionSelect = document.getElementById('edit-position_archer');
-                if (positionSelect) {
-                    positionSelect.innerHTML = '<option value="">Sélectionnez d\'abord une cible</option>';
-                }
-            }
+            applyEditCibleFilters();
         };
         
         // Appliquer le filtre au changement de la checkbox
@@ -1601,6 +1903,22 @@ document.addEventListener('DOMContentLoaded', function() {
             filterCibles();
         });
         observer.observe(editCibleSelect, { childList: true });
+
+        const editBlasonInput = document.getElementById('edit-blason');
+        if (editBlasonInput) {
+            editBlasonInput.addEventListener('change', filterCibles);
+            editBlasonInput.addEventListener('input', filterCibles);
+        }
+
+        const editCategorieSelect = document.getElementById('edit-categorie_classement');
+        if (editCategorieSelect) {
+            editCategorieSelect.addEventListener('change', filterCibles);
+        }
+
+        const editDistanceSelect = document.getElementById('edit-distance');
+        if (editDistanceSelect) {
+            editDistanceSelect.addEventListener('change', filterCibles);
+        }
     }
 
     // Écouter le changement de départ dans la modale d'édition
@@ -2384,6 +2702,10 @@ function selectArcher(archer, cardElement) {
         console.error('Bootstrap n\'est pas chargé');
         alert('Erreur: Bootstrap n\'est pas chargé');
     }
+
+    if (typeof window !== 'undefined' && typeof window.applyCibleFilters === 'function') {
+        window.applyCibleFilters();
+    }
 }
 
 // Note: showConfirmModal est déjà définie au début du fichier (ligne 7)
@@ -2778,6 +3100,10 @@ window.editInscription = function(inscriptionId) {
             alert('Erreur: Aucune donnée trouvée');
             return;
         }
+
+        if (typeof window !== 'undefined') {
+            window.currentEditInscription = inscription;
+        }
         
         // Vérifier que inscription n'est pas encore un objet avec success/data
         if (inscription && typeof inscription === 'object' && inscription.success && inscription.data) {
@@ -2981,6 +3307,10 @@ window.editInscription = function(inscriptionId) {
                     setTimeout(() => window.loadCiblesForDepartEdit(departValue, existingCible, existingPosition, afterLoadCallback), 0);
                 } else if (departValue) {
                     console.warn('loadCiblesForDepartEdit non disponible');
+                }
+
+                if (typeof window !== 'undefined' && typeof window.applyEditCibleFilters === 'function') {
+                    window.applyEditCibleFilters();
                 }
                 
                 console.log('=== fillForm terminée ===');
