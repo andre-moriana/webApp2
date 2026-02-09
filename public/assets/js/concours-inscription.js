@@ -942,6 +942,27 @@ window.showConfirmModal = function(archer) {
                         console.warn('✗ showConfirmModal - Catégorie XML non trouvée. Valeur XML (après conversion):', categorieXml);
                     }
                 }
+
+                if (!categorieSelect.value) {
+                    const computedCategorie = buildCategorieClassementFromArcher(archer);
+                    if (computedCategorie) {
+                        const optionExists = Array.from(categorieSelect.options).some(opt => opt.value === computedCategorie);
+                        if (optionExists) {
+                            categorieSelect.value = computedCategorie;
+                            console.log('✓ showConfirmModal - Catégorie calculée:', computedCategorie);
+                            try {
+                                const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+                                categorieSelect.dispatchEvent(changeEvent);
+                            } catch (error) {
+                                console.error('Erreur lors du déclenchement de l\'événement change:', error);
+                            }
+                        } else {
+                            console.warn('✗ showConfirmModal - Catégorie calculée non trouvée dans le select:', computedCategorie);
+                        }
+                    } else {
+                        console.warn('✗ showConfirmModal - Catégorie calculée indisponible (CATAGE/SEXE/TYPARC manquants)');
+                    }
+                }
             }
             
             // Pré-remplir l'arme depuis TYPARC
@@ -1060,6 +1081,147 @@ window.showConfirmModal = function(archer) {
 };
 
 // Fonction globale pour remplir automatiquement la distance et le blason selon la catégorie
+function getCategorieLabelFromAbv(abvCategorie) {
+    if (!abvCategorie || typeof categoriesClassement === 'undefined' || !categoriesClassement) {
+        return '';
+    }
+    const normalized = String(abvCategorie).trim();
+    const found = categoriesClassement.find(cat => {
+        return String(cat.abv_categorie_classement || '').trim() === normalized;
+    });
+    return found ? String(found.lb_categorie_classement || '').trim() : '';
+}
+
+function getGenderCodeFromArcher(archer) {
+    const raw = String(archer.gender || archer.sexe || archer.SEXE || archer.sex || '').trim().toUpperCase();
+    if (!raw) {
+        return '';
+    }
+    if (raw === '1' || raw === 'H' || raw === 'M' || raw === 'HOMME') {
+        return 'H';
+    }
+    if (raw === '2' || raw === 'F' || raw === 'D' || raw === 'FEMME') {
+        return 'F';
+    }
+    if (raw.includes('H')) {
+        return 'H';
+    }
+    if (raw.includes('F') || raw.includes('D')) {
+        return 'F';
+    }
+    return '';
+}
+
+function getAgeCodeFromValue(value) {
+    const raw = String(value || '').trim().toUpperCase();
+    if (!raw) {
+        return '';
+    }
+    const numericMatch = raw.match(/^\d+$/);
+    if (numericMatch) {
+        const map = {
+            '8': 'U11',
+            '2': 'U13',
+            '3': 'U15',
+            '4': 'U18',
+            '5': 'U21',
+            '11': 'S1',
+            '12': 'S2',
+            '13': 'S3',
+            '14': 'T1',
+            '15': 'T2',
+            '16': 'T3'
+        };
+        return map[raw] || '';
+    }
+    const codeMatch = raw.match(/(U\d+|S[1-3]|T[1-3])/i);
+    if (codeMatch) {
+        return codeMatch[1].toUpperCase();
+    }
+    return '';
+}
+
+function getAgeCodeFromArcher(archer) {
+    return getAgeCodeFromValue(archer.catage || archer.CATAGE || archer.ageCategory || archer.age_category || '');
+}
+
+function getArcCodeFromArcher(archer) {
+    const raw = String(archer.typarc || archer.TYPARC || archer.bowType || archer.bow_type || archer.arme || '').trim();
+    if (!raw) {
+        return '';
+    }
+
+    const arcMap = {
+        '1': 'CL',
+        '2': 'CO',
+        '3': 'AD',
+        '4': 'AC',
+        '5': 'BB',
+        '6': 'TL',
+        'CL': 'CL',
+        'CO': 'CO',
+        'AD': 'AD',
+        'AC': 'AC',
+        'BB': 'BB',
+        'TL': 'TL'
+    };
+
+    const rawUpper = raw.toUpperCase();
+    if (arcMap[rawUpper]) {
+        return arcMap[rawUpper];
+    }
+
+    const labelMap = {
+        'ARC CLASSIQUE': 'CL',
+        'ARC A POULIES': 'CO',
+        'ARC A POU LIES': 'CO',
+        'ARC DROIT': 'AD',
+        'ARC DE CHASSE': 'AC',
+        'ARC NU': 'BB',
+        'ARC LIBRE': 'TL',
+        'CLASSIQUE': 'CL',
+        'RECURVE': 'CL',
+        'COMPOUND': 'CO',
+        'BAREBOW': 'BB',
+        'LONGBOW': 'AD'
+    };
+
+    const normalizedLabel = rawUpper.replace(/\s+/g, ' ').trim();
+    if (labelMap[normalizedLabel]) {
+        return labelMap[normalizedLabel];
+    }
+
+    if (typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
+        const numericId = parseInt(raw, 10);
+        if (!Number.isNaN(numericId)) {
+            const arcById = arcs.find(arc => parseInt(arc.idarc || 0, 10) === numericId);
+            if (arcById && arcById.abv_arc) {
+                return String(arcById.abv_arc).trim().toUpperCase();
+            }
+        }
+
+        const arcByLabel = arcs.find(arc => {
+            const label = String(arc.lb_arc || arc.name || arc.nom || '').toUpperCase();
+            return label && label === normalizedLabel;
+        });
+        if (arcByLabel && arcByLabel.abv_arc) {
+            return String(arcByLabel.abv_arc).trim().toUpperCase();
+        }
+    }
+
+    return '';
+}
+
+function buildCategorieClassementFromArcher(archer) {
+    const ageCode = getAgeCodeFromArcher(archer);
+    const genderCode = getGenderCodeFromArcher(archer);
+    const arcCode = getArcCodeFromArcher(archer);
+    if (!ageCode || !genderCode || !arcCode) {
+        return '';
+    }
+    return `${ageCode}${genderCode}${arcCode}`;
+}
+
 function fillDistanceAndBlasonFromCategorie(abvCategorie) {
     console.log('=== fillDistanceAndBlasonFromCategorie appelée ===');
     console.log('Paramètres:', {
@@ -1091,11 +1253,15 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
     });
     
     // Appeler l'API pour récupérer la distance recommandée
+    const categorieLabel = getCategorieLabelFromAbv(abvCategorie);
     const params = new URLSearchParams({
         iddiscipline: concoursDiscipline,
         idtype_competition: concoursTypeCompetition,
         abv_categorie_classement: abvCategorie
     });
+    if (categorieLabel) {
+        params.append('lb_categorie_classement', categorieLabel);
+    }
     
     fetch(`/api/concours/distance-recommandee?${params.toString()}`, {
         method: 'GET',
@@ -1227,12 +1393,17 @@ function getBlasonFromAPI(iddiscipline, abvCategorie, distance) {
         console.log('Paramètres manquants pour récupérer le blason:', { iddiscipline, abvCategorie, distance });
         return Promise.resolve(null);
     }
+
+    const categorieLabel = getCategorieLabelFromAbv(abvCategorie);
     
     const params = new URLSearchParams({
         iddiscipline: iddiscipline,
         abv_categorie_classement: abvCategorie,
         distance: distance
     });
+    if (categorieLabel) {
+        params.append('lb_categorie_classement', categorieLabel);
+    }
     
     return fetch(`/api/concours/blason-recommandee?${params.toString()}`, {
         method: 'GET',
@@ -2535,6 +2706,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (blasonInput && distance) {
                 // Récupérer la catégorie et la discipline pour l'appel API
                 const abvCategorie = categorieSelect ? categorieSelect.value : null;
+                const categorieLabel = getCategorieLabelFromAbv(abvCategorie);
                 
                 if (concoursDiscipline && abvCategorie) {
                     // Utiliser l'endpoint blason-recommandee pour récupérer le blason
@@ -2549,6 +2721,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         abv_categorie_classement: abvCategorie,
                         distance: distance
                     });
+                    if (categorieLabel) {
+                        params.append('lb_categorie_classement', categorieLabel);
+                    }
                     
                     fetch(`/api/concours/blason-recommandee?${params.toString()}`, {
                         method: 'GET',
@@ -2578,12 +2753,16 @@ document.addEventListener('DOMContentLoaded', function() {
                                         }
                                         // Essayer de récupérer le blason via distance-recommandee comme fallback
                                         console.warn('Tentative avec distance-recommandee...');
-                                        return fetch(`/api/concours/distance-recommandee?${new URLSearchParams({
+                                        const distanceParams = new URLSearchParams({
                                             iddiscipline: concoursDiscipline,
                                             idtype_competition: concoursTypeCompetition,
                                             abv_categorie_classement: abvCategorie,
                                             distance: distance
-                                        }).toString()}`, {
+                                        });
+                                        if (categorieLabel) {
+                                            distanceParams.append('lb_categorie_classement', categorieLabel);
+                                        }
+                                        return fetch(`/api/concours/distance-recommandee?${distanceParams.toString()}`, {
                                             method: 'GET',
                                             headers: {
                                                 'Content-Type': 'application/json',
@@ -3155,6 +3334,27 @@ function selectArcher(archer, cardElement) {
                 }
             } else {
                 console.warn('Impossible de pré-remplir la catégorie. categorieXml:', categorieXml, 'categoriesClassement:', typeof categoriesClassement);
+            }
+
+            if (!categorieSelect.value) {
+                const computedCategorie = buildCategorieClassementFromArcher(archer);
+                if (computedCategorie) {
+                    const optionExists = Array.from(categorieSelect.options).some(opt => opt.value === computedCategorie);
+                    if (optionExists) {
+                        categorieSelect.value = computedCategorie;
+                        console.log('✓ Catégorie pré-remplie depuis CATAGE/SEXE/TYPARC:', computedCategorie);
+                        try {
+                            const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+                            categorieSelect.dispatchEvent(changeEvent);
+                        } catch (error) {
+                            console.error('Erreur lors du déclenchement de l\'événement change:', error);
+                        }
+                    } else {
+                        console.warn('✗ Catégorie calculée non trouvée dans le select:', computedCategorie);
+                    }
+                } else {
+                    console.warn('✗ Catégorie calculée indisponible (CATAGE/SEXE/TYPARC incomplets)');
+                }
             }
         } else {
             console.warn('Select categorie_classement introuvable dans le DOM');
