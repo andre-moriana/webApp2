@@ -2138,38 +2138,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Délégation d'événements pour les cartes d'archers (plus fiable)
-    // Utiliser le conteneur parent qui existe toujours
-    const searchResultsContainer = document.getElementById('search-results');
-    if (searchResultsContainer) {
-        searchResultsContainer.addEventListener('click', function(e) {
-            console.log('Clic détecté dans search-results, target:', e.target);
-            // Trouver la carte parente
-            const card = e.target.closest('.archer-card');
-            if (card) {
-                e.preventDefault();
-                e.stopPropagation();
-                const archerIndex = card.getAttribute('data-archer-index');
-                console.log('Carte trouvée, index:', archerIndex);
-                console.log('archersList disponible:', !!window.archersList);
-                if (archerIndex !== null && window.archersList && window.archersList[archerIndex]) {
-                    console.log('Clic sur carte via délégation, index:', archerIndex);
-                    const archerData = window.archersList[archerIndex];
-                    console.log('Données archer:', archerData);
-                    selectArcher(archerData, card);
-                } else {
-                    console.error('Données archer introuvables pour index:', archerIndex);
-                    console.error('archersList:', window.archersList);
-                    alert('Erreur: Impossible de récupérer les données de l\'archer. Index: ' + archerIndex);
-                }
-            } else {
-                console.log('Pas de carte trouvée pour le clic');
-            }
-        });
-        console.log('Délégation d\'événements configurée sur search-results');
-    } else {
-        console.error('search-results container introuvable');
-    }
+    // Ancien conteneur search-results supprimé (recherche locale via table des archers).
     
     // Écouter le changement de distance pour renseigner automatiquement le blason (seulement pour les disciplines non-3D/Nature/Campagne)
     const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
