@@ -83,6 +83,10 @@ const initArcherTableSearch = () => {
     const clearBtn = document.getElementById('clearSearchBtn');
     const table = document.getElementById('usersTable');
 
+    if (typeof window !== 'undefined' && Array.isArray(window.archersTable) && !Array.isArray(window.archersTableFull)) {
+        window.archersTableFull = window.archersTable.slice();
+    }
+
     const buildClubMap = () => {
         const clubs = typeof window !== 'undefined' && Array.isArray(window.clubsTable) ? window.clubsTable : [];
         const map = {};
@@ -101,15 +105,82 @@ const initArcherTableSearch = () => {
 
     const clubMap = buildClubMap();
 
+    const setTableData = (archers) => {
+        window.archersTable = Array.isArray(archers) ? archers : [];
+        if (!Array.isArray(window.archersTableFull) || window.archersTableFull.length === 0) {
+            window.archersTableFull = window.archersTable.slice();
+        }
+        populateArchersTable(window.archersTable);
+    };
+
+    let xmlSearchTimer = null;
+    let lastXmlQuery = '';
+    const searchArchersInXml = (term) => {
+        const trimmed = term.trim();
+        if (!trimmed || trimmed.length < 2) {
+            return;
+        }
+
+        if (xmlSearchTimer) {
+            clearTimeout(xmlSearchTimer);
+        }
+
+        xmlSearchTimer = setTimeout(() => {
+            if (trimmed === lastXmlQuery) {
+                return;
+            }
+            lastXmlQuery = trimmed;
+
+            const isLicence = /^\d+$/.test(trimmed);
+            const param = isLicence ? 'licence' : 'nom';
+            fetch(`/api/archers/search?${param}=${encodeURIComponent(trimmed)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const archers = data && data.success && Array.isArray(data.archers) ? data.archers : [];
+                if (archers.length > 0) {
+                    setTableData(archers);
+                    if (searchInput && searchInput.value.trim()) {
+                        if (typeof window.filterUsersTable === 'function') {
+                            window.filterUsersTable(searchInput.value);
+                        } else {
+                            filterArchersTable(searchInput.value);
+                        }
+                    }
+                }
+            })
+            .catch(() => {
+                // Silence: on laisse l'etat actuel si XML indisponible.
+            });
+        }, 300);
+    };
+
     if (searchInput) {
         searchInput.addEventListener('input', function() {
+            const value = this.value;
             if (typeof window.filterUsersTable === 'function') {
-                window.filterUsersTable(this.value);
+                window.filterUsersTable(value);
             } else {
-                filterArchersTable(this.value);
+                filterArchersTable(value);
             }
             if (clearBtn) {
-                clearBtn.style.display = this.value.trim() ? 'block' : 'none';
+                clearBtn.style.display = value.trim() ? 'block' : 'none';
+            }
+
+            const tbody = table ? table.querySelector('tbody') : null;
+            const visibleRows = tbody ? tbody.querySelectorAll('tr.user-row:not([style*="display: none"])') : [];
+            if (value.trim() && visibleRows.length === 0) {
+                searchArchersInXml(value);
+            }
+
+            if (!value.trim() && Array.isArray(window.archersTableFull)) {
+                setTableData(window.archersTableFull.slice());
             }
         });
 
@@ -123,6 +194,9 @@ const initArcherTableSearch = () => {
                 }
                 if (clearBtn) {
                     clearBtn.style.display = 'none';
+                }
+                if (Array.isArray(window.archersTableFull)) {
+                    setTableData(window.archersTableFull.slice());
                 }
             }
         });
@@ -139,6 +213,9 @@ const initArcherTableSearch = () => {
                 }
                 clearBtn.style.display = 'none';
                 searchInput.focus();
+                if (Array.isArray(window.archersTableFull)) {
+                    setTableData(window.archersTableFull.slice());
+                }
             }
         });
     }
@@ -252,8 +329,7 @@ const initArcherTableSearch = () => {
                 users = data.users;
             }
 
-            window.archersTable = users;
-            populateArchersTable(users);
+            setTableData(users);
             if (searchInput && searchInput.value.trim()) {
                 if (typeof window.filterUsersTable === 'function') {
                     window.filterUsersTable(searchInput.value);
