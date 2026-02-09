@@ -582,7 +582,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             ?>
                             <?php
                                 $dataUserId = $dispositionType === 'trispot' ? $userIdTrispot : $userId;
-                                $dataTrispot = ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true || $blasonCible === 'T40') ? '1' : '0';
+                                $dataTrispot = ($dispositionType === 'trispot' || $trispotCible == 1 || $trispotCible === '1' || $trispotCible === true || $blasonCible === 'T40') ? '1' : '0';
                                 $dataBlason = $planBlason ?? $blasonCible;
                                 $dataDistance = $planDistance ?? $distanceCible;
                             ?>
