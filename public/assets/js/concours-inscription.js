@@ -1048,9 +1048,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                if (!shouldDisable && cible.blason !== null && cible.blason !== undefined && cible.blason !== '') {
+                if (!shouldDisable && selectedBlason !== null && cible.blason !== null && cible.blason !== undefined && cible.blason !== '') {
                     const cibleBlason = parseInt(cible.blason, 10);
-                    if (selectedBlason === null || Number.isNaN(cibleBlason) || cibleBlason !== selectedBlason) {
+                    if (Number.isNaN(cibleBlason) || cibleBlason !== selectedBlason) {
                         shouldDisable = true;
                     }
                 }
@@ -1179,9 +1179,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
 
-                    if (!shouldDisable && cible.blason !== null && cible.blason !== undefined && cible.blason !== '') {
+                    if (!shouldDisable && selectedBlason !== null && cible.blason !== null && cible.blason !== undefined && cible.blason !== '') {
                         const cibleBlason = parseInt(cible.blason, 10);
-                        if (selectedBlason === null || Number.isNaN(cibleBlason) || cibleBlason !== selectedBlason) {
+                        if (Number.isNaN(cibleBlason) || cibleBlason !== selectedBlason) {
                             shouldDisable = true;
                         }
                     }
