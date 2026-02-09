@@ -894,6 +894,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const getSelectedBlasonValue = () => {
         const blasonInput = document.getElementById('blason');
         if (!blasonInput || blasonInput.value === '') {
+            const fallback = typeof window !== 'undefined' ? window.selectedArcher : null;
+            if (fallback && fallback.blason !== undefined && fallback.blason !== null && fallback.blason !== '') {
+                const parsedFallback = parseInt(fallback.blason, 10);
+                return Number.isNaN(parsedFallback) ? null : parsedFallback;
+            }
             return null;
         }
         const parsed = parseInt(blasonInput.value, 10);
@@ -1132,6 +1137,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const getEditBlasonValue = () => {
         const blasonInput = document.getElementById('edit-blason');
         if (!blasonInput || blasonInput.value === '') {
+            const inscription = getEditInscription();
+            if (inscription && inscription.blason !== undefined && inscription.blason !== null && inscription.blason !== '') {
+                const parsedFallback = parseInt(inscription.blason, 10);
+                return Number.isNaN(parsedFallback) ? null : parsedFallback;
+            }
             return null;
         }
         const parsed = parseInt(blasonInput.value, 10);
