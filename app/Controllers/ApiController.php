@@ -2528,6 +2528,39 @@ class ApiController {
             ], 500);
         }
     }
+
+    /**
+     * Proxy pour /api/concours/{id}/inscriptions
+     */
+    public function proxyConcoursInscriptions($concoursId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $endpoint = "concours/{$concoursId}/inscriptions" . ($queryString ? "?{$queryString}" : "");
+
+            $response = $this->apiService->makeRequest($endpoint, $method);
+
+            if (isset($response['data']) && is_array($response['data']) && isset($response['data']['success'])) {
+                $response = $response['data'];
+            }
+
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     
     /**
      * Proxy pour /api/concours/{id}/inscription/{inscriptionId} - Mise à jour d'inscription
