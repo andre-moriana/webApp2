@@ -142,6 +142,107 @@ const initArcherTableSearch = () => {
             selectArcher(archers[index], targetRow);
         });
     }
+
+    const populateArchersTable = (archers) => {
+        if (!table) {
+            return;
+        }
+        const tbody = table.querySelector('tbody');
+        if (!tbody) {
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        if (!Array.isArray(archers) || archers.length === 0) {
+            const row = document.createElement('tr');
+            row.className = 'no-results-row';
+            row.innerHTML = '<td colspan="5" class="text-center py-4"><i class="fas fa-users fa-2x text-muted mb-2"></i><p class="text-muted">Aucun archer trouvé</p></td>';
+            tbody.appendChild(row);
+            return;
+        }
+
+        archers.forEach((archer, index) => {
+            const nom = archer.name || archer.nom || '';
+            const prenom = archer.firstName || archer.first_name || archer.prenom || '';
+            const licence = archer.licenceNumber || archer.licence_number || '';
+            const club = archer.clubName || archer.club_name || archer.clubNameShort || archer.club_name_short || '';
+            const searchable = `${prenom} ${nom} ${licence} ${club}`.trim().toLowerCase();
+
+            const row = document.createElement('tr');
+            row.className = 'user-row';
+            row.setAttribute('data-archer-index', index.toString());
+            row.setAttribute('data-searchable', searchable);
+            row.innerHTML = `
+                <td>${nom}</td>
+                <td>${prenom}</td>
+                <td>${licence}</td>
+                <td>${club}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-primary js-select-archer" data-archer-index="${index}">
+                        Selectionner
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    };
+
+    const loadArchersIfEmpty = () => {
+        if (!table) {
+            return;
+        }
+        const tbody = table.querySelector('tbody');
+        const existingRows = tbody ? tbody.querySelectorAll('tr.user-row') : null;
+        const hasRows = existingRows && existingRows.length > 0;
+        const archers = typeof window !== 'undefined' && Array.isArray(window.archersTable) ? window.archersTable : [];
+
+        if (hasRows || archers.length > 0) {
+            if (!hasRows && archers.length > 0) {
+                populateArchersTable(archers);
+            }
+            return;
+        }
+
+        fetch('/api/users', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            let users = [];
+            if (Array.isArray(data)) {
+                users = data;
+            } else if (data && data.success && data.data) {
+                if (Array.isArray(data.data)) {
+                    users = data.data;
+                } else if (Array.isArray(data.data.users)) {
+                    users = data.data.users;
+                }
+            } else if (data && Array.isArray(data.users)) {
+                users = data.users;
+            }
+
+            window.archersTable = users;
+            populateArchersTable(users);
+            if (searchInput && searchInput.value.trim()) {
+                if (typeof window.filterUsersTable === 'function') {
+                    window.filterUsersTable(searchInput.value);
+                } else {
+                    filterArchersTable(searchInput.value);
+                }
+            }
+        })
+        .catch(() => {
+            populateArchersTable([]);
+        });
+    };
+
+    loadArchersIfEmpty();
 };
 
 // DÉFINIR showConfirmModal IMMÉDIATEMENT au début du fichier
