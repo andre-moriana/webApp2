@@ -83,9 +83,13 @@ const initArcherTableSearch = () => {
     const clearBtn = document.getElementById('clearSearchBtn');
     const table = document.getElementById('usersTable');
 
-    if (searchInput && typeof window.filterUsersTable !== 'function') {
+    if (searchInput) {
         searchInput.addEventListener('input', function() {
-            filterArchersTable(this.value);
+            if (typeof window.filterUsersTable === 'function') {
+                window.filterUsersTable(this.value);
+            } else {
+                filterArchersTable(this.value);
+            }
             if (clearBtn) {
                 clearBtn.style.display = this.value.trim() ? 'block' : 'none';
             }
@@ -94,7 +98,11 @@ const initArcherTableSearch = () => {
         searchInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 this.value = '';
-                filterArchersTable('');
+                if (typeof window.filterUsersTable === 'function') {
+                    window.filterUsersTable('');
+                } else {
+                    filterArchersTable('');
+                }
                 if (clearBtn) {
                     clearBtn.style.display = 'none';
                 }
@@ -102,11 +110,15 @@ const initArcherTableSearch = () => {
         });
     }
 
-    if (clearBtn && typeof window.filterUsersTable !== 'function') {
+    if (clearBtn) {
         clearBtn.addEventListener('click', function() {
             if (searchInput) {
                 searchInput.value = '';
-                filterArchersTable('');
+                if (typeof window.filterUsersTable === 'function') {
+                    window.filterUsersTable('');
+                } else {
+                    filterArchersTable('');
+                }
                 clearBtn.style.display = 'none';
                 searchInput.focus();
             }
