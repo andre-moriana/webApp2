@@ -3473,8 +3473,7 @@ window.editInscription = function(inscriptionId) {
 };
 
 // Gestionnaire pour le bouton de confirmation d'édition
-document.addEventListener('DOMContentLoaded', function() {
-    initArcherTableSearch();
+const initEditInscriptionHandlers = () => {
     const btnConfirmEdit = document.getElementById('btn-confirm-edit');
     if (btnConfirmEdit) {
         btnConfirmEdit.addEventListener('click', function() {
@@ -3612,4 +3611,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        initArcherTableSearch();
+        initEditInscriptionHandlers();
+    });
+} else {
+    initArcherTableSearch();
+    initEditInscriptionHandlers();
+}
