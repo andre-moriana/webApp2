@@ -219,7 +219,7 @@ const initArcherTableSearch = () => {
                         if (isLicence) {
                             return licence.includes(needle);
                         }
-                        return nom.includes(needle) || prenom.includes(needle) || nomComplet.includes(needle) || club.includes(needle) || clubShort.includes(needle);
+                        return licence.includes(needle) || nom.includes(needle) || prenom.includes(needle) || nomComplet.includes(needle) || club.includes(needle) || clubShort.includes(needle);
                     }).slice(0, 200);
 
                     if (results.length > 0) {
@@ -254,11 +254,12 @@ const initArcherTableSearch = () => {
             const tbody = table ? table.querySelector('tbody') : null;
             const visibleRows = tbody ? tbody.querySelectorAll('tr.user-row:not([style*="display: none"])') : [];
             if (value.trim() && visibleRows.length === 0) {
+                loadArchersIfEmpty();
                 searchArchersInXml(value);
             }
 
-            if (!value.trim() && Array.isArray(window.archersTableFull)) {
-                setTableData(window.archersTableFull.slice());
+            if (!value.trim()) {
+                setTableData([]);
             }
         });
 
@@ -273,9 +274,7 @@ const initArcherTableSearch = () => {
                 if (clearBtn) {
                     clearBtn.style.display = 'none';
                 }
-                if (Array.isArray(window.archersTableFull)) {
-                    setTableData(window.archersTableFull.slice());
-                }
+                setTableData([]);
             }
         });
     }
@@ -291,9 +290,7 @@ const initArcherTableSearch = () => {
                 }
                 clearBtn.style.display = 'none';
                 searchInput.focus();
-                if (Array.isArray(window.archersTableFull)) {
-                    setTableData(window.archersTableFull.slice());
-                }
+                setTableData([]);
             }
         });
     }
@@ -369,6 +366,10 @@ const initArcherTableSearch = () => {
     };
 
     const loadArchersIfEmpty = () => {
+        if (!searchInput || !searchInput.value.trim()) {
+            setTableData([]);
+            return;
+        }
         if (!table) {
             return;
         }
