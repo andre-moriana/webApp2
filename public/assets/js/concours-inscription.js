@@ -83,6 +83,24 @@ const initArcherTableSearch = () => {
     const clearBtn = document.getElementById('clearSearchBtn');
     const table = document.getElementById('usersTable');
 
+    const buildClubMap = () => {
+        const clubs = typeof window !== 'undefined' && Array.isArray(window.clubsTable) ? window.clubsTable : [];
+        const map = {};
+        clubs.forEach(club => {
+            const name = club.name || club.lb_club || '';
+            const nameShort = club.nameShort || club.name_short || '';
+            if (nameShort) {
+                map[String(nameShort).trim()] = name;
+            }
+            if (club.id || club._id) {
+                map[String(club.id || club._id).trim()] = name;
+            }
+        });
+        return map;
+    };
+
+    const clubMap = buildClubMap();
+
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             if (typeof window.filterUsersTable === 'function') {
@@ -166,8 +184,15 @@ const initArcherTableSearch = () => {
             const nom = archer.name || archer.nom || '';
             const prenom = archer.firstName || archer.first_name || archer.prenom || '';
             const licence = archer.licenceNumber || archer.licence_number || '';
-            const club = archer.clubName || archer.club_name || archer.clubNameShort || archer.club_name_short || '';
-            const searchable = `${prenom} ${nom} ${licence} ${club}`.trim().toLowerCase();
+            const clubShort = archer.clubNameShort || archer.club_name_short || archer.club || archer.clubId || archer.club_id || '';
+            let club = archer.clubName || archer.club_name || '';
+            if (!club && clubShort && clubMap[String(clubShort).trim()]) {
+                club = clubMap[String(clubShort).trim()];
+            }
+            if (!club) {
+                club = clubShort;
+            }
+            const searchable = `${prenom} ${nom} ${licence} ${club} ${clubShort}`.trim().toLowerCase();
 
             const row = document.createElement('tr');
             row.className = 'user-row';
