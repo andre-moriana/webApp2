@@ -14,7 +14,7 @@ const getNeedsPlanCible = () => {
 };
 
 const filterArchersTable = (searchTerm) => {
-    const table = document.getElementById('archersTable');
+    const table = document.getElementById('usersTable');
     if (!table) {
         return;
     }
@@ -24,7 +24,7 @@ const filterArchersTable = (searchTerm) => {
         return;
     }
 
-    const rows = tbody.querySelectorAll('tr.archer-row');
+    const rows = tbody.querySelectorAll('tr.user-row');
     const noResultsRow = tbody.querySelector('tr.no-results-row');
 
     let visibleCount = 0;
@@ -79,11 +79,11 @@ const filterArchersTable = (searchTerm) => {
 };
 
 const initArcherTableSearch = () => {
-    const searchInput = document.getElementById('archerSearchInput');
-    const clearBtn = document.getElementById('clearArcherSearchBtn');
-    const table = document.getElementById('archersTable');
+    const searchInput = document.getElementById('userSearchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    const table = document.getElementById('usersTable');
 
-    if (searchInput) {
+    if (searchInput && typeof window.filterUsersTable !== 'function') {
         searchInput.addEventListener('input', function() {
             filterArchersTable(this.value);
             if (clearBtn) {
@@ -102,7 +102,7 @@ const initArcherTableSearch = () => {
         });
     }
 
-    if (clearBtn) {
+    if (clearBtn && typeof window.filterUsersTable !== 'function') {
         clearBtn.addEventListener('click', function() {
             if (searchInput) {
                 searchInput.value = '';
@@ -116,8 +116,8 @@ const initArcherTableSearch = () => {
     if (table) {
         table.addEventListener('click', function(event) {
             const button = event.target.closest('.js-select-archer');
-            const row = event.target.closest('.archer-row');
-            const targetRow = button ? button.closest('.archer-row') : row;
+            const row = event.target.closest('.user-row');
+            const targetRow = button ? button.closest('.user-row') : row;
             if (!targetRow) {
                 return;
             }

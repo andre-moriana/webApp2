@@ -102,8 +102,8 @@ table tbody tr.piquet-blanc {
                         <span class="input-group-text bg-white">
                             <i class="fas fa-search text-muted"></i>
                         </span>
-                        <input type="text" class="form-control" id="archerSearchInput" placeholder="Rechercher un archer..." autocomplete="off">
-                        <button class="btn btn-outline-secondary" type="button" id="clearArcherSearchBtn" style="display: none;">
+                        <input type="text" class="form-control" id="userSearchInput" placeholder="Rechercher un archer..." autocomplete="off">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn" style="display: none;">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -112,7 +112,7 @@ table tbody tr.piquet-blanc {
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0" id="archersTable">
+                <table class="table table-hover mb-0" id="usersTable">
                     <thead class="table-light">
                         <tr>
                             <th>Nom</th>
@@ -146,7 +146,7 @@ table tbody tr.piquet-blanc {
                                     $archerClub = $archer['clubName'] ?? $archer['club_name'] ?? $archer['clubNameShort'] ?? $archer['club_name_short'] ?? '';
                                     $searchableText = strtolower(trim($archerPrenom . ' ' . $archerNom . ' ' . $archerLicence . ' ' . $archerClub));
                                 ?>
-                                <tr class="archer-row" data-archer-index="<?= (int)$index ?>" data-searchable="<?= htmlspecialchars($searchableText) ?>">
+                                <tr class="user-row" data-archer-index="<?= (int)$index ?>" data-searchable="<?= htmlspecialchars($searchableText) ?>">
                                     <td><?= htmlspecialchars($archerNom) ?></td>
                                     <td><?= htmlspecialchars($archerPrenom) ?></td>
                                     <td><?= htmlspecialchars($archerLicence) ?></td>
@@ -767,4 +767,5 @@ const disciplineAbv = <?= json_encode($disciplineAbv ?? null) ?>;
 const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)) ?>;
 window.archersTable = <?= json_encode($archers ?? [], JSON_UNESCAPED_UNICODE) ?>;
 </script>
+<script src="/public/assets/js/users-table.js"></script>
 <script src="/public/assets/js/concours-inscription.js"></script>
