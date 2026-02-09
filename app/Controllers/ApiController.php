@@ -2748,7 +2748,11 @@ class ApiController {
             }
             
             $response = $this->apiService->makeRequest($endpoint, $method, $data);
-            
+
+            if (isset($response['data']) && isset($response['data']['success']) && array_key_exists('data', $response['data'])) {
+                $response = $response['data'];
+            }
+
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
             } else {
