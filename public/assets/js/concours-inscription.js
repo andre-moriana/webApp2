@@ -1033,13 +1033,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            const isTrispotCible = option.getAttribute('data-trispot') === '1';
             const occupiedByTrispot = option.getAttribute('data-occupied-trispot') === '1';
             const occupiedByNonTrispot = option.getAttribute('data-occupied-non-trispot') === '1';
             const isCibleEmpty = !occupiedByTrispot && !occupiedByNonTrispot;
 
             let shouldDisable = false;
 
-            if (!isCibleEmpty) {
+            if (selectedTrispot !== null) {
+                if (selectedTrispot === 1 && !isTrispotCible) {
+                    shouldDisable = true;
+                } else if (selectedTrispot === 0 && isTrispotCible) {
+                    shouldDisable = true;
+                }
+            }
+
+            if (!isCibleEmpty && !shouldDisable) {
                 if (selectedTrispot !== null) {
                     if (selectedTrispot === 1 && occupiedByNonTrispot) {
                         shouldDisable = true;
@@ -1166,11 +1175,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentCible && option.value == currentCible) {
                 shouldDisable = false;
             } else {
+                const isTrispotCible = option.getAttribute('data-trispot') === '1';
                 const occupiedByTrispot = option.getAttribute('data-occupied-trispot') === '1';
                 const occupiedByNonTrispot = option.getAttribute('data-occupied-non-trispot') === '1';
                 const isCibleEmpty = !occupiedByTrispot && !occupiedByNonTrispot;
 
-                if (!isCibleEmpty) {
+                if (selectedTrispot !== null) {
+                    if (selectedTrispot === 1 && !isTrispotCible) {
+                        shouldDisable = true;
+                    } else if (selectedTrispot === 0 && isTrispotCible) {
+                        shouldDisable = true;
+                    }
+                }
+
+                if (!isCibleEmpty && !shouldDisable) {
                     if (selectedTrispot !== null) {
                         if (selectedTrispot === 1 && occupiedByNonTrispot) {
                             shouldDisable = true;
