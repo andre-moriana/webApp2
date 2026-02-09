@@ -734,6 +734,44 @@ class ConcoursController {
             }
         }
         unset($inscription);
+
+        // Récupérer la liste des archers pour la recherche locale
+        $archers = [];
+        $archersError = null;
+        try {
+            $response = $this->apiService->getUsers();
+            $apiResponse = $response['data'] ?? null;
+
+            if ($response['success'] && isset($apiResponse) && is_array($apiResponse)) {
+                if (isset($apiResponse[0]) && is_array($apiResponse[0])) {
+                    $archers = $apiResponse;
+                } elseif (isset($apiResponse['users']) && is_array($apiResponse['users'])) {
+                    $archers = $apiResponse['users'];
+                } elseif (isset($apiResponse['data']) && is_array($apiResponse['data'])) {
+                    $archers = $apiResponse['data'];
+                } else {
+                    $archers = [];
+                }
+            } else {
+                $archersError = 'Impossible de charger la liste des archers.';
+            }
+        } catch (Exception $e) {
+            $archersError = 'Erreur lors du chargement des archers: ' . $e->getMessage();
+        }
+
+        if (!empty($archers) && !empty($clubsMap)) {
+            foreach ($archers as &$archer) {
+                $clubKey = $archer['club'] ?? $archer['clubId'] ?? $archer['club_id'] ?? null;
+                if ($clubKey) {
+                    $clubKeyStr = trim((string)$clubKey);
+                    if (isset($clubsMap[$clubKeyStr])) {
+                        $archer['clubName'] = $clubsMap[$clubKeyStr]['name'] ?? ($archer['clubName'] ?? null);
+                        $archer['clubNameShort'] = $clubsMap[$clubKeyStr]['nameShort'] ?? $clubsMap[$clubKeyStr]['name_short'] ?? ($archer['clubNameShort'] ?? null);
+                    }
+                }
+            }
+            unset($archer);
+        }
         
         try {
             // Disciplines

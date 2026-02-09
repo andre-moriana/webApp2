@@ -13,6 +13,125 @@ const getNeedsPlanCible = () => {
     return false;
 };
 
+const filterArchersTable = (searchTerm) => {
+    const table = document.getElementById('archersTable');
+    if (!table) {
+        return;
+    }
+
+    const tbody = table.querySelector('tbody');
+    if (!tbody) {
+        return;
+    }
+
+    const rows = tbody.querySelectorAll('tr.archer-row');
+    const noResultsRow = tbody.querySelector('tr.no-results-row');
+
+    let visibleCount = 0;
+    const normalized = searchTerm ? searchTerm.trim().toLowerCase() : '';
+
+    if (!normalized) {
+        rows.forEach(row => {
+            row.style.display = '';
+            visibleCount += 1;
+        });
+        if (noResultsRow) {
+            noResultsRow.style.display = '';
+        }
+        const searchNoResultsRow = tbody.querySelector('tr.search-no-results');
+        if (searchNoResultsRow) {
+            searchNoResultsRow.remove();
+        }
+        return;
+    }
+
+    rows.forEach(row => {
+        const dataSearchable = (row.getAttribute('data-searchable') || '').toLowerCase();
+        const rowText = row.textContent ? row.textContent.toLowerCase() + ' ' + dataSearchable : dataSearchable;
+
+        if (rowText.includes(normalized)) {
+            row.style.display = '';
+            visibleCount += 1;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    if (visibleCount === 0 && rows.length > 0) {
+        let searchNoResultsRow = tbody.querySelector('tr.search-no-results');
+        if (!searchNoResultsRow) {
+            searchNoResultsRow = document.createElement('tr');
+            searchNoResultsRow.className = 'search-no-results';
+            searchNoResultsRow.innerHTML = '<td colspan="5" class="text-center py-4"><i class="fas fa-search fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Aucun archer ne correspond a la recherche</p></td>';
+            tbody.appendChild(searchNoResultsRow);
+        }
+        searchNoResultsRow.style.display = '';
+    } else {
+        const searchNoResultsRow = tbody.querySelector('tr.search-no-results');
+        if (searchNoResultsRow) {
+            searchNoResultsRow.style.display = 'none';
+        }
+    }
+
+    if (noResultsRow) {
+        noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+    }
+};
+
+const initArcherTableSearch = () => {
+    const searchInput = document.getElementById('archerSearchInput');
+    const clearBtn = document.getElementById('clearArcherSearchBtn');
+    const table = document.getElementById('archersTable');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            filterArchersTable(this.value);
+            if (clearBtn) {
+                clearBtn.style.display = this.value.trim() ? 'block' : 'none';
+            }
+        });
+
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                filterArchersTable('');
+                if (clearBtn) {
+                    clearBtn.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            if (searchInput) {
+                searchInput.value = '';
+                filterArchersTable('');
+                clearBtn.style.display = 'none';
+                searchInput.focus();
+            }
+        });
+    }
+
+    if (table) {
+        table.addEventListener('click', function(event) {
+            const button = event.target.closest('.js-select-archer');
+            const row = event.target.closest('.archer-row');
+            const targetRow = button ? button.closest('.archer-row') : row;
+            if (!targetRow) {
+                return;
+            }
+            const indexAttr = targetRow.getAttribute('data-archer-index');
+            const index = indexAttr !== null ? parseInt(indexAttr, 10) : null;
+            const archers = typeof window !== 'undefined' && Array.isArray(window.archersTable) ? window.archersTable : [];
+            if (index === null || Number.isNaN(index) || !archers[index]) {
+                return;
+            }
+            selectArcher(archers[index], targetRow);
+        });
+    }
+};
+
 // DÉFINIR showConfirmModal IMMÉDIATEMENT au début du fichier
 window.showConfirmModal = function(archer) {
     console.log('=== showConfirmModal DÉBUT ===');
@@ -2395,7 +2514,7 @@ function selectArcher(archer, cardElement) {
     }
     
     // Retirer la sélection précédente
-    document.querySelectorAll('.archer-card').forEach(card => {
+    document.querySelectorAll('.archer-card, .archer-row').forEach(card => {
         card.classList.remove('selected');
     });
 
@@ -3378,6 +3497,7 @@ window.editInscription = function(inscriptionId) {
 
 // Gestionnaire pour le bouton de confirmation d'édition
 document.addEventListener('DOMContentLoaded', function() {
+    initArcherTableSearch();
     const btnConfirmEdit = document.getElementById('btn-confirm-edit');
     if (btnConfirmEdit) {
         btnConfirmEdit.addEventListener('click', function() {

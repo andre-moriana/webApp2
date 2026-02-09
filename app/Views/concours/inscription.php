@@ -1,5 +1,6 @@
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/concours-inscription.css" rel="stylesheet">
+<link href="/public/assets/css/users-table.css" rel="stylesheet">
 <style>
 /* FORCER les couleurs de piquet - Spécificité maximale */
 #inscriptions-table tbody tr[data-piquet="rouge"],
@@ -89,30 +90,79 @@ table tbody tr.piquet-blanc {
         </div>
     </div>
 
-    <!-- Formulaire de recherche d'archer -->
-    <div class="search-section">
-        <h3>Rechercher un archer</h3>
-        <div class="search-form">
-            <div class="form-group">
-                <label>Rechercher par :</label>
-                <select id="search-type" class="form-control">
-                    <option value="licence">Numéro de licence</option>
-                    <option value="nom">Nom</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <input type="text" id="search-input" class="form-control" placeholder="Entrez le numéro de licence ou le nom">
-                <button type="button" class="btn btn-primary" id="btn-search">
-                    <i class="fas fa-search"></i> Rechercher
-                </button>
+    <!-- Recherche locale des archers (meme systeme que /users) -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users me-2"></i>Liste des archers
+                </h5>
+                <div class="search-box">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control" id="archerSearchInput" placeholder="Rechercher un archer..." autocomplete="off">
+                        <button class="btn btn-outline-secondary" type="button" id="clearArcherSearchBtn" style="display: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- Résultats de recherche -->
-    <div id="search-results" class="search-results" style="display: none;">
-        <h3>Résultats de la recherche</h3>
-        <div id="results-list"></div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="archersTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nom</th>
+                            <th>Prenom</th>
+                            <th>Licence</th>
+                            <th>Club</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($archersError)): ?>
+                            <tr class="no-results-row">
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-exclamation-triangle text-muted mb-2"></i>
+                                    <p class="text-muted"><?= htmlspecialchars($archersError) ?></p>
+                                </td>
+                            </tr>
+                        <?php elseif (empty($archers)): ?>
+                            <tr class="no-results-row">
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted">Aucun archer trouvé</p>
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($archers as $index => $archer): ?>
+                                <?php
+                                    $archerNom = $archer['name'] ?? $archer['nom'] ?? '';
+                                    $archerPrenom = $archer['firstName'] ?? $archer['first_name'] ?? $archer['prenom'] ?? '';
+                                    $archerLicence = $archer['licenceNumber'] ?? $archer['licence_number'] ?? '';
+                                    $archerClub = $archer['clubName'] ?? $archer['club_name'] ?? $archer['clubNameShort'] ?? $archer['club_name_short'] ?? '';
+                                    $searchableText = strtolower(trim($archerPrenom . ' ' . $archerNom . ' ' . $archerLicence . ' ' . $archerClub));
+                                ?>
+                                <tr class="archer-row" data-archer-index="<?= (int)$index ?>" data-searchable="<?= htmlspecialchars($searchableText) ?>">
+                                    <td><?= htmlspecialchars($archerNom) ?></td>
+                                    <td><?= htmlspecialchars($archerPrenom) ?></td>
+                                    <td><?= htmlspecialchars($archerLicence) ?></td>
+                                    <td><?= htmlspecialchars($archerClub) ?></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-primary js-select-archer" data-archer-index="<?= (int)$index ?>">
+                                            Selectionner
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Liste des inscrits -->
@@ -715,5 +765,6 @@ const concoursTypeCompetition = <?= json_encode(is_object($concours) ? ($concour
 const concoursNombreDepart = <?= json_encode(is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null)) ?>;
 const disciplineAbv = <?= json_encode($disciplineAbv ?? null) ?>;
 const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)) ?>;
+window.archersTable = <?= json_encode($archers ?? [], JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="/public/assets/js/concours-inscription.js"></script>
