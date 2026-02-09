@@ -314,6 +314,7 @@ class UserImportController {
         $prenom = trim($entry['PRENOM'] ?? '');
         $nomComplet = trim($entry['NOMCOMPLET'] ?? '');
         $cie = trim($entry['CIE'] ?? '');
+        $clubUnique = trim($entry['club_unique'] ?? $entry['CLUB_UNIQUE'] ?? '');
         $idLicence = trim($entry['IDLicence'] ?? '');
         $dateNaissance = trim($entry['DATENAISSANCE'] ?? '');
         $sexe = trim($entry['SEXE'] ?? '');
@@ -359,9 +360,25 @@ class UserImportController {
         
         // Convertir le type d'arc (TYPARC)
         $bowType = $this->convertBowType($typeArc);
-        
+
         // Convertir la catégorie d'âge (CATAGE)
         $ageCategoryConverted = $this->convertAgeCategory($ageCategory);
+
+        // Extraire les infos depuis CATEGORIE si nécessaire (ex: CLS2D)
+        $categorieParsed = $this->parseCategorieComposite($categorie);
+        if ($categorieParsed !== null) {
+            if (empty($bowType) && !empty($categorieParsed['bowType'])) {
+                $bowType = $categorieParsed['bowType'];
+            }
+            if (empty($ageCategoryConverted) && !empty($categorieParsed['ageCategory'])) {
+                $ageCategoryConverted = $categorieParsed['ageCategory'];
+            }
+            if (empty($gender) && !empty($categorieParsed['gender'])) {
+                $gender = $categorieParsed['gender'];
+            }
+        }
+
+        $clubCode = !empty($clubUnique) ? $clubUnique : $cie;
         
         return [
             'first_name' => $prenom,
@@ -375,10 +392,38 @@ class UserImportController {
             'ageCategory' => $ageCategoryConverted ?: $ageCategory,
             'categorie' => $categorie,
             'bowType' => $bowType,
-            'club' => $cie,
+            'club' => $clubCode,
             'role' => 'Archer',
             'status' => 'pending',
             'requires_approval' => true
+        ];
+    }
+
+    private function parseCategorieComposite($categorie) {
+        $value = strtoupper(trim($categorie));
+        if ($value === '' || strlen($value) < 4) {
+            return null;
+        }
+
+        $bowCode = substr($value, 0, 2);
+        $genderCode = substr($value, -1);
+        $ageCode = substr($value, 2, -1);
+
+        $bowType = $this->convertBowType($bowCode);
+        $ageCategory = $this->convertAgeCategory($ageCode);
+        $normalizedAge = !empty($ageCategory) ? $ageCategory : $ageCode;
+
+        $gender = '';
+        if ($genderCode === 'H') {
+            $gender = 'H';
+        } elseif ($genderCode === 'D' || $genderCode === 'F') {
+            $gender = 'F';
+        }
+
+        return [
+            'bowType' => $bowType,
+            'ageCategory' => $normalizedAge,
+            'gender' => $gender
         ];
     }
     
@@ -595,6 +640,10 @@ class UserImportController {
                     'status' => 'pending',
                     'requires_approval' => true
                 ];
+
+                if (!empty($userData['club'])) {
+                    $createData['clubId'] = $userData['club'];
+                }
                 
                 $response = $this->apiService->createUser($createData);
                 
@@ -632,6 +681,9 @@ class UserImportController {
                         }
                         if (!empty($userData['bowType'])) {
                             $updateData['bowType'] = $userData['bowType'];
+                        }
+                        if (!empty($userData['club'])) {
+                            $updateData['clubId'] = $userData['club'];
                         }
                         if (!empty($userData['categorie'])) {
                             // La catégorie peut être stockée dans ageCategory si elle n'est pas déjà remplie
