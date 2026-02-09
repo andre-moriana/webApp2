@@ -158,6 +158,7 @@ const initArcherTableSearch = () => {
                     firstName: prenom,
                     licence_number: licence,
                     IDLicence: licence,
+                    xml_source: true,
                     club_name: clubName,
                     CIE: clubName,
                     clubNameShort: clubShort,
@@ -2775,6 +2776,12 @@ function selectArcher(archer, cardElement) {
         alert('Erreur: Aucune information d\'archer disponible');
         return;
     }
+
+    const hasUserId = !!(archer.id || archer._id || archer.ID);
+    if (archer.xml_source && !hasUserId) {
+        createUserFromXmlArcher(archer, cardElement);
+        return;
+    }
     
     if (!cardElement) {
         console.error('selectArcher: cardElement est undefined');
@@ -3127,6 +3134,57 @@ function selectArcher(archer, cardElement) {
     if (typeof window !== 'undefined' && typeof window.applyCibleFilters === 'function') {
         window.applyCibleFilters();
     }
+}
+
+function createUserFromXmlArcher(archer, cardElement) {
+    if (!archer) {
+        return;
+    }
+    if (archer.xml_creating) {
+        return;
+    }
+    archer.xml_creating = true;
+
+    const licence = archer.licence_number || archer.IDLicence || '';
+    if (!licence) {
+        alert('Licence manquante pour l\'import XML');
+        return;
+    }
+
+    fetch('/api/users/import-xml', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+            licence_number: licence
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data || !data.success || !data.data || !data.data.user_id) {
+            const errorMsg = data && (data.error || data.message) ? (data.error || data.message) : 'Import XML impossible';
+            alert(errorMsg);
+            return;
+        }
+
+        archer.id = data.data.user_id;
+        archer._id = data.data.user_id;
+        archer.licence_number = data.data.licenceNumber || archer.licence_number || licence;
+        archer.name = data.data.name || archer.name || archer.nom;
+        archer.firstName = data.data.first_name || archer.firstName || archer.prenom;
+        archer.club_name = data.data.club || archer.club_name || archer.CIE;
+
+        selectArcher(archer, cardElement);
+    })
+    .catch(() => {
+        alert('Erreur lors de l\'import XML');
+    })
+    .finally(() => {
+        archer.xml_creating = false;
+    });
 }
 
 // Note: showConfirmModal est déjà définie au début du fichier (ligne 7)

@@ -1,5 +1,8 @@
 <?php
 
+require_once 'app/Config/PermissionHelper.php';
+require_once 'app/Services/PermissionService.php';
+
 class UserImportController {
     private $apiService;
     
@@ -155,6 +158,78 @@ class UserImportController {
         
         header('Location: /users/import');
         exit;
+    }
+
+    public function importSingleXmlUser() {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Non authentifié']);
+            return;
+        }
+
+        try {
+            $clubId = $_SESSION['user']['clubId'] ?? null;
+            PermissionHelper::requirePermission(
+                PermissionService::RESOURCE_USERS_ALL,
+                PermissionService::ACTION_VIEW,
+                $clubId
+            );
+        } catch (Exception $e) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Permissions insuffisantes']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $licence = trim($input['licence_number'] ?? $input['IDLicence'] ?? $input['id_licence'] ?? '');
+
+        if ($licence === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Numero de licence requis']);
+            return;
+        }
+
+        $xmlPath = __DIR__ . '/../../public/data/users-licences.xml';
+        if (!file_exists($xmlPath) || !is_readable($xmlPath)) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Fichier XML introuvable']);
+            return;
+        }
+
+        $entry = $this->findXmlEntryByLicence($xmlPath, $licence);
+        if (!$entry) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Licence non trouvee dans le XML']);
+            return;
+        }
+
+        $userData = $this->processUserEntry($entry, '');
+        if ($userData === null) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Entree XML invalide']);
+            return;
+        }
+
+        $results = $this->importUserBatch([$userData]);
+        $result = $results[0] ?? null;
+        if (!$result || empty($result['success'])) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => $result['message'] ?? 'Erreur lors de l\'import']);
+            return;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'data' => [
+                'user_id' => $result['user_id'] ?? null,
+                'licenceNumber' => $userData['licenceNumber'] ?? null,
+                'first_name' => $userData['first_name'] ?? null,
+                'name' => $userData['name'] ?? null,
+                'club' => $userData['club'] ?? null
+            ]
+        ]);
     }
     
     /**
@@ -449,6 +524,57 @@ class UserImportController {
         
         return $results;
     }
+
+    private function findXmlEntryByLicence($filePath, $licence) {
+        libxml_use_internal_errors(true);
+        libxml_clear_errors();
+
+        $reader = new XMLReader();
+        if (!$reader->open($filePath)) {
+            libxml_clear_errors();
+            return null;
+        }
+
+        $currentEntry = [];
+        $currentTag = '';
+        $inTableContenu = false;
+        $target = trim($licence);
+
+        while ($reader->read()) {
+            switch ($reader->nodeType) {
+                case XMLReader::ELEMENT:
+                    $currentTag = $reader->localName;
+                    if ($currentTag === 'TABLE_CONTENU') {
+                        $inTableContenu = true;
+                        $currentEntry = [];
+                    }
+                    break;
+                case XMLReader::TEXT:
+                case XMLReader::CDATA:
+                    if ($inTableContenu && $currentTag !== '') {
+                        $currentEntry[$currentTag] = trim($reader->value);
+                    }
+                    break;
+                case XMLReader::END_ELEMENT:
+                    if ($reader->localName === 'TABLE_CONTENU' && $inTableContenu) {
+                        $entryLicence = trim($currentEntry['IDLicence'] ?? '');
+                        if ($entryLicence !== '' && $entryLicence === $target) {
+                            $reader->close();
+                            libxml_clear_errors();
+                            return $currentEntry;
+                        }
+                        $currentEntry = [];
+                        $inTableContenu = false;
+                    }
+                    $currentTag = '';
+                    break;
+            }
+        }
+
+        $reader->close();
+        libxml_clear_errors();
+        return null;
+    }
     
     /**
      * Importe un lot d'utilisateurs
@@ -526,6 +652,7 @@ class UserImportController {
                     $results[] = [
                         'success' => true,
                         'user' => $userData['username'],
+                        'user_id' => $userId,
                         'message' => "Utilisateur {$userData['username']} créé avec succès"
                     ];
                 } else {
