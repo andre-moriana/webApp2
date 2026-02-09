@@ -580,7 +580,24 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     }
                                 }
                             ?>
-                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason80' ? 'blason-80-size' : '' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>" data-position="<?= htmlspecialchars($position) ?>"<?= !empty($tooltipText) ? ' title="' . htmlspecialchars($tooltipText) . '"' : '' ?>>
+                            <?php
+                                $dataUserId = $dispositionType === 'trispot' ? $userIdTrispot : $userId;
+                                $dataTrispot = ($trispotCible == 1 || $trispotCible === '1' || $trispotCible === true || $blasonCible === 'T40') ? '1' : '0';
+                                $dataBlason = $planBlason ?? $blasonCible;
+                                $dataDistance = $planDistance ?? $distanceCible;
+                            ?>
+                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason80' ? 'blason-80-size' : '' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>"
+                                 data-concours-id="<?= htmlspecialchars($concoursId) ?>"
+                                 data-depart="<?= htmlspecialchars($numeroDepart) ?>"
+                                 data-cible="<?= htmlspecialchars($numeroCible) ?>"
+                                 data-position="<?= htmlspecialchars($position) ?>"
+                                 data-colonne="<?= htmlspecialchars($colonne ?? '') ?>"
+                                 data-blason="<?= htmlspecialchars($dataBlason ?? '') ?>"
+                                 data-trispot="<?= htmlspecialchars($dataTrispot) ?>"
+                                 data-distance="<?= htmlspecialchars($dataDistance ?? '') ?>"
+                                 data-user-id="<?= htmlspecialchars($dataUserId ?? '') ?>"
+                                 data-assignable="<?= $isAssigne ? '0' : '1' ?>"
+                                <?= !empty($tooltipText) ? ' title="' . htmlspecialchars($tooltipText) . '"' : '' ?>>
                                 <?php if ($dispositionType === 'trispot'): ?>
                                     <!-- Pour les trispots, afficher le numéro du blason (1, 2, 3) au lieu du numéro de la cible -->
                                     <?php
@@ -692,6 +709,32 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
 </div>
 </div>
 
+<div class="modal fade" id="blasonAssignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Affecter un archer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div id="blason-modal-info" class="text-muted"></div>
+                </div>
+                <div id="blason-modal-release" class="mb-3" style="display: none;">
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                        <span>Emplacement deja affecte.</span>
+                        <button type="button" class="btn btn-sm btn-danger" id="btn-liberer-emplacement">Liberer l'emplacement</button>
+                    </div>
+                </div>
+                <div id="blason-archers-list" class="list-group"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Mettre à jour le flag trispot quand on change la sélection du type de blason
 document.addEventListener('DOMContentLoaded', function() {
@@ -713,4 +756,202 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+</script>
+
+<script>
+(function() {
+    const modalElement = document.getElementById('blasonAssignModal');
+    const listContainer = document.getElementById('blason-archers-list');
+    const infoContainer = document.getElementById('blason-modal-info');
+    const releaseContainer = document.getElementById('blason-modal-release');
+    const releaseButton = document.getElementById('btn-liberer-emplacement');
+    let modalInstance = null;
+    let currentTarget = null;
+
+    if (modalElement && typeof bootstrap !== 'undefined') {
+        modalInstance = new bootstrap.Modal(modalElement);
+    }
+
+    const setListMessage = (message, type = 'info') => {
+        if (!listContainer) {
+            return;
+        }
+        const cssClass = type === 'danger' ? 'alert-danger' : (type === 'warning' ? 'alert-warning' : 'alert-info');
+        listContainer.innerHTML = `<div class="alert ${cssClass}">${message}</div>`;
+    };
+
+    const formatTargetInfo = (target) => {
+        const trispotLabel = target.trispot === 1 ? 'Trispot' : 'Blason';
+        const positionLabel = target.trispot === 1 && target.colonne ? `Colonne ${target.colonne}` : `Position ${target.position}`;
+        const distanceText = target.distance ? ` - ${target.distance}m` : '';
+        return `Depart ${target.depart} - Cible ${target.cible} - ${trispotLabel} ${target.blason}${distanceText} - ${positionLabel}`;
+    };
+
+    const fetchArchersDisponibles = (target) => {
+        if (!target || !listContainer) {
+            return;
+        }
+        if (!target.blason) {
+            setListMessage('Aucun type de blason defini pour cette cible.', 'warning');
+            return;
+        }
+        setListMessage('Chargement des archers disponibles...');
+        const params = new URLSearchParams({
+            blason: target.blason,
+            trispot: target.trispot
+        });
+        fetch(`/api/concours/${target.concoursId}/plan-cible/${target.depart}/archers-dispo?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success || !Array.isArray(data.data)) {
+                setListMessage('Impossible de charger les archers.', 'danger');
+                return;
+            }
+            const archers = data.data;
+            if (archers.length === 0) {
+                setListMessage('Aucun archer sans cible pour ce blason/trispot.', 'warning');
+                return;
+            }
+            listContainer.innerHTML = '';
+            archers.forEach(archer => {
+                const name = `${archer.prenom || ''} ${archer.nom || ''}`.trim();
+                const club = archer.club_name ? ` - ${archer.club_name}` : '';
+                const licence = archer.numero_licence ? ` (${archer.numero_licence})` : '';
+                const item = document.createElement('div');
+                item.className = 'list-group-item d-flex justify-content-between align-items-center';
+                item.innerHTML = `
+                    <div>
+                        <div><strong>${name || 'Archer'}</strong>${licence}</div>
+                        <div class="text-muted" style="font-size: 0.9em;">${club.replace(' - ', '')}</div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary js-assign-archer" data-user-id="${archer.user_id}" data-id-club="${archer.id_club || ''}" data-licence="${archer.numero_licence || ''}">
+                        Affecter
+                    </button>
+                `;
+                listContainer.appendChild(item);
+            });
+        })
+        .catch(() => {
+            setListMessage('Erreur lors du chargement des archers.', 'danger');
+        });
+    };
+
+    const openModalForItem = (item) => {
+        if (!item || !modalInstance) {
+            return;
+        }
+        const trispotValue = item.dataset.trispot === '1' ? 1 : 0;
+        currentTarget = {
+            concoursId: item.dataset.concoursId,
+            depart: item.dataset.depart,
+            cible: item.dataset.cible,
+            position: item.dataset.position,
+            colonne: item.dataset.colonne || null,
+            blason: item.dataset.blason,
+            trispot: trispotValue,
+            distance: item.dataset.distance,
+            userId: item.dataset.userId || null
+        };
+
+        if (infoContainer) {
+            infoContainer.textContent = formatTargetInfo(currentTarget);
+        }
+
+        if (releaseContainer) {
+            releaseContainer.style.display = currentTarget.userId ? 'block' : 'none';
+        }
+
+        fetchArchersDisponibles(currentTarget);
+        modalInstance.show();
+    };
+
+    document.querySelectorAll('.blason-item').forEach(item => {
+        item.addEventListener('click', function() {
+            openModalForItem(this);
+        });
+    });
+
+    if (listContainer) {
+        listContainer.addEventListener('click', function(event) {
+            const button = event.target.closest('.js-assign-archer');
+            if (!button || !currentTarget) {
+                return;
+            }
+            const userId = button.getAttribute('data-user-id');
+            if (!userId) {
+                return;
+            }
+            const positionToAssign = currentTarget.trispot === 1 && currentTarget.colonne ? currentTarget.colonne : currentTarget.position;
+            const payload = {
+                numero_depart: parseInt(currentTarget.depart, 10),
+                numero_cible: parseInt(currentTarget.cible, 10),
+                position_archer: positionToAssign,
+                user_id: parseInt(userId, 10),
+                id_club: button.getAttribute('data-id-club') || null,
+                blason: currentTarget.blason ? parseInt(currentTarget.blason, 10) : null,
+                distance: currentTarget.distance ? parseInt(currentTarget.distance, 10) : null,
+                trispot: currentTarget.trispot
+            };
+
+            fetch(`/api/concours/${currentTarget.concoursId}/plan-cible/assign`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                    return;
+                }
+                setListMessage(data.error || 'Erreur lors de l\'assignation.', 'danger');
+            })
+            .catch(() => {
+                setListMessage('Erreur lors de l\'assignation.', 'danger');
+            });
+        });
+    }
+
+    if (releaseButton) {
+        releaseButton.addEventListener('click', function() {
+            if (!currentTarget) {
+                return;
+            }
+            fetch(`/api/concours/${currentTarget.concoursId}/plan-cible/${currentTarget.depart}/liberer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    numero_cible: parseInt(currentTarget.cible, 10),
+                    position_archer: currentTarget.position
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                    return;
+                }
+                setListMessage(data.error || 'Erreur lors de la liberation.', 'danger');
+            })
+            .catch(() => {
+                setListMessage('Erreur lors de la liberation.', 'danger');
+            });
+        });
+    }
+})();
 </script>
