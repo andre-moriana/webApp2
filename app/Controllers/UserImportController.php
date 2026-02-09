@@ -5,9 +5,11 @@ require_once 'app/Services/PermissionService.php';
 
 class UserImportController {
     private $apiService;
+    private $ageCategoriesMap;
     
     public function __construct() {
         $this->apiService = new ApiService();
+        $this->ageCategoriesMap = null;
     }
     
     public function index() {
@@ -363,6 +365,10 @@ class UserImportController {
 
         // Convertir la catégorie d'âge (CATAGE)
         $ageCategoryConverted = $this->convertAgeCategory($ageCategory);
+        $ageCategoryLabel = $this->getAgeCategoryLabelById($ageCategory);
+        if (!empty($ageCategoryLabel)) {
+            $ageCategoryConverted = $ageCategoryLabel;
+        }
 
         // Extraire les infos depuis CATEGORIE si nécessaire (ex: CLS2D)
         $categorieParsed = $this->parseCategorieComposite($categorie);
@@ -851,6 +857,37 @@ class UserImportController {
         
         // Par défaut, retourner le code original
         return $catage;
+    }
+
+    private function getAgeCategoryLabelById($catage) {
+        $catage = trim((string)$catage);
+        if ($catage === '' || !ctype_digit($catage)) {
+            return '';
+        }
+
+        if ($this->ageCategoriesMap === null) {
+            $this->ageCategoriesMap = [];
+            try {
+                $response = $this->apiService->makeRequest('concours/categories-age', 'GET');
+                $payload = $this->apiService->unwrapData($response);
+                if (is_array($payload) && isset($payload['data']) && isset($payload['success'])) {
+                    $payload = $payload['data'];
+                }
+                if (is_array($payload)) {
+                    foreach ($payload as $row) {
+                        $id = $row['idcategorie'] ?? null;
+                        $label = $row['lb_categorie'] ?? null;
+                        if ($id !== null && $label !== null) {
+                            $this->ageCategoriesMap[(string)$id] = $label;
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                $this->ageCategoriesMap = [];
+            }
+        }
+
+        return $this->ageCategoriesMap[$catage] ?? '';
     }
     
     public function getClubs() {
