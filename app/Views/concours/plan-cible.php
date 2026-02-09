@@ -767,9 +767,51 @@ document.addEventListener('DOMContentLoaded', function() {
     const releaseButton = document.getElementById('btn-liberer-emplacement');
     let modalInstance = null;
     let currentTarget = null;
+    let fallbackBackdrop = null;
 
-    if (modalElement && typeof bootstrap !== 'undefined') {
+    const hasBootstrapModal = modalElement && typeof bootstrap !== 'undefined' && typeof bootstrap.Modal !== 'undefined';
+    if (hasBootstrapModal) {
         modalInstance = new bootstrap.Modal(modalElement);
+    }
+
+    const showModalFallback = () => {
+        if (!modalElement) {
+            return;
+        }
+        modalElement.classList.add('show');
+        modalElement.style.display = 'block';
+        modalElement.removeAttribute('aria-hidden');
+        modalElement.setAttribute('aria-modal', 'true');
+        document.body.classList.add('modal-open');
+
+        if (!fallbackBackdrop) {
+            fallbackBackdrop = document.createElement('div');
+            fallbackBackdrop.className = 'modal-backdrop fade show';
+            document.body.appendChild(fallbackBackdrop);
+            fallbackBackdrop.addEventListener('click', hideModalFallback);
+        }
+    };
+
+    const hideModalFallback = () => {
+        if (!modalElement) {
+            return;
+        }
+        modalElement.classList.remove('show');
+        modalElement.style.display = 'none';
+        modalElement.setAttribute('aria-hidden', 'true');
+        modalElement.removeAttribute('aria-modal');
+        document.body.classList.remove('modal-open');
+        if (fallbackBackdrop) {
+            fallbackBackdrop.removeEventListener('click', hideModalFallback);
+            fallbackBackdrop.remove();
+            fallbackBackdrop = null;
+        }
+    };
+
+    if (modalElement && !hasBootstrapModal) {
+        modalElement.querySelectorAll('[data-bs-dismiss="modal"], .btn-close').forEach(button => {
+            button.addEventListener('click', hideModalFallback);
+        });
     }
 
     const setListMessage = (message, type = 'info') => {
@@ -844,7 +886,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const openModalForItem = (item) => {
-        if (!item || !modalInstance) {
+        if (!item || !modalElement) {
             return;
         }
         const trispotValue = item.dataset.trispot === '1' ? 1 : 0;
@@ -869,13 +911,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         fetchArchersDisponibles(currentTarget);
-        modalInstance.show();
+        if (modalInstance) {
+            modalInstance.show();
+        } else {
+            showModalFallback();
+        }
     };
 
-    document.querySelectorAll('.blason-item').forEach(item => {
-        item.addEventListener('click', function() {
-            openModalForItem(this);
-        });
+    document.addEventListener('click', function(event) {
+        const item = event.target.closest('.blason-item');
+        if (item) {
+            openModalForItem(item);
+        }
     });
 
     if (listContainer) {
