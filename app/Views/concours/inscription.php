@@ -143,8 +143,12 @@ table tbody tr.piquet-blanc {
                                     $archerNom = $archer['name'] ?? $archer['nom'] ?? '';
                                     $archerPrenom = $archer['firstName'] ?? $archer['first_name'] ?? $archer['prenom'] ?? '';
                                     $archerLicence = $archer['licenceNumber'] ?? $archer['licence_number'] ?? '';
-                                    $archerClub = $archer['clubName'] ?? $archer['club_name'] ?? $archer['clubNameShort'] ?? $archer['club_name_short'] ?? '';
-                                    $searchableText = strtolower(trim($archerPrenom . ' ' . $archerNom . ' ' . $archerLicence . ' ' . $archerClub));
+                                    $archerClub = $archer['clubName'] ?? $archer['club_name'] ?? '';
+                                    $archerClubShort = $archer['clubNameShort'] ?? $archer['club_name_short'] ?? '';
+                                    if ($archerClub === '' && $archerClubShort !== '') {
+                                        $archerClub = $archerClubShort;
+                                    }
+                                    $searchableText = strtolower(trim($archerPrenom . ' ' . $archerNom . ' ' . $archerLicence . ' ' . $archerClub . ' ' . $archerClubShort));
                                 ?>
                                 <tr class="user-row" data-archer-index="<?= (int)$index ?>" data-searchable="<?= htmlspecialchars($searchableText) ?>">
                                     <td><?= htmlspecialchars($archerNom) ?></td>
@@ -766,6 +770,7 @@ const concoursNombreDepart = <?= json_encode(is_object($concours) ? ($concours->
 const disciplineAbv = <?= json_encode($disciplineAbv ?? null) ?>;
 const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)) ?>;
 window.archersTable = <?= json_encode($archers ?? [], JSON_UNESCAPED_UNICODE) ?>;
+window.clubsTable = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="/public/assets/js/users-table.js"></script>
 <script src="/public/assets/js/concours-inscription.js"></script>
