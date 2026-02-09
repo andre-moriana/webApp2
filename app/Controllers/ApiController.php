@@ -2677,7 +2677,7 @@ class ApiController {
 
             $response = $this->apiService->makeRequest($endpoint, $method);
 
-            if (isset($response['data']) && isset($response['data']['success']) && array_key_exists('data', $response['data'])) {
+            if (isset($response['data']) && is_array($response['data']) && isset($response['data']['success'])) {
                 $response = $response['data'];
             }
 
@@ -2749,7 +2749,7 @@ class ApiController {
             
             $response = $this->apiService->makeRequest($endpoint, $method, $data);
 
-            if (isset($response['data']) && isset($response['data']['success']) && array_key_exists('data', $response['data'])) {
+            if (isset($response['data']) && is_array($response['data']) && isset($response['data']['success'])) {
                 $response = $response['data'];
             }
 
