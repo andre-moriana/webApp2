@@ -105,9 +105,9 @@ const initArcherTableSearch = () => {
 
     const clubMap = buildClubMap();
 
-    const setTableData = (archers) => {
+    const setTableData = (archers, options = {}) => {
         window.archersTable = Array.isArray(archers) ? archers : [];
-        if (!Array.isArray(window.archersTableFull) || window.archersTableFull.length === 0) {
+        if (!options.preserveFull && (!Array.isArray(window.archersTableFull) || window.archersTableFull.length === 0)) {
             window.archersTableFull = window.archersTable.slice();
         }
         populateArchersTable(window.archersTable);
@@ -115,6 +115,78 @@ const initArcherTableSearch = () => {
 
     let xmlSearchTimer = null;
     let lastXmlQuery = '';
+    let xmlCache = null;
+    let xmlCacheLoading = null;
+
+    const loadXmlArchers = () => {
+        if (xmlCache) {
+            return Promise.resolve(xmlCache);
+        }
+        if (xmlCacheLoading) {
+            return xmlCacheLoading;
+        }
+
+        xmlCacheLoading = fetch('/public/data/users-licences.xml', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/xml'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.text())
+        .then(text => {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(text, 'application/xml');
+            if (xmlDoc.getElementsByTagName('parsererror').length) {
+                throw new Error('XML invalide');
+            }
+            const nodes = Array.from(xmlDoc.getElementsByTagName('TABLE_CONTENU'));
+            const archers = nodes.map(node => {
+                const getText = (tag) => {
+                    const el = node.getElementsByTagName(tag)[0];
+                    return el ? (el.textContent || '').trim() : '';
+                };
+                const licence = getText('IDLicence');
+                const nom = getText('NOM');
+                const prenom = getText('PRENOM');
+                const clubName = getText('CIE');
+                const clubShort = getText('AGREMENTNR') || getText('club_unique');
+                return {
+                    nom: nom,
+                    prenom: prenom,
+                    name: nom,
+                    firstName: prenom,
+                    licence_number: licence,
+                    IDLicence: licence,
+                    club_name: clubName,
+                    CIE: clubName,
+                    clubNameShort: clubShort,
+                    AGREMENTNR: clubShort,
+                    categorie: getText('CATEGORIE'),
+                    CATEGORIE: getText('CATEGORIE'),
+                    typarc: getText('TYPARC'),
+                    TYPARC: getText('TYPARC'),
+                    sexe: getText('SEXE'),
+                    SEXE: getText('SEXE'),
+                    birth_date: getText('DATENAISSANCE'),
+                    DATENAISSANCE: getText('DATENAISSANCE'),
+                    certificat_medical: getText('certificat_medical') || getText('CERTIFICAT'),
+                    certificat_medical_raw: getText('CERTIFICAT'),
+                    type_licence: getText('type_licence'),
+                    type_licence_raw: getText('type_licence'),
+                    creation_renouvellement: getText('Creation_renouvellement')
+                };
+            });
+            xmlCache = archers;
+            return archers;
+        })
+        .finally(() => {
+            xmlCacheLoading = null;
+        });
+
+        return xmlCacheLoading;
+    };
+
     const searchArchersInXml = (term) => {
         const trimmed = term.trim();
         if (!trimmed || trimmed.length < 2) {
@@ -130,34 +202,39 @@ const initArcherTableSearch = () => {
                 return;
             }
             lastXmlQuery = trimmed;
-
+            const needle = trimmed.toLowerCase();
             const isLicence = /^\d+$/.test(trimmed);
-            const param = isLicence ? 'licence' : 'nom';
-            fetch(`/api/archers/search?${param}=${encodeURIComponent(trimmed)}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                credentials: 'include'
-            })
-            .then(response => response.json())
-            .then(data => {
-                const archers = data && data.success && Array.isArray(data.archers) ? data.archers : [];
-                if (archers.length > 0) {
-                    setTableData(archers);
-                    if (searchInput && searchInput.value.trim()) {
-                        if (typeof window.filterUsersTable === 'function') {
-                            window.filterUsersTable(searchInput.value);
-                        } else {
-                            filterArchersTable(searchInput.value);
+
+            loadXmlArchers()
+                .then(archers => {
+                    const results = archers.filter(archer => {
+                        const licence = (archer.licence_number || archer.IDLicence || '').toLowerCase();
+                        const nom = (archer.nom || archer.name || '').toLowerCase();
+                        const prenom = (archer.prenom || archer.firstName || '').toLowerCase();
+                        const nomComplet = `${prenom} ${nom}`.trim();
+                        const club = (archer.club_name || archer.CIE || '').toLowerCase();
+                        const clubShort = (archer.clubNameShort || archer.AGREMENTNR || '').toLowerCase();
+
+                        if (isLicence) {
+                            return licence.includes(needle);
+                        }
+                        return nom.includes(needle) || prenom.includes(needle) || nomComplet.includes(needle) || club.includes(needle) || clubShort.includes(needle);
+                    }).slice(0, 200);
+
+                    if (results.length > 0) {
+                        setTableData(results, { preserveFull: true });
+                        if (searchInput && searchInput.value.trim()) {
+                            if (typeof window.filterUsersTable === 'function') {
+                                window.filterUsersTable(searchInput.value);
+                            } else {
+                                filterArchersTable(searchInput.value);
+                            }
                         }
                     }
-                }
-            })
-            .catch(() => {
-                // Silence: on laisse l'etat actuel si XML indisponible.
-            });
+                })
+                .catch(() => {
+                    // Silence: on laisse l'etat actuel si XML indisponible.
+                });
         }, 300);
     };
 
