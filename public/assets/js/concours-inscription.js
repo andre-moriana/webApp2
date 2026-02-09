@@ -106,8 +106,36 @@ const initArcherTableSearch = () => {
     const clubMap = buildClubMap();
 
     let pendingSearchCount = 0;
+    let searchSpinner = null;
+
+    const ensureSearchSpinner = () => {
+        if (!searchInput) {
+            return;
+        }
+        if (searchSpinner) {
+            return;
+        }
+        const existing = document.getElementById('archerSearchSpinner');
+        if (existing) {
+            searchSpinner = existing;
+            return;
+        }
+        const spinner = document.createElement('span');
+        spinner.id = 'archerSearchSpinner';
+        spinner.className = 'spinner-border spinner-border-sm ms-2 d-none';
+        spinner.setAttribute('role', 'status');
+        spinner.setAttribute('aria-hidden', 'true');
+        if (searchInput.parentNode) {
+            searchInput.parentNode.appendChild(spinner);
+        }
+        searchSpinner = spinner;
+    };
 
     const showSearchLoading = () => {
+        ensureSearchSpinner();
+        if (searchSpinner) {
+            searchSpinner.classList.remove('d-none');
+        }
         if (!table) {
             return;
         }
@@ -123,6 +151,9 @@ const initArcherTableSearch = () => {
     };
 
     const hideSearchLoading = () => {
+        if (searchSpinner) {
+            searchSpinner.classList.add('d-none');
+        }
         if (!table) {
             return;
         }
