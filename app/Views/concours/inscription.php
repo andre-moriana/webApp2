@@ -379,7 +379,7 @@ table tbody tr.piquet-blanc {
                             <!-- Le champ Blason n'existe pas pour les disciplines 3D, Nature et Campagne -->
                             <div class="col-md-3 mb-3">
                                 <label for="blason" class="form-label">Blason</label>
-                                <input type="number" id="blason" class="form-control" min="0" placeholder="Ex: 40">
+                                <input type="number" id="blason" class="form-control" min="0" placeholder="Ex: 40" readonly>
                             </div>
                         <?php endif; ?>
                     </div>
