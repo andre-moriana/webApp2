@@ -105,6 +105,49 @@ const initArcherTableSearch = () => {
 
     const clubMap = buildClubMap();
 
+    let pendingSearchCount = 0;
+
+    const showSearchLoading = () => {
+        if (!table) {
+            return;
+        }
+        const tbody = table.querySelector('tbody');
+        if (!tbody) {
+            return;
+        }
+        tbody.innerHTML = '';
+        const row = document.createElement('tr');
+        row.className = 'search-loading-row';
+        row.innerHTML = '<td colspan="5" class="text-center py-4"><div class="d-inline-flex align-items-center"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><span>Recherche en cours...</span></div></td>';
+        tbody.appendChild(row);
+    };
+
+    const hideSearchLoading = () => {
+        if (!table) {
+            return;
+        }
+        const tbody = table.querySelector('tbody');
+        if (!tbody) {
+            return;
+        }
+        const row = tbody.querySelector('tr.search-loading-row');
+        if (row) {
+            row.remove();
+        }
+    };
+
+    const startSearchLoading = () => {
+        pendingSearchCount += 1;
+        showSearchLoading();
+    };
+
+    const stopSearchLoading = () => {
+        pendingSearchCount = Math.max(0, pendingSearchCount - 1);
+        if (pendingSearchCount === 0) {
+            hideSearchLoading();
+        }
+    };
+
     const setTableData = (archers, options = {}) => {
         window.archersTable = Array.isArray(archers) ? archers : [];
         if (!options.preserveFull && (!Array.isArray(window.archersTableFull) || window.archersTableFull.length === 0)) {
@@ -206,6 +249,7 @@ const initArcherTableSearch = () => {
             const needle = trimmed.toLowerCase();
             const isLicence = /^\d+$/.test(trimmed);
 
+            startSearchLoading();
             loadXmlArchers()
                 .then(archers => {
                     const results = archers.filter(archer => {
@@ -235,6 +279,9 @@ const initArcherTableSearch = () => {
                 })
                 .catch(() => {
                     // Silence: on laisse l'etat actuel si XML indisponible.
+                })
+                .finally(() => {
+                    stopSearchLoading();
                 });
         }, 300);
     };
@@ -385,6 +432,7 @@ const initArcherTableSearch = () => {
             return;
         }
 
+        startSearchLoading();
         fetch('/api/users', {
             method: 'GET',
             headers: {
@@ -419,6 +467,9 @@ const initArcherTableSearch = () => {
         })
         .catch(() => {
             populateArchersTable([]);
+        })
+        .finally(() => {
+            stopSearchLoading();
         });
     };
 
