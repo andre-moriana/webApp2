@@ -837,6 +837,15 @@ document.addEventListener('DOMContentLoaded', function() {
         debugContainer.textContent = message;
     };
 
+    const appendDebugMessage = (message) => {
+        if (!debugContainer || !message) {
+            return;
+        }
+        const prefix = debugContainer.textContent ? '\n' : '';
+        debugContainer.style.display = 'block';
+        debugContainer.textContent += `${prefix}${message}`;
+    };
+
     const formatTargetInfo = (target) => {
         const trispotLabel = target.trispot === 1 ? 'Trispot' : 'Blason';
         const positionLabel = target.trispot === 1 && target.colonne ? `Colonne ${target.colonne}` : `Position ${target.position}`;
@@ -1009,7 +1018,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 trispot: currentTarget.trispot
             };
 
-            fetch(`/api/concours/${currentTarget.concoursId}/plan-cible/assign`, {
+            const assignUrl = `/api/concours/${currentTarget.concoursId}/plan-cible/assign`;
+            appendDebugMessage(`POST ${assignUrl} payload: ${JSON.stringify(payload)}`);
+            fetch(assignUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1018,8 +1029,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 credentials: 'include',
                 body: JSON.stringify(payload)
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(response => {
+                const contentType = response.headers.get('content-type') || '';
+                return response.text().then(text => ({
+                    ok: response.ok,
+                    status: response.status,
+                    contentType,
+                    text
+                }));
+            })
+            .then(({ ok, status, contentType, text }) => {
+                let data = null;
+                if (contentType.includes('application/json')) {
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        data = null;
+                    }
+                }
+                appendDebugMessage(`POST ${assignUrl} -> HTTP ${status} | ${text.substring(0, 200)}`);
+                if (!ok) {
+                    throw new Error(`HTTP ${status}: ${text.substring(0, 200)}`);
+                }
+                if (!data) {
+                    throw new Error(`Reponse non-JSON: ${text.substring(0, 200)}`);
+                }
                 if (data.success) {
                     window.location.reload();
                     return;
