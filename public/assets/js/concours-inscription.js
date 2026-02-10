@@ -60,8 +60,11 @@ const loadXmlArchersCache = () => {
                 SEXE: getText('SEXE'),
                 birth_date: getText('DATENAISSANCE'),
                 DATENAISSANCE: getText('DATENAISSANCE'),
+                ABREV: getText('ABREV'),
+                saison: getText('ABREV'),
                 certificat_medical: getText('certificat_medical') || getText('CERTIFICAT'),
                 certificat_medical_raw: getText('CERTIFICAT'),
+                CERTIFICAT: getText('CERTIFICAT'),
                 type_licence: getText('type_licence'),
                 type_licence_raw: getText('type_licence'),
                 creation_renouvellement: getText('Creation_renouvellement')
@@ -101,6 +104,27 @@ const ensureXmlDataForArcher = (archer) => {
         return Promise.resolve(false);
     }
 
+    const mapCertificatValue = (value) => {
+        const raw = String(value || '').trim();
+        if (!raw) {
+            return '';
+        }
+        const upper = raw.toUpperCase();
+        if (upper === 'COMPETITION' || upper === 'COMPÉTITION' || upper === 'C') {
+            return 'Compétition';
+        }
+        if (upper === 'PRATIQUE' || upper === 'P') {
+            return 'Pratique';
+        }
+        if (upper === '1') {
+            return 'Compétition';
+        }
+        if (upper === '2') {
+            return 'Pratique';
+        }
+        return raw;
+    };
+
     return loadXmlArchersCache().then(archers => {
         if (!Array.isArray(archers) || archers.length === 0) {
             return false;
@@ -113,6 +137,8 @@ const ensureXmlDataForArcher = (archer) => {
             return false;
         }
 
+        archer.ABREV = archer.ABREV || match.ABREV || '';
+        archer.saison = archer.saison || match.saison || match.ABREV || '';
         archer.categorie = archer.categorie || match.categorie || match.CATEGORIE || '';
         archer.CATEGORIE = archer.CATEGORIE || match.CATEGORIE || match.categorie || '';
         archer.typarc = archer.typarc || match.typarc || match.TYPARC || '';
@@ -121,7 +147,9 @@ const ensureXmlDataForArcher = (archer) => {
         archer.SEXE = archer.SEXE || match.SEXE || match.sexe || '';
         archer.birth_date = archer.birth_date || match.birth_date || match.DATENAISSANCE || '';
         archer.DATENAISSANCE = archer.DATENAISSANCE || match.DATENAISSANCE || match.birth_date || '';
-        archer.certificat_medical = archer.certificat_medical || match.certificat_medical || '';
+        const certificatRaw = archer.certificat_medical || match.certificat_medical || match.CERTIFICAT || '';
+        archer.certificat_medical = certificatRaw;
+        archer.type_certificat_medical = archer.type_certificat_medical || mapCertificatValue(certificatRaw);
         archer.type_licence = archer.type_licence || match.type_licence || '';
         archer.creation_renouvellement = archer.creation_renouvellement || match.creation_renouvellement || '';
         return true;
