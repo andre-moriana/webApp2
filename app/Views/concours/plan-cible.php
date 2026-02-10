@@ -838,9 +838,21 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         setListMessage('Chargement des archers disponibles...');
+        let positionQuery = target.position || '';
+        if (target.trispot === 1) {
+            if (target.colonne) {
+                positionQuery = target.colonne;
+            } else if (typeof target.position === 'string') {
+                const match = target.position.match(/^([A-D])/i);
+                if (match) {
+                    positionQuery = match[1].toUpperCase();
+                }
+            }
+        }
         const params = new URLSearchParams({
             blason: target.blason,
-            trispot: target.trispot
+            trispot: target.trispot,
+            position_archer: positionQuery
         });
         fetch(`/api/concours/${target.concoursId}/plan-cible/${target.depart}/archers-dispo?${params.toString()}`, {
             method: 'GET',
