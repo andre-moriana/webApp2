@@ -28,21 +28,21 @@ $nombreTireursParCibles = $concours->nombre_tireurs_par_cibles ?? 0;
 $concoursId = $concours->id ?? $concours->_id ?? null;
 ?>
 
-<div class="form-section">
+<!-- <div class="form-section">
     <div class="form-group">
         <label><strong>Nombre de cibles :</strong></label>
-        <p><?= htmlspecialchars($nombreCibles) ?></p>
+        <p><?= //htmlspecialchars($nombreCibles) ?></p>
     </div>
     <div class="form-group">
         <label><strong>Nombre de départs :</strong></label>
-        <p><?= htmlspecialchars($nombreDepart) ?></p>
+        <p><?= //htmlspecialchars($nombreDepart) ?></p>
     </div>
     <div class="form-group">
         <label><strong>Nombre d'archers par cible :</strong></label>
-        <p><?= htmlspecialchars($nombreTireursParCibles) ?></p>
+        <p><?= //htmlspecialchars($nombreTireursParCibles) ?></p>
     </div>
 </div>
-
+-->
 <?php if (empty($plans)): ?>
     <div class="alert alert-info">
         <p>Aucun plan de cible n'a été créé pour ce concours.</p>
@@ -720,7 +720,6 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                 <div class="mb-3">
                     <div id="blason-modal-info" class="text-muted"></div>
                 </div>
-                <div id="blason-debug" class="text-muted" style="font-size: 0.85em; display: none;"></div>
                 <div id="blason-modal-release" class="mb-3" style="display: none;">
                     <div class="alert alert-warning d-flex justify-content-between align-items-center">
                         <span>Emplacement deja affecte.</span>
@@ -764,7 +763,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalElement = document.getElementById('blasonAssignModal');
     const listContainer = document.getElementById('blason-archers-list');
     const infoContainer = document.getElementById('blason-modal-info');
-    const debugContainer = document.getElementById('blason-debug');
     const releaseContainer = document.getElementById('blason-modal-release');
     const releaseButton = document.getElementById('btn-liberer-emplacement');
     let modalInstance = null;
@@ -824,28 +822,6 @@ document.addEventListener('DOMContentLoaded', function() {
         listContainer.innerHTML = `<div class="alert ${cssClass}">${message}</div>`;
     };
 
-    const setDebugMessage = (message) => {
-        if (!debugContainer) {
-            return;
-        }
-        if (!message) {
-            debugContainer.style.display = 'none';
-            debugContainer.textContent = '';
-            return;
-        }
-        debugContainer.style.display = 'block';
-        debugContainer.textContent = message;
-    };
-
-    const appendDebugMessage = (message) => {
-        if (!debugContainer || !message) {
-            return;
-        }
-        const prefix = debugContainer.textContent ? '\n' : '';
-        debugContainer.style.display = 'block';
-        debugContainer.textContent += `${prefix}${message}`;
-    };
-
     const formatTargetInfo = (target) => {
         const trispotLabel = target.trispot === 1 ? 'Trispot' : 'Blason';
         const positionLabel = target.trispot === 1 && target.colonne ? `Colonne ${target.colonne}` : `Position ${target.position}`;
@@ -879,7 +855,6 @@ document.addEventListener('DOMContentLoaded', function() {
             position_archer: positionQuery
         });
         const requestUrl = `/api/concours/${target.concoursId}/plan-cible/${target.depart}/archers-dispo?${params.toString()}`;
-        setDebugMessage(`GET ${requestUrl}`);
         fetch(requestUrl, {
             method: 'GET',
             headers: {
@@ -906,7 +881,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     data = null;
                 }
             }
-            setDebugMessage(`GET ${requestUrl} -> HTTP ${status} | ${text.substring(0, 200)}`);
             if (!ok) {
                 throw new Error(`HTTP ${status}: ${text.substring(0, 200)}`);
             }
@@ -1019,7 +993,6 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             const assignUrl = `/api/concours/${currentTarget.concoursId}/plan-cible/assign`;
-            appendDebugMessage(`POST ${assignUrl} payload: ${JSON.stringify(payload)}`);
             fetch(assignUrl, {
                 method: 'POST',
                 headers: {
@@ -1047,7 +1020,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         data = null;
                     }
                 }
-                appendDebugMessage(`POST ${assignUrl} -> HTTP ${status} | ${text.substring(0, 200)}`);
                 if (!ok) {
                     throw new Error(`HTTP ${status}: ${text.substring(0, 200)}`);
                 }
