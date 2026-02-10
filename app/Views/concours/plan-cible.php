@@ -720,6 +720,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                 <div class="mb-3">
                     <div id="blason-modal-info" class="text-muted"></div>
                 </div>
+                <div id="blason-debug" class="text-muted" style="font-size: 0.85em; display: none;"></div>
                 <div id="blason-modal-release" class="mb-3" style="display: none;">
                     <div class="alert alert-warning d-flex justify-content-between align-items-center">
                         <span>Emplacement deja affecte.</span>
@@ -763,6 +764,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalElement = document.getElementById('blasonAssignModal');
     const listContainer = document.getElementById('blason-archers-list');
     const infoContainer = document.getElementById('blason-modal-info');
+    const debugContainer = document.getElementById('blason-debug');
     const releaseContainer = document.getElementById('blason-modal-release');
     const releaseButton = document.getElementById('btn-liberer-emplacement');
     let modalInstance = null;
@@ -822,6 +824,19 @@ document.addEventListener('DOMContentLoaded', function() {
         listContainer.innerHTML = `<div class="alert ${cssClass}">${message}</div>`;
     };
 
+    const setDebugMessage = (message) => {
+        if (!debugContainer) {
+            return;
+        }
+        if (!message) {
+            debugContainer.style.display = 'none';
+            debugContainer.textContent = '';
+            return;
+        }
+        debugContainer.style.display = 'block';
+        debugContainer.textContent = message;
+    };
+
     const formatTargetInfo = (target) => {
         const trispotLabel = target.trispot === 1 ? 'Trispot' : 'Blason';
         const positionLabel = target.trispot === 1 && target.colonne ? `Colonne ${target.colonne}` : `Position ${target.position}`;
@@ -854,7 +869,9 @@ document.addEventListener('DOMContentLoaded', function() {
             trispot: target.trispot,
             position_archer: positionQuery
         });
-        fetch(`/api/concours/${target.concoursId}/plan-cible/${target.depart}/archers-dispo?${params.toString()}`, {
+        const requestUrl = `/api/concours/${target.concoursId}/plan-cible/${target.depart}/archers-dispo?${params.toString()}`;
+        setDebugMessage(`GET ${requestUrl}`);
+        fetch(requestUrl, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -864,19 +881,29 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             const contentType = response.headers.get('content-type') || '';
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
-                });
-            }
-            if (!contentType.includes('application/json')) {
-                return response.text().then(text => {
-                    throw new Error(`Reponse non-JSON: ${text.substring(0, 200)}`);
-                });
-            }
-            return response.json();
+            return response.text().then(text => ({
+                ok: response.ok,
+                status: response.status,
+                contentType,
+                text
+            }));
         })
-        .then(data => {
+        .then(({ ok, status, contentType, text }) => {
+            let data = null;
+            if (contentType.includes('application/json')) {
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    data = null;
+                }
+            }
+            setDebugMessage(`GET ${requestUrl} -> HTTP ${status} | ${text.substring(0, 200)}`);
+            if (!ok) {
+                throw new Error(`HTTP ${status}: ${text.substring(0, 200)}`);
+            }
+            if (!data) {
+                throw new Error(`Reponse non-JSON: ${text.substring(0, 200)}`);
+            }
             if (!data.success || !Array.isArray(data.data)) {
                 setListMessage(data.error || 'Impossible de charger les archers.', 'danger');
                 return;
