@@ -5,6 +5,8 @@ let selectedArcher = null;
 let xmlArchersCache = null;
 let xmlArchersCacheLoading = null;
 
+const shouldAutoPrefill = () => true;
+
 const loadXmlArchersCache = () => {
     if (xmlArchersCache) {
         return Promise.resolve(xmlArchersCache);
@@ -3199,113 +3201,137 @@ function selectArcher(archer, cardElement) {
         return;
     }
     
-    // Extraire les données de l'archer
-    // IMPORTANT: Les données viennent du XML, le club est dans "CIE"
-    const nom = archer.nom || archer.name || archer.NOM || 'N/A';
-    const prenom = archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A';
-    const licence = archer.licence_number || archer.licenceNumber || archer.IDLicence || 'N/A';
-    // Le XML retourne le club dans club_name (qui vient de CIE), CIE, ou CLUB
-    const club = archer.club_name || archer.CIE || archer.CLUB || archer.clubName || 'N/A';
-    
-    // Extraire les données pour le formulaire d'inscription
-    const saison = (archer.saison || archer.ABREV || '').trim();
-    const typeLicence = (archer.type_licence || '').trim();
-    const creationRenouvellement = (archer.creation_renouvellement || archer.Creation_renouvellement || '').trim();
-    // Type de certificat médical depuis le champ XML <certificat_medical>
-    const typeCertificatMedical = (archer.type_certificat_medical || archer.certificat_medical || '').trim();
-    
-    console.log('Mise à jour des données dans la modale:', { nom, prenom, licence, club, saison, typeLicence, creationRenouvellement });
-    console.log('Données archer complètes:', archer);
-    console.log('Club depuis archer.club_name:', archer.club_name);
-    console.log('Club depuis archer.CIE:', archer.CIE);
-    console.log('Club depuis archer.CLUB:', archer.CLUB);
-    
-    // Mettre à jour les spans dans la modale
-    const nomSpan = document.getElementById('modal-archer-nom');
-    const prenomSpan = document.getElementById('modal-archer-prenom');
-    const licenceSpan = document.getElementById('modal-archer-licence');
-    const clubSpan = document.getElementById('modal-archer-club');
-    
-    if (nomSpan) {
-        nomSpan.textContent = nom;
-        console.log('Nom mis à jour:', nom);
-    } else {
-        console.error('Span modal-archer-nom introuvable');
-    }
-    
-    if (prenomSpan) {
-        prenomSpan.textContent = prenom;
-        console.log('Prénom mis à jour:', prenom);
-    } else {
-        console.error('Span modal-archer-prenom introuvable');
-    }
-    
-    if (licenceSpan) {
-        licenceSpan.textContent = licence;
-        console.log('Licence mise à jour:', licence);
-    } else {
-        console.error('Span modal-archer-licence introuvable');
-    }
-    
-    if (clubSpan) {
-        clubSpan.textContent = club;
-        console.log('Club mis à jour:', club);
-    } else {
-        console.error('Span modal-archer-club introuvable');
-    }
-    
-    // Pré-remplir les champs du formulaire d'inscription
-    const saisonInput = document.getElementById('saison');
-    if (saisonInput && saison) {
-        saisonInput.value = saison;
-        console.log('Saison pré-remplie:', saison);
-    }
-    
-    const typeLicenceSelect = document.getElementById('type_licence');
-    if (typeLicenceSelect && typeLicence) {
-        // Nettoyer la valeur (enlever les espaces) et prendre la première lettre en majuscule
-        const cleanedTypeLicence = typeLicence.trim().toUpperCase();
-        const firstLetter = cleanedTypeLicence.length > 0 ? cleanedTypeLicence[0] : '';
+    const resolveClubName = (archerData) => {
+        const direct = archerData.club_name || archerData.CIE || archerData.CLUB || archerData.clubName || '';
+        if (direct) {
+            return direct;
+        }
+        const clubKey = archerData.club || archerData.clubId || archerData.club_id || '';
+        if (!clubKey) {
+            return '';
+        }
+        const clubs = typeof window !== 'undefined' && Array.isArray(window.clubsTable) ? window.clubsTable : [];
+        const keyStr = String(clubKey).trim();
+        const match = clubs.find(item => {
+            const id = String(item.id || item._id || '').trim();
+            const shortName = String(item.nameShort || item.name_short || '').trim();
+            return id === keyStr || shortName === keyStr;
+        });
+        if (!match) {
+            return '';
+        }
+        return match.name || match.lb_club || match.nameShort || match.name_short || '';
+    };
+
+    const updateModalFromArcher = (shouldShowModal = true) => {
+        // Extraire les données de l'archer
+        // IMPORTANT: Les données viennent du XML, le club est dans "CIE"
+        const nom = archer.nom || archer.name || archer.NOM || 'N/A';
+        const prenom = archer.prenom || archer.first_name || archer.firstName || archer.PRENOM || 'N/A';
+        const licence = archer.licence_number || archer.licenceNumber || archer.IDLicence || 'N/A';
+        // Le XML retourne le club dans club_name (qui vient de CIE), CIE, ou CLUB
+        const clubResolved = resolveClubName(archer);
+        const club = clubResolved || 'N/A';
         
-        // Chercher une option qui correspond (A, B, C, L)
-        const options = typeLicenceSelect.options;
-        for (let i = 0; i < options.length; i++) {
-            if (options[i].value === firstLetter) {
-                typeLicenceSelect.value = options[i].value;
-                typeLicenceSelect.disabled = false; // Activer temporairement pour définir la valeur
-                typeLicenceSelect.disabled = true; // Re-désactiver
-                console.log('Type licence pré-rempli:', options[i].value, '(depuis:', typeLicence, ')');
-                break;
+        // Extraire les données pour le formulaire d'inscription
+        const saison = (archer.saison || archer.ABREV || '').trim();
+        const typeLicence = (archer.type_licence || '').trim();
+        const creationRenouvellement = (archer.creation_renouvellement || archer.Creation_renouvellement || '').trim();
+        // Type de certificat médical depuis le champ XML <certificat_medical>
+        const typeCertificatMedical = (archer.type_certificat_medical || archer.certificat_medical || '').trim();
+        
+        console.log('Mise à jour des données dans la modale:', { nom, prenom, licence, club, saison, typeLicence, creationRenouvellement });
+        console.log('Données archer complètes:', archer);
+        console.log('Club depuis archer.club_name:', archer.club_name);
+        console.log('Club depuis archer.CIE:', archer.CIE);
+        console.log('Club depuis archer.CLUB:', archer.CLUB);
+        
+        // Mettre à jour les spans dans la modale
+        const nomSpan = document.getElementById('modal-archer-nom');
+        const prenomSpan = document.getElementById('modal-archer-prenom');
+        const licenceSpan = document.getElementById('modal-archer-licence');
+        const clubSpan = document.getElementById('modal-archer-club');
+        
+        if (nomSpan) {
+            nomSpan.textContent = nom;
+            console.log('Nom mis à jour:', nom);
+        } else {
+            console.error('Span modal-archer-nom introuvable');
+        }
+        
+        if (prenomSpan) {
+            prenomSpan.textContent = prenom;
+            console.log('Prénom mis à jour:', prenom);
+        } else {
+            console.error('Span modal-archer-prenom introuvable');
+        }
+        
+        if (licenceSpan) {
+            licenceSpan.textContent = licence;
+            console.log('Licence mise à jour:', licence);
+        } else {
+            console.error('Span modal-archer-licence introuvable');
+        }
+        
+        if (clubSpan) {
+            clubSpan.textContent = club;
+            console.log('Club mis à jour:', club);
+        } else {
+            console.error('Span modal-archer-club introuvable');
+        }
+        
+        // Pré-remplir les champs du formulaire d'inscription
+        const saisonInput = document.getElementById('saison');
+        if (saisonInput && saison) {
+            saisonInput.value = saison;
+            console.log('Saison pré-remplie:', saison);
+        }
+        
+        const typeLicenceSelect = document.getElementById('type_licence');
+        if (typeLicenceSelect && typeLicence) {
+            // Nettoyer la valeur (enlever les espaces) et prendre la première lettre en majuscule
+            const cleanedTypeLicence = typeLicence.trim().toUpperCase();
+            const firstLetter = cleanedTypeLicence.length > 0 ? cleanedTypeLicence[0] : '';
+            
+            // Chercher une option qui correspond (A, B, C, L)
+            const options = typeLicenceSelect.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === firstLetter) {
+                    typeLicenceSelect.value = options[i].value;
+                    typeLicenceSelect.disabled = false; // Activer temporairement pour définir la valeur
+                    typeLicenceSelect.disabled = true; // Re-désactiver
+                    console.log('Type licence pré-rempli:', options[i].value, '(depuis:', typeLicence, ')');
+                    break;
+                }
             }
         }
-    }
-    
-    // Pré-remplir le type de certificat médical
-    const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');
-    if (typeCertificatMedicalSelect && typeCertificatMedical) {
-        // Normaliser la valeur (Compétition, Pratique, Loisir, etc.)
-        const normalizedValue = typeCertificatMedical.trim();
-        const options = typeCertificatMedicalSelect.options;
-        for (let i = 0; i < options.length; i++) {
-            if (options[i].value.toLowerCase() === normalizedValue.toLowerCase() || 
-                options[i].text.toLowerCase() === normalizedValue.toLowerCase()) {
-                typeCertificatMedicalSelect.value = options[i].value;
-                typeCertificatMedicalSelect.disabled = false; // Activer temporairement pour définir la valeur
-                typeCertificatMedicalSelect.disabled = true; // Re-désactiver
-                console.log('Type certificat médical pré-rempli:', options[i].value, '(depuis XML:', typeCertificatMedical, ')');
-                break;
+        
+        // Pré-remplir le type de certificat médical
+        const typeCertificatMedicalSelect = document.getElementById('type_certificat_medical');
+        if (typeCertificatMedicalSelect && typeCertificatMedical) {
+            // Normaliser la valeur (Compétition, Pratique, Loisir, etc.)
+            const normalizedValue = typeCertificatMedical.trim();
+            const options = typeCertificatMedicalSelect.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value.toLowerCase() === normalizedValue.toLowerCase() || 
+                    options[i].text.toLowerCase() === normalizedValue.toLowerCase()) {
+                    typeCertificatMedicalSelect.value = options[i].value;
+                    typeCertificatMedicalSelect.disabled = false; // Activer temporairement pour définir la valeur
+                    typeCertificatMedicalSelect.disabled = true; // Re-désactiver
+                    console.log('Type certificat médical pré-rempli:', options[i].value, '(depuis XML:', typeCertificatMedical, ')');
+                    break;
+                }
             }
         }
-    }
-    
-    const creationRenouvellementInput = document.getElementById('creation_renouvellement');
-    if (creationRenouvellementInput && creationRenouvellement) {
-        // Afficher la valeur depuis le XML (R pour Renouvellement, C pour Création, etc.)
-        creationRenouvellementInput.value = creationRenouvellement;
-        console.log('Création/Renouvellement pré-rempli:', creationRenouvellement);
-    }
-    
-    // Fonction pour convertir le format XML vers le format base de données
+        
+        const creationRenouvellementInput = document.getElementById('creation_renouvellement');
+        if (creationRenouvellementInput && creationRenouvellement) {
+            // Afficher la valeur depuis le XML (R pour Renouvellement, C pour Création, etc.)
+            creationRenouvellementInput.value = creationRenouvellement;
+            console.log('Création/Renouvellement pré-rempli:', creationRenouvellement);
+        }
+
+        // Fonction pour convertir le format XML vers le format base de données
     // Exemple: "COS3H" -> "S3HCO" (CO + S3 + H -> S3 + H + CO)
     // Si H ou F n'est pas dans CATEGORIE, utilise SEXE (1=H, 2=F)
     // "D" (Dames) est converti en "F" (Femmes)
@@ -3515,37 +3541,52 @@ function selectArcher(archer, cardElement) {
         });
     };
 
-    // Pré-remplir immédiatement si le select existe déjà (formulaire statique)
-    prefillCategorieAndArmeWithXml();
+    if (shouldAutoPrefill()) {
+        prefillCategorieAndArmeWithXml();
+    }
     
-    // Afficher la modale avec Bootstrap
-    if (typeof bootstrap !== 'undefined') {
-        const existingModal = bootstrap.Modal.getInstance(modalElement);
-        if (existingModal) {
-            existingModal.dispose();
+    if (shouldShowModal) {
+        // Afficher la modale avec Bootstrap
+        if (typeof bootstrap !== 'undefined') {
+            const existingModal = bootstrap.Modal.getInstance(modalElement);
+            if (existingModal) {
+                existingModal.dispose();
+            }
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+            console.log('Modale affichée');
+            
+            // Attendre que la modale soit complètement affichée avant de pré-remplir les champs
+            // (nécessaire car la modale peut être générée dynamiquement)
+            setTimeout(() => {
+                if (shouldAutoPrefill()) {
+                    prefillCategorieAndArmeWithXml();
+                }
+            }, 200);
+            
+            // Écouter l'événement 'shown.bs.modal' pour s'assurer que la modale est complètement affichée
+            modalElement.addEventListener('shown.bs.modal', function() {
+                if (shouldAutoPrefill()) {
+                    prefillCategorieAndArmeWithXml();
+                }
+            }, { once: true });
+        } else {
+            console.error('Bootstrap n\'est pas chargé');
+            alert('Erreur: Bootstrap n\'est pas chargé');
         }
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
-        console.log('Modale affichée');
-        
-        // Attendre que la modale soit complètement affichée avant de pré-remplir les champs
-        // (nécessaire car la modale peut être générée dynamiquement)
-        setTimeout(() => {
-            prefillCategorieAndArmeWithXml();
-        }, 200);
-        
-        // Écouter l'événement 'shown.bs.modal' pour s'assurer que la modale est complètement affichée
-        modalElement.addEventListener('shown.bs.modal', function() {
-            prefillCategorieAndArmeWithXml();
-        }, { once: true });
-    } else {
-        console.error('Bootstrap n\'est pas chargé');
-        alert('Erreur: Bootstrap n\'est pas chargé');
     }
 
     if (typeof window !== 'undefined' && typeof window.applyCibleFilters === 'function') {
         window.applyCibleFilters();
     }
+    };
+
+    updateModalFromArcher(true);
+    ensureXmlDataForArcher(archer).then(didUpdate => {
+        if (didUpdate) {
+            updateModalFromArcher(false);
+        }
+    });
 }
 
 function createUserFromXmlArcher(archer, cardElement) {
