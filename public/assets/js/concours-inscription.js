@@ -2,6 +2,129 @@
 
 // Variable globale pour stocker l'archer sélectionné
 let selectedArcher = null;
+let xmlArchersCache = null;
+let xmlArchersCacheLoading = null;
+
+const loadXmlArchersCache = () => {
+    if (xmlArchersCache) {
+        return Promise.resolve(xmlArchersCache);
+    }
+    if (xmlArchersCacheLoading) {
+        return xmlArchersCacheLoading;
+    }
+
+    xmlArchersCacheLoading = fetch('/public/data/users-licences.xml', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/xml'
+        },
+        credentials: 'include'
+    })
+    .then(response => response.text())
+    .then(text => {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, 'application/xml');
+        if (xmlDoc.getElementsByTagName('parsererror').length) {
+            throw new Error('XML invalide');
+        }
+        const nodes = Array.from(xmlDoc.getElementsByTagName('TABLE_CONTENU'));
+        const archers = nodes.map(node => {
+            const getText = (tag) => {
+                const el = node.getElementsByTagName(tag)[0];
+                return el ? (el.textContent || '').trim() : '';
+            };
+            const licence = getText('IDLicence');
+            const nom = getText('NOM');
+            const prenom = getText('PRENOM');
+            const clubName = getText('CIE');
+            const clubShort = getText('AGREMENTNR') || getText('club_unique');
+            return {
+                nom: nom,
+                prenom: prenom,
+                name: nom,
+                firstName: prenom,
+                licence_number: licence,
+                IDLicence: licence,
+                xml_source: true,
+                club_name: clubName,
+                CIE: clubName,
+                clubNameShort: clubShort,
+                AGREMENTNR: clubShort,
+                categorie: getText('CATEGORIE'),
+                CATEGORIE: getText('CATEGORIE'),
+                typarc: getText('TYPARC'),
+                TYPARC: getText('TYPARC'),
+                sexe: getText('SEXE'),
+                SEXE: getText('SEXE'),
+                birth_date: getText('DATENAISSANCE'),
+                DATENAISSANCE: getText('DATENAISSANCE'),
+                certificat_medical: getText('certificat_medical') || getText('CERTIFICAT'),
+                certificat_medical_raw: getText('CERTIFICAT'),
+                type_licence: getText('type_licence'),
+                type_licence_raw: getText('type_licence'),
+                creation_renouvellement: getText('Creation_renouvellement')
+            };
+        });
+        xmlArchersCache = archers;
+        return archers;
+    })
+    .catch(() => {
+        xmlArchersCache = [];
+        return xmlArchersCache;
+    })
+    .finally(() => {
+        xmlArchersCacheLoading = null;
+    });
+
+    return xmlArchersCacheLoading;
+};
+
+const ensureXmlDataForArcher = (archer) => {
+    if (!archer) {
+        return Promise.resolve(false);
+    }
+
+    const hasXmlFields = !!(
+        archer.categorie || archer.CATEGORIE ||
+        archer.typarc || archer.TYPARC ||
+        archer.sexe || archer.SEXE
+    );
+
+    if (hasXmlFields) {
+        return Promise.resolve(false);
+    }
+
+    const licence = (archer.licence_number || archer.licenceNumber || archer.IDLicence || '').trim();
+    if (!licence) {
+        return Promise.resolve(false);
+    }
+
+    return loadXmlArchersCache().then(archers => {
+        if (!Array.isArray(archers) || archers.length === 0) {
+            return false;
+        }
+        const match = archers.find(item => {
+            const xmlLicence = (item.licence_number || item.IDLicence || '').trim();
+            return xmlLicence && xmlLicence === licence;
+        });
+        if (!match) {
+            return false;
+        }
+
+        archer.categorie = archer.categorie || match.categorie || match.CATEGORIE || '';
+        archer.CATEGORIE = archer.CATEGORIE || match.CATEGORIE || match.categorie || '';
+        archer.typarc = archer.typarc || match.typarc || match.TYPARC || '';
+        archer.TYPARC = archer.TYPARC || match.TYPARC || match.typarc || '';
+        archer.sexe = archer.sexe || match.sexe || match.SEXE || '';
+        archer.SEXE = archer.SEXE || match.SEXE || match.sexe || '';
+        archer.birth_date = archer.birth_date || match.birth_date || match.DATENAISSANCE || '';
+        archer.DATENAISSANCE = archer.DATENAISSANCE || match.DATENAISSANCE || match.birth_date || '';
+        archer.certificat_medical = archer.certificat_medical || match.certificat_medical || '';
+        archer.type_licence = archer.type_licence || match.type_licence || '';
+        archer.creation_renouvellement = archer.creation_renouvellement || match.creation_renouvellement || '';
+        return true;
+    });
+};
 // Déterminer si le plan de cible est requis (évalué au moment d'usage)
 const getNeedsPlanCible = () => {
     if (typeof window !== 'undefined' && typeof window.needsPlanCible !== 'undefined') {
@@ -3386,8 +3509,14 @@ function selectArcher(archer, cardElement) {
         }
     };
     
+    const prefillCategorieAndArmeWithXml = () => {
+        ensureXmlDataForArcher(archer).finally(() => {
+            prefillCategorieAndArme();
+        });
+    };
+
     // Pré-remplir immédiatement si le select existe déjà (formulaire statique)
-    prefillCategorieAndArme();
+    prefillCategorieAndArmeWithXml();
     
     // Afficher la modale avec Bootstrap
     if (typeof bootstrap !== 'undefined') {
@@ -3402,12 +3531,12 @@ function selectArcher(archer, cardElement) {
         // Attendre que la modale soit complètement affichée avant de pré-remplir les champs
         // (nécessaire car la modale peut être générée dynamiquement)
         setTimeout(() => {
-            prefillCategorieAndArme();
+            prefillCategorieAndArmeWithXml();
         }, 200);
         
         // Écouter l'événement 'shown.bs.modal' pour s'assurer que la modale est complètement affichée
         modalElement.addEventListener('shown.bs.modal', function() {
-            prefillCategorieAndArme();
+            prefillCategorieAndArmeWithXml();
         }, { once: true });
     } else {
         console.error('Bootstrap n\'est pas chargé');
