@@ -948,7 +948,17 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!userId) {
                 return;
             }
-            const positionToAssign = currentTarget.trispot === 1 && currentTarget.colonne ? currentTarget.colonne : currentTarget.position;
+            let positionToAssign = currentTarget.position;
+            if (currentTarget.trispot === 1) {
+                if (currentTarget.colonne) {
+                    positionToAssign = currentTarget.colonne;
+                } else if (typeof currentTarget.position === 'string') {
+                    const match = currentTarget.position.match(/^([A-D])/i);
+                    if (match) {
+                        positionToAssign = match[1].toUpperCase();
+                    }
+                }
+            }
             const payload = {
                 numero_depart: parseInt(currentTarget.depart, 10),
                 numero_cible: parseInt(currentTarget.cible, 10),
