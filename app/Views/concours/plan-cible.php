@@ -28,21 +28,6 @@ $nombreTireursParCibles = $concours->nombre_tireurs_par_cibles ?? 0;
 $concoursId = $concours->id ?? $concours->_id ?? null;
 ?>
 
-<!-- <div class="form-section">
-    <div class="form-group">
-        <label><strong>Nombre de cibles :</strong></label>
-        <p><?= //htmlspecialchars($nombreCibles) ?></p>
-    </div>
-    <div class="form-group">
-        <label><strong>Nombre de départs :</strong></label>
-        <p><?= //htmlspecialchars($nombreDepart) ?></p>
-    </div>
-    <div class="form-group">
-        <label><strong>Nombre d'archers par cible :</strong></label>
-        <p><?= //htmlspecialchars($nombreTireursParCibles) ?></p>
-    </div>
-</div>
--->
 <?php if (empty($plans)): ?>
     <div class="alert alert-info">
         <p>Aucun plan de cible n'a été créé pour ce concours.</p>
