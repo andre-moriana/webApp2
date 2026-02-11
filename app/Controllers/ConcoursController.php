@@ -1429,14 +1429,21 @@ class ConcoursController {
             exit;
         }
 
+        error_log("=== storeInscription appelé pour concoursId: " . $concoursId);
+        error_log("Données POST reçues: " . json_encode($_POST, JSON_UNESCAPED_UNICODE));
+
         $user_id = $_POST['user_id'] ?? null;
 
+        error_log("user_id récupéré: " . var_export($user_id, true));
+
         if (!$user_id) {
+            error_log("ERREUR: Pas de user_id dans le POST!");
             $_SESSION['error'] = 'Utilisateur requis';
             header("Location: /concours/{$concoursId}/inscription");
             exit;
         }
         if (!isset($_POST['numero_depart']) || $_POST['numero_depart'] === '') {
+            error_log("ERREUR: Pas de numero_depart!");
             $_SESSION['error'] = 'Numéro de départ requis';
             header("Location: /concours/{$concoursId}/inscription");
             exit;

@@ -34,7 +34,7 @@ table tbody tr.piquet-blanc {
 }
 </style>
 
-<div class="container-fluid concours-inscription-container">
+<div class="container-fluid concours-inscription-container" data-concours-id="<?= htmlspecialchars($concoursId) ?>">
     <h1>Inscription au concours</h1>
 
     <?php if (isset($_SESSION['error'])): ?>
@@ -90,82 +90,59 @@ table tbody tr.piquet-blanc {
         </div>
     </div>
 
-    <!-- Recherche locale des archers (meme systeme que /users) -->
+    <!-- Recherche d'archer par numéro de licence -->
     <div class="card mb-4">
         <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-users me-2"></i>Liste des archers
-                </h5>
-                <div class="search-box">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-search me-2"></i>Rechercher un archer
+            </h5>
+        </div>
+        <div class="card-body">
+            <form id="archer-search-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="licence-search-input" class="form-label">
+                        Numéro de licence <span class="text-danger">*</span>
+                    </label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white">
-                            <i class="fas fa-search text-muted"></i>
-                        </span>
-                        <input type="text" class="form-control" id="userSearchInput" placeholder="Rechercher un archer..." autocomplete="off">
-                        <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn" style="display: none;">
-                            <i class="fas fa-times"></i>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="licence-search-input" 
+                            placeholder="Entrer le numéro de licence (ex: 75234821)" 
+                            autocomplete="off"
+                            required>
+                        <button class="btn btn-primary" type="button" id="btn-search-archer">
+                            <i class="fas fa-search me-2"></i>Chercher
                         </button>
                     </div>
+                    <small class="form-text text-muted mt-2">
+                        La recherche cherche d'abord en base de données, puis dans le fichier XML des licences.
+                        Si l'archer n'existe pas encore, il sera créé automatiquement.
+                    </small>
+                </div>
+            </form>
+            
+            <!-- Affichage de l'archer trouvé/créé -->
+            <div id="archer-search-result" style="display: none; margin-top: 20px;">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">Archer sélectionné</h6>
+                    <div id="archer-result-content"></div>
+                    <button type="button" class="btn btn-sm btn-success mt-2" id="btn-confirm-archer-selection">
+                        <i class="fas fa-check me-2"></i>Confirmer la sélection
+                    </button>
                 </div>
             </div>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0" id="usersTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Nom</th>
-                            <th>Prenom</th>
-                            <th>Licence</th>
-                            <th>Club</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!empty($archersError)): ?>
-                            <tr class="no-results-row">
-                                <td colspan="5" class="text-center py-4">
-                                    <i class="fas fa-exclamation-triangle text-muted mb-2"></i>
-                                    <p class="text-muted"><?= htmlspecialchars($archersError) ?></p>
-                                </td>
-                            </tr>
-                        <?php elseif (empty($archers)): ?>
-                            <tr class="no-results-row">
-                                <td colspan="5" class="text-center py-4">
-                                    <i class="fas fa-users fa-2x text-muted mb-2"></i>
-                                    <p class="text-muted">Aucun archer trouvé</p>
-                                </td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($archers as $index => $archer): ?>
-                                <?php
-                                    $archerNom = $archer['name'] ?? $archer['nom'] ?? '';
-                                    $archerPrenom = $archer['firstName'] ?? $archer['first_name'] ?? $archer['prenom'] ?? '';
-                                    $archerLicence = $archer['licenceNumber'] ?? $archer['licence_number'] ?? '';
-                                    $archerClub = $archer['clubName'] ?? $archer['club_name'] ?? '';
-                                    $archerClubShort = $archer['clubNameShort'] ?? $archer['club_name_short'] ?? '';
-                                    if ($archerClub === '' && $archerClubShort !== '') {
-                                        $archerClub = $archerClubShort;
-                                    }
-                                    $searchableText = strtolower(trim($archerPrenom . ' ' . $archerNom . ' ' . $archerLicence . ' ' . $archerClub . ' ' . $archerClubShort));
-                                ?>
-                                <tr class="user-row" data-archer-index="<?= (int)$index ?>" data-searchable="<?= htmlspecialchars($searchableText) ?>">
-                                    <td><?= htmlspecialchars($archerNom) ?></td>
-                                    <td><?= htmlspecialchars($archerPrenom) ?></td>
-                                    <td><?= htmlspecialchars($archerLicence) ?></td>
-                                    <td><?= htmlspecialchars($archerClub) ?></td>
-                                    <td>
-                                        <button type="button" class="btn btn-sm btn-primary js-select-archer" data-archer-index="<?= (int)$index ?>">
-                                            Selectionner
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+            
+            <!-- Message de chargement -->
+            <div id="archer-search-loading" style="display: none; margin-top: 20px;">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <span class="ms-2">Recherche en cours...</span>
             </div>
+            
+            <!-- Message d'erreur -->
+            <div id="archer-search-error" style="display: none; margin-top: 20px;"></div>
         </div>
     </div>
 
@@ -704,5 +681,4 @@ const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($
 window.archersTable = <?= json_encode($archers ?? [], JSON_UNESCAPED_UNICODE) ?>;
 window.clubsTable = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 </script>
-<script src="/public/assets/js/users-table.js"></script>
-<script src="/public/assets/js/concours-inscription.js"></script>
+<script src="/public/assets/js/concours-inscription-simple.js"></script>
