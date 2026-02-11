@@ -1027,6 +1027,11 @@ class ConcoursController {
     {
         // Transformer les données comme dans store() pour assurer la cohérence
         $data = $_POST;
+
+        // Mapper le champ id_niveau_championnat vers idniveau_championnat pour l'API
+        if (isset($data['id_niveau_championnat']) && !isset($data['idniveau_championnat'])) {
+            $data['idniveau_championnat'] = $data['id_niveau_championnat'];
+        }
         
         // Transformer lieu_competition en lieu (comme dans store())
         if (isset($data['lieu_competition'])) {
