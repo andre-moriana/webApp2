@@ -2101,6 +2101,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fonction pour charger les cibles disponibles pour un départ
     function loadCiblesForDepart(numeroDepart) {
         console.log('loadCiblesForDepart appelée avec numéro de départ:', numeroDepart);
+        // Fonction désactivée - les cibles sont gérées dans le plan de cible
+        return;
+        /*
         currentDepartForCibles = numeroDepart;
         
         // Annuler la requête précédente si elle existe
@@ -2258,6 +2261,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 cibleSelect.appendChild(option);
             }
         });
+        */
     }
     
     // Fonction pour charger les positions disponibles pour une cible
@@ -2315,6 +2319,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadCiblesForDepartEdit(numeroDepart, existingNumeroCible = null, existingPosition = null, callback = null) {
         console.log('loadCiblesForDepartEdit appelée avec numéro de départ:', numeroDepart, 'cible existante:', existingNumeroCible, 'position existante:', existingPosition);
+        // Fonction désactivée - les cibles sont gérées dans le plan de cible
+        return;
+        /*
         currentDepartForCiblesEdit = numeroDepart;
 
         // Annuler la requête précédente si elle existe
@@ -2485,6 +2492,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 cibleSelect.appendChild(option);
             }
         });
+        */
     }
 
     // Exposer pour un appel depuis la modale d'édition
