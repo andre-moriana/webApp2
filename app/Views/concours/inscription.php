@@ -317,6 +317,7 @@ table tbody tr.piquet-blanc {
                                 <option value="B">B</option>
                                 <option value="C">C</option>
                                 <option value="L">L</option>
+                                <option value="J">J</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
