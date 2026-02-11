@@ -79,6 +79,16 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Form action URL:', new URL(form.action, window.location.origin).href);
             
             // Renseigner les champs derives avant soumission
+            const clubSelectForSubmit = document.getElementById('club_organisateur');
+            const clubCodeInput = document.getElementById('club_code');
+            if (clubSelectForSubmit && clubCodeInput && clubSelectForSubmit.value) {
+                const clubOption = clubSelectForSubmit.options[clubSelectForSubmit.selectedIndex];
+                const clubCode = clubOption && clubOption.dataset ? clubOption.dataset.code : '';
+                if (clubCode) {
+                    clubCodeInput.value = clubCode;
+                }
+            }
+
             const typeCompetitionSelect = document.getElementById('type_competition');
             let typeCompetitionText = '';
             if (typeCompetitionSelect && typeCompetitionSelect.selectedIndex >= 0) {
@@ -98,8 +108,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     idNiveauChampionnat = dataId;
                 } else if (Array.isArray(window.niveauChampionnatData)) {
                     const match = window.niveauChampionnatData.find(function(niveau) {
-                        const value = niveau.abv_niveauchampionnat || niveau.idniveau_championnat || niveau.id || '';
-                        return String(value) === String(niveauSelect.value);
+                        const value = niveau.abv_niveauchampionnat || '';
+                        return value !== '' && String(value) === String(niveauSelect.value);
                     });
                     if (match) {
                         idNiveauChampionnat = match.idniveau_championnat || match.id || '';
@@ -416,8 +426,8 @@ function loadNiveauChampionnat() {
     niveaux.forEach(function(niveau, index) {
         try {
             const option = document.createElement('option');
-            // Utiliser abv_niveauchampionnat comme valeur (abréviation) ou idniveau_championnat
-            const value = niveau.abv_niveauchampionnat || niveau.idniveau_championnat || niveau.id || '';
+            // Utiliser l'abreviation pour niveau_championnat (pas l'ID numerique)
+            const value = niveau.abv_niveauchampionnat || '';
             const idNiveau = niveau.idniveau_championnat || niveau.id || '';
             const text = niveau.lb_niveauchampionnat || niveau.name || niveau.nom || 'Niveau';
             
@@ -707,14 +717,24 @@ function prefillFormForEdit() {
             console.log('Recherche du niveau_championnat:', concours.niveau_championnat);
             console.log('Options disponibles:', Array.from(niveauSelect.options).map(opt => ({value: opt.value, text: opt.text})));
             // Vérifier que l'option existe (comparaison flexible)
+            const concoursValue = String(concours.niveau_championnat);
+            let matchedValue = '';
             const optionExists = Array.from(niveauSelect.options).some(opt => {
                 const optValue = String(opt.value);
-                const concoursValue = String(concours.niveau_championnat);
-                return optValue === concoursValue || opt.value == concours.niveau_championnat;
+                if (optValue === concoursValue || opt.value == concours.niveau_championnat) {
+                    matchedValue = optValue;
+                    return true;
+                }
+                const optId = opt.dataset ? opt.dataset.idniveauChampionnat : '';
+                if (optId && (String(optId) === concoursValue)) {
+                    matchedValue = optValue;
+                    return true;
+                }
+                return false;
             });
-            if (optionExists) {
-                niveauSelect.value = String(concours.niveau_championnat);
-                console.log('✓ Niveau championnat défini:', concours.niveau_championnat);
+            if (optionExists && matchedValue !== '') {
+                niveauSelect.value = matchedValue;
+                console.log('✓ Niveau championnat défini:', matchedValue);
             } else {
                 console.warn('✗ Option niveau_championnat non trouvée pour la valeur:', concours.niveau_championnat);
                 console.warn('Valeurs disponibles:', Array.from(niveauSelect.options).map(opt => opt.value));
