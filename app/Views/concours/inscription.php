@@ -34,7 +34,7 @@ table tbody tr.piquet-blanc {
 }
 </style>
 
-<div class="container-fluid concours-inscription-container" data-concours-id="<?= htmlspecialchars($concoursId) ?>">
+<div class="container-fluid concours-inscription-container">
     <h1>Inscription au concours</h1>
 
     <?php if (isset($_SESSION['error'])): ?>
@@ -90,59 +90,24 @@ table tbody tr.piquet-blanc {
         </div>
     </div>
 
-    <!-- Recherche d'archer par numéro de licence -->
+    <!-- Recherche d'archer dans le fichier XML -->
     <div class="card mb-4">
         <div class="card-header">
             <h5 class="card-title mb-0">
-                <i class="fas fa-search me-2"></i>Rechercher un archer
+                <i class="fas fa-search me-2"></i>Recherche d'archer
             </h5>
         </div>
         <div class="card-body">
-            <form id="archer-search-form" onsubmit="return false;">
-                <div class="form-group">
-                    <label for="licence-search-input" class="form-label">
-                        Numéro de licence <span class="text-danger">*</span>
-                    </label>
-                    <div class="input-group">
-                        <input 
-                            type="text" 
-                            class="form-control" 
-                            id="licence-search-input" 
-                            placeholder="Entrer le numéro de licence (ex: 75234821)" 
-                            autocomplete="off"
-                            required>
-                        <button class="btn btn-primary" type="button" id="btn-search-archer">
-                            <i class="fas fa-search me-2"></i>Chercher
-                        </button>
-                    </div>
-                    <small class="form-text text-muted mt-2">
-                        La recherche cherche d'abord en base de données, puis dans le fichier XML des licences.
-                        Si l'archer n'existe pas encore, il sera créé automatiquement.
-                    </small>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-8">
+                    <label for="licence-search-input" class="form-label">Numero de licence</label>
+                    <input type="text" class="form-control" id="licence-search-input" placeholder="Entrer le numero de licence" autocomplete="off">
                 </div>
-            </form>
-            
-            <!-- Affichage de l'archer trouvé/créé -->
-            <div id="archer-search-result" style="display: none; margin-top: 20px;">
-                <div class="alert alert-info">
-                    <h6 class="alert-heading">Archer sélectionné</h6>
-                    <div id="archer-result-content"></div>
-                    <button type="button" class="btn btn-sm btn-success mt-2" id="btn-confirm-archer-selection">
-                        <i class="fas fa-check me-2"></i>Confirmer la sélection
-                    </button>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-primary w-100" id="archer-search-btn">Chercher</button>
                 </div>
             </div>
-            
-            <!-- Message de chargement -->
-            <div id="archer-search-loading" style="display: none; margin-top: 20px;">
-                <div class="spinner-border spinner-border-sm" role="status">
-                    <span class="visually-hidden">Chargement...</span>
-                </div>
-                <span class="ms-2">Recherche en cours...</span>
-            </div>
-            
-            <!-- Message d'erreur -->
-            <div id="archer-search-error" style="display: none; margin-top: 20px;"></div>
+            <small class="text-muted d-block mt-2">Recherche uniquement dans le fichier XML.</small>
         </div>
     </div>
 
@@ -678,7 +643,5 @@ const concoursTypeCompetition = <?= json_encode(is_object($concours) ? ($concour
 const concoursNombreDepart = <?= json_encode(is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null)) ?>;
 const disciplineAbv = <?= json_encode($disciplineAbv ?? null) ?>;
 const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)) ?>;
-window.archersTable = <?= json_encode($archers ?? [], JSON_UNESCAPED_UNICODE) ?>;
-window.clubsTable = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="/public/assets/js/concours-inscription-simple.js"></script>
