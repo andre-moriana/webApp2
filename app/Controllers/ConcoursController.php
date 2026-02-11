@@ -1032,6 +1032,11 @@ class ConcoursController {
         if (isset($data['id_niveau_championnat']) && !isset($data['idniveau_championnat'])) {
             $data['idniveau_championnat'] = $data['id_niveau_championnat'];
         }
+
+        // Mapper le code club vers agreenum pour l'API
+        if (isset($data['club_code']) && !isset($data['agreenum'])) {
+            $data['agreenum'] = $data['club_code'];
+        }
         
         // Transformer lieu_competition en lieu (comme dans store())
         if (isset($data['lieu_competition'])) {

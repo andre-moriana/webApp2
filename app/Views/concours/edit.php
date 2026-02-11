@@ -122,11 +122,11 @@ window.niveauChampionnatData = <?= json_encode($niveauChampionnat ?? [], JSON_UN
                     <?php if (isset($niveauChampionnat) && is_array($niveauChampionnat)): ?>
                         <?php foreach ($niveauChampionnat as $niveau): ?>
                             <?php 
-                            $niveauId = $niveau['abv_niveauchampionnat'] ?? $niveau['idniveau_championnat'] ?? $niveau['id'] ?? '';
+                            $niveauId = $niveau['abv_niveauchampionnat'] ?? '';
                             $niveauName = $niveau['lb_niveauchampionnat'] ?? $niveau['name'] ?? '';
                             $selected = (isset($concours->niveau_championnat) && ($concours->niveau_championnat == $niveauId)) ? 'selected' : '';
                             ?>
-                            <option value="<?= htmlspecialchars($niveauId) ?>" <?= $selected ?>>
+                            <option value="<?= htmlspecialchars($niveauId) ?>" <?= $selected ?> data-idniveau-championnat="<?= htmlspecialchars($niveau['idniveau_championnat'] ?? $niveau['id'] ?? '') ?>">
                                 <?= htmlspecialchars($niveauName) ?>
                             </option>
                         <?php endforeach; ?>
