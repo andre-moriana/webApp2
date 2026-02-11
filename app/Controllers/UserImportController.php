@@ -187,6 +187,10 @@ class UserImportController {
         $input = json_decode(file_get_contents('php://input'), true);
         $licence = trim($input['licence_number'] ?? $input['IDLicence'] ?? $input['id_licence'] ?? '');
 
+        error_log("=== importSingleXmlUser ===");
+        error_log("Licence reçue: " . $licence);
+        error_log("Données complètes reçues: " . json_encode($input, JSON_UNESCAPED_UNICODE));
+
         if ($licence === '') {
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Numero de licence requis']);
@@ -203,24 +207,35 @@ class UserImportController {
         $entry = $this->findXmlEntryByLicence($xmlPath, $licence);
         if (!$entry) {
             http_response_code(404);
+            error_log("Licence non trouvée dans le XML: " . $licence);
             echo json_encode(['success' => false, 'error' => 'Licence non trouvee dans le XML']);
             return;
         }
 
+        error_log("Entrée XML trouvée pour licence " . $licence);
+
         $userData = $this->processUserEntry($entry, '');
         if ($userData === null) {
             http_response_code(400);
+            error_log("Erreur lors du traitement de l'entrée XML");
             echo json_encode(['success' => false, 'error' => 'Entree XML invalide']);
             return;
         }
 
+        error_log("userData après traitement: " . json_encode($userData, JSON_UNESCAPED_UNICODE));
+
         $results = $this->importUserBatch([$userData]);
+        error_log("Résultats importUserBatch: " . json_encode($results, JSON_UNESCAPED_UNICODE));
+        
         $result = $results[0] ?? null;
         if (!$result || empty($result['success'])) {
             http_response_code(500);
+            error_log("ERREUR: importUserBatch a échoué. Result: " . json_encode($result, JSON_UNESCAPED_UNICODE));
             echo json_encode(['success' => false, 'error' => $result['message'] ?? 'Erreur lors de l\'import']);
             return;
         }
+
+        error_log("user_id retourné: " . ($result['user_id'] ?? 'NULL'));
 
         echo json_encode([
             'success' => true,
@@ -654,19 +669,31 @@ class UserImportController {
                     $createData['clubId'] = $userData['club'];
                 }
                 
+                error_log("=== importUserBatch pour username: " . $userData['username']);
+                error_log("createData: " . json_encode($createData, JSON_UNESCAPED_UNICODE));
+                
                 $response = $this->apiService->createUser($createData);
+                
+                error_log("Réponse createUser: " . json_encode($response, JSON_UNESCAPED_UNICODE));
                 
                 if ($response['success']) {
                     // Récupérer l'ID de l'utilisateur créé
                     $userId = null;
                     if (isset($response['data']['user']['_id'])) {
                         $userId = $response['data']['user']['_id'];
+                        error_log("user_id trouvé dans data.user._id: " . $userId);
                     } elseif (isset($response['data']['user']['id'])) {
                         $userId = $response['data']['user']['id'];
+                        error_log("user_id trouvé dans data.user.id: " . $userId);
                     } elseif (isset($response['data']['_id'])) {
                         $userId = $response['data']['_id'];
+                        error_log("user_id trouvé dans data._id: " . $userId);
                     } elseif (isset($response['data']['id'])) {
                         $userId = $response['data']['id'];
+                        error_log("user_id trouvé dans data.id: " . $userId);
+                    } else {
+                        error_log("ERREUR: Aucun user_id trouvé dans la réponse. Clés disponibles dans data: " . implode(', ', array_keys($response['data'] ?? [])));
+                        error_log("Contenu complet de data: " . json_encode($response['data'] ?? [], JSON_UNESCAPED_UNICODE));
                     }
                     
                     // Mettre à jour les informations supplémentaires si l'utilisateur a été créé
@@ -708,6 +735,8 @@ class UserImportController {
                                 error_log("Erreur lors de la mise à jour de l'utilisateur {$userId}: " . ($updateResponse['message'] ?? 'Erreur inconnue'));
                             }
                         }
+                    } else {
+                        error_log("ERREUR: Impossible d'extraire user_id de la réponse createUser pour username " . $userData['username']);
                     }
                     
                     $results[] = [
@@ -724,6 +753,7 @@ class UserImportController {
                     ];
                 }
             } catch (Exception $e) {
+                error_log("Exception dans importUserBatch: " . $e->getMessage());
                 $results[] = [
                     'success' => false,
                     'user' => $userData['username'],

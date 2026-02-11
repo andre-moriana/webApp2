@@ -3938,13 +3938,16 @@ function proceedWithInscriptionSubmission() {
             input.name = name;
             input.value = value;
             form.appendChild(input);
-        } else if ((name === 'numero_licence' || name === 'id_club') && value === null) {
-            // Inclure numero_licence et id_club même s'ils sont null (seront traités côté serveur)
+        } else if ((name === 'numero_licence' || name === 'id_club' || name === 'user_id') && value === null) {
+            // Inclure numero_licence, id_club et user_id même s'ils sont null (seront traités côté serveur)
             const input = document.createElement('input');
             input.type = 'hidden';
             input.name = name;
             input.value = '';
             form.appendChild(input);
+            if (name === 'user_id') {
+                console.warn('⚠️ user_id est absent ou null - archer n\'a probablement pas d\'ID utilisateur');
+            }
         }
     }
     
