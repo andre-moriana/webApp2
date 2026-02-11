@@ -441,7 +441,6 @@ class ConcoursController {
         $club_code = $_POST['club_code'] ?? ''; // nameShort du club
         $discipline = $_POST['discipline'] ?? '';
         $type_competition = $_POST['type_competition'] ?? '';
-        $type_competition_text = $_POST['type_competition_text'] ?? '';
         $idNiveau_Championnat = $_POST['idniveau_championnat'] ?? '';
         $niveau_championnat_autre = $_POST['niveau_championnat_autre'] ?? '';
         $nombre_cibles = $_POST['nombre_cibles'] ?? 0;
@@ -490,7 +489,6 @@ class ConcoursController {
                 'club_organisateur' => $club_organisateur,
                 'discipline' => $discipline,
                 'type_competition' => $type_competition,
-                'type_competition_text' => $type_competition_text,
                 'idniveau_championnat' => $idNiveau_Championnat,
                 'niveau_championnat_autre' => $niveau_championnat_autre,
                 'nombre_cibles' => (int)$nombre_cibles,
