@@ -89,16 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            const typeCompetitionSelect = document.getElementById('type_competition');
-            let typeCompetitionText = '';
-            if (typeCompetitionSelect && typeCompetitionSelect.selectedIndex >= 0) {
-                const selectedOption = typeCompetitionSelect.options[typeCompetitionSelect.selectedIndex];
-                if (selectedOption && typeCompetitionSelect.value !== '') {
-                    typeCompetitionText = (selectedOption.textContent || '').trim();
-                }
-            }
-            ensureHiddenField(form, 'type_competition_text', typeCompetitionText);
-
             const niveauSelect = document.getElementById('idniveau_championnat');
             if (niveauSelect && niveauSelect.value) {
                 niveauSelect.value = String(niveauSelect.value);
