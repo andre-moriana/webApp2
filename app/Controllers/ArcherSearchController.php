@@ -1,15 +1,10 @@
 <?php
 
-require_once 'app/Services/ApiService.php';
-require_once 'app/Controllers/UserImportController.php';
-
 class ArcherSearchController {
     private $apiService;
-    private $userImportController;
     
     public function __construct() {
         $this->apiService = new ApiService();
-        $this->userImportController = new UserImportController();
     }
     
     /**
@@ -47,29 +42,32 @@ class ArcherSearchController {
             );
             
             if ($bdResult['success'] && !empty($bdResult['data'])) {
-                // Utilisateur trouvé dans la BD
-                $users = $bdResult['data'];
-                if (is_array($users) && count($users) > 0) {
-                    $user = $users[0];
-                    $userId = $user['_id'] ?? $user['id'] ?? null;
-                    
-                    if ($userId) {
-                        error_log("✓ Utilisateur trouvé dans BD - ID: " . $userId);
-                        echo json_encode([
-                            'success' => true,
-                            'source' => 'database',
-                            'data' => [
-                                'user_id' => $userId,
-                                'licence_number' => $licenceNumber,
-                                'first_name' => $user['first_name'] ?? $user['firstName'] ?? '',
-                                'name' => $user['name'] ?? '',
-                                'club' => $user['club'] ?? $user['club_name'] ?? '',
-                                'age_category' => $user['age_category'] ?? $user['ageCategory'] ?? '',
-                                'bow_type' => $user['bow_type'] ?? $user['bowType'] ?? ''
-                            ]
-                        ]);
-                        return;
-                    }
+                // L'API retourne un objet utilisateur unique
+                $user = $bdResult['data'];
+                
+                // Convertir en array si c'est un objet
+                if (is_object($user)) {
+                    $user = (array)$user;
+                }
+                
+                $userId = $user['_id'] ?? $user['id'] ?? null;
+                
+                if ($userId) {
+                    error_log("✓ Utilisateur trouvé dans BD - ID: " . $userId);
+                    echo json_encode([
+                        'success' => true,
+                        'source' => 'database',
+                        'data' => [
+                            'user_id' => $userId,
+                            'licence_number' => $licenceNumber,
+                            'first_name' => $user['first_name'] ?? $user['firstName'] ?? '',
+                            'name' => $user['name'] ?? '',
+                            'club' => $user['club'] ?? $user['club_name'] ?? '',
+                            'age_category' => $user['age_category'] ?? $user['ageCategory'] ?? '',
+                            'bow_type' => $user['bow_type'] ?? $user['bowType'] ?? ''
+                        ]
+                    ]);
+                    return;
                 }
             }
             
