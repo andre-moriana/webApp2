@@ -99,24 +99,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             ensureHiddenField(form, 'type_competition_text', typeCompetitionText);
 
-            const niveauSelect = document.getElementById('niveau_championnat');
-            let idNiveauChampionnat = '';
+            const niveauSelect = document.getElementById('idniveau_championnat');
             if (niveauSelect && niveauSelect.value) {
-                const selectedOption = niveauSelect.options[niveauSelect.selectedIndex];
-                const dataId = selectedOption && selectedOption.dataset ? selectedOption.dataset.idniveauChampionnat : '';
-                if (dataId) {
-                    idNiveauChampionnat = dataId;
-                } else if (Array.isArray(window.niveauChampionnatData)) {
-                    const match = window.niveauChampionnatData.find(function(niveau) {
-                        const value = niveau.abv_niveauchampionnat || '';
-                        return value !== '' && String(value) === String(niveauSelect.value);
-                    });
-                    if (match) {
-                        idNiveauChampionnat = match.idniveau_championnat || match.id || '';
-                    }
-                }
+                niveauSelect.value = String(niveauSelect.value);
             }
-            ensureHiddenField(form, 'id_niveau_championnat', idNiveauChampionnat);
 
             // Vérifier que tous les champs requis sont remplis
             const requiredFields = form.querySelectorAll('[required]');
@@ -391,15 +377,15 @@ function loadNiveauChampionnat() {
     console.log('=== loadNiveauChampionnat() appelée ===');
     console.log('window.niveauChampionnatData:', window.niveauChampionnatData);
     
-    const select = document.getElementById('niveau_championnat');
+    const select = document.getElementById('idniveau_championnat');
     if (!select) {
-        console.error('ERREUR: Select niveau_championnat non trouvé dans le DOM');
+        console.error('ERREUR: Select idniveau_championnat non trouvé dans le DOM');
         return;
     }
     
     // Si le select a déjà des options (page edit), ne pas le recharger
     if (select.options.length > 1) {
-        console.log('Select niveau_championnat déjà rempli (page edit), pas de rechargement');
+        console.log('Select idniveau_championnat déjà rempli (page edit), pas de rechargement');
         return;
     }
     
@@ -426,15 +412,11 @@ function loadNiveauChampionnat() {
     niveaux.forEach(function(niveau, index) {
         try {
             const option = document.createElement('option');
-            // Utiliser l'abreviation pour niveau_championnat (pas l'ID numerique)
-            const value = niveau.abv_niveauchampionnat || '';
-            const idNiveau = niveau.idniveau_championnat || niveau.id || '';
+            // Utiliser l'ID numerique du niveau
+            const value = niveau.idniveau_championnat || niveau.id || '';
             const text = niveau.lb_niveauchampionnat || niveau.name || niveau.nom || 'Niveau';
             
             option.value = value;
-            if (idNiveau !== '') {
-                option.dataset.idniveauChampionnat = idNiveau;
-            }
             option.textContent = text;
             select.appendChild(option);
             addedCount++;
@@ -711,32 +693,21 @@ function prefillFormForEdit() {
     }
     
     // Niveau championnat
-    if (concours.niveau_championnat) {
-        const niveauSelect = document.getElementById('niveau_championnat');
+    if (concours.idniveau_championnat) {
+        const niveauSelect = document.getElementById('idniveau_championnat');
         if (niveauSelect) {
-            console.log('Recherche du niveau_championnat:', concours.niveau_championnat);
+            console.log('Recherche du idniveau_championnat:', concours.idniveau_championnat);
             console.log('Options disponibles:', Array.from(niveauSelect.options).map(opt => ({value: opt.value, text: opt.text})));
-            // Vérifier que l'option existe (comparaison flexible)
-            const concoursValue = String(concours.niveau_championnat);
-            let matchedValue = '';
+            const concoursValue = String(concours.idniveau_championnat);
             const optionExists = Array.from(niveauSelect.options).some(opt => {
                 const optValue = String(opt.value);
-                if (optValue === concoursValue || opt.value == concours.niveau_championnat) {
-                    matchedValue = optValue;
-                    return true;
-                }
-                const optId = opt.dataset ? opt.dataset.idniveauChampionnat : '';
-                if (optId && (String(optId) === concoursValue)) {
-                    matchedValue = optValue;
-                    return true;
-                }
-                return false;
+                return optValue === concoursValue || opt.value == concours.idniveau_championnat;
             });
-            if (optionExists && matchedValue !== '') {
-                niveauSelect.value = matchedValue;
-                console.log('✓ Niveau championnat défini:', matchedValue);
+            if (optionExists) {
+                niveauSelect.value = concoursValue;
+                console.log('✓ idniveau_championnat défini:', concoursValue);
             } else {
-                console.warn('✗ Option niveau_championnat non trouvée pour la valeur:', concours.niveau_championnat);
+                console.warn('✗ Option idniveau_championnat non trouvée pour la valeur:', concours.idniveau_championnat);
                 console.warn('Valeurs disponibles:', Array.from(niveauSelect.options).map(opt => opt.value));
             }
         }

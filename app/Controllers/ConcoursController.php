@@ -442,8 +442,7 @@ class ConcoursController {
         $discipline = $_POST['discipline'] ?? '';
         $type_competition = $_POST['type_competition'] ?? '';
         $type_competition_text = $_POST['type_competition_text'] ?? '';
-        $niveau_championnat = $_POST['niveau_championnat'] ?? '';
-        $idNiveau_Championnat = $_POST['id_niveau_championnat'] ?? '';
+        $idNiveau_Championnat = $_POST['idniveau_championnat'] ?? '';
         $niveau_championnat_autre = $_POST['niveau_championnat_autre'] ?? '';
         $nombre_cibles = $_POST['nombre_cibles'] ?? 0;
         $nombre_depart = $_POST['nombre_depart'] ?? 1;
@@ -492,7 +491,6 @@ class ConcoursController {
                 'discipline' => $discipline,
                 'type_competition' => $type_competition,
                 'type_competition_text' => $type_competition_text,
-                'niveau_championnat' => $niveau_championnat,
                 'idniveau_championnat' => $idNiveau_Championnat,
                 'niveau_championnat_autre' => $niveau_championnat_autre,
                 'nombre_cibles' => (int)$nombre_cibles,
@@ -1027,11 +1025,6 @@ class ConcoursController {
     {
         // Transformer les données comme dans store() pour assurer la cohérence
         $data = $_POST;
-
-        // Mapper le champ id_niveau_championnat vers idniveau_championnat pour l'API
-        if (isset($data['id_niveau_championnat']) && !isset($data['idniveau_championnat'])) {
-            $data['idniveau_championnat'] = $data['id_niveau_championnat'];
-        }
 
         // Mapper le code club vers agreenum pour l'API
         if (isset($data['club_code']) && !isset($data['agreenum'])) {

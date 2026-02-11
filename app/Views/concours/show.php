@@ -38,7 +38,7 @@ function findLabel($items, $id, $idField = 'id', $labelField = 'name') {
 $clubName = findLabel($clubs, $concours->club_organisateur ?? null, 'id', 'name');
 $disciplineName = findLabel($disciplines, $concours->discipline ?? null, 'iddiscipline', 'lb_discipline');
 $typeCompetitionName = findLabel($typeCompetitions, $concours->type_competition ?? null, 'idformat_competition', 'lb_format_competition');
-$niveauChampionnatName = findLabel($niveauChampionnat, $concours->niveau_championnat ?? null, 'abv_niveauchampionnat', 'lb_niveauchampionnat');
+$niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_championnat ?? null, 'idniveau_championnat', 'lb_niveauchampionnat');
 ?>
 
 <!-- Section principale -->
