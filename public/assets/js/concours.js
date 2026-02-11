@@ -1,5 +1,16 @@
 // Script pour le formulaire de création et d'édition de concours
 
+function ensureHiddenField(form, name, value) {
+    let input = form.querySelector('input[name="' + name + '"]');
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        form.appendChild(input);
+    }
+    input.value = value != null ? String(value) : '';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Vérifier si on est sur la page edit (les selects sont déjà remplis en PHP)
     const clubSelect = document.getElementById('club_organisateur');
@@ -67,6 +78,36 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Method:', form.method);
             console.log('Form action URL:', new URL(form.action, window.location.origin).href);
             
+            // Renseigner les champs derives avant soumission
+            const typeCompetitionSelect = document.getElementById('type_competition');
+            let typeCompetitionText = '';
+            if (typeCompetitionSelect && typeCompetitionSelect.selectedIndex >= 0) {
+                const selectedOption = typeCompetitionSelect.options[typeCompetitionSelect.selectedIndex];
+                if (selectedOption && typeCompetitionSelect.value !== '') {
+                    typeCompetitionText = (selectedOption.textContent || '').trim();
+                }
+            }
+            ensureHiddenField(form, 'type_competition_text', typeCompetitionText);
+
+            const niveauSelect = document.getElementById('niveau_championnat');
+            let idNiveauChampionnat = '';
+            if (niveauSelect && niveauSelect.value) {
+                const selectedOption = niveauSelect.options[niveauSelect.selectedIndex];
+                const dataId = selectedOption && selectedOption.dataset ? selectedOption.dataset.idniveauChampionnat : '';
+                if (dataId) {
+                    idNiveauChampionnat = dataId;
+                } else if (Array.isArray(window.niveauChampionnatData)) {
+                    const match = window.niveauChampionnatData.find(function(niveau) {
+                        const value = niveau.abv_niveauchampionnat || niveau.idniveau_championnat || niveau.id || '';
+                        return String(value) === String(niveauSelect.value);
+                    });
+                    if (match) {
+                        idNiveauChampionnat = match.idniveau_championnat || match.id || '';
+                    }
+                }
+            }
+            ensureHiddenField(form, 'id_niveau_championnat', idNiveauChampionnat);
+
             // Vérifier que tous les champs requis sont remplis
             const requiredFields = form.querySelectorAll('[required]');
             let isValid = true;
@@ -377,9 +418,13 @@ function loadNiveauChampionnat() {
             const option = document.createElement('option');
             // Utiliser abv_niveauchampionnat comme valeur (abréviation) ou idniveau_championnat
             const value = niveau.abv_niveauchampionnat || niveau.idniveau_championnat || niveau.id || '';
+            const idNiveau = niveau.idniveau_championnat || niveau.id || '';
             const text = niveau.lb_niveauchampionnat || niveau.name || niveau.nom || 'Niveau';
             
             option.value = value;
+            if (idNiveau !== '') {
+                option.dataset.idniveauChampionnat = idNiveau;
+            }
             option.textContent = text;
             select.appendChild(option);
             addedCount++;
