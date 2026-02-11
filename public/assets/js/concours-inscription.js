@@ -3875,12 +3875,9 @@ function proceedWithInscriptionSubmission() {
     }
     console.log('numeroDepartInt final:', numeroDepartInt);
     
-    // Récupérer le numéro de cible et la position si applicable
-    const needsPlanCibleNow = getNeedsPlanCible();
-    const numeroCible = needsPlanCibleNow ? (document.getElementById('numero_cible')?.value || null) : null;
-    const positionArcher = needsPlanCibleNow ? (document.getElementById('position_archer')?.value || null) : null;
-    
     // Construire les champs selon le type de discipline
+    // NOTE: numero_cible et position_archer ne sont pas inclus ici car ils appartiennent au plan de cible
+    // et sont gérés séparément. Les inscriptions ne contiennent que les données d'enregistrement.
     const fields = {
         'user_id': userId,
         'numero_depart': numeroDepartInt,
@@ -3895,9 +3892,7 @@ function proceedWithInscriptionSubmission() {
         'mobilite_reduite': mobiliteReduite,
         'numero_tir': numeroTir,
         'tarif_competition': tarifCompetition,
-        'mode_paiement': modePaiement,
-        'numero_cible': numeroCible ? parseInt(numeroCible) : null,
-        'position_archer': positionArcher
+        'mode_paiement': modePaiement
     };
     
     // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason, pas de duel/trispot
@@ -3925,17 +3920,6 @@ function proceedWithInscriptionSubmission() {
             } else {
                 console.warn('✗ numero_depart non valide ou vide. Valeur:', value, '- Non envoyé au serveur');
             }
-            continue;
-        }
-        
-        // Traitement spécial pour numero_cible et position_archer : les ajouter même s'ils sont null/vides
-        if (name === 'numero_cible' || name === 'position_archer') {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = name;
-            input.value = value || '';
-            form.appendChild(input);
-            console.log('✓ ' + name + ' ajouté au formulaire:', value);
             continue;
         }
         
