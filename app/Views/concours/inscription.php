@@ -438,41 +438,6 @@ table tbody tr.piquet-blanc {
                         <?php endif; ?>
                     </div>
                     
-                    <?php 
-                    // Vérifier si le concours nécessite un plan de cible (disciplines S, T, I, H)
-                    $needsPlanCible = isset($disciplineAbv) && in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
-                    ?>
-                    <?php if ($needsPlanCible): ?>
-                        <!-- Sélection de cible et position dans le plan de cible -->
-                        <div class="row mt-3" id="plan-cible-selection" style="display: none;">
-                            <div class="col-md-12 mb-2">
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i> 
-                                    <strong>Plan de cible :</strong> 
-                                    Sélectionnez une cible et une position pour assigner l'archer. 
-                                    <strong>Pour les trispots (cibles 11-14) :</strong> sélectionnez une colonne (A, B, C ou D) - les 3 positions verticales de cette colonne seront automatiquement assignées au même archer.
-                                    Si le plan de cible n'existe pas encore, créez-le depuis la page de détails du concours.
-                                </div>
-                            </div>
-                            <div class="col-md-12 mb-3">
-                                <h6 class="mb-3">Sélection de la cible et position</h6>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="numero_cible" class="form-label">Cible</label>
-                                <select id="numero_cible" class="form-control">
-                                    <option value="">Sélectionner une cible</option>
-                                </select>
-                                <small class="form-text text-muted" id="cible-info"></small>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="position_archer" class="form-label">Position</label>
-                                <select id="position_archer" class="form-control">
-                                    <option value="">Sélectionner une position</option>
-                                </select>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                    
                     <?php if (!$isNature3DOrCampagne): ?>
                         <!-- Les champs Duel et Trispot n'existent pas pour les disciplines 3D, Nature et Campagne -->
                         <div class="row">
@@ -686,40 +651,6 @@ table tbody tr.piquet-blanc {
                                     <input type="checkbox" id="edit-trispot" class="form-check-input">
                                     <label for="edit-trispot" class="form-check-label">Trispot</label>
                                 </div>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                    <?php 
-                    // Vérifier si le concours nécessite un plan de cible (disciplines S, T, I, H)
-                    $needsPlanCible = isset($disciplineAbv) && in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
-                    ?>
-                    <?php if ($needsPlanCible): ?>
-                        <!-- Sélection de cible et position dans le plan de cible -->
-                        <div class="row mt-3" id="edit-plan-cible-selection" style="display: none;">
-                            <div class="col-md-12 mb-2">
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle"></i> 
-                                    <strong>Plan de cible :</strong> 
-                                    Sélectionnez une cible et une position pour assigner l'archer. 
-                                    <strong>Pour les trispots (cibles 11-14) :</strong> sélectionnez une colonne (A, B, C ou D) - les 3 positions verticales de cette colonne seront automatiquement assignées au même archer.
-                                    Si le plan de cible n'existe pas encore, créez-le depuis la page de détails du concours.
-                                </div>
-                            </div>
-                            <div class="col-md-12 mb-3">
-                                <h6 class="mb-3">Sélection de la cible et position</h6>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="edit-numero_cible" class="form-label">Cible</label>
-                                <select id="edit-numero_cible" class="form-control">
-                                    <option value="">Sélectionner une cible</option>
-                                </select>
-                                <small class="form-text text-muted" id="edit-cible-info"></small>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="edit-position_archer" class="form-label">Position</label>
-                                <select id="edit-position_archer" class="form-control">
-                                    <option value="">Sélectionner une position</option>
-                                </select>
                             </div>
                         </div>
                     <?php endif; ?>
