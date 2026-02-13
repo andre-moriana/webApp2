@@ -243,16 +243,29 @@ function prefillFormFields(archer) {
     const certificatSelect = document.getElementById('type_certificat_medical');
     if (certificatSelect) {
         if (archer.certificat_medical) {
-            const certValue = archer.certificat_medical.trim();
+            const certValue = archer.certificat_medical.trim().toUpperCase();
             console.log('Tentative pré-remplissage certificat_medical:', certValue);
-            // Chercher l'option correspondante (Compétition ou Pratique)
+            
+            // Mapper les valeurs possibles du XML vers les options du formulaire
+            let targetValue = '';
+            if (certValue.includes('COMPETITION') || certValue.includes('COMPÉTITION') || certValue === 'C' || certValue.startsWith('C')) {
+                targetValue = 'Compétition';
+            } else if (certValue.includes('PRATIQUE') || certValue === 'P' || certValue.startsWith('P')) {
+                targetValue = 'Pratique';
+            }
+            
+            // Chercher l'option correspondante
             let found = false;
             for (let i = 0; i < certificatSelect.options.length; i++) {
-                if (certificatSelect.options[i].textContent.toLowerCase().includes(certValue.toLowerCase()) ||
-                    certValue.toLowerCase().includes(certificatSelect.options[i].textContent.toLowerCase())) {
+                const optionValue = certificatSelect.options[i].value;
+                const optionText = certificatSelect.options[i].textContent.trim();
+                
+                if (optionValue === targetValue || optionText === targetValue ||
+                    optionText.toLowerCase().includes(certValue.toLowerCase()) ||
+                    certValue.includes(optionText.toUpperCase())) {
                     // Activer temporairement pour définir la valeur
                     certificatSelect.disabled = false;
-                    certificatSelect.value = certificatSelect.options[i].value;
+                    certificatSelect.value = optionValue;
                     certificatSelect.disabled = true; // Re-désactiver
                     console.log('✓ Certificat médical pré-rempli:', certificatSelect.value);
                     found = true;
@@ -260,7 +273,8 @@ function prefillFormFields(archer) {
                 }
             }
             if (!found) {
-                console.log('✗ Aucune option trouvée pour certificat_medical:', certValue);
+                console.log('✗ Aucune option trouvée pour certificat_medical:', certValue, 'targetValue:', targetValue);
+                console.log('Options disponibles:', Array.from(certificatSelect.options).map(o => ({ value: o.value, text: o.textContent })));
             }
         } else {
             console.log('✗ certificat_medical non disponible dans les données');
@@ -297,6 +311,11 @@ function prefillFormFields(archer) {
                 if (categorieFound) {
                     categorieSelect.value = categorieFound.abv_categorie_classement || '';
                     console.log('✓ Catégorie pré-remplie:', categorieSelect.value);
+                    
+                    // Déclencher le remplissage automatique de la distance et du blason
+                    setTimeout(() => {
+                        fillDistanceAndBlasonFromCategorie(categorieFound.abv_categorie_classement);
+                    }, 300);
                 } else {
                     console.log('✗ Catégorie non trouvée dans categoriesClassement:', categorieXml);
                     console.log('Catégories disponibles:', categoriesClassement.map(c => c.abv_categorie_classement));
@@ -351,6 +370,177 @@ function prefillFormFields(archer) {
             modalDepartDisplay.textContent = 'Départ ' + departSelect.value;
         }
     }
+}
+
+/**
+ * Remplit automatiquement la distance et le blason en fonction de la catégorie
+ */
+function fillDistanceAndBlasonFromCategorie(abvCategorie) {
+    console.log('=== fillDistanceAndBlasonFromCategorie appelée ===');
+    console.log('Paramètres:', {
+        abvCategorie: abvCategorie,
+        concoursDiscipline: typeof concoursDiscipline !== 'undefined' ? concoursDiscipline : 'undefined',
+        concoursTypeCompetition: typeof concoursTypeCompetition !== 'undefined' ? concoursTypeCompetition : 'undefined'
+    });
+    
+    if (!abvCategorie) {
+        console.error('✗ Catégorie manquante');
+        return;
+    }
+    
+    if (typeof concoursDiscipline === 'undefined' || concoursDiscipline === null) {
+        console.error('✗ concoursDiscipline non défini ou null');
+        return;
+    }
+    
+    if (typeof concoursTypeCompetition === 'undefined' || concoursTypeCompetition === null) {
+        console.error('✗ concoursTypeCompetition non défini ou null');
+        return;
+    }
+    
+    // Vérifier si c'est une discipline 3D, Nature ou Campagne
+    const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+    if (isNature) {
+        console.log('Discipline 3D/Nature/Campagne détectée - pas de remplissage automatique distance/blason');
+        return;
+    }
+    
+    console.log('✓ Toutes les conditions sont remplies');
+    console.log('→ Appel API distance-recommandee avec:', {
+        iddiscipline: concoursDiscipline,
+        idtype_competition: concoursTypeCompetition,
+        abv_categorie_classement: abvCategorie
+    });
+    
+    // Appeler l'API pour récupérer la distance recommandée
+    const params = new URLSearchParams({
+        iddiscipline: concoursDiscipline,
+        idtype_competition: concoursTypeCompetition,
+        abv_categorie_classement: abvCategorie
+    });
+    
+    fetch(`/api/concours/distance-recommandee?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('=== Réponse API distance-recommandee reçue ===');
+        console.log('Données complètes:', JSON.stringify(data, null, 2));
+        
+        if (data.success && data.data) {
+            const distanceSelect = document.getElementById('distance');
+            const blasonInput = document.getElementById('blason');
+            
+            if (!distanceSelect) {
+                console.error('✗ Select de distance non trouvé dans le DOM');
+                return;
+            }
+            
+            // La réponse peut avoir une structure imbriquée : data.data.data (via ApiService)
+            // ou directement : data.data (réponse directe)
+            const responseData = data.data.data || data.data;
+            
+            const distanceValeur = responseData.distance_valeur;
+            const blasonValeur = responseData.blason;
+            
+            console.log('Données extraites:', {
+                distanceValeur: distanceValeur,
+                lb_distance: responseData.lb_distance,
+                blasonValeur: blasonValeur
+            });
+            
+            // Sélectionner la distance correspondante
+            let distanceFound = false;
+            for (let i = 0; i < distanceSelect.options.length; i++) {
+                const optionValue = distanceSelect.options[i].value;
+                if (optionValue == distanceValeur || optionValue === String(distanceValeur)) {
+                    distanceSelect.value = optionValue;
+                    distanceFound = true;
+                    console.log('✓✓✓ Distance automatiquement sélectionnée:', responseData.lb_distance, '(valeur:', distanceValeur, ')');
+                    
+                    // Remplir le blason si disponible
+                    if (blasonInput && blasonValeur) {
+                        blasonInput.value = blasonValeur;
+                        console.log('✓✓✓ Blason automatiquement renseigné:', blasonValeur, 'cm');
+                    } else if (blasonInput && !blasonValeur) {
+                        // Fallback: récupérer le blason via l'API séparée
+                        console.log('Blason non inclus dans la réponse, récupération via API séparée...');
+                        getBlasonFromAPI(concoursDiscipline, abvCategorie, distanceValeur)
+                            .then(blason => {
+                                if (blason && blasonInput) {
+                                    blasonInput.value = blason;
+                                    console.log('✓✓✓ Blason récupéré via API séparée:', blason, 'cm');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Erreur lors de la récupération du blason:', error);
+                            });
+                    }
+                    
+                    // Déclencher l'événement change sur le select de distance
+                    setTimeout(() => {
+                        const changeEvent = new Event('change', { bubbles: true });
+                        distanceSelect.dispatchEvent(changeEvent);
+                        console.log('Événement change déclenché sur le select de distance');
+                    }, 100);
+                    
+                    break;
+                }
+            }
+            
+            if (!distanceFound) {
+                console.warn('✗ Distance non trouvée dans les options:', distanceValeur);
+            }
+        } else {
+            console.warn('✗ Réponse API invalide ou sans données');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur lors de la récupération de la distance recommandée:', error);
+    });
+}
+
+/**
+ * Récupère le blason via l'API séparée
+ */
+function getBlasonFromAPI(iddiscipline, abvCategorie, distanceValeur) {
+    const params = new URLSearchParams({
+        iddiscipline: iddiscipline,
+        abv_categorie_classement: abvCategorie,
+        distance_valeur: distanceValeur
+    });
+    
+    return fetch(`/api/concours/blason-recommandee?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success && data.data) {
+            const responseData = data.data.data || data.data;
+            return responseData.blason || null;
+        }
+        return null;
+    });
 }
 
 /**
