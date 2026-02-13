@@ -2403,6 +2403,22 @@ class ApiController {
     }
     
     /**
+     * Recherche ou crée un archer par numéro de licence
+     * Proxy vers ArcherSearchController pour maintenir la cohérence avec les autres routes API
+     */
+    public function searchOrCreateArcherByLicense() {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        
+        // Déléguer à ArcherSearchController
+        require_once __DIR__ . '/ArcherSearchController.php';
+        $archerSearchController = new ArcherSearchController();
+        $archerSearchController->findOrCreateByLicense();
+    }
+    
+    /**
      * Supprime une conversation privée
      */
     public function deletePrivateConversation($userId) {

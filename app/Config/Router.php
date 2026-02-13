@@ -165,6 +165,7 @@ class Router {
         
         // Route API pour la recherche d'archers
         $this->addRoute("GET", "/api/archers/search", "ApiController@searchArchers");
+        $this->addRoute("POST", "/api/archer/search-or-create", "ApiController@searchOrCreateArcherByLicense");
         
         // Routes API pour les groupes (proxy vers API externe)
         $this->addRoute("GET", "/api/users", "ApiController@users");
