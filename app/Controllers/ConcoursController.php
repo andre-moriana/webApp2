@@ -1468,16 +1468,45 @@ class ConcoursController {
                     if ($inscriptionsResponse['success']) {
                         $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
                     } else {
-                        error_log("Erreur API - success: false - " . ($inscriptionsResponse['error'] ?? 'Erreur inconnue'));
-                        $_SESSION['error'] = 'Erreur lors de la récupération des inscriptions: ' . ($inscriptionsResponse['error'] ?? 'Erreur inconnue');
-                        header("Location: /concours/{$concoursId}/inscription");
-                        exit;
+                        // Vérifier si data contient quand même un tableau (cas où l'API retourne des données même en erreur)
+                        $data = $inscriptionsResponse['data'] ?? null;
+                        if (is_array($data) && (isset($data[0]) || empty($data))) {
+                            error_log("API retourne success: false mais data contient un tableau - Utilisation des données");
+                            $inscriptions = $data;
+                        } else {
+                            // Récupérer tous les messages d'erreur possibles
+                            $errorMessage = $inscriptionsResponse['error'] 
+                                ?? $inscriptionsResponse['message'] 
+                                ?? ($data && is_array($data) ? ($data['error'] ?? $data['message'] ?? null) : null)
+                                ?? 'Erreur inconnue';
+                            
+                            $statusCode = $inscriptionsResponse['status_code'] ?? 'N/A';
+                            error_log("Erreur API - success: false - Status: $statusCode - Message: $errorMessage");
+                            error_log("Réponse complète: " . json_encode($inscriptionsResponse, JSON_UNESCAPED_UNICODE));
+                            
+                            // Si c'est une erreur 500 ou autre erreur serveur, continuer avec tableau vide plutôt que bloquer
+                            // Cela permet de ne pas bloquer l'inscription si le serveur a un problème temporaire
+                            if ($statusCode >= 500 || $statusCode === 'N/A') {
+                                error_log("Erreur serveur détectée ($statusCode) - Continuation avec tableau vide pour permettre l'inscription");
+                                $inscriptions = [];
+                            } else {
+                                // Pour les autres erreurs (400, 404, etc.), bloquer l'inscription
+                                $_SESSION['error'] = 'Erreur lors de la récupération des inscriptions: ' . $errorMessage;
+                                header("Location: /concours/{$concoursId}/inscription");
+                                exit;
+                            }
+                        }
                     }
                 }
                 // Si c'est un tableau associatif sans 'success', essayer unwrapData quand même
                 else {
                     $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
                 }
+            } else {
+                // Si la réponse n'est pas un tableau, logger et utiliser un tableau vide
+                error_log("ERREUR: La réponse de l'API n'est pas un tableau. Type: " . gettype($inscriptionsResponse));
+                error_log("Valeur reçue: " . var_export($inscriptionsResponse, true));
+                $inscriptions = [];
             }
             
             // Normaliser $inscriptions si nécessaire
