@@ -46,21 +46,46 @@ function searchArcherByLicense() {
     fetch('/api/archer/search-or-create', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
             licence_number: licence
         })
     })
     .then(response => {
+        console.log('Réponse reçue:', response.status, response.statusText);
+        
+        // Vérifier si la réponse est JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                console.error('Réponse non-JSON reçue:', text.substring(0, 500));
+                throw new Error('Le serveur a retourné une réponse non-JSON. Vérifiez les erreurs PHP.');
+            });
+        }
+        
         if (!response.ok) {
             return response.json().then(data => {
-                throw new Error(data.error || 'Erreur de recherche');
+                console.error('Erreur API:', data);
+                throw new Error(data.error || `Erreur ${response.status}: ${response.statusText}`);
+            }).catch(err => {
+                // Si la réponse d'erreur n'est pas JSON non plus
+                if (err.message && !err.message.includes('Erreur')) {
+                    return response.text().then(text => {
+                        console.error('Erreur non-JSON:', text.substring(0, 500));
+                        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+                    });
+                }
+                throw err;
             });
         }
         return response.json();
     })
     .then(data => {
+        console.log('Données reçues:', data);
+        
         if (!data.success) {
             alert('Archer non trouvé: ' + (data.error || 'Erreur inconnue'));
             return;
@@ -68,6 +93,12 @@ function searchArcherByLicense() {
         
         // Stocker les données de l'archer
         selectedArcher = data.data;
+        if (!selectedArcher) {
+            console.error('Données archer manquantes:', data);
+            alert('Erreur: données archer manquantes dans la réponse');
+            return;
+        }
+        
         selectedArcher.licence_number = licence; // S'assurer que la licence est bien stockée
         
         // Afficher le modal avec les infos
