@@ -28,18 +28,28 @@ class ArcherSearchController {
         // Chercher dans le XML uniquement
         $xmlPath = __DIR__ . '/../../public/data/users-licences.xml';
         
-        if (!file_exists($xmlPath) || !is_readable($xmlPath)) {
+        // Normaliser le chemin
+        $xmlPath = realpath($xmlPath);
+        
+        error_log("ArcherSearchController: Recherche licence '$licenceNumber'");
+        error_log("ArcherSearchController: Chemin XML: '$xmlPath'");
+        
+        if (!$xmlPath || !file_exists($xmlPath) || !is_readable($xmlPath)) {
+            error_log("ArcherSearchController: Fichier XML non trouvé ou non lisible");
             http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Fichier XML non trouvé']);
+            echo json_encode(['success' => false, 'error' => 'Fichier XML non trouvé: ' . ($xmlPath ?: __DIR__ . '/../../public/data/users-licences.xml')]);
             return;
         }
         
         $xmlEntry = $this->findXmlEntryByLicence($xmlPath, $licenceNumber);
         if (!$xmlEntry) {
+            error_log("ArcherSearchController: Aucune entrée trouvée pour licence '$licenceNumber'");
             http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Archer non trouvé dans le XML']);
+            echo json_encode(['success' => false, 'error' => 'Archer non trouvé dans le XML pour la licence: ' . $licenceNumber]);
             return;
         }
+        
+        error_log("ArcherSearchController: Entrée trouvée pour licence '$licenceNumber'");
         
         // Traiter l'entrée XML
         $xmlData = $this->processUserEntry($xmlEntry);
@@ -92,8 +102,9 @@ class ArcherSearchController {
                 $currentTag = '';
             } elseif ($reader->nodeType === XMLReader::END_ELEMENT) {
                 if ($reader->name === 'TABLE_CONTENU' && $inTableContenu) {
-                    $entryLicence = $currentEntry['IDLicence'] ?? '';
-                    if ($entryLicence !== '' && $entryLicence === $target) {
+                    $entryLicence = trim($currentEntry['IDLicence'] ?? '');
+                    // Comparaison stricte mais aussi avec trim pour éviter les problèmes d'espaces
+                    if ($entryLicence !== '' && trim($entryLicence) === trim($target)) {
                         $reader->close();
                         libxml_clear_errors();
                         return $currentEntry;
