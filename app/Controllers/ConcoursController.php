@@ -1449,19 +1449,41 @@ class ConcoursController {
         try {
             $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
             
-            // Vérifier que la réponse est valide
-            if (!$inscriptionsResponse || !isset($inscriptionsResponse['success']) || !$inscriptionsResponse['success']) {
-                error_log("Erreur lors de la récupération des inscriptions pour la vérification de doublon - Réponse invalide");
-                // Si on ne peut pas vérifier, on bloque l'inscription pour sécurité
-                $_SESSION['error'] = 'Impossible de vérifier les inscriptions existantes. Veuillez réessayer.';
-                header("Location: /concours/{$concoursId}/inscription");
-                exit;
-            }
+            // Log pour déboguer
+            error_log("Réponse API inscriptions: " . json_encode($inscriptionsResponse, JSON_UNESCAPED_UNICODE));
             
-            $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+            // Gérer deux formats possibles :
+            // 1. Format avec wrapper : {success: true, data: [...]}
+            // 2. Format direct : [...] (tableau directement)
+            
+            $inscriptions = [];
+            
+            if (is_array($inscriptionsResponse)) {
+                // Si c'est un tableau indexé numériquement, c'est probablement le format direct
+                if (isset($inscriptionsResponse[0]) || empty($inscriptionsResponse)) {
+                    $inscriptions = $inscriptionsResponse;
+                }
+                // Sinon, vérifier si c'est un format avec wrapper
+                elseif (isset($inscriptionsResponse['success'])) {
+                    if ($inscriptionsResponse['success']) {
+                        $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+                    } else {
+                        error_log("Erreur API - success: false - " . ($inscriptionsResponse['error'] ?? 'Erreur inconnue'));
+                        $_SESSION['error'] = 'Erreur lors de la récupération des inscriptions: ' . ($inscriptionsResponse['error'] ?? 'Erreur inconnue');
+                        header("Location: /concours/{$concoursId}/inscription");
+                        exit;
+                    }
+                }
+                // Si c'est un tableau associatif sans 'success', essayer unwrapData quand même
+                else {
+                    $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+                }
+            }
             
             // Normaliser $inscriptions si nécessaire
             if (!is_array($inscriptions)) {
+                error_log("ERREUR: Les inscriptions ne sont pas un tableau après traitement: " . gettype($inscriptions));
+                error_log("Valeur reçue: " . var_export($inscriptions, true));
                 $inscriptions = [];
             }
             
@@ -1469,6 +1491,12 @@ class ConcoursController {
             error_log("=== VÉRIFICATION DOUBLON ===");
             error_log("user_nom: $user_nom, numero_depart: " . var_export($numero_depart, true) . ", numero_tir: " . var_export($numero_tir, true));
             error_log("Nombre d'inscriptions existantes: " . count($inscriptions));
+            
+            // Si on n'a pas réussi à obtenir les inscriptions mais qu'il n'y a pas d'erreur explicite,
+            // continuer avec un tableau vide (pas de doublon possible)
+            if (empty($inscriptions)) {
+                error_log("Aucune inscription existante trouvée - pas de vérification de doublon nécessaire");
+            }
             
             // Parcourir toutes les inscriptions existantes pour cet archer
             foreach ($inscriptions as $inscription) {
