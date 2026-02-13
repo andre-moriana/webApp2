@@ -145,8 +145,8 @@ table tbody tr.piquet-blanc {
                         <?php 
                         // $usersMap est passé depuis le contrôleur
                         foreach ($inscriptions as $inscription):
-                            $userId = $inscription['user_id'] ?? null;
-                            $user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
+                            $userName = $inscription['user_name'] ?? null;
+                            //$user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
                             
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
                             $piquetColorRaw = $inscription['piquet'] ?? null;
@@ -169,13 +169,12 @@ table tbody tr.piquet-blanc {
                             }
                         ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['user_name'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
                                     <?php 
                                     // Afficher le champ "name" (nom complet) du club comme demandé
-                                    $clubName = $inscription['club_name'] ?? $inscription['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
+                                    $clubName = $inscription['id_club'] ?? null;
                                     echo htmlspecialchars($clubName ?? 'N/A');
                                     ?>
                                 </td>
