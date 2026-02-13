@@ -874,6 +874,7 @@ function submitInscription() {
         user_nom: user_nom,
         numero_depart: numeroDepart,
         numero_licence: selectedArcher.licence_number,
+        id_club: selectedArcher.id_club || '', // ID unique du club depuis club_unique du XML
         saison: document.getElementById('saison')?.value || '',
         type_certificat_medical: document.getElementById('type_certificat_medical')?.value || '',
         type_licence: document.getElementById('type_licence')?.value || '',
