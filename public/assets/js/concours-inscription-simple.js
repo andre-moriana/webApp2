@@ -101,8 +101,29 @@ function setupBlasonAutoUpdate() {
         
         console.log('Mise à jour automatique du blason pour catégorie:', categorie, 'distance:', distance, 'discipline:', concoursDiscipline);
         
-        // Appeler l'API pour récupérer le blason
-        getBlasonFromAPI(concoursDiscipline, categorie, distance)
+        // Récupérer l'ID de la catégorie (IDCategorie) depuis categoriesClassement
+        let idCategorie = null;
+        if (typeof categoriesClassement !== 'undefined' && categoriesClassement) {
+            const categorieObj = categoriesClassement.find(cat => {
+                const abv = (cat.abv_categorie_classement || '').trim();
+                return abv === categorie;
+            });
+            if (categorieObj) {
+                idCategorie = categorieObj.idcategorie || categorieObj.id_categorie || categorieObj.id || null;
+                console.log('IDCategorie trouvé:', idCategorie, 'pour abv:', categorie);
+            }
+        }
+        
+        if (!idCategorie) {
+            console.error('✗ IDCategorie non trouvé pour la catégorie:', categorie);
+            if (currentBlasonInput) {
+                currentBlasonInput.value = '';
+            }
+            return;
+        }
+        
+        // Appeler l'API pour récupérer le blason avec IDCategorie
+        getBlasonFromAPI(concoursDiscipline, idCategorie, distance)
             .then(blason => {
                 if (blason && currentBlasonInput) {
                     currentBlasonInput.value = blason;
@@ -670,29 +691,38 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
                         } else {
                             // Fallback: récupérer le blason via l'API séparée
                             console.log('Blason non inclus dans la réponse distance-recommandee, récupération via API séparée...');
-                            getBlasonFromAPI(concoursDiscipline, abvCategorie, distanceValeur)
-                                .then(blason => {
-                                    if (blason && blasonInput) {
-                                        blasonInput.value = blason;
-                                        console.log('✓✓✓ Blason récupéré via API séparée:', blason, 'cm');
-                                    } else {
-                                        console.log('✗ Aucun blason trouvé via API séparée');
-                                        blasonInput.value = '';
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Erreur lors de la récupération du blason:', error);
-                                    blasonInput.value = '';
+                            // Récupérer l'ID de la catégorie
+                            let idCategorie = null;
+                            if (typeof categoriesClassement !== 'undefined' && categoriesClassement) {
+                                const categorieObj = categoriesClassement.find(cat => {
+                                    const abv = (cat.abv_categorie_classement || '').trim();
+                                    return abv === abvCategorie;
                                 });
+                                if (categorieObj) {
+                                    idCategorie = categorieObj.idcategorie || categorieObj.id_categorie || categorieObj.id || null;
+                                }
+                            }
+                            if (idCategorie) {
+                                getBlasonFromAPI(concoursDiscipline, idCategorie, distanceValeur)
+                                    .then(blason => {
+                                        if (blason && blasonInput) {
+                                            blasonInput.value = blason;
+                                            console.log('✓✓✓ Blason récupéré via API séparée:', blason, 'cm');
+                                        } else {
+                                            console.log('✗ Aucun blason trouvé via API séparée');
+                                            blasonInput.value = '';
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Erreur lors de la récupération du blason:', error);
+                                        blasonInput.value = '';
+                                    });
+                            } else {
+                                console.log('✗ IDCategorie non trouvé pour récupérer le blason');
+                            }
                         }
                     } else {
                         console.error('✗ Input blason introuvable dans le DOM');
-                    }
-                    
-                    // Mettre à jour le blason directement si pas déjà fait
-                    if (blasonInput && !blasonInput.value && blasonValeur) {
-                        blasonInput.value = blasonValeur;
-                        console.log('✓✓✓ Blason mis à jour directement:', blasonValeur, 'cm');
                     }
                     
                     // Déclencher l'événement change sur le select de distance pour déclencher les autres listeners
@@ -708,16 +738,31 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
                             const currentDistance = distanceSelect.value;
                             if (currentCategorie && currentDistance && typeof concoursDiscipline !== 'undefined') {
                                 console.log('Mise à jour manuelle du blason après changement de distance');
-                                getBlasonFromAPI(concoursDiscipline, currentCategorie, currentDistance)
-                                    .then(blason => {
-                                        if (blason && blasonInput) {
-                                            blasonInput.value = blason;
-                                            console.log('✓✓✓ Blason mis à jour manuellement:', blason, 'cm');
-                                        }
-                                    })
-                                    .catch(error => {
-                                        console.error('Erreur lors de la mise à jour manuelle du blason:', error);
+                                // Récupérer l'ID de la catégorie
+                                let idCategorie = null;
+                                if (typeof categoriesClassement !== 'undefined' && categoriesClassement) {
+                                    const categorieObj = categoriesClassement.find(cat => {
+                                        const abv = (cat.abv_categorie_classement || '').trim();
+                                        return abv === currentCategorie;
                                     });
+                                    if (categorieObj) {
+                                        idCategorie = categorieObj.idcategorie || categorieObj.id_categorie || categorieObj.id || null;
+                                    }
+                                }
+                                if (idCategorie) {
+                                    getBlasonFromAPI(concoursDiscipline, idCategorie, currentDistance)
+                                        .then(blason => {
+                                            if (blason && blasonInput) {
+                                                blasonInput.value = blason;
+                                                console.log('✓✓✓ Blason mis à jour manuellement:', blason, 'cm');
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Erreur lors de la mise à jour manuelle du blason:', error);
+                                        });
+                                } else {
+                                    console.log('✗ IDCategorie non trouvé pour mise à jour manuelle du blason');
+                                }
                             }
                         }
                     }, 200);
@@ -740,18 +785,19 @@ function fillDistanceAndBlasonFromCategorie(abvCategorie) {
 
 /**
  * Récupère le blason via l'API séparée
+ * Utilise IDCategorie (id de la catégorie) au lieu de l'abréviation
  */
-function getBlasonFromAPI(iddiscipline, abvCategorie, distanceValeur) {
+function getBlasonFromAPI(iddiscipline, idCategorie, distanceValeur) {
     console.log('=== getBlasonFromAPI appelée ===');
     console.log('Paramètres:', {
         iddiscipline: iddiscipline,
-        abvCategorie: abvCategorie,
+        idCategorie: idCategorie,
         distanceValeur: distanceValeur
     });
     
     const params = new URLSearchParams({
         iddiscipline: iddiscipline,
-        abv_categorie_classement: abvCategorie,
+        IDCategorie: idCategorie,
         distance_valeur: distanceValeur
     });
     
