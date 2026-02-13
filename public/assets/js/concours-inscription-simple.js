@@ -124,16 +124,132 @@ function searchArcherByLicense() {
 function showSearchResult() {
     if (!selectedArcher) return;
     
-    // Remplir les infos dans le modal
+    console.log('Données archer pour pré-remplissage:', selectedArcher);
+    
+    // Remplir les infos dans le modal (affichage)
     document.getElementById('modal-archer-nom').textContent = selectedArcher.name || 'N/A';
     document.getElementById('modal-archer-prenom').textContent = selectedArcher.first_name || 'N/A';
     document.getElementById('modal-archer-licence').textContent = selectedArcher.licence_number || 'N/A';
     document.getElementById('modal-archer-club').textContent = selectedArcher.club || 'N/A';
     
+    // Pré-remplir les champs du formulaire
+    prefillFormFields(selectedArcher);
+    
     // Afficher le modal de confirmation
     const modal = new bootstrap.Modal(document.getElementById('confirmInscriptionModal'));
     modal.show();
+}
+
+/**
+ * Pré-remplit les champs du formulaire avec les données de l'archer
+ */
+function prefillFormFields(archer) {
+    if (!archer) return;
     
+    // Pré-remplir la saison
+    const saisonInput = document.getElementById('saison');
+    if (saisonInput && archer.saison) {
+        saisonInput.value = archer.saison;
+        console.log('Saison pré-remplie:', saisonInput.value);
+    }
+    
+    // Pré-remplir le type de licence
+    const typeLicenceSelect = document.getElementById('type_licence');
+    if (typeLicenceSelect && archer.type_licence) {
+        const cleanedTypeLicence = archer.type_licence.trim().toUpperCase();
+        const firstLetter = cleanedTypeLicence.length > 0 ? cleanedTypeLicence[0] : '';
+        // Chercher l'option correspondante
+        for (let i = 0; i < typeLicenceSelect.options.length; i++) {
+            if (typeLicenceSelect.options[i].value === firstLetter) {
+                // Activer temporairement pour définir la valeur
+                typeLicenceSelect.disabled = false;
+                typeLicenceSelect.value = firstLetter;
+                typeLicenceSelect.disabled = true; // Re-désactiver
+                console.log('Type licence pré-rempli:', firstLetter);
+                break;
+            }
+        }
+    }
+    
+    // Pré-remplir création/renouvellement
+    const creationRenouvellementInput = document.getElementById('creation_renouvellement');
+    if (creationRenouvellementInput && archer.creation_renouvellement) {
+        creationRenouvellementInput.value = archer.creation_renouvellement;
+        console.log('Création/renouvellement pré-rempli:', archer.creation_renouvellement);
+    }
+    
+    // Pré-remplir le type de certificat médical
+    const certificatSelect = document.getElementById('type_certificat_medical');
+    if (certificatSelect && archer.certificat_medical) {
+        const certValue = archer.certificat_medical.trim();
+        // Chercher l'option correspondante (Compétition ou Pratique)
+        for (let i = 0; i < certificatSelect.options.length; i++) {
+            if (certificatSelect.options[i].textContent.toLowerCase().includes(certValue.toLowerCase()) ||
+                certValue.toLowerCase().includes(certificatSelect.options[i].textContent.toLowerCase())) {
+                // Activer temporairement pour définir la valeur
+                certificatSelect.disabled = false;
+                certificatSelect.value = certificatSelect.options[i].value;
+                certificatSelect.disabled = true; // Re-désactiver
+                console.log('Certificat médical pré-rempli:', certificatSelect.value);
+                break;
+            }
+        }
+    }
+    
+    // Pré-remplir la catégorie de classement
+    const categorieSelect = document.getElementById('categorie_classement');
+    if (categorieSelect && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
+        let categorieXml = (archer.CATEGORIE || '').trim().toUpperCase();
+        const sexeXml = (archer.SEXE || '').trim();
+        
+        // Si la catégorie ne contient pas H/F, l'ajouter depuis le sexe
+        if (categorieXml && sexeXml && !categorieXml.match(/[HF]/)) {
+            const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
+            if (sexeLetter) {
+                categorieXml = sexeLetter + categorieXml;
+            }
+        }
+        
+        if (categorieXml) {
+            // Chercher la catégorie correspondante
+            const categorieFound = categoriesClassement.find(cat => {
+                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                return abv === categorieXml;
+            });
+            
+            if (categorieFound) {
+                categorieSelect.value = categorieFound.abv_categorie_classement || '';
+                console.log('Catégorie pré-remplie:', categorieSelect.value);
+            }
+        }
+    }
+    
+    // Pré-remplir l'arme (type d'arc)
+    const armeSelect = document.getElementById('arme');
+    if (armeSelect && typeof arcs !== 'undefined' && arcs) {
+        const typarc = (archer.TYPARC || '').trim();
+        if (typarc) {
+            // Chercher l'arc correspondant
+            const arcFound = arcs.find(arc => {
+                const lbArc = (arc.lb_arc || '').trim().toLowerCase();
+                return lbArc.includes(typarc.toLowerCase()) || typarc.toLowerCase().includes(lbArc);
+            });
+            
+            if (arcFound) {
+                armeSelect.value = arcFound.lb_arc || '';
+                console.log('Arme pré-remplie:', armeSelect.value);
+            }
+        }
+    }
+    
+    // Pré-remplir le numéro de départ (affichage seulement)
+    const departSelect = document.getElementById('depart-select-main');
+    if (departSelect && departSelect.value) {
+        const modalDepartDisplay = document.getElementById('modal-depart-display');
+        if (modalDepartDisplay) {
+            modalDepartDisplay.textContent = 'Départ ' + departSelect.value;
+        }
+    }
 }
 
 /**
