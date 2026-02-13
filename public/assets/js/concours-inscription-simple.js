@@ -376,35 +376,52 @@ function prefillFormFields(archer) {
     }
     
     // Pré-remplir la catégorie de classement
-    // Utiliser CATAGE (idcategorie) et TYPARC (idarc) pour trouver la catégorie
+    // Utiliser CATAGE (idcategorie), TYPARC (idarc) et SEXE (1=H, 2=F) pour trouver la catégorie
     const categorieSelect = document.getElementById('categorie_classement');
     if (categorieSelect) {
         if (typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0) {
             const catage = archer.CATAGE ? String(archer.CATAGE).trim() : '';
             const typarc = archer.TYPARC ? String(archer.TYPARC).trim() : '';
             const sexeXml = (archer.SEXE || '').trim();
+            const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
             
-            console.log('Tentative pré-remplissage catégorie. CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeXml);
+            console.log('Tentative pré-remplissage catégorie. CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeXml, '->', sexeLetter);
             
             if (catage && typarc) {
                 // Chercher la catégorie correspondante avec idcategorie = CATAGE et idarc = TYPARC
-                const categorieFound = categoriesClassement.find(cat => {
+                // Et vérifier que l'abréviation de la catégorie commence par H ou F selon le sexe
+                let categorieFound = categoriesClassement.find(cat => {
                     const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
                     const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
+                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
                     
-                    return catIdcategorie === catage && catIdarc === typarc;
+                    // Vérifier idcategorie et idarc
+                    const matchIds = catIdcategorie === catage && catIdarc === typarc;
+                    
+                    if (!matchIds) {
+                        return false;
+                    }
+                    
+                    // Si on a un sexe, vérifier que la catégorie correspond au sexe
+                    if (sexeLetter) {
+                        // La catégorie doit commencer par H ou F selon le sexe
+                        return catAbv.startsWith(sexeLetter);
+                    }
+                    
+                    // Si pas de sexe, retourner la première correspondance
+                    return true;
                 });
                 
                 if (categorieFound) {
                     categorieSelect.value = categorieFound.abv_categorie_classement || '';
-                    console.log('✓ Catégorie pré-remplie via CATAGE/TYPARC:', categorieSelect.value);
+                    console.log('✓ Catégorie pré-remplie via CATAGE/TYPARC/SEXE:', categorieSelect.value);
                     
                     // Déclencher le remplissage automatique de la distance et du blason
                     setTimeout(() => {
                         fillDistanceAndBlasonFromCategorie(categorieFound.abv_categorie_classement);
                     }, 300);
                 } else {
-                    console.log('✗ Catégorie non trouvée avec CATAGE:', catage, 'et TYPARC:', typarc);
+                    console.log('✗ Catégorie non trouvée avec CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter);
                     console.log('Catégories disponibles:', categoriesClassement.map(c => ({
                         abv: c.abv_categorie_classement,
                         idcategorie: c.idcategorie || c.id_categorie,
@@ -414,7 +431,6 @@ function prefillFormFields(archer) {
                     // Fallback: essayer avec CATEGORIE si disponible
                     let categorieXml = (archer.CATEGORIE || '').trim().toUpperCase();
                     if (categorieXml && sexeXml && !categorieXml.match(/[HF]/)) {
-                        const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
                         if (sexeLetter) {
                             categorieXml = sexeLetter + categorieXml;
                         }
