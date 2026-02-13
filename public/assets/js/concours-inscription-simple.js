@@ -122,21 +122,44 @@ function searchArcherByLicense() {
  * Affiche les résultats de la recherche dans le modal
  */
 function showSearchResult() {
-    if (!selectedArcher) return;
+    if (!selectedArcher) {
+        console.error('showSearchResult: selectedArcher est null');
+        return;
+    }
     
-    console.log('Données archer pour pré-remplissage:', selectedArcher);
+    console.log('=== showSearchResult appelé ===');
+    console.log('Données archer complètes:', JSON.stringify(selectedArcher, null, 2));
+    
+    const modalElement = document.getElementById('confirmInscriptionModal');
+    if (!modalElement) {
+        console.error('Modal confirmInscriptionModal introuvable');
+        return;
+    }
     
     // Remplir les infos dans le modal (affichage)
-    document.getElementById('modal-archer-nom').textContent = selectedArcher.name || 'N/A';
-    document.getElementById('modal-archer-prenom').textContent = selectedArcher.first_name || 'N/A';
-    document.getElementById('modal-archer-licence').textContent = selectedArcher.licence_number || 'N/A';
-    document.getElementById('modal-archer-club').textContent = selectedArcher.club || 'N/A';
+    const nomEl = document.getElementById('modal-archer-nom');
+    const prenomEl = document.getElementById('modal-archer-prenom');
+    const licenceEl = document.getElementById('modal-archer-licence');
+    const clubEl = document.getElementById('modal-archer-club');
     
-    // Pré-remplir les champs du formulaire
+    if (nomEl) nomEl.textContent = selectedArcher.name || 'N/A';
+    if (prenomEl) prenomEl.textContent = selectedArcher.first_name || 'N/A';
+    if (licenceEl) licenceEl.textContent = selectedArcher.licence_number || 'N/A';
+    if (clubEl) clubEl.textContent = selectedArcher.club || 'N/A';
+    
+    // Pré-remplir les champs du formulaire AVANT d'afficher le modal
     prefillFormFields(selectedArcher);
     
     // Afficher le modal de confirmation
-    const modal = new bootstrap.Modal(document.getElementById('confirmInscriptionModal'));
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Écouter l'événement 'shown' pour s'assurer que le modal est complètement affiché
+    modalElement.addEventListener('shown.bs.modal', function onModalShown() {
+        // Réessayer le pré-remplissage au cas où certains champs ne seraient pas encore disponibles
+        prefillFormFields(selectedArcher);
+        modalElement.removeEventListener('shown.bs.modal', onModalShown);
+    }, { once: true });
+    
     modal.show();
 }
 
@@ -144,103 +167,181 @@ function showSearchResult() {
  * Pré-remplit les champs du formulaire avec les données de l'archer
  */
 function prefillFormFields(archer) {
-    if (!archer) return;
+    if (!archer) {
+        console.error('prefillFormFields: archer est null');
+        return;
+    }
+    
+    console.log('=== prefillFormFields appelé ===');
+    console.log('Données disponibles:', {
+        saison: archer.saison,
+        type_licence: archer.type_licence,
+        creation_renouvellement: archer.creation_renouvellement,
+        certificat_medical: archer.certificat_medical,
+        CATEGORIE: archer.CATEGORIE,
+        TYPARC: archer.TYPARC,
+        SEXE: archer.SEXE
+    });
     
     // Pré-remplir la saison
     const saisonInput = document.getElementById('saison');
-    if (saisonInput && archer.saison) {
-        saisonInput.value = archer.saison;
-        console.log('Saison pré-remplie:', saisonInput.value);
+    if (saisonInput) {
+        if (archer.saison) {
+            saisonInput.value = archer.saison;
+            console.log('✓ Saison pré-remplie:', saisonInput.value);
+        } else {
+            console.log('✗ Saison non disponible dans les données');
+        }
+    } else {
+        console.error('✗ Champ saison introuvable');
     }
     
     // Pré-remplir le type de licence
     const typeLicenceSelect = document.getElementById('type_licence');
-    if (typeLicenceSelect && archer.type_licence) {
-        const cleanedTypeLicence = archer.type_licence.trim().toUpperCase();
-        const firstLetter = cleanedTypeLicence.length > 0 ? cleanedTypeLicence[0] : '';
-        // Chercher l'option correspondante
-        for (let i = 0; i < typeLicenceSelect.options.length; i++) {
-            if (typeLicenceSelect.options[i].value === firstLetter) {
-                // Activer temporairement pour définir la valeur
-                typeLicenceSelect.disabled = false;
-                typeLicenceSelect.value = firstLetter;
-                typeLicenceSelect.disabled = true; // Re-désactiver
-                console.log('Type licence pré-rempli:', firstLetter);
-                break;
+    if (typeLicenceSelect) {
+        if (archer.type_licence) {
+            const cleanedTypeLicence = archer.type_licence.trim().toUpperCase();
+            const firstLetter = cleanedTypeLicence.length > 0 ? cleanedTypeLicence[0] : '';
+            console.log('Tentative pré-remplissage type_licence:', cleanedTypeLicence, '-> première lettre:', firstLetter);
+            // Chercher l'option correspondante
+            let found = false;
+            for (let i = 0; i < typeLicenceSelect.options.length; i++) {
+                if (typeLicenceSelect.options[i].value === firstLetter) {
+                    // Activer temporairement pour définir la valeur
+                    typeLicenceSelect.disabled = false;
+                    typeLicenceSelect.value = firstLetter;
+                    typeLicenceSelect.disabled = true; // Re-désactiver
+                    console.log('✓ Type licence pré-rempli:', firstLetter);
+                    found = true;
+                    break;
+                }
             }
+            if (!found) {
+                console.log('✗ Aucune option trouvée pour type_licence:', firstLetter);
+            }
+        } else {
+            console.log('✗ type_licence non disponible dans les données');
         }
+    } else {
+        console.error('✗ Champ type_licence introuvable');
     }
     
     // Pré-remplir création/renouvellement
     const creationRenouvellementInput = document.getElementById('creation_renouvellement');
-    if (creationRenouvellementInput && archer.creation_renouvellement) {
-        creationRenouvellementInput.value = archer.creation_renouvellement;
-        console.log('Création/renouvellement pré-rempli:', archer.creation_renouvellement);
+    if (creationRenouvellementInput) {
+        if (archer.creation_renouvellement) {
+            creationRenouvellementInput.value = archer.creation_renouvellement;
+            console.log('✓ Création/renouvellement pré-rempli:', archer.creation_renouvellement);
+        } else {
+            console.log('✗ creation_renouvellement non disponible dans les données');
+        }
+    } else {
+        console.error('✗ Champ creation_renouvellement introuvable');
     }
     
     // Pré-remplir le type de certificat médical
     const certificatSelect = document.getElementById('type_certificat_medical');
-    if (certificatSelect && archer.certificat_medical) {
-        const certValue = archer.certificat_medical.trim();
-        // Chercher l'option correspondante (Compétition ou Pratique)
-        for (let i = 0; i < certificatSelect.options.length; i++) {
-            if (certificatSelect.options[i].textContent.toLowerCase().includes(certValue.toLowerCase()) ||
-                certValue.toLowerCase().includes(certificatSelect.options[i].textContent.toLowerCase())) {
-                // Activer temporairement pour définir la valeur
-                certificatSelect.disabled = false;
-                certificatSelect.value = certificatSelect.options[i].value;
-                certificatSelect.disabled = true; // Re-désactiver
-                console.log('Certificat médical pré-rempli:', certificatSelect.value);
-                break;
+    if (certificatSelect) {
+        if (archer.certificat_medical) {
+            const certValue = archer.certificat_medical.trim();
+            console.log('Tentative pré-remplissage certificat_medical:', certValue);
+            // Chercher l'option correspondante (Compétition ou Pratique)
+            let found = false;
+            for (let i = 0; i < certificatSelect.options.length; i++) {
+                if (certificatSelect.options[i].textContent.toLowerCase().includes(certValue.toLowerCase()) ||
+                    certValue.toLowerCase().includes(certificatSelect.options[i].textContent.toLowerCase())) {
+                    // Activer temporairement pour définir la valeur
+                    certificatSelect.disabled = false;
+                    certificatSelect.value = certificatSelect.options[i].value;
+                    certificatSelect.disabled = true; // Re-désactiver
+                    console.log('✓ Certificat médical pré-rempli:', certificatSelect.value);
+                    found = true;
+                    break;
+                }
             }
+            if (!found) {
+                console.log('✗ Aucune option trouvée pour certificat_medical:', certValue);
+            }
+        } else {
+            console.log('✗ certificat_medical non disponible dans les données');
         }
+    } else {
+        console.error('✗ Champ type_certificat_medical introuvable');
     }
     
     // Pré-remplir la catégorie de classement
     const categorieSelect = document.getElementById('categorie_classement');
-    if (categorieSelect && typeof categoriesClassement !== 'undefined' && categoriesClassement) {
-        let categorieXml = (archer.CATEGORIE || '').trim().toUpperCase();
-        const sexeXml = (archer.SEXE || '').trim();
-        
-        // Si la catégorie ne contient pas H/F, l'ajouter depuis le sexe
-        if (categorieXml && sexeXml && !categorieXml.match(/[HF]/)) {
-            const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
-            if (sexeLetter) {
-                categorieXml = sexeLetter + categorieXml;
-            }
-        }
-        
-        if (categorieXml) {
-            // Chercher la catégorie correspondante
-            const categorieFound = categoriesClassement.find(cat => {
-                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                return abv === categorieXml;
-            });
+    if (categorieSelect) {
+        if (typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0) {
+            let categorieXml = (archer.CATEGORIE || '').trim().toUpperCase();
+            const sexeXml = (archer.SEXE || '').trim();
             
-            if (categorieFound) {
-                categorieSelect.value = categorieFound.abv_categorie_classement || '';
-                console.log('Catégorie pré-remplie:', categorieSelect.value);
+            console.log('Tentative pré-remplissage catégorie. CATEGORIE:', categorieXml, 'SEXE:', sexeXml);
+            
+            // Si la catégorie ne contient pas H/F, l'ajouter depuis le sexe
+            if (categorieXml && sexeXml && !categorieXml.match(/[HF]/)) {
+                const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
+                if (sexeLetter) {
+                    categorieXml = sexeLetter + categorieXml;
+                    console.log('Catégorie avec sexe ajouté:', categorieXml);
+                }
             }
+            
+            if (categorieXml) {
+                // Chercher la catégorie correspondante
+                const categorieFound = categoriesClassement.find(cat => {
+                    const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                    return abv === categorieXml;
+                });
+                
+                if (categorieFound) {
+                    categorieSelect.value = categorieFound.abv_categorie_classement || '';
+                    console.log('✓ Catégorie pré-remplie:', categorieSelect.value);
+                } else {
+                    console.log('✗ Catégorie non trouvée dans categoriesClassement:', categorieXml);
+                    console.log('Catégories disponibles:', categoriesClassement.map(c => c.abv_categorie_classement));
+                }
+            } else {
+                console.log('✗ CATEGORIE vide ou invalide');
+            }
+        } else {
+            console.error('✗ categoriesClassement non défini ou vide');
         }
+    } else {
+        console.error('✗ Champ categorie_classement introuvable');
     }
     
     // Pré-remplir l'arme (type d'arc)
     const armeSelect = document.getElementById('arme');
-    if (armeSelect && typeof arcs !== 'undefined' && arcs) {
-        const typarc = (archer.TYPARC || '').trim();
-        if (typarc) {
-            // Chercher l'arc correspondant
-            const arcFound = arcs.find(arc => {
-                const lbArc = (arc.lb_arc || '').trim().toLowerCase();
-                return lbArc.includes(typarc.toLowerCase()) || typarc.toLowerCase().includes(lbArc);
-            });
-            
-            if (arcFound) {
-                armeSelect.value = arcFound.lb_arc || '';
-                console.log('Arme pré-remplie:', armeSelect.value);
+    if (armeSelect) {
+        if (typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
+            const typarc = (archer.TYPARC || '').trim();
+            if (typarc) {
+                console.log('Tentative pré-remplissage arme. TYPARC:', typarc);
+                // Chercher l'arc correspondant
+                const arcFound = arcs.find(arc => {
+                    const lbArc = (arc.lb_arc || '').trim().toLowerCase();
+                    return lbArc.includes(typarc.toLowerCase()) || typarc.toLowerCase().includes(lbArc);
+                });
+                
+                if (arcFound) {
+                    armeSelect.value = arcFound.lb_arc || '';
+                    console.log('✓ Arme pré-remplie:', armeSelect.value);
+                } else {
+                    console.log('✗ Arc non trouvé pour TYPARC:', typarc);
+                    console.log('Arcs disponibles:', arcs.map(a => a.lb_arc));
+                }
+            } else {
+                console.log('✗ TYPARC non disponible dans les données');
             }
+        } else {
+            console.error('✗ arcs non défini ou vide');
         }
+    } else {
+        console.error('✗ Champ arme introuvable');
     }
+    
+    console.log('=== Fin prefillFormFields ===');
     
     // Pré-remplir le numéro de départ (affichage seulement)
     const departSelect = document.getElementById('depart-select-main');
