@@ -388,12 +388,25 @@ function prefillFormFields(archer) {
             console.log('Tentative pré-remplissage catégorie. CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeXml, '->', sexeLetter);
             
             if (catage && typarc) {
-                // Chercher la catégorie correspondante avec idcategorie = CATAGE et idarc = TYPARC
-                // Et vérifier que l'abréviation de la catégorie commence par H ou F selon le sexe
+                // Chercher la catégorie correspondante avec idcategorie = CATAGE, idarc = TYPARC et sexe = H/F
                 let categorieFound = categoriesClassement.find(cat => {
                     const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
                     const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
+                    const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
                     const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                    
+                    console.log('Comparaison catégorie:', {
+                        catIdcategorie,
+                        catage,
+                        matchIdcategorie: catIdcategorie === catage,
+                        catIdarc,
+                        typarc,
+                        matchIdarc: catIdarc === typarc,
+                        catSexe,
+                        sexeLetter,
+                        matchSexe: sexeLetter ? catSexe === sexeLetter : true,
+                        catAbv
+                    });
                     
                     // Vérifier idcategorie et idarc
                     const matchIds = catIdcategorie === catage && catIdarc === typarc;
@@ -402,10 +415,16 @@ function prefillFormFields(archer) {
                         return false;
                     }
                     
-                    // Si on a un sexe, vérifier que la catégorie correspond au sexe
+                    // Si on a un sexe, vérifier que le champ sexe de la catégorie correspond
                     if (sexeLetter) {
-                        // La catégorie doit commencer par H ou F selon le sexe
-                        return catAbv.startsWith(sexeLetter);
+                        // Le champ sexe de la catégorie doit être H ou F selon le sexe du XML
+                        // Si le champ sexe n'existe pas, vérifier que l'abréviation commence par H ou F
+                        if (catSexe) {
+                            return catSexe === sexeLetter;
+                        } else {
+                            // Fallback: vérifier que l'abréviation commence par H ou F
+                            return catAbv.startsWith(sexeLetter);
+                        }
                     }
                     
                     // Si pas de sexe, retourner la première correspondance
@@ -425,8 +444,22 @@ function prefillFormFields(archer) {
                     console.log('Catégories disponibles:', categoriesClassement.map(c => ({
                         abv: c.abv_categorie_classement,
                         idcategorie: c.idcategorie || c.id_categorie,
-                        idarc: c.idarc || c.id_arc
+                        idarc: c.idarc || c.id_arc,
+                        sexe: c.sexe || c.SEXE || 'N/A'
                     })));
+                    
+                    // Afficher les catégories qui correspondent à CATAGE et TYPARC (sans le sexe)
+                    const matchingCategories = categoriesClassement.filter(cat => {
+                        const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
+                        const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
+                        return catIdcategorie === catage && catIdarc === typarc;
+                    });
+                    if (matchingCategories.length > 0) {
+                        console.log('Catégories correspondant à CATAGE et TYPARC (sans sexe):', matchingCategories.map(c => ({
+                            abv: c.abv_categorie_classement,
+                            sexe: c.sexe || c.SEXE || 'N/A'
+                        })));
+                    }
                     
                     // Fallback: essayer avec CATEGORIE si disponible
                     let categorieXml = (archer.CATEGORIE || '').trim().toUpperCase();
