@@ -71,7 +71,8 @@ class ArcherSearchController {
                 'bow_type' => $xmlData['bowType'] ?? '',
                 // Données pour le pré-remplissage (une seule clé par donnée)
                 'CATEGORIE' => $xmlData['categorie'] ?? '',
-                'TYPARC' => $xmlData['bowType'] ?? '',
+                'TYPARC' => $xmlEntry['TYPARC'] ?? '',
+                'CATAGE' => $xmlEntry['CATAGE'] ?? '',
                 'SEXE' => $xmlEntry['SEXE'] ?? '',
                 'saison' => $xmlEntry['ABREV'] ?? '',
                 'type_licence' => $xmlEntry['type_licence'] ?? '',

@@ -30,6 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setupBlasonAutoUpdate();
 });
 
+// Variable pour stocker la fonction de mise à jour du blason (pour pouvoir la retirer si nécessaire)
+let blasonUpdateHandler = null;
+
 /**
  * Configure les listeners pour mettre à jour automatiquement le blason
  * quand la catégorie ou la distance change
@@ -40,17 +43,33 @@ function setupBlasonAutoUpdate() {
     const blasonInput = document.getElementById('blason');
     
     if (!categorieSelect || !distanceSelect || !blasonInput) {
-        console.log('Champs manquants pour le blason auto-update');
+        console.log('Champs manquants pour le blason auto-update:', {
+            categorieSelect: !!categorieSelect,
+            distanceSelect: !!distanceSelect,
+            blasonInput: !!blasonInput
+        });
         return;
     }
     
+    // Retirer l'ancien listener s'il existe
+    if (blasonUpdateHandler) {
+        categorieSelect.removeEventListener('change', blasonUpdateHandler);
+        distanceSelect.removeEventListener('change', blasonUpdateHandler);
+    }
+    
     // Fonction pour mettre à jour le blason
-    const updateBlason = () => {
+    blasonUpdateHandler = function updateBlason() {
         const categorie = categorieSelect.value;
         const distance = distanceSelect.value;
         
+        console.log('=== updateBlason appelé ===');
+        console.log('Catégorie:', categorie, 'Distance:', distance);
+        
         if (!categorie || !distance) {
             console.log('Catégorie ou distance manquante, pas de mise à jour du blason');
+            if (blasonInput) {
+                blasonInput.value = '';
+            }
             return;
         }
         
@@ -62,32 +81,43 @@ function setupBlasonAutoUpdate() {
         // Vérifier si c'est une discipline 3D, Nature ou Campagne
         const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
         if (isNature) {
+            console.log('Discipline 3D/Nature/Campagne - pas de blason');
             return; // Pas de blason pour ces disciplines
         }
         
-        console.log('Mise à jour automatique du blason pour catégorie:', categorie, 'distance:', distance);
+        console.log('Mise à jour automatique du blason pour catégorie:', categorie, 'distance:', distance, 'discipline:', concoursDiscipline);
         
         // Appeler l'API pour récupérer le blason
         getBlasonFromAPI(concoursDiscipline, categorie, distance)
             .then(blason => {
                 if (blason && blasonInput) {
                     blasonInput.value = blason;
-                    console.log('✓ Blason mis à jour automatiquement:', blason, 'cm');
+                    console.log('✓✓✓ Blason mis à jour automatiquement:', blason, 'cm');
                 } else {
                     console.log('✗ Aucun blason trouvé pour cette combinaison');
-                    blasonInput.value = '';
+                    if (blasonInput) {
+                        blasonInput.value = '';
+                    }
                 }
             })
             .catch(error => {
                 console.error('Erreur lors de la récupération du blason:', error);
+                if (blasonInput) {
+                    blasonInput.value = '';
+                }
             });
     };
     
     // Ajouter les listeners
-    categorieSelect.addEventListener('change', updateBlason);
-    distanceSelect.addEventListener('change', updateBlason);
+    categorieSelect.addEventListener('change', blasonUpdateHandler);
+    distanceSelect.addEventListener('change', blasonUpdateHandler);
     
     console.log('✓ Listeners pour mise à jour automatique du blason configurés');
+    console.log('Éléments:', {
+        categorieSelect: categorieSelect.id,
+        distanceSelect: distanceSelect.id,
+        blasonInput: blasonInput.id
+    });
 }
 
 /**
@@ -220,6 +250,8 @@ function showSearchResult() {
     modalElement.addEventListener('shown.bs.modal', function onModalShown() {
         // Réessayer le pré-remplissage au cas où certains champs ne seraient pas encore disponibles
         prefillFormFields(selectedArcher);
+        // Configurer les listeners pour le blason maintenant que le modal est ouvert
+        setupBlasonAutoUpdate();
         modalElement.removeEventListener('shown.bs.modal', onModalShown);
     }, { once: true });
     
@@ -242,6 +274,7 @@ function prefillFormFields(archer) {
         creation_renouvellement: archer.creation_renouvellement,
         certificat_medical: archer.certificat_medical,
         CATEGORIE: archer.CATEGORIE,
+        CATAGE: archer.CATAGE,
         TYPARC: archer.TYPARC,
         SEXE: archer.SEXE
     });
@@ -343,44 +376,68 @@ function prefillFormFields(archer) {
     }
     
     // Pré-remplir la catégorie de classement
+    // Utiliser CATAGE (idcategorie) et TYPARC (idarc) pour trouver la catégorie
     const categorieSelect = document.getElementById('categorie_classement');
     if (categorieSelect) {
         if (typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0) {
-            let categorieXml = (archer.CATEGORIE || '').trim().toUpperCase();
+            const catage = archer.CATAGE ? String(archer.CATAGE).trim() : '';
+            const typarc = archer.TYPARC ? String(archer.TYPARC).trim() : '';
             const sexeXml = (archer.SEXE || '').trim();
             
-            console.log('Tentative pré-remplissage catégorie. CATEGORIE:', categorieXml, 'SEXE:', sexeXml);
+            console.log('Tentative pré-remplissage catégorie. CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeXml);
             
-            // Si la catégorie ne contient pas H/F, l'ajouter depuis le sexe
-            if (categorieXml && sexeXml && !categorieXml.match(/[HF]/)) {
-                const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
-                if (sexeLetter) {
-                    categorieXml = sexeLetter + categorieXml;
-                    console.log('Catégorie avec sexe ajouté:', categorieXml);
-                }
-            }
-            
-            if (categorieXml) {
-                // Chercher la catégorie correspondante
+            if (catage && typarc) {
+                // Chercher la catégorie correspondante avec idcategorie = CATAGE et idarc = TYPARC
                 const categorieFound = categoriesClassement.find(cat => {
-                    const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                    return abv === categorieXml;
+                    const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
+                    const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
+                    
+                    return catIdcategorie === catage && catIdarc === typarc;
                 });
                 
                 if (categorieFound) {
                     categorieSelect.value = categorieFound.abv_categorie_classement || '';
-                    console.log('✓ Catégorie pré-remplie:', categorieSelect.value);
+                    console.log('✓ Catégorie pré-remplie via CATAGE/TYPARC:', categorieSelect.value);
                     
                     // Déclencher le remplissage automatique de la distance et du blason
                     setTimeout(() => {
                         fillDistanceAndBlasonFromCategorie(categorieFound.abv_categorie_classement);
                     }, 300);
                 } else {
-                    console.log('✗ Catégorie non trouvée dans categoriesClassement:', categorieXml);
-                    console.log('Catégories disponibles:', categoriesClassement.map(c => c.abv_categorie_classement));
+                    console.log('✗ Catégorie non trouvée avec CATAGE:', catage, 'et TYPARC:', typarc);
+                    console.log('Catégories disponibles:', categoriesClassement.map(c => ({
+                        abv: c.abv_categorie_classement,
+                        idcategorie: c.idcategorie || c.id_categorie,
+                        idarc: c.idarc || c.id_arc
+                    })));
+                    
+                    // Fallback: essayer avec CATEGORIE si disponible
+                    let categorieXml = (archer.CATEGORIE || '').trim().toUpperCase();
+                    if (categorieXml && sexeXml && !categorieXml.match(/[HF]/)) {
+                        const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
+                        if (sexeLetter) {
+                            categorieXml = sexeLetter + categorieXml;
+                        }
+                    }
+                    
+                    if (categorieXml) {
+                        const categorieFoundFallback = categoriesClassement.find(cat => {
+                            const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                            return abv === categorieXml;
+                        });
+                        
+                        if (categorieFoundFallback) {
+                            categorieSelect.value = categorieFoundFallback.abv_categorie_classement || '';
+                            console.log('✓ Catégorie pré-remplie via CATEGORIE (fallback):', categorieSelect.value);
+                            
+                            setTimeout(() => {
+                                fillDistanceAndBlasonFromCategorie(categorieFoundFallback.abv_categorie_classement);
+                            }, 300);
+                        }
+                    }
                 }
             } else {
-                console.log('✗ CATEGORIE vide ou invalide');
+                console.log('✗ CATAGE ou TYPARC manquant. CATAGE:', catage, 'TYPARC:', typarc);
             }
         } else {
             console.error('✗ categoriesClassement non défini ou vide');
@@ -390,24 +447,39 @@ function prefillFormFields(archer) {
     }
     
     // Pré-remplir l'arme (type d'arc)
+    // Utiliser TYPARC qui correspond à idarc de la table concour_arcs
     const armeSelect = document.getElementById('arme');
     if (armeSelect) {
         if (typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
-            const typarc = (archer.TYPARC || '').trim();
+            const typarc = archer.TYPARC ? String(archer.TYPARC).trim() : '';
             if (typarc) {
-                console.log('Tentative pré-remplissage arme. TYPARC:', typarc);
-                // Chercher l'arc correspondant
+                console.log('Tentative pré-remplissage arme. TYPARC (idarc):', typarc);
+                // Chercher l'arc correspondant avec idarc = TYPARC
                 const arcFound = arcs.find(arc => {
-                    const lbArc = (arc.lb_arc || '').trim().toLowerCase();
-                    return lbArc.includes(typarc.toLowerCase()) || typarc.toLowerCase().includes(lbArc);
+                    const arcIdarc = String(arc.idarc || arc.id_arc || arc.id || '').trim();
+                    return arcIdarc === typarc;
                 });
                 
                 if (arcFound) {
                     armeSelect.value = arcFound.lb_arc || '';
-                    console.log('✓ Arme pré-remplie:', armeSelect.value);
+                    console.log('✓ Arme pré-remplie via TYPARC:', armeSelect.value);
                 } else {
-                    console.log('✗ Arc non trouvé pour TYPARC:', typarc);
-                    console.log('Arcs disponibles:', arcs.map(a => a.lb_arc));
+                    console.log('✗ Arc non trouvé pour TYPARC (idarc):', typarc);
+                    console.log('Arcs disponibles:', arcs.map(a => ({
+                        lb_arc: a.lb_arc,
+                        idarc: a.idarc || a.id_arc || a.id
+                    })));
+                    
+                    // Fallback: chercher par nom si disponible
+                    const arcFoundFallback = arcs.find(arc => {
+                        const lbArc = (arc.lb_arc || '').trim().toLowerCase();
+                        return lbArc.includes(typarc.toLowerCase()) || typarc.toLowerCase().includes(lbArc);
+                    });
+                    
+                    if (arcFoundFallback) {
+                        armeSelect.value = arcFoundFallback.lb_arc || '';
+                        console.log('✓ Arme pré-remplie via nom (fallback):', armeSelect.value);
+                    }
                 }
             } else {
                 console.log('✗ TYPARC non disponible dans les données');
