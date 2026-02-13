@@ -69,7 +69,14 @@ class ArcherSearchController {
                 'club' => $xmlData['club_name'] ?? '',
                 'age_category' => $xmlData['ageCategory'] ?? '',
                 'bow_type' => $xmlData['bowType'] ?? '',
-                'gender' => $xmlData['gender'] ?? ''
+                // Données pour le pré-remplissage (une seule clé par donnée)
+                'CATEGORIE' => $xmlData['categorie'] ?? '',
+                'TYPARC' => $xmlData['bowType'] ?? '',
+                'SEXE' => $xmlEntry['SEXE'] ?? '',
+                'saison' => $xmlEntry['ABREV'] ?? '',
+                'type_licence' => $xmlEntry['type_licence'] ?? '',
+                'creation_renouvellement' => $xmlEntry['Creation_renouvellement'] ?? '',
+                'certificat_medical' => $xmlEntry['CERTIFICAT'] ?? ''
             ]
         ]);
     }
