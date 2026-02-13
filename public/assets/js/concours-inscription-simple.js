@@ -25,7 +25,70 @@ document.addEventListener('DOMContentLoaded', function() {
     if (confirmBtn) {
         confirmBtn.addEventListener('click', confirmArcherSelection);
     }
+    
+    // Ajouter les listeners pour mettre à jour le blason automatiquement
+    setupBlasonAutoUpdate();
 });
+
+/**
+ * Configure les listeners pour mettre à jour automatiquement le blason
+ * quand la catégorie ou la distance change
+ */
+function setupBlasonAutoUpdate() {
+    const categorieSelect = document.getElementById('categorie_classement');
+    const distanceSelect = document.getElementById('distance');
+    const blasonInput = document.getElementById('blason');
+    
+    if (!categorieSelect || !distanceSelect || !blasonInput) {
+        console.log('Champs manquants pour le blason auto-update');
+        return;
+    }
+    
+    // Fonction pour mettre à jour le blason
+    const updateBlason = () => {
+        const categorie = categorieSelect.value;
+        const distance = distanceSelect.value;
+        
+        if (!categorie || !distance) {
+            console.log('Catégorie ou distance manquante, pas de mise à jour du blason');
+            return;
+        }
+        
+        if (typeof concoursDiscipline === 'undefined' || concoursDiscipline === null) {
+            console.log('concoursDiscipline non défini, pas de mise à jour du blason');
+            return;
+        }
+        
+        // Vérifier si c'est une discipline 3D, Nature ou Campagne
+        const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+        if (isNature) {
+            return; // Pas de blason pour ces disciplines
+        }
+        
+        console.log('Mise à jour automatique du blason pour catégorie:', categorie, 'distance:', distance);
+        
+        // Appeler l'API pour récupérer le blason
+        getBlasonFromAPI(concoursDiscipline, categorie, distance)
+            .then(blason => {
+                if (blason && blasonInput) {
+                    blasonInput.value = blason;
+                    console.log('✓ Blason mis à jour automatiquement:', blason, 'cm');
+                } else {
+                    console.log('✗ Aucun blason trouvé pour cette combinaison');
+                    blasonInput.value = '';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération du blason:', error);
+            });
+    };
+    
+    // Ajouter les listeners
+    categorieSelect.addEventListener('change', updateBlason);
+    distanceSelect.addEventListener('change', updateBlason);
+    
+    console.log('✓ Listeners pour mise à jour automatique du blason configurés');
+}
 
 /**
  * Cherche un archer par son numéro de licence
@@ -243,26 +306,22 @@ function prefillFormFields(archer) {
     const certificatSelect = document.getElementById('type_certificat_medical');
     if (certificatSelect) {
         if (archer.certificat_medical) {
-            const certValue = archer.certificat_medical.trim().toUpperCase();
+            const certValue = archer.certificat_medical.trim();
             console.log('Tentative pré-remplissage certificat_medical:', certValue);
             
-            // Mapper les valeurs possibles du XML vers les options du formulaire
-            let targetValue = '';
-            if (certValue.includes('COMPETITION') || certValue.includes('COMPÉTITION') || certValue === 'C' || certValue.startsWith('C')) {
-                targetValue = 'Compétition';
-            } else if (certValue.includes('PRATIQUE') || certValue === 'P' || certValue.startsWith('P')) {
-                targetValue = 'Pratique';
-            }
-            
+            // Le champ XML contient directement "Compétition" ou "Pratique"
             // Chercher l'option correspondante
             let found = false;
             for (let i = 0; i < certificatSelect.options.length; i++) {
                 const optionValue = certificatSelect.options[i].value;
                 const optionText = certificatSelect.options[i].textContent.trim();
                 
-                if (optionValue === targetValue || optionText === targetValue ||
-                    optionText.toLowerCase().includes(certValue.toLowerCase()) ||
-                    certValue.includes(optionText.toUpperCase())) {
+                // Comparaison insensible à la casse et aux accents
+                const certValueLower = certValue.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const optionTextLower = optionText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                
+                if (optionValue === certValue || optionText === certValue ||
+                    optionTextLower.includes(certValueLower) || certValueLower.includes(optionTextLower)) {
                     // Activer temporairement pour définir la valeur
                     certificatSelect.disabled = false;
                     certificatSelect.value = optionValue;
@@ -273,7 +332,7 @@ function prefillFormFields(archer) {
                 }
             }
             if (!found) {
-                console.log('✗ Aucune option trouvée pour certificat_medical:', certValue, 'targetValue:', targetValue);
+                console.log('✗ Aucune option trouvée pour certificat_medical:', certValue);
                 console.log('Options disponibles:', Array.from(certificatSelect.options).map(o => ({ value: o.value, text: o.textContent })));
             }
         } else {
