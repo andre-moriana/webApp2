@@ -864,8 +864,14 @@ function submitInscription() {
         return;
     }
     
+    // Construire user_nom avec nom et prénom
+    const nom = selectedArcher.name || '';
+    const prenom = selectedArcher.first_name || '';
+    const user_nom = `${prenom} ${nom}`.trim() || nom || prenom || '';
+    
     // Récupérer les données du formulaire
     const formData = {
+        user_nom: user_nom,
         numero_depart: numeroDepart,
         numero_licence: selectedArcher.licence_number,
         saison: document.getElementById('saison')?.value || '',
