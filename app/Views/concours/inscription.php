@@ -125,8 +125,7 @@ table tbody tr.piquet-blanc {
                 <table class="table table-bordered" id="inscriptions-table">
                     <thead>
                         <tr>
-                            <th>Nom</th>
-                            <th>Prénom</th>
+                            <th>Nom et Prénom</th>
                             <th>Numéro de licence</th>
                             <th>Club</th>
                             <th>Départ</th>
