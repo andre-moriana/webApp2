@@ -144,7 +144,7 @@ table tbody tr.piquet-blanc {
                         <?php 
                         // $usersMap est passé depuis le contrôleur
                         foreach ($inscriptions as $inscription):
-                            $userName = $inscription['user_name'] ?? null;
+                            $userName = $inscription['user_nom'] ?? null;
                             //$user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
                             
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
@@ -168,7 +168,7 @@ table tbody tr.piquet-blanc {
                             }
                         ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['user_name'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['user_nom'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
                                     <?php 
