@@ -76,7 +76,7 @@ class ArcherSearchController {
                 'saison' => $xmlEntry['ABREV'] ?? '',
                 'type_licence' => $xmlEntry['type_licence'] ?? '',
                 'creation_renouvellement' => $xmlEntry['Creation_renouvellement'] ?? '',
-                'certificat_medical' => $xmlEntry['CERTIFICAT'] ?? ''
+                'certificat_medical' => $xmlEntry['certificat_medical'] ?? ''
             ]
         ]);
     }
