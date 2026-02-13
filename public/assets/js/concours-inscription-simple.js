@@ -59,29 +59,34 @@ function searchArcherByLicense() {
         
         // Vérifier si la réponse est JSON
         const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            return response.text().then(text => {
-                console.error('Réponse non-JSON reçue:', text.substring(0, 500));
-                throw new Error('Le serveur a retourné une réponse non-JSON. Vérifiez les erreurs PHP.');
+        const isJson = contentType && contentType.includes('application/json');
+        
+        // Toujours essayer de parser en JSON si le content-type indique JSON
+        // Même si le code HTTP est une erreur (404, 400, etc.)
+        if (isJson) {
+            return response.json().then(data => {
+                // Si le serveur retourne success: false, c'est une erreur métier, pas une erreur HTTP
+                if (!data.success) {
+                    console.error('Erreur API:', data);
+                    throw new Error(data.error || 'Erreur lors de la recherche');
+                }
+                // Si success: true, retourner les données même si le code HTTP est une erreur
+                return data;
             });
         }
         
+        // Si ce n'est pas JSON, gérer comme une erreur
         if (!response.ok) {
-            return response.json().then(data => {
-                console.error('Erreur API:', data);
-                throw new Error(data.error || `Erreur ${response.status}: ${response.statusText}`);
-            }).catch(err => {
-                // Si la réponse d'erreur n'est pas JSON non plus
-                if (err.message && !err.message.includes('Erreur')) {
-                    return response.text().then(text => {
-                        console.error('Erreur non-JSON:', text.substring(0, 500));
-                        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
-                    });
-                }
-                throw err;
+            return response.text().then(text => {
+                console.error('Réponse non-JSON reçue:', text.substring(0, 500));
+                throw new Error(`Erreur ${response.status}: ${response.statusText}`);
             });
         }
-        return response.json();
+        
+        // Si OK et pas JSON, essayer quand même de parser
+        return response.json().catch(() => {
+            throw new Error('Le serveur a retourné une réponse non-JSON');
+        });
     })
     .then(data => {
         console.log('Données reçues:', data);
