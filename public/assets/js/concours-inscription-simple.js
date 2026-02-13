@@ -43,7 +43,7 @@ function searchArcherByLicense() {
     const searchBtn = document.getElementById('archer-search-btn');
     if (searchBtn) searchBtn.disabled = true;
     
-    fetch('/api/archer/search-or-create', {
+    fetch('/archer/search-or-create', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
