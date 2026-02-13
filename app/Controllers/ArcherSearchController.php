@@ -66,7 +66,7 @@ class ArcherSearchController {
                 'licence_number' => $licenceNumber,
                 'first_name' => $xmlData['first_name'] ?? '',
                 'name' => $xmlData['name'] ?? '',
-                'club' => $xmlData['club_name'] ?? '',
+                'club' => $xmlData['club_name'] ?? $xmlData['club'] ?? '',
                 'age_category' => $xmlData['ageCategory'] ?? '',
                 'bow_type' => $xmlData['bowType'] ?? '',
                 // Données pour le pré-remplissage (une seule clé par donnée)

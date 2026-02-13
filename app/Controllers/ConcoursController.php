@@ -1396,7 +1396,15 @@ class ConcoursController {
         error_log("=== storeInscription appelé pour concoursId: " . $concoursId);
         error_log("Données POST reçues: " . json_encode($_POST, JSON_UNESCAPED_UNICODE));
 
-        $user_id = $_POST['user_id'] ?? null;
+        $user_nom = isset($_POST['user_nom']) ? trim($_POST['user_nom']) : null;
+        
+        if (empty($user_nom)) {
+            error_log("ERREUR: Pas de user_nom!");
+            $_SESSION['error'] = 'Nom de l\'archer requis';
+            header("Location: /concours/{$concoursId}/inscription");
+            exit;
+        }
+        
         if (!isset($_POST['numero_depart']) || $_POST['numero_depart'] === '') {
             error_log("ERREUR: Pas de numero_depart!");
             $_SESSION['error'] = 'Numéro de départ requis';
@@ -1459,16 +1467,25 @@ class ConcoursController {
             
             // Log pour déboguer
             error_log("=== VÉRIFICATION DOUBLON ===");
-            error_log("user_id: $user_id, numero_depart: " . var_export($numero_depart, true) . ", numero_tir: " . var_export($numero_tir, true));
+            error_log("user_nom: $user_nom, numero_depart: " . var_export($numero_depart, true) . ", numero_tir: " . var_export($numero_tir, true));
             error_log("Nombre d'inscriptions existantes: " . count($inscriptions));
             
             // Parcourir toutes les inscriptions existantes pour cet archer
             foreach ($inscriptions as $inscription) {
-                // Vérifier si c'est le même utilisateur
+                // Vérifier si c'est le même utilisateur (par user_nom)
+                // Support aussi user_id pour compatibilité avec les anciennes inscriptions
+                $insc_user_nom = isset($inscription['user_nom']) ? trim($inscription['user_nom']) : null;
                 $insc_user_id = isset($inscription['user_id']) ? (int)$inscription['user_id'] : null;
                 
-                if ($insc_user_id !== (int)$user_id) {
+                // Comparer par user_nom si disponible, sinon ignorer cette inscription pour la vérification
+                if (!empty($insc_user_nom) && $insc_user_nom !== trim($user_nom)) {
                     continue; // Ce n'est pas le même utilisateur, passer à la suivante
+                }
+                
+                // Si l'inscription existante n'a pas de user_nom mais a un user_id, on ne peut pas comparer
+                // On ignore cette inscription pour la vérification de doublon basée sur user_nom
+                if (empty($insc_user_nom) && !empty($insc_user_id)) {
+                    continue; // Ancienne inscription avec user_id, ignorer pour cette vérification
                 }
                 
                 // Normaliser les valeurs de l'inscription existante
@@ -1483,7 +1500,7 @@ class ConcoursController {
                     $insc_numero_tir = (int)$inscription['numero_tir'];
                 }
                 
-                error_log("Inscription existante trouvée - user_id: $insc_user_id, numero_depart: " . var_export($insc_numero_depart, true) . ", numero_tir: " . var_export($insc_numero_tir, true));
+                error_log("Inscription existante trouvée - user_nom: $insc_user_nom, numero_depart: " . var_export($insc_numero_depart, true) . ", numero_tir: " . var_export($insc_numero_tir, true));
                 
                 // Vérifier le numero_depart : un archer ne peut pas être inscrit 2 fois pour le même départ
                 if ($insc_numero_depart !== null && $insc_numero_depart === $numero_depart) {
@@ -1517,8 +1534,9 @@ class ConcoursController {
                 // Récupérer toutes les inscriptions de cet archer pour ce concours, triées par numero_depart
                 $inscriptionsArcher = [];
                 foreach ($inscriptions as $inscription) {
-                    $insc_user_id = isset($inscription['user_id']) ? (int)$inscription['user_id'] : null;
-                    if ($insc_user_id === (int)$user_id) {
+                    $insc_user_nom = isset($inscription['user_nom']) ? trim($inscription['user_nom']) : null;
+                    // Comparer seulement si user_nom est disponible et correspond
+                    if (!empty($insc_user_nom) && $insc_user_nom === trim($user_nom)) {
                         $insc_numero_depart = null;
                         $insc_numero_tir = null;
                         
@@ -1628,7 +1646,7 @@ class ConcoursController {
         
         // Préparer toutes les données d'inscription
         $inscriptionData = [
-            'user_id' => $user_id,
+            'user_nom' => $user_nom,
             'numero_depart' => $numero_depart,
             'numero_licence' => !empty($_POST['numero_licence']) ? $_POST['numero_licence'] : null,
             'id_club' => !empty($_POST['id_club']) ? $_POST['id_club'] : null,
