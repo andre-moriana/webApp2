@@ -639,7 +639,8 @@ class ConcoursController {
         } catch (Exception $e) {
             $inscriptions = [];
         }
-        
+        print_r($inscriptions);
+        exit;   
         // Récupérer les informations complètes des utilisateurs inscrits
         $userIds = array_column($inscriptions, 'user_id');
         $usersMap = [];
@@ -1532,7 +1533,7 @@ class ConcoursController {
                 // Vérifier si c'est le même utilisateur (par user_nom)
                 // Support aussi user_id pour compatibilité avec les anciennes inscriptions
                 $insc_user_nom = isset($inscription['user_nom']) ? trim($inscription['user_nom']) : null;
-                $insc_user_id = isset($inscription['user_id']) ? (int)$inscription['user_id'] : null;
+                //$insc_user_id = isset($inscription['user_id']) ? (int)$inscription['user_id'] : null;
                 
                 // Comparer par user_nom si disponible, sinon ignorer cette inscription pour la vérification
                 if (!empty($insc_user_nom) && $insc_user_nom !== trim($user_nom)) {
