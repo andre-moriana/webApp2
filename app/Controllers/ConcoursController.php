@@ -639,8 +639,7 @@ class ConcoursController {
         } catch (Exception $e) {
             $inscriptions = [];
         }
-        print_r($inscriptions);
-        exit;   
+
         // Récupérer les informations complètes des utilisateurs inscrits
         $userIds = array_column($inscriptions, 'user_id');
         $usersMap = [];
