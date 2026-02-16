@@ -118,11 +118,8 @@ table tbody tr.piquet-blanc {
     ?>
     <div class="inscriptions-section">
         <h3>Archers inscrits</h3>
-        <?php if (empty($inscriptions)): ?>
-            <p class="alert alert-info">Aucun archer inscrit pour le moment.</p>
-        <?php else: ?>
-            <div class="table-responsive">
-                <table class="table table-bordered" id="inscriptions-table">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="inscriptions-table">
                     <thead>
                         <tr>
                             <th>Nom et Prénom</th>
@@ -143,6 +140,9 @@ table tbody tr.piquet-blanc {
                     <tbody id="inscriptions-list">
                         <?php 
                         // $usersMap est passé depuis le contrôleur
+                        if (empty($inscriptions)): ?>
+                            <tr id="inscriptions-empty-row"><td colspan="9" class="text-center text-muted">Chargement des inscriptions...</td></tr>
+                        <?php else:
                         foreach ($inscriptions as $inscription):
                             $userName = $inscription['user_nom'] ?? null;
                             //$user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
@@ -200,11 +200,12 @@ table tbody tr.piquet-blanc {
                                     </button>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php 
+                        endforeach;
+                        endif; ?>
                     </tbody>
                 </table>
             </div>
-        <?php endif; ?>
     </div>
 
     <div class="actions-section">
