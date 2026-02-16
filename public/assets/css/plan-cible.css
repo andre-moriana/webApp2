@@ -203,7 +203,13 @@
     margin: 0 auto;
     flex: 1;
     min-height: 0;
-    align-items: center;
+    place-items: center;
+    justify-content: center;
+}
+
+.blasons-container.blasons-blason40 .blason-item {
+    justify-self: center;
+    align-self: center;
 }
 
 .blasons-container.blasons-blason40 .blason-item[data-position="A"],
