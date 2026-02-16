@@ -1967,11 +1967,13 @@ class ConcoursController {
             $plans = [];
         }
         
-        // Récupérer les noms des utilisateurs assignés aux positions et les informations de trispot
+        // Récupérer les noms des utilisateurs assignés et les inscriptions (user_nom + numero_licence)
         $usersMap = [];
+        $inscriptionsMap = []; // Clé: numero_licence -> { user_nom, id_club, club_name, ... }
         $trispotMap = []; // Map pour stocker les informations trispot par cible (clé: "depart_cible")
         if (!empty($plans)) {
             $userIds = [];
+            $licencesFromPlan = [];
             foreach ($plans as $numeroDepartLoop => $departPlans) {
                 if (is_array($departPlans)) {
                     foreach ($departPlans as $plan) {
@@ -1979,7 +1981,10 @@ class ConcoursController {
                         if ($userId && !in_array($userId, $userIds)) {
                             $userIds[] = $userId;
                         }
-                        
+                        $licence = $plan['numero_licence'] ?? null;
+                        if ($licence && !isset($licencesFromPlan[$licence])) {
+                            $licencesFromPlan[$licence] = $plan['user_nom'] ?? null;
+                        }
                         // Récupérer l'information trispot directement depuis le plan (concours_plan_cible)
                         if (isset($plan['numero_depart']) && isset($plan['numero_cible'])) {
                             $cibleKey = $plan['numero_depart'] . '_' . $plan['numero_cible'];
@@ -1991,7 +1996,35 @@ class ConcoursController {
                 }
             }
             
-            // Récupérer les informations des utilisateurs
+            // Récupérer les inscriptions pour user_nom + numero_licence (plan utilise inscriptions)
+            if (!empty($licencesFromPlan)) {
+                try {
+                    $inscResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
+                    if ($inscResponse['success']) {
+                        $inscriptions = $this->apiService->unwrapData($inscResponse);
+                        if (is_array($inscriptions)) {
+                            foreach ($inscriptions as $insc) {
+                                $lic = $insc['numero_licence'] ?? null;
+                                if ($lic) {
+                                    $inscriptionsMap[$lic] = [
+                                        'user_nom' => $insc['user_nom'] ?? '',
+                                        'numero_licence' => $lic,
+                                        'id_club' => $insc['id_club'] ?? null,
+                                        'club_name' => $insc['club_name'] ?? $insc['id_club'] ?? null,
+                                        'nom' => $insc['user_nom'] ?? '',
+                                        'name' => $insc['user_nom'] ?? '',
+                                        'clubName' => $insc['club_name'] ?? null
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log('Erreur récupération inscriptions pour plan cible: ' . $e->getMessage());
+                }
+            }
+            
+            // Récupérer les informations des utilisateurs (pour user_id - compatibilité)
             foreach ($userIds as $userId) {
                 try {
                     $userResponse = $this->apiService->makeRequest("users/{$userId}", 'GET');
@@ -2000,8 +2033,6 @@ class ConcoursController {
                         if (is_array($userData) && isset($userData['data']) && isset($userData['success'])) {
                             $userData = $userData['data'];
                         }
-                        
-                        // Si pas de clubName, essayer de récupérer le club depuis ses données de club_id ou club
                         if (empty($userData['clubName']) && (isset($userData['club']) || isset($userData['club_id']))) {
                             try {
                                 $clubId = $userData['club_id'] ?? $userData['club'] ?? null;
@@ -2016,7 +2047,6 @@ class ConcoursController {
                                 error_log('Erreur lors de la récupération du club pour l\'utilisateur ' . $userId . ': ' . $e->getMessage());
                             }
                         }
-                        
                         $usersMap[$userId] = $userData;
                     }
                 } catch (Exception $e) {

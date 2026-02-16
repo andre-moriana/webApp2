@@ -21,6 +21,24 @@
 <?php endif; ?>
 
 <?php
+// Helper: récupérer les infos d'affichage d'un archer (user_id ou user_nom+numero_licence)
+$getArcherDisplayInfo = function($plan, $usersMap, $inscriptionsMap = []) {
+    $numeroLicence = $plan['numero_licence'] ?? null;
+    $userNom = $plan['user_nom'] ?? null;
+    if ($numeroLicence && isset($inscriptionsMap[$numeroLicence])) {
+        $i = $inscriptionsMap[$numeroLicence];
+        $nom = $i['user_nom'] ?? $i['nom'] ?? $i['name'] ?? '';
+        return [
+            'nom' => $nom,
+            'club' => $i['club_name'] ?? $i['clubName'] ?? $i['id_club'] ?? '',
+            'nomComplet' => $nom
+        ];
+    }
+    if ($userNom) {
+        return ['nom' => $userNom, 'club' => '', 'nomComplet' => $userNom];
+    }
+    return null;
+};
 // Récupérer les informations du concours
 $nombreCibles = $concours->nombre_cibles ?? 0;
 $nombreDepart = $concours->nombre_depart ?? 1;
@@ -157,7 +175,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                         $cibleHasAssigned = false;
                         foreach ($ciblePlans as $plan) {
                             // Vérifier si un archer est assigné à cette position
-                            if (isset($plan['user_id']) && $plan['user_id'] !== null) {
+                            if (isset($plan['user_nom']) && $plan['user_nom'] !== null && $plan['numero_licence'] !== null) {
                                 $cibleHasAssigned = true;
                             }
                             
@@ -294,36 +312,46 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                         $plan = $plansParPosition[$colonne];
                                     }
                                     
-                                    // Récupérer le user_id de la colonne (vérifier les 3 positions de la colonne)
+                                    // Récupérer user_id ou user_nom+numero_licence de la colonne (vérifier les 3 positions)
+                                    $numeroLicenceTrispot = null;
+                                    $userNomTrispot = null;
                                     for ($ligne = 1; $ligne <= 3; $ligne++) {
                                         $posTrispot = $colonne . $ligne;
                                         $planPos = $plansParPosition[$posTrispot] ?? null;
-                                        if ($planPos && $planPos['user_id'] !== null) {
-                                            $userIdTrispot = $planPos['user_id'];
-                                            break; // Toutes les positions ont le même user_id
+                                        if ($planPos) {
+                                            if ($planPos['user_nom'] !== null && $planPos['numero_licence'] !== null) {
+                                                $userIdTrispot = $planPos['user_nom'] . '-' . $planPos['numero_licence'];
+                                                break;
+                                            }
+                                            if (!empty($planPos['numero_licence'])) {
+                                                $numeroLicenceTrispot = $planPos['numero_licence'];
+                                                $userNomTrispot = $planPos['user_nom'] ?? null;
+                                                break;
+                                            }
                                         }
                                     }
-                                    
-                                    // Si pas trouvé par positions complètes, essayer par colonne seule
-                                    if ($userIdTrispot === null && isset($plansParPosition[$colonne])) {
+                                    if ($userIdTrispot === null && $numeroLicenceTrispot === null && isset($plansParPosition[$colonne])) {
                                         $planPos = $plansParPosition[$colonne];
-                                        if ($planPos && $planPos['user_id'] !== null) {
-                                            $userIdTrispot = $planPos['user_id'];
+                                            if ($planPos && $planPos['user_nom'] !== null && $planPos['numero_licence'] !== null) {
+                                                $userIdTrispot = $planPos['user_nom'] . '-' . $planPos['numero_licence'];
+                                        } elseif ($planPos && !empty($planPos['numero_licence'])) {
+                                            $numeroLicenceTrispot = $planPos['numero_licence'];
+                                            $userNomTrispot = $planPos['user_nom'] ?? null;
                                         }
                                     }
                                     
-                                    // Si pas de plan trouvé, créer un plan vide pour cette position
                                     if ($plan === null) {
                                         $plan = [
                                             'numero_cible' => $numeroCible,
                                             'position_archer' => $position,
-                                            'user_id' => $userIdTrispot, // Utiliser le user_id de la colonne
+                                            'numero_licence' => $numeroLicenceTrispot,
+                                            'user_nom' => $userNomTrispot,
                                             'blason' => $blasonCible,
                                             'distance' => $distanceCible
                                         ];
                                     } else {
-                                        // Mettre à jour le user_id avec celui de la colonne
-                                        $plan['user_id'] = $userIdTrispot;
+                                        $plan['numero_licence'] = $numeroLicenceTrispot;
+                                        $plan['user_nom'] = $userNomTrispot;
                                     }
                                 } else {
                                     // Pour les blasons normaux, récupérer le plan normalement
@@ -344,59 +372,45 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                         $plan = [
                                             'numero_cible' => $numeroCible,
                                             'position_archer' => $position,
-                                            'user_id' => null,
                                             'blason' => $blasonCible,
                                             'distance' => $distanceCible
                                         ];
                                     }
                                 }
-                                // Pour les blasons 80, récupérer les user_id de toutes les positions du même blason
+                                // Pour les blasons 80/60, récupérer user_id ou numero_licence des positions
                                 $userIdsBlason = [];
+                                $licencesBlason = [];
                                 if ($dispositionType === 'blason80') {
                                     if ($position === 'A') {
-                                        // Blason A,B,C et D
-                                        if (isset($plansParPosition['A']) && $plansParPosition['A']['user_id']) {
-                                            $userIdsBlason[] = $plansParPosition['A']['user_id'];
-                                        }
-                                        if (isset($plansParPosition['C']) && $plansParPosition['C']['user_id']) {
-                                            $userIdsBlason[] = $plansParPosition['C']['user_id'];
-                                        }
-                                        if (isset($plansParPosition['B']) && $plansParPosition['B']['user_id']) {
-                                            $userIdsBlason[] = $plansParPosition['B']['user_id'];
-                                        }
-                                        if (isset($plansParPosition['D']) && $plansParPosition['D']['user_id']) {
-                                            $userIdsBlason[] = $plansParPosition['D']['user_id'];
+                                        foreach (['A','B','C','D'] as $p) {
+                                            $pp = $plansParPosition[$p] ?? null;
+                                                if ($pp && $pp['user_nom'] !== null && $pp['numero_licence'] !== null) $userIdsBlason[] = $pp['user_nom'] . '-' . $pp['numero_licence'];
+                                            if ($pp && !empty($pp['numero_licence'])) $licencesBlason[] = $pp['numero_licence'];
                                         }
                                     }
                                 }
-                                
-                                // Pour les blasons 60, récupérer les user_id de toutes les positions du même blason
                                 if ($dispositionType === 'blason60') {
                                     if ($position === 'A') {
-                                        // Blason gauche : A et C
-                                        if (isset($plansParPosition['A']) && $plansParPosition['A']['user_id']) {
-                                            $userIdsBlason[] = $plansParPosition['A']['user_id'];
-                                        }
-                                        if (isset($plansParPosition['C']) && $plansParPosition['C']['user_id']) {
-                                            $userIdsBlason[] = $plansParPosition['C']['user_id'];
+                                        foreach (['A','C'] as $p) {
+                                            $pp = $plansParPosition[$p] ?? null;
+                                            if ($pp && $pp['user_nom'] !== null && $pp['numero_licence'] !== null) $userIdsBlason[] = $pp['user_nom'] . '-' . $pp['numero_licence'];
+                                            if ($pp && !empty($pp['numero_licence'])) $licencesBlason[] = $pp['numero_licence'];
                                         }
                                     } elseif ($position === 'B') {
-                                        // Blason droit : B et D
-                                        if (isset($plansParPosition['B']) && $plansParPosition['B']['user_id']) {
-                                            $userIdsBlason[] = $plansParPosition['B']['user_id'];
-                                        }
-                                        if (isset($plansParPosition['D']) && $plansParPosition['D']['user_id']) {
-                                            $userIdsBlason[] = $plansParPosition['D']['user_id'];
+                                        foreach (['B','D'] as $p) {
+                                            $pp = $plansParPosition[$p] ?? null;
+                                            if ($pp && $pp['user_nom'] !== null && $pp['numero_licence'] !== null) $userIdsBlason[] = $pp['user_nom'] . '-' . $pp['numero_licence'];
+                                            if ($pp && !empty($pp['numero_licence'])) $licencesBlason[] = $pp['numero_licence'];
                                         }
                                     }
                                 }
                                 
-                                $userId = $plan['user_id'] ?? null;
-                                // Pour les trispots, utiliser $userIdTrispot pour déterminer si assigné
+                                $userId = $plan['user_nom'] !== null && $plan['numero_licence'] !== null ? $plan['user_nom'] . '-' . $plan['numero_licence'] : null;
+                                $numeroLicence = $plan['numero_licence'] ?? null;
                                 if ($dispositionType === 'trispot') {
-                                    $isAssigne = $userIdTrispot !== null;
+                                    $isAssigne = $userIdTrispot !== null || $numeroLicenceTrispot !== null;
                                 } else {
-                                    $isAssigne = $userId !== null || !empty($userIdsBlason);
+                                    $isAssigne = $userId !== null || $numeroLicence !== null || !empty($userIdsBlason) || !empty($licencesBlason);
                                 }
                                 
                                 // Récupérer les informations de l'utilisateur
@@ -406,129 +420,63 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 $clubComplet = '';
                                 $nomsArchers = [];
                                 
-                                // Pour les blasons 80, stocker tous les noms
+                                $inscriptionsMap = $inscriptionsMap ?? [];
                                 if ($dispositionType === 'blason80') {
-                                    // Pour les blasons 80, récupérer les noms de tous les archers du même blason
                                     if ($position === 'A') {
-                                        // Blason gauche : A et C
-                                        foreach (['A', 'B', 'C', 'D'] as $pos) {
+                                        foreach (['A','B','C','D'] as $pos) {
                                             $planPos = $plansParPosition[$pos] ?? null;
-                                            if ($planPos && $planPos['user_id']) {
-                                                $uid = $planPos['user_id'];
-                                                if (isset($usersMap[$uid])) {
-                                                    $user = $usersMap[$uid];
-                                                    if (is_array($user)) {
-                                                        $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
-                                                        $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
-                                                    } else {
-                                                        $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
-                                                        $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
-                                                    }
-                                                    $nom = trim($userPrenom . ' ' . $userNom);
-                                                    if (!empty($nom)) {
-                                                        $nomsArchers[] = $nom;
-                                                    }
+                                            if ($planPos && ($planPos['user_nom'] !== null && $planPos['numero_licence'] !== null || !empty($planPos['numero_licence']))) {
+                                                $info = $getArcherDisplayInfo($planPos, $usersMap, $inscriptionsMap);
+                                                if ($info && !empty($info['nomComplet'])) {
+                                                    $nomsArchers[] = $info['nomComplet'];
                                                 }
                                             }
                                         }
+                                        $nomComplet = implode(', ', array_unique($nomsArchers));
+                                        if (empty($nomComplet)) $nomComplet = 'Libre';
                                     }
-                                }
-                                if ($dispositionType === 'blason60') {
-                                    // Pour les blasons 60, récupérer les noms de tous les archers du même blason
+                                } elseif ($dispositionType === 'blason60') {
                                     if ($position === 'A') {
-                                        // Blason gauche : A et C
-                                        foreach (['A', 'C'] as $pos) {
+                                        foreach (['A','C'] as $pos) {
                                             $planPos = $plansParPosition[$pos] ?? null;
-                                            if ($planPos && $planPos['user_id']) {
-                                                $uid = $planPos['user_id'];
-                                                if (isset($usersMap[$uid])) {
-                                                    $user = $usersMap[$uid];
-                                                    if (is_array($user)) {
-                                                        $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
-                                                        $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
-                                                    } else {
-                                                        $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
-                                                        $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
-                                                    }
-                                                    $nom = trim($userPrenom . ' ' . $userNom);
-                                                    if (!empty($nom)) {
-                                                        $nomsArchers[] = $nom;
-                                                    }
+                                            if ($planPos && ($planPos['user_nom'] !== null && $planPos['numero_licence'] !== null || !empty($planPos['numero_licence']))) {
+                                                $info = $getArcherDisplayInfo($planPos, $usersMap, $inscriptionsMap);
+                                                if ($info && !empty($info['nomComplet'])) {
+                                                    $nomsArchers[] = $info['nomComplet'];
                                                 }
                                             }
                                         }
                                     } elseif ($position === 'B') {
-                                        // Blason droit : B et D
-                                        foreach (['B', 'D'] as $pos) {
+                                        foreach (['B','D'] as $pos) {
                                             $planPos = $plansParPosition[$pos] ?? null;
-                                            if ($planPos && $planPos['user_id']) {
-                                                $uid = $planPos['user_id'];
-                                                if (isset($usersMap[$uid])) {
-                                                    $user = $usersMap[$uid];
-                                                    if (is_array($user)) {
-                                                        $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
-                                                        $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
-                                                    } else {
-                                                        $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
-                                                        $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
-                                                    }
-                                                    $nom = trim($userPrenom . ' ' . $userNom);
-                                                    if (!empty($nom)) {
-                                                        $nomsArchers[] = $nom;
-                                                    }
+                                            if ($planPos && ($planPos['user_nom'] !== null && $planPos['numero_licence'] !== null || !empty($planPos['numero_licence']))) {
+                                                $info = $getArcherDisplayInfo($planPos, $usersMap, $inscriptionsMap);
+                                                if ($info && !empty($info['nomComplet'])) {
+                                                    $nomsArchers[] = $info['nomComplet'];
                                                 }
                                             }
                                         }
                                     }
                                     $nomComplet = implode(', ', array_unique($nomsArchers));
-                                    if (empty($nomComplet)) {
-                                        $nomComplet = 'Libre';
-                                    }
-                                } elseif ($dispositionType === 'trispot' && $userIdTrispot !== null) {
-                                    // Pour les trispots, récupérer le nom de l'utilisateur assigné à la colonne
-                                    if (isset($usersMap[$userIdTrispot])) {
-                                        $user = $usersMap[$userIdTrispot];
-                                        // Gérer les différents formats de données utilisateur
-                                        if (is_array($user)) {
-                                            $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
-                                            $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
-                                            $clubComplet = $user['clubName'] ?? $user['club_name'] ?? $user['nom_club'] ?? $user['club'] ?? '';
-                                        } else {
-                                            $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
-                                            $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
-                                            $clubComplet = $user->clubName ?? $user->club_name ?? $user->nom_club ?? $user->club ?? '';
-                                        }
-                                        $nomComplet = trim($userPrenom . ' ' . $userNom);
-                                    }
-                                    
-                                    // Si le nom n'a pas pu être récupéré, utiliser l'ID
-                                    if (empty($nomComplet)) {
-                                        $nomComplet = $userIdTrispot ? 'ID: ' . $userIdTrispot : 'Libre';
+                                    if (empty($nomComplet)) $nomComplet = 'Libre';
+                                } elseif ($dispositionType === 'trispot' && ($userIdTrispot !== null || $numeroLicenceTrispot !== null)) {
+                                    $info = $getArcherDisplayInfo($plan, $usersMap, $inscriptionsMap);
+                                    if ($info) {
+                                        $nomComplet = $info['nomComplet'] ?: ($numeroLicenceTrispot ? 'Licence: ' . $numeroLicenceTrispot : 'Libre');
+                                        $clubComplet = $info['club'] ?? '';
+                                    } else {
+                                        $nomComplet = $numeroLicenceTrispot ? 'Licence: ' . $numeroLicenceTrispot : 'Libre';
                                     }
                                 } elseif ($isAssigne) {
-                                    if (isset($usersMap[$userId])) {
-                                        $user = $usersMap[$userId];
-                                        // Gérer les différents formats de données utilisateur
-                                        if (is_array($user)) {
-                                            $userNom = $user['nom'] ?? $user['NOM'] ?? $user['name'] ?? '';
-                                            $userPrenom = $user['prenom'] ?? $user['PRENOM'] ?? $user['first_name'] ?? $user['firstName'] ?? '';
-                                            $clubComplet = $user['clubName'] ?? $user['club_name'] ?? $user['nom_club'] ?? $user['club'] ?? '';
-                                        } else {
-                                            $userNom = $user->nom ?? $user->NOM ?? $user->name ?? '';
-                                            $userPrenom = $user->prenom ?? $user->PRENOM ?? $user->first_name ?? $user->firstName ?? '';
-                                            $clubComplet = $user->clubName ?? $user->club_name ?? $user->nom_club ?? $user->club ?? '';
-                                        }
-                                        $nomComplet = trim($userPrenom . ' ' . $userNom);
-                                    }
-                                    
-                                    // Si le nom n'a pas pu être récupéré, utiliser l'ID
-                                    if (empty($nomComplet)) {
-                                        $nomComplet = 'ID: ' . $userId;
+                                    $info = $getArcherDisplayInfo($plan, $usersMap, $inscriptionsMap);
+                                    if ($info) {
+                                        $nomComplet = $info['nomComplet'] ?: ($numeroLicence ? 'Licence: ' . $numeroLicence : 'ID: ' . $userId);
+                                        $clubComplet = $info['club'] ?? '';
+                                    } else {
+                                        $nomComplet = $numeroLicence ? 'Licence: ' . $numeroLicence : 'ID: ' . $userId;
                                     }
                                 }
-                                
-                                // Pour les trispots, si aucune position n'est assignée, afficher "Libre"
-                                if ($dispositionType === 'trispot' && $userIdTrispot === null && empty($nomComplet)) {
+                                if ($dispositionType === 'trispot' && !$isAssigne && empty($nomComplet)) {
                                     $nomComplet = 'Libre';
                                 }
                             ?>
@@ -567,6 +515,8 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             ?>
                             <?php
                                 $dataUserId = $dispositionType === 'trispot' ? $userIdTrispot : $userId;
+                                $dataNumeroLicence = $dispositionType === 'trispot' ? ($numeroLicenceTrispot ?? $numeroLicence) : $numeroLicence;
+                                $dataUserNom = $dispositionType === 'trispot' ? ($userNomTrispot ?? ($plan['user_nom'] ?? '')) : ($plan['user_nom'] ?? '');
                                 $dataTrispot = ($dispositionType === 'trispot' || $trispotCible == 1 || $trispotCible === '1' || $trispotCible === true || $blasonCible === 'T40') ? '1' : '0';
                                 $dataBlason = $planBlason ?? $blasonCible;
                                 $dataDistance = $planDistance ?? $distanceCible;
@@ -581,6 +531,8 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                  data-trispot="<?= htmlspecialchars($dataTrispot) ?>"
                                  data-distance="<?= htmlspecialchars($dataDistance ?? '') ?>"
                                  data-user-id="<?= htmlspecialchars($dataUserId ?? '') ?>"
+                                 data-numero-licence="<?= htmlspecialchars($dataNumeroLicence ?? '') ?>"
+                                 data-user-nom="<?= htmlspecialchars($dataUserNom ?? '') ?>"
                                  data-assignable="<?= $isAssigne ? '0' : '1' ?>"
                                 <?= !empty($tooltipText) ? ' title="' . htmlspecialchars($tooltipText) . '"' : '' ?>>
                                 <?php if ($dispositionType === 'trispot'): ?>
@@ -883,17 +835,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             listContainer.innerHTML = '';
             archers.forEach(archer => {
-                const name = `${archer.prenom || ''} ${archer.nom || ''}`.trim();
+                const name = (archer.user_nom || `${archer.prenom || ''} ${archer.nom || ''}`.trim()) || 'Archer';
                 const club = archer.club_name ? ` - ${archer.club_name}` : '';
                 const licence = archer.numero_licence ? ` (${archer.numero_licence})` : '';
                 const item = document.createElement('div');
                 item.className = 'list-group-item d-flex justify-content-between align-items-center';
                 item.innerHTML = `
                     <div>
-                        <div><strong>${name || 'Archer'}</strong>${licence}</div>
-                        <div class="text-muted" style="font-size: 0.9em;">${club.replace(' - ', '')}</div>
+                        <div><strong>${name}</strong>${licence}</div>
+                        <div class="text-muted" style="font-size: 0.9em;">${(club || '').replace(' - ', '')}</div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-primary js-assign-archer" data-user-id="${archer.user_id}" data-id-club="${archer.id_club || ''}" data-licence="${archer.numero_licence || ''}">
+                    <button type="button" class="btn btn-sm btn-primary js-assign-archer user-nom-${archer.user_nom || ''}-numero-licence-${archer.numero_licence || ''}" data-user-nom="${archer.user_nom || ''}" data-numero-licence="${archer.numero_licence || ''}" data-id-club="${archer.id_club || ''}">
                         Affecter
                     </button>
                 `;
@@ -919,7 +871,9 @@ document.addEventListener('DOMContentLoaded', function() {
             blason: item.dataset.blason,
             trispot: trispotValue,
             distance: item.dataset.distance,
-            userId: item.dataset.userId || null
+            userId: item.dataset.userId || null,
+            numeroLicence: item.dataset.numeroLicence || null,
+            userNom: item.dataset.userNom || null
         };
 
         if (infoContainer) {
@@ -927,7 +881,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (releaseContainer) {
-            releaseContainer.style.display = currentTarget.userId ? 'block' : 'none';
+            const isAssigned = currentTarget.userId || currentTarget.numeroLicence;
+            releaseContainer.style.display = isAssigned ? 'block' : 'none';
         }
 
         fetchArchersDisponibles(currentTarget);
@@ -952,7 +907,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             const userId = button.getAttribute('data-user-id');
-            if (!userId) {
+            const userNom = button.getAttribute('data-user-nom');
+            const numeroLicence = button.getAttribute('data-numero-licence');
+            if (!numeroLicence) {
+                setListMessage('Archer sans numero_licence.', 'danger');
                 return;
             }
             let positionToAssign = currentTarget.position;
@@ -970,12 +928,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 numero_depart: parseInt(currentTarget.depart, 10),
                 numero_cible: parseInt(currentTarget.cible, 10),
                 position_archer: positionToAssign,
-                user_id: parseInt(userId, 10),
                 id_club: button.getAttribute('data-id-club') || null,
                 blason: currentTarget.blason ? parseInt(currentTarget.blason, 10) : null,
                 distance: currentTarget.distance ? parseInt(currentTarget.distance, 10) : null,
                 trispot: currentTarget.trispot
             };
+            payload.user_nom = userNom || '';
+            payload.numero_licence = numeroLicence || '';
+            
 
             const assignUrl = `/api/concours/${currentTarget.concoursId}/plan-cible/assign`;
             fetch(assignUrl, {
