@@ -91,14 +91,16 @@
     margin-top: 5px;
 }
 
-/* Sélecteur de type de blason positionné en bas du cadre */
+/* Sélecteur de type de blason fixé en bas du cadre, sans chevauchement */
 .blason-type-select {
     margin-top: auto;
     flex-shrink: 0;
     width: 100%;
     text-align: center;
-    padding-top: 15px;
+    padding: 15px 0 0 0;
     border-top: 1px solid #dee2e6;
+    background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+    z-index: 5;
 }
 
 .blasons-container {
@@ -111,6 +113,7 @@
     justify-content: center;
     flex: 1;
     min-height: 0;
+    overflow: hidden;
 }
 
 /* Disposition pour blason 60 : 2 blasons par cible (A-C gauche, B-D droite) */
