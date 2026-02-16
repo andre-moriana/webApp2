@@ -95,8 +95,10 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                     $isAssigne = $plan && isset($plan['user_nom']) && $plan['user_nom'] !== null && isset($plan['numero_licence']) && $plan['numero_licence'] !== null;
                                     $info = $isAssigne && $plan ? $getArcherDisplayInfo($plan, $inscriptionsMap ?? []) : null;
                                     $nomComplet = $info ? $info['nomComplet'] : ($isAssigne ? ($plan['user_nom'] ?? '') : 'Libre');
+                                    $clubComplet = $info ? ($info['club'] ?? '') : '';
                                     $piquetVal = $plan['piquet'] ?? null;
                                     $bgStyle = $piquetVal && isset($piquetColors[strtolower($piquetVal)]) ? 'background-color:' . $piquetColors[strtolower($piquetVal)] . ';' : '';
+                                    $tooltipText = $isAssigne ? $nomComplet . (!empty($clubComplet) ? ' - ' . $clubComplet : '') : 'Cliquer pour assigner un archer';
                                     ?>
                                     <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>" style="<?= $bgStyle ?>"
                                         data-concours-id="<?= htmlspecialchars($concoursId) ?>"
@@ -106,7 +108,7 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                         data-numero-licence="<?= htmlspecialchars($plan['numero_licence'] ?? '') ?>"
                                         data-user-nom="<?= htmlspecialchars($plan['user_nom'] ?? '') ?>"
                                         data-assignable="<?= $isAssigne ? '0' : '1' ?>"
-                                        title="Cliquer pour <?= $isAssigne ? 'modifier ou libérer' : 'assigner un archer' ?>">
+                                        title="<?= htmlspecialchars($tooltipText) ?>">
                                         <span class="peloton-position-letter"><?= htmlspecialchars($position) ?></span>
                                         <span class="peloton-position-name"><?= htmlspecialchars($nomComplet) ?></span>
                                         <?php if ($piquetVal): ?>
