@@ -50,7 +50,7 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
 <?php else: ?>
     <div class="plan-cible-legend">
         <h4><i class="fas fa-info-circle"></i> Règles</h4>
-        <p>Max 3 archers du même club par peloton. Max 2 couleurs de piquet par peloton.</p>
+        <p>Max 50% d'archers du même club par peloton (ex: 2 pour 4, 3 pour 6). Max 2 couleurs de piquet par peloton.</p>
         <div class="legend-items">
             <div class="legend-item"><div class="legend-color assigne"></div><span>Position assignée</span></div>
             <div class="legend-item"><div class="legend-color libre"></div><span>Position libre</span></div>

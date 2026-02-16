@@ -190,7 +190,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
             <i class="fas fa-list"></i> Voir le plan de peloton
         </a>
         <div id="plan-peloton-message" style="margin-top: 10px;"></div>
-        <small class="text-muted d-block mt-1">Règles : max 3 archers du même club, max 2 couleurs de piquet par peloton</small>
+        <small class="text-muted d-block mt-1">Règles : max 50% d'archers du même club (ex: 2 pour 4, 3 pour 6), max 2 couleurs de piquet par peloton</small>
     </div>
     <?php endif; ?>
 </div>
