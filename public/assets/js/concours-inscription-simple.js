@@ -28,6 +28,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Ajouter les listeners pour mettre à jour le blason automatiquement
     setupBlasonAutoUpdate();
+    
+    // Charger la liste des inscriptions depuis le backend
+    loadInscriptions();
+    
+    // Initialiser les handlers pour l'édition
+    initEditInscriptionHandlers();
 });
 
 // Variable pour stocker la fonction de mise à jour du blason (pour pouvoir la retirer si nécessaire)
@@ -911,4 +917,335 @@ function submitInscription() {
 
     document.body.appendChild(form);
     form.submit();
+}
+
+/**
+ * Extrait le tableau d'inscriptions depuis la réponse API
+ */
+function getInscriptionsFromResponse(data) {
+    if (Array.isArray(data)) {
+        return data;
+    }
+    if (data && data.success && Array.isArray(data.data)) {
+        return data.data;
+    }
+    if (data && data.data && Array.isArray(data.data.data)) {
+        return data.data.data;
+    }
+    if (data && Array.isArray(data.inscriptions)) {
+        return data.inscriptions;
+    }
+    return [];
+}
+
+/**
+ * Charge la liste des inscriptions depuis l'API et met à jour le tableau
+ */
+function loadInscriptions() {
+    if (!concoursIdValue) {
+        console.warn('loadInscriptions: concoursId non disponible');
+        return;
+    }
+
+    const tbody = document.getElementById('inscriptions-list');
+    if (!tbody) {
+        console.warn('loadInscriptions: #inscriptions-list introuvable');
+        return;
+    }
+
+    fetch(`/api/concours/${concoursIdValue}/inscriptions`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        const contentType = response.headers.get('content-type') || '';
+        if (!response.ok || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                throw new Error('Réponse non-JSON: ' + (text || '').substring(0, 200));
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        const inscriptions = getInscriptionsFromResponse(data);
+        renderInscriptions(inscriptions);
+    })
+    .catch(error => {
+        console.error('Erreur lors du chargement des inscriptions:', error);
+        tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="9" class="text-center text-danger">Erreur lors du chargement des inscriptions.</td></tr>';
+    });
+}
+
+/**
+ * Affiche les inscriptions dans le tableau
+ */
+function renderInscriptions(inscriptions) {
+    const tbody = document.getElementById('inscriptions-list');
+    if (!tbody) return;
+
+    const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+
+    if (!inscriptions || inscriptions.length === 0) {
+        tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="9" class="text-center text-muted">Aucun archer inscrit pour le moment.</td></tr>';
+        return;
+    }
+
+    const rows = inscriptions.map(inscription => {
+        const piquetColorRaw = inscription.piquet || null;
+        let rowClass = '';
+        let dataPiquet = '';
+        let rowStyle = '';
+
+        if (piquetColorRaw && piquetColorRaw !== '') {
+            const piquetColor = piquetColorRaw.trim().toLowerCase();
+            rowClass = 'piquet-' + piquetColor;
+            dataPiquet = ' data-piquet="' + piquetColor + '"';
+            const colors = { rouge: '#ffe0e0', bleu: '#e0e8ff', blanc: '#f5f5f5' };
+            if (colors[piquetColor]) {
+                rowStyle = ' style="background-color: ' + colors[piquetColor] + ' !important;"';
+            }
+        }
+
+        const clubDisplay = inscription.club_name || inscription.id_club || 'N/A';
+        const piquetDisplay = piquetColorRaw ? piquetColorRaw.charAt(0).toUpperCase() + piquetColorRaw.slice(1).toLowerCase() : 'N/A';
+        const dateDisplay = inscription.created_at || inscription.date_inscription || 'N/A';
+        const id = inscription.id || '';
+
+        let cells = [
+            '<td' + rowStyle + '>' + escapeHtml(inscription.user_nom || 'N/A') + '</td>',
+            '<td' + rowStyle + '>' + escapeHtml(inscription.numero_licence || 'N/A') + '</td>',
+            '<td' + rowStyle + '>' + escapeHtml(clubDisplay) + '</td>',
+            '<td' + rowStyle + '>' + escapeHtml(String(inscription.numero_depart ?? 'N/A')) + '</td>',
+            '<td' + rowStyle + '>' + escapeHtml(String(inscription.numero_tir ?? 'N/A')) + '</td>'
+        ];
+
+        if (isNature) {
+            cells.push('<td class="piquet-value"' + rowStyle + '>' + escapeHtml(piquetDisplay) + '</td>');
+        } else {
+            cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.distance ?? 'N/A')) + '</td>');
+            cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.blason ?? 'N/A')) + '</td>');
+        }
+
+        cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
+        cells.push('<td' + rowStyle + '>' +
+            '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(' + id + ')"><i class="fas fa-edit"></i> Éditer</button> ' +
+            '<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')"><i class="fas fa-trash"></i> Retirer</button>' +
+            '</td>');
+
+        return '<tr data-inscription-id="' + id + '" class="' + rowClass + '"' + dataPiquet + rowStyle + '>' + cells.join('') + '</tr>';
+    });
+
+    tbody.innerHTML = rows.join('');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Retire une inscription par ID
+ */
+function removeInscription(inscriptionId) {
+    if (!confirm('Voulez-vous retirer cet archer de l\'inscription ?')) {
+        return;
+    }
+
+    const concoursId = concoursIdValue || (typeof concoursId !== 'undefined' ? concoursId : null);
+    if (!concoursId) {
+        alert('Erreur: ID du concours non disponible');
+        return;
+    }
+
+    fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadInscriptions();
+        } else {
+            alert('Erreur lors de la suppression: ' + (data.error || 'Erreur inconnue'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la suppression: ' + error.message);
+    });
+}
+
+// Inscription en cours d'édition (pour conserver numero_depart si le select n'existe pas)
+let currentEditInscription = null;
+
+/**
+ * Édite une inscription - charge les données et ouvre la modale
+ */
+window.editInscription = function(inscriptionId) {
+    const concoursId = concoursIdValue || (typeof concoursId !== 'undefined' ? concoursId : null);
+    if (!concoursId || !inscriptionId) {
+        alert('Erreur: Informations manquantes');
+        return;
+    }
+
+    const modalElement = document.getElementById('editInscriptionModal');
+    if (!modalElement) {
+        alert('Erreur: La modale d\'édition est introuvable');
+        return;
+    }
+
+    const form = document.getElementById('edit-inscription-form');
+    if (form) {
+        form.dataset.inscriptionId = inscriptionId;
+    }
+
+    currentEditInscription = null;
+
+    fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP error! status: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        let inscription = (data.success && data.data) ? data.data : (data.id ? data : null);
+        if (!inscription) {
+            alert('Erreur: Aucune donnée trouvée');
+            return;
+        }
+        if (inscription.success && inscription.data) {
+            inscription = inscription.data;
+        }
+        currentEditInscription = inscription;
+
+        const fillForm = () => {
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val || '';
+            };
+            const setCheck = (id, checked) => {
+                const el = document.getElementById(id);
+                if (el) el.checked = !!checked;
+            };
+
+            setVal('edit-saison', inscription.saison);
+            setVal('edit-type_certificat_medical', inscription.type_certificat_medical);
+            setVal('edit-type_licence', inscription.type_licence);
+            let crVal = inscription.creation_renouvellement;
+            if (crVal === 1 || crVal === '1') crVal = 'C';
+            else if (crVal === 2 || crVal === '2') crVal = 'R';
+            setVal('edit-creation_renouvellement', crVal || '');
+            setVal('edit-depart-select', inscription.numero_depart);
+            setVal('edit-categorie_classement', inscription.categorie_classement);
+            setVal('edit-arme', inscription.arme);
+            setCheck('edit-mobilite_reduite', inscription.mobilite_reduite);
+
+            if (typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne) {
+                setVal('edit-piquet', inscription.piquet);
+            } else {
+                setVal('edit-distance', inscription.distance);
+                setVal('edit-blason', inscription.blason);
+                setCheck('edit-duel', inscription.duel);
+                setCheck('edit-trispot', inscription.trispot);
+            }
+
+            setVal('edit-numero_tir', inscription.numero_tir);
+            setVal('edit-tarif_competition', inscription.tarif_competition);
+            setVal('edit-mode_paiement', inscription.mode_paiement || 'Non payé');
+        };
+
+        fillForm();
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors du chargement: ' + error.message);
+    });
+};
+
+/**
+ * Initialise les handlers pour le formulaire d'édition
+ */
+function initEditInscriptionHandlers() {
+    const btnConfirmEdit = document.getElementById('btn-confirm-edit');
+    if (!btnConfirmEdit) return;
+
+    btnConfirmEdit.addEventListener('click', function() {
+        const form = document.getElementById('edit-inscription-form');
+        const inscriptionId = form?.dataset?.inscriptionId;
+        const concoursId = concoursIdValue || (typeof concoursId !== 'undefined' ? concoursId : null);
+
+        if (!concoursId || !inscriptionId) {
+            alert('Erreur: Informations manquantes');
+            return;
+        }
+
+        const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+        const departSelect = document.getElementById('edit-depart-select');
+        const numeroDepart = departSelect?.value || (currentEditInscription?.numero_depart ?? '');
+        const updateData = {
+            saison: document.getElementById('edit-saison')?.value || '',
+            type_certificat_medical: document.getElementById('edit-type_certificat_medical')?.value || '',
+            type_licence: document.getElementById('edit-type_licence')?.value || '',
+            creation_renouvellement: document.getElementById('edit-creation_renouvellement')?.value || '',
+            numero_depart: numeroDepart,
+            categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
+            arme: document.getElementById('edit-arme')?.value || '',
+            mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
+            numero_tir: document.getElementById('edit-numero_tir')?.value || '',
+            tarif_competition: document.getElementById('edit-tarif_competition')?.value || '',
+            mode_paiement: document.getElementById('edit-mode_paiement')?.value || 'Non payé'
+        };
+
+        if (isNature) {
+            updateData.piquet = document.getElementById('edit-piquet')?.value || '';
+        } else {
+            updateData.distance = document.getElementById('edit-distance')?.value || '';
+            updateData.blason = document.getElementById('edit-blason')?.value || '';
+            updateData.duel = document.getElementById('edit-duel')?.checked ? 1 : 0;
+            updateData.trispot = document.getElementById('edit-trispot')?.checked ? 1 : 0;
+        }
+
+        fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(updateData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editInscriptionModal'));
+                if (modal) modal.hide();
+                loadInscriptions();
+            } else {
+                alert('Erreur lors de la mise à jour: ' + (data.error || 'Erreur inconnue'));
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la mise à jour: ' + error.message);
+        });
+    });
 }
