@@ -1,6 +1,53 @@
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/concours-show.css" rel="stylesheet">
 <link href="/public/assets/css/plan-cible.css" rel="stylesheet">
+<style>
+/* Plan peloton : cadres avec liste A, B, C... */
+.peloton-card {
+    width: 280px;
+    min-width: 280px;
+    height: auto;
+    min-height: 200px;
+}
+.peloton-positions-list {
+    width: 100%;
+    flex: 1;
+    margin: 0;
+    padding: 0;
+}
+.peloton-position-item {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    transition: background-color 0.2s;
+}
+.peloton-position-item:hover {
+    background-color: rgba(13, 110, 253, 0.08) !important;
+}
+.peloton-position-item.assigne {
+    font-weight: 500;
+}
+.peloton-position-letter {
+    font-weight: bold;
+    min-width: 28px;
+    text-align: center;
+    background: #e9ecef;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 1em;
+}
+.peloton-position-item.assigne .peloton-position-letter {
+    background: #cfe2ff;
+}
+.peloton-position-name {
+    flex: 1;
+    font-size: 0.95em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>
 
 <div class="container-fluid concours-create-container">
 <h1>Plan de peloton - <?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?></h1>
@@ -103,12 +150,13 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
             if (!isset($plansParPeloton[$pel])) $plansParPeloton[$pel] = [];
             $plansParPeloton[$pel][] = $plan;
         }
+        $nbPelotons = max($nombrePelotons, count($plansParPeloton));
         ?>
         <div class="plan-depart-section" style="margin-bottom: 40px;">
             <h2><i class="fas fa-flag"></i> Départ <?= htmlspecialchars($numeroDepart) ?></h2>
             <div class="plan-cible-container">
-                <div class="plan-cible-scroll">
-                    <?php for ($numeroPeloton = 1; $numeroPeloton <= $nombrePelotons; $numeroPeloton++): ?>
+                <div class="plan-cible-scroll plan-peloton-scroll">
+                    <?php for ($numeroPeloton = 1; $numeroPeloton <= $nbPelotons; $numeroPeloton++): ?>
                         <?php
                         $pelotonPlans = $plansParPeloton[$numeroPeloton] ?? [];
                         usort($pelotonPlans, function($a, $b) { return strcmp($a['position_archer'] ?? '', $b['position_archer'] ?? ''); });
@@ -121,11 +169,11 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                             $ordrePositions[] = chr(64 + $i);
                         }
                         ?>
-                        <div class="pas-de-tir">
+                        <div class="pas-de-tir peloton-card">
                             <div class="pas-de-tir-header">
                                 <h3>Peloton <?= htmlspecialchars($numeroPeloton) ?></h3>
                             </div>
-                            <div class="blasons-container blasons-blason40">
+                            <ul class="list-group list-group-flush peloton-positions-list">
                                 <?php foreach ($ordrePositions as $position): ?>
                                     <?php
                                     $plan = $plansParPosition[$position] ?? null;
@@ -135,23 +183,23 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                     $piquetVal = $plan['piquet'] ?? null;
                                     $bgStyle = $piquetVal && isset($piquetColors[strtolower($piquetVal)]) ? 'background-color:' . $piquetColors[strtolower($piquetVal)] . ';' : '';
                                     ?>
-                                    <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>" style="<?= $bgStyle ?>"
-                                         data-concours-id="<?= htmlspecialchars($concoursId) ?>"
-                                         data-depart="<?= htmlspecialchars($numeroDepart) ?>"
-                                         data-peloton="<?= htmlspecialchars($numeroPeloton) ?>"
-                                         data-position="<?= htmlspecialchars($position) ?>"
-                                         data-numero-licence="<?= htmlspecialchars($plan['numero_licence'] ?? '') ?>"
-                                         data-user-nom="<?= htmlspecialchars($plan['user_nom'] ?? '') ?>"
-                                         data-assignable="<?= $isAssigne ? '0' : '1' ?>"
-                                         title="<?= htmlspecialchars($nomComplet) ?>">
-                                        <div class="blason-position"><?= htmlspecialchars($position) ?></div>
+                                    <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>" style="<?= $bgStyle ?>"
+                                        data-concours-id="<?= htmlspecialchars($concoursId) ?>"
+                                        data-depart="<?= htmlspecialchars($numeroDepart) ?>"
+                                        data-peloton="<?= htmlspecialchars($numeroPeloton) ?>"
+                                        data-position="<?= htmlspecialchars($position) ?>"
+                                        data-numero-licence="<?= htmlspecialchars($plan['numero_licence'] ?? '') ?>"
+                                        data-user-nom="<?= htmlspecialchars($plan['user_nom'] ?? '') ?>"
+                                        data-assignable="<?= $isAssigne ? '0' : '1' ?>"
+                                        title="Cliquer pour <?= $isAssigne ? 'modifier ou libérer' : 'assigner un archer' ?>">
+                                        <span class="peloton-position-letter"><?= htmlspecialchars($position) ?></span>
+                                        <span class="peloton-position-name"><?= htmlspecialchars($nomComplet) ?></span>
                                         <?php if ($piquetVal): ?>
-                                            <div class="blason-taille" style="font-size:0.8em;"><?= htmlspecialchars(ucfirst($piquetVal)) ?></div>
+                                            <span class="badge bg-secondary"><?= htmlspecialchars(ucfirst($piquetVal)) ?></span>
                                         <?php endif; ?>
-                                        <div class="blason-archer-name"><?= htmlspecialchars($nomComplet) ?></div>
-                                    </div>
+                                    </li>
                                 <?php endforeach; ?>
-                            </div>
+                            </ul>
                         </div>
                     <?php endfor; ?>
                 </div>
@@ -165,18 +213,18 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
 </p>
 </div>
 
-<!-- Modale assignation -->
+<!-- Modale : liste des archers inscrits sans peloton -->
 <div class="modal fade" id="pelotonAssignModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Assigner un archer</h5>
+                <h5 class="modal-title">Archers inscrits sans peloton</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p id="peloton-assign-info" class="text-muted"></p>
-                <div id="peloton-archers-list"></div>
-                <button type="button" class="btn btn-outline-secondary mt-2" id="peloton-liberer-btn" style="display:none;">Libérer cette position</button>
+                <p id="peloton-assign-info" class="text-muted mb-2"></p>
+                <div id="peloton-archers-list" class="list-group"></div>
+                <button type="button" class="btn btn-outline-secondary mt-3" id="peloton-liberer-btn" style="display:none;">Libérer cette position</button>
             </div>
         </div>
     </div>
@@ -237,7 +285,7 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
             numeroLicence: item.dataset.numeroLicence,
             userNom: item.dataset.userNom
         };
-        if (infoContainer) infoContainer.textContent = 'Départ ' + currentTarget.depart + ' - Peloton ' + currentTarget.peloton + ' - Position ' + currentTarget.position;
+        if (infoContainer) infoContainer.textContent = 'Départ ' + currentTarget.depart + ' - Peloton ' + currentTarget.peloton + ' - Position ' + currentTarget.position + ' : sélectionnez un archer à affecter';
         if (releaseBtn) releaseBtn.style.display = assignable ? 'none' : 'block';
         fetchArchersDispo(currentTarget);
         if (modalInstance) modalInstance.show();
