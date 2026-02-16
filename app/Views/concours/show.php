@@ -163,6 +163,9 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     $canCreatePlanCible = in_array($abv_discipline_show, ['S', 'T', 'I', 'H']) && 
                           ($concours->nombre_cibles ?? 0) > 0 && 
                           ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
+    $canCreatePlanPeloton = in_array($abv_discipline_show, ['3', 'N', 'C']) && 
+                            (($concours->nombre_pelotons ?? $concours->nombre_cibles ?? 0) > 0) && 
+                            (($concours->nombre_archers_par_peloton ?? $concours->nombre_tireurs_par_cibles ?? 0) > 0);
     ?>
     
     <?php if ($canCreatePlanCible): ?>
@@ -170,7 +173,19 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         <button type="button" class="btn btn-primary" id="btn-create-plan-cible" onclick="createPlanCible()">
             <i class="fas fa-bullseye"></i> Créer le plan de cible
         </button>
+        <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-cible" class="btn btn-outline-primary ms-2">
+            <i class="fas fa-list"></i> Voir le plan de cible
+        </a>
         <div id="plan-cible-message" style="margin-top: 10px;"></div>
+    </div>
+    <?php endif; ?>
+    
+    <?php if ($canCreatePlanPeloton): ?>
+    <div class="form-group" style="margin-top: 20px;">
+        <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-peloton" class="btn btn-primary">
+            <i class="fas fa-users"></i> Plan de peloton
+        </a>
+        <small class="text-muted d-block mt-1">Règles : max 3 archers du même club, max 2 couleurs de piquet par peloton</small>
     </div>
     <?php endif; ?>
 </div>
