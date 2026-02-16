@@ -106,6 +106,13 @@ class ApiService {
             }
             return $this->makeRequest("concours/{$concoursId}/plan-cible", "GET");
         }
+
+        public function getPlanPeloton($concoursId) {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
+            }
+            return $this->makeRequest("concours/{$concoursId}/plan-peloton", "GET");
+        }
     
     /**
      * Vérifie et rafraîchit le token si nécessaire avant chaque requête

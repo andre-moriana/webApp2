@@ -2111,4 +2111,120 @@ class ConcoursController {
         header('Location: /concours/' . urlencode((string)$concoursId) . '/plan-cible');
         exit;
     }
+
+    public function planPeloton($concoursId)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+        unset($_SESSION['error']);
+        unset($_SESSION['success']);
+
+        $concours = null;
+        $plans = [];
+        $inscriptionsMap = [];
+        $usersMap = [];
+
+        $response = $this->apiService->getConcoursById($concoursId);
+        if ($response['success'] && isset($response['data'])) {
+            $concours = (object) $response['data'];
+        } else {
+            $_SESSION['error'] = 'Impossible de récupérer le concours.';
+            header('Location: /concours');
+            exit;
+        }
+
+        $disciplines = [];
+        try {
+            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+            if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                $disciplinesPayload = $disciplinesPayload['data'];
+            }
+            if ($disciplinesResponse['success'] && is_array($disciplinesPayload)) {
+                $disciplines = array_values($disciplinesPayload);
+            }
+        } catch (Exception $e) {
+            error_log('Erreur disciplines: ' . $e->getMessage());
+        }
+
+        $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+        $abv_discipline = null;
+        if ($iddiscipline && is_array($disciplines)) {
+            foreach ($disciplines as $disc) {
+                $discId = $disc['iddiscipline'] ?? $disc['id'] ?? null;
+                if ($discId == $iddiscipline || (string)$discId === (string)$iddiscipline) {
+                    $abv_discipline = $disc['abv_discipline'] ?? null;
+                    break;
+                }
+            }
+        }
+
+        if (!in_array($abv_discipline, ['3', 'N', 'C'])) {
+            $_SESSION['error'] = "Les plans de peloton ne sont disponibles que pour les disciplines Campagne (C), Nature (N) et 3D (3). Discipline actuelle: " . ($abv_discipline ?? 'inconnue');
+            header('Location: /concours/show/' . $concoursId);
+            exit;
+        }
+
+        try {
+            $plansResponse = $this->apiService->getPlanPeloton($concoursId);
+            if ($plansResponse['success']) {
+                $plans = $this->apiService->unwrapData($plansResponse);
+                if (is_array($plans) && isset($plans['data']) && isset($plans['success'])) {
+                    $plans = $plans['data'];
+                }
+                if (!is_array($plans)) {
+                    $plans = [];
+                }
+            } else {
+                $plans = [];
+            }
+        } catch (Exception $e) {
+            error_log('Erreur plan peloton: ' . $e->getMessage());
+            $_SESSION['error'] = 'Erreur lors de la récupération des plans de peloton: ' . $e->getMessage();
+            $plans = [];
+        }
+
+        $licencesFromPlan = [];
+        foreach ($plans as $departPlans) {
+            if (is_array($departPlans)) {
+                foreach ($departPlans as $plan) {
+                    $lic = $plan['numero_licence'] ?? null;
+                    if ($lic) $licencesFromPlan[$lic] = $plan['user_nom'] ?? null;
+                }
+            }
+        }
+        if (!empty($licencesFromPlan)) {
+            try {
+                $inscResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
+                if ($inscResponse['success']) {
+                    $inscriptions = $this->apiService->unwrapData($inscResponse);
+                    if (is_array($inscriptions)) {
+                        foreach ($inscriptions as $insc) {
+                            $lic = $insc['numero_licence'] ?? null;
+                            if ($lic) {
+                                $inscriptionsMap[$lic] = [
+                                    'user_nom' => $insc['user_nom'] ?? '',
+                                    'numero_licence' => $lic,
+                                    'id_club' => $insc['id_club'] ?? null,
+                                    'club_name' => $insc['club_name'] ?? $insc['id_club'] ?? null,
+                                    'nom' => $insc['user_nom'] ?? '',
+                                    'name' => $insc['user_nom'] ?? '',
+                                    'clubName' => $insc['club_name'] ?? null
+                                ];
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Erreur inscriptions plan peloton: ' . $e->getMessage());
+            }
+        }
+
+        $title = 'Plan de peloton - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
+        include 'app/Views/layouts/header.php';
+        include 'app/Views/concours/plan-peloton.php';
+        include 'app/Views/layouts/footer.php';
+    }
 }

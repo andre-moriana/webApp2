@@ -2814,5 +2814,100 @@ class ApiController {
             ], 500);
         }
     }
+
+    public function proxyConcoursPlanPeloton($concoursId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $method = $_SERVER['REQUEST_METHOD'];
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $endpoint = "concours/{$concoursId}/plan-peloton" . ($queryString ? "?{$queryString}" : "");
+            $data = null;
+            if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH') {
+                $input = file_get_contents('php://input');
+                $data = json_decode($input, true);
+            }
+            $response = $this->apiService->makeRequest($endpoint, $method, $data);
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function proxyConcoursPlanPelotonArchersDispo($concoursId, $depart) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $endpoint = "concours/{$concoursId}/plan-peloton/{$depart}/archers-dispo";
+            $response = $this->apiService->makeRequest($endpoint, 'GET');
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function proxyConcoursPlanPelotonLiberer($concoursId, $depart) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $endpoint = "concours/{$concoursId}/plan-peloton/{$depart}/liberer";
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            $response = $this->apiService->makeRequest($endpoint, 'POST', $data);
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function proxyConcoursPlanPelotonAssign($concoursId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $endpoint = "concours/{$concoursId}/plan-peloton/assign";
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            $response = $this->apiService->makeRequest($endpoint, 'POST', $data);
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 ?>

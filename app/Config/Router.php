@@ -22,6 +22,8 @@ class Router {
         $this->addRoute("POST", "/concours/{id}/inscription", "ConcoursController@storeInscription");
         // Route pour le plan de cible
         $this->addRoute("GET", "/concours/{id}/plan-cible", "ConcoursController@planCible");
+        // Route pour le plan de peloton (Campagne/Nature/3D)
+        $this->addRoute("GET", "/concours/{id}/plan-peloton", "ConcoursController@planPeloton");
         // Route pour enregistrer le type de blason d'une cible
         $this->addRoute("POST", "/concours/plan-cible-type-blason", "ConcoursController@planCibleTypeBlason");
         // Route pour la mise à jour d'inscription (POST avec X-HTTP-Method-Override ou PUT)
@@ -206,6 +208,11 @@ class Router {
         $this->addRoute("GET", "/api/concours/{id}/plan-cible/{depart}/archers-dispo", "ApiController@proxyConcoursPlanCibleArchersDispo");
         $this->addRoute("POST", "/api/concours/{id}/plan-cible/{depart}/liberer", "ApiController@proxyConcoursPlanCibleLiberer");
         $this->addRoute("POST", "/api/concours/{id}/plan-cible/assign", "ApiController@proxyConcoursPlanCibleAssign");
+        $this->addRoute("GET", "/api/concours/{id}/plan-peloton", "ApiController@proxyConcoursPlanPeloton");
+        $this->addRoute("POST", "/api/concours/{id}/plan-peloton", "ApiController@proxyConcoursPlanPeloton");
+        $this->addRoute("GET", "/api/concours/{id}/plan-peloton/{depart}/archers-dispo", "ApiController@proxyConcoursPlanPelotonArchersDispo");
+        $this->addRoute("POST", "/api/concours/{id}/plan-peloton/{depart}/liberer", "ApiController@proxyConcoursPlanPelotonLiberer");
+        $this->addRoute("POST", "/api/concours/{id}/plan-peloton/assign", "ApiController@proxyConcoursPlanPelotonAssign");
         $this->addRoute("GET", "/api/concours/{id}/inscriptions", "ApiController@proxyConcoursInscriptions");
         $this->addRoute("GET", "/api/concours/{id}/inscription/{userId}", "ApiController@proxyConcoursInscription");
         $this->addRoute("DELETE", "/api/concours/{id}/inscription/{userId}", "ApiController@proxyConcoursInscription");
