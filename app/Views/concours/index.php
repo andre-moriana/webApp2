@@ -178,6 +178,11 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                                     <i class="fas fa-bullseye"></i>
                                                 </a>
                                                 <?php endif; ?>
+                                                <?php if ($abv_discipline && in_array($abv_discipline, ['3', 'N', 'C', '3D'])): ?>
+                                                <a href="/concours/<?php echo $concoursId; ?>/plan-peloton" class="btn btn-sm btn-outline-info" title="Plan de peloton (Nature/3D/Campagne)">
+                                                    <i class="fas fa-users"></i>
+                                                </a>
+                                                <?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
