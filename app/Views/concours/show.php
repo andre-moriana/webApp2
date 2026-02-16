@@ -163,7 +163,8 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     $canCreatePlanCible = in_array($abv_discipline_show, ['S', 'T', 'I', 'H']) && 
                           ($concours->nombre_cibles ?? 0) > 0 && 
                           ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
-    $canCreatePlanPeloton = in_array($abv_discipline_show, ['3', 'N', 'C']) && 
+    // Plan peloton : utiliser isNature3DOrCampagne (détection par nom) car abv_discipline peut varier (3, 3D, N, etc.)
+    $canCreatePlanPeloton = $isNature3DOrCampagne && 
                             (($concours->nombre_pelotons ?? $concours->nombre_cibles ?? 0) > 0) && 
                             (($concours->nombre_archers_par_peloton ?? $concours->nombre_tireurs_par_cibles ?? 0) > 0);
     ?>
