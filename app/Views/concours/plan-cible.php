@@ -332,8 +332,10 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                     }
                                     if ($userIdTrispot === null && $numeroLicenceTrispot === null && isset($plansParPosition[$colonne])) {
                                         $planPos = $plansParPosition[$colonne];
-                                            if ($planPos && $planPos['user_nom'] !== null && $planPos['numero_licence'] !== null) {
-                                                $userIdTrispot = $planPos['user_nom'] . '-' . $planPos['numero_licence'];
+                                        if ($planPos && $planPos['user_nom'] !== null && $planPos['numero_licence'] !== null) {
+                                            $userIdTrispot = $planPos['user_nom'] . '-' . $planPos['numero_licence'];
+                                            $numeroLicenceTrispot = $planPos['numero_licence'];
+                                            $userNomTrispot = $planPos['user_nom'];
                                         } elseif ($planPos && !empty($planPos['numero_licence'])) {
                                             $numeroLicenceTrispot = $planPos['numero_licence'];
                                             $userNomTrispot = $planPos['user_nom'] ?? null;
