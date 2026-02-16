@@ -222,6 +222,9 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                                 if (isset($colors[$piquetColor])) {
                                     $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
                                 }
+                                if (isset($inscription['blason']) && $inscription['blason'] !== '') {
+                                    $rowStyle .= ' style=" font-weight: bold; color: red; "';
+                                }
                             }
                        ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
