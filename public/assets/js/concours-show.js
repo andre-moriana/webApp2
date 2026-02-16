@@ -86,6 +86,75 @@ function createPlanCible() {
     });
 }
 
+// Créer le plan de peloton pour un concours (Campagne/Nature/3D)
+function createPlanPeloton() {
+    const concoursId = typeof concoursIdShow !== 'undefined' ? concoursIdShow : null;
+    if (!concoursId) {
+        alert('Erreur: ID du concours non trouvé');
+        return;
+    }
+    const btn = document.getElementById('btn-create-plan-peloton');
+    const messageDiv = document.getElementById('plan-peloton-message');
+    if (!btn || !messageDiv) {
+        alert('Erreur: Éléments du formulaire non trouvés');
+        return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
+    messageDiv.innerHTML = '';
+
+    const concoursData = typeof concoursDataShow !== 'undefined' ? concoursDataShow : {};
+    const nombrePelotons = concoursData.nombre_pelotons || concoursData.nombre_cibles || 0;
+    const nombreDepart = concoursData.nombre_depart || 1;
+    const nombreArchersParPeloton = concoursData.nombre_archers_par_peloton || concoursData.nombre_tireurs_par_cibles || 0;
+
+    const data = {
+        nombre_pelotons: nombrePelotons,
+        nombre_depart: nombreDepart,
+        nombre_archers_par_peloton: nombreArchersParPeloton
+    };
+
+    fetch(`/api/concours/${concoursId}/plan-peloton`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                throw new Error('La réponse du serveur n\'est pas au format JSON.');
+            });
+        }
+        return response.json();
+    })
+    .then(result => {
+        const apiResponse = result.data || result;
+        const success = apiResponse.success || result.success;
+        const message = apiResponse.message || apiResponse.error || result.message || result.error || 'Opération terminée';
+
+        if (success) {
+            messageDiv.innerHTML = '<div class="alert alert-success">' + message + '</div>';
+            btn.innerHTML = '<i class="fas fa-check"></i> Plan de peloton créé';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+            setTimeout(() => {
+                window.location.href = '/concours/' + concoursId + '/plan-peloton';
+            }, 1500);
+        } else {
+            messageDiv.innerHTML = '<div class="alert alert-danger">Erreur: ' + message + '</div>';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-users"></i> Créer le plan de peloton';
+        }
+    })
+    .catch(error => {
+        messageDiv.innerHTML = '<div class="alert alert-danger">Erreur lors de la création: ' + error.message + '</div>';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-users"></i> Créer le plan de peloton';
+    });
+}
+
 // Retirer une inscription par ID
 function removeInscription(inscriptionId) {
     if (!confirm('Voulez-vous retirer cet archer de l\'inscription ?')) {
