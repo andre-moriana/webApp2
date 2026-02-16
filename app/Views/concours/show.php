@@ -215,15 +215,19 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                             $piquetColorRaw = $inscription['piquet'] ?? null;
                             $piquetColor = null;
                             $rowStyle = '';
+                            $hasBlason = isset($inscription['blason']) && $inscription['blason'] !== null && $inscription['blason'] !== '';
+                            $hasPiquet = $piquetColorRaw && $piquetColorRaw !== '';
                             
-                            if ($piquetColorRaw && $piquetColorRaw !== '') {
-                                $piquetColor = trim(strtolower($piquetColorRaw));
-                                $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                            if ($hasPiquet || $hasBlason) {
                                 $rowStyle = ' style="';
-                                if (isset($colors[$piquetColor])) {
-                                    $rowStyle .= 'background-color: ' . $colors[$piquetColor] . ' !important;';
+                                if ($hasPiquet) {
+                                    $piquetColor = trim(strtolower($piquetColorRaw));
+                                    $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                                    if (isset($colors[$piquetColor])) {
+                                        $rowStyle .= 'background-color: ' . $colors[$piquetColor] . ' !important;';
+                                    }
                                 }
-                                if (isset($inscription['blason']) && $inscription['blason'] !== null) {
+                                if ($hasBlason) {
                                     $rowStyle .= ' font-weight: bold; ';
                                 }
                                 $rowStyle .= '"';
