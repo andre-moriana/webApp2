@@ -190,8 +190,7 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
         <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
-                            <th>Nom</th>
-                            <th>Prénom</th>
+                            <th>Nom - Prénom</th>
                             <th>Numéro de licence</th>
                             <th>Club</th>
                             <th>Départ</th>
@@ -210,8 +209,9 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                         <?php 
                         // $usersMap est passé depuis le contrôleur
                         foreach ($inscriptions as $inscription):
-                            $userId = $inscription['user_id'] ?? null;
-                            $user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
+                            $userNom = $inscription['user_nom'] ?? null;
+                            $userNumeroLicence = $inscription['numero_licence'] ?? null;
+                            $user = isset($usersMap) && isset($usersMap[$userNom . '-' . $userNumeroLicence]) ? $usersMap[$userNom . '-' . $userNumeroLicence] : null;
                             
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
                             $piquetColorRaw = $inscription['piquet'] ?? null;
@@ -227,16 +227,9 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                             }
                        ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($user['name'] ?? $user['nom'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($user['first_name'] ?? $user['firstName'] ?? $user['prenom'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? $user['licence_number'] ?? $user['licenceNumber'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>>
-                                    <?php 
-                                    // Afficher le champ "name" (nom complet) du club comme demandé
-                                    $clubName = $inscription['club_name'] ?? $inscription['club_name_short'] ?? $user['clubName'] ?? $user['club_name'] ?? $user['clubNameShort'] ?? $user['club_name_short'] ?? null;
-                                    echo htmlspecialchars($clubName ?? 'N/A');
-                                    ?>
-                                </td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNom . ' - ' . $userNumeroLicence) ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNumeroLicence) ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <?php if ($isNature3DOrCampagne): ?>
