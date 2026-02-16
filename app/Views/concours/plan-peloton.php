@@ -29,6 +29,17 @@ $getArcherDisplayInfo = function($plan, $inscriptionsMap = []) {
     return null;
 };
 
+// Vérifier si un archer est compound (arc à poulies) via inscription
+$isCompound = function($numeroLicence, $inscriptionsMap = []) {
+    if (!$numeroLicence || !isset($inscriptionsMap[$numeroLicence])) return false;
+    $i = $inscriptionsMap[$numeroLicence];
+    $arme = strtolower(trim($i['arme'] ?? ''));
+    $cat = strtoupper(trim($i['categorie_classement'] ?? ''));
+    if (!empty($arme) && (strpos($arme, 'poulies') !== false || strpos($arme, 'compound') !== false)) return true;
+    if (!empty($cat) && substr($cat, -2) === 'CO') return true;
+    return false;
+};
+
 $nombrePelotons = $concours->nombre_pelotons ?? $concours->nombre_cibles ?? 0;
 $nombreDepart = $concours->nombre_depart ?? 1;
 $nombreArchersParPeloton = $concours->nombre_archers_par_peloton ?? $concours->nombre_tireurs_par_cibles ?? 0;
@@ -83,10 +94,21 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                         for ($i = 1; $i <= $nombreArchersParPeloton; $i++) {
                             $ordrePositions[] = chr(64 + $i);
                         }
+                        $nbCompound = 0;
+                        foreach ($pelotonPlans as $p) {
+                            if (!empty($p['numero_licence']) && $isCompound($p['numero_licence'], $inscriptionsMap ?? [])) {
+                                $nbCompound++;
+                            }
+                        }
                         ?>
                         <div class="pas-de-tir peloton-card">
                             <div class="pas-de-tir-header">
                                 <h3>Peloton <?= htmlspecialchars($numeroPeloton) ?></h3>
+                                <?php if ($nbCompound >= 2): ?>
+                                    <div class="alert alert-warning py-2 px-3 mt-2 mb-0" role="alert">
+                                        <i class="fas fa-exclamation-triangle"></i> <strong>Attention :</strong> <?= $nbCompound ?> tireur(s) à compound dans ce peloton (max 2 recommandé).
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             <ul class="list-group list-group-flush peloton-positions-list">
                                 <?php foreach ($ordrePositions as $position): ?>
