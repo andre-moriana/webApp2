@@ -234,7 +234,7 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                                     <td<?= $rowStyle ?>><?= htmlspecialchars($piquetColor ? ucfirst($piquetColor) : 'N/A') ?></td>
                                 <?php else: ?>
                                     <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?> <?= htmlspecialchars($inscription['trispot'] ? 'T' : '') ?></td>
                                 <?php endif; ?>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
