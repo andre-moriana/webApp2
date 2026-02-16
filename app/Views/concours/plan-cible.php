@@ -608,8 +608,8 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                             <?php } ?>
                         </div>
                         
-                        <!-- Sélecteur de type de blason SOUS la cible (en dehors de la boucle des positions) -->
-                        <div class="blason-type-select" style="margin-top: 10px; text-align: center;">
+                        <!-- Sélecteur de type de blason en bas du cadre -->
+                        <div class="blason-type-select">
                             <form method="post" action="/concours/plan-cible-type-blason" class="blason-type-form">
                                 <input type="hidden" name="concours_id" value="<?= htmlspecialchars($concoursId) ?>">
                                 <input type="hidden" name="numero_depart" value="<?= htmlspecialchars($numeroDepart) ?>">
