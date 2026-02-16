@@ -76,11 +76,13 @@
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            if (!data.success || !Array.isArray(data.data)) {
-                setListMessage(data.error || 'Erreur', 'danger');
+            var archers = (data.data && Array.isArray(data.data.data)) ? data.data.data : (Array.isArray(data.data) ? data.data : null);
+            var ok = data.success && archers !== null;
+            if (!ok) {
+                var errMsg = (data.data && data.data.error) || data.error || data.message || 'Erreur';
+                setListMessage(errMsg, 'danger');
                 return;
             }
-            var archers = data.data;
             if (archers.length === 0) {
                 setListMessage('Aucun archer disponible.', 'warning');
                 return;
