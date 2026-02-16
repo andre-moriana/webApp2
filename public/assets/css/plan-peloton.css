@@ -1,4 +1,4 @@
-/* Plan peloton : cadres avec liste A, B, C... */
+/* Plan peloton : cadres rectangulaires (override des styles circulaires de plan-cible) */
 
 .peloton-card {
     width: 320px;
@@ -14,6 +14,34 @@
     padding: 0;
 }
 
+/* Annuler les styles circulaires de .blason-item (plan-cible.css) pour afficher des cadres rectangulaires */
+.peloton-positions-list .peloton-position-item.blason-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    border-radius: 8px !important;
+    border: 1px solid #dee2e6 !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    margin-bottom: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+.peloton-positions-list .peloton-position-item.blason-item.assigne {
+    background: #f8f9fa !important;
+    border-color: #28a745 !important;
+}
+
+.peloton-positions-list .peloton-position-item.blason-item.assigne::before {
+    display: none !important;
+}
+
+.peloton-positions-list .peloton-position-item.blason-item.libre {
+    background: #ffffff !important;
+    opacity: 1 !important;
+}
+
 .peloton-position-item {
     cursor: pointer;
     display: flex;
@@ -25,6 +53,7 @@
 
 .peloton-position-item:hover {
     background-color: rgba(13, 110, 253, 0.08) !important;
+    transform: none !important;
 }
 
 .peloton-position-item.assigne {

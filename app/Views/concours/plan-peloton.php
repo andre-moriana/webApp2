@@ -99,9 +99,10 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                     $piquetVal = $plan['piquet'] ?? null;
                                     $piquetColor = $piquetVal && isset($piquetColors[strtolower($piquetVal)]) ? $piquetColors[strtolower($piquetVal)] : null;
                                     $letterRectStyle = ($isAssigne && $piquetColor) ? 'background-color:' . $piquetColor . ';' : '';
+                                    $frameBorderStyle = ($isAssigne && $piquetColor) ? 'border-color:' . $piquetColor . ' !important;' : '';
                                     $tooltipText = $isAssigne ? $nomComplet . (!empty($clubComplet) ? ' - ' . $clubComplet : '') : 'Cliquer pour assigner un archer';
                                     ?>
-                                    <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>"
+                                    <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>" <?= $frameBorderStyle ? 'style="' . $frameBorderStyle . '"' : '' ?>
                                         data-concours-id="<?= htmlspecialchars($concoursId) ?>"
                                         data-depart="<?= htmlspecialchars($numeroDepart) ?>"
                                         data-peloton="<?= htmlspecialchars($numeroPeloton) ?>"
