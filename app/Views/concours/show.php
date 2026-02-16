@@ -218,7 +218,7 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
 
                             // Gras si blason assigné (toutes disciplines)
                             $blason = $inscription['blason'] ?? null;
-                            if ($blason !== null && $blason !== '' && $blason !== 'N/A') {
+                            if (isset($blason) && $blason === null || $blason === '' || $blason === 'N/A' && !$piquetColorRaw) {
                                 $rowStyleParts[] = 'font-weight: bold';
                             }
 
@@ -228,6 +228,8 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                                 $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
                                 if (isset($colors[$piquetColor])) {
                                     $rowStyleParts[] = 'background-color: ' . $colors[$piquetColor] . ' !important';
+                                }else{    
+                                    $rowStyleParts[] = 'font-weight: bold';
                                 }
                             }
 
