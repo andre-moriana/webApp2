@@ -34,10 +34,15 @@
 .peloton-position-letter {
     font-weight: bold;
     min-width: 28px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     background: #e9ecef;
-    border-radius: 6px;
-    padding: 4px 8px;
+    border-radius: 50%;
+    padding: 0;
     font-size: 1em;
 }
 

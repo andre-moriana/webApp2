@@ -97,10 +97,11 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                     $nomComplet = $info ? $info['nomComplet'] : ($isAssigne ? ($plan['user_nom'] ?? '') : 'Libre');
                                     $clubComplet = $info ? ($info['club'] ?? '') : '';
                                     $piquetVal = $plan['piquet'] ?? null;
-                                    $bgStyle = $piquetVal && isset($piquetColors[strtolower($piquetVal)]) ? 'background-color:' . $piquetColors[strtolower($piquetVal)] . ';' : '';
+                                    $piquetColor = $piquetVal && isset($piquetColors[strtolower($piquetVal)]) ? $piquetColors[strtolower($piquetVal)] : null;
+                                    $letterCircleStyle = ($isAssigne && $piquetColor) ? 'background-color:' . $piquetColor . ';' : '';
                                     $tooltipText = $isAssigne ? $nomComplet . (!empty($clubComplet) ? ' - ' . $clubComplet : '') : 'Cliquer pour assigner un archer';
                                     ?>
-                                    <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>" style="<?= $bgStyle ?>"
+                                    <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>"
                                         data-concours-id="<?= htmlspecialchars($concoursId) ?>"
                                         data-depart="<?= htmlspecialchars($numeroDepart) ?>"
                                         data-peloton="<?= htmlspecialchars($numeroPeloton) ?>"
@@ -109,7 +110,7 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                         data-user-nom="<?= htmlspecialchars($plan['user_nom'] ?? '') ?>"
                                         data-assignable="<?= $isAssigne ? '0' : '1' ?>"
                                         title="<?= htmlspecialchars($tooltipText) ?>">
-                                        <span class="peloton-position-letter"><?= htmlspecialchars($position) ?></span>
+                                        <span class="peloton-position-letter"<?= $letterCircleStyle ? ' style="' . $letterCircleStyle . '"' : '' ?>><?= htmlspecialchars($position) ?></span>
                                         <span class="peloton-position-name"><?= htmlspecialchars($nomComplet) ?></span>
                                         <?php if ($piquetVal): ?>
                                             <span class="badge bg-secondary"><?= htmlspecialchars(ucfirst($piquetVal)) ?></span>
