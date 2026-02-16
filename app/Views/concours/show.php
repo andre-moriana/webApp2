@@ -219,13 +219,18 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                             if ($piquetColorRaw && $piquetColorRaw !== '') {
                                 $piquetColor = trim(strtolower($piquetColorRaw));
                                 $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                                $rowStyle = ' style="';
                                 if (isset($colors[$piquetColor])) {
-                                    $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
+                                    $rowStyle .= 'background-color: ' . $colors[$piquetColor] . ' !important;';
                                 }
+                                if (isset($inscription['blason']) && $inscription['blason'] !== null) {
+                                    $rowStyle .= ' font-weight: bold; ';
+                                }
+                                $rowStyle .= '"';
                             }
                        ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?><?= htmlspecialchars($inscription['blason'] !== null ? ' <span style="font-weight: bold;">T</span>' : '') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($userNumeroLicence) ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
