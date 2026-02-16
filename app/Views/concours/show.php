@@ -214,20 +214,24 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
                             $piquetColorRaw = $inscription['piquet'] ?? null;
                             $piquetColor = null;
-                            $rowStyle = '';
-                            
+                            $rowStyleParts = [];
+
+                            // Gras si blason assigné (toutes disciplines)
+                            $blason = $inscription['blason'] ?? null;
+                            if ($blason !== null && $blason !== '' && $blason !== 'N/A') {
+                                $rowStyleParts[] = 'font-weight: bold';
+                            }
+
+                            // Couleur de fond selon piquet (3D/Nature/Campagne)
                             if ($piquetColorRaw && $piquetColorRaw !== '') {
                                 $piquetColor = trim(strtolower($piquetColorRaw));
                                 $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
-                                $rowStyle = ' style="';
                                 if (isset($colors[$piquetColor])) {
-                                    $rowStyle .= 'background-color: ' . $colors[$piquetColor] . ' !important;';
+                                    $rowStyleParts[] = 'background-color: ' . $colors[$piquetColor] . ' !important';
                                 }
-                                if (isset($inscription['blason']) && $inscription['blason'] !== null) {
-                                    $rowStyle .= ' font-weight: bold; ';
-                                }
-                                $rowStyle .= '"';
                             }
+
+                            $rowStyle = !empty($rowStyleParts) ? ' style="' . implode('; ', $rowStyleParts) . '"' : '';
                        ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?></td>
