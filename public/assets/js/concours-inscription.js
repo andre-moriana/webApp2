@@ -1795,17 +1795,21 @@ document.addEventListener('DOMContentLoaded', function() {
             return 0;
         }
         const occupantUserIds = new Set();
+        const occupantLicences = new Set();
         cible.positions.forEach(position => {
             if (position.user_id !== null && position.user_id !== undefined) {
                 occupantUserIds.add(String(position.user_id));
+            }
+            if (position.numero_licence) {
+                occupantLicences.add(String(position.numero_licence));
             }
         });
 
         let count = 0;
         inscriptions.forEach(inscription => {
-            if (!occupantUserIds.has(String(inscription.user_id))) {
-                return;
-            }
+            const isOnCible = (inscription.user_id && occupantUserIds.has(String(inscription.user_id))) ||
+                (inscription.numero_licence && occupantLicences.has(String(inscription.numero_licence)));
+            if (!isOnCible) return;
             const clubId = normalizeClubId(inscription.id_club);
             if (clubId && clubId === selectedClub) {
                 count += 1;
@@ -1815,25 +1819,28 @@ document.addEventListener('DOMContentLoaded', function() {
         return count;
     };
 
-    const countSameClubOnCibleEdit = (cible, inscriptions, selectedClub, currentUserId) => {
+    const countSameClubOnCibleEdit = (cible, inscriptions, selectedClub, currentUserId, currentNumeroLicence) => {
         if (!cible || !Array.isArray(cible.positions) || !selectedClub) {
             return 0;
         }
         const occupantUserIds = new Set();
+        const occupantLicences = new Set();
         cible.positions.forEach(position => {
             if (position.user_id !== null && position.user_id !== undefined) {
                 occupantUserIds.add(String(position.user_id));
+            }
+            if (position.numero_licence) {
+                occupantLicences.add(String(position.numero_licence));
             }
         });
 
         let count = 0;
         inscriptions.forEach(inscription => {
-            if (!occupantUserIds.has(String(inscription.user_id))) {
-                return;
-            }
-            if (currentUserId !== null && String(inscription.user_id) === String(currentUserId)) {
-                return;
-            }
+            const isOnCible = (inscription.user_id && occupantUserIds.has(String(inscription.user_id))) ||
+                (inscription.numero_licence && occupantLicences.has(String(inscription.numero_licence)));
+            if (!isOnCible) return;
+            if (currentUserId !== null && String(inscription.user_id) === String(currentUserId)) return;
+            if (currentNumeroLicence && String(inscription.numero_licence) === String(currentNumeroLicence)) return;
             const clubId = normalizeClubId(inscription.id_club);
             if (clubId && clubId === selectedClub) {
                 count += 1;
@@ -1996,6 +2003,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentCible = editCibleSelect.dataset.currentCible || null;
         const currentInscription = getEditInscription();
         const currentUserId = currentInscription ? currentInscription.user_id : null;
+        const currentNumeroLicence = currentInscription ? currentInscription.numero_licence : null;
 
         const options = editCibleSelect.querySelectorAll('option');
         options.forEach(option => {
@@ -2042,7 +2050,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     if (!shouldDisable && selectedClub) {
-                        const sameClubCount = countSameClubOnCibleEdit(cible, inscriptionsDepart, selectedClub, currentUserId);
+                        const sameClubCount = countSameClubOnCibleEdit(cible, inscriptionsDepart, selectedClub, currentUserId, currentNumeroLicence);
                         if (sameClubCount >= 3) {
                             shouldDisable = true;
                         }
@@ -2582,8 +2590,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const userId = selectedArcher.id || selectedArcher._id || selectedArcher.ID || null;
-        if (!userId) {
-            alert('Erreur: L\'archer sélectionné n\'a pas d\'ID');
+        const numeroLicence = selectedArcher.licence_number || selectedArcher.licenceNumber || selectedArcher.IDLicence || null;
+        const userNom = selectedArcher.nom || selectedArcher.name || selectedArcher.user_nom || '';
+        if (!userId && !numeroLicence) {
+            alert('Erreur: L\'archer sélectionné n\'a ni ID ni numéro de licence');
             return;
         }
         
@@ -2612,10 +2622,13 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            // Trouver l'inscription de cet archer pour ce départ
-            const inscription = data.inscriptions?.find(ins => 
-                ins.user_id == userId && ins.numero_depart == numeroDepart
-            );
+            // Trouver l'inscription par user_id ou numero_licence
+            const inscription = data.inscriptions?.find(ins => {
+                if (ins.numero_depart != numeroDepart) return false;
+                if (userId && ins.user_id == userId) return true;
+                if (numeroLicence && String(ins.numero_licence) === String(numeroLicence)) return true;
+                return false;
+            });
             
             if (!inscription) {
                 throw new Error('Aucune inscription trouvée pour cet archer sur ce départ');
@@ -2625,12 +2638,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 numero_depart: parseInt(numeroDepart),
                 numero_cible: parseInt(numeroCible),
                 position_archer: positionArcher,
-                user_id: parseInt(userId),
                 id_club: inscription.id_club || null,
                 blason: inscription.blason ? parseInt(inscription.blason) : null,
                 distance: inscription.distance ? parseInt(inscription.distance) : null,
                 trispot: inscription.trispot == 1 || inscription.trispot === '1' || inscription.trispot === true
             };
+            if (userId) {
+                requestData.user_id = parseInt(userId);
+            } else {
+                requestData.user_nom = inscription.user_nom || userNom || '';
+                requestData.numero_licence = inscription.numero_licence || numeroLicence || '';
+            }
             
             console.log('Assignation cible - Données envoyées:', requestData);
             
