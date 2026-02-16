@@ -211,8 +211,6 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                         foreach ($inscriptions as $inscription):
                             $userNom = $inscription['user_nom'] ?? null;
                             $userNumeroLicence = $inscription['numero_licence'] ?? null;
-                            $user = isset($usersMap) && isset($usersMap[$userNom . '-' . $userNumeroLicence]) ? $usersMap[$userNom . '-' . $userNumeroLicence] : null;
-                            
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
                             $piquetColorRaw = $inscription['piquet'] ?? null;
                             $piquetColor = null;
@@ -227,7 +225,7 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                             }
                        ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNom . ' - ' . $userNumeroLicence) ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($userNumeroLicence) ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
