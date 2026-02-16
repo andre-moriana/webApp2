@@ -172,9 +172,9 @@ table tbody tr.piquet-blanc {
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
                                     <?php 
-                                    // Afficher le champ "name" (nom complet) du club comme demandé
-                                    $clubName = $inscription['id_club'] ?? null;
-                                    echo htmlspecialchars($clubName ?? 'N/A');
+                                    // Afficher le nom du club (lié à id_club), sinon id_club en fallback
+                                    $clubDisplay = $inscription['club_name'] ?? $inscription['id_club'] ?? null;
+                                    echo htmlspecialchars($clubDisplay ?? 'N/A');
                                     ?>
                                 </td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
