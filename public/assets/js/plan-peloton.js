@@ -39,7 +39,7 @@
                 if (result.success) {
                     window.location.href = '/concours/' + concoursId + '/plan-peloton';
                 } else {
-                    msgCreate.innerHTML = '<div class="alert alert-danger">' + (result.error || 'Erreur') + '</div>';
+                    msgCreate.innerHTML = '<div class="alert alert-danger">' + ((result.data && result.data.error) || result.error || result.message || 'Erreur') + '</div>';
                     btnCreate.disabled = false;
                     btnCreate.innerHTML = '<i class="fas fa-users"></i> Créer le plan de peloton';
                 }
@@ -145,7 +145,7 @@
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.success) window.location.reload();
-                else setListMessage(data.error || 'Erreur', 'danger');
+                else setListMessage((data.data && data.data.error) || data.error || data.message || 'Erreur', 'danger');
             })
             .catch(function() { setListMessage('Erreur', 'danger'); });
         });
@@ -166,7 +166,7 @@
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.success) window.location.reload();
-                else setListMessage(data.error || 'Erreur', 'danger');
+                else setListMessage((data.data && data.data.error) || data.error || data.message || 'Erreur', 'danger');
             });
         });
     }
