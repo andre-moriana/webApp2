@@ -244,6 +244,7 @@
     align-items: center; /* Centrer verticalement les blasons */
     flex: 1;
     min-height: 0;
+    overflow: visible; /* Permet l'affichage du nom du tireur sous les blasons */
 }
 
 .blasons-container.blasons-trispot .blason-item {
