@@ -222,13 +222,10 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                                 if (isset($colors[$piquetColor])) {
                                     $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
                                 }
-                                if (isset($inscription['blason']) && $inscription['blason'] !== null) {
-                                    $rowStyle .= ' style=" font-weight: bold; color: red; "';
-                                }
                             }
                        ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?><?= htmlspecialchars($inscription['blason'] !== null ? ' <span style="font-weight: bold;">T</span>' : '') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($userNumeroLicence) ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
