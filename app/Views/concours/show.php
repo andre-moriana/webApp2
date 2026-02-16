@@ -212,19 +212,26 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                             $userNom = $inscription['user_nom'] ?? null;
                             $userNumeroLicence = $inscription['numero_licence'] ?? null;
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
-                            $piquetColorRaw = $inscription['piquet'] ?? null;
+                            $piquetColorRaw = $inscription['piquet'] ?? null ;
                             $piquetColor = null;
-                            $rowStyle = ' style="font-weight: bold;';
+
+                            $hasBlason = isset($inscription['blason']) && $inscription['blason'] === 'N/A' || $inscription['blason'] === null;
                             $hasPiquet = $piquetColorRaw && $piquetColorRaw !== '';
                             
-                            if ($hasPiquet) {
-                                $piquetColor = trim(strtolower($piquetColorRaw));
-                                $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
-                                if (isset($colors[$piquetColor])) {
-                                    $rowStyle .= ' background-color: ' . $colors[$piquetColor] . ' !important;';
+                            if ($hasPiquet || $hasBlason) {
+                                $rowStyle = ' style="';
+                                if ($hasPiquet) {
+                                    $piquetColor = trim(strtolower($piquetColorRaw));
+                                    $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                                    if (isset($colors[$piquetColor])) {
+                                        $rowStyle .= 'background-color: ' . $colors[$piquetColor] . ' !important;';
+                                    }
                                 }
+                                if ($hasBlason && !$hasPiquet) {
+                                    $rowStyle .= ' font-weight: bold; ';
+                                }
+                                $rowStyle .= '"';
                             }
-                            $rowStyle .= '"';
                        ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?></td>
