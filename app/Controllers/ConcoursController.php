@@ -2211,7 +2211,9 @@ class ConcoursController {
                                     'club_name' => $insc['club_name'] ?? $insc['id_club'] ?? null,
                                     'nom' => $insc['user_nom'] ?? '',
                                     'name' => $insc['user_nom'] ?? '',
-                                    'clubName' => $insc['club_name'] ?? null
+                                    'clubName' => $insc['club_name'] ?? null,
+                                    'arme' => $insc['arme'] ?? null,
+                                    'categorie_classement' => $insc['categorie_classement'] ?? null
                                 ];
                             }
                         }
