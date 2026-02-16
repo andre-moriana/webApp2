@@ -624,9 +624,6 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-outline-primary" style="margin-left: 8px;" <?= $cibleHasAssigned ? 'disabled' : '' ?>>Enregistrer</button>
                             </form>
-                            <?php if ($cibleHasAssigned): ?>
-                                <div class="text-muted" style="margin-top: 6px; font-size: 0.9em;">Type de blason verrouillé : une ou plusieurs positions sont déjà assignées.</div>
-                            <?php endif; ?>
                         </div>
                     </div>
                     <?php endfor; ?>
