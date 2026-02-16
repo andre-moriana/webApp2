@@ -212,22 +212,18 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                             $userNom = $inscription['user_nom'] ?? null;
                             $userNumeroLicence = $inscription['numero_licence'] ?? null;
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
-                            $piquetColorRaw = $inscription['piquet'] ?? null ;
+                            $piquetColorRaw = $inscription['piquet'] ?? null;
                             $piquetColor = null;
-
-                            $hasBlason = isset($inscription['blason']) && $inscription['blason'] === 'N/A' || $inscription['blason'] === null;
-                            $hasPiquet = $piquetColorRaw && $piquetColorRaw !== '';
-                            $rowStyle = ' style="';
-                       
-                            if ($hasPiquet || $hasBlason) {
-                                if ($hasPiquet) {
-                                    $piquetColor = trim(strtolower($piquetColorRaw));
-                                    $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
-                                    if (isset($colors[$piquetColor])) {
-                                        $rowStyle .= 'background-color: ' . $colors[$piquetColor] . ' !important;';
-                                    }
+                            $rowStyle = '';
+                            
+                            if ($piquetColorRaw && $piquetColorRaw !== '') {
+                                $piquetColor = trim(strtolower($piquetColorRaw));
+                                $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                                $rowStyle = ' style="';
+                                if (isset($colors[$piquetColor])) {
+                                    $rowStyle .= 'background-color: ' . $colors[$piquetColor] . ' !important;';
                                 }
-                                if ($hasBlason && !$hasPiquet) {
+                                if (isset($inscription['blason']) && $inscription['blason'] !== null) {
                                     $rowStyle .= ' font-weight: bold; ';
                                 }
                                 $rowStyle .= '"';
