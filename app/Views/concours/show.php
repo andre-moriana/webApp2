@@ -182,9 +182,13 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     
     <?php if ($canCreatePlanPeloton): ?>
     <div class="form-group" style="margin-top: 20px;">
-        <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-peloton" class="btn btn-primary">
-            <i class="fas fa-users"></i> Plan de peloton
+        <button type="button" class="btn btn-primary" id="btn-create-plan-peloton" onclick="createPlanPeloton()">
+            <i class="fas fa-users"></i> Créer le plan de peloton
+        </button>
+        <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-peloton" class="btn btn-outline-primary ms-2">
+            <i class="fas fa-list"></i> Voir le plan de peloton
         </a>
+        <div id="plan-peloton-message" style="margin-top: 10px;"></div>
         <small class="text-muted d-block mt-1">Règles : max 3 archers du même club, max 2 couleurs de piquet par peloton</small>
     </div>
     <?php endif; ?>
