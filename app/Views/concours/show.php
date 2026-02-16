@@ -217,9 +217,9 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
 
                             $hasBlason = isset($inscription['blason']) && $inscription['blason'] === 'N/A' || $inscription['blason'] === null;
                             $hasPiquet = $piquetColorRaw && $piquetColorRaw !== '';
-                            
+                            $rowStyle = ' style="';
+                       
                             if ($hasPiquet || $hasBlason) {
-                                $rowStyle = ' style="';
                                 if ($hasPiquet) {
                                     $piquetColor = trim(strtolower($piquetColorRaw));
                                     $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
