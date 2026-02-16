@@ -1,0 +1,53 @@
+/* Plan peloton : cadres avec liste A, B, C... */
+
+.peloton-card {
+    width: 280px;
+    min-width: 280px;
+    height: auto;
+    min-height: 200px;
+}
+
+.peloton-positions-list {
+    width: 100%;
+    flex: 1;
+    margin: 0;
+    padding: 0;
+}
+
+.peloton-position-item {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    transition: background-color 0.2s;
+}
+
+.peloton-position-item:hover {
+    background-color: rgba(13, 110, 253, 0.08) !important;
+}
+
+.peloton-position-item.assigne {
+    font-weight: 500;
+}
+
+.peloton-position-letter {
+    font-weight: bold;
+    min-width: 28px;
+    text-align: center;
+    background: #e9ecef;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 1em;
+}
+
+.peloton-position-item.assigne .peloton-position-letter {
+    background: #cfe2ff;
+}
+
+.peloton-position-name {
+    flex: 1;
+    font-size: 0.95em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
