@@ -142,12 +142,21 @@
                 credentials: 'include',
                 body: JSON.stringify(payload)
             })
-            .then(function(r) { return r.json(); })
+            .then(function(r) {
+                return r.json().catch(function() { return { success: false, error: 'Réponse invalide du serveur' }; });
+            })
             .then(function(data) {
                 if (data.success) window.location.reload();
-                else setListMessage((data.data && data.data.error) || data.error || data.message || 'Erreur', 'danger');
+                else {
+                    var err = (data.data && data.data.error) || data.error || data.message || 'Erreur';
+                    console.warn('Assign peloton erreur:', err, 'Réponse:', data);
+                    setListMessage(err, 'danger');
+                }
             })
-            .catch(function() { setListMessage('Erreur', 'danger'); });
+            .catch(function(e) {
+                console.error('Assign peloton exception:', e);
+                setListMessage('Erreur réseau ou serveur', 'danger');
+            });
         });
     }
 
