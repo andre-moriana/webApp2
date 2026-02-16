@@ -227,7 +227,7 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                                         $rowStyle .= 'background-color: ' . $colors[$piquetColor] . ' !important;';
                                     }
                                 }
-                                if ($hasBlason) {
+                                if ($hasBlason && !$hasPiquet) {
                                     $rowStyle .= ' font-weight: bold; ';
                                 }
                                 $rowStyle .= '"';
