@@ -144,5 +144,3 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
         </div>
     </div>
 </div>
-
-<script src="/public/assets/js/plan-peloton.js"></script>

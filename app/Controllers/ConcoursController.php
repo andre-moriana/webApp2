@@ -2223,6 +2223,7 @@ class ConcoursController {
         }
 
         $title = 'Plan de peloton - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
+        $additionalJS = ['/public/assets/js/plan-peloton.js'];
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/plan-peloton.php';
         include 'app/Views/layouts/footer.php';
