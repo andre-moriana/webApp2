@@ -2623,6 +2623,40 @@ class ApiController {
     }
 
     /**
+     * Proxy pour POST /api/concours/{id}/inscriptions/send-confirmation-email - Envoie l'email de confirmation pour un batch d'inscriptions
+     */
+    public function proxyConcoursSendConfirmationEmail($concoursId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            $endpoint = "concours/{$concoursId}/inscriptions/send-confirmation-email";
+            $response = $this->apiService->makeRequest($endpoint, 'POST', $data);
+            $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Proxy pour POST /api/concours/{id}/inscriptions/send-confirmation-email/public - Envoi email batch (inscription ciblée, sans auth)
+     */
+    public function proxyConcoursSendConfirmationEmailPublic($concoursId) {
+        try {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            $endpoint = "concours/{$concoursId}/inscriptions/send-confirmation-email/public";
+            $response = $this->apiService->makeRequestPublic($endpoint, 'POST', $data);
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Proxy pour /api/concours/{id}/inscriptions
      */
     public function proxyConcoursInscriptions($concoursId) {
