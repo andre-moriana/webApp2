@@ -1630,6 +1630,8 @@ class ConcoursController {
             'email' => isset($_POST['email']) && $_POST['email'] !== '' ? trim($_POST['email']) : null,
             'numero_depart' => $numero_depart,
             'numero_tir' => $numero_tir,
+            'categorie_classement' => isset($_POST['categorie_classement']) && $_POST['categorie_classement'] !== '' ? trim((string)$_POST['categorie_classement']) : null,
+            'arme' => isset($_POST['arme']) && $_POST['arme'] !== '' ? trim((string)$_POST['arme']) : null,
             'distance' => isset($_POST['distance']) && $_POST['distance'] !== '' ? (int)$_POST['distance'] : null,
             'blason' => isset($_POST['blason']) && $_POST['blason'] !== '' ? (int)$_POST['blason'] : null,
             'piquet' => $_POST['piquet'] ?? null,
