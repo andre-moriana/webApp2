@@ -821,6 +821,38 @@ class ConcoursController {
         } catch (Exception $e) {
             // Ignorer les erreurs
         }
+        // Vérifier si le plan de peloton existe (pour disciplines 3, N, C)
+        $planCibleExists = false;
+        if (in_array($disciplineAbv, ['S', 'T', 'I', 'H'])) {
+            try {
+                $plansResponse = $this->apiService->getPlanCible($id);
+                if ($plansResponse['success']) {
+                    $plansCible = $this->apiService->unwrapData($plansResponse);
+                    if (is_array($plansCible) && isset($plansCible['data']) && isset($plansCible['success'])) {
+                        $plansCible = $plansCible['data'];
+                    }
+                    $planCibleExists = !empty($plansCible);
+                }
+            } catch (Exception $e) {
+                // Ignorer les erreurs
+            }
+        }        
+        // Vérifier si le plan de peloton existe (pour disciplines 3, N, C)
+        $planPelotonExists = false;
+        if (in_array($disciplineAbv, ['3', 'N', 'C'])) {
+            try {
+                $plansResponse = $this->apiService->getPlanPeloton($id);
+                if ($plansResponse['success']) {
+                    $plansPeloton = $this->apiService->unwrapData($plansResponse);
+                    if (is_array($plansPeloton) && isset($plansPeloton['data']) && isset($plansPeloton['success'])) {
+                        $plansPeloton = $plansPeloton['data'];
+                    }
+                    $planPelotonExists = !empty($plansPeloton);
+                }
+            } catch (Exception $e) {
+                // Ignorer les erreurs
+            }
+        }
         
         $title = 'Détails du concours - Portail Archers de Gémenos';
         include 'app/Views/layouts/header.php';
