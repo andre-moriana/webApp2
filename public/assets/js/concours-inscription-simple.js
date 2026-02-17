@@ -980,7 +980,7 @@ function loadInscriptions() {
     })
     .catch(error => {
         console.error('Erreur lors du chargement des inscriptions:', error);
-        tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="9" class="text-center text-danger">Erreur lors du chargement des inscriptions.</td></tr>';
+        tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-danger">Erreur lors du chargement des inscriptions.</td></tr>';
     });
 }
 
@@ -994,7 +994,7 @@ function renderInscriptions(inscriptions) {
     const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
 
     if (!inscriptions || inscriptions.length === 0) {
-        tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="9" class="text-center text-muted">Aucun archer inscrit pour le moment.</td></tr>';
+        tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Aucun archer inscrit pour le moment.</td></tr>';
         return;
     }
 
@@ -1019,7 +1019,18 @@ function renderInscriptions(inscriptions) {
         const dateDisplay = inscription.created_at || inscription.date_inscription || 'N/A';
         const id = inscription.id || '';
 
+        const statut = inscription.statut_inscription || 'en_attente';
+        let statutIcon;
+        if (statut === 'confirmee') {
+            statutIcon = '<i class="fas fa-check-circle text-success" title="Confirmée"></i>';
+        } else if (statut === 'refuse' || statut === 'annule') {
+            statutIcon = '<i class="fas fa-times-circle text-danger" title="' + (statut === 'refuse' ? 'Refusé' : 'Annulé') + '"></i>';
+        } else {
+            statutIcon = '<i class="fas fa-clock text-warning" title="En attente"></i>';
+        }
+
         let cells = [
+            '<td' + rowStyle + '>' + statutIcon + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(inscription.user_nom || 'N/A') + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(inscription.numero_licence || 'N/A') + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(clubDisplay) + '</td>',

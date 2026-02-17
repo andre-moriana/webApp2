@@ -122,6 +122,7 @@ table tbody tr.piquet-blanc {
             <table class="table table-bordered" id="inscriptions-table">
                     <thead>
                         <tr>
+                            <th>Statut</th>
                             <th>Nom et Prénom</th>
                             <th>Numéro de licence</th>
                             <th>Club</th>
@@ -141,7 +142,7 @@ table tbody tr.piquet-blanc {
                         <?php 
                         // $usersMap est passé depuis le contrôleur
                         if (empty($inscriptions)): ?>
-                            <tr id="inscriptions-empty-row"><td colspan="9" class="text-center text-muted">Chargement des inscriptions...</td></tr>
+                            <tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Chargement des inscriptions...</td></tr>
                         <?php else:
                         foreach ($inscriptions as $inscription):
                             $userName = $inscription['user_nom'] ?? null;
@@ -167,7 +168,18 @@ table tbody tr.piquet-blanc {
                                 $dataPiquet = '';
                             }
                         ?>
+                            <?php
+                            $statut = $inscription['statut_inscription'] ?? 'en_attente';
+                            if ($statut === 'confirmee') {
+                                $statutIcon = '<i class="fas fa-check-circle text-success" title="Confirmée"></i>';
+                            } elseif (in_array($statut, ['refuse', 'annule'], true)) {
+                                $statutIcon = '<i class="fas fa-times-circle text-danger" title="' . htmlspecialchars(ucfirst($statut)) . '"></i>';
+                            } else {
+                                $statutIcon = '<i class="fas fa-clock text-warning" title="En attente"></i>';
+                            }
+                            ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
+                                <td<?= $rowStyle ?>><?= $statutIcon ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['user_nom'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
