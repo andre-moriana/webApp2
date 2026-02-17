@@ -1445,6 +1445,7 @@ window.editInscription = function(inscriptionId) {
         };
 
         fillForm();
+        loadEditBuvetteProduits(concoursId, inscription.buvette_reservations || [], inscription.token_confirmation);
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
     })
@@ -1507,6 +1508,23 @@ function initEditInscriptionHandlers() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                const token = currentEditInscription?.token_confirmation;
+                if (token) {
+                    const items = getEditBuvetteItems();
+                    return fetch('/api/concours/' + concoursId + '/buvette/reservations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ token_confirmation: token, items: items })
+                    }).then(r => r.json()).then(buvRes => {
+                        if (buvRes && !buvRes.success && buvRes.error) {
+                            console.warn('Buvette:', buvRes.error);
+                        }
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('editInscriptionModal'));
+                        if (modal) modal.hide();
+                        loadInscriptions();
+                    });
+                }
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editInscriptionModal'));
                 if (modal) modal.hide();
                 loadInscriptions();
@@ -1570,4 +1588,71 @@ function getBuvetteItems() {
         if (qty > 0 && pid) items.push({ produit_id: parseInt(pid, 10), quantite: qty });
     });
     return items;
+}
+
+/**
+ * Récupère les articles buvette du modal d'édition (quantité > 0)
+ */
+function getEditBuvetteItems() {
+    const container = document.getElementById('edit-buvette-produits-list');
+    const inputs = container ? container.querySelectorAll('.buvette-qty') : [];
+    const items = [];
+    inputs.forEach(inp => {
+        const qty = parseInt(inp.value, 10) || 0;
+        const pid = inp.getAttribute('data-produit-id');
+        if (qty > 0 && pid) items.push({ produit_id: parseInt(pid, 10), quantite: qty });
+    });
+    return items;
+}
+
+/**
+ * Charge les produits buvette dans le modal d'édition et préremplit les quantités
+ */
+function loadEditBuvetteProduits(concoursId, buvetteReservations, tokenConfirmation) {
+    const loadingEl = document.getElementById('edit-buvette-loading');
+    const listEl = document.getElementById('edit-buvette-produits-list');
+    const emptyEl = document.getElementById('edit-buvette-empty');
+    const noTokenEl = document.getElementById('edit-buvette-no-token');
+    if (!loadingEl || !listEl) return;
+
+    loadingEl.classList.remove('d-none');
+    listEl.classList.add('d-none');
+    if (emptyEl) emptyEl.classList.add('d-none');
+    if (noTokenEl) noTokenEl.classList.add('d-none');
+
+    if (!tokenConfirmation) {
+        loadingEl.classList.add('d-none');
+        if (noTokenEl) noTokenEl.classList.remove('d-none');
+        return;
+    }
+
+    const qtyByProduit = {};
+    (buvetteReservations || []).forEach(r => {
+        const pid = r.produit_id || r.id;
+        if (pid) qtyByProduit[pid] = parseInt(r.quantite, 10) || 0;
+    });
+
+    fetch('/api/concours/' + concoursId + '/buvette/produits/public', { credentials: 'include', headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            loadingEl.classList.add('d-none');
+            const produits = Array.isArray(data) ? data : (data.data || []);
+            if (produits.length === 0) {
+                if (emptyEl) emptyEl.classList.remove('d-none');
+                return;
+            }
+            if (emptyEl) emptyEl.classList.add('d-none');
+            listEl.innerHTML = produits.map(p => {
+                const pid = p.id || '';
+                const qty = qtyByProduit[pid] || 0;
+                const prix = p.prix != null ? parseFloat(p.prix).toFixed(2) + ' €' : '';
+                const unite = p.unite || 'portion';
+                return '<div class="d-flex align-items-center justify-content-between mb-2"><label class="mb-0 flex-grow-1">' + (p.libelle || '') + (prix ? ' <span class="text-muted">(' + prix + ')</span>' : '') + '</label><input type="number" class="form-control form-control-sm buvette-qty" data-produit-id="' + pid + '" min="0" value="' + qty + '" style="width:70px;"> <span class="ms-1 small text-muted">' + unite + '</span></div>';
+            }).join('');
+            listEl.classList.remove('d-none');
+        })
+        .catch(() => {
+            loadingEl.classList.add('d-none');
+            if (emptyEl) { emptyEl.textContent = 'Erreur de chargement.'; emptyEl.classList.remove('d-none'); }
+        });
 }
