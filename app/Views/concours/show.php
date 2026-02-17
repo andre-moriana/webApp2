@@ -233,6 +233,12 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         <div id="plan-peloton-message" style="margin-top: 10px;"></div>
     </div>
     <?php endif; ?>
+
+    <div class="form-group" style="margin-top: 20px;">
+        <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/buvette" class="btn btn-outline-primary">
+            <i class="fas fa-coffee"></i> Gestion de la buvette
+        </a>
+    </div>
     
     <?php if (!empty($concours->lien_inscription_cible)): ?>
     <div class="form-group" style="margin-top: 20px;">
