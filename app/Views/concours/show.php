@@ -148,6 +148,13 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     <!-- Liste des départs -->
     <?php
     $departsList = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+    if (is_object($departsList)) {
+        $departsList = array_values((array)$departsList);
+    }
+    $departsList = is_array($departsList) ? $departsList : [];
+    $getD = function($d, $key, $default = '') {
+        return is_array($d) ? ($d[$key] ?? $default) : ($d->$key ?? $default);
+    };
     ?>
     <?php if (!empty($departsList)): ?>
     <div class="form-group" style="margin-top: 20px;">
@@ -155,13 +162,13 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         <ul class="list-group list-group-flush" style="max-width: 400px;">
             <?php foreach ($departsList as $d): ?>
                 <?php
-                $dateDep = $d['date_depart'] ?? '';
-                $heureGreffe = $d['heure_greffe'] ?? '';
-                $numero = (int)($d['numero_depart'] ?? 0);
+                $dateDep = $getD($d, 'date_depart', '');
+                $heureGreffe = $getD($d, 'heure_greffe', '');
+                $numero = (int)$getD($d, 'numero_depart', 0);
                 if ($dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
                     $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
                 }
-                $heureGreffe = $heureGreffe ? substr($heureGreffe, 0, 5) : '';
+                $heureGreffe = $heureGreffe ? substr((string)$heureGreffe, 0, 5) : '';
                 $label = trim($dateDep . ($heureGreffe ? ' à ' . $heureGreffe : ''));
                 if (empty($label)) $label = 'Départ ' . $numero;
                 ?>

@@ -55,6 +55,10 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
     <!-- Sélection des départs (plusieurs possibles) -->
     <?php 
     $departsList = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+    if (is_object($departsList)) {
+        $departsList = array_values((array)$departsList);
+    }
+    $departsList = is_array($departsList) ? $departsList : [];
     $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null);
     if (empty($departsList) && $nombreDepart) {
         $nombreDepart = (int)$nombreDepart;
@@ -71,21 +75,26 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         <input type="checkbox" id="depart-select-all" class="form-check-input">
                         <label for="depart-select-all" class="form-check-label fw-bold">Tout sélectionner</label>
                     </div>
-                    <?php foreach ($departsList as $d): ?>
-                        <?php
-                        $dateDep = $d['date_depart'] ?? '';
-                        $heureGreffe = $d['heure_greffe'] ?? '';
-                        $numero = (int)($d['numero_depart'] ?? 0);
+                    <?php 
+                    $getD = function($d, $key, $default = '') {
+                        return is_array($d) ? ($d[$key] ?? $default) : ($d->$key ?? $default);
+                    };
+                    foreach ($departsList as $idx => $d): 
+                        $dateDep = $getD($d, 'date_depart', '');
+                        $heureGreffe = $getD($d, 'heure_greffe', '');
+                        $numero = (int)$getD($d, 'numero_depart', 0);
+                        $departId = $getD($d, 'id', $idx);
                         if ($dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
                             $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
                         }
-                        $heureGreffe = $heureGreffe ? substr($heureGreffe, 0, 5) : '';
+                        $heureGreffe = $heureGreffe ? substr((string)$heureGreffe, 0, 5) : '';
                         $label = trim($dateDep . ($heureGreffe ? ' ' . $heureGreffe : ''));
                         if (empty($label)) $label = 'Départ ' . $numero;
+                        $cbId = 'depart-cb-' . $departId;
                         ?>
                         <div class="form-check">
-                            <input type="checkbox" id="depart-cb-<?= $numero ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $numero ?>" data-date-depart="<?= htmlspecialchars($d['date_depart'] ?? '') ?>" data-heure-greffe="<?= htmlspecialchars($d['heure_greffe'] ?? '') ?>">
-                            <label for="depart-cb-<?= $numero ?>" class="form-check-label"><?= htmlspecialchars($label) ?></label>
+                            <input type="checkbox" id="<?= htmlspecialchars($cbId) ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $numero ?>" data-date-depart="<?= htmlspecialchars($getD($d, 'date_depart', '')) ?>" data-heure-greffe="<?= htmlspecialchars($getD($d, 'heure_greffe', '')) ?>">
+                            <label for="<?= htmlspecialchars($cbId) ?>" class="form-check-label"><?= htmlspecialchars($label) ?></label>
                         </div>
                     <?php endforeach; ?>
                 <?php elseif ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0): ?>
