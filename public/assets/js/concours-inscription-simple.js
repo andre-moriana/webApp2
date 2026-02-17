@@ -989,19 +989,27 @@ function submitInscription() {
         confirmBtn.textContent = 'Enregistrement...';
     }
 
-    const promises = sortedDeparts.map((cb) => {
-        const numeroDepart = parseInt(cb.value, 10);
-        const data = { ...baseData, numero_depart: numeroDepart };
-        if (batchToken) data.token_confirmation = batchToken;
-        return fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(data)
-        }).then(r => parseJsonResponse(r).then(body => ({ ok: r.ok, status: r.status, body })));
-    });
+    // Exécuter les inscriptions séquentiellement pour éviter les erreurs 500 (race condition
+    // dans recalculateNumeroTirForArcher quand plusieurs requêtes modifient les mêmes inscriptions)
+    const runSequential = async () => {
+        const results = [];
+        for (const cb of sortedDeparts) {
+            const numeroDepart = parseInt(cb.value, 10);
+            const data = { ...baseData, numero_depart: numeroDepart };
+            if (batchToken) data.token_confirmation = batchToken;
+            const r = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(data)
+            });
+            const body = await parseJsonResponse(r);
+            results.push({ ok: r.ok, status: r.status, body });
+        }
+        return results;
+    };
 
-    Promise.all(promises).then(results => {
+    runSequential().then(results => {
         if (confirmBtn) {
             confirmBtn.disabled = false;
             confirmBtn.textContent = originalBtnText;
