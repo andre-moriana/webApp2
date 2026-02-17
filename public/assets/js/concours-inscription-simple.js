@@ -1,6 +1,29 @@
+// Charger la config depuis data-config (séparation PHP/JS)
+(function() {
+    var el = document.getElementById('inscription-page');
+    var cfg = el && el.getAttribute('data-config');
+    if (cfg) {
+        try {
+            var c = JSON.parse(cfg);
+            window.concoursId = c.concoursId;
+            window.formAction = c.formAction;
+            window.apiInscriptionsUrl = c.apiInscriptionsUrl;
+            window.archerSearchUrl = c.archerSearchUrl;
+            window.categoriesClassement = c.categoriesClassement || [];
+            window.arcs = c.arcs || [];
+            window.distancesTir = c.distancesTir || [];
+            window.concoursDiscipline = c.concoursDiscipline;
+            window.concoursTypeCompetition = c.concoursTypeCompetition;
+            window.concoursNombreDepart = c.concoursNombreDepart;
+            window.disciplineAbv = c.disciplineAbv;
+            window.isNature3DOrCampagne = !!c.isNature3DOrCampagne;
+        } catch (e) { console.warn('Config inscription parse error', e); }
+    }
+})();
+
 // Variables globales
-let selectedArcher = null;
-const concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concoursId :
+var selectedArcher = null;
+var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concoursId :
     (document.querySelector('input[name="concours_id"]')?.value ||
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
 

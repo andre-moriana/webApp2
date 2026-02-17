@@ -1,4 +1,15 @@
 // JavaScript pour la page de détails du concours (show.php)
+(function() {
+    var el = document.getElementById('concours-show-page');
+    var cfg = el && el.getAttribute('data-config');
+    if (cfg) {
+        try {
+            var c = JSON.parse(cfg);
+            window.concoursIdShow = c.concoursId;
+            window.concoursDataShow = c.concoursData || {};
+        } catch (e) { console.warn('Config concours show parse error', e); }
+    }
+})();
 
 // Créer le plan de cible pour un concours
 function createPlanCible() {

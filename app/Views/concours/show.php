@@ -4,7 +4,10 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <!-- Affichage d'un concours (lecture seule) -->
-<div class="container-fluid concours-create-container">
+<div class="container-fluid concours-create-container" id="concours-show-page" data-config="<?= htmlspecialchars(json_encode([
+    'concoursId' => $concours->id ?? $concours->_id ?? $id ?? null,
+    'concoursData' => $concours
+], JSON_UNESCAPED_UNICODE)) ?>">
 <h1>Détails du concours</h1>
 
 <?php if (isset($_SESSION['error'])): ?>
@@ -312,7 +315,10 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
 
 <!-- Modale pour afficher la carte (lecture seule) -->
 <?php if (isset($concours->lieu_latitude) && isset($concours->lieu_longitude) && $concours->lieu_latitude && $concours->lieu_longitude): ?>
-<div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+<div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true"
+     data-lat="<?= htmlspecialchars((float)$concours->lieu_latitude) ?>"
+     data-lng="<?= htmlspecialchars((float)$concours->lieu_longitude) ?>"
+     data-address="<?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? 'Non renseigné') ?>">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -364,115 +370,8 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
     </div>
 </div>
 
-<!-- Scripts pour la carte -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-// Variables pour la carte en mode affichage
-let showMap = null;
-let showMarker = null;
-
-// Fonction pour ouvrir la modale de la carte
-function openMapModal() {
-    const modalElement = document.getElementById('mapModal');
-    const modal = new bootstrap.Modal(modalElement);
-    
-    // Attendre que la modale soit complètement affichée avant d'initialiser la carte
-    modalElement.addEventListener('shown.bs.modal', function onShown() {
-        initShowMap();
-        // Retirer l'écouteur pour éviter les multiples initialisations
-        modalElement.removeEventListener('shown.bs.modal', onShown);
-    }, { once: true });
-    
-    modal.show();
-}
-
-// Initialiser la carte en mode affichage (lecture seule)
-function initShowMap() {
-    // Coordonnées du lieu
-    const lat = <?= (float)$concours->lieu_latitude ?>;
-    const lng = <?= (float)$concours->lieu_longitude ?>;
-    
-    // Si la carte existe déjà, la détruire
-    if (showMap) {
-        showMap.remove();
-        showMap = null;
-        showMarker = null;
-    }
-    
-    // Créer la carte
-    showMap = L.map('map-show-container').setView([lat, lng], 15);
-    
-    // Ajouter la couche de tuiles OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-    }).addTo(showMap);
-    
-    // Ajouter un marqueur au lieu
-    showMarker = L.marker([lat, lng]).addTo(showMap);
-    
-    // Ajouter un popup avec l'adresse
-    const address = <?= json_encode($concours->lieu_competition ?? $concours->lieu ?? 'Non renseigné', JSON_UNESCAPED_UNICODE) ?>;
-    showMarker.bindPopup('<strong>' + address + '</strong><br><small>Coordonnées: ' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</small>').openPopup();
-    
-    // Forcer le recalcul de la taille de la carte
-    setTimeout(function() {
-        showMap.invalidateSize();
-    }, 100);
-}
-
-// Fonction pour créer un itinéraire
-function createItinerary(service = 'google') {
-    const lat = <?= (float)$concours->lieu_latitude ?>;
-    const lng = <?= (float)$concours->lieu_longitude ?>;
-    const address = <?= json_encode($concours->lieu_competition ?? $concours->lieu ?? '', JSON_UNESCAPED_UNICODE) ?>;
-    
-    let url = '';
-    
-    switch(service) {
-        case 'google':
-            // Google Maps avec itinéraire
-            url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-            break;
-            
-        case 'osm':
-            // OpenStreetMap avec routing
-            url = `https://www.openstreetmap.org/directions?to=${lat},${lng}`;
-            break;
-            
-        case 'waze':
-            // Waze (application mobile ou web)
-            url = `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`;
-            break;
-            
-        case 'native':
-            // Utiliser le protocole de navigation natif (ouvre l'app de navigation par défaut)
-            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-            const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
-            
-            if (isIOS) {
-                // iOS - utiliser Apple Maps
-                url = `http://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`;
-            } else {
-                // Android ou autres - utiliser Google Maps
-                url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-            }
-            break;
-            
-        default:
-            url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    }
-    
-    // Ouvrir dans un nouvel onglet
-    window.open(url, '_blank');
-}
-</script>
+<script src="/public/assets/js/concours-show-map.js"></script>
 <?php endif; ?>
 
-<script>
-// Variables globales pour la page show
-const concoursIdShow = <?= json_encode($concours->id ?? $concours->_id ?? $id ?? null) ?>;
-// Données du concours pour JavaScript
-const concoursDataShow = <?= json_encode($concours, JSON_UNESCAPED_UNICODE) ?>;
-</script>
 <script src="/public/assets/js/concours-show.js"></script>

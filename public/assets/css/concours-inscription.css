@@ -192,6 +192,46 @@
     border-color: #14532d;
 }
 
+/* FORCER les couleurs de piquet - Spécificité maximale */
+#inscriptions-table tbody tr[data-piquet="rouge"],
+#inscriptions-table tbody tr.piquet-rouge,
+table.table tbody tr[data-piquet="rouge"],
+table.table tbody tr.piquet-rouge,
+table tbody tr[data-piquet="rouge"],
+table tbody tr.piquet-rouge {
+    background-color: #ffe0e0 !important;
+    background: #ffe0e0 !important;
+}
+
+#inscriptions-table tbody tr[data-piquet="bleu"],
+#inscriptions-table tbody tr.piquet-bleu,
+table.table tbody tr[data-piquet="bleu"],
+table.table tbody tr.piquet-bleu,
+table tbody tr[data-piquet="bleu"],
+table tbody tr.piquet-bleu {
+    background-color: #e0e8ff !important;
+    background: #e0e8ff !important;
+}
+
+#inscriptions-table tbody tr[data-piquet="blanc"],
+#inscriptions-table tbody tr.piquet-blanc,
+table.table tbody tr[data-piquet="blanc"],
+table.table tbody tr.piquet-blanc,
+table tbody tr[data-piquet="blanc"],
+table tbody tr.piquet-blanc {
+    background-color: #f5f5f5 !important;
+    background: #f5f5f5 !important;
+}
+
+/* Centrer l'icône de statut et style du dropdown */
+#inscriptions-table .statut-cell {
+    text-align: center;
+    vertical-align: middle;
+}
+#inscriptions-table .statut-dropdown .btn-link {
+    cursor: pointer;
+}
+
 /* Styles pour les lignes colorées selon la couleur du piquet (disciplines 3D, Nature et Campagne) */
 /* Styles pour toutes les tables, avec ou sans table-striped */
 #inscriptions-table tbody tr.piquet-rouge,
