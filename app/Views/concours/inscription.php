@@ -440,6 +440,14 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             </div>
                         </div>
                     <?php endif; ?>
+
+                    <h6 class="mt-4 mb-3"><i class="fas fa-coffee"></i> Buvette</h6>
+                    <p class="text-muted small mb-2">Réservation optionnelle des articles de la buvette</p>
+                    <div id="buvette-produits-container" class="border rounded p-3 bg-light">
+                        <div id="buvette-loading" class="text-center py-2 text-muted small">Chargement des produits...</div>
+                        <div id="buvette-produits-list" class="d-none"></div>
+                        <div id="buvette-empty" class="text-muted small d-none">Aucun produit disponible pour ce concours.</div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">

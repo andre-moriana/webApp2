@@ -2730,6 +2730,97 @@ class ApiController {
             ], 500);
         }
     }
+
+    /**
+     * Proxy pour /api/concours/{id}/buvette/produits - Liste des produits buvette (admin)
+     */
+    public function proxyConcoursBuvetteProduits($concoursId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $response = $this->apiService->makeRequest("concours/{$concoursId}/buvette/produits", 'GET');
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Proxy pour POST /api/concours/{id}/buvette/produits - Créer un produit buvette (admin)
+     */
+    public function proxyConcoursBuvetteProduitsCreate($concoursId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $response = $this->apiService->makeRequest("concours/{$concoursId}/buvette/produits", 'POST', $data);
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 201);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Proxy pour PUT /api/concours/{id}/buvette/produits/{produitId} - Mettre à jour un produit (admin)
+     */
+    public function proxyConcoursBuvetteProduitUpdate($concoursId, $produitId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $response = $this->apiService->makeRequest("concours/{$concoursId}/buvette/produits/{$produitId}", 'PUT', $data);
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Proxy pour DELETE /api/concours/{id}/buvette/produits/{produitId} - Supprimer un produit (admin)
+     */
+    public function proxyConcoursBuvetteProduitDelete($concoursId, $produitId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $response = $this->apiService->makeRequest("concours/{$concoursId}/buvette/produits/{$produitId}", 'DELETE');
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Proxy pour GET /api/concours/{id}/buvette/produits/public - Produits buvette pour inscription (public)
+     */
+    public function proxyConcoursBuvetteProduitsPublic($concoursId) {
+        try {
+            $response = $this->apiService->makeRequestPublic("concours/{$concoursId}/buvette/produits/public", 'GET');
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Proxy pour POST /api/concours/{id}/buvette/reservations - Enregistrer réservations buvette (public)
+     */
+    public function proxyConcoursBuvetteReservations($concoursId) {
+        try {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $response = $this->apiService->makeRequestPublic("concours/{$concoursId}/buvette/reservations", 'POST', $data);
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
     
     /**
      * Proxy pour /api/concours/{id}/plan-cible - Gestion des plans de cible

@@ -33,6 +33,8 @@ class Router {
         $this->addRoute("GET", "/concours/{id}/plan-cible", "ConcoursController@planCible");
         // Route pour le plan de peloton (Campagne/Nature/3D)
         $this->addRoute("GET", "/concours/{id}/plan-peloton", "ConcoursController@planPeloton");
+        // Gestion des produits buvette
+        $this->addRoute("GET", "/concours/{id}/buvette", "ConcoursController@buvette");
         // Route pour enregistrer le type de blason d'une cible
         $this->addRoute("POST", "/concours/plan-cible-type-blason", "ConcoursController@planCibleTypeBlason");
         // Route pour la mise à jour d'inscription (POST avec X-HTTP-Method-Override ou PUT)
@@ -236,6 +238,14 @@ class Router {
         $this->addRoute("POST", "/api/concours/{id}/inscription/{inscriptionId}", "ApiController@proxyConcoursInscriptionUpdate");
         $this->addRoute("PUT", "/api/concours/{id}/inscription/{inscriptionId}", "ApiController@proxyConcoursInscriptionUpdate");
         $this->addRoute("PATCH", "/api/concours/{id}/inscription/{inscriptionId}", "ApiController@proxyConcoursInscriptionUpdate");
+        // Buvette - produits (admin, auth)
+        $this->addRoute("GET", "/api/concours/{id}/buvette/produits", "ApiController@proxyConcoursBuvetteProduits");
+        $this->addRoute("POST", "/api/concours/{id}/buvette/produits", "ApiController@proxyConcoursBuvetteProduitsCreate");
+        $this->addRoute("PUT", "/api/concours/{id}/buvette/produits/{produitId}", "ApiController@proxyConcoursBuvetteProduitUpdate");
+        $this->addRoute("DELETE", "/api/concours/{id}/buvette/produits/{produitId}", "ApiController@proxyConcoursBuvetteProduitDelete");
+        // Buvette - produits public (inscription) et réservations (public)
+        $this->addRoute("GET", "/api/concours/{id}/buvette/produits/public", "ApiController@proxyConcoursBuvetteProduitsPublic");
+        $this->addRoute("POST", "/api/concours/{id}/buvette/reservations", "ApiController@proxyConcoursBuvetteReservations");
         
         // Routes API (protégées)
         $this->addRoute("GET", "/api/documents", "ApiController@documents");

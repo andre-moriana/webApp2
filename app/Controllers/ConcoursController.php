@@ -2526,6 +2526,32 @@ class ConcoursController {
         exit;
     }
 
+    /**
+     * Gestion des produits buvette pour un concours (admin)
+     */
+    public function buvette($concoursId)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login?return=' . urlencode('/concours/' . $concoursId . '/buvette'));
+            exit;
+        }
+
+        $concours = null;
+        $response = $this->apiService->getConcoursById($concoursId);
+        if ($response['success'] && isset($response['data'])) {
+            $concours = (object) $response['data'];
+        } else {
+            $_SESSION['error'] = 'Concours non trouvé.';
+            header('Location: /concours');
+            exit;
+        }
+
+        $pageTitle = 'Gestion buvette - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
+        require_once __DIR__ . '/../Views/layouts/header.php';
+        require_once __DIR__ . '/../Views/concours/buvette.php';
+        require_once __DIR__ . '/../Views/layouts/footer.php';
+    }
+
     public function planPeloton($concoursId)
     {
         $isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
