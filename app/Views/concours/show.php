@@ -160,20 +160,24 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         }
     }
     
-    $canCreatePlanCible = in_array($abv_discipline_show, ['S', 'T', 'I', 'H']) && 
+    $canShowPlanCibleSection = in_array($abv_discipline_show, ['S', 'T', 'I', 'H']) && 
                           ($concours->nombre_cibles ?? 0) > 0 && 
                           ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
+    $canCreatePlanCible = $canShowPlanCibleSection && !($planCibleExists ?? false);
     // Plan peloton : utiliser isNature3DOrCampagne (détection par nom) car abv_discipline peut varier (3, 3D, N, etc.)
-    $canCreatePlanPeloton = in_array($abv_discipline_show, ['3', 'N', 'C']) && 
-                          ($concours->nombre_cibles ?? 0) > 0 && 
-                          ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
+    $canShowPlanPelotonSection = in_array($abv_discipline_show, ['3', 'N', 'C']) && 
+                                 ($concours->nombre_cibles ?? 0) > 0 && 
+                                 ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
+    $canCreatePlanPeloton = $canShowPlanPelotonSection && !($planPelotonExists ?? false);
     ?>
     
-    <?php if ($canCreatePlanCible): ?>
+    <?php if ($canShowPlanCibleSection): ?>
     <div class="form-group" style="margin-top: 20px;">
+    <?php if ($canCreatePlanCible): ?>
         <button type="button" class="btn btn-primary" id="btn-create-plan-cible" onclick="createPlanCible()">
             <i class="fas fa-bullseye"></i> Créer le plan de cible
         </button>
+        <?php endif; ?>
         <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-cible" class="btn btn-outline-primary ms-2">
             <i class="fas fa-list"></i> Voir le plan de cible
         </a>
@@ -181,16 +185,17 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     </div>
     <?php endif; ?>
     
-    <?php if ($canCreatePlanPeloton): ?>
+    <?php if ($canShowPlanPelotonSection): ?>
     <div class="form-group" style="margin-top: 20px;">
+        <?php if ($canCreatePlanPeloton): ?>
         <button type="button" class="btn btn-primary" id="btn-create-plan-peloton" onclick="createPlanPeloton()">
             <i class="fas fa-users"></i> Créer le plan de peloton
         </button>
-        <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-peloton" class="btn btn-outline-primary ms-2">
+        <?php endif; ?>
+        <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-peloton" class="btn btn-outline-primary <?= $canCreatePlanPeloton ? 'ms-2' : '' ?>">
             <i class="fas fa-list"></i> Voir le plan de peloton
         </a>
         <div id="plan-peloton-message" style="margin-top: 10px;"></div>
-        <small class="text-muted d-block mt-1">Règles : max 50% d'archers du même club (ex: 2 pour 4, 3 pour 6), max 2 couleurs de piquet par peloton</small>
     </div>
     <?php endif; ?>
 </div>
