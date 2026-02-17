@@ -154,7 +154,12 @@ class AuthController {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                 
-                header('Location: /dashboard');
+                $returnUrl = $_POST['return'] ?? $_GET['return'] ?? '';
+                if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/_-]+$#', $returnUrl)) {
+                    header('Location: ' . $returnUrl);
+                } else {
+                    header('Location: /dashboard');
+                }
                 exit;
             } else {
                 // Échec de la connexion via l'API, essayer les identifiants de test
@@ -172,7 +177,12 @@ class AuthController {
                     $_SESSION['logged_in'] = true;
                     $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                     
-                    header('Location: /dashboard');
+                    $returnUrl = $_POST['return'] ?? $_GET['return'] ?? '';
+                    if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/_-]+$#', $returnUrl)) {
+                        header('Location: ' . $returnUrl);
+                    } else {
+                        header('Location: /dashboard');
+                    }
                     exit;
                 } else {
                     $_SESSION['error'] = $loginResult['message'] ?? 'Identifiants incorrects';
@@ -196,7 +206,12 @@ class AuthController {
                 $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                 $_SESSION['logged_in'] = true;
                 
-                header('Location: /dashboard');
+                $returnUrl = $_POST['return'] ?? $_GET['return'] ?? '';
+                if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/_-]+$#', $returnUrl)) {
+                    header('Location: ' . $returnUrl);
+                } else {
+                    header('Location: /dashboard');
+                }
                 exit;
             } else {
                 $_SESSION['error'] = 'Erreur de connexion à l\'API. Utilisez admin/admin1234';
@@ -316,7 +331,9 @@ class AuthController {
     public function requireAuth() {
         if (!$this->isLoggedIn()) {
             $_SESSION['error'] = 'Vous devez être connecté pour accéder à cette page.';
-            header('Location: /login');
+            $returnUrl = $_SERVER['REQUEST_URI'] ?? '';
+            $loginUrl = '/login' . (!empty($returnUrl) ? '?return=' . urlencode($returnUrl) : '');
+            header('Location: ' . $loginUrl);
             exit;
         }
         

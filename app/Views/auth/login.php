@@ -45,6 +45,9 @@
                         <?php endif; ?>
                         
                         <form method="POST" action="/auth/authenticate">
+                            <?php if (!empty($_GET['return'])): ?>
+                            <input type="hidden" name="return" value="<?= htmlspecialchars($_GET['return']) ?>">
+                            <?php endif; ?>
                             <div class="mb-3">
                                 <label for="email" class="form-label">
                                     <i class="fas fa-user me-2"></i>Identifiant

@@ -2530,8 +2530,13 @@ class ConcoursController {
 
         if (!$isLoggedIn) {
             if (empty($token) && empty($tokenFromSession)) {
+                $returnUrl = urlencode('/concours/' . $concoursId . '/plan-peloton');
                 require_once __DIR__ . '/../Views/layouts/header.php';
-                echo '<div class="container mt-5"><div class="alert alert-danger"><strong>Accès refusé.</strong> Ce plan n\'est accessible que via le lien envoyé par email de confirmation d\'inscription.</div></div>';
+                echo '<div class="container mt-5">';
+                echo '<div class="alert alert-danger"><strong>Accès refusé.</strong> Ce plan est accessible aux utilisateurs connectés ou via le lien envoyé par email de confirmation d\'inscription.</div>';
+                echo '<p><a href="/login?return=' . $returnUrl . '" class="btn btn-primary">Se connecter pour accéder au plan</a></p>';
+                echo '<p class="text-muted small">Ou accédez au <a href="/concours/show/' . htmlspecialchars($concoursId) . '">concours</a> pour voir le plan.</p>';
+                echo '</div>';
                 require_once __DIR__ . '/../Views/layouts/footer.php';
                 exit;
             }
