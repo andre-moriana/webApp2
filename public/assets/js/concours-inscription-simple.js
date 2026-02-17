@@ -893,9 +893,7 @@ function submitInscription() {
         categorie_classement: document.getElementById('categorie_classement')?.value || '',
         arme: document.getElementById('arme')?.value || '',
         mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0,
-        numero_tir: document.getElementById('numero_tir')?.value || '',
-        tarif_competition: document.getElementById('tarif_competition')?.value || '',
-        mode_paiement: document.getElementById('mode_paiement')?.value || ''
+        numero_tir: document.getElementById('numero_tir')?.value || ''
     };
 
     const piquetSelect = document.getElementById('piquet');
@@ -1173,8 +1171,6 @@ window.editInscription = function(inscriptionId) {
             }
 
             setVal('edit-numero_tir', inscription.numero_tir);
-            setVal('edit-tarif_competition', inscription.tarif_competition);
-            setVal('edit-mode_paiement', inscription.mode_paiement || 'Non payé');
         };
 
         fillForm();
@@ -1217,8 +1213,6 @@ function initEditInscriptionHandlers() {
             arme: document.getElementById('edit-arme')?.value || '',
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
             numero_tir: document.getElementById('edit-numero_tir')?.value || '',
-            tarif_competition: document.getElementById('edit-tarif_competition')?.value || '',
-            mode_paiement: document.getElementById('edit-mode_paiement')?.value || 'Non payé'
         };
 
         if (isNature) {
