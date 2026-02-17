@@ -40,9 +40,11 @@ $isCompound = function($numeroLicence, $inscriptionsMap = []) {
     return false;
 };
 
-$nombrePelotons = $concours->nombre_pelotons ?? $concours->nombre_cibles ?? 0;
-$nombreDepart = $concours->nombre_depart ?? 1;
-$nombreArchersParPeloton = $concours->nombre_archers_par_peloton ?? $concours->nombre_tireurs_par_cibles ?? 0;
+$nombrePelotons = (int)($concours->nombre_pelotons ?? $concours->nombre_cibles ?? 0) ?: 4;
+$nombreDepart = (int)($concours->nombre_depart ?? 1) ?: 1;
+$departsForCreate = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+$nombreDepart = !empty($departsForCreate) ? count($departsForCreate) : $nombreDepart;
+$nombreArchersParPeloton = (int)($concours->nombre_archers_par_peloton ?? $concours->nombre_tireurs_par_cibles ?? 0) ?: 4;
 $concoursId = $concours->id ?? $concours->_id ?? null;
 $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
 ?>
