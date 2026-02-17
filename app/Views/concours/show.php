@@ -235,6 +235,7 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
         <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
+                            <th>Statut</th>
                             <th>Nom - Prénom</th>
                             <th>Numéro de licence</th>
                             <th>Club</th>
@@ -272,8 +273,34 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
 
                             $rowStyle = !empty($rowStyleParts) ? ' style="' . implode('; ', $rowStyleParts) . '"' : '';
                        ?>
+                            <?php
+                            $statut = $inscription['statut_inscription'] ?? 'en_attente';
+                            $inscId = $inscription['id'] ?? '';
+                            if ($statut === 'confirmee') {
+                                $statutIcon = 'fa-check-circle text-success';
+                                $statutTitle = 'Confirmée';
+                            } elseif (in_array($statut, ['refuse', 'annule'], true)) {
+                                $statutIcon = 'fa-times-circle text-danger';
+                                $statutTitle = $statut === 'refuse' ? 'Refusée' : 'Annulée';
+                            } else {
+                                $statutIcon = 'fa-clock text-warning';
+                                $statutTitle = 'En attente';
+                            }
+                            ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?></td>
+                            <td class="statut-cell"<?= $rowStyle ?>>
+                                    <div class="dropdown statut-dropdown">
+                                        <button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= htmlspecialchars($statutTitle) ?>">
+                                            <i class="fas <?= $statutIcon ?>"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>
+                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>
+                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>
+                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>
+                                        </ul>
+                                    </div>
+                                </td>                               <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($userNumeroLicence) ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
