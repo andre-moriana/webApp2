@@ -1009,8 +1009,20 @@ function submitInscription() {
                 ? 'Inscription enregistrée avec succès.'
                 : successes.length + ' inscription(s) enregistrée(s) avec succès.');
         } else {
-            const msg = failures.map(f => f.body?.error || f.body?.message || 'Erreur ' + f.status).join('\n');
-            alert('Erreur(s) lors de l\'enregistrement :\n' + msg);
+            const alreadyRegistered = failures.filter(f => {
+                const m = (f.body?.error || f.body?.message || '').toLowerCase();
+                return m.includes('déjà inscrit') || m.includes('deja inscrit');
+            });
+            const otherFailures = failures.filter(f => !alreadyRegistered.includes(f));
+            if (alreadyRegistered.length > 0 && otherFailures.length === 0) {
+                alert('Attention : Cet archer est déjà inscrit pour le(s) départ(s) sélectionné(s). Aucune nouvelle inscription n\'a été créée.');
+            } else if (alreadyRegistered.length > 0) {
+                const otherMsg = otherFailures.map(f => f.body?.error || f.body?.message || 'Erreur ' + f.status).join('\n');
+                alert('Attention : Cet archer est déjà inscrit pour certains départs.\n\nErreur(s) pour d\'autres départs :\n' + otherMsg);
+            } else {
+                const msg = failures.map(f => f.body?.error || f.body?.message || 'Erreur ' + f.status).join('\n');
+                alert('Erreur(s) lors de l\'enregistrement :\n' + msg);
+            }
             if (successes.length > 0) loadInscriptions();
         }
     }).catch(err => {
