@@ -2,7 +2,8 @@
 <link href="/public/assets/css/concours-inscription.css" rel="stylesheet">
 <link href="/public/assets/css/users-table.css" rel="stylesheet">
 
-<div class="container-fluid concours-inscription-container" id="inscription-page" data-config="<?= htmlspecialchars(json_encode([
+<?php
+$inscriptionConfig = [
     'concoursId' => $concoursId ?? null,
     'formAction' => $formAction ?? '/concours/' . ($concoursId ?? '') . '/inscription',
     'apiInscriptionsUrl' => $apiInscriptionsUrl ?? '/api/concours/' . ($concoursId ?? '') . '/inscriptions',
@@ -15,7 +16,10 @@
     'concoursNombreDepart' => is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null),
     'disciplineAbv' => $disciplineAbv ?? null,
     'isNature3DOrCampagne' => isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)
-]), JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
+];
+$inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+?>
+<div class="container-fluid concours-inscription-container" id="inscription-page" data-config="<?= $inscriptionConfigJson ?>">
     <h1>Inscription au concours</h1>
 
     <?php if (isset($_SESSION['error'])): ?>
