@@ -932,13 +932,17 @@ function submitInscription() {
         return;
     }
 
-    // Trier les départs par ordre chronologique (date_depart, heure_greffe) pour assigner numero_tir
+    // Trier les départs par ordre chronologique (15/03 avant 16/03, puis heure) pour assigner numero_tir
     const sortedDeparts = checkedCbs.slice().sort((a, b) => {
-        const dateA = (a.dataset.dateDepart || '') + ' ' + (a.dataset.heureGreffe || '00:00');
-        const dateB = (b.dataset.dateDepart || '') + ' ' + (b.dataset.heureGreffe || '00:00');
-        if (!dateA.trim()) return 1;
-        if (!dateB.trim()) return -1;
-        return dateA.localeCompare(dateB);
+        const dateStrA = (a.dataset.dateDepart || '').trim();
+        const dateStrB = (b.dataset.dateDepart || '').trim();
+        const heureA = (a.dataset.heureGreffe || '00:00').substring(0, 5);
+        const heureB = (b.dataset.heureGreffe || '00:00').substring(0, 5);
+        if (!dateStrA) return 1;
+        if (!dateStrB) return -1;
+        const tsA = new Date(dateStrA + 'T' + heureA + ':00').getTime();
+        const tsB = new Date(dateStrB + 'T' + heureB + ':00').getTime();
+        return tsA - tsB;
     });
 
     const nom = selectedArcher.name || '';
