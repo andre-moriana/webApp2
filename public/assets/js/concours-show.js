@@ -166,6 +166,63 @@ function createPlanPeloton() {
     });
 }
 
+// Délégation d'événement pour le changement de statut (dropdown) - au chargement du DOM
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {
+        const item = e.target.closest('.statut-dropdown-item');
+        if (item) {
+            e.preventDefault();
+            const statut = item.getAttribute('data-statut');
+            let inscriptionId = item.getAttribute('data-inscription-id');
+            if (!inscriptionId) {
+                const row = item.closest('tr');
+                inscriptionId = row ? row.getAttribute('data-inscription-id') : null;
+            }
+            const concoursId = typeof concoursIdShow !== 'undefined' ? concoursIdShow : null;
+            if (inscriptionId && statut && concoursId) {
+                updateStatutInscription(parseInt(inscriptionId, 10), statut);
+            }
+        }
+    });
+});
+
+/**
+ * Met à jour le statut d'une inscription
+ */
+function updateStatutInscription(inscriptionId, statut) {
+    const concoursId = typeof concoursIdShow !== 'undefined' ? concoursIdShow : null;
+    if (!concoursId) {
+        alert('Erreur: ID du concours non disponible');
+        return;
+    }
+
+    fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ statut_inscription: statut })
+    })
+    .then(response => {
+        return response.json().then(data => ({ ok: response.ok, data }));
+    })
+    .then(({ ok, data }) => {
+        const success = ok && (data.success !== false) && !data.error;
+        if (success) {
+            location.reload();
+        } else {
+            const errMsg = data.error || data.message || (data.data && data.data.error) || 'Erreur inconnue';
+            alert('Erreur lors de la mise à jour du statut: ' + errMsg + (ok ? '' : ' (Connexion requise)'));
+        }
+    })
+    .catch(err => {
+        console.error('Erreur updateStatutInscription:', err);
+        alert('Erreur lors de la mise à jour du statut. Vérifiez que vous êtes connecté.');
+    });
+}
+
 // Retirer une inscription par ID
 function removeInscription(inscriptionId) {
     if (!confirm('Voulez-vous retirer cet archer de l\'inscription ?')) {
