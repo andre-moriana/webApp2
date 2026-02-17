@@ -983,10 +983,9 @@ function submitInscription() {
         confirmBtn.textContent = 'Enregistrement...';
     }
 
-    const promises = sortedDeparts.map((cb, index) => {
+    const promises = sortedDeparts.map((cb) => {
         const numeroDepart = parseInt(cb.value, 10);
-        const numeroTir = index + 1; // 1, 2, 3... selon l'ordre chronologique
-        const data = { ...baseData, numero_depart: numeroDepart, numero_tir: numeroTir };
+        const data = { ...baseData, numero_depart: numeroDepart };
         return fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
