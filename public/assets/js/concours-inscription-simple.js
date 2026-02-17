@@ -24,6 +24,7 @@
 
 // Variables globales
 var selectedArcher = null;
+var allInscriptionsCache = []; // Liste complète pour filtrage par départs cochés
 var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concoursId :
     (document.querySelector('input[name="concours_id"]')?.value ||
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
@@ -68,11 +69,15 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     const departSelectAll = document.getElementById('depart-select-all');
     const departCheckboxes = document.querySelectorAll('.depart-checkbox');
-    departCheckboxes.forEach(cb => cb.addEventListener('change', window.updateModalDepartDisplay));
+    departCheckboxes.forEach(cb => cb.addEventListener('change', function() {
+        window.updateModalDepartDisplay();
+        applyDepartFilterAndRender();
+    }));
     if (departSelectAll) {
         departSelectAll.addEventListener('change', function() {
             document.querySelectorAll('.depart-checkbox').forEach(cb => { cb.checked = this.checked; });
             window.updateModalDepartDisplay();
+            applyDepartFilterAndRender();
         });
     }
 
@@ -1057,13 +1062,26 @@ function loadInscriptions() {
         return response.json();
     })
     .then(data => {
-        const inscriptions = getInscriptionsFromResponse(data);
-        renderInscriptions(inscriptions);
+        allInscriptionsCache = getInscriptionsFromResponse(data);
+        applyDepartFilterAndRender();
     })
     .catch(error => {
         console.error('Erreur lors du chargement des inscriptions:', error);
         tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-danger">Erreur lors du chargement des inscriptions.</td></tr>';
     });
+}
+
+/**
+ * Filtre les inscriptions selon les départs cochés et affiche le tableau
+ */
+function applyDepartFilterAndRender() {
+    const checkedDeparts = Array.from(document.querySelectorAll('.depart-checkbox:checked')).map(cb => cb.value);
+    let toRender = allInscriptionsCache;
+    if (checkedDeparts.length > 0) {
+        const depSet = new Set(checkedDeparts.map(String));
+        toRender = allInscriptionsCache.filter(ins => depSet.has(String(ins.numero_depart ?? '')));
+    }
+    renderInscriptions(toRender);
 }
 
 /**
@@ -1074,9 +1092,21 @@ function renderInscriptions(inscriptions) {
     if (!tbody) return;
 
     const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+    const checkedDeparts = Array.from(document.querySelectorAll('.depart-checkbox:checked')).map(cb => cb.value);
+    const isFiltered = checkedDeparts.length > 0;
+
+    const hintEl = document.getElementById('inscriptions-filter-hint');
+    if (hintEl) {
+        hintEl.textContent = isFiltered
+            ? 'Affichage filtré : inscriptions des départs sélectionnés (' + checkedDeparts.length + ' départ(s)).'
+            : 'La liste affiche toutes les inscriptions. Cochez des départs ci-dessus pour filtrer.';
+    }
 
     if (!inscriptions || inscriptions.length === 0) {
-        tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Aucun archer inscrit pour le moment.</td></tr>';
+        const msg = isFiltered
+            ? 'Aucune inscription pour les départs sélectionnés.'
+            : 'Aucun archer inscrit pour le moment.';
+        tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">' + msg + '</td></tr>';
         return;
     }
 

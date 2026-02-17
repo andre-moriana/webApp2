@@ -134,6 +134,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
     ?>
     <div class="inscriptions-section">
         <h3>Archers inscrits</h3>
+        <small id="inscriptions-filter-hint" class="text-muted d-block mb-2">La liste affiche toutes les inscriptions. Cochez des départs ci-dessus pour filtrer.</small>
         <div class="table-responsive">
             <table class="table table-bordered" id="inscriptions-table">
                     <thead>
