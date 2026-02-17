@@ -634,6 +634,8 @@ table tbody tr.piquet-blanc {
 <script>
 // Variables globales - doivent être définies avant le chargement du script
 const concoursId = <?= json_encode($concoursId ?? null) ?>;
+const formAction = <?= json_encode($formAction ?? '/concours/' . ($concoursId ?? '') . '/inscription') ?>;
+const apiInscriptionsUrl = <?= json_encode($apiInscriptionsUrl ?? '/api/concours/' . ($concoursId ?? '') . '/inscriptions') ?>;
 const categoriesClassement = <?= json_encode($categoriesClassement ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const arcs = <?= json_encode($arcs ?? [], JSON_UNESCAPED_UNICODE) ?>;
 const distancesTir = <?= json_encode($distancesTir ?? [], JSON_UNESCAPED_UNICODE) ?>;

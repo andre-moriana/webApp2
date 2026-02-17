@@ -636,7 +636,7 @@ class ConcoursController {
             $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
             $basePath = preg_replace('#/concours/.*$#', '', $path);
             $basePath = rtrim($basePath, '/');
-            $lienInscription = $baseUrl . ($basePath ?: '') . '/concours/' . $id . '/inscription';
+            $lienInscription = $baseUrl . ($basePath ?: '') . '/inscription-cible/' . $id;
             try {
                 $updateResponse = $this->apiService->updateConcours($id, ['lien_inscription_cible' => $lienInscription]);
                 if ($updateResponse['success'] && isset($updateResponse['data'])) {
@@ -1434,6 +1434,102 @@ class ConcoursController {
         require_once __DIR__ . '/../Views/layouts/header.php';
         require_once __DIR__ . '/../Views/concours/inscription.php';
         require_once __DIR__ . '/../Views/layouts/footer.php';
+    }
+
+    /**
+     * Page d'inscription ciblée (publique, sans authentification)
+     */
+    public function inscriptionCible($concoursId)
+    {
+        $concoursResponse = $this->apiService->makeRequestPublic("concours/{$concoursId}/public", 'GET');
+        if (!$concoursResponse['success'] || empty($concoursResponse['data'])) {
+            $_SESSION['error'] = 'Concours introuvable';
+            header('Location: /login');
+            exit;
+        }
+        $concours = is_array($concoursResponse['data']) ? (object)$concoursResponse['data'] : $concoursResponse['data'];
+
+        $inscriptionsResponse = $this->apiService->makeRequestPublic("concours/{$concoursId}/inscriptions/public", 'GET');
+        $inscriptions = is_array($inscriptionsResponse['data'] ?? null) ? $inscriptionsResponse['data'] : [];
+
+        $usersMap = [];
+        $clubs = [];
+        $categoriesClassement = [];
+        $arcs = [];
+        $departs = [];
+        for ($i = 1; $i <= ($concours->nombre_depart ?? 1); $i++) {
+            $departs[] = ['numero' => $i, 'heure' => '', 'date' => ''];
+        }
+
+        $inscriptionCible = true;
+        $formAction = '/inscription-cible/' . $concoursId;
+        $apiInscriptionsUrl = '/api/concours/' . $concoursId . '/inscriptions/public';
+
+        require_once __DIR__ . '/../Views/layouts/header.php';
+        require_once __DIR__ . '/../Views/concours/inscription.php';
+        require_once __DIR__ . '/../Views/layouts/footer.php';
+    }
+
+    /**
+     * Traitement inscription ciblée (sans auth)
+     */
+    public function storeInscriptionCible($concoursId)
+    {
+        $user_nom = isset($_POST['user_nom']) ? trim($_POST['user_nom']) : null;
+        if (empty($user_nom)) {
+            $_SESSION['error'] = 'Nom de l\'archer requis';
+            header("Location: /inscription-cible/{$concoursId}");
+            exit;
+        }
+        $numero_depart = isset($_POST['numero_depart']) && $_POST['numero_depart'] !== '' ? (int)$_POST['numero_depart'] : null;
+        if ($numero_depart === null) {
+            $_SESSION['error'] = 'Numéro de départ requis';
+            header("Location: /inscription-cible/{$concoursId}");
+            exit;
+        }
+        $numero_tir = isset($_POST['numero_tir']) && $_POST['numero_tir'] !== '' ? (int)$_POST['numero_tir'] : null;
+
+        $inscriptionsResponse = $this->apiService->makeRequestPublic("concours/{$concoursId}/inscriptions/public", 'GET');
+        $inscriptions = is_array($inscriptionsResponse['data'] ?? null) ? $inscriptionsResponse['data'] : [];
+
+        foreach ($inscriptions as $inscription) {
+            $insc_user_nom = isset($inscription['user_nom']) ? trim($inscription['user_nom']) : null;
+            if (empty($insc_user_nom) || $insc_user_nom !== $user_nom) continue;
+            $insc_numero_depart = isset($inscription['numero_depart']) ? (int)$inscription['numero_depart'] : null;
+            if ($insc_numero_depart === $numero_depart) {
+                $_SESSION['error'] = "Cet archer est déjà inscrit au départ $numero_depart pour ce concours.";
+                header("Location: /inscription-cible/{$concoursId}");
+                exit;
+            }
+        }
+
+        $inscriptionData = [
+            'user_id' => null,
+            'user_nom' => $user_nom,
+            'id_club' => $_POST['id_club'] ?? null,
+            'numero_licence' => trim($_POST['numero_licence'] ?? ''),
+            'numero_depart' => $numero_depart,
+            'numero_tir' => $numero_tir,
+            'distance' => isset($_POST['distance']) && $_POST['distance'] !== '' ? (int)$_POST['distance'] : null,
+            'blason' => isset($_POST['blason']) && $_POST['blason'] !== '' ? (int)$_POST['blason'] : null,
+            'piquet' => $_POST['piquet'] ?? null,
+            'duel' => isset($_POST['duel']) ? (int)$_POST['duel'] : 0,
+            'trispot' => isset($_POST['trispot']) ? (int)$_POST['trispot'] : 0,
+        ];
+        if (empty($inscriptionData['numero_licence'])) {
+            $_SESSION['error'] = 'Numéro de licence requis';
+            header("Location: /inscription-cible/{$concoursId}");
+            exit;
+        }
+
+        $response = $this->apiService->makeRequestPublic("concours/{$concoursId}/inscription/public", 'POST', $inscriptionData);
+        if ($response['success'] ?? false) {
+            $_SESSION['success'] = 'Inscription enregistrée avec succès.';
+        } else {
+            $_SESSION['error'] = $response['error'] ?? $response['data']['error'] ?? 'Erreur lors de l\'inscription';
+        }
+        header("Location: /inscription-cible/{$concoursId}");
+        exit;
     }
 
     // Traitement de l'inscription

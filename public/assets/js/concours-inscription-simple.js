@@ -905,7 +905,7 @@ function submitInscription() {
 
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = `/concours/${concoursIdValue}/inscription`;
+    form.action = typeof formAction !== 'undefined' ? formAction : `/concours/${concoursIdValue}/inscription`;
 
     Object.entries(formData).forEach(([key, value]) => {
         const input = document.createElement('input');
@@ -953,7 +953,8 @@ function loadInscriptions() {
         return;
     }
 
-    fetch(`/api/concours/${concoursIdValue}/inscriptions`, {
+    const inscriptionsUrl = typeof apiInscriptionsUrl !== 'undefined' ? apiInscriptionsUrl : `/api/concours/${concoursIdValue}/inscriptions`;
+    fetch(inscriptionsUrl, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

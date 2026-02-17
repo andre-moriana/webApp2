@@ -337,6 +337,50 @@ class ApiService {
     }
 
     /**
+     * Requête API sans authentification (pour inscription ciblée publique)
+     */
+    public function makeRequestPublic($endpoint, $method = 'GET', $data = null) {
+        $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        if (strpos($url, 'https://') === 0) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        $headers = ['Accept: */*'];
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        if ($method === 'POST') {
+            curl_setopt($ch, CURLOPT_POST, true);
+            if ($data !== null) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                $headers[] = 'Content-Type: application/json';
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            }
+        } else if ($method === 'PUT') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+            if ($data !== null) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                $headers[] = 'Content-Type: application/json';
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            }
+        }
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+        $cleanResponse = preg_replace('/^\xEF\xBB\xBF/', '', $response);
+        $decodedResponse = json_decode(trim($cleanResponse), true);
+        if ($decodedResponse !== null && json_last_error() === JSON_ERROR_NONE) {
+            return ['success' => $httpCode >= 200 && $httpCode < 300, 'data' => $decodedResponse, 'status_code' => $httpCode];
+        }
+        return ['success' => false, 'data' => null, 'status_code' => $httpCode];
+    }
+
+    /**
      * Helper pour extraire le payload (data) d'une réponse standardisée { success, data, message }
      */
     public function unwrapData($response) {
