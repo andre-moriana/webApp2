@@ -452,6 +452,14 @@ class ConcoursController {
         $code_authentification = $_POST['code_authentification'] ?? '';
         $type_publication_internet = $_POST['type_publication_internet'] ?? '';
         $lien_inscription_cible = $_POST['lien_inscription_cible'] ?? '';
+        $departs_json = $_POST['departs_json'] ?? '';
+        $departs = [];
+        if ($departs_json !== '') {
+            $decoded = json_decode($departs_json, true);
+            if (is_array($decoded)) {
+                $departs = $decoded;
+            }
+        }
         
         // Validation des champs requis
         if (empty($titre_competition)) {
@@ -502,6 +510,7 @@ class ConcoursController {
                 'type_publication_internet' => $type_publication_internet,
                 'lien_inscription_cible' => $lien_inscription_cible ?: null,
                 'agreenum' => $club_code, // nameShort du club organisateur
+                'departs' => $departs,
                 'lieu_latitude' => $lieu_latitude ? (float)$lieu_latitude : null,
                 'lieu_longitude' => $lieu_longitude ? (float)$lieu_longitude : null
             ];
@@ -1069,6 +1078,13 @@ class ConcoursController {
         if (isset($data['titre_competition']) && !isset($data['nom'])) {
             $data['nom'] = $data['titre_competition'];
         }
+        
+        // Départs
+        if (isset($data['departs_json']) && $data['departs_json'] !== '') {
+            $decoded = json_decode($data['departs_json'], true);
+            $data['departs'] = is_array($decoded) ? $decoded : [];
+        }
+        unset($data['departs_json']);
         
         $response = $this->apiService->updateConcours($id, $data);
         // Optionally handle errors here
