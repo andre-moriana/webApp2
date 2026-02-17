@@ -228,6 +228,16 @@ table tbody tr.piquet-blanc {
     text-align: center;
     vertical-align: middle;
 }
+
+/* Icônes d'actions côte à côte */
+#inscriptions-table td:last-child {
+    white-space: nowrap;
+}
+#inscriptions-table td:last-child .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
 #inscriptions-table .statut-dropdown .btn-link {
     cursor: pointer;
 }
