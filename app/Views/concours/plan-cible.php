@@ -49,14 +49,17 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
 <?php if (empty($plans)): ?>
     <div class="alert alert-info">
         <p>Aucun plan de cible n'a été créé pour ce concours.</p>
+        <?php if (!empty($canEditPlan)): ?>
         <button type="button" class="btn btn-primary" id="btn-create-plan-cible-empty" data-concours-id="<?= htmlspecialchars($concoursId) ?>"
                 data-nombre-cibles="<?= (int)$nombreCibles ?>"
                 data-nombre-depart="<?= (int)$nombreDepart ?>"
                 data-nombre-tireurs="<?= (int)$nombreTireursParCibles ?>">
             <i class="fas fa-bullseye"></i> Créer le plan de cible
         </button>
+        <?php endif; ?>
         <div id="plan-cible-create-message" style="margin-top: 10px;"></div>
     </div>
+    <?php if (!empty($canEditPlan)): ?>
     <script>
     (function() {
         var btn = document.getElementById('btn-create-plan-cible-empty');
@@ -122,6 +125,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
         }
     })();
     </script>
+    <?php endif; ?>
 <?php else: ?>
     <!-- Légende -->
     <div class="plan-cible-legend">

@@ -50,12 +50,14 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
 <?php if (empty($plans)): ?>
     <div class="alert alert-info">
         <p>Aucun plan de peloton n'a été créé pour ce concours.</p>
+        <?php if (!empty($canEditPlan)): ?>
         <button type="button" class="btn btn-primary" id="btn-create-plan-peloton-empty" data-concours-id="<?= htmlspecialchars($concoursId) ?>"
                 data-nombre-pelotons="<?= (int)$nombrePelotons ?>"
                 data-nombre-depart="<?= (int)$nombreDepart ?>"
                 data-nombre-archers="<?= (int)$nombreArchersParPeloton ?>">
             <i class="fas fa-users"></i> Créer le plan de peloton
         </button>
+        <?php endif; ?>
         <div id="plan-peloton-create-message" style="margin-top: 10px;"></div>
     </div>
 <?php else: ?>

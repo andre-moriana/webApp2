@@ -2197,13 +2197,10 @@ class ConcoursController {
     // Méthode utilitaire pour récupérer les concours via l'API
     // plus de méthode fetchConcoursFromApi : tout passe par ApiService
 
-    // Affichage du plan de cible d'un concours
+    // Affichage du plan de cible d'un concours (accessible sans authentification pour lien email)
     public function planCible($concoursId)
     {
-        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            header('Location: /login');
-            exit;
-        }
+        $isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
         
         // Nettoyer les messages d'erreur de session
         unset($_SESSION['error']);
@@ -2213,8 +2210,10 @@ class ConcoursController {
         $plans = [];
         $disciplines = [];
         
-        // Récupérer le concours
-        $response = $this->apiService->getConcoursById($concoursId);
+        // Récupérer le concours (endpoint public si non connecté)
+        $response = $isLoggedIn
+            ? $this->apiService->getConcoursById($concoursId)
+            : $this->apiService->makeRequestPublic("concours/{$concoursId}/public", 'GET');
         if ($response['success'] && isset($response['data'])) {
             $concours = (object) $response['data'];
         } else {
@@ -2225,7 +2224,9 @@ class ConcoursController {
         
         // Récupérer l'abréviation de la discipline pour vérifier si on peut afficher le plan
         try {
-            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $disciplinesResponse = $isLoggedIn
+                ? $this->apiService->makeRequest('concours/disciplines', 'GET')
+                : $this->apiService->makeRequestPublic('concours/disciplines', 'GET');
             $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
             if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
                 $disciplinesPayload = $disciplinesPayload['data'];
@@ -2263,9 +2264,11 @@ class ConcoursController {
             exit;
         }
         
-        // Récupérer les plans de cible
+        // Récupérer les plans de cible (endpoint public si non connecté)
         try {
-            $plansResponse = $this->apiService->getPlanCible($concoursId);
+            $plansResponse = $isLoggedIn
+                ? $this->apiService->getPlanCible($concoursId)
+                : $this->apiService->makeRequestPublic("concours/{$concoursId}/plan-cible/public", 'GET');
             if ($plansResponse['success']) {
                 $plans = $this->apiService->unwrapData($plansResponse);
                 // Si les données sont encore encapsulées, les extraire
@@ -2317,7 +2320,9 @@ class ConcoursController {
             // Récupérer les inscriptions pour user_nom + numero_licence (plan utilise inscriptions)
             if (!empty($licencesFromPlan)) {
                 try {
-                    $inscResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
+                    $inscResponse = $isLoggedIn
+                        ? $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET')
+                        : $this->apiService->makeRequestPublic("concours/{$concoursId}/inscriptions/public", 'GET');
                     if ($inscResponse['success']) {
                         $inscriptions = $this->apiService->unwrapData($inscResponse);
                         if (is_array($inscriptions)) {
@@ -2342,7 +2347,8 @@ class ConcoursController {
                 }
             }
             
-            // Récupérer les informations des utilisateurs (pour user_id - compatibilité)
+            // Récupérer les informations des utilisateurs (pour user_id - compatibilité, uniquement si connecté)
+            if ($isLoggedIn) {
             foreach ($userIds as $userId) {
                 try {
                     $userResponse = $this->apiService->makeRequest("users/{$userId}", 'GET');
@@ -2371,9 +2377,11 @@ class ConcoursController {
                     error_log('Erreur lors de la récupération de l\'utilisateur ' . $userId . ': ' . $e->getMessage());
                 }
             }
+            }
         }
         
         $title = 'Plan de cible - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
+        $canEditPlan = $isLoggedIn;
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/plan-cible.php';
         include 'app/Views/layouts/footer.php';
@@ -2432,10 +2440,7 @@ class ConcoursController {
 
     public function planPeloton($concoursId)
     {
-        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            header('Location: /login');
-            exit;
-        }
+        $isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
         unset($_SESSION['error']);
         unset($_SESSION['success']);
 
@@ -2444,7 +2449,9 @@ class ConcoursController {
         $inscriptionsMap = [];
         $usersMap = [];
 
-        $response = $this->apiService->getConcoursById($concoursId);
+        $response = $isLoggedIn
+            ? $this->apiService->getConcoursById($concoursId)
+            : $this->apiService->makeRequestPublic("concours/{$concoursId}/public", 'GET');
         if ($response['success'] && isset($response['data'])) {
             $concours = (object) $response['data'];
         } else {
@@ -2455,12 +2462,14 @@ class ConcoursController {
 
         $disciplines = [];
         try {
-            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $disciplinesResponse = $isLoggedIn
+                ? $this->apiService->makeRequest('concours/disciplines', 'GET')
+                : $this->apiService->makeRequestPublic('concours/disciplines', 'GET');
             $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
             if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
                 $disciplinesPayload = $disciplinesPayload['data'];
             }
-            if ($disciplinesResponse['success'] && is_array($disciplinesPayload)) {
+            if (($disciplinesResponse['success'] ?? false) && is_array($disciplinesPayload)) {
                 $disciplines = array_values($disciplinesPayload);
             }
         } catch (Exception $e) {
@@ -2486,8 +2495,10 @@ class ConcoursController {
         }
 
         try {
-            $plansResponse = $this->apiService->getPlanPeloton($concoursId);
-            if ($plansResponse['success']) {
+            $plansResponse = $isLoggedIn
+                ? $this->apiService->getPlanPeloton($concoursId)
+                : $this->apiService->makeRequestPublic("concours/{$concoursId}/plan-peloton/public", 'GET');
+            if ($plansResponse['success'] ?? false) {
                 $plans = $this->apiService->unwrapData($plansResponse);
                 if (is_array($plans) && isset($plans['data']) && isset($plans['success'])) {
                     $plans = $plans['data'];
@@ -2515,8 +2526,10 @@ class ConcoursController {
         }
         if (!empty($licencesFromPlan)) {
             try {
-                $inscResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
-                if ($inscResponse['success']) {
+                $inscResponse = $isLoggedIn
+                    ? $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET')
+                    : $this->apiService->makeRequestPublic("concours/{$concoursId}/inscriptions/public", 'GET');
+                if ($inscResponse['success'] ?? false) {
                     $inscriptions = $this->apiService->unwrapData($inscResponse);
                     if (is_array($inscriptions)) {
                         foreach ($inscriptions as $insc) {
@@ -2543,6 +2556,7 @@ class ConcoursController {
         }
 
         $title = 'Plan de peloton - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
+        $canEditPlan = $isLoggedIn;
         $additionalJS = ['/public/assets/js/plan-peloton.js'];
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/plan-peloton.php';
