@@ -2591,6 +2591,24 @@ class ApiController {
     }
 
     /**
+     * Proxy pour POST /api/concours/{id}/inscription - Créer une inscription (authentifié)
+     */
+    public function proxyConcoursInscriptionCreate($id) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            $response = $this->apiService->makeRequest("concours/{$id}/inscription", 'POST', $data);
+            $this->sendJsonResponse($response, 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Proxy public pour POST /api/concours/{id}/inscription/public (sans auth - inscription ciblée)
      */
     public function proxyConcoursInscriptionPublic($id) {

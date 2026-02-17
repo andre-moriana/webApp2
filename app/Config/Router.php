@@ -227,6 +227,7 @@ class Router {
         $this->addRoute("POST", "/api/concours/{id}/plan-peloton/{depart}/liberer", "ApiController@proxyConcoursPlanPelotonLiberer");
         $this->addRoute("POST", "/api/concours/{id}/plan-peloton/assign", "ApiController@proxyConcoursPlanPelotonAssign");
         $this->addRoute("GET", "/api/concours/{id}/inscriptions", "ApiController@proxyConcoursInscriptions");
+        $this->addRoute("POST", "/api/concours/{id}/inscription", "ApiController@proxyConcoursInscriptionCreate");
         $this->addRoute("GET", "/api/concours/{id}/inscription/{userId}", "ApiController@proxyConcoursInscription");
         $this->addRoute("DELETE", "/api/concours/{id}/inscription/{userId}", "ApiController@proxyConcoursInscription");
         // Route pour la mise à jour d'inscription (POST avec X-HTTP-Method-Override: PUT ou PUT direct)
