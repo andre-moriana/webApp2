@@ -978,7 +978,7 @@ function submitInscription() {
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             credentials: 'include',
             body: JSON.stringify(data)
-        }).then(r => r.json().then(body => ({ ok: r.ok, status: r.status, body })));
+        }).then(r => parseJsonResponse(r).then(body => ({ ok: r.ok, status: r.status, body })));
     });
 
     Promise.all(promises).then(results => {
@@ -1006,6 +1006,29 @@ function submitInscription() {
             confirmBtn.textContent = originalBtnText;
         }
         alert('Erreur réseau : ' + (err.message || err));
+    });
+}
+
+/**
+ * Parse une réponse fetch en JSON. Si le serveur renvoie du HTML (404, redirect, erreur),
+ * lance une erreur explicite au lieu de "Unexpected token '<'".
+ */
+function parseJsonResponse(response) {
+    const ct = (response.headers.get('content-type') || '').toLowerCase();
+    return response.text().then(function(text) {
+        if (!ct.includes('application/json') && !ct.includes('text/json')) {
+            if (text.trim().startsWith('<')) {
+                throw new Error('Le serveur a renvoyé une page HTML au lieu de JSON (vérifiez l\'URL de l\'API ou la configuration du proxy).');
+            }
+        }
+        try {
+            return text ? JSON.parse(text) : {};
+        } catch (e) {
+            if (text.trim().startsWith('<')) {
+                throw new Error('Le serveur a renvoyé une page HTML au lieu de JSON. Vérifiez que l\'API est accessible.');
+            }
+            throw e;
+        }
     });
 }
 
@@ -1052,15 +1075,7 @@ function loadInscriptions() {
         },
         credentials: 'include'
     })
-    .then(response => {
-        const contentType = response.headers.get('content-type') || '';
-        if (!response.ok || !contentType.includes('application/json')) {
-            return response.text().then(text => {
-                throw new Error('Réponse non-JSON: ' + (text || '').substring(0, 200));
-            });
-        }
-        return response.json();
-    })
+    .then(response => parseJsonResponse(response))
     .then(data => {
         allInscriptionsCache = getInscriptionsFromResponse(data);
         applyDepartFilterAndRender();
