@@ -997,14 +997,31 @@ function submitInscription() {
             const numeroDepart = parseInt(cb.value, 10);
             const data = { ...baseData, numero_depart: numeroDepart };
             if (batchToken) data.token_confirmation = batchToken;
-            const r = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify(data)
-            });
-            const body = await parseJsonResponse(r);
-            results.push({ ok: r.ok, status: r.status, body });
+            try {
+                const r = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+                const text = await r.text();
+                let body = {};
+                try {
+                    body = text ? JSON.parse(text) : {};
+                } catch (parseErr) {
+                    console.error('Inscription départ ' + numeroDepart + ' - Réponse non-JSON:', text.substring(0, 300));
+                    body = { error: 'Réponse serveur invalide (HTTP ' + r.status + ')' };
+                }
+                if (!r.ok) {
+                    if (!body.error && text) body.error = text.substring(0, 200);
+                    if (!body.error) body.error = 'Erreur HTTP ' + r.status;
+                    console.error('Inscription départ ' + numeroDepart + ' - Erreur API:', body.error);
+                }
+                results.push({ ok: r.ok, status: r.status, body });
+            } catch (err) {
+                console.error('Inscription départ ' + numeroDepart + ' - Erreur:', err);
+                results.push({ ok: false, status: 0, body: { error: err.message || 'Erreur réseau' } });
+            }
         }
         return results;
     };
