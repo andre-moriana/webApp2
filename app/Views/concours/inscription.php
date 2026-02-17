@@ -276,6 +276,11 @@ table tbody tr.piquet-blanc {
                         <small class="form-text text-muted">Le numéro de départ est sélectionné en haut de la page</small>
                     </div>
                     
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email <span class="text-muted">(pour confirmation d'inscription)</span></label>
+                        <input type="email" id="email" class="form-control" placeholder="exemple@email.com" autocomplete="email">
+                    </div>
+                    
                     <h6 class="mt-4 mb-3">Classification et équipement</h6>
                     
                     <div class="row">
