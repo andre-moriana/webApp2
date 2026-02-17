@@ -7,6 +7,7 @@ $inscriptionConfig = [
     'concoursId' => $concoursId ?? null,
     'formAction' => $formAction ?? '/concours/' . ($concoursId ?? '') . '/inscription',
     'apiInscriptionsUrl' => $apiInscriptionsUrl ?? '/api/concours/' . ($concoursId ?? '') . '/inscriptions',
+    'inscriptionCible' => $inscriptionCible ?? false,
     'archerSearchUrl' => $archerSearchUrl ?? '/archer/search-or-create',
     'categoriesClassement' => $categoriesClassement ?? [],
     'arcs' => $arcs ?? [],
@@ -51,7 +52,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
         <p><strong>Dates:</strong> <?= htmlspecialchars($concoursDateDebut) ?> - <?= htmlspecialchars($concoursDateFin) ?></p>
     </div>
 
-    <!-- Sélection du départ -->
+    <!-- Sélection des départs (plusieurs possibles) -->
     <?php 
     $departsList = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
     $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null);
@@ -60,12 +61,16 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
     }
     ?>
     <div class="depart-selection-section mb-4">
-        <h3>Sélectionner un départ</h3>
+        <h3>Sélectionner un ou plusieurs départs</h3>
         <div class="form-group">
-            <label for="depart-select-main" class="form-label">Date et heure du greffe <span class="text-danger">*</span></label>
-            <select id="depart-select-main" class="form-control" required name="numero_depart">
-                <option value="">Sélectionner un départ</option>
+            <label class="form-label">Date et heure du greffe <span class="text-danger">*</span></label>
+            <small class="form-text text-muted d-block mb-2">Cochez les départs pour inscrire l'archer à tous les départs sélectionnés en une fois.</small>
+            <div id="depart-checkboxes-container" class="border rounded p-3">
                 <?php if (!empty($departsList)): ?>
+                    <div class="form-check mb-1">
+                        <input type="checkbox" id="depart-select-all" class="form-check-input">
+                        <label for="depart-select-all" class="form-check-label fw-bold">Tout sélectionner</label>
+                    </div>
                     <?php foreach ($departsList as $d): ?>
                         <?php
                         $dateDep = $d['date_depart'] ?? '';
@@ -78,16 +83,26 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         $label = trim($dateDep . ($heureGreffe ? ' ' . $heureGreffe : ''));
                         if (empty($label)) $label = 'Départ ' . $numero;
                         ?>
-                        <option value="<?= $numero ?>"><?= htmlspecialchars($label) ?></option>
+                        <div class="form-check">
+                            <input type="checkbox" id="depart-cb-<?= $numero ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $numero ?>">
+                            <label for="depart-cb-<?= $numero ?>" class="form-check-label"><?= htmlspecialchars($label) ?></label>
+                        </div>
                     <?php endforeach; ?>
                 <?php elseif ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0): ?>
+                    <div class="form-check mb-1">
+                        <input type="checkbox" id="depart-select-all" class="form-check-input">
+                        <label for="depart-select-all" class="form-check-label fw-bold">Tout sélectionner</label>
+                    </div>
                     <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): ?>
-                        <option value="<?= $i ?>">Départ <?= $i ?></option>
+                        <div class="form-check">
+                            <input type="checkbox" id="depart-cb-<?= $i ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $i ?>">
+                            <label for="depart-cb-<?= $i ?>" class="form-check-label">Départ <?= $i ?></label>
+                        </div>
                     <?php endfor; ?>
                 <?php else: ?>
-                    <option value="" disabled>Aucun départ disponible</option>
+                    <p class="text-muted mb-0">Aucun départ disponible</p>
                 <?php endif; ?>
-            </select>
+            </div>
         </div>
     </div>
 
@@ -296,13 +311,13 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         </div>
                     </div>
                     
-                    <!-- Le départ est sélectionné dans la page principale -->
+                    <!-- Les départs sont sélectionnés dans la page principale -->
                     <div class="mb-3">
-                        <label class="form-label">Date et heure du greffe</label>
-                        <div class="form-control bg-light" style="pointer-events: none;">
-                            <span id="modal-depart-display">Sélectionné dans la page principale</span>
+                        <label class="form-label">Date(s) et heure(s) du greffe</label>
+                        <div class="form-control bg-light" style="pointer-events: none; min-height: 2.5rem;">
+                            <span id="modal-depart-display">Sélectionné(s) en haut de la page</span>
                         </div>
-                        <small class="form-text text-muted">Le départ est sélectionné en haut de la page</small>
+                        <small class="form-text text-muted">Les départs sont sélectionnés en haut de la page</small>
                     </div>
                     
                     <div class="mb-3">

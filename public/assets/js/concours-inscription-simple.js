@@ -8,6 +8,7 @@
             window.concoursId = c.concoursId;
             window.formAction = c.formAction;
             window.apiInscriptionsUrl = c.apiInscriptionsUrl;
+            window.inscriptionCible = !!c.inscriptionCible;
             window.archerSearchUrl = c.archerSearchUrl;
             window.categoriesClassement = c.categoriesClassement || [];
             window.arcs = c.arcs || [];
@@ -55,13 +56,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ajouter les listeners pour mettre à jour le blason automatiquement
     setupBlasonAutoUpdate();
     
-    // Mettre à jour l'affichage du départ dans la modale quand l'utilisateur change le select
-    const departSelectMain = document.getElementById('depart-select-main');
-    const modalDepartDisplay = document.getElementById('modal-depart-display');
-    if (departSelectMain && modalDepartDisplay) {
-        departSelectMain.addEventListener('change', function() {
-            const opt = this.options[this.selectedIndex];
-            modalDepartDisplay.textContent = opt && opt.value ? opt.text : 'Sélectionné dans la page principale';
+    // Mettre à jour l'affichage des départs dans la modale + "Tout sélectionner"
+    window.updateModalDepartDisplay = function() {
+        const modalDepartDisplay = document.getElementById('modal-depart-display');
+        const departCheckboxes = document.querySelectorAll('.depart-checkbox');
+        if (!modalDepartDisplay) return;
+        const checked = Array.from(departCheckboxes).filter(cb => cb.checked);
+        modalDepartDisplay.textContent = checked.length
+            ? checked.map(cb => cb.nextElementSibling?.textContent || cb.value).join(', ')
+            : 'Sélectionné(s) en haut de la page';
+    };
+    const departSelectAll = document.getElementById('depart-select-all');
+    const departCheckboxes = document.querySelectorAll('.depart-checkbox');
+    departCheckboxes.forEach(cb => cb.addEventListener('change', window.updateModalDepartDisplay));
+    if (departSelectAll) {
+        departSelectAll.addEventListener('change', function() {
+            document.querySelectorAll('.depart-checkbox').forEach(cb => { cb.checked = this.checked; });
+            window.updateModalDepartDisplay();
         });
     }
 
@@ -634,14 +645,9 @@ function prefillFormFields(archer) {
     
     console.log('=== Fin prefillFormFields ===');
     
-    // Pré-remplir le numéro de départ (affichage : date et heure du greffe)
-    const departSelect = document.getElementById('depart-select-main');
-    if (departSelect && departSelect.value) {
-        const modalDepartDisplay = document.getElementById('modal-depart-display');
-        if (modalDepartDisplay) {
-            const opt = departSelect.options[departSelect.selectedIndex];
-            modalDepartDisplay.textContent = opt ? opt.text : 'Départ ' + departSelect.value;
-        }
+    // Pré-remplir l'affichage des départs sélectionnés
+    if (typeof window.updateModalDepartDisplay === 'function') {
+        window.updateModalDepartDisplay();
     }
 }
 
@@ -907,7 +913,7 @@ function confirmArcherSelection() {
 }
 
 /**
- * Soumet le formulaire d'inscription
+ * Soumet les inscriptions pour tous les départs sélectionnés (appels API multiples)
  */
 function submitInscription() {
     if (!selectedArcher || !concoursIdValue) {
@@ -915,24 +921,20 @@ function submitInscription() {
         return;
     }
 
-    const departSelect = document.getElementById('depart-select-main');
-    const numeroDepart = departSelect?.value || '';
-    if (!numeroDepart) {
-        alert('Veuillez sélectionner un départ (date et heure du greffe).');
+    const checkedDeparts = Array.from(document.querySelectorAll('.depart-checkbox:checked')).map(cb => cb.value);
+    if (!checkedDeparts.length) {
+        alert('Veuillez sélectionner au moins un départ (date et heure du greffe).');
         return;
     }
-    
-    // Construire user_nom avec nom et prénom
+
     const nom = selectedArcher.name || '';
     const prenom = selectedArcher.first_name || '';
     const user_nom = `${prenom} ${nom}`.trim() || nom || prenom || '';
-    
-    // Récupérer les données du formulaire
-    const formData = {
+
+    const baseData = {
         user_nom: user_nom,
-        numero_depart: numeroDepart,
         numero_licence: selectedArcher.licence_number,
-        id_club: selectedArcher.id_club || '', // ID unique du club depuis club_unique du XML
+        id_club: selectedArcher.id_club || '',
         email: document.getElementById('email')?.value?.trim() || '',
         saison: document.getElementById('saison')?.value || '',
         type_certificat_medical: document.getElementById('type_certificat_medical')?.value || '',
@@ -943,36 +945,63 @@ function submitInscription() {
         mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0,
         numero_tir: document.getElementById('numero_tir')?.value || ''
     };
-
     const piquetSelect = document.getElementById('piquet');
     if (piquetSelect) {
-        formData.piquet = piquetSelect.value || '';
+        baseData.piquet = piquetSelect.value || '';
     } else {
-        formData.distance = document.getElementById('distance')?.value || '';
-        formData.blason = document.getElementById('blason')?.value || '';
-        formData.duel = document.getElementById('duel')?.checked ? 1 : 0;
-        formData.trispot = document.getElementById('trispot')?.checked ? 1 : 0;
+        baseData.distance = document.getElementById('distance')?.value || '';
+        baseData.blason = document.getElementById('blason')?.value || '';
+        baseData.duel = document.getElementById('duel')?.checked ? 1 : 0;
+        baseData.trispot = document.getElementById('trispot')?.checked ? 1 : 0;
     }
 
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = typeof formAction !== 'undefined' ? formAction : `/concours/${concoursIdValue}/inscription`;
-    const actionUrl = form.action;
-    const tokenMatch = actionUrl.match(/[?&]token=([^&]+)/);
-    if (tokenMatch) {
-        formData._token_inscription = decodeURIComponent(tokenMatch[1]);
+    const apiUrl = (typeof inscriptionCible !== 'undefined' && inscriptionCible)
+        ? '/api/concours/' + concoursIdValue + '/inscription/public'
+        : '/api/concours/' + concoursIdValue + '/inscription';
+    const confirmBtn = document.getElementById('btn-confirm-inscription');
+    const originalBtnText = confirmBtn ? confirmBtn.textContent : '';
+
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Enregistrement...';
     }
 
-    Object.entries(formData).forEach(([key, value]) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value;
-        form.appendChild(input);
+    const promises = checkedDeparts.map(numeroDepart => {
+        const data = { ...baseData, numero_depart: parseInt(numeroDepart, 10) };
+        return fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(data)
+        }).then(r => r.json().then(body => ({ ok: r.ok, status: r.status, body })));
     });
 
-    document.body.appendChild(form);
-    form.submit();
+    Promise.all(promises).then(results => {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = originalBtnText;
+        }
+        const successes = results.filter(r => r.ok && (r.body.success !== false));
+        const failures = results.filter(r => !r.ok || r.body.success === false);
+        if (failures.length === 0) {
+            const modal = document.getElementById('confirmInscriptionModal');
+            if (modal && typeof bootstrap !== 'undefined') bootstrap.Modal.getInstance(modal)?.hide();
+            loadInscriptions();
+            alert(successes.length === 1
+                ? 'Inscription enregistrée avec succès.'
+                : successes.length + ' inscription(s) enregistrée(s) avec succès.');
+        } else {
+            const msg = failures.map(f => f.body?.error || f.body?.message || 'Erreur ' + f.status).join('\n');
+            alert('Erreur(s) lors de l\'enregistrement :\n' + msg);
+            if (successes.length > 0) loadInscriptions();
+        }
+    }).catch(err => {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = originalBtnText;
+        }
+        alert('Erreur réseau : ' + (err.message || err));
+    });
 }
 
 /**
