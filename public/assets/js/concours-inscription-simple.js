@@ -37,6 +37,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialiser les handlers pour l'édition
     initEditInscriptionHandlers();
+
+    // Délégation d'événement pour le changement de statut (dropdown)
+    document.addEventListener('click', function(e) {
+        const item = e.target.closest('.statut-dropdown-item');
+        if (item) {
+            e.preventDefault();
+            const statut = item.getAttribute('data-statut');
+            const row = item.closest('tr');
+            const inscriptionId = row ? row.getAttribute('data-inscription-id') : null;
+            if (inscriptionId && statut && concoursIdValue) {
+                updateStatutInscription(parseInt(inscriptionId), statut);
+            }
+        }
+    });
 });
 
 // Variable pour stocker la fonction de mise à jour du blason (pour pouvoir la retirer si nécessaire)
@@ -1020,17 +1034,32 @@ function renderInscriptions(inscriptions) {
         const id = inscription.id || '';
 
         const statut = inscription.statut_inscription || 'en_attente';
-        let statutIcon;
+        let statutIconClass, statutTitle;
         if (statut === 'confirmee') {
-            statutIcon = '<i class="fas fa-check-circle text-success" title="Confirmée"></i>';
+            statutIconClass = 'fa-check-circle text-success';
+            statutTitle = 'Confirmée';
         } else if (statut === 'refuse' || statut === 'annule') {
-            statutIcon = '<i class="fas fa-times-circle text-danger" title="' + (statut === 'refuse' ? 'Refusé' : 'Annulé') + '"></i>';
+            statutIconClass = 'fa-times-circle text-danger';
+            statutTitle = statut === 'refuse' ? 'Refusée' : 'Annulée';
         } else {
-            statutIcon = '<i class="fas fa-clock text-warning" title="En attente"></i>';
+            statutIconClass = 'fa-clock text-warning';
+            statutTitle = 'En attente';
         }
 
+        const statutCell = '<td class="statut-cell"' + rowStyle + '>' +
+            '<div class="dropdown statut-dropdown">' +
+            '<button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="' + escapeHtml(statutTitle) + '">' +
+            '<i class="fas ' + statutIconClass + '"></i>' +
+            '</button>' +
+            '<ul class="dropdown-menu dropdown-menu-end">' +
+            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>' +
+            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>' +
+            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>' +
+            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>' +
+            '</ul></div></td>';
+
         let cells = [
-            '<td' + rowStyle + '>' + statutIcon + '</td>',
+            statutCell,
             '<td' + rowStyle + '>' + escapeHtml(inscription.user_nom || 'N/A') + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(inscription.numero_licence || 'N/A') + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(clubDisplay) + '</td>',
@@ -1061,6 +1090,43 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Met à jour le statut d'une inscription
+ */
+function updateStatutInscription(inscriptionId, statut) {
+    const concoursId = concoursIdValue || (typeof concoursId !== 'undefined' ? concoursId : null);
+    if (!concoursId) {
+        alert('Erreur: ID du concours non disponible');
+        return;
+    }
+
+    fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ statut_inscription: statut })
+    })
+    .then(response => {
+        return response.json().then(data => ({ ok: response.ok, data }));
+    })
+    .then(({ ok, data }) => {
+        const result = data.data || data;
+        if (ok && (result.success !== false) && !result.error && !data.error) {
+            loadInscriptions();
+        } else {
+            const errMsg = data.error || result.error || data.message || 'Erreur inconnue';
+            alert('Erreur lors de la mise à jour du statut: ' + errMsg + (ok ? '' : ' (Connexion requise)'));
+        }
+    })
+    .catch(err => {
+        console.error('Erreur updateStatutInscription:', err);
+        alert('Erreur lors de la mise à jour du statut. Vérifiez que vous êtes connecté.');
+    });
 }
 
 /**

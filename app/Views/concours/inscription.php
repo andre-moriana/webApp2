@@ -32,6 +32,15 @@ table tbody tr.piquet-blanc {
     background-color: #f5f5f5 !important;
     background: #f5f5f5 !important;
 }
+
+/* Centrer l'icône de statut et style du dropdown */
+#inscriptions-table .statut-cell {
+    text-align: center;
+    vertical-align: middle;
+}
+#inscriptions-table .statut-dropdown .btn-link {
+    cursor: pointer;
+}
 </style>
 
 <div class="container-fluid concours-inscription-container">
@@ -170,16 +179,32 @@ table tbody tr.piquet-blanc {
                         ?>
                             <?php
                             $statut = $inscription['statut_inscription'] ?? 'en_attente';
+                            $inscId = $inscription['id'] ?? '';
                             if ($statut === 'confirmee') {
-                                $statutIcon = '<i class="fas fa-check-circle text-success" title="Confirmée"></i>';
+                                $statutIcon = 'fa-check-circle text-success';
+                                $statutTitle = 'Confirmée';
                             } elseif (in_array($statut, ['refuse', 'annule'], true)) {
-                                $statutIcon = '<i class="fas fa-times-circle text-danger" title="' . htmlspecialchars(ucfirst($statut)) . '"></i>';
+                                $statutIcon = 'fa-times-circle text-danger';
+                                $statutTitle = $statut === 'refuse' ? 'Refusée' : 'Annulée';
                             } else {
-                                $statutIcon = '<i class="fas fa-clock text-warning" title="En attente"></i>';
+                                $statutIcon = 'fa-clock text-warning';
+                                $statutTitle = 'En attente';
                             }
                             ?>
-                            <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
-                                <td<?= $rowStyle ?>><?= $statutIcon ?></td>
+                            <tr data-inscription-id="<?= htmlspecialchars($inscId) ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
+                                <td class="statut-cell"<?= $rowStyle ?>>
+                                    <div class="dropdown statut-dropdown">
+                                        <button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= htmlspecialchars($statutTitle) ?>">
+                                            <i class="fas <?= $statutIcon ?>"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>
+                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>
+                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>
+                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['user_nom'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
