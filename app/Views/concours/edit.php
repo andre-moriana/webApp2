@@ -163,6 +163,49 @@
             <label>Nombre départ : <input type="number" name="nombre_depart" value="<?= htmlspecialchars($concours->nombre_depart ?? 1) ?>" min="1" required></label>
             <label id="label_nombre_tireurs">Nombre tireurs par cibles : <input type="number" name="nombre_tireurs_par_cibles" id="nombre_tireurs_par_cibles" value="<?= htmlspecialchars($concours->nombre_tireurs_par_cibles ?? 0) ?>" min="0" required></label>
         </div>
+
+        <!-- Section Départs -->
+        <div class="form-group departs-section" style="margin-top: 20px;">
+            <h4>Départs</h4>
+            <p class="text-muted small">Ajoutez les départs avec leur date, heure de greffe et heure de départ.</p>
+            <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="btn-add-depart">
+                <i class="fas fa-plus"></i> Ajouter un départ
+            </button>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm" id="departs-table">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Date</th>
+                            <th>Heure de greffe</th>
+                            <th>Heure de départ</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="departs-tbody">
+                        <?php
+                        $departs = isset($concours->departs) ? $concours->departs : [];
+                        if (!empty($departs)):
+                            foreach ($departs as $i => $d):
+                                $d = (array)$d;
+                                $date = $d['date_depart'] ?? '';
+                                $heureGreffe = $d['heure_greffe'] ?? '';
+                                $heureDepart = $d['heure_depart'] ?? '';
+                                $numero = $d['numero_depart'] ?? ($i + 1);
+                        ?>
+                        <tr data-index="<?= $i ?>">
+                            <td class="depart-numero"><?= (int)$numero ?></td>
+                            <td><input type="date" class="form-control form-control-sm depart-date" value="<?= htmlspecialchars($date) ?>"></td>
+                            <td><input type="time" class="form-control form-control-sm depart-heure-greffe" value="<?= htmlspecialchars($heureGreffe) ?>"></td>
+                            <td><input type="time" class="form-control form-control-sm depart-heure-depart" value="<?= htmlspecialchars($heureDepart) ?>"></td>
+                            <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove-depart"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                        <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            <input type="hidden" name="departs_json" id="departs_json" value="">
+        </div>
     </div>
 
     <!-- Sections encadrées en bas -->
@@ -264,4 +307,5 @@
 <script src="https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.js"></script>
 <script src="/public/assets/js/concours-form-config.js"></script>
 <script src="/public/assets/js/concours.js"></script>
+<script src="/public/assets/js/concours-departs.js"></script>
 <script src="/public/assets/js/concours-lieu-map.js"></script>
