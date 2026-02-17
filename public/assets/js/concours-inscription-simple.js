@@ -953,11 +953,13 @@ function submitInscription() {
     const prenom = selectedArcher.first_name || '';
     const user_nom = `${prenom} ${nom}`.trim() || nom || prenom || '';
 
+    const emailValue = document.getElementById('email')?.value?.trim() || '';
+    const batchToken = sortedDeparts.length > 1 ? Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('') : null;
     const baseData = {
         user_nom: user_nom,
         numero_licence: selectedArcher.licence_number,
         id_club: selectedArcher.id_club || '',
-        email: document.getElementById('email')?.value?.trim() || '',
+        email: emailValue,
         saison: document.getElementById('saison')?.value || '',
         type_certificat_medical: document.getElementById('type_certificat_medical')?.value || '',
         type_licence: document.getElementById('type_licence')?.value || '',
@@ -990,6 +992,7 @@ function submitInscription() {
     const promises = sortedDeparts.map((cb) => {
         const numeroDepart = parseInt(cb.value, 10);
         const data = { ...baseData, numero_depart: numeroDepart };
+        if (batchToken) data.token_confirmation = batchToken;
         return fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -1009,6 +1012,17 @@ function submitInscription() {
             const modal = document.getElementById('confirmInscriptionModal');
             if (modal && typeof bootstrap !== 'undefined') bootstrap.Modal.getInstance(modal)?.hide();
             loadInscriptions();
+            if (batchToken && emailValue && successes.length > 1) {
+                const sendEmailUrl = (typeof inscriptionCible !== 'undefined' && inscriptionCible)
+                    ? '/api/concours/' + concoursIdValue + '/inscriptions/send-confirmation-email/public'
+                    : '/api/concours/' + concoursIdValue + '/inscriptions/send-confirmation-email';
+                fetch(sendEmailUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ token: batchToken, email: emailValue })
+                }).catch(function() {});
+            }
             alert(successes.length === 1
                 ? 'Inscription enregistrée avec succès.'
                 : successes.length + ' inscription(s) enregistrée(s) avec succès.');
