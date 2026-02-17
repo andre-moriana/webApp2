@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     if (licenceInput) {
+        licenceInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
         licenceInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 searchArcherByLicense();
