@@ -59,7 +59,6 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
         <?php endif; ?>
         <div id="plan-cible-create-message" style="margin-top: 10px;"></div>
     </div>
-    <?php endif; ?>
 <?php else: ?>
     <!-- Légende -->
     <div class="plan-cible-legend">
