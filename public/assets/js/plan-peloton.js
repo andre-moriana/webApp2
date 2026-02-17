@@ -11,15 +11,11 @@
     if (btnCreate && msgCreate) {
         btnCreate.addEventListener('click', function() {
             var concoursId = btnCreate.getAttribute('data-concours-id');
-            var nombrePelotons = parseInt(btnCreate.getAttribute('data-nombre-pelotons'), 10) || 0;
+            var nombrePelotons = parseInt(btnCreate.getAttribute('data-nombre-pelotons'), 10) || 4;
             var nombreDepart = parseInt(btnCreate.getAttribute('data-nombre-depart'), 10) || 1;
-            var nombreArchers = parseInt(btnCreate.getAttribute('data-nombre-archers'), 10) || 0;
+            var nombreArchers = parseInt(btnCreate.getAttribute('data-nombre-archers'), 10) || 4;
             if (!concoursId) {
                 alert('ID du concours manquant');
-                return;
-            }
-            if (nombrePelotons <= 0 || nombreArchers <= 0) {
-                alert('Veuillez configurer le nombre de pelotons et d\'archers par peloton dans les paramètres du concours.');
                 return;
             }
             btnCreate.disabled = true;
