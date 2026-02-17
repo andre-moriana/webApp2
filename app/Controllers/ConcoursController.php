@@ -1678,6 +1678,30 @@ class ConcoursController {
         require_once __DIR__ . '/../Views/layouts/footer.php';
     }
 
+    /**
+     * Annulation d'inscription via lien email (sans auth)
+     */
+    public function annulerInscription($token)
+    {
+        $success = false;
+        $message = '';
+        $alreadyCancelled = false;
+
+        try {
+            $response = $this->apiService->makeRequestPublic("concours/inscription/annuler/" . urlencode($token), 'GET');
+            $data = $response['data'] ?? $response;
+            $success = $data['success'] ?? false;
+            $alreadyCancelled = $data['already_cancelled'] ?? false;
+            $message = $data['error'] ?? ($success ? ($alreadyCancelled ? 'Votre inscription était déjà annulée.' : 'Votre inscription a bien été annulée.') : 'Lien invalide ou expiré.');
+        } catch (Exception $e) {
+            $message = 'Erreur lors de l\'annulation : ' . $e->getMessage();
+        }
+
+        require_once __DIR__ . '/../Views/layouts/header.php';
+        require_once __DIR__ . '/../Views/concours/inscription-annulee.php';
+        require_once __DIR__ . '/../Views/layouts/footer.php';
+    }
+
     // Traitement de l'inscription
     public function storeInscription($concoursId)
     {
