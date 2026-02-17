@@ -338,12 +338,15 @@ class ApiService {
 
     /**
      * Requête API sans authentification (pour inscription ciblée publique).
-     * Si $token est fourni, l'ajoute en query (GET) ou dans le body (POST) pour auth plan.
+     * Si $token est fourni, l'ajoute en query (GET) ou en header (POST). Si $licence est fourni, restreint aux actions sur sa propre inscription.
      */
-    public function makeRequestPublic($endpoint, $method = 'GET', $data = null, $token = null) {
+    public function makeRequestPublic($endpoint, $method = 'GET', $data = null, $token = null, $licence = null) {
         $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
         if (!empty($token) && $method === 'GET') {
             $url .= (strpos($url, '?') !== false ? '&' : '?') . 'token=' . urlencode($token);
+            if (!empty($licence)) {
+                $url .= '&licence=' . urlencode($licence);
+            }
         }
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -356,14 +359,16 @@ class ApiService {
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         }
         $headers = ['Accept: */*'];
+        if (!empty($token)) {
+            $headers[] = 'X-Plan-Token: ' . $token;
+            if (!empty($licence)) {
+                $headers[] = 'X-Plan-Licence: ' . $licence;
+            }
+        }
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
             $postData = $data;
-            if (!empty($token)) {
-                $postData = is_array($postData) ? $postData : [];
-                $postData['token'] = $token;
-            }
             if ($postData !== null) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
                 $headers[] = 'Content-Type: application/json';
@@ -372,10 +377,6 @@ class ApiService {
         } else if ($method === 'PUT') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
             $putData = $data;
-            if (!empty($token)) {
-                $putData = is_array($putData) ? $putData : [];
-                $putData['token'] = $token;
-            }
             if ($putData !== null) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($putData));
                 $headers[] = 'Content-Type: application/json';

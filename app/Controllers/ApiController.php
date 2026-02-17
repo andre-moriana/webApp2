@@ -37,6 +37,16 @@ class ApiController {
     }
 
     /**
+     * Retourne le numéro de licence restreint pour un concours (lien email avec licence = uniquement sa propre inscription)
+     */
+    private function getPlanLicenceForConcours($concoursId) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        return $_SESSION['plan_licence'][$concoursId] ?? null;
+    }
+
+    /**
      * Envoie une réponse d'erreur d'authentification
      */
     private function sendUnauthenticatedResponse() {
@@ -2774,9 +2784,10 @@ class ApiController {
             $queryString = $_SERVER['QUERY_STRING'] ?? '';
             $endpoint = "concours/{$concoursId}/plan-cible/{$depart}/archers-dispo" . ($queryString ? "?{$queryString}" : "");
 
+            $planLicence = $this->getPlanLicenceForConcours($concoursId);
             $response = $this->isAuthenticated()
                 ? $this->apiService->makeRequest($endpoint, $method)
-                : $this->apiService->makeRequestPublic($endpoint, $method, null, $planToken);
+                : $this->apiService->makeRequestPublic($endpoint, $method, null, $planToken, $planLicence);
 
             if (isset($response['data']) && is_array($response['data']) && isset($response['data']['success'])) {
                 $response = $response['data'];
@@ -2815,9 +2826,10 @@ class ApiController {
                 $data = json_decode($input, true);
             }
 
+            $planLicence = $this->getPlanLicenceForConcours($concoursId);
             $response = $this->isAuthenticated()
                 ? $this->apiService->makeRequest($endpoint, $method, $data)
-                : $this->apiService->makeRequestPublic($endpoint, $method, $data, $planToken);
+                : $this->apiService->makeRequestPublic($endpoint, $method, $data, $planToken, $planLicence);
 
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
@@ -2852,9 +2864,10 @@ class ApiController {
                 $data = json_decode($input, true);
             }
             
+            $planLicence = $this->getPlanLicenceForConcours($concoursId);
             $response = $this->isAuthenticated()
                 ? $this->apiService->makeRequest($endpoint, $method, $data)
-                : $this->apiService->makeRequestPublic($endpoint, $method, $data, $planToken);
+                : $this->apiService->makeRequestPublic($endpoint, $method, $data, $planToken, $planLicence);
 
             if (isset($response['data']) && is_array($response['data']) && isset($response['data']['success'])) {
                 $response = $response['data'];
@@ -2910,9 +2923,10 @@ class ApiController {
         try {
             $queryString = $_SERVER['QUERY_STRING'] ?? '';
             $endpoint = "concours/{$concoursId}/plan-peloton/{$depart}/archers-dispo" . ($queryString ? "?{$queryString}" : "");
+            $planLicence = $this->getPlanLicenceForConcours($concoursId);
             $response = $this->isAuthenticated()
                 ? $this->apiService->makeRequest($endpoint, 'GET')
-                : $this->apiService->makeRequestPublic($endpoint, 'GET', null, $planToken);
+                : $this->apiService->makeRequestPublic($endpoint, 'GET', null, $planToken, $planLicence);
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
             } else {
@@ -2936,9 +2950,10 @@ class ApiController {
             $endpoint = "concours/{$concoursId}/plan-peloton/{$depart}/liberer";
             $input = file_get_contents('php://input');
             $data = json_decode($input, true);
+            $planLicence = $this->getPlanLicenceForConcours($concoursId);
             $response = $this->isAuthenticated()
                 ? $this->apiService->makeRequest($endpoint, 'POST', $data)
-                : $this->apiService->makeRequestPublic($endpoint, 'POST', $data, $planToken);
+                : $this->apiService->makeRequestPublic($endpoint, 'POST', $data, $planToken, $planLicence);
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
             } else {
@@ -2962,9 +2977,10 @@ class ApiController {
             $endpoint = "concours/{$concoursId}/plan-peloton/assign";
             $input = file_get_contents('php://input');
             $data = json_decode($input, true);
+            $planLicence = $this->getPlanLicenceForConcours($concoursId);
             $response = $this->isAuthenticated()
                 ? $this->apiService->makeRequest($endpoint, 'POST', $data)
-                : $this->apiService->makeRequestPublic($endpoint, 'POST', $data, $planToken);
+                : $this->apiService->makeRequestPublic($endpoint, 'POST', $data, $planToken, $planLicence);
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
             } else {
@@ -2978,4 +2994,4 @@ class ApiController {
         }
     }
 }
-?>
+?> 

@@ -2236,6 +2236,7 @@ class ConcoursController {
     {
         $isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
         $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $licence = isset($_GET['licence']) ? trim((string)$_GET['licence']) : '';
         $tokenFromSession = $_SESSION['plan_token'][$concoursId] ?? null;
 
         if (!$isLoggedIn) {
@@ -2255,6 +2256,9 @@ class ConcoursController {
                     exit;
                 }
                 $_SESSION['plan_token'][$concoursId] = $token;
+            }
+            if (!empty($licence)) {
+                $_SESSION['plan_licence'][$concoursId] = $licence;
             }
         }
 
@@ -2501,6 +2505,7 @@ class ConcoursController {
     {
         $isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
         $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $licence = isset($_GET['licence']) ? trim((string)$_GET['licence']) : '';
         $tokenFromSession = $_SESSION['plan_token'][$concoursId] ?? null;
 
         if (!$isLoggedIn) {
@@ -2520,6 +2525,9 @@ class ConcoursController {
                     exit;
                 }
                 $_SESSION['plan_token'][$concoursId] = $token;
+            }
+            if (!empty($licence)) {
+                $_SESSION['plan_licence'][$concoursId] = $licence;
             }
         }
 
