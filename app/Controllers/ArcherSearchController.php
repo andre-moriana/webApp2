@@ -2,8 +2,38 @@
 
 class ArcherSearchController {
     
+    /**
+     * Recherche archer par licence - version publique pour inscription ciblée (sans auth).
+     * Valide que le concours existe avant de permettre la recherche.
+     */
+    public function findOrCreateByLicensePublic($concoursId) {
+        header('Content-Type: application/json');
+        
+        if (empty($concoursId)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'ID concours requis']);
+            return;
+        }
+        
+        // Valider que le concours existe (appel API public)
+        try {
+            $apiService = new ApiService();
+            $concoursResponse = $apiService->makeRequestPublic("concours/{$concoursId}/public", 'GET');
+            if (!$concoursResponse['success'] || empty($concoursResponse['data'])) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Concours introuvable']);
+                return;
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Erreur de validation du concours']);
+            return;
+        }
+        
+        $this->doSearchByLicense();
+    }
+    
     public function findOrCreateByLicense() {
-        // Démarrer la session si elle n'est pas déjà démarrée
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -16,6 +46,13 @@ class ArcherSearchController {
             return;
         }
         
+        $this->doSearchByLicense();
+    }
+    
+    /**
+     * Logique commune de recherche par licence (XML)
+     */
+    private function doSearchByLicense() {
         $input = json_decode(file_get_contents('php://input'), true);
         $licenceNumber = trim($input['licence_number'] ?? '');
         
@@ -25,19 +62,15 @@ class ArcherSearchController {
             return;
         }
         
-        // Chercher dans le XML uniquement
         $xmlPath = __DIR__ . '/../../public/data/users-licences.xml';
-        
-        // Normaliser le chemin
         $xmlPath = realpath($xmlPath);
         
         error_log("ArcherSearchController: Recherche licence '$licenceNumber'");
-        error_log("ArcherSearchController: Chemin XML: '$xmlPath'");
         
         if (!$xmlPath || !file_exists($xmlPath) || !is_readable($xmlPath)) {
             error_log("ArcherSearchController: Fichier XML non trouvé ou non lisible");
             http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Fichier XML non trouvé: ' . ($xmlPath ?: __DIR__ . '/../../public/data/users-licences.xml')]);
+            echo json_encode(['success' => false, 'error' => 'Fichier XML non trouvé']);
             return;
         }
         
@@ -49,9 +82,6 @@ class ArcherSearchController {
             return;
         }
         
-        error_log("ArcherSearchController: Entrée trouvée pour licence '$licenceNumber'");
-        
-        // Traiter l'entrée XML
         $xmlData = $this->processUserEntry($xmlEntry);
         if (!$xmlData) {
             http_response_code(400);
@@ -67,10 +97,9 @@ class ArcherSearchController {
                 'first_name' => $xmlData['first_name'] ?? '',
                 'name' => $xmlData['name'] ?? '',
                 'club' => $xmlData['club_name'] ?? $xmlData['club'] ?? '',
-                'id_club' => $xmlData['club_unique'] ?? $xmlEntry['club_unique'] ?? '', // ID unique du club
+                'id_club' => $xmlData['club_unique'] ?? $xmlEntry['club_unique'] ?? '',
                 'age_category' => $xmlData['ageCategory'] ?? '',
                 'bow_type' => $xmlData['bowType'] ?? '',
-                // Données pour le pré-remplissage (une seule clé par donnée)
                 'CATEGORIE' => $xmlData['categorie'] ?? '',
                 'TYPARC' => $xmlEntry['TYPARC'] ?? '',
                 'CATAGE' => $xmlEntry['CATAGE'] ?? '',

@@ -11,6 +11,8 @@ class Router {
     private function defineRoutes() {
         // Routes d'archer (recherche/création depuis licence)
         $this->addRoute("POST", "/archer/search-or-create", "ArcherSearchController@findOrCreateByLicense");
+        // Recherche publique pour inscription ciblée (sans auth).
+        $this->addRoute("POST", "/archer/search-or-create/public/{concoursId}", "ArcherSearchController@findOrCreateByLicensePublic");
         
         // Routes des concours (protégées)
         // Routes spécifiques AVANT les routes génériques pour éviter les conflits
