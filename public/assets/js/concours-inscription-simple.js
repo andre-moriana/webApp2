@@ -177,7 +177,8 @@ function searchArcherByLicense() {
     const searchBtn = document.getElementById('archer-search-btn');
     if (searchBtn) searchBtn.disabled = true;
     
-    fetch('/archer/search-or-create', {
+    const searchUrl = typeof archerSearchUrl !== 'undefined' ? archerSearchUrl : '/archer/search-or-create';
+    fetch(searchUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

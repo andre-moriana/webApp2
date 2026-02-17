@@ -1464,6 +1464,7 @@ class ConcoursController {
         $inscriptionCible = true;
         $formAction = '/inscription-cible/' . $concoursId;
         $apiInscriptionsUrl = '/api/concours/' . $concoursId . '/inscriptions/public';
+        $archerSearchUrl = '/archer/search-or-create/public/' . $concoursId;
 
         require_once __DIR__ . '/../Views/layouts/header.php';
         require_once __DIR__ . '/../Views/concours/inscription.php';
