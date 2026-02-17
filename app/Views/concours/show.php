@@ -107,7 +107,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         </div>
     </div>
 
-    <!-- Nombre cibles/pelotons, départ, tireurs -->
+    <!-- Nombre cibles/pelotons, tireurs -->
     <?php
     // Fonction helper pour déterminer si c'est un concours de type nature 3D ou campagne
     function isNature3DOrCampagneShow($disciplineId, $disciplines) {
@@ -140,14 +140,39 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
             <p><?= htmlspecialchars($concours->nombre_cibles ?? 0) ?></p>
         </div>
         <div class="form-group">
-            <label><strong>Nombre départ :</strong></label>
-            <p><?= htmlspecialchars($concours->nombre_depart ?? 1) ?></p>
-        </div>
-        <div class="form-group">
             <label><strong><?= htmlspecialchars($labelTireurs) ?> :</strong></label>
             <p><?= htmlspecialchars($concours->nombre_tireurs_par_cibles ?? 0) ?></p>
         </div>
     </div>
+
+    <!-- Liste des départs -->
+    <?php
+    $departsList = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+    ?>
+    <?php if (!empty($departsList)): ?>
+    <div class="form-group" style="margin-top: 20px;">
+        <label><strong>Liste des départs :</strong></label>
+        <ul class="list-group list-group-flush" style="max-width: 400px;">
+            <?php foreach ($departsList as $d): ?>
+                <?php
+                $dateDep = $d['date_depart'] ?? '';
+                $heureGreffe = $d['heure_greffe'] ?? '';
+                $numero = (int)($d['numero_depart'] ?? 0);
+                if ($dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
+                    $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
+                }
+                $heureGreffe = $heureGreffe ? substr($heureGreffe, 0, 5) : '';
+                $label = trim($dateDep . ($heureGreffe ? ' à ' . $heureGreffe : ''));
+                if (empty($label)) $label = 'Départ ' . $numero;
+                ?>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-flag text-muted me-2"></i><?= htmlspecialchars($label) ?></span>
+                    <?php if ($numero): ?><span class="badge bg-secondary">N°<?= $numero ?></span><?php endif; ?>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <?php endif; ?>
     
     <!-- Bouton pour créer les plans de cible (uniquement pour les disciplines S, T, I, H) -->
     <?php
