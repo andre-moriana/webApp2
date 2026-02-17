@@ -1374,7 +1374,6 @@ window.editInscription = function(inscriptionId) {
                 setCheck('edit-trispot', inscription.trispot);
             }
 
-            setVal('edit-numero_tir', inscription.numero_tir);
         };
 
         fillForm();
@@ -1416,7 +1415,7 @@ function initEditInscriptionHandlers() {
             categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
             arme: document.getElementById('edit-arme')?.value || '',
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
-            numero_tir: document.getElementById('edit-numero_tir')?.value || '',
+            numero_tir: currentEditInscription?.numero_tir ?? '',
         };
 
         if (isNature) {
