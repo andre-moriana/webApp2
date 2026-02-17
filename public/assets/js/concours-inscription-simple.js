@@ -1104,8 +1104,8 @@ function renderInscriptions(inscriptions) {
 
         cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
         cells.push('<td' + rowStyle + '>' +
-            '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(' + id + ')"><i class="fas fa-edit"></i> Éditer</button> ' +
-            '<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')"><i class="fas fa-trash"></i> Retirer</button>' +
+            '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(' + id + ')"><i class="fas fa-edit"></i></button> ' +
+            '<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')"><i class="fas fa-trash"></i></button>' +
             '</td>');
 
         return '<tr data-inscription-id="' + id + '" class="' + rowClass + '"' + dataPiquet + rowStyle + '>' + cells.join('') + '</tr>';
