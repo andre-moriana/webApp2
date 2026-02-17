@@ -402,30 +402,6 @@ table tbody tr.piquet-blanc {
                             </div>
                         </div>
                     <?php endif; ?>
-                    
-                    <h6 class="mt-4 mb-3">Paiement</h6>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="tarif_competition" class="form-label">Tarif Compétition</label>
-                            <select id="tarif_competition" class="form-control">
-                                <option value="">Sélectionner</option>
-                                <option value="Tarif standard">Tarif standard</option>
-                                <option value="Tarif réduit">Tarif réduit</option>
-                                <option value="Tarif jeune">Tarif jeune</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="mode_paiement" class="form-label">Mode Paiement</label>
-                            <select id="mode_paiement" class="form-control">
-                                <option value="Non payé">Non payé</option>
-                                <option value="Espèces">Espèces</option>
-                                <option value="Chèque">Chèque</option>
-                                <option value="Carte bancaire">Carte bancaire</option>
-                                <option value="Virement">Virement</option>
-                            </select>
-                        </div>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -601,31 +577,6 @@ table tbody tr.piquet-blanc {
                             </div>
                         </div>
                     <?php endif; ?>
-                    
-                    
-                    <h6 class="mt-4 mb-3">Paiement</h6>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="edit-tarif_competition" class="form-label">Tarif Compétition</label>
-                            <select id="edit-tarif_competition" class="form-control">
-                                <option value="">Sélectionner</option>
-                                <option value="Tarif standard">Tarif standard</option>
-                                <option value="Tarif réduit">Tarif réduit</option>
-                                <option value="Tarif jeune">Tarif jeune</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit-mode_paiement" class="form-label">Mode Paiement</label>
-                            <select id="edit-mode_paiement" class="form-control">
-                                <option value="Non payé">Non payé</option>
-                                <option value="Espèces">Espèces</option>
-                                <option value="Chèque">Chèque</option>
-                                <option value="Carte bancaire">Carte bancaire</option>
-                                <option value="Virement">Virement</option>
-                            </select>
-                        </div>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
