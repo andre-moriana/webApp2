@@ -451,6 +451,7 @@ class ConcoursController {
         $division_equipe = $_POST['division_equipe'] ?? 'duels_equipes';
         $code_authentification = $_POST['code_authentification'] ?? '';
         $type_publication_internet = $_POST['type_publication_internet'] ?? '';
+        $lien_inscription_cible = $_POST['lien_inscription_cible'] ?? '';
         
         // Validation des champs requis
         if (empty($titre_competition)) {
@@ -499,6 +500,7 @@ class ConcoursController {
                 'division_equipe' => $division_equipe,
                 'code_authentification' => $code_authentification,
                 'type_publication_internet' => $type_publication_internet,
+                'lien_inscription_cible' => $lien_inscription_cible ?: null,
                 'agreenum' => $club_code, // nameShort du club organisateur
                 'lieu_latitude' => $lieu_latitude ? (float)$lieu_latitude : null,
                 'lieu_longitude' => $lieu_longitude ? (float)$lieu_longitude : null
