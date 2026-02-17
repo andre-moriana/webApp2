@@ -198,6 +198,23 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         <div id="plan-peloton-message" style="margin-top: 10px;"></div>
     </div>
     <?php endif; ?>
+    
+    <?php if (!empty($concours->lien_inscription_cible)): ?>
+    <div class="form-group" style="margin-top: 20px;">
+        <label><strong>Lien inscription ciblé :</strong></label>
+        <div class="lien-inscription-cible-qr d-flex align-items-start gap-3 flex-wrap">
+            <div class="qr-code-wrapper">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=<?= urlencode($concours->lien_inscription_cible) ?>" alt="QR Code inscription ciblé" class="qr-code-img" title="<?= htmlspecialchars($concours->lien_inscription_cible) ?>">
+            </div>
+            <div class="qr-link-info">
+                <a href="<?= htmlspecialchars($concours->lien_inscription_cible) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-external-link-alt"></i> Ouvrir le lien
+                </a>
+                <p class="text-muted small mt-2 mb-0">Scannez le QR code pour accéder au formulaire d'inscription</p>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- Liste des inscrits -->

@@ -72,6 +72,24 @@
     margin-bottom: 8px;
 }
 
+/* QR Code inscription ciblé */
+.lien-inscription-cible-qr {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.qr-code-wrapper {
+    flex-shrink: 0;
+}
+
+.qr-code-img {
+    display: block;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
 .inscriptions-section {
     max-width: 1200px;
     width: 100%;
