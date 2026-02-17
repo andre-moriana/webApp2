@@ -2439,7 +2439,7 @@ class ConcoursController {
         }
         
         $title = 'Plan de cible - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
-        $canEditPlan = $isLoggedIn;
+        $canEditPlan = $isLoggedIn || !empty($planToken);
         $additionalJS = ['/public/assets/js/plan-cible.js'];
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/plan-cible.php';
@@ -2640,7 +2640,7 @@ class ConcoursController {
         }
 
         $title = 'Plan de peloton - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
-        $canEditPlan = $isLoggedIn;
+        $canEditPlan = $isLoggedIn || !empty($planToken);
         $additionalJS = ['/public/assets/js/plan-peloton.js'];
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/plan-peloton.php';
