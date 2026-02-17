@@ -630,22 +630,25 @@ class ConcoursController {
             exit;
         }
         
-        // Créer le lien d'inscription ciblé s'il n'existe pas
+        // Lien d'inscription ciblé avec token (sécurisé - accès uniquement via lien email)
+        $tokenAcces = $concours->token_acces_inscription ?? null;
+        $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+        $basePath = preg_replace('#/concours/.*$#', '', $path);
+        $basePath = rtrim($basePath, '/');
+        $lienBase = $baseUrl . ($basePath ?: '') . '/inscription-cible/' . $id;
+        $lienInscription = $tokenAcces ? $lienBase . '?token=' . urlencode($tokenAcces) : $lienBase;
         if (empty($concours->lien_inscription_cible)) {
-            $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
-            $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
-            $basePath = preg_replace('#/concours/.*$#', '', $path);
-            $basePath = rtrim($basePath, '/');
-            $lienInscription = $baseUrl . ($basePath ?: '') . '/inscription-cible/' . $id;
             try {
                 $updateResponse = $this->apiService->updateConcours($id, ['lien_inscription_cible' => $lienInscription]);
                 if ($updateResponse['success'] && isset($updateResponse['data'])) {
                     $concours->lien_inscription_cible = $lienInscription;
                 }
             } catch (Exception $e) {
-                // Ignorer les erreurs, le lien restera vide
+                // Ignorer les erreurs
             }
         }
+        $concours->lien_inscription_cible = $lienInscription;
         
         // Récupérer les inscriptions
         try {
@@ -1438,9 +1441,34 @@ class ConcoursController {
 
     /**
      * Page d'inscription ciblée (publique, sans authentification)
+     * Accès sécurisé par token transmis dans le lien de l'email
      */
     public function inscriptionCible($concoursId)
     {
+        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $tokenFromSession = $_SESSION['inscription_cible_token'][$concoursId] ?? null;
+
+        // Utilisateur non connecté : token obligatoire (lien reçu par email)
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            if (empty($token) && empty($tokenFromSession)) {
+                require_once __DIR__ . '/../Views/layouts/header.php';
+                echo '<div class="container mt-5"><div class="alert alert-danger"><strong>Accès refusé.</strong> Ce formulaire n\'est accessible que via le lien envoyé par email de confirmation d\'inscription.</div></div>';
+                require_once __DIR__ . '/../Views/layouts/footer.php';
+                exit;
+            }
+            if (!empty($token)) {
+                $validateResponse = $this->apiService->makeRequestPublic("concours/{$concoursId}/inscription-cible/validate?token=" . urlencode($token), 'GET');
+                $valid = $validateResponse['data']['valid'] ?? $validateResponse['valid'] ?? false;
+                if (!$valid) {
+                    require_once __DIR__ . '/../Views/layouts/header.php';
+                    echo '<div class="container mt-5"><div class="alert alert-danger"><strong>Lien invalide ou expiré.</strong> Utilisez le lien reçu par email pour accéder au formulaire d\'inscription.</div></div>';
+                    require_once __DIR__ . '/../Views/layouts/footer.php';
+                    exit;
+                }
+                $_SESSION['inscription_cible_token'][$concoursId] = $token;
+            }
+        }
+
         $concoursResponse = $this->apiService->makeRequestPublic("concours/{$concoursId}/public", 'GET');
         if (!$concoursResponse['success'] || empty($concoursResponse['data'])) {
             $_SESSION['error'] = 'Concours introuvable';
@@ -1580,7 +1608,8 @@ class ConcoursController {
         }
 
         $inscriptionCible = true;
-        $formAction = '/inscription-cible/' . $concoursId;
+        $currentToken = $token ?: ($tokenFromSession ?? '');
+        $formAction = '/inscription-cible/' . $concoursId . ($currentToken ? '?token=' . urlencode($currentToken) : '');
         $apiInscriptionsUrl = '/api/concours/' . $concoursId . '/inscriptions/public';
         $archerSearchUrl = '/archer/search-or-create/public/' . $concoursId;
 
@@ -1594,10 +1623,15 @@ class ConcoursController {
      */
     public function storeInscriptionCible($concoursId)
     {
+        $token = isset($_POST['_token_inscription']) ? trim((string)$_POST['_token_inscription']) : (isset($_GET['token']) ? trim((string)$_GET['token']) : '');
+        $tokenFromSession = $_SESSION['inscription_cible_token'][$concoursId] ?? null;
+        $currentToken = $token ?: $tokenFromSession;
+        $redirectSuffix = $currentToken ? '?token=' . urlencode($currentToken) : '';
+
         $user_nom = isset($_POST['user_nom']) ? trim($_POST['user_nom']) : null;
         if (empty($user_nom)) {
             $_SESSION['error'] = 'Nom de l\'archer requis';
-            header("Location: /inscription-cible/{$concoursId}");
+            header("Location: /inscription-cible/{$concoursId}{$redirectSuffix}");
             exit;
         }
         $numero_depart = isset($_POST['numero_depart']) && $_POST['numero_depart'] !== '' ? (int)$_POST['numero_depart'] : null;
@@ -1617,7 +1651,7 @@ class ConcoursController {
             $insc_numero_depart = isset($inscription['numero_depart']) ? (int)$inscription['numero_depart'] : null;
             if ($insc_numero_depart === $numero_depart) {
                 $_SESSION['error'] = "Cet archer est déjà inscrit au départ $numero_depart pour ce concours.";
-                header("Location: /inscription-cible/{$concoursId}");
+                header("Location: /inscription-cible/{$concoursId}{$redirectSuffix}");
                 exit;
             }
         }
@@ -1640,7 +1674,7 @@ class ConcoursController {
         ];
         if (empty($inscriptionData['numero_licence'])) {
             $_SESSION['error'] = 'Numéro de licence requis';
-            header("Location: /inscription-cible/{$concoursId}");
+            header("Location: /inscription-cible/{$concoursId}{$redirectSuffix}");
             exit;
         }
 
@@ -1650,7 +1684,7 @@ class ConcoursController {
         } else {
             $_SESSION['error'] = $response['error'] ?? $response['data']['error'] ?? 'Erreur lors de l\'inscription';
         }
-        header("Location: /inscription-cible/{$concoursId}");
+        header("Location: /inscription-cible/{$concoursId}{$redirectSuffix}");
         exit;
     }
 
@@ -2197,11 +2231,35 @@ class ConcoursController {
     // Méthode utilitaire pour récupérer les concours via l'API
     // plus de méthode fetchConcoursFromApi : tout passe par ApiService
 
-    // Affichage du plan de cible d'un concours (accessible sans authentification pour lien email)
+    // Affichage du plan de cible d'un concours (accessible sans auth via lien email avec token)
     public function planCible($concoursId)
     {
         $isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
-        
+        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $tokenFromSession = $_SESSION['plan_token'][$concoursId] ?? null;
+
+        if (!$isLoggedIn) {
+            if (empty($token) && empty($tokenFromSession)) {
+                require_once __DIR__ . '/../Views/layouts/header.php';
+                echo '<div class="container mt-5"><div class="alert alert-danger"><strong>Accès refusé.</strong> Ce plan n\'est accessible que via le lien envoyé par email de confirmation d\'inscription.</div></div>';
+                require_once __DIR__ . '/../Views/layouts/footer.php';
+                exit;
+            }
+            if (!empty($token)) {
+                $validateResponse = $this->apiService->makeRequestPublic("concours/{$concoursId}/inscription-cible/validate?token=" . urlencode($token), 'GET');
+                $valid = $validateResponse['data']['valid'] ?? $validateResponse['valid'] ?? false;
+                if (!$valid) {
+                    require_once __DIR__ . '/../Views/layouts/header.php';
+                    echo '<div class="container mt-5"><div class="alert alert-danger"><strong>Lien invalide ou expiré.</strong> Utilisez le lien reçu par email.</div></div>';
+                    require_once __DIR__ . '/../Views/layouts/footer.php';
+                    exit;
+                }
+                $_SESSION['plan_token'][$concoursId] = $token;
+            }
+        }
+
+        $planToken = $token ?: $tokenFromSession;
+
         // Nettoyer les messages d'erreur de session
         unset($_SESSION['error']);
         unset($_SESSION['success']);
@@ -2264,11 +2322,11 @@ class ConcoursController {
             exit;
         }
         
-        // Récupérer les plans de cible (endpoint public si non connecté)
+        // Récupérer les plans de cible (endpoint public si non connecté, avec token)
         try {
             $plansResponse = $isLoggedIn
                 ? $this->apiService->getPlanCible($concoursId)
-                : $this->apiService->makeRequestPublic("concours/{$concoursId}/plan-cible/public", 'GET');
+                : $this->apiService->makeRequestPublic("concours/{$concoursId}/plan-cible/public" . ($planToken ? "?token=" . urlencode($planToken) : ""), 'GET');
             if ($plansResponse['success']) {
                 $plans = $this->apiService->unwrapData($plansResponse);
                 // Si les données sont encore encapsulées, les extraire
@@ -2441,6 +2499,31 @@ class ConcoursController {
     public function planPeloton($concoursId)
     {
         $isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+        $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
+        $tokenFromSession = $_SESSION['plan_token'][$concoursId] ?? null;
+
+        if (!$isLoggedIn) {
+            if (empty($token) && empty($tokenFromSession)) {
+                require_once __DIR__ . '/../Views/layouts/header.php';
+                echo '<div class="container mt-5"><div class="alert alert-danger"><strong>Accès refusé.</strong> Ce plan n\'est accessible que via le lien envoyé par email de confirmation d\'inscription.</div></div>';
+                require_once __DIR__ . '/../Views/layouts/footer.php';
+                exit;
+            }
+            if (!empty($token)) {
+                $validateResponse = $this->apiService->makeRequestPublic("concours/{$concoursId}/inscription-cible/validate?token=" . urlencode($token), 'GET');
+                $valid = $validateResponse['data']['valid'] ?? $validateResponse['valid'] ?? false;
+                if (!$valid) {
+                    require_once __DIR__ . '/../Views/layouts/header.php';
+                    echo '<div class="container mt-5"><div class="alert alert-danger"><strong>Lien invalide ou expiré.</strong> Utilisez le lien reçu par email.</div></div>';
+                    require_once __DIR__ . '/../Views/layouts/footer.php';
+                    exit;
+                }
+                $_SESSION['plan_token'][$concoursId] = $token;
+            }
+        }
+
+        $planToken = $token ?: $tokenFromSession;
+
         unset($_SESSION['error']);
         unset($_SESSION['success']);
 
@@ -2497,7 +2580,7 @@ class ConcoursController {
         try {
             $plansResponse = $isLoggedIn
                 ? $this->apiService->getPlanPeloton($concoursId)
-                : $this->apiService->makeRequestPublic("concours/{$concoursId}/plan-peloton/public", 'GET');
+                : $this->apiService->makeRequestPublic("concours/{$concoursId}/plan-peloton/public" . ($planToken ? "?token=" . urlencode($planToken) : ""), 'GET');
             if ($plansResponse['success'] ?? false) {
                 $plans = $this->apiService->unwrapData($plansResponse);
                 if (is_array($plans) && isset($plans['data']) && isset($plans['success'])) {

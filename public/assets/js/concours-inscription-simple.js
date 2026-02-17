@@ -923,6 +923,11 @@ function submitInscription() {
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = typeof formAction !== 'undefined' ? formAction : `/concours/${concoursIdValue}/inscription`;
+    const actionUrl = form.action;
+    const tokenMatch = actionUrl.match(/[?&]token=([^&]+)/);
+    if (tokenMatch) {
+        formData._token_inscription = decodeURIComponent(tokenMatch[1]);
+    }
 
     Object.entries(formData).forEach(([key, value]) => {
         const input = document.createElement('input');
