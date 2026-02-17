@@ -53,18 +53,34 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
 
     <!-- Sélection du départ -->
     <?php 
+    $departsList = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
     $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null);
-    // Debug: vérifier la valeur
-    // error_log("DEBUG nombre_depart: " . var_export($nombreDepart, true));
-    // error_log("DEBUG concours object: " . var_export($concours, true));
+    if (empty($departsList) && $nombreDepart) {
+        $nombreDepart = (int)$nombreDepart;
+    }
     ?>
     <div class="depart-selection-section mb-4">
         <h3>Sélectionner un départ</h3>
         <div class="form-group">
-            <label for="depart-select-main" class="form-label">N° départ <span class="text-danger">*</span></label>
+            <label for="depart-select-main" class="form-label">Date et heure du greffe <span class="text-danger">*</span></label>
             <select id="depart-select-main" class="form-control" required name="numero_depart">
                 <option value="">Sélectionner un départ</option>
-                <?php if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0): ?>
+                <?php if (!empty($departsList)): ?>
+                    <?php foreach ($departsList as $d): ?>
+                        <?php
+                        $dateDep = $d['date_depart'] ?? '';
+                        $heureGreffe = $d['heure_greffe'] ?? '';
+                        $numero = (int)($d['numero_depart'] ?? 0);
+                        if ($dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
+                            $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
+                        }
+                        $heureGreffe = $heureGreffe ? substr($heureGreffe, 0, 5) : '';
+                        $label = trim($dateDep . ($heureGreffe ? ' ' . $heureGreffe : ''));
+                        if (empty($label)) $label = 'Départ ' . $numero;
+                        ?>
+                        <option value="<?= $numero ?>"><?= htmlspecialchars($label) ?></option>
+                    <?php endforeach; ?>
+                <?php elseif ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0): ?>
                     <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): ?>
                         <option value="<?= $i ?>">Départ <?= $i ?></option>
                     <?php endfor; ?>
@@ -280,13 +296,13 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         </div>
                     </div>
                     
-                    <!-- Le numéro de départ est sélectionné dans la page principale, pas besoin de le redemander ici -->
+                    <!-- Le départ est sélectionné dans la page principale -->
                     <div class="mb-3">
-                        <label class="form-label">N° départ</label>
+                        <label class="form-label">Date et heure du greffe</label>
                         <div class="form-control bg-light" style="pointer-events: none;">
                             <span id="modal-depart-display">Sélectionné dans la page principale</span>
                         </div>
-                        <small class="form-text text-muted">Le numéro de départ est sélectionné en haut de la page</small>
+                        <small class="form-text text-muted">Le départ est sélectionné en haut de la page</small>
                     </div>
                     
                     <div class="mb-3">
@@ -475,13 +491,22 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     
                     <?php if (!empty($departs)): ?>
                     <div class="mb-3">
-                        <label for="edit-depart-select" class="form-label">N° départ</label>
+                        <label for="edit-depart-select" class="form-label">Date et heure du greffe</label>
                         <select id="edit-depart-select" class="form-control">
                             <option value="">Sélectionner un départ</option>
-                            <?php foreach ($departs as $index => $depart): ?>
-                                <option value="<?= ($index + 1) ?>">
-                                    Départ <?= ($index + 1) ?> - <?= htmlspecialchars($depart['heure'] ?? '') ?><?= !empty($depart['date']) ? ' (' . htmlspecialchars($depart['date']) . ')' : '' ?>
-                                </option>
+                            <?php foreach ($departs as $depart): ?>
+                                <?php
+                                $dateDep = $depart['date_depart'] ?? $depart['date'] ?? '';
+                                $heureGreffe = $depart['heure_greffe'] ?? $depart['heure'] ?? '';
+                                $numero = (int)($depart['numero_depart'] ?? $depart['numero'] ?? 0);
+                                if ($dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
+                                    $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
+                                }
+                                $heureGreffe = $heureGreffe ? substr($heureGreffe, 0, 5) : '';
+                                $label = trim($dateDep . ($heureGreffe ? ' ' . $heureGreffe : ''));
+                                if (empty($label)) $label = 'Départ ' . $numero;
+                                ?>
+                                <option value="<?= $numero ?>"><?= htmlspecialchars($label) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>

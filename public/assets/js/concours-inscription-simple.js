@@ -55,6 +55,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ajouter les listeners pour mettre à jour le blason automatiquement
     setupBlasonAutoUpdate();
     
+    // Mettre à jour l'affichage du départ dans la modale quand l'utilisateur change le select
+    const departSelectMain = document.getElementById('depart-select-main');
+    const modalDepartDisplay = document.getElementById('modal-depart-display');
+    if (departSelectMain && modalDepartDisplay) {
+        departSelectMain.addEventListener('change', function() {
+            const opt = this.options[this.selectedIndex];
+            modalDepartDisplay.textContent = opt && opt.value ? opt.text : 'Sélectionné dans la page principale';
+        });
+    }
+
     // Charger la liste des inscriptions depuis le backend
     loadInscriptions();
     
@@ -624,12 +634,13 @@ function prefillFormFields(archer) {
     
     console.log('=== Fin prefillFormFields ===');
     
-    // Pré-remplir le numéro de départ (affichage seulement)
+    // Pré-remplir le numéro de départ (affichage : date et heure du greffe)
     const departSelect = document.getElementById('depart-select-main');
     if (departSelect && departSelect.value) {
         const modalDepartDisplay = document.getElementById('modal-depart-display');
         if (modalDepartDisplay) {
-            modalDepartDisplay.textContent = 'Départ ' + departSelect.value;
+            const opt = departSelect.options[departSelect.selectedIndex];
+            modalDepartDisplay.textContent = opt ? opt.text : 'Départ ' + departSelect.value;
         }
     }
 }
@@ -907,7 +918,7 @@ function submitInscription() {
     const departSelect = document.getElementById('depart-select-main');
     const numeroDepart = departSelect?.value || '';
     if (!numeroDepart) {
-        alert('Veuillez sélectionner un numéro de départ.');
+        alert('Veuillez sélectionner un départ (date et heure du greffe).');
         return;
     }
     

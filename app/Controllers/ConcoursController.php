@@ -1433,18 +1433,20 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des distances de tir: ' . $e->getMessage());
         }
 
-        // Préparer les départs pour la modale d'édition (nombre_depart = count depuis concours_departs)
-        $departs = [];
-        $nombreDepart = is_object($concours)
-            ? ($concours->nombre_depart ?? count($concours->departs ?? []))
-            : ($concours['nombre_depart'] ?? count($concours['departs'] ?? []));
-        if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0) {
-            for ($i = 1; $i <= (int)$nombreDepart; $i++) {
-                $departs[] = [
-                    'numero' => $i,
-                    'heure' => '', // Peut être enrichi plus tard si nécessaire
-                    'date' => '' // Peut être enrichi plus tard si nécessaire
-                ];
+        // Préparer les départs pour la modale d'édition (departs réels avec date_depart, heure_greffe)
+        $departs = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+        if (empty($departs)) {
+            $nombreDepart = is_object($concours)
+                ? ($concours->nombre_depart ?? 0)
+                : ($concours['nombre_depart'] ?? 0);
+            if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0) {
+                for ($i = 1; $i <= (int)$nombreDepart; $i++) {
+                    $departs[] = [
+                        'numero_depart' => $i,
+                        'date_depart' => '',
+                        'heure_greffe' => ''
+                    ];
+                }
             }
         }
 
@@ -1617,10 +1619,12 @@ class ConcoursController {
             error_log('inscriptionCible: erreur distances: ' . $e->getMessage());
         }
 
-        $departs = [];
-        $nbDeparts = $concours->nombre_depart ?? count($concours->departs ?? []) ?: 1;
-        for ($i = 1; $i <= $nbDeparts; $i++) {
-            $departs[] = ['numero' => $i, 'heure' => '', 'date' => ''];
+        $departs = $concours->departs ?? [];
+        if (empty($departs)) {
+            $nbDeparts = $concours->nombre_depart ?? 1;
+            for ($i = 1; $i <= (int)$nbDeparts; $i++) {
+                $departs[] = ['numero_depart' => $i, 'date_depart' => '', 'heure_greffe' => ''];
+            }
         }
 
         $inscriptionCible = true;
