@@ -70,6 +70,20 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
         </div>
     </div>
 
+    <?php
+    $departsList = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+    $departsLabelMap = [];
+    foreach ($departsList as $d) {
+        $num = (int)($d['numero_depart'] ?? 0);
+        $dateDep = $d['date_depart'] ?? '';
+        $heureGreffe = $d['heure_greffe'] ?? '';
+        if ($num && $dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
+            $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
+        }
+        $heureGreffe = $heureGreffe ? substr($heureGreffe, 0, 5) : '';
+        $departsLabelMap[$num] = trim($dateDep . ($heureGreffe ? ' ' . $heureGreffe : '')) ?: 'Départ ' . $num;
+    }
+    ?>
     <?php foreach ($plans as $numeroDepart => $departPlans): ?>
         <?php
         $plansParPeloton = [];
@@ -81,7 +95,7 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
         $nbPelotons = max($nombrePelotons, count($plansParPeloton));
         ?>
         <div class="plan-depart-section" style="margin-bottom: 40px;">
-            <h2><i class="fas fa-flag"></i> Départ <?= htmlspecialchars($numeroDepart) ?></h2>
+            <h2><i class="fas fa-flag"></i> <?= htmlspecialchars($departsLabelMap[$numeroDepart] ?? 'Départ ' . $numeroDepart) ?></h2>
             <div class="plan-cible-container">
                 <div class="plan-cible-scroll plan-peloton-scroll">
                     <?php for ($numeroPeloton = 1; $numeroPeloton <= $nbPelotons; $numeroPeloton++): ?>

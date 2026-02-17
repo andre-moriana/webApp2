@@ -75,10 +75,24 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
         </div>
     </div>
     
+    <?php
+    $departsList = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+    $departsLabelMap = [];
+    foreach ($departsList as $d) {
+        $num = (int)($d['numero_depart'] ?? 0);
+        $dateDep = $d['date_depart'] ?? '';
+        $heureGreffe = $d['heure_greffe'] ?? '';
+        if ($num && $dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
+            $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
+        }
+        $heureGreffe = $heureGreffe ? substr($heureGreffe, 0, 5) : '';
+        $departsLabelMap[$num] = trim($dateDep . ($heureGreffe ? ' ' . $heureGreffe : '')) ?: 'Départ ' . $num;
+    }
+    ?>
     <?php foreach ($plans as $numeroDepart => $departPlans): ?>
         <div class="plan-depart-section" style="margin-bottom: 40px;">
             <h2 style="margin-bottom: 20px;">
-                <i class="fas fa-flag"></i> Départ <?= htmlspecialchars($numeroDepart) ?>
+                <i class="fas fa-flag"></i> <?= htmlspecialchars($departsLabelMap[$numeroDepart] ?? 'Départ ' . $numeroDepart) ?>
             </h2>
             
             <!-- Container avec scroll horizontal -->
