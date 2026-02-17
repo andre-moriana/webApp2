@@ -926,11 +926,20 @@ function submitInscription() {
         return;
     }
 
-    const checkedDeparts = Array.from(document.querySelectorAll('.depart-checkbox:checked')).map(cb => cb.value);
-    if (!checkedDeparts.length) {
+    const checkedCbs = Array.from(document.querySelectorAll('.depart-checkbox:checked'));
+    if (!checkedCbs.length) {
         alert('Veuillez sélectionner au moins un départ (date et heure du greffe).');
         return;
     }
+
+    // Trier les départs par ordre chronologique (date_depart, heure_greffe) pour assigner numero_tir
+    const sortedDeparts = checkedCbs.slice().sort((a, b) => {
+        const dateA = (a.dataset.dateDepart || '') + ' ' + (a.dataset.heureGreffe || '00:00');
+        const dateB = (b.dataset.dateDepart || '') + ' ' + (b.dataset.heureGreffe || '00:00');
+        if (!dateA.trim()) return 1;
+        if (!dateB.trim()) return -1;
+        return dateA.localeCompare(dateB);
+    });
 
     const nom = selectedArcher.name || '';
     const prenom = selectedArcher.first_name || '';
@@ -947,8 +956,7 @@ function submitInscription() {
         creation_renouvellement: document.getElementById('creation_renouvellement')?.value || '',
         categorie_classement: document.getElementById('categorie_classement')?.value || '',
         arme: document.getElementById('arme')?.value || '',
-        mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0,
-        numero_tir: document.getElementById('numero_tir')?.value || ''
+        mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0
     };
     const piquetSelect = document.getElementById('piquet');
     if (piquetSelect) {
@@ -971,8 +979,10 @@ function submitInscription() {
         confirmBtn.textContent = 'Enregistrement...';
     }
 
-    const promises = checkedDeparts.map(numeroDepart => {
-        const data = { ...baseData, numero_depart: parseInt(numeroDepart, 10) };
+    const promises = sortedDeparts.map((cb, index) => {
+        const numeroDepart = parseInt(cb.value, 10);
+        const numeroTir = index + 1; // 1, 2, 3... selon l'ordre chronologique
+        const data = { ...baseData, numero_depart: numeroDepart, numero_tir: numeroTir };
         return fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },

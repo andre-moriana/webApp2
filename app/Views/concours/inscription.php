@@ -84,7 +84,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         if (empty($label)) $label = 'Départ ' . $numero;
                         ?>
                         <div class="form-check">
-                            <input type="checkbox" id="depart-cb-<?= $numero ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $numero ?>">
+                            <input type="checkbox" id="depart-cb-<?= $numero ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $numero ?>" data-date-depart="<?= htmlspecialchars($d['date_depart'] ?? '') ?>" data-heure-greffe="<?= htmlspecialchars($d['heure_greffe'] ?? '') ?>">
                             <label for="depart-cb-<?= $numero ?>" class="form-check-label"><?= htmlspecialchars($label) ?></label>
                         </div>
                     <?php endforeach; ?>
@@ -95,7 +95,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     </div>
                     <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): ?>
                         <div class="form-check">
-                            <input type="checkbox" id="depart-cb-<?= $i ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $i ?>">
+                            <input type="checkbox" id="depart-cb-<?= $i ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $i ?>" data-date-depart="" data-heure-greffe="">
                             <label for="depart-cb-<?= $i ?>" class="form-check-label">Départ <?= $i ?></label>
                         </div>
                     <?php endfor; ?>
@@ -407,6 +407,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         <?php endif; ?>
                         <div class="col-md-3 mb-3">
                             <label for="numero_tir" class="form-label">N° Tir</label>
+                            <small class="text-muted d-block">Attribué automatiquement (1, 2, 3…) selon l'ordre chronologique des départs sélectionnés.</small>
                             <select id="numero_tir" class="form-control">
                                 <option value="">Sélectionner</option>
                                 <?php 
