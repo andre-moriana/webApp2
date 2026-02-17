@@ -20,6 +20,9 @@ class Router {
         // Route d'inscription avant les autres routes avec {id}
         $this->addRoute("GET", "/concours/{id}/inscription", "ConcoursController@inscription");
         $this->addRoute("POST", "/concours/{id}/inscription", "ConcoursController@storeInscription");
+        // Inscription ciblée (publique, sans authentification)
+        $this->addRoute("GET", "/inscription-cible/{id}", "ConcoursController@inscriptionCible");
+        $this->addRoute("POST", "/inscription-cible/{id}", "ConcoursController@storeInscriptionCible");
         // Route pour le plan de cible
         $this->addRoute("GET", "/concours/{id}/plan-cible", "ConcoursController@planCible");
         // Route pour le plan de peloton (Campagne/Nature/3D)
@@ -200,6 +203,10 @@ class Router {
         $this->addRoute("DELETE", "/events/{id}", "EventController@destroy");
         
         // Routes API pour les concours (proxy vers backend)
+        // Routes publiques (sans auth - inscription ciblée)
+        $this->addRoute("GET", "/api/concours/{id}/public", "ApiController@proxyConcoursPublic");
+        $this->addRoute("GET", "/api/concours/{id}/inscriptions/public", "ApiController@proxyConcoursInscriptionsPublic");
+        $this->addRoute("POST", "/api/concours/{id}/inscription/public", "ApiController@proxyConcoursInscriptionPublic");
         $this->addRoute("GET", "/api/concours/distance-recommandee", "ApiController@proxyConcoursDistanceRecommandee");
         $this->addRoute("GET", "/api/concours/blason-recommandee", "ApiController@proxyConcoursBlasonRecommandee");
         $this->addRoute("GET", "/api/concours/{id}/plan-cible", "ApiController@proxyConcoursPlanCible");

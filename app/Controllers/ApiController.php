@@ -2546,6 +2546,45 @@ class ApiController {
     }
 
     /**
+     * Proxy public pour /api/concours/{id}/public (sans auth - inscription ciblée)
+     */
+    public function proxyConcoursPublic($id) {
+        try {
+            $response = $this->apiService->makeRequestPublic("concours/{$id}/public", 'GET');
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Proxy public pour /api/concours/{id}/inscriptions/public (sans auth - inscription ciblée)
+     */
+    public function proxyConcoursInscriptionsPublic($id) {
+        try {
+            $response = $this->apiService->makeRequestPublic("concours/{$id}/inscriptions/public", 'GET');
+            $data = $response['data'] ?? [];
+            $this->sendJsonResponse($data, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Proxy public pour POST /api/concours/{id}/inscription/public (sans auth - inscription ciblée)
+     */
+    public function proxyConcoursInscriptionPublic($id) {
+        try {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            $response = $this->apiService->makeRequestPublic("concours/{$id}/inscription/public", 'POST', $data);
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Proxy pour /api/concours/{id}/inscriptions
      */
     public function proxyConcoursInscriptions($concoursId) {
