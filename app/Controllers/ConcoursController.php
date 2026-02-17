@@ -1652,6 +1652,30 @@ class ConcoursController {
         exit;
     }
 
+    /**
+     * Confirmation d'inscription via lien email (sans auth)
+     */
+    public function confirmerInscription($token)
+    {
+        $success = false;
+        $message = '';
+        $alreadyConfirmed = false;
+
+        try {
+            $response = $this->apiService->makeRequestPublic("concours/inscription/confirmer/" . urlencode($token), 'GET');
+            $data = $response['data'] ?? $response;
+            $success = $data['success'] ?? false;
+            $alreadyConfirmed = $data['already_confirmed'] ?? false;
+            $message = $data['error'] ?? ($success ? ($alreadyConfirmed ? 'Votre inscription était déjà confirmée.' : 'Votre inscription a bien été confirmée.') : 'Lien invalide ou expiré.');
+        } catch (Exception $e) {
+            $message = 'Erreur lors de la confirmation : ' . $e->getMessage();
+        }
+
+        require_once __DIR__ . '/../Views/layouts/header.php';
+        require_once __DIR__ . '/../Views/concours/inscription-confirmee.php';
+        require_once __DIR__ . '/../Views/layouts/footer.php';
+    }
+
     // Traitement de l'inscription
     public function storeInscription($concoursId)
     {
