@@ -27,6 +27,8 @@ class Router {
         $this->addRoute("POST", "/inscription-cible/{id}", "ConcoursController@storeInscriptionCible");
         // Confirmation d'inscription par lien email (publique)
         $this->addRoute("GET", "/inscription-confirmer/{token}", "ConcoursController@confirmerInscription");
+        // Annulation d'inscription par lien email (publique)
+        $this->addRoute("GET", "/inscription-annuler/{token}", "ConcoursController@annulerInscription");
         // Route pour le plan de cible
         $this->addRoute("GET", "/concours/{id}/plan-cible", "ConcoursController@planCible");
         // Route pour le plan de peloton (Campagne/Nature/3D)
