@@ -1124,7 +1124,9 @@ class ConcoursController {
         if (is_array($concours)) {
             $concours = (object)$concours;
         }
-
+        // Normaliser departs : s'assurer que c'est un tableau indexé (0,1,2...) pour l'affichage
+        $departsRaw = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+        $concours->departs = array_values(is_array($departsRaw) ? $departsRaw : (array)$departsRaw);
 
         // Récupérer les inscriptions existantes
         $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
@@ -1493,6 +1495,9 @@ class ConcoursController {
             exit;
         }
         $concours = is_array($concoursResponse['data']) ? (object)$concoursResponse['data'] : $concoursResponse['data'];
+        // Normaliser departs : s'assurer que c'est un tableau indexé (0,1,2...) pour l'affichage
+        $departsRaw = $concours->departs ?? [];
+        $concours->departs = array_values(is_array($departsRaw) ? $departsRaw : (array)$departsRaw);
 
         $inscriptionsResponse = $this->apiService->makeRequestPublic("concours/{$concoursId}/inscriptions/public", 'GET');
         $inscriptions = is_array($inscriptionsResponse['data'] ?? null) ? $inscriptionsResponse['data'] : [];
