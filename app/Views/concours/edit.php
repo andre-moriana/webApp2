@@ -218,6 +218,8 @@ window.niveauChampionnatData = <?= json_encode($niveauChampionnat ?? [], JSON_UN
             <select id="type_publication_internet" name="type_publication_internet">
                 <option value="">-- Sélectionner --</option>
             </select>
+            <label>Lien formulaire inscription ciblé :</label>
+            <input type="url" name="lien_inscription_cible" value="<?= htmlspecialchars($concours->lien_inscription_cible ?? '') ?>" placeholder="https://... (auth temporaire jusqu'au jour du concours, confirmation par email, puis choix peloton/plan cible)">
         </div>
     </div>
 
