@@ -27,6 +27,16 @@ class ApiController {
     }
     
     /**
+     * Retourne le token plan pour un concours si présent en session (accès via lien email)
+     */
+    private function getPlanToken($concoursId) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        return $_SESSION['plan_token'][$concoursId] ?? null;
+    }
+
+    /**
      * Envoie une réponse d'erreur d'authentification
      */
     private function sendUnauthenticatedResponse() {
@@ -2753,7 +2763,8 @@ class ApiController {
      * Proxy pour /api/concours/{id}/plan-cible/{depart}/archers-dispo - Liste les archers disponibles
      */
     public function proxyConcoursPlanCibleArchersDispo($concoursId, $depart) {
-        if (!$this->isAuthenticated()) {
+        $useToken = !$this->isAuthenticated() && $this->getPlanToken($concoursId);
+        if (!$this->isAuthenticated() && !$useToken) {
             $this->sendUnauthenticatedResponse();
             return;
         }
@@ -2762,8 +2773,11 @@ class ApiController {
             $method = $_SERVER['REQUEST_METHOD'];
             $queryString = $_SERVER['QUERY_STRING'] ?? '';
             $endpoint = "concours/{$concoursId}/plan-cible/{$depart}/archers-dispo" . ($queryString ? "?{$queryString}" : "");
+            if ($useToken) {
+                $endpoint .= (strpos($endpoint, '?') !== false ? '&' : '?') . 'token=' . urlencode($this->getPlanToken($concoursId));
+            }
 
-            $response = $this->apiService->makeRequest($endpoint, $method);
+            $response = $useToken ? $this->apiService->makeRequestPublic($endpoint, $method) : $this->apiService->makeRequest($endpoint, $method);
 
             if (isset($response['data']) && is_array($response['data']) && isset($response['data']['success'])) {
                 $response = $response['data'];
@@ -2786,14 +2800,16 @@ class ApiController {
      * Proxy pour /api/concours/{id}/plan-cible/{depart}/liberer - Libere une position
      */
     public function proxyConcoursPlanCibleLiberer($concoursId, $depart) {
-        if (!$this->isAuthenticated()) {
+        $useToken = !$this->isAuthenticated() && $this->getPlanToken($concoursId);
+        if (!$this->isAuthenticated() && !$useToken) {
             $this->sendUnauthenticatedResponse();
             return;
         }
 
         try {
             $method = $_SERVER['REQUEST_METHOD'];
-            $endpoint = "concours/{$concoursId}/plan-cible/{$depart}/liberer";
+            $token = $useToken ? $this->getPlanToken($concoursId) : null;
+            $endpoint = "concours/{$concoursId}/plan-cible/{$depart}/liberer" . ($token ? "?token=" . urlencode($token) : "");
 
             $data = null;
             if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH') {
@@ -2801,7 +2817,7 @@ class ApiController {
                 $data = json_decode($input, true);
             }
 
-            $response = $this->apiService->makeRequest($endpoint, $method, $data);
+            $response = $useToken ? $this->apiService->makeRequestPublic($endpoint, $method, $data) : $this->apiService->makeRequest($endpoint, $method, $data);
 
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
@@ -2820,14 +2836,16 @@ class ApiController {
      * Proxy pour /api/concours/{id}/plan-cible/assign - Assigne un archer à une position
      */
     public function proxyConcoursPlanCibleAssign($concoursId) {
-        if (!$this->isAuthenticated()) {
+        $useToken = !$this->isAuthenticated() && $this->getPlanToken($concoursId);
+        if (!$this->isAuthenticated() && !$useToken) {
             $this->sendUnauthenticatedResponse();
             return;
         }
         
         try {
             $method = $_SERVER['REQUEST_METHOD'];
-            $endpoint = "concours/{$concoursId}/plan-cible/assign";
+            $token = $useToken ? $this->getPlanToken($concoursId) : null;
+            $endpoint = "concours/{$concoursId}/plan-cible/assign" . ($token ? "?token=" . urlencode($token) : "");
             
             $data = null;
             if ($method === 'POST') {
@@ -2835,7 +2853,7 @@ class ApiController {
                 $data = json_decode($input, true);
             }
             
-            $response = $this->apiService->makeRequest($endpoint, $method, $data);
+            $response = $useToken ? $this->apiService->makeRequestPublic($endpoint, $method, $data) : $this->apiService->makeRequest($endpoint, $method, $data);
 
             if (isset($response['data']) && is_array($response['data']) && isset($response['data']['success'])) {
                 $response = $response['data'];
@@ -2883,13 +2901,18 @@ class ApiController {
     }
 
     public function proxyConcoursPlanPelotonArchersDispo($concoursId, $depart) {
-        if (!$this->isAuthenticated()) {
+        $useToken = !$this->isAuthenticated() && $this->getPlanToken($concoursId);
+        if (!$this->isAuthenticated() && !$useToken) {
             $this->sendUnauthenticatedResponse();
             return;
         }
         try {
-            $endpoint = "concours/{$concoursId}/plan-peloton/{$depart}/archers-dispo";
-            $response = $this->apiService->makeRequest($endpoint, 'GET');
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $endpoint = "concours/{$concoursId}/plan-peloton/{$depart}/archers-dispo" . ($queryString ? "?{$queryString}" : "");
+            if ($useToken) {
+                $endpoint .= (strpos($endpoint, '?') !== false ? '&' : '?') . 'token=' . urlencode($this->getPlanToken($concoursId));
+            }
+            $response = $useToken ? $this->apiService->makeRequestPublic($endpoint, 'GET') : $this->apiService->makeRequest($endpoint, 'GET');
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
             } else {
@@ -2904,15 +2927,17 @@ class ApiController {
     }
 
     public function proxyConcoursPlanPelotonLiberer($concoursId, $depart) {
-        if (!$this->isAuthenticated()) {
+        $useToken = !$this->isAuthenticated() && $this->getPlanToken($concoursId);
+        if (!$this->isAuthenticated() && !$useToken) {
             $this->sendUnauthenticatedResponse();
             return;
         }
         try {
-            $endpoint = "concours/{$concoursId}/plan-peloton/{$depart}/liberer";
+            $token = $useToken ? $this->getPlanToken($concoursId) : null;
+            $endpoint = "concours/{$concoursId}/plan-peloton/{$depart}/liberer" . ($token ? "?token=" . urlencode($token) : "");
             $input = file_get_contents('php://input');
             $data = json_decode($input, true);
-            $response = $this->apiService->makeRequest($endpoint, 'POST', $data);
+            $response = $useToken ? $this->apiService->makeRequestPublic($endpoint, 'POST', $data) : $this->apiService->makeRequest($endpoint, 'POST', $data);
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
             } else {
@@ -2927,15 +2952,17 @@ class ApiController {
     }
 
     public function proxyConcoursPlanPelotonAssign($concoursId) {
-        if (!$this->isAuthenticated()) {
+        $useToken = !$this->isAuthenticated() && $this->getPlanToken($concoursId);
+        if (!$this->isAuthenticated() && !$useToken) {
             $this->sendUnauthenticatedResponse();
             return;
         }
         try {
-            $endpoint = "concours/{$concoursId}/plan-peloton/assign";
+            $token = $useToken ? $this->getPlanToken($concoursId) : null;
+            $endpoint = "concours/{$concoursId}/plan-peloton/assign" . ($token ? "?token=" . urlencode($token) : "");
             $input = file_get_contents('php://input');
             $data = json_decode($input, true);
-            $response = $this->apiService->makeRequest($endpoint, 'POST', $data);
+            $response = $useToken ? $this->apiService->makeRequestPublic($endpoint, 'POST', $data) : $this->apiService->makeRequest($endpoint, 'POST', $data);
             if (isset($response['success'])) {
                 $this->sendJsonResponse($response, $response['status_code'] ?? 200);
             } else {
