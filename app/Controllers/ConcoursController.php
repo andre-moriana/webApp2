@@ -1456,6 +1456,124 @@ class ConcoursController {
         $clubs = [];
         $categoriesClassement = [];
         $arcs = [];
+        $distancesTir = [];
+        $disciplineAbv = null;
+
+        // Récupérer les catégories de classement (filtrées par discipline)
+        $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+        try {
+            $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
+            $categoriesResponse = $this->apiService->makeRequestPublic($endpoint, 'GET');
+            if ($categoriesResponse['success'] ?? false) {
+                $categoriesPayload = $categoriesResponse['data'] ?? [];
+                if (is_array($categoriesPayload) && isset($categoriesPayload['data']) && isset($categoriesPayload['success'])) {
+                    $categoriesPayload = $categoriesPayload['data'];
+                }
+                if (is_array($categoriesPayload)) {
+                    foreach ($categoriesPayload as &$c) {
+                        if (!isset($c['id']) && isset($c['_id'])) $c['id'] = $c['_id'];
+                    }
+                    unset($c);
+                    usort($categoriesPayload, fn($a, $b) => strcasecmp($a['lb_categorie_classement'] ?? '', $b['lb_categorie_classement'] ?? ''));
+                    $categoriesClassement = array_values($categoriesPayload);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('inscriptionCible: erreur catégories: ' . $e->getMessage());
+        }
+
+        // Récupérer les arcs
+        try {
+            $arcsResponse = $this->apiService->makeRequestPublic('concours/arcs', 'GET');
+            if ($arcsResponse['success'] ?? false) {
+                $arcsPayload = $arcsResponse['data'] ?? [];
+                if (is_array($arcsPayload) && isset($arcsPayload['data']) && isset($arcsPayload['success'])) {
+                    $arcsPayload = $arcsPayload['data'];
+                }
+                if (is_array($arcsPayload)) {
+                    foreach ($arcsPayload as &$a) {
+                        if (!isset($a['id']) && isset($a['_id'])) $a['id'] = $a['_id'];
+                    }
+                    unset($a);
+                    usort($arcsPayload, fn($a, $b) => strcasecmp($a['lb_arc'] ?? '', $b['lb_arc'] ?? ''));
+                    $arcs = array_values($arcsPayload);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('inscriptionCible: erreur arcs: ' . $e->getMessage());
+        }
+
+        // Récupérer disciplineAbv pour savoir si 3D/Nature/Campagne
+        if ($iddiscipline) {
+            try {
+                $disciplinesResponse = $this->apiService->makeRequestPublic('concours/disciplines', 'GET');
+                if ($disciplinesResponse['success'] ?? false) {
+                    $disciplinesPayload = $disciplinesResponse['data'] ?? [];
+                    if (is_array($disciplinesPayload) && isset($disciplinesPayload['data'])) {
+                        $disciplinesPayload = $disciplinesPayload['data'];
+                    }
+                    if (is_array($disciplinesPayload)) {
+                        foreach ($disciplinesPayload as $d) {
+                            $discId = $d['iddiscipline'] ?? $d['id'] ?? null;
+                            if ($discId == $iddiscipline || (string)$discId === (string)$iddiscipline) {
+                                $disciplineAbv = $d['abv_discipline'] ?? null;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('inscriptionCible: erreur disciplines: ' . $e->getMessage());
+            }
+        }
+
+        // Récupérer les distances de tir (filtrées par discipline et type compétition)
+        $idtype_competition = $concours->type_competition ?? null;
+        $type_compet = null;
+        if ($idtype_competition) {
+            try {
+                $typeCompetResponse = $this->apiService->makeRequestPublic('concours/type-competitions', 'GET');
+                if ($typeCompetResponse['success'] ?? false) {
+                    $typeCompetPayload = $typeCompetResponse['data'] ?? [];
+                    if (is_array($typeCompetPayload) && isset($typeCompetPayload['data'])) {
+                        $typeCompetPayload = $typeCompetPayload['data'];
+                    }
+                    if (is_array($typeCompetPayload)) {
+                        foreach ($typeCompetPayload as $tc) {
+                            if (($tc['idformat_competition'] ?? null) == $idtype_competition) {
+                                $type_compet = $tc['lb_format_competition'] ?? null;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {}
+        }
+        try {
+            $endpoint = 'concours/distances-tir';
+            $params = [];
+            if ($iddiscipline) $params[] = 'iddiscipline=' . (int)$iddiscipline;
+            if ($type_compet) $params[] = 'type_compet=' . urlencode($type_compet);
+            if (!empty($params)) $endpoint .= '?' . implode('&', $params);
+            $distancesResponse = $this->apiService->makeRequestPublic($endpoint, 'GET');
+            if ($distancesResponse['success'] ?? false) {
+                $distancesPayload = $distancesResponse['data'] ?? [];
+                if (is_array($distancesPayload) && isset($distancesPayload['data']) && isset($distancesPayload['success'])) {
+                    $distancesPayload = $distancesPayload['data'];
+                }
+                if (is_array($distancesPayload)) {
+                    foreach ($distancesPayload as &$d) {
+                        if (!isset($d['id']) && isset($d['_id'])) $d['id'] = $d['_id'];
+                    }
+                    unset($d);
+                    usort($distancesPayload, fn($a, $b) => ((int)($a['distance_valeur'] ?? 0)) <=> ((int)($b['distance_valeur'] ?? 0)));
+                    $distancesTir = array_values($distancesPayload);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('inscriptionCible: erreur distances: ' . $e->getMessage());
+        }
+
         $departs = [];
         for ($i = 1; $i <= ($concours->nombre_depart ?? 1); $i++) {
             $departs[] = ['numero' => $i, 'heure' => '', 'date' => ''];
