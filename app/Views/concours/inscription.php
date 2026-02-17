@@ -405,23 +405,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 </select>
                             </div>
                         <?php endif; ?>
-                        <div class="col-md-3 mb-3">
-                            <label for="numero_tir" class="form-label">N° Tir</label>
-                            <small class="text-muted d-block">Attribué automatiquement (1, 2, 3…) selon l'ordre chronologique des départs sélectionnés.</small>
-                            <select id="numero_tir" class="form-control">
-                                <option value="">Sélectionner</option>
-                                <?php 
-                                $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null);
-                                if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0):
-                                    for ($i = 1; $i <= (int)$nombreDepart; $i++):
-                                ?>
-                                    <option value="<?= $i ?>"><?= $i ?></option>
-                                <?php 
-                                    endfor;
-                                endif;
-                                ?>
-                            </select>
-                        </div>
                         <?php if (!$isNature3DOrCampagne): ?>
                             <!-- Le champ Blason n'existe pas pour les disciplines 3D, Nature et Campagne -->
                             <div class="col-md-3 mb-3">
@@ -592,22 +575,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 </select>
                             </div>
                         <?php endif; ?>
-                        <div class="col-md-3 mb-3">
-                            <label for="edit-numero_tir" class="form-label">N° Tir</label>
-                            <select id="edit-numero_tir" class="form-control">
-                                <option value="">Sélectionner</option>
-                                <?php 
-                                $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null);
-                                if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0):
-                                    for ($i = 1; $i <= (int)$nombreDepart; $i++):
-                                ?>
-                                    <option value="<?= $i ?>"><?= $i ?></option>
-                                <?php 
-                                    endfor;
-                                endif;
-                                ?>
-                            </select>
-                        </div>
                         <?php if (!$isNature3DOrCampagne): ?>
                             <div class="col-md-3 mb-3">
                                 <label for="edit-blason" class="form-label">Blason</label>
