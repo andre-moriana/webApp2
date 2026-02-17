@@ -1036,12 +1036,13 @@ function submitInscription() {
         const successes = results.filter(r => r.ok && (r.body.success !== false));
         const failures = results.filter(r => !r.ok || r.body.success === false);
         if (failures.length === 0) {
+            // Récupérer les données buvette AVANT de fermer la modale (les inputs sont dans la modale)
+            const buvetteItems = typeof getBuvetteItems === 'function' ? getBuvetteItems() : [];
+            const tokenForBuvette = batchToken || (successes[0] && successes[0].body && successes[0].body.token_confirmation) || null;
             const modal = document.getElementById('confirmInscriptionModal');
             if (modal && typeof bootstrap !== 'undefined') bootstrap.Modal.getInstance(modal)?.hide();
             loadInscriptions();
             // Enregistrer les réservations buvette si des articles ont été sélectionnés
-            const buvetteItems = typeof getBuvetteItems === 'function' ? getBuvetteItems() : [];
-            const tokenForBuvette = batchToken || (successes[0] && successes[0].body && successes[0].body.token_confirmation) || null;
             if (buvetteItems.length > 0 && tokenForBuvette) {
                 fetch('/api/concours/' + concoursIdValue + '/buvette/reservations', {
                     method: 'POST',
