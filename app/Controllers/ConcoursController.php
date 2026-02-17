@@ -2617,8 +2617,16 @@ class ConcoursController {
                 : $this->apiService->makeRequestPublic("concours/{$concoursId}/plan-peloton/public" . ($planToken ? "?token=" . urlencode($planToken) : ""), 'GET');
             if ($plansResponse['success'] ?? false) {
                 $plans = $this->apiService->unwrapData($plansResponse);
+                // L'API peut retourner {success, data, message} ou directement les plans
                 if (is_array($plans) && isset($plans['data']) && isset($plans['success'])) {
                     $plans = $plans['data'];
+                }
+                // makeRequest met la réponse API dans 'data', donc unwrapData peut retourner {success, data}
+                if (is_array($plans) && isset($plans['data']) && is_array($plans['data'])) {
+                    $plans = $plans['data'];
+                }
+                if (is_object($plans)) {
+                    $plans = (array) $plans;
                 }
                 if (!is_array($plans)) {
                     $plans = [];

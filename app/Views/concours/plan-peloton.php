@@ -82,8 +82,15 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
         if ($num && $dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
             $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
         }
-        $heureGreffe = $heureGreffe ? substr($heureGreffe, 0, 5) : '';
+        $heureGreffe = $heureGreffe ? substr((string)$heureGreffe, 0, 5) : '';
         $departsLabelMap[$num] = trim($dateDep . ($heureGreffe ? ' ' . $heureGreffe : '')) ?: 'Départ ' . $num;
+    }
+    // Si pas de départs dans le concours, créer des labels pour les numéros présents dans les plans
+    foreach (array_keys($plans) as $num) {
+        $num = (int) $num;
+        if ($num && !isset($departsLabelMap[$num])) {
+            $departsLabelMap[$num] = 'Départ ' . $num;
+        }
     }
     ?>
     <?php foreach ($plans as $numeroDepart => $departPlans): ?>
