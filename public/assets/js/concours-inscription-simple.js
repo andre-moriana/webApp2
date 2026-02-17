@@ -93,10 +93,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (item) {
             e.preventDefault();
             const statut = item.getAttribute('data-statut');
-            const row = item.closest('tr');
-            const inscriptionId = row ? row.getAttribute('data-inscription-id') : null;
+            // data-inscription-id sur l'item (robuste si le menu Bootstrap est déplacé hors du tr)
+            let inscriptionId = item.getAttribute('data-inscription-id');
+            if (!inscriptionId) {
+                const row = item.closest('tr');
+                inscriptionId = row ? row.getAttribute('data-inscription-id') : null;
+            }
             if (inscriptionId && statut && concoursIdValue) {
-                updateStatutInscription(parseInt(inscriptionId), statut);
+                updateStatutInscription(parseInt(inscriptionId, 10), statut);
             }
         }
     });
@@ -1185,15 +1189,15 @@ function renderInscriptions(inscriptions) {
         }
 
         const statutCell = '<td class="statut-cell"' + rowStyle + '>' +
-            '<div class="dropdown statut-dropdown">' +
+            '<div class="dropdown statut-dropdown" data-inscription-id="' + escapeHtml(String(id)) + '">' +
             '<button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="' + escapeHtml(statutTitle) + '">' +
             '<i class="fas ' + statutIconClass + '"></i>' +
             '</button>' +
             '<ul class="dropdown-menu dropdown-menu-end">' +
-            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>' +
-            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>' +
-            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>' +
-            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>' +
+            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>' +
+            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>' +
+            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>' +
+            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>' +
             '</ul></div></td>';
 
         let cells = [
@@ -1253,11 +1257,11 @@ function updateStatutInscription(inscriptionId, statut) {
         return response.json().then(data => ({ ok: response.ok, data }));
     })
     .then(({ ok, data }) => {
-        const result = data.data || data;
-        if (ok && (result.success !== false) && !result.error && !data.error) {
+        const success = ok && (data.success !== false) && !data.error;
+        if (success) {
             loadInscriptions();
         } else {
-            const errMsg = data.error || result.error || data.message || 'Erreur inconnue';
+            const errMsg = data.error || data.message || (data.data && data.data.error) || 'Erreur inconnue';
             alert('Erreur lors de la mise à jour du statut: ' + errMsg + (ok ? '' : ' (Connexion requise)'));
         }
     })
