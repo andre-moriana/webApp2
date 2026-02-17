@@ -245,6 +245,7 @@ class Router {
         $this->addRoute("DELETE", "/api/concours/{id}/buvette/produits/{produitId}", "ApiController@proxyConcoursBuvetteProduitDelete");
         // Buvette - produits public (inscription) et réservations (public)
         $this->addRoute("GET", "/api/concours/{id}/buvette/produits/public", "ApiController@proxyConcoursBuvetteProduitsPublic");
+        $this->addRoute("GET", "/api/concours/{id}/buvette/reservations", "ApiController@proxyConcoursBuvetteReservationsList");
         $this->addRoute("POST", "/api/concours/{id}/buvette/reservations", "ApiController@proxyConcoursBuvetteReservations");
         
         // Routes API (protégées)
