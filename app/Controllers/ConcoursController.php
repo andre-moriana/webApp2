@@ -444,7 +444,6 @@ class ConcoursController {
         $idNiveau_Championnat = $_POST['idniveau_championnat'] ?? '';
         $niveau_championnat_autre = $_POST['niveau_championnat_autre'] ?? '';
         $nombre_cibles = $_POST['nombre_cibles'] ?? 0;
-        $nombre_depart = $_POST['nombre_depart'] ?? 1;
         $nombre_tireurs_par_cibles = $_POST['nombre_tireurs_par_cibles'] ?? 0;
         $type_concours = $_POST['type_concours'] ?? 'ouvert';
         $duel = isset($_POST['duel']) ? 1 : 0;
@@ -501,7 +500,6 @@ class ConcoursController {
                 'idniveau_championnat' => $idNiveau_Championnat,
                 'niveau_championnat_autre' => $niveau_championnat_autre,
                 'nombre_cibles' => (int)$nombre_cibles,
-                'nombre_depart' => (int)$nombre_depart,
                 'nombre_tireurs_par_cibles' => (int)$nombre_tireurs_par_cibles,
                 'type_concours' => $type_concours,
                 'duel' => $duel,
@@ -553,7 +551,6 @@ class ConcoursController {
                             if ($abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H'])) {
                                 $planData = [
                                     'nombre_cibles' => (int)$nombre_cibles,
-                                    'nombre_depart' => (int)$nombre_depart,
                                     'nombre_tireurs_par_cibles' => (int)$nombre_tireurs_par_cibles
                                 ];
                                 
@@ -1436,9 +1433,11 @@ class ConcoursController {
             error_log('Erreur lors de la récupération des distances de tir: ' . $e->getMessage());
         }
 
-        // Préparer les départs pour la modale d'édition
+        // Préparer les départs pour la modale d'édition (nombre_depart = count depuis concours_departs)
         $departs = [];
-        $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null);
+        $nombreDepart = is_object($concours)
+            ? ($concours->nombre_depart ?? count($concours->departs ?? []))
+            : ($concours['nombre_depart'] ?? count($concours['departs'] ?? []));
         if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0) {
             for ($i = 1; $i <= (int)$nombreDepart; $i++) {
                 $departs[] = [
@@ -1619,7 +1618,8 @@ class ConcoursController {
         }
 
         $departs = [];
-        for ($i = 1; $i <= ($concours->nombre_depart ?? 1); $i++) {
+        $nbDeparts = $concours->nombre_depart ?? count($concours->departs ?? []) ?: 1;
+        for ($i = 1; $i <= $nbDeparts; $i++) {
             $departs[] = ['numero' => $i, 'heure' => '', 'date' => ''];
         }
 
