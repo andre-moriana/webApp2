@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     if (form && departsJsonInput) {
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(e) {
             const departs = collectDeparts();
             departsJsonInput.value = JSON.stringify(departs);
         }, true);
