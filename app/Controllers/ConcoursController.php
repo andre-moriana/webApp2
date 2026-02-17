@@ -630,6 +630,23 @@ class ConcoursController {
             exit;
         }
         
+        // Créer le lien d'inscription ciblé s'il n'existe pas
+        if (empty($concours->lien_inscription_cible)) {
+            $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+            $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+            $basePath = preg_replace('#/concours/.*$#', '', $path);
+            $basePath = rtrim($basePath, '/');
+            $lienInscription = $baseUrl . ($basePath ?: '') . '/concours/' . $id . '/inscription';
+            try {
+                $updateResponse = $this->apiService->updateConcours($id, ['lien_inscription_cible' => $lienInscription]);
+                if ($updateResponse['success'] && isset($updateResponse['data'])) {
+                    $concours->lien_inscription_cible = $lienInscription;
+                }
+            } catch (Exception $e) {
+                // Ignorer les erreurs, le lien restera vide
+            }
+        }
+        
         // Récupérer les inscriptions
         try {
             $inscriptionsResponse = $this->apiService->makeRequest("concours/{$id}/inscriptions", 'GET');
