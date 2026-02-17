@@ -1,49 +1,21 @@
 <!-- CSS personnalisé -->
 <link href="/public/assets/css/concours-inscription.css" rel="stylesheet">
 <link href="/public/assets/css/users-table.css" rel="stylesheet">
-<style>
-/* FORCER les couleurs de piquet - Spécificité maximale */
-#inscriptions-table tbody tr[data-piquet="rouge"],
-#inscriptions-table tbody tr.piquet-rouge,
-table.table tbody tr[data-piquet="rouge"],
-table.table tbody tr.piquet-rouge,
-table tbody tr[data-piquet="rouge"],
-table tbody tr.piquet-rouge {
-    background-color: #ffe0e0 !important;
-    background: #ffe0e0 !important;
-}
 
-#inscriptions-table tbody tr[data-piquet="bleu"],
-#inscriptions-table tbody tr.piquet-bleu,
-table.table tbody tr[data-piquet="bleu"],
-table.table tbody tr.piquet-bleu,
-table tbody tr[data-piquet="bleu"],
-table tbody tr.piquet-bleu {
-    background-color: #e0e8ff !important;
-    background: #e0e8ff !important;
-}
-
-#inscriptions-table tbody tr[data-piquet="blanc"],
-#inscriptions-table tbody tr.piquet-blanc,
-table.table tbody tr[data-piquet="blanc"],
-table.table tbody tr.piquet-blanc,
-table tbody tr[data-piquet="blanc"],
-table tbody tr.piquet-blanc {
-    background-color: #f5f5f5 !important;
-    background: #f5f5f5 !important;
-}
-
-/* Centrer l'icône de statut et style du dropdown */
-#inscriptions-table .statut-cell {
-    text-align: center;
-    vertical-align: middle;
-}
-#inscriptions-table .statut-dropdown .btn-link {
-    cursor: pointer;
-}
-</style>
-
-<div class="container-fluid concours-inscription-container">
+<div class="container-fluid concours-inscription-container" id="inscription-page" data-config="<?= htmlspecialchars(json_encode([
+    'concoursId' => $concoursId ?? null,
+    'formAction' => $formAction ?? '/concours/' . ($concoursId ?? '') . '/inscription',
+    'apiInscriptionsUrl' => $apiInscriptionsUrl ?? '/api/concours/' . ($concoursId ?? '') . '/inscriptions',
+    'archerSearchUrl' => $archerSearchUrl ?? '/archer/search-or-create',
+    'categoriesClassement' => $categoriesClassement ?? [],
+    'arcs' => $arcs ?? [],
+    'distancesTir' => $distancesTir ?? [],
+    'concoursDiscipline' => is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null),
+    'concoursTypeCompetition' => is_object($concours) ? ($concours->type_competition ?? null) : ($concours['type_competition'] ?? null),
+    'concoursNombreDepart' => is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null),
+    'disciplineAbv' => $disciplineAbv ?? null,
+    'isNature3DOrCampagne' => isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)
+]), JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>">
     <h1>Inscription au concours</h1>
 
     <?php if (isset($_SESSION['error'])): ?>
@@ -624,19 +596,4 @@ table tbody tr.piquet-blanc {
     </div>
 </div>
 
-<script>
-// Variables globales - doivent être définies avant le chargement du script
-const concoursId = <?= json_encode($concoursId ?? null) ?>;
-const formAction = <?= json_encode($formAction ?? '/concours/' . ($concoursId ?? '') . '/inscription') ?>;
-const apiInscriptionsUrl = <?= json_encode($apiInscriptionsUrl ?? '/api/concours/' . ($concoursId ?? '') . '/inscriptions') ?>;
-const archerSearchUrl = <?= json_encode($archerSearchUrl ?? '/archer/search-or-create') ?>;
-const categoriesClassement = <?= json_encode($categoriesClassement ?? [], JSON_UNESCAPED_UNICODE) ?>;
-const arcs = <?= json_encode($arcs ?? [], JSON_UNESCAPED_UNICODE) ?>;
-const distancesTir = <?= json_encode($distancesTir ?? [], JSON_UNESCAPED_UNICODE) ?>;
-const concoursDiscipline = <?= json_encode(is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null)) ?>;
-const concoursTypeCompetition = <?= json_encode(is_object($concours) ? ($concours->type_competition ?? null) : ($concours['type_competition'] ?? null)) ?>;
-const concoursNombreDepart = <?= json_encode(is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null)) ?>;
-const disciplineAbv = <?= json_encode($disciplineAbv ?? null) ?>;
-const isNature3DOrCampagne = <?= json_encode(isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)) ?>;
-</script>
 <script src="/public/assets/js/concours-inscription-simple.js"></script>

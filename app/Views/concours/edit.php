@@ -22,19 +22,15 @@
     <?php unset($_SESSION['success']); ?>
 <?php endif; ?>
 
-<!-- Passer les clubs et disciplines au JavaScript -->
-<script>
-// Vérifier que les variables PHP sont définies
-var clubsFromPHP = <?= json_encode($clubs ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
-var disciplinesFromPHP = <?= json_encode($disciplines ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?>;
-
-window.clubsData = clubsFromPHP || [];
-window.disciplinesData = disciplinesFromPHP || [];
-window.typeCompetitionsData = <?= json_encode($typeCompetitions ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?> || [];
-window.niveauChampionnatData = <?= json_encode($niveauChampionnat ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) ?> || [];
-
-</script>
-<form method="post" action="/concours/update/<?= $concours->id ?? '' ?>" id="concoursForm" novalidate>
+<form method="post" action="/concours/update/<?= $concours->id ?? '' ?>" id="concoursForm" novalidate
+      data-concours-form-config
+      data-config="<?= htmlspecialchars(json_encode([
+          'clubs' => $clubs ?? [],
+          'disciplines' => $disciplines ?? [],
+          'typeCompetitions' => $typeCompetitions ?? [],
+          'niveauChampionnat' => $niveauChampionnat ?? [],
+          'concoursData' => isset($concours) ? $concours : null
+      ], JSON_UNESCAPED_UNICODE)) ?>">
     
     <!-- Section principale -->
     <div class="form-section">
@@ -266,5 +262,6 @@ window.niveauChampionnatData = <?= json_encode($niveauChampionnat ?? [], JSON_UN
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.js"></script>
+<script src="/public/assets/js/concours-form-config.js"></script>
 <script src="/public/assets/js/concours.js"></script>
 <script src="/public/assets/js/concours-lieu-map.js"></script>

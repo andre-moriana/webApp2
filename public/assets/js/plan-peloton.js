@@ -102,9 +102,12 @@
         .catch(function() { setListMessage('Erreur réseau', 'danger'); });
     }
 
+    var canEditPlanPeloton = document.querySelector('[data-can-edit-plan]')?.getAttribute('data-can-edit-plan') === '1';
+
     document.addEventListener('click', function(e) {
         var item = e.target.closest('.blason-item');
         if (!item) return;
+        if (!canEditPlanPeloton) return;
         var assignable = item.getAttribute('data-assignable') === '1';
         currentTarget = {
             concoursId: item.dataset.concoursId,

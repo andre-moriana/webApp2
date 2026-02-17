@@ -2,7 +2,7 @@
 <?php
 $title = "Gestion des concours - Portail Archers de Gémenos";
 ?>
-<div class="container-fluid">
+<div class="container-fluid" data-concours-index data-user-id="<?= htmlspecialchars($_SESSION['user']['id'] ?? '') ?>">
     <?php if (isset($_SESSION['error'])): ?>
         <div class="alert alert-danger">
             <?php 
@@ -198,41 +198,4 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
     </div>
 </div>
 <link href="/public/assets/css/concours-index.css" rel="stylesheet">
-<script>
-function inscrireConcours(concoursId) {
-    if (!concoursId) {
-        alert('ID du concours manquant');
-        return;
-    }
-    
-    if (!confirm('Voulez-vous vous inscrire à ce concours ?')) {
-        return;
-    }
-    
-    // Appel API pour s'inscrire
-    fetch('/api/concours/' + concoursId + '/inscription', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-            user_id: <?php echo $_SESSION['user']['id'] ?? 'null'; ?>
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Inscription réussie !');
-            location.reload();
-        } else {
-            alert('Erreur lors de l\'inscription: ' + (data.error || data.message || 'Erreur inconnue'));
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors de l\'inscription');
-    });
-}
-</script>
+<script src="/public/assets/js/concours-index.js"></script>

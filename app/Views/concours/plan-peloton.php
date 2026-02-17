@@ -3,7 +3,7 @@
 <link href="/public/assets/css/plan-cible.css" rel="stylesheet">
 <link href="/public/assets/css/plan-peloton.css" rel="stylesheet">
 
-<div class="container-fluid concours-create-container">
+<div class="container-fluid concours-create-container" data-can-edit-plan="<?= !empty($canEditPlan) ? '1' : '0' ?>">
 <h1>Plan de peloton - <?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?></h1>
 
 <?php if (isset($_SESSION['error'])): ?>
