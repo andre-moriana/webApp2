@@ -54,6 +54,36 @@ $concoursTitre = $concours->titre_competition ?? $concours->nom ?? 'Concours';
             <p id="buvette-empty" class="text-muted text-center py-4 d-none">Aucun produit. Cliquez sur « Ajouter un produit » pour commencer.</p>
         </div>
     </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-list"></i> Réservations buvette</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="table-buvette-reservations">
+                    <thead>
+                        <tr>
+                            <th>Inscription</th>
+                            <th>Produit</th>
+                            <th>Quantité</th>
+                            <th>Prix unitaire</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-buvette-reservations">
+                        <tr id="reservations-loading">
+                            <td colspan="5" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2 mb-0">Chargement des réservations...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p id="reservations-empty" class="text-muted text-center py-4 d-none">Aucune réservation pour ce concours.</p>
+        </div>
+    </div>
 </div>
 
 <!-- Modal Ajout/Modification produit -->

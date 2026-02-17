@@ -2810,6 +2810,22 @@ class ApiController {
     }
 
     /**
+     * Proxy pour GET /api/concours/{id}/buvette/reservations - Liste des réservations buvette (admin)
+     */
+    public function proxyConcoursBuvetteReservationsList($concoursId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $response = $this->apiService->makeRequest("concours/{$concoursId}/buvette/reservations", 'GET');
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Proxy pour POST /api/concours/{id}/buvette/reservations - Enregistrer réservations buvette (public)
      */
     public function proxyConcoursBuvetteReservations($concoursId) {

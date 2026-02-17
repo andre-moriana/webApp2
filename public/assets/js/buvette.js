@@ -157,5 +157,45 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(err => showMessage('Erreur: ' + err.message, 'danger'));
     });
 
+    function loadReservations() {
+        const loadingRow = document.getElementById('reservations-loading');
+        const tbodyRes = document.getElementById('tbody-buvette-reservations');
+        const emptyRes = document.getElementById('reservations-empty');
+        if (!loadingRow || !tbodyRes) return;
+        loadingRow.classList.remove('d-none');
+        if (emptyRes) emptyRes.classList.add('d-none');
+        fetch('/api/concours/' + concoursId + '/buvette/reservations', {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            loadingRow.classList.add('d-none');
+            const reservations = Array.isArray(data) ? data : (data.data || []);
+            if (reservations.length === 0) {
+                if (emptyRes) emptyRes.classList.remove('d-none');
+                tbodyRes.innerHTML = '';
+                return;
+            }
+            if (emptyRes) emptyRes.classList.add('d-none');
+            tbodyRes.innerHTML = reservations.map(r => {
+                const prix = r.prix != null ? parseFloat(r.prix) : 0;
+                const qty = parseInt(r.quantite, 10) || 0;
+                const total = (prix * qty).toFixed(2);
+                const prixStr = prix > 0 ? prix.toFixed(2) + ' €' : '-';
+                const totalStr = total > 0 ? total + ' €' : '-';
+                let inscription = (r.user_nom || '').trim();
+                if (r.email && r.email.trim()) inscription += (inscription ? ' — ' : '') + r.email.trim();
+                if (!inscription) inscription = '—';
+                return '<tr><td>' + escapeHtml(inscription) + '</td><td>' + escapeHtml(r.libelle || '') + '</td><td>' + qty + ' ' + escapeHtml(r.unite || '') + '</td><td>' + prixStr + '</td><td>' + totalStr + '</td></tr>';
+            }).join('');
+        })
+        .catch(err => {
+            loadingRow.classList.add('d-none');
+            if (emptyRes) { emptyRes.textContent = 'Erreur de chargement.'; emptyRes.classList.remove('d-none'); }
+        });
+    }
+
     loadProduits();
+    loadReservations();
 });
