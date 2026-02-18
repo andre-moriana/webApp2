@@ -1,56 +1,80 @@
 <?php
-/** Classement - tableau trié par classement */
-$classement = [];
+/** Classement - calculé par catégorie de classement */
+$categoriesMap = $categoriesMap ?? [];
+
+// Grouper par catégorie de classement
+$byCategorie = [];
 foreach ($inscriptions as $insc) {
+    $cat = trim((string)($insc['categorie_classement'] ?? ''));
+    if ($cat === '') $cat = 'Sans catégorie';
+    if (!isset($byCategorie[$cat])) {
+        $byCategorie[$cat] = [];
+    }
     $inscId = $insc['id'] ?? $insc['_id'] ?? null;
     $r = $inscId ? ($resultats[(int)$inscId] ?? null) : null;
-    $classement[] = [
+    $byCategorie[$cat][] = [
         'inscription' => $insc,
         'resultat' => $r,
-        'classement' => $r ? ($r['classement'] ?? null) : null,
-        'score' => $r ? ($r['score'] ?? 0) : 0
+        'score' => $r ? (int)($r['score'] ?? 0) : 0
     ];
 }
-usort($classement, function($a, $b) {
-    $ca = $a['classement'];
-    $cb = $b['classement'];
-    if ($ca !== null && $cb !== null) return (int)$ca - (int)$cb;
-    if ($ca !== null) return -1;
-    if ($cb !== null) return 1;
-    return (int)$b['score'] - (int)$a['score'];
+
+// Trier les catégories (ordre alphabétique du libellé, "Sans catégorie" en dernier)
+uksort($byCategorie, function($a, $b) use ($categoriesMap) {
+    if ($a === 'Sans catégorie') return 1;
+    if ($b === 'Sans catégorie') return -1;
+    $lbA = $categoriesMap[$a] ?? $a;
+    $lbB = $categoriesMap[$b] ?? $b;
+    return strcasecmp($lbA, $lbB);
 });
+
+// Pour chaque catégorie : trier par score décroissant et attribuer les rangs
+foreach ($byCategorie as $cat => &$items) {
+    usort($items, function($a, $b) {
+        return $b['score'] - $a['score'];
+    });
+    $rang = 1;
+    foreach ($items as &$item) {
+        $item['rang'] = $rang++;
+    }
+    unset($item);
+}
+unset($items);
 ?>
 <div class="edition-classement">
     <h1 class="text-center mb-4">Classement</h1>
     <p class="text-center"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong></p>
     <p class="text-center"><?= htmlspecialchars($concours->date_debut ?? '') ?> — <?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? '') ?></p>
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Rang</th>
-                <th>Nom</th>
-                <th>N° Licence</th>
-                <th>Club</th>
-                <th>Score</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php $rang = 1; foreach ($classement as $item):
-                $insc = $item['inscription'];
-                $r = $item['resultat'];
-                $pos = $item['classement'] ?? $rang;
-                ?>
-                <tr>
-                    <td><?= $pos ?></td>
-                    <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
-                    <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
-                    <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
-                    <td><?= $r ? ($r['score'] ?? '-') : '-' ?></td>
-                </tr>
-            <?php $rang++; endforeach; ?>
-        </tbody>
-    </table>
+    <?php foreach ($byCategorie as $catAbv => $items): ?>
+        <?php $catLabel = $categoriesMap[$catAbv] ?? $catAbv; ?>
+        <div class="classement-categorie mb-4 page-break">
+            <h3 class="mb-3"><?= htmlspecialchars($catLabel) ?> <?= $catAbv !== 'Sans catégorie' ? '(' . htmlspecialchars($catAbv) . ')' : '' ?></h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Rang</th>
+                        <th>Nom</th>
+                        <th>N° Licence</th>
+                        <th>Club</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($items as $item): ?>
+                        <?php $insc = $item['inscription']; $r = $item['resultat']; ?>
+                        <tr>
+                            <td><?= $item['rang'] ?></td>
+                            <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
+                            <td><?= $r ? ($r['score'] ?? '-') : '-' ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endforeach; ?>
 
     <div class="mt-4 text-end">
         <p><em>Document généré le <?= date('d/m/Y à H:i') ?></em></p>

@@ -1646,6 +1646,24 @@ class ConcoursController {
         try {
             $niveauChampionnat = $this->apiService->unwrapData($this->apiService->makeRequest('niveau-championnat/list', 'GET')) ?: [];
         } catch (Exception $e) {}
+        $categoriesClassement = [];
+        $categoriesMap = [];
+        try {
+            $iddiscipline = $concours->discipline ?? null;
+            $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
+            $catResp = $this->apiService->makeRequest($endpoint, 'GET');
+            $catPayload = $this->apiService->unwrapData($catResp);
+            if (is_array($catPayload)) {
+                $categoriesClassement = isset($catPayload['data']) ? $catPayload['data'] : $catPayload;
+                $categoriesClassement = is_array($categoriesClassement) ? array_values($categoriesClassement) : [];
+                foreach ($categoriesClassement as $cat) {
+                    $abv = $cat['abv_categorie_classement'] ?? '';
+                    if ($abv) {
+                        $categoriesMap[$abv] = $cat['lb_categorie_classement'] ?? $abv;
+                    }
+                }
+            }
+        } catch (Exception $e) {}
 
         function findLabelEditions($items, $id, $idField = 'id', $labelField = 'name') {
             if (!is_array($items) || !$id) return '';
