@@ -21,13 +21,7 @@ class ConcoursController {
             header('Location: /login');
             exit;
         }
-            // Vérifier la permission de voir les utilisateurs
-            $clubId = $_SESSION['user']['clubId'] ?? null;
-            PermissionHelper::requirePermission(
-                PermissionService::RESOURCE_USERS_ALL,
-                PermissionService::ACTION_VIEW,
-                $clubId
-            );
+        // Accès autorisé à tous les archers (utilisateurs authentifiés)
 
         // Nettoyer les messages d'erreur de session
         unset($_SESSION['error']);
