@@ -1,10 +1,16 @@
 <?php
-/** Classement - calculé par catégorie de classement */
+/** Classement - calculé par catégorie de classement, uniquement 1er tir */
 $categoriesMap = $categoriesMap ?? [];
+
+// Ne prendre en compte que le 1er tir (numero_tir = 1 ou null)
+$inscriptions1erTir = array_filter($inscriptions, function($insc) {
+    $nt = $insc['numero_tir'] ?? null;
+    return $nt === null || $nt === '' || (int)$nt === 1;
+});
 
 // Grouper par catégorie de classement
 $byCategorie = [];
-foreach ($inscriptions as $insc) {
+foreach ($inscriptions1erTir as $insc) {
     $cat = trim((string)($insc['categorie_classement'] ?? ''));
     if ($cat === '') $cat = 'Sans catégorie';
     if (!isset($byCategorie[$cat])) {
@@ -43,6 +49,7 @@ unset($items);
 ?>
 <div class="edition-classement">
     <h1 class="text-center mb-4">Classement</h1>
+    <p class="text-center text-muted small">(1er tir uniquement)</p>
     <p class="text-center"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong></p>
     <p class="text-center"><?= htmlspecialchars($concours->date_debut ?? '') ?> — <?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? '') ?></p>
 
