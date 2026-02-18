@@ -336,9 +336,19 @@ window.editInscription = function(inscriptionId) {
         setVal('edit-arme', inscription.arme);
         setCheck('edit-mobilite_reduite', inscription.mobilite_reduite);
 
-        if (typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne) {
+        const isNature = !!(typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne) || !!(inscription.piquet && String(inscription.piquet).trim() !== '');
+        const piquetSection = document.querySelector('.edit-piquet-section');
+        const distanceSection = document.querySelector('.edit-distance-section');
+        const blasonSection = document.querySelector('.edit-blason-section');
+        const duelTrispotSection = document.querySelector('.edit-duel-trispot-section');
+        if (piquetSection) {
+            piquetSection.classList.toggle('d-none', !isNature);
             setVal('edit-piquet', inscription.piquet);
-        } else {
+        }
+        if (distanceSection) distanceSection.classList.toggle('d-none', isNature);
+        if (blasonSection) blasonSection.classList.toggle('d-none', isNature);
+        if (duelTrispotSection) duelTrispotSection.classList.toggle('d-none', isNature);
+        if (!isNature) {
             const editDistance = document.getElementById('edit-distance');
             const editBlason = document.getElementById('edit-blason');
             const editDuel = document.getElementById('edit-duel');
@@ -434,7 +444,8 @@ function initEditInscriptionHandlers() {
             return;
         }
 
-        const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+        const piquetSection = document.querySelector('.edit-piquet-section');
+        const isNature = piquetSection ? !piquetSection.classList.contains('d-none') : (typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne);
         const departSelect = document.getElementById('edit-depart-select');
         const numeroDepart = departSelect?.value || (currentEditInscription?.numero_depart ?? '');
         const updateData = {
