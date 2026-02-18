@@ -300,7 +300,8 @@ $currentUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? null;
                         foreach ($inscriptions as $inscription):
                             $inscriptionUserId = $inscription['user_id'] ?? null;
                             $isOwnInscription = $currentUserId && $inscriptionUserId && ((string)$currentUserId === (string)$inscriptionUserId);
-                            $canManageInscription = $isDirigeant && !$isOwnInscription;
+                            $canManageInscription = $isDirigeant && !$isOwnInscription; // Dirigeant : actions sur les inscriptions des autres
+                            $canEditDeleteInscription = $canManageInscription || $isOwnInscription; // Dirigeant sur autres OU archer sur sa propre inscription
                             $userNom = $inscription['user_nom'] ?? null;
                             $userNumeroLicence = $inscription['numero_licence'] ?? null;
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
@@ -363,7 +364,7 @@ $currentUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? null;
                                 <?php endif; ?>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
-                                    <?php if ($canManageInscription): ?>
+                                    <?php if ($canEditDeleteInscription): ?>
                                     <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/inscription" class="btn btn-sm btn-primary me-1">
                                         <i class="fas fa-edit"></i>
                                     </a>
