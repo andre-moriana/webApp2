@@ -1714,8 +1714,10 @@ class ConcoursController {
             $nb_20_10 = (isset($data['nb_20_10']) && $data['nb_20_10'] !== '') ? (int)$data['nb_20_10'] : null;
             $nb_15_15 = (isset($data['nb_15_15']) && $data['nb_15_15'] !== '') ? (int)$data['nb_15_15'] : null;
             $nb_15_10 = (isset($data['nb_15_10']) && $data['nb_15_10'] !== '') ? (int)$data['nb_15_10'] : null;
+            $nb_15 = (isset($data['nb_15']) && $data['nb_15'] !== '') ? (int)$data['nb_15'] : null;
+            $nb_10 = (isset($data['nb_10']) && $data['nb_10'] !== '') ? (int)$data['nb_10'] : null;
 
-            if ($score === null && $nb_20_15 === null && $nb_20_10 === null && $nb_15_15 === null && $nb_15_10 === null) {
+            if ($score === null && $nb_20_15 === null && $nb_20_10 === null && $nb_15_15 === null && $nb_15_10 === null && $nb_15 === null && $nb_10 === null) {
                 continue;
             }
 
@@ -1726,7 +1728,9 @@ class ConcoursController {
                     'nb_20_15' => $nb_20_15,
                     'nb_20_10' => $nb_20_10,
                     'nb_15_15' => $nb_15_15,
-                    'nb_15_10' => $nb_15_10
+                    'nb_15_10' => $nb_15_10,
+                    'nb_15' => $nb_15,
+                    'nb_10' => $nb_10
                 ];
                 $response = $this->apiService->makeRequest("concours/{$concoursId}/resultat", 'POST', $payload);
                 if ($response['success'] ?? false) {
