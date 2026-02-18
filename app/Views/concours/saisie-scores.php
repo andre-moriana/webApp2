@@ -189,8 +189,8 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                                    value="<?= htmlspecialchars($s2_9 !== '' ? $s2_9 : '') ?>" 
                                                    class="form-control form-control-sm serie-input" min="0" step="1" placeholder="0">
                                         </td>
-                                        <td class="text-center total-cell" data-insc="<?= (int)$inscId ?>"><?= $tot10 !== '' ? (int)$tot10 : '-' ?></td>
-                                        <td class="text-center total-cell" data-insc="<?= (int)$inscId ?>"><?= $tot9 !== '' ? (int)$tot9 : '-' ?></td>
+                                        <td class="text-center total-10-cell"><?= $tot10 !== '' ? (int)$tot10 : '-' ?></td>
+                                        <td class="text-center total-9-cell"><?= $tot9 !== '' ? (int)$tot9 : '-' ?></td>
                                     <?php elseif ($isNature): ?>
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][nb_20_15]" 
@@ -240,10 +240,10 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                             var s1_9 = parseInt(row.querySelector('input[name*="[serie1_nb_9]"]')?.value || 0) || 0;
                             var s2_10 = parseInt(row.querySelector('input[name*="[serie2_nb_10]"]')?.value || 0) || 0;
                             var s2_9 = parseInt(row.querySelector('input[name*="[serie2_nb_9]"]')?.value || 0) || 0;
-                            var tot10 = row.querySelector('.total-cell[data-insc]');
-                            var tot9 = tot10 ? tot10.nextElementSibling : null;
-                            if (tot10) tot10.textContent = s1_10 + s2_10;
-                            if (tot9) tot9.textContent = s1_9 + s2_9;
+                            var tot10Cell = row.querySelector('.total-10-cell');
+                            var tot9Cell = row.querySelector('.total-9-cell');
+                            if (tot10Cell) tot10Cell.textContent = s1_10 + s2_10;
+                            if (tot9Cell) tot9Cell.textContent = s1_9 + s2_9;
                         });
                     });
                 })();
