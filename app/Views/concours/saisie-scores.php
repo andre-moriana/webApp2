@@ -11,7 +11,11 @@ $isSalleTae = $isSalleTae ?? false;
 $resultats = $resultats ?? [];
 $departsForSelect = $departsForSelect ?? [];
 $departSelected = $departSelected ?? null;
+$serieMode = $serieMode ?? 'both';
 $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
+$showSerie1 = ($isSalleTae && ($serieMode === '1' || $serieMode === 'both'));
+$showSerie2 = ($isSalleTae && ($serieMode === '2' || $serieMode === 'both'));
+$showTotaux = ($isSalleTae && $serieMode === 'both');
 ?>
 <div class="container-fluid concours-saisie-scores">
     <h1 class="mb-4">
@@ -45,21 +49,40 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
         <?php return; ?>
     <?php endif; ?>
 
-    <?php if (!empty($departsForSelect)): ?>
+    <?php if (!empty($departsForSelect) || $isSalleTae): ?>
     <div class="card mb-3">
         <div class="card-body py-2">
-            <form method="get" action="<?= htmlspecialchars($baseUrlScores) ?>" id="form-select-depart" class="d-flex align-items-center gap-2 flex-wrap">
-                <label for="select-depart" class="mb-0 fw-bold">
-                    <i class="fas fa-flag me-1"></i>Départ :
-                </label>
-                <select name="depart" id="select-depart" class="form-select form-select-sm" style="max-width: 280px;">
-                    <option value="">-- Tous les départs --</option>
-                    <?php foreach ($departsForSelect as $num => $label): ?>
-                        <option value="<?= (int)$num ?>"<?= $departSelected === (int)$num ? ' selected' : '' ?>>
-                            <?= htmlspecialchars($label) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+            <form method="get" action="<?= htmlspecialchars($baseUrlScores) ?>" id="form-select-depart" class="d-flex align-items-center gap-3 flex-wrap">
+                <?php if ($departSelected !== null && empty($departsForSelect)): ?>
+                <input type="hidden" name="depart" value="<?= (int)$departSelected ?>">
+                <?php endif; ?>
+                <?php if (!empty($departsForSelect)): ?>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="select-depart" class="mb-0 fw-bold">
+                        <i class="fas fa-flag me-1"></i>Départ :
+                    </label>
+                    <select name="depart" id="select-depart" class="form-select form-select-sm" style="max-width: 280px;">
+                        <option value="">-- Tous les départs --</option>
+                        <?php foreach ($departsForSelect as $num => $label): ?>
+                            <option value="<?= (int)$num ?>"<?= $departSelected === (int)$num ? ' selected' : '' ?>>
+                                <?= htmlspecialchars($label) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+                <?php if ($isSalleTae): ?>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="select-serie" class="mb-0 fw-bold">
+                        <i class="fas fa-list-ol me-1"></i>Série :
+                    </label>
+                    <select name="serie" id="select-serie" class="form-select form-select-sm" style="max-width: 220px;">
+                        <option value="1"<?= $serieMode === '1' ? ' selected' : '' ?>>Série 1 uniquement</option>
+                        <option value="2"<?= $serieMode === '2' ? ' selected' : '' ?>>Série 2 uniquement</option>
+                        <option value="both"<?= $serieMode === 'both' ? ' selected' : '' ?>>Les deux séries</option>
+                    </select>
+                </div>
+                <?php endif; ?>
                 <button type="submit" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-filter me-1"></i>Filtrer
                 </button>
@@ -67,9 +90,8 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
         </div>
     </div>
     <script>
-    document.getElementById('select-depart').addEventListener('change', function() {
-        document.getElementById('form-select-depart').submit();
-    });
+    document.getElementById('select-depart')?.addEventListener('change', function() { document.getElementById('form-select-depart').submit(); });
+    document.getElementById('select-serie')?.addEventListener('change', function() { document.getElementById('form-select-depart').submit(); });
     </script>
     <?php endif; ?>
 
@@ -104,9 +126,18 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
             </h5>
         </div>
         <div class="card-body">
-            <form method="post" action="<?= htmlspecialchars($baseUrlScores) ?><?= $departSelected !== null ? '?depart=' . (int)$departSelected : '' ?>" id="form-scores">
+            <?php
+            $formActionParams = [];
+            if ($departSelected !== null) $formActionParams['depart'] = $departSelected;
+            if ($isSalleTae && $serieMode !== 'both') $formActionParams['serie'] = $serieMode;
+            $formAction = $baseUrlScores . (!empty($formActionParams) ? '?' . http_build_query($formActionParams) : '');
+            ?>
+            <form method="post" action="<?= htmlspecialchars($formAction) ?>" id="form-scores">
                 <?php if ($departSelected !== null): ?>
                 <input type="hidden" name="depart" value="<?= (int)$departSelected ?>">
+                <?php endif; ?>
+                <?php if ($isSalleTae): ?>
+                <input type="hidden" name="serie_mode" value="<?= htmlspecialchars($serieMode) ?>">
                 <?php endif; ?>
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle">
@@ -116,21 +147,32 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                 <th>N° licence</th>
                                 <th>Club</th>
                                 <th>Départ</th>
-                                <th>Score total</th>
                                 <?php if ($isSalleTae): ?>
-                                    <th>S1 - 10</th>
-                                    <th>S1 - 9</th>
-                                    <th>S2 - 10</th>
-                                    <th>S2 - 9</th>
-                                    <th>Total 10</th>
-                                    <th>Total 9</th>
+                                    <?php if ($showSerie1): ?>
+                                        <th>Score S1</th>
+                                        <th>S1 - 10</th>
+                                        <th>S1 - 9</th>
+                                    <?php endif; ?>
+                                    <?php if ($showSerie2): ?>
+                                        <th>Score S2</th>
+                                        <th>S2 - 10</th>
+                                        <th>S2 - 9</th>
+                                    <?php endif; ?>
+                                    <?php if ($showTotaux): ?>
+                                        <th>Score total</th>
+                                        <th>Total 10</th>
+                                        <th>Total 9</th>
+                                    <?php endif; ?>
                                 <?php elseif ($isNature): ?>
+                                    <th>Score total</th>
                                     <th>20-15</th>
                                     <th>20-10</th>
                                     <th>15-15</th>
                                     <th>15-10</th>
                                     <th>15</th>
                                     <th>10</th>
+                                <?php else: ?>
+                                    <th>Score total</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>
@@ -150,8 +192,10 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                 $nb1510 = $res['nb_15_10'] ?? '';
                                 $nb15 = $res['nb_15'] ?? '';
                                 $nb10 = $res['nb_10'] ?? '';
+                                $s1_score = $res['serie1_score'] ?? '';
                                 $s1_10 = $res['serie1_nb_10'] ?? '';
                                 $s1_9 = $res['serie1_nb_9'] ?? '';
+                                $s2_score = $res['serie2_score'] ?? '';
                                 $s2_10 = $res['serie2_nb_10'] ?? '';
                                 $s2_9 = $res['serie2_nb_9'] ?? '';
                                 $tot10 = ($s1_10 !== '' && $s2_10 !== '') ? ((int)$s1_10 + (int)$s2_10) : (($res['total_nb_10'] ?? ''));
@@ -162,13 +206,13 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                     <td><?= htmlspecialchars($numeroLicence) ?></td>
                                     <td><?= htmlspecialchars($clubName) ?></td>
                                     <td><?= htmlspecialchars($numeroDepart) ?></td>
-                                    <td>
-                                        <input type="number" name="scores[<?= (int)$inscId ?>][score]" 
-                                               value="<?= htmlspecialchars($scoreVal !== '' ? $scoreVal : '') ?>" 
-                                               class="form-control form-control-sm score-total" min="0" step="1" 
-                                               placeholder="0">
-                                    </td>
                                     <?php if ($isSalleTae): ?>
+                                        <?php if ($showSerie1): ?>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][serie1_score]" 
+                                                   value="<?= htmlspecialchars($s1_score !== '' ? $s1_score : '') ?>" 
+                                                   class="form-control form-control-sm serie1-score-input" min="0" step="1" placeholder="0">
+                                        </td>
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][serie1_nb_10]" 
                                                    value="<?= htmlspecialchars($s1_10 !== '' ? $s1_10 : '') ?>" 
@@ -178,6 +222,13 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                             <input type="number" name="scores[<?= (int)$inscId ?>][serie1_nb_9]" 
                                                    value="<?= htmlspecialchars($s1_9 !== '' ? $s1_9 : '') ?>" 
                                                    class="form-control form-control-sm serie-input" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <?php endif; ?>
+                                        <?php if ($showSerie2): ?>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][serie2_score]" 
+                                                   value="<?= htmlspecialchars($s2_score !== '' ? $s2_score : '') ?>" 
+                                                   class="form-control form-control-sm serie2-score-input" min="0" step="1" placeholder="0">
                                         </td>
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][serie2_nb_10]" 
@@ -189,9 +240,18 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                                    value="<?= htmlspecialchars($s2_9 !== '' ? $s2_9 : '') ?>" 
                                                    class="form-control form-control-sm serie-input" min="0" step="1" placeholder="0">
                                         </td>
-                                        <td class="text-center total-10-cell"><?= $tot10 !== '' ? (int)$tot10 : '-' ?></td>
-                                        <td class="text-center total-9-cell"><?= $tot9 !== '' ? (int)$tot9 : '-' ?></td>
+                                        <?php endif; ?>
+                                        <?php if ($showTotaux): ?>
+                                        <td class="text-center score-total-cell"><?= ($s1_score !== '' && $s2_score !== '') ? ((int)$s1_score + (int)$s2_score) : '-' ?></td>
+                                        <td class="text-center total-10-cell"><?= ($s1_10 !== '' && $s2_10 !== '') ? (int)$tot10 : '-' ?></td>
+                                        <td class="text-center total-9-cell"><?= ($s1_9 !== '' && $s2_9 !== '') ? (int)$tot9 : '-' ?></td>
+                                        <?php endif; ?>
                                     <?php elseif ($isNature): ?>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][score]" 
+                                                   value="<?= htmlspecialchars($scoreVal !== '' ? $scoreVal : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][nb_20_15]" 
                                                    value="<?= htmlspecialchars($nb2015 !== '' ? $nb2015 : '') ?>" 
@@ -222,6 +282,12 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                                    value="<?= htmlspecialchars($nb10 !== '' ? $nb10 : '') ?>" 
                                                    class="form-control form-control-sm" min="0" step="1" placeholder="0">
                                         </td>
+                                    <?php else: ?>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][score]" 
+                                                   value="<?= htmlspecialchars($scoreVal !== '' ? $scoreVal : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
                                     <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
@@ -229,23 +295,36 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                     </table>
                 </div>
 
-                <?php if ($isSalleTae): ?>
+                <?php if ($isSalleTae && $showTotaux): ?>
                 <script>
                 (function() {
-                    document.querySelectorAll('.serie-input').forEach(function(inp) {
-                        inp.addEventListener('input', function() {
-                            var row = inp.closest('tr');
-                            if (!row) return;
-                            var s1_10 = parseInt(row.querySelector('input[name*="[serie1_nb_10]"]')?.value || 0) || 0;
-                            var s1_9 = parseInt(row.querySelector('input[name*="[serie1_nb_9]"]')?.value || 0) || 0;
-                            var s2_10 = parseInt(row.querySelector('input[name*="[serie2_nb_10]"]')?.value || 0) || 0;
-                            var s2_9 = parseInt(row.querySelector('input[name*="[serie2_nb_9]"]')?.value || 0) || 0;
-                            var tot10Cell = row.querySelector('.total-10-cell');
-                            var tot9Cell = row.querySelector('.total-9-cell');
-                            if (tot10Cell) tot10Cell.textContent = s1_10 + s2_10;
-                            if (tot9Cell) tot9Cell.textContent = s1_9 + s2_9;
+                    function updateTotaux(row) {
+                        var s1ScoreInp = row.querySelector('input[name*="[serie1_score]"]');
+                        var s2ScoreInp = row.querySelector('input[name*="[serie2_score]"]');
+                        var s1_10Inp = row.querySelector('input[name*="[serie1_nb_10]"]');
+                        var s1_9Inp = row.querySelector('input[name*="[serie1_nb_9]"]');
+                        var s2_10Inp = row.querySelector('input[name*="[serie2_nb_10]"]');
+                        var s2_9Inp = row.querySelector('input[name*="[serie2_nb_9]"]');
+                        var s1Score = s1ScoreInp && s1ScoreInp.value !== '' ? (parseInt(s1ScoreInp.value) || 0) : null;
+                        var s2Score = s2ScoreInp && s2ScoreInp.value !== '' ? (parseInt(s2ScoreInp.value) || 0) : null;
+                        var s1_10 = s1_10Inp && s1_10Inp.value !== '' ? (parseInt(s1_10Inp.value) || 0) : null;
+                        var s1_9 = s1_9Inp && s1_9Inp.value !== '' ? (parseInt(s1_9Inp.value) || 0) : null;
+                        var s2_10 = s2_10Inp && s2_10Inp.value !== '' ? (parseInt(s2_10Inp.value) || 0) : null;
+                        var s2_9 = s2_9Inp && s2_9Inp.value !== '' ? (parseInt(s2_9Inp.value) || 0) : null;
+                        var scoreTotalCell = row.querySelector('.score-total-cell');
+                        var tot10Cell = row.querySelector('.total-10-cell');
+                        var tot9Cell = row.querySelector('.total-9-cell');
+                        if (scoreTotalCell) scoreTotalCell.textContent = (s1Score !== null && s2Score !== null) ? (s1Score + s2Score) : '-';
+                        if (tot10Cell) tot10Cell.textContent = (s1_10 !== null && s2_10 !== null) ? (s1_10 + s2_10) : '-';
+                        if (tot9Cell) tot9Cell.textContent = (s1_9 !== null && s2_9 !== null) ? (s1_9 + s2_9) : '-';
+                    }
+                    function addListeners(row) {
+                        var inputs = row.querySelectorAll('.serie-input, .serie1-score-input, .serie2-score-input');
+                        inputs.forEach(function(inp) {
+                            inp.addEventListener('input', function() { updateTotaux(row); });
                         });
-                    });
+                    }
+                    document.querySelectorAll('#form-scores tbody tr').forEach(addListeners);
                 })();
                 </script>
                 <?php endif; ?>

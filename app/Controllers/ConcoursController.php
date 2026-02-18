@@ -1614,6 +1614,11 @@ class ConcoursController {
 
         // Départ sélectionné (GET)
         $departSelected = isset($_GET['depart']) && $_GET['depart'] !== '' ? (int)$_GET['depart'] : null;
+        // Mode série Salle/TAE : 1 = série 1 uniquement, 2 = série 2 uniquement, both = les deux (totaux affichés)
+        $serieMode = isset($_GET['serie']) ? $_GET['serie'] : 'both';
+        if (!in_array($serieMode, ['1', '2', 'both'])) {
+            $serieMode = 'both';
+        }
         if ($departSelected !== null) {
             $inscriptions = array_filter($inscriptions, function($i) use ($departSelected) {
                 $num = isset($i['numero_depart']) ? (int)$i['numero_depart'] : null;
@@ -1733,12 +1738,14 @@ class ConcoursController {
             $nb_15_10 = (isset($data['nb_15_10']) && $data['nb_15_10'] !== '') ? (int)$data['nb_15_10'] : null;
             $nb_15 = (isset($data['nb_15']) && $data['nb_15'] !== '') ? (int)$data['nb_15'] : null;
             $nb_10 = (isset($data['nb_10']) && $data['nb_10'] !== '') ? (int)$data['nb_10'] : null;
+            $serie1_score = (isset($data['serie1_score']) && $data['serie1_score'] !== '') ? (int)$data['serie1_score'] : null;
             $serie1_nb_10 = (isset($data['serie1_nb_10']) && $data['serie1_nb_10'] !== '') ? (int)$data['serie1_nb_10'] : null;
             $serie1_nb_9 = (isset($data['serie1_nb_9']) && $data['serie1_nb_9'] !== '') ? (int)$data['serie1_nb_9'] : null;
+            $serie2_score = (isset($data['serie2_score']) && $data['serie2_score'] !== '') ? (int)$data['serie2_score'] : null;
             $serie2_nb_10 = (isset($data['serie2_nb_10']) && $data['serie2_nb_10'] !== '') ? (int)$data['serie2_nb_10'] : null;
             $serie2_nb_9 = (isset($data['serie2_nb_9']) && $data['serie2_nb_9'] !== '') ? (int)$data['serie2_nb_9'] : null;
 
-            $hasSalleTae = $serie1_nb_10 !== null || $serie1_nb_9 !== null || $serie2_nb_10 !== null || $serie2_nb_9 !== null;
+            $hasSalleTae = $serie1_score !== null || $serie1_nb_10 !== null || $serie1_nb_9 !== null || $serie2_score !== null || $serie2_nb_10 !== null || $serie2_nb_9 !== null;
             $hasNature = $score !== null || $nb_20_15 !== null || $nb_20_10 !== null || $nb_15_15 !== null || $nb_15_10 !== null || $nb_15 !== null || $nb_10 !== null;
             if (!$hasSalleTae && !$hasNature) {
                 continue;
@@ -1754,11 +1761,24 @@ class ConcoursController {
                     'nb_15_10' => $nb_15_10,
                     'nb_15' => $nb_15,
                     'nb_10' => $nb_10,
-                    'serie1_nb_10' => $serie1_nb_10,
-                    'serie1_nb_9' => $serie1_nb_9,
-                    'serie2_nb_10' => $serie2_nb_10,
-                    'serie2_nb_9' => $serie2_nb_9
                 ];
+                $serieMode = $_POST['serie_mode'] ?? 'both';
+                if ($serieMode === '1') {
+                    $payload['serie1_score'] = $serie1_score;
+                    $payload['serie1_nb_10'] = $serie1_nb_10;
+                    $payload['serie1_nb_9'] = $serie1_nb_9;
+                } elseif ($serieMode === '2') {
+                    $payload['serie2_score'] = $serie2_score;
+                    $payload['serie2_nb_10'] = $serie2_nb_10;
+                    $payload['serie2_nb_9'] = $serie2_nb_9;
+                } else {
+                    $payload['serie1_score'] = $serie1_score;
+                    $payload['serie1_nb_10'] = $serie1_nb_10;
+                    $payload['serie1_nb_9'] = $serie1_nb_9;
+                    $payload['serie2_score'] = $serie2_score;
+                    $payload['serie2_nb_10'] = $serie2_nb_10;
+                    $payload['serie2_nb_9'] = $serie2_nb_9;
+                }
                 $response = $this->apiService->makeRequest("concours/{$concoursId}/resultat", 'POST', $payload);
                 if ($response['success'] ?? false) {
                     $saved++;
@@ -1778,8 +1798,15 @@ class ConcoursController {
         }
 
         $redirectUrl = '/concours/' . $concoursId . '/saisie-scores';
+        $params = [];
         if (isset($_POST['depart']) && $_POST['depart'] !== '') {
-            $redirectUrl .= '?depart=' . (int)$_POST['depart'];
+            $params['depart'] = (int)$_POST['depart'];
+        }
+        if (isset($_POST['serie_mode']) && $_POST['serie_mode'] !== '' && $_POST['serie_mode'] !== 'both') {
+            $params['serie'] = $_POST['serie_mode'];
+        }
+        if (!empty($params)) {
+            $redirectUrl .= '?' . http_build_query($params);
         }
         header('Location: ' . $redirectUrl);
         exit;
