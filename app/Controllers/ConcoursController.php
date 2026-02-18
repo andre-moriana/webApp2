@@ -1158,6 +1158,35 @@ class ConcoursController {
         if (!is_array($inscriptions)) {
             $inscriptions = [];
         }
+
+        // Enrichir les inscriptions sans user_id : ajouter user_id si numero_licence = licence de l'utilisateur connecté
+        $currentUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? $_SESSION['user']['_id'] ?? null;
+        $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));
+        if ($currentUserLicence === '' && $currentUserId) {
+            try {
+                $userResponse = $this->apiService->makeRequest("users/{$currentUserId}", 'GET');
+                if ($userResponse['success'] && isset($userResponse['data'])) {
+                    $userData = $userResponse['data'];
+                    $currentUserLicence = trim((string)($userData['numero_licence'] ?? $userData['licence_number'] ?? $userData['licenceNumber'] ?? ''));
+                    if ($currentUserLicence !== '') {
+                        $_SESSION['user']['numero_licence'] = $currentUserLicence;
+                        $_SESSION['user']['licenceNumber'] = $currentUserLicence;
+                    }
+                }
+            } catch (Exception $e) {
+                // Ignorer
+            }
+        }
+        foreach ($inscriptions as &$inscription) {
+            if (empty($inscription['user_id']) && $currentUserId && $currentUserLicence !== '') {
+                $inscLicence = trim((string)($inscription['numero_licence'] ?? ''));
+                if ($inscLicence !== '' && $inscLicence === $currentUserLicence) {
+                    $inscription['user_id'] = $currentUserId;
+                }
+            }
+        }
+        unset($inscription);
+        $isDirigeant = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
         
         // Récupérer les informations complètes des utilisateurs inscrits
         $userIds = array_column($inscriptions, 'user_id');
@@ -1660,6 +1689,10 @@ class ConcoursController {
         $formAction = '/inscription-cible/' . $concoursId . ($currentToken ? '?token=' . urlencode($currentToken) : '');
         $apiInscriptionsUrl = '/api/concours/' . $concoursId . '/inscriptions/public';
         $archerSearchUrl = '/archer/search-or-create/public/' . $concoursId;
+        // Permissions pour les actions sur les inscriptions (inscription ciblée : souvent non connecté)
+        $currentUserId = isset($_SESSION['user']) ? ($_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? $_SESSION['user']['_id'] ?? null) : null;
+        $currentUserLicence = isset($_SESSION['user']) ? trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? '')) : '';
+        $isDirigeant = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
 
         require_once __DIR__ . '/../Views/layouts/header.php';
         require_once __DIR__ . '/../Views/concours/inscription.php';
