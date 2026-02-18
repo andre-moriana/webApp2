@@ -3,10 +3,14 @@
  * Page de saisie des scores pour un concours
  * Pour les concours de type Nature : score total + nombre de 20-15, 20-10, 15-15, 15-10
  * Pour les autres types : score total uniquement (extensible)
+ * Filtrage par départ : afficher uniquement les tireurs du départ sélectionné
  */
 $concoursId = $concoursId ?? ($concours->id ?? $concours->_id ?? null);
 $isNature = $isNature ?? false;
 $resultats = $resultats ?? [];
+$departsForSelect = $departsForSelect ?? [];
+$departSelected = $departSelected ?? null;
+$baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
 ?>
 <div class="container-fluid concours-saisie-scores">
     <h1 class="mb-4">
@@ -30,9 +34,52 @@ $resultats = $resultats ?? [];
         <?php unset($_SESSION['success']); ?>
     <?php endif; ?>
 
-    <?php if (empty($inscriptions)): ?>
+    <?php if (empty($inscriptions) && empty($departsForSelect)): ?>
         <div class="alert alert-info">
             <i class="fas fa-info-circle me-2"></i>Aucune inscription confirmée pour ce concours. Les scores ne peuvent être saisis que pour les archers dont l'inscription est confirmée.
+        </div>
+        <a href="/concours/show/<?= (int)$concoursId ?>" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Retour au concours
+        </a>
+        <?php return; ?>
+    <?php endif; ?>
+
+    <?php if (!empty($departsForSelect)): ?>
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="get" action="<?= htmlspecialchars($baseUrlScores) ?>" id="form-select-depart" class="d-flex align-items-center gap-2 flex-wrap">
+                <label for="select-depart" class="mb-0 fw-bold">
+                    <i class="fas fa-flag me-1"></i>Départ :
+                </label>
+                <select name="depart" id="select-depart" class="form-select form-select-sm" style="max-width: 280px;">
+                    <option value="">-- Tous les départs --</option>
+                    <?php foreach ($departsForSelect as $num => $label): ?>
+                        <option value="<?= (int)$num ?>"<?= $departSelected === (int)$num ? ' selected' : '' ?>>
+                            <?= htmlspecialchars($label) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-filter me-1"></i>Filtrer
+                </button>
+            </form>
+        </div>
+    </div>
+    <script>
+    document.getElementById('select-depart').addEventListener('change', function() {
+        document.getElementById('form-select-depart').submit();
+    });
+    </script>
+    <?php endif; ?>
+
+    <?php if (empty($inscriptions)): ?>
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <?php if ($departSelected !== null): ?>
+                Aucun tireur inscrit au départ sélectionné.
+            <?php else: ?>
+                Aucune inscription confirmée pour ce concours.
+            <?php endif; ?>
         </div>
         <a href="/concours/show/<?= (int)$concoursId ?>" class="btn btn-secondary">
             <i class="fas fa-arrow-left me-1"></i>Retour au concours
@@ -53,7 +100,10 @@ $resultats = $resultats ?? [];
             </h5>
         </div>
         <div class="card-body">
-            <form method="post" action="/concours/<?= (int)$concoursId ?>/saisie-scores" id="form-scores">
+            <form method="post" action="<?= htmlspecialchars($baseUrlScores) ?><?= $departSelected !== null ? '?depart=' . (int)$departSelected : '' ?>" id="form-scores">
+                <?php if ($departSelected !== null): ?>
+                <input type="hidden" name="depart" value="<?= (int)$departSelected ?>">
+                <?php endif; ?>
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle">
                         <thead class="table-light">
