@@ -383,7 +383,8 @@ $debugLicence = isset($_GET['debug_licence']);
                                     <?php else: ?>
                                     <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
                                     <?php endif; ?>
-                                </td>                               <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?></td>
+                                </td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ?? '') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscriptionLicence ?: 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
@@ -484,7 +485,182 @@ $debugLicence = isset($_GET['debug_licence']);
         </div>
     </div>
 </div>
+<!-- Modale pour éditer une inscription -->
+<div class="modal fade" id="editInscriptionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Éditer l'inscription</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="edit-modal-body">
+                <form id="edit-inscription-form">
+                    <h5 class="mb-3">Informations d'inscription</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-saison" class="form-label">Saison</label>
+                            <input type="text" id="edit-saison" class="form-control" placeholder="Ex: 2024-2025">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-type_certificat_medical" class="form-label">Type Certificat Médical</label>
+                            <select id="edit-type_certificat_medical" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="Compétition">Compétition</option>
+                                <option value="Pratique">Pratique</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-type_licence" class="form-label">Type Licence</label>
+                            <select id="edit-type_licence" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="L">L</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-creation_renouvellement" class="form-label">Création/Renouvellement</label>
+                            <select id="edit-creation_renouvellement" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="C">Création</option>
+                                <option value="R">Renouvellement</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <?php if (!empty($departs)): ?>
+                    <div class="mb-3">
+                        <label for="edit-depart-select" class="form-label">Date et heure du greffe</label>
+                        <select id="edit-depart-select" class="form-control">
+                            <option value="">Sélectionner un départ</option>
+                            <?php foreach ($departs as $depart): ?>
+                                <?php
+                                $dateDep = $depart['date_depart'] ?? $depart['date'] ?? '';
+                                $heureGreffe = $depart['heure_greffe'] ?? $depart['heure'] ?? '';
+                                $numero = (int)($depart['numero_depart'] ?? $depart['numero'] ?? 0);
+                                if ($dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
+                                    $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
+                                }
+                                $heureGreffe = $heureGreffe ? substr($heureGreffe, 0, 5) : '';
+                                $label = trim($dateDep . ($heureGreffe ? ' ' . $heureGreffe : ''));
+                                if (empty($label)) $label = 'Départ ' . $numero;
+                                ?>
+                                <option value="<?= $numero ?>"><?= htmlspecialchars($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <h6 class="mt-4 mb-3">Classification et équipement</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-categorie_classement" class="form-label">Catégorie de classement</label>
+                            <select id="edit-categorie_classement" class="form-control">
+                                <option value="">Sélectionner une catégorie</option>
+                                <?php if (!empty($categoriesClassement)): ?>
+                                    <?php foreach ($categoriesClassement as $categorie): ?>
+                                        <option value="<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>">
+                                            <?= htmlspecialchars($categorie['lb_categorie_classement'] ?? '') ?> (<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit-arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
+                            <select id="edit-arme" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <?php if (!empty($arcs)): ?>
+                                    <?php foreach ($arcs as $arc): ?>
+                                        <option value="<?= htmlspecialchars($arc['lb_arc'] ?? '') ?>">
+                                            <?= htmlspecialchars($arc['lb_arc'] ?? '') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" id="edit-mobilite_reduite" class="form-check-input">
+                                <label for="edit-mobilite_reduite" class="form-check-label">Mobilité réduite</label>
+                            </div>
+                        </div>
+                        <?php if ($isNature3DOrCampagne): ?>
+                            <div class="col-md-3 mb-3">
+                                <label for="edit-piquet" class="form-label">Piquet</label>
+                                <select id="edit-piquet" name="piquet" class="form-control">
+                                    <option value="">Sélectionner</option>
+                                    <option value="rouge">Rouge</option>
+                                    <option value="bleu">Bleu</option>
+                                    <option value="blanc">Blanc</option>
+                                </select>
+                            </div>
+                        <?php else: ?>
+                            <div class="col-md-3 mb-3">
+                                <label for="edit-distance" class="form-label">Distance</label>
+                                <select id="edit-distance" class="form-control">
+                                    <option value="">Sélectionner</option>
+                                    <?php if (!empty($distancesTir)): ?>
+                                        <?php foreach ($distancesTir as $distance): ?>
+                                            <option value="<?= htmlspecialchars($distance['distance_valeur'] ?? '') ?>">
+                                                <?= htmlspecialchars($distance['lb_distance'] ?? '') ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                        <?php endif; ?>
+                        <?php if (!$isNature3DOrCampagne): ?>
+                            <div class="col-md-3 mb-3">
+                                <label for="edit-blason" class="form-label">Blason</label>
+                                <input type="number" id="edit-blason" class="form-control" min="0" placeholder="Ex: 40">
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <?php if (!$isNature3DOrCampagne): ?>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    <input type="checkbox" id="edit-duel" class="form-check-input">
+                                    <label for="edit-duel" class="form-check-label">Duel</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    <input type="checkbox" id="edit-trispot" class="form-check-input">
+                                    <label for="edit-trispot" class="form-check-label">Trispot</label>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
+                    <h6 class="mt-4 mb-3"><i class="fas fa-coffee"></i> Buvette</h6>
+                    <p class="text-muted small mb-2">Réservation optionnelle des articles de la buvette</p>
+                    <div id="edit-buvette-produits-container" class="border rounded p-3 bg-light">
+                        <div id="edit-buvette-loading" class="text-center py-2 text-muted small">Chargement des produits...</div>
+                        <div id="edit-buvette-produits-list" class="d-none"></div>
+                        <div id="edit-buvette-empty" class="text-muted small d-none">Aucun produit disponible pour ce concours.</div>
+                        <div id="edit-buvette-no-token" class="text-muted small d-none">Les réservations buvette ne sont pas disponibles pour cette inscription (token manquant).</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm-edit">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/public/assets/js/concours-show-map.js"></script>
 <?php endif; ?>
