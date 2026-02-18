@@ -82,7 +82,7 @@
                             <i class="fas fa-clipboard-list me-1"></i> Exercices
                         </a>
                     </li>
-                    <?php if (($_SESSION['user']['is_admin'] ?? false) || ($_SESSION['user']['role'] ?? '') === 'Coach' || ($_SESSION['user']['role'] ?? '') === 'Dirigeant'): ?>
+                    <?php // if (($_SESSION['user']['is_admin'] ?? false) || ($_SESSION['user']['role'] ?? '') === 'Coach' || ($_SESSION['user']['role'] ?? '') === 'Dirigeant'): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="/concours">
                             <i class="fas fa-trophy me-1"></i> Concours
@@ -93,7 +93,7 @@
                             <i class="fas fa-users me-1"></i> Utilisateurs
                         </a>
                     </li>
-                    <?php endif; ?>
+                    <?php // endif; ?>
                     <li class="nav-item">
                         <a class="nav-link" href="/private-messages">
                             <i class="fas fa-envelope me-1"></i> Messages

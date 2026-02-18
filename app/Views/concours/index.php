@@ -156,9 +156,11 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                                 <a href="/concours/<?php echo $concoursId; ?>/inscription" class="btn btn-sm btn-outline-success" title="Gérer les inscriptions">
                                                     <i class="fas fa-user-plus"></i>
                                                 </a>
+                                                <!--
                                                 <button type="button" class="btn btn-sm btn-outline-info" title="S'inscrire rapidement" onclick="inscrireConcours(<?php echo $concoursId; ?>)">
                                                     <i class="fas fa-check"></i>
                                                 </button>
+                                                -->
                                                 <?php 
                                                 // Afficher le bouton plan de cible uniquement pour les disciplines S, T, I, H
                                                 $disciplineId = $item['discipline'] ?? $item['iddiscipline'] ?? null;
