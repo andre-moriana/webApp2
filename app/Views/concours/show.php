@@ -266,7 +266,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
 <?php
 // Déterminer si c'est une discipline 3D, Nature ou Campagne (abv_discipline = "3", "N" ou "C")
 $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true);
-$currentUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? null;
+$currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));
 ?>
 <div class="inscriptions-section">
     <h2>Liste des inscrits</h2>
@@ -298,8 +298,8 @@ $currentUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? null;
                         <?php 
                         // $usersMap est passé depuis le contrôleur
                         foreach ($inscriptions as $inscription):
-                            $inscriptionUserId = $inscription['user_id'] ?? null;
-                            $isOwnInscription = $currentUserId && $inscriptionUserId && ((string)$currentUserId === (string)$inscriptionUserId);
+                            $inscriptionLicence = trim((string)($inscription['numero_licence'] ?? ''));
+                            $isOwnInscription = $currentUserLicence !== '' && $inscriptionLicence !== '' && $currentUserLicence === $inscriptionLicence;
                             $canManageInscription = $isDirigeant && !$isOwnInscription; // Dirigeant : actions sur les inscriptions des autres
                             $canEditDeleteInscription = $canManageInscription || $isOwnInscription; // Dirigeant sur autres OU archer sur sa propre inscription
                             $userNom = $inscription['user_nom'] ?? null;
