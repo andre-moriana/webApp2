@@ -156,9 +156,11 @@ $title = "Gestion des concours - Portail Archers de Gémenos";
                                                 <a href="/concours/<?php echo $concoursId; ?>/inscription" class="btn btn-sm btn-outline-success" title="Gérer les inscriptions">
                                                     <i class="fas fa-user-plus"></i>
                                                 </a>
+                                                <?php if ($isAdmin || $isDirigeant): ?>
                                                 <a href="/concours/<?php echo $concoursId; ?>/saisie-scores" class="btn btn-sm btn-outline-warning" title="Saisie des scores">
                                                     <i class="fas fa-calculator"></i>
                                                 </a>
+                                                <?php endif; ?>
                                                 <!--
                                                 <button type="button" class="btn btn-sm btn-outline-info" title="S'inscrire rapidement" onclick="inscrireConcours(<?php echo $concoursId; ?>)">
                                                     <i class="fas fa-check"></i>

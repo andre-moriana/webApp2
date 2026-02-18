@@ -425,13 +425,20 @@ $debugLicence = isset($_GET['debug_licence']);
 <div class="actions-section">
     <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
     <?php if (isset($concours->id) || isset($concours->_id)): ?>
-        <?php $concoursId = $concours->id ?? $concours->_id; ?>
+        <?php 
+        $concoursId = $concours->id ?? $concours->_id;
+        $isAdmin = $_SESSION['user']['is_admin'] ?? false;
+        $isDirigeantShow = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+        $canSaisieScores = $isAdmin || $isDirigeantShow;
+        ?>
         <a href="/concours/<?= htmlspecialchars($concoursId) ?>/inscription" class="btn btn-success">
             <i class="fas fa-user-plus"></i> Gérer les inscriptions
         </a>
+        <?php if ($canSaisieScores): ?>
         <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
             <i class="fas fa-calculator"></i> Saisie des scores
         </a>
+        <?php endif; ?>
     <?php endif; ?>
 </div>
 </div>

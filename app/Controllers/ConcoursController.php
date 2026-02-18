@@ -1566,6 +1566,14 @@ class ConcoursController {
             exit;
         }
 
+        $isAdmin = $_SESSION['user']['is_admin'] ?? false;
+        $isDirigeant = ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+        if (!$isAdmin && !$isDirigeant) {
+            $_SESSION['error'] = 'Accès refusé. La saisie des scores est réservée aux administrateurs et dirigeants.';
+            header('Location: /concours/show/' . $concoursId);
+            exit;
+        }
+
         $concoursResponse = $this->apiService->getConcoursById($concoursId);
         if (!$concoursResponse['success']) {
             $_SESSION['error'] = 'Concours introuvable';
@@ -1696,6 +1704,14 @@ class ConcoursController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $_SESSION['error'] = 'Méthode non autorisée';
             header('Location: /concours/' . $concoursId . '/saisie-scores');
+            exit;
+        }
+
+        $isAdmin = $_SESSION['user']['is_admin'] ?? false;
+        $isDirigeant = ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+        if (!$isAdmin && !$isDirigeant) {
+            $_SESSION['error'] = 'Accès refusé. La saisie des scores est réservée aux administrateurs et dirigeants.';
+            header('Location: /concours/show/' . $concoursId);
             exit;
         }
 
