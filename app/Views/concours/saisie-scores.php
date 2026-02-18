@@ -7,6 +7,7 @@
  */
 $concoursId = $concoursId ?? ($concours->id ?? $concours->_id ?? null);
 $isNature = $isNature ?? false;
+$isSalleTae = $isSalleTae ?? false;
 $resultats = $resultats ?? [];
 $departsForSelect = $departsForSelect ?? [];
 $departSelected = $departSelected ?? null;
@@ -90,7 +91,10 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
     <div class="card">
         <div class="card-header bg-light">
             <h5 class="mb-0">
-                <?php if ($isNature): ?>
+                <?php if ($isSalleTae): ?>
+                    <i class="fas fa-bullseye me-2"></i>Concours Salle / TAE – Saisie des scores
+                    <small class="d-block text-muted mt-1">2 séries par départ : nombre de 10 et de 9 par série, total général</small>
+                <?php elseif ($isNature): ?>
                     <i class="fas fa-leaf me-2"></i>Concours Nature – Saisie des scores
                     <small class="d-block text-muted mt-1">Score total et détail des impacts (20-15, 20-10, 15-15, 15-10, 15, 10)</small>
                 <?php else: ?>
@@ -113,7 +117,14 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                 <th>Club</th>
                                 <th>Départ</th>
                                 <th>Score total</th>
-                                <?php if ($isNature): ?>
+                                <?php if ($isSalleTae): ?>
+                                    <th>S1 - 10</th>
+                                    <th>S1 - 9</th>
+                                    <th>S2 - 10</th>
+                                    <th>S2 - 9</th>
+                                    <th>Total 10</th>
+                                    <th>Total 9</th>
+                                <?php elseif ($isNature): ?>
                                     <th>20-15</th>
                                     <th>20-10</th>
                                     <th>15-15</th>
@@ -139,6 +150,12 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                 $nb1510 = $res['nb_15_10'] ?? '';
                                 $nb15 = $res['nb_15'] ?? '';
                                 $nb10 = $res['nb_10'] ?? '';
+                                $s1_10 = $res['serie1_nb_10'] ?? '';
+                                $s1_9 = $res['serie1_nb_9'] ?? '';
+                                $s2_10 = $res['serie2_nb_10'] ?? '';
+                                $s2_9 = $res['serie2_nb_9'] ?? '';
+                                $tot10 = ($s1_10 !== '' && $s2_10 !== '') ? ((int)$s1_10 + (int)$s2_10) : (($res['total_nb_10'] ?? ''));
+                                $tot9 = ($s1_9 !== '' && $s2_9 !== '') ? ((int)$s1_9 + (int)$s2_9) : (($res['total_nb_9'] ?? ''));
                                 ?>
                                 <tr>
                                     <td><?= htmlspecialchars($userNom) ?></td>
@@ -151,7 +168,30 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                                class="form-control form-control-sm score-total" min="0" step="1" 
                                                placeholder="0">
                                     </td>
-                                    <?php if ($isNature): ?>
+                                    <?php if ($isSalleTae): ?>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][serie1_nb_10]" 
+                                                   value="<?= htmlspecialchars($s1_10 !== '' ? $s1_10 : '') ?>" 
+                                                   class="form-control form-control-sm serie-input" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][serie1_nb_9]" 
+                                                   value="<?= htmlspecialchars($s1_9 !== '' ? $s1_9 : '') ?>" 
+                                                   class="form-control form-control-sm serie-input" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][serie2_nb_10]" 
+                                                   value="<?= htmlspecialchars($s2_10 !== '' ? $s2_10 : '') ?>" 
+                                                   class="form-control form-control-sm serie-input" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][serie2_nb_9]" 
+                                                   value="<?= htmlspecialchars($s2_9 !== '' ? $s2_9 : '') ?>" 
+                                                   class="form-control form-control-sm serie-input" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td class="text-center total-cell" data-insc="<?= (int)$inscId ?>"><?= $tot10 !== '' ? (int)$tot10 : '-' ?></td>
+                                        <td class="text-center total-cell" data-insc="<?= (int)$inscId ?>"><?= $tot9 !== '' ? (int)$tot9 : '-' ?></td>
+                                    <?php elseif ($isNature): ?>
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][nb_20_15]" 
                                                    value="<?= htmlspecialchars($nb2015 !== '' ? $nb2015 : '') ?>" 
@@ -188,6 +228,27 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                         </tbody>
                     </table>
                 </div>
+
+                <?php if ($isSalleTae): ?>
+                <script>
+                (function() {
+                    document.querySelectorAll('.serie-input').forEach(function(inp) {
+                        inp.addEventListener('input', function() {
+                            var row = inp.closest('tr');
+                            if (!row) return;
+                            var s1_10 = parseInt(row.querySelector('input[name*="[serie1_nb_10]"]')?.value || 0) || 0;
+                            var s1_9 = parseInt(row.querySelector('input[name*="[serie1_nb_9]"]')?.value || 0) || 0;
+                            var s2_10 = parseInt(row.querySelector('input[name*="[serie2_nb_10]"]')?.value || 0) || 0;
+                            var s2_9 = parseInt(row.querySelector('input[name*="[serie2_nb_9]"]')?.value || 0) || 0;
+                            var tot10 = row.querySelector('.total-cell[data-insc]');
+                            var tot9 = tot10 ? tot10.nextElementSibling : null;
+                            if (tot10) tot10.textContent = s1_10 + s2_10;
+                            if (tot9) tot9.textContent = s1_9 + s2_9;
+                        });
+                    });
+                })();
+                </script>
+                <?php endif; ?>
 
                 <div class="d-flex gap-2 mt-3">
                     <button type="submit" class="btn btn-primary">
