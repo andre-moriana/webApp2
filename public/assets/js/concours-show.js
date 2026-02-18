@@ -343,7 +343,9 @@ window.editInscription = function(inscriptionId) {
         const duelTrispotSection = document.querySelector('.edit-duel-trispot-section');
         if (piquetSection) {
             piquetSection.classList.toggle('d-none', !isNature);
-            setVal('edit-piquet', inscription.piquet);
+            // Normaliser piquet en minuscules pour correspondre aux options (rouge, bleu, blanc)
+            const piquetVal = inscription.piquet ? String(inscription.piquet).trim().toLowerCase() : '';
+            setVal('edit-piquet', piquetVal);
         }
         if (distanceSection) distanceSection.classList.toggle('d-none', isNature);
         if (blasonSection) blasonSection.classList.toggle('d-none', isNature);
@@ -445,7 +447,7 @@ function initEditInscriptionHandlers() {
         }
 
         const piquetSection = document.querySelector('.edit-piquet-section');
-        const isNature = piquetSection ? !piquetSection.classList.contains('d-none') : (typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne);
+        const isNature = (piquetSection && !piquetSection.classList.contains('d-none')) || !!(typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne);
         const departSelect = document.getElementById('edit-depart-select');
         const numeroDepart = departSelect?.value || (currentEditInscription?.numero_depart ?? '');
         const updateData = {
@@ -461,7 +463,9 @@ function initEditInscriptionHandlers() {
         };
 
         if (isNature) {
-            updateData.piquet = document.getElementById('edit-piquet')?.value || '';
+            const piquetEl = document.getElementById('edit-piquet');
+            const piquetVal = piquetEl ? String(piquetEl.value || '').trim().toLowerCase() : '';
+            updateData.piquet = piquetVal || '';
         } else {
             updateData.distance = document.getElementById('edit-distance')?.value || '';
             updateData.blason = document.getElementById('edit-blason')?.value || '';
