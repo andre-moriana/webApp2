@@ -904,6 +904,51 @@ class ConcoursController {
                 // Ignorer les erreurs
             }
         }
+
+        // Données pour la modale d'édition d'inscription (departs, catégories, arcs, distances)
+        $departs = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+        $departs = is_array($departs) ? $departs : [];
+        if (empty($departs)) {
+            $nombreDepart = is_object($concours) ? ($concours->nombre_depart ?? 0) : ($concours['nombre_depart'] ?? 0);
+            if ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0) {
+                for ($i = 1; $i <= (int)$nombreDepart; $i++) {
+                    $departs[] = ['numero_depart' => $i, 'date_depart' => '', 'heure_greffe' => ''];
+                }
+            }
+        }
+        $categoriesClassement = [];
+        $arcs = [];
+        $distancesTir = [];
+        if (!empty($inscriptions)) {
+            try {
+                $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+                $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
+                $catResp = $this->apiService->makeRequest($endpoint, 'GET');
+                $catPayload = $this->apiService->unwrapData($catResp);
+                if (is_array($catPayload)) {
+                    $categoriesClassement = isset($catPayload['data']) ? $catPayload['data'] : $catPayload;
+                    $categoriesClassement = is_array($categoriesClassement) ? array_values($categoriesClassement) : [];
+                }
+            } catch (Exception $e) {}
+            try {
+                $arcResp = $this->apiService->makeRequest('concours/arcs', 'GET');
+                $arcPayload = $this->apiService->unwrapData($arcResp);
+                if (is_array($arcPayload)) {
+                    $arcs = isset($arcPayload['data']) ? $arcPayload['data'] : $arcPayload;
+                    $arcs = is_array($arcs) ? array_values($arcs) : [];
+                }
+            } catch (Exception $e) {}
+            try {
+                $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+                $endpoint = 'concours/distances-tir' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
+                $distResp = $this->apiService->makeRequest($endpoint, 'GET');
+                $distPayload = $this->apiService->unwrapData($distResp);
+                if (is_array($distPayload)) {
+                    $distancesTir = isset($distPayload['data']) ? $distPayload['data'] : $distPayload;
+                    $distancesTir = is_array($distancesTir) ? array_values($distancesTir) : [];
+                }
+            } catch (Exception $e) {}
+        }
         
         $title = 'Détails du concours - Portail Archers de Gémenos';
         include 'app/Views/layouts/header.php';

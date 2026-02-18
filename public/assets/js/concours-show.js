@@ -7,9 +7,12 @@
             var c = JSON.parse(cfg);
             window.concoursIdShow = c.concoursId;
             window.concoursDataShow = c.concoursData || {};
+            window.isNature3DOrCampagne = !!(c.isNature3DOrCampagne);
         } catch (e) { console.warn('Config concours show parse error', e); }
     }
 })();
+
+var currentEditInscription = null;
 
 // Créer le plan de cible pour un concours
 function createPlanCible() {
@@ -184,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    initEditInscriptionHandlers();
 });
 
 /**
@@ -260,5 +264,246 @@ function removeInscription(inscriptionId) {
     .catch(error => {
         console.error('Erreur:', error);
         alert('Erreur lors de la suppression: ' + error.message);
+    });
+}
+
+/**
+ * Édite une inscription - charge les données et ouvre la modale
+ */
+window.editInscription = function(inscriptionId) {
+    const concoursId = typeof concoursIdShow !== 'undefined' ? concoursIdShow : null;
+    if (!concoursId || !inscriptionId) {
+        alert('Erreur: Informations manquantes');
+        return;
+    }
+
+    const modalElement = document.getElementById('editInscriptionModal');
+    if (!modalElement) {
+        alert('Erreur: La modale d\'édition est introuvable');
+        return;
+    }
+
+    const form = document.getElementById('edit-inscription-form');
+    if (form) {
+        form.dataset.inscriptionId = inscriptionId;
+    }
+
+    currentEditInscription = null;
+
+    fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP error! status: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        let inscription = (data.success && data.data) ? data.data : (data.id ? data : null);
+        if (!inscription) {
+            alert('Erreur: Aucune donnée trouvée');
+            return;
+        }
+        if (inscription.success && inscription.data) {
+            inscription = inscription.data;
+        }
+        currentEditInscription = inscription;
+
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val || '';
+        };
+        const setCheck = (id, checked) => {
+            const el = document.getElementById(id);
+            if (el) el.checked = !!checked;
+        };
+
+        setVal('edit-saison', inscription.saison);
+        setVal('edit-type_certificat_medical', inscription.type_certificat_medical);
+        setVal('edit-type_licence', inscription.type_licence);
+        let crVal = inscription.creation_renouvellement;
+        if (crVal === 1 || crVal === '1') crVal = 'C';
+        else if (crVal === 2 || crVal === '2') crVal = 'R';
+        setVal('edit-creation_renouvellement', crVal || '');
+        setVal('edit-depart-select', inscription.numero_depart);
+        setVal('edit-categorie_classement', inscription.categorie_classement);
+        setVal('edit-arme', inscription.arme);
+        setCheck('edit-mobilite_reduite', inscription.mobilite_reduite);
+
+        if (typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne) {
+            setVal('edit-piquet', inscription.piquet);
+        } else {
+            const editDistance = document.getElementById('edit-distance');
+            const editBlason = document.getElementById('edit-blason');
+            const editDuel = document.getElementById('edit-duel');
+            const editTrispot = document.getElementById('edit-trispot');
+            if (editDistance) editDistance.value = inscription.distance || '';
+            if (editBlason) editBlason.value = inscription.blason || '';
+            if (editDuel) editDuel.checked = !!inscription.duel;
+            if (editTrispot) editTrispot.checked = !!inscription.trispot;
+        }
+
+        loadEditBuvetteProduits(concoursId, inscription.buvette_reservations || [], inscription.token_confirmation);
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors du chargement: ' + error.message);
+    });
+};
+
+function loadEditBuvetteProduits(concoursId, buvetteReservations, tokenConfirmation) {
+    const loadingEl = document.getElementById('edit-buvette-loading');
+    const listEl = document.getElementById('edit-buvette-produits-list');
+    const emptyEl = document.getElementById('edit-buvette-empty');
+    const noTokenEl = document.getElementById('edit-buvette-no-token');
+    if (!loadingEl || !listEl) return;
+
+    loadingEl.classList.remove('d-none');
+    listEl.classList.add('d-none');
+    if (emptyEl) emptyEl.classList.add('d-none');
+    if (noTokenEl) noTokenEl.classList.add('d-none');
+
+    if (!tokenConfirmation) {
+        loadingEl.classList.add('d-none');
+        if (noTokenEl) noTokenEl.classList.remove('d-none');
+        return;
+    }
+
+    const qtyByProduit = {};
+    (buvetteReservations || []).forEach(r => {
+        const pid = r.produit_id || r.id;
+        if (pid) qtyByProduit[pid] = parseInt(r.quantite, 10) || 0;
+    });
+
+    fetch('/api/concours/' + concoursId + '/buvette/produits/public', { credentials: 'include', headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            loadingEl.classList.add('d-none');
+            const produits = Array.isArray(data) ? data : (data.data || []);
+            if (produits.length === 0) {
+                if (emptyEl) emptyEl.classList.remove('d-none');
+                return;
+            }
+            if (emptyEl) emptyEl.classList.add('d-none');
+            listEl.innerHTML = produits.map(p => {
+                const pid = p.id || '';
+                const qty = qtyByProduit[pid] || 0;
+                const prix = p.prix != null ? parseFloat(p.prix).toFixed(2) + ' €' : '';
+                const unite = p.unite || 'portion';
+                return '<div class="d-flex align-items-center justify-content-between mb-2"><label class="mb-0 flex-grow-1">' + (p.libelle || '') + (prix ? ' <span class="text-muted">(' + prix + ')</span>' : '') + '</label><input type="number" class="form-control form-control-sm buvette-qty" data-produit-id="' + pid + '" min="0" value="' + qty + '" style="width:70px;"> <span class="ms-1 small text-muted">' + unite + '</span></div>';
+            }).join('');
+            listEl.classList.remove('d-none');
+        })
+        .catch(() => {
+            loadingEl.classList.add('d-none');
+            if (emptyEl) { emptyEl.textContent = 'Erreur de chargement.'; emptyEl.classList.remove('d-none'); }
+        });
+}
+
+function getEditBuvetteItems() {
+    const container = document.getElementById('edit-buvette-produits-list');
+    const inputs = container ? container.querySelectorAll('.buvette-qty') : [];
+    const items = [];
+    inputs.forEach(inp => {
+        const qty = parseInt(inp.value, 10) || 0;
+        const pid = inp.getAttribute('data-produit-id');
+        if (qty > 0 && pid) items.push({ produit_id: parseInt(pid, 10), quantite: qty });
+    });
+    return items;
+}
+
+function initEditInscriptionHandlers() {
+    const btnConfirmEdit = document.getElementById('btn-confirm-edit');
+    if (!btnConfirmEdit) return;
+
+    btnConfirmEdit.addEventListener('click', function() {
+        const form = document.getElementById('edit-inscription-form');
+        const inscriptionId = form?.dataset?.inscriptionId;
+        const concoursId = typeof concoursIdShow !== 'undefined' ? concoursIdShow : null;
+
+        if (!concoursId || !inscriptionId) {
+            alert('Erreur: Informations manquantes');
+            return;
+        }
+
+        const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+        const departSelect = document.getElementById('edit-depart-select');
+        const numeroDepart = departSelect?.value || (currentEditInscription?.numero_depart ?? '');
+        const updateData = {
+            saison: document.getElementById('edit-saison')?.value || '',
+            type_certificat_medical: document.getElementById('edit-type_certificat_medical')?.value || '',
+            type_licence: document.getElementById('edit-type_licence')?.value || '',
+            creation_renouvellement: document.getElementById('edit-creation_renouvellement')?.value || '',
+            numero_depart: numeroDepart,
+            categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
+            arme: document.getElementById('edit-arme')?.value || '',
+            mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
+            numero_tir: currentEditInscription?.numero_tir ?? '',
+        };
+
+        if (isNature) {
+            updateData.piquet = document.getElementById('edit-piquet')?.value || '';
+        } else {
+            updateData.distance = document.getElementById('edit-distance')?.value || '';
+            updateData.blason = document.getElementById('edit-blason')?.value || '';
+            updateData.duel = document.getElementById('edit-duel')?.checked ? 1 : 0;
+            updateData.trispot = document.getElementById('edit-trispot')?.checked ? 1 : 0;
+        }
+
+        btnConfirmEdit.disabled = true;
+        btnConfirmEdit.textContent = 'Enregistrement...';
+
+        fetch(`/api/concours/${concoursId}/inscription/${inscriptionId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(updateData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            btnConfirmEdit.disabled = false;
+            btnConfirmEdit.textContent = 'Enregistrer';
+            if (data.success !== false && !data.error) {
+                const token = currentEditInscription?.token_confirmation;
+                if (token) {
+                    const items = getEditBuvetteItems();
+                    return fetch('/api/concours/' + concoursId + '/buvette/reservations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ token_confirmation: token, items: items })
+                    }).then(r => r.json()).then(buvRes => {
+                        if (buvRes && !buvRes.success && buvRes.error) {
+                            console.warn('Buvette:', buvRes.error);
+                        }
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('editInscriptionModal'));
+                        if (modal) modal.hide();
+                        location.reload();
+                    });
+                }
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editInscriptionModal'));
+                if (modal) modal.hide();
+                location.reload();
+            } else {
+                alert('Erreur lors de la mise à jour: ' + (data.error || 'Erreur inconnue'));
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            btnConfirmEdit.disabled = false;
+            btnConfirmEdit.textContent = 'Enregistrer';
+            alert('Erreur lors de la mise à jour: ' + error.message);
+        });
     });
 }

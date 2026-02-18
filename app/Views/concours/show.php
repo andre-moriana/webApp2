@@ -6,7 +6,8 @@
 <!-- Affichage d'un concours (lecture seule) -->
 <div class="container-fluid concours-create-container" id="concours-show-page" data-config="<?= htmlspecialchars(json_encode([
     'concoursId' => $concours->id ?? $concours->_id ?? $id ?? null,
-    'concoursData' => $concours
+    'concoursData' => $concours,
+    'isNature3DOrCampagne' => isset($isNature3DOrCampagne) && $isNature3DOrCampagne
 ], JSON_UNESCAPED_UNICODE)) ?>">
 <h1>Détails du concours</h1>
 
@@ -398,9 +399,9 @@ $debugLicence = isset($_GET['debug_licence']);
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
                                     <?php if ($canEditDeleteInscription): ?>
-                                    <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/inscription" class="btn btn-sm btn-primary me-1">
+                                    <button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(<?= (int)($inscription['id'] ?? 0) ?>)">
                                         <i class="fas fa-edit"></i>
-                                    </a>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -485,6 +486,9 @@ $debugLicence = isset($_GET['debug_licence']);
         </div>
     </div>
 </div>
+<?php endif; ?>
+
+<?php if (!empty($inscriptions)): ?>
 <!-- Modale pour éditer une inscription -->
 <div class="modal fade" id="editInscriptionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -661,6 +665,9 @@ $debugLicence = isset($_GET['debug_licence']);
         </div>
     </div>
 </div>
+<?php endif; ?>
+
+<?php if (isset($concours->lieu_latitude) && isset($concours->lieu_longitude) && $concours->lieu_latitude && $concours->lieu_longitude): ?>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/public/assets/js/concours-show-map.js"></script>
 <?php endif; ?>
