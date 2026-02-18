@@ -267,7 +267,22 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
 // Déterminer si c'est une discipline 3D, Nature ou Campagne (abv_discipline = "3", "N" ou "C")
 $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true);
 $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));
+$currentUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? $_SESSION['user']['_id'] ?? null;
+
+// DEBUG - À supprimer après résolution : ajouter ?debug_licence=1 à l'URL pour afficher les valeurs
+$debugLicence = isset($_GET['debug_licence']);
 ?>
+<?php if ($debugLicence): ?>
+<div class="alert alert-info small">
+    <strong>Debug licence (session user) :</strong><br>
+    licenceNumber = <?= json_encode($_SESSION['user']['licenceNumber'] ?? 'NON DÉFINI') ?><br>
+    licence_number = <?= json_encode($_SESSION['user']['licence_number'] ?? 'NON DÉFINI') ?><br>
+    numero_licence = <?= json_encode($_SESSION['user']['numero_licence'] ?? 'NON DÉFINI') ?><br>
+    <strong>currentUserLicence :</strong> <?= json_encode($currentUserLicence) ?>
+    <?php if ($currentUserLicence === ''): ?><span class="text-danger">← VIDE</span><?php endif; ?><br>
+    <strong>currentUserId (fallback) :</strong> <?= json_encode($currentUserId) ?>
+</div>
+<?php endif; ?>
 <div class="inscriptions-section">
     <h2>Liste des inscrits</h2>
     
@@ -299,7 +314,10 @@ $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESS
                         // $usersMap est passé depuis le contrôleur
                         foreach ($inscriptions as $inscription):
                             $inscriptionLicence = trim((string)($inscription['numero_licence'] ?? ''));
-                            $isOwnInscription = $currentUserLicence !== '' && $inscriptionLicence !== '' && $currentUserLicence === $inscriptionLicence;
+                            $inscriptionUserId = $inscription['user_id'] ?? null;
+                            // Identification : par numéro de licence (prioritaire) ou par user_id si licence absent
+                            $isOwnInscription = ($currentUserLicence !== '' && $inscriptionLicence !== '' && $currentUserLicence === $inscriptionLicence)
+                                || ($currentUserId && $inscriptionUserId && (string)$currentUserId === (string)$inscriptionUserId);
                             $canManageInscription = $isDirigeant && !$isOwnInscription; // Dirigeant : actions sur les inscriptions des autres
                             $canEditDeleteInscription = $canManageInscription || $isOwnInscription; // Dirigeant sur autres OU archer sur sa propre inscription
                             $userNom = $inscription['user_nom'] ?? null;
@@ -333,7 +351,7 @@ $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESS
                                 $statutTitle = 'En attente';
                             }
                             ?>
-                            <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
+                            <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>"<?php if ($debugLicence): ?> data-debug-licence="<?= htmlspecialchars($inscriptionLicence) ?>" data-debug-own="<?= $isOwnInscription ? '1' : '0' ?>" data-debug-can-edit="<?= $canEditDeleteInscription ? '1' : '0' ?>"<?php endif; ?>>
                             <td class="statut-cell"<?= $rowStyle ?>>
                                     <?php if ($canManageInscription): ?>
                                     <div class="dropdown statut-dropdown" data-inscription-id="<?= htmlspecialchars($inscId) ?>">
