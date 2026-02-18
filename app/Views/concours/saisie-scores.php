@@ -118,7 +118,7 @@ $showTotaux = ($isSalleTae && $serieMode === 'both');
                     <small class="d-block text-muted mt-1">2 séries par départ : nombre de 10 et de 9 par série, total général</small>
                 <?php elseif ($isNature): ?>
                     <i class="fas fa-leaf me-2"></i>Concours Nature – Saisie des scores
-                    <small class="d-block text-muted mt-1">Score total et détail des impacts (20-15, 20-10, 15-15, 15-10, 15, 10)</small>
+                    <small class="d-block text-muted mt-1">Score total et détail des impacts (20-15, 20-10, 15-15, 15-10, 15, 10, manqués)</small>
                 <?php else: ?>
                     <i class="fas fa-bullseye me-2"></i>Saisie des scores
                     <small class="d-block text-muted mt-1">Score total par archer</small>
@@ -171,6 +171,7 @@ $showTotaux = ($isSalleTae && $serieMode === 'both');
                                     <th>15-10</th>
                                     <th>15</th>
                                     <th>10</th>
+                                    <th>Manqués (0)</th>
                                 <?php else: ?>
                                     <th>Score total</th>
                                 <?php endif; ?>
@@ -192,6 +193,7 @@ $showTotaux = ($isSalleTae && $serieMode === 'both');
                                 $nb1510 = $res['nb_15_10'] ?? '';
                                 $nb15 = $res['nb_15'] ?? '';
                                 $nb10 = $res['nb_10'] ?? '';
+                                $nb0 = $res['nb_0'] ?? '';
                                 $s1_score = $res['serie1_score'] ?? '';
                                 $s1_10 = $res['serie1_nb_10'] ?? '';
                                 $s1_9 = $res['serie1_nb_9'] ?? '';
@@ -280,6 +282,11 @@ $showTotaux = ($isSalleTae && $serieMode === 'both');
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][nb_10]" 
                                                    value="<?= htmlspecialchars($nb10 !== '' ? $nb10 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_0]" 
+                                                   value="<?= htmlspecialchars($nb0 !== '' ? $nb0 : '') ?>" 
                                                    class="form-control form-control-sm" min="0" step="1" placeholder="0">
                                         </td>
                                     <?php else: ?>
