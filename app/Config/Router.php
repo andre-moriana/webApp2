@@ -33,6 +33,9 @@ class Router {
         $this->addRoute("GET", "/concours/{id}/plan-cible", "ConcoursController@planCible");
         // Route pour le plan de peloton (Campagne/Nature/3D)
         $this->addRoute("GET", "/concours/{id}/plan-peloton", "ConcoursController@planPeloton");
+        // Route pour la saisie des scores
+        $this->addRoute("GET", "/concours/{id}/saisie-scores", "ConcoursController@saisieScores");
+        $this->addRoute("POST", "/concours/{id}/saisie-scores", "ConcoursController@storeScores");
         // Gestion des produits buvette
         $this->addRoute("GET", "/concours/{id}/buvette", "ConcoursController@buvette");
         // Route pour enregistrer le type de blason d'une cible
