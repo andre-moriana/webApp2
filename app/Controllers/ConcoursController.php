@@ -1738,6 +1738,7 @@ class ConcoursController {
             $nb_15_10 = (isset($data['nb_15_10']) && $data['nb_15_10'] !== '') ? (int)$data['nb_15_10'] : null;
             $nb_15 = (isset($data['nb_15']) && $data['nb_15'] !== '') ? (int)$data['nb_15'] : null;
             $nb_10 = (isset($data['nb_10']) && $data['nb_10'] !== '') ? (int)$data['nb_10'] : null;
+            $nb_0 = (isset($data['nb_0']) && $data['nb_0'] !== '') ? (int)$data['nb_0'] : null;
             $serie1_score = (isset($data['serie1_score']) && $data['serie1_score'] !== '') ? (int)$data['serie1_score'] : null;
             $serie1_nb_10 = (isset($data['serie1_nb_10']) && $data['serie1_nb_10'] !== '') ? (int)$data['serie1_nb_10'] : null;
             $serie1_nb_9 = (isset($data['serie1_nb_9']) && $data['serie1_nb_9'] !== '') ? (int)$data['serie1_nb_9'] : null;
@@ -1746,7 +1747,7 @@ class ConcoursController {
             $serie2_nb_9 = (isset($data['serie2_nb_9']) && $data['serie2_nb_9'] !== '') ? (int)$data['serie2_nb_9'] : null;
 
             $hasSalleTae = $serie1_score !== null || $serie1_nb_10 !== null || $serie1_nb_9 !== null || $serie2_score !== null || $serie2_nb_10 !== null || $serie2_nb_9 !== null;
-            $hasNature = $score !== null || $nb_20_15 !== null || $nb_20_10 !== null || $nb_15_15 !== null || $nb_15_10 !== null || $nb_15 !== null || $nb_10 !== null;
+            $hasNature = $score !== null || $nb_20_15 !== null || $nb_20_10 !== null || $nb_15_15 !== null || $nb_15_10 !== null || $nb_15 !== null || $nb_10 !== null || $nb_0 !== null;
             if (!$hasSalleTae && !$hasNature) {
                 continue;
             }
@@ -1761,6 +1762,7 @@ class ConcoursController {
                     'nb_15_10' => $nb_15_10,
                     'nb_15' => $nb_15,
                     'nb_10' => $nb_10,
+                    'nb_0' => $nb_0,
                 ];
                 $serieMode = $_POST['serie_mode'] ?? 'both';
                 if ($serieMode === '1') {
