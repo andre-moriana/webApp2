@@ -234,11 +234,15 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     </div>
     <?php endif; ?>
 
+    <?php
+    $isDirigeant = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+    if ($isDirigeant): ?>
     <div class="form-group" style="margin-top: 20px;">
         <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/buvette" class="btn btn-outline-primary">
             <i class="fas fa-coffee"></i> Gestion de la buvette
         </a>
     </div>
+    <?php endif; ?>
     
     <?php if (!empty($concours->lien_inscription_cible)): ?>
     <div class="form-group" style="margin-top: 20px;">
@@ -262,6 +266,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
 <?php
 // Déterminer si c'est une discipline 3D, Nature ou Campagne (abv_discipline = "3", "N" ou "C")
 $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true);
+$currentUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? null;
 ?>
 <div class="inscriptions-section">
     <h2>Liste des inscrits</h2>
@@ -293,6 +298,9 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                         <?php 
                         // $usersMap est passé depuis le contrôleur
                         foreach ($inscriptions as $inscription):
+                            $inscriptionUserId = $inscription['user_id'] ?? null;
+                            $isOwnInscription = $currentUserId && $inscriptionUserId && ((string)$currentUserId === (string)$inscriptionUserId);
+                            $canManageInscription = $isDirigeant && !$isOwnInscription;
                             $userNom = $inscription['user_nom'] ?? null;
                             $userNumeroLicence = $inscription['numero_licence'] ?? null;
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
@@ -327,6 +335,7 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                             ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>">
                             <td class="statut-cell"<?= $rowStyle ?>>
+                                    <?php if ($canManageInscription): ?>
                                     <div class="dropdown statut-dropdown" data-inscription-id="<?= htmlspecialchars($inscId) ?>">
                                         <button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= htmlspecialchars($statutTitle) ?>">
                                             <i class="fas <?= $statutIcon ?>"></i>
@@ -338,6 +347,9 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                                             <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>
                                         </ul>
                                     </div>
+                                    <?php else: ?>
+                                    <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
+                                    <?php endif; ?>
                                 </td>                               <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($userNumeroLicence) ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
@@ -351,11 +363,16 @@ $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 
                                 <?php endif; ?>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
+                                    <?php if ($canManageInscription): ?>
                                     <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/inscription" class="btn btn-sm btn-primary me-1">
-                                        <i class="fas fa-edit"></i>                                     </a>
+                                        <i class="fas fa-edit"></i>
+                                    </a>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    <?php else: ?>
+                                    —
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
