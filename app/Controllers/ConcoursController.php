@@ -662,6 +662,35 @@ class ConcoursController {
             $inscriptions = [];
         }
 
+        // Enrichir les inscriptions sans user_id : ajouter user_id si numero_licence = licence de l'utilisateur connecté
+        $currentUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? $_SESSION['user']['_id'] ?? null;
+        $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));
+        // Si licence absente en session, la récupérer depuis l'API
+        if ($currentUserLicence === '' && $currentUserId) {
+            try {
+                $userResponse = $this->apiService->makeRequest("users/{$currentUserId}", 'GET');
+                if ($userResponse['success'] && isset($userResponse['data'])) {
+                    $userData = $userResponse['data'];
+                    $currentUserLicence = trim((string)($userData['numero_licence'] ?? $userData['licence_number'] ?? $userData['licenceNumber'] ?? ''));
+                    if ($currentUserLicence !== '') {
+                        $_SESSION['user']['numero_licence'] = $currentUserLicence;
+                        $_SESSION['user']['licenceNumber'] = $currentUserLicence;
+                    }
+                }
+            } catch (Exception $e) {
+                // Ignorer
+            }
+        }
+        foreach ($inscriptions as &$inscription) {
+            if (empty($inscription['user_id']) && $currentUserId && $currentUserLicence !== '') {
+                $inscLicence = trim((string)($inscription['numero_licence'] ?? ''));
+                if ($inscLicence !== '' && $inscLicence === $currentUserLicence) {
+                    $inscription['user_id'] = $currentUserId;
+                }
+            }
+        }
+        unset($inscription);
+
         // Récupérer les informations complètes des utilisateurs inscrits
         $userIds = array_column($inscriptions, 'user_id');
         $usersMap = [];

@@ -282,6 +282,21 @@ $debugLicence = isset($_GET['debug_licence']);
     <?php if ($currentUserLicence === ''): ?><span class="text-danger">← VIDE</span><?php endif; ?><br>
     <strong>currentUserId (fallback) :</strong> <?= json_encode($currentUserId) ?>
 </div>
+<script>
+(function() {
+    var debug = {
+        licenceNumber: <?= json_encode($_SESSION['user']['licenceNumber'] ?? null) ?>,
+        licence_number: <?= json_encode($_SESSION['user']['licence_number'] ?? null) ?>,
+        numero_licence: <?= json_encode($_SESSION['user']['numero_licence'] ?? null) ?>,
+        currentUserLicence: <?= json_encode($currentUserLicence) ?>,
+        currentUserId: <?= json_encode($currentUserId) ?>
+    };
+    console.log('[Concours Debug Licence]', debug);
+    document.querySelectorAll('tr[data-debug-licence]').forEach(function(tr) {
+        console.log('[Ligne inscription] licence=' + tr.getAttribute('data-debug-licence') + ' own=' + tr.getAttribute('data-debug-own') + ' canEdit=' + tr.getAttribute('data-debug-can-edit'));
+    });
+})();
+</script>
 <?php endif; ?>
 <div class="inscriptions-section">
     <h2>Liste des inscrits</h2>
