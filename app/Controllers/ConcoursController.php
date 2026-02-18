@@ -1783,7 +1783,8 @@ class ConcoursController {
                 if ($response['success'] ?? false) {
                     $saved++;
                 } else {
-                    $errors[] = 'Inscription ' . $inscriptionId . ': ' . ($response['message'] ?? $response['error'] ?? 'Erreur');
+                    $apiError = $response['data']['error'] ?? $response['error'] ?? $response['message'] ?? 'Erreur';
+                    $errors[] = 'Inscription ' . $inscriptionId . ': ' . $apiError;
                 }
             } catch (Exception $e) {
                 $errors[] = 'Inscription ' . $inscriptionId . ': ' . $e->getMessage();
