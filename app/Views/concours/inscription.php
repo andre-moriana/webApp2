@@ -3,6 +3,10 @@
 <link href="/public/assets/css/users-table.css" rel="stylesheet">
 
 <?php
+// Permissions pour les actions sur les inscriptions (mêmes règles que show.php)
+$currentUserLicence = $currentUserLicence ?? trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));
+$currentUserId = $currentUserId ?? ($_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? $_SESSION['user']['_id'] ?? null);
+$isDirigeant = $isDirigeant ?? (isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant');
 $inscriptionConfig = [
     'concoursId' => $concoursId ?? null,
     'formAction' => $formAction ?? '/concours/' . ($concoursId ?? '') . '/inscription',
@@ -16,7 +20,10 @@ $inscriptionConfig = [
     'concoursTypeCompetition' => is_object($concours) ? ($concours->type_competition ?? null) : ($concours['type_competition'] ?? null),
     'concoursNombreDepart' => is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null),
     'disciplineAbv' => $disciplineAbv ?? null,
-    'isNature3DOrCampagne' => isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true)
+    'isNature3DOrCampagne' => isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true),
+    'isDirigeant' => $isDirigeant,
+    'currentUserLicence' => $currentUserLicence,
+    'currentUserId' => $currentUserId
 ];
 $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
 ?>
@@ -171,8 +178,13 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Chargement des inscriptions...</td></tr>
                         <?php else:
                         foreach ($inscriptions as $inscription):
+                            $inscriptionLicence = trim((string)($inscription['numero_licence'] ?? ''));
+                            $inscriptionUserId = $inscription['user_id'] ?? null;
+                            $isOwnInscription = ($currentUserLicence !== '' && $inscriptionLicence !== '' && $currentUserLicence === $inscriptionLicence)
+                                || ($currentUserId && $inscriptionUserId && (string)$currentUserId === (string)$inscriptionUserId);
+                            $canManageInscription = $isDirigeant && !$isOwnInscription;
+                            $canEditDeleteInscription = $canManageInscription || $isOwnInscription;
                             $userName = $inscription['user_nom'] ?? null;
-                            //$user = isset($usersMap) && isset($usersMap[$userId]) ? $usersMap[$userId] : null;
                             
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
                             $piquetColorRaw = $inscription['piquet'] ?? null;
@@ -210,6 +222,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             ?>
                             <tr data-inscription-id="<?= htmlspecialchars($inscId) ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
                                 <td class="statut-cell"<?= $rowStyle ?>>
+                                    <?php if ($canManageInscription): ?>
                                     <div class="dropdown statut-dropdown" data-inscription-id="<?= htmlspecialchars($inscId) ?>">
                                         <button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= htmlspecialchars($statutTitle) ?>">
                                             <i class="fas <?= $statutIcon ?>"></i>
@@ -221,6 +234,9 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                             <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>
                                         </ul>
                                     </div>
+                                    <?php else: ?>
+                                    <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
+                                    <?php endif; ?>
                                 </td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['user_nom'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
@@ -246,12 +262,16 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <?php endif; ?>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
+                                    <?php if ($canEditDeleteInscription): ?>
                                     <button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    <?php else: ?>
+                                    —
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php 

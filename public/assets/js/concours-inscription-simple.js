@@ -18,6 +18,9 @@
             window.concoursNombreDepart = c.concoursNombreDepart;
             window.disciplineAbv = c.disciplineAbv;
             window.isNature3DOrCampagne = !!c.isNature3DOrCampagne;
+            window.isDirigeant = !!c.isDirigeant;
+            window.currentUserLicence = (c.currentUserLicence || '').toString().trim();
+            window.currentUserId = c.currentUserId != null ? String(c.currentUserId) : '';
         } catch (e) { console.warn('Config inscription parse error', e); }
     }
 })();
@@ -1207,6 +1210,10 @@ function renderInscriptions(inscriptions) {
         return;
     }
 
+    const isDirigeant = !!(typeof window !== 'undefined' && window.isDirigeant);
+    const currentUserLicence = (typeof window !== 'undefined' && window.currentUserLicence != null ? window.currentUserLicence : '').toString().trim();
+    const currentUserId = (typeof window !== 'undefined' && window.currentUserId != null) ? String(window.currentUserId) : '';
+
     const rows = inscriptions.map(inscription => {
         const piquetColorRaw = inscription.piquet || null;
         let rowClass = '';
@@ -1222,6 +1229,13 @@ function renderInscriptions(inscriptions) {
                 rowStyle = ' style="background-color: ' + colors[piquetColor] + ' !important;"';
             }
         }
+
+        const inscriptionLicence = (inscription.numero_licence || '').toString().trim();
+        const inscriptionUserId = inscription.user_id != null ? String(inscription.user_id) : '';
+        const isOwnInscription = (currentUserLicence && inscriptionLicence && currentUserLicence === inscriptionLicence) ||
+            (currentUserId && inscriptionUserId && currentUserId === inscriptionUserId);
+        const canManageInscription = isDirigeant && !isOwnInscription;
+        const canEditDeleteInscription = canManageInscription || isOwnInscription;
 
         const clubDisplay = inscription.club_name || inscription.id_club || 'N/A';
         const piquetDisplay = piquetColorRaw ? piquetColorRaw.charAt(0).toUpperCase() + piquetColorRaw.slice(1).toLowerCase() : 'N/A';
@@ -1241,17 +1255,30 @@ function renderInscriptions(inscriptions) {
             statutTitle = 'En attente';
         }
 
-        const statutCell = '<td class="statut-cell"' + rowStyle + '>' +
-            '<div class="dropdown statut-dropdown" data-inscription-id="' + escapeHtml(String(id)) + '">' +
-            '<button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="' + escapeHtml(statutTitle) + '">' +
-            '<i class="fas ' + statutIconClass + '"></i>' +
-            '</button>' +
-            '<ul class="dropdown-menu dropdown-menu-end">' +
-            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>' +
-            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>' +
-            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>' +
-            '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>' +
-            '</ul></div></td>';
+        let statutCell;
+        if (canManageInscription) {
+            statutCell = '<td class="statut-cell"' + rowStyle + '>' +
+                '<div class="dropdown statut-dropdown" data-inscription-id="' + escapeHtml(String(id)) + '">' +
+                '<button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="' + escapeHtml(statutTitle) + '">' +
+                '<i class="fas ' + statutIconClass + '"></i>' +
+                '</button>' +
+                '<ul class="dropdown-menu dropdown-menu-end">' +
+                '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>' +
+                '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>' +
+                '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>' +
+                '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>' +
+                '</ul></div></td>';
+        } else {
+            statutCell = '<td class="statut-cell"' + rowStyle + '><span title="' + escapeHtml(statutTitle) + '"><i class="fas ' + statutIconClass + '"></i></span></td>';
+        }
+
+        let actionsCell;
+        if (canEditDeleteInscription) {
+            actionsCell = '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(' + id + ')"><i class="fas fa-edit"></i></button> ' +
+                '<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')"><i class="fas fa-trash"></i></button>';
+        } else {
+            actionsCell = '—';
+        }
 
         let cells = [
             statutCell,
@@ -1270,10 +1297,7 @@ function renderInscriptions(inscriptions) {
         }
 
         cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
-        cells.push('<td' + rowStyle + '>' +
-            '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(' + id + ')"><i class="fas fa-edit"></i></button> ' +
-            '<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')"><i class="fas fa-trash"></i></button>' +
-            '</td>');
+        cells.push('<td' + rowStyle + '>' + actionsCell + '</td>');
 
         return '<tr data-inscription-id="' + id + '" class="' + rowClass + '"' + dataPiquet + rowStyle + '>' + cells.join('') + '</tr>';
     });
