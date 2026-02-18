@@ -36,6 +36,8 @@ class Router {
         // Route pour la saisie des scores
         $this->addRoute("GET", "/concours/{id}/saisie-scores", "ConcoursController@saisieScores");
         $this->addRoute("POST", "/concours/{id}/saisie-scores", "ConcoursController@storeScores");
+        // Page Éditions - documents à imprimer
+        $this->addRoute("GET", "/concours/{id}/editions", "ConcoursController@editions");
         // Gestion des produits buvette
         $this->addRoute("GET", "/concours/{id}/buvette", "ConcoursController@buvette");
         // Route pour enregistrer le type de blason d'une cible

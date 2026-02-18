@@ -1556,6 +1556,136 @@ class ConcoursController {
     }
 
     /**
+     * Page Éditions - documents à imprimer (avis, feuilles de marques, liste participants, scores, classement)
+     */
+    public function editions($concoursId)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+
+        $concoursResponse = $this->apiService->getConcoursById($concoursId);
+        if (!$concoursResponse['success']) {
+            $_SESSION['error'] = 'Concours introuvable';
+            header('Location: /concours');
+            exit;
+        }
+
+        $concours = $this->apiService->unwrapData($concoursResponse);
+        if (is_array($concours) && isset($concours['data']) && isset($concours['success'])) {
+            $concours = $concours['data'];
+        }
+        if (is_array($concours)) {
+            $concours = (object)$concours;
+        }
+
+        // Inscriptions confirmées
+        $inscriptions = [];
+        try {
+            $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
+            $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+            if (!is_array($inscriptions)) {
+                $inscriptions = [];
+            }
+            $inscriptions = array_filter($inscriptions, function($i) {
+                return ($i['statut_inscription'] ?? '') === 'confirmee';
+            });
+        } catch (Exception $e) {
+            $inscriptions = [];
+        }
+
+        // Résultats
+        $resultats = [];
+        try {
+            $resultatsResponse = $this->apiService->makeRequest("concours/{$concoursId}/resultats", 'GET');
+            $resultatsRaw = $this->apiService->unwrapData($resultatsResponse);
+            if (is_array($resultatsRaw)) {
+                foreach ($resultatsRaw as $r) {
+                    $inscId = $r['inscription_id'] ?? $r['inscriptionId'] ?? null;
+                    if ($inscId) {
+                        $resultats[(int)$inscId] = $r;
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            $resultats = [];
+        }
+
+        // Clubs, disciplines, types compétition, niveaux championnat
+        $clubs = [];
+        $clubsMap = [];
+        $disciplines = [];
+        $typeCompetitions = [];
+        $niveauChampionnat = [];
+        try {
+            $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+            $clubsPayload = $this->apiService->unwrapData($clubsResponse);
+            if (is_array($clubsPayload)) {
+                foreach ($clubsPayload as &$club) {
+                    $clubId = $club['id'] ?? $club['_id'] ?? null;
+                    if ($clubId) {
+                        $clubsMap[$clubId] = $club;
+                        $clubsMap[(string)$clubId] = $club;
+                    }
+                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? null;
+                    if ($nameShort) {
+                        $clubsMap[trim((string)$nameShort)] = $club;
+                    }
+                }
+                unset($club);
+                $clubs = array_values($clubsPayload);
+            }
+        } catch (Exception $e) {}
+        try {
+            $disciplines = $this->apiService->unwrapData($this->apiService->makeRequest('disciplines/list', 'GET')) ?: [];
+        } catch (Exception $e) {}
+        try {
+            $typeCompetitions = $this->apiService->unwrapData($this->apiService->makeRequest('type-competitions/list', 'GET')) ?: [];
+        } catch (Exception $e) {}
+        try {
+            $niveauChampionnat = $this->apiService->unwrapData($this->apiService->makeRequest('niveau-championnat/list', 'GET')) ?: [];
+        } catch (Exception $e) {}
+
+        function findLabelEditions($items, $id, $idField = 'id', $labelField = 'name') {
+            if (!is_array($items) || !$id) return '';
+            foreach ($items as $item) {
+                $itemId = $item[$idField] ?? $item['_id'] ?? $item['iddiscipline'] ?? $item['idformat_competition'] ?? $item['abv_niveauchampionnat'] ?? null;
+                if ($itemId == $id || (string)$itemId === (string)$id) {
+                    return $item[$labelField] ?? $item['lb_discipline'] ?? $item['lb_format_competition'] ?? $item['lb_niveauchampionnat'] ?? $item['name'] ?? '';
+                }
+            }
+            return '';
+        }
+
+        $clubName = findLabelEditions($clubs, $concours->club_organisateur ?? null, 'id', 'name');
+        $disciplineName = findLabelEditions($disciplines, $concours->discipline ?? null, 'iddiscipline', 'lb_discipline');
+        $typeCompetitionName = findLabelEditions($typeCompetitions, $concours->type_competition ?? null, 'idformat_competition', 'lb_format_competition');
+        $niveauChampionnatName = findLabelEditions($niveauChampionnat, $concours->idniveau_championnat ?? null, 'idniveau_championnat', 'lb_niveauchampionnat');
+
+        // Enrichir inscriptions avec nom club
+        foreach ($inscriptions as &$insc) {
+            $clubId = $insc['id_club'] ?? null;
+            $c = $clubId ? ($clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? null) : null;
+            $insc['club_nom'] = $c ? ($c['name'] ?? $c['nameShort'] ?? $c['name_short'] ?? '') : '';
+        }
+        unset($insc);
+
+        $doc = $_GET['doc'] ?? null;
+        $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement'];
+
+        if ($doc && in_array($doc, $validDocs)) {
+            // Affichage d'un document spécifique (optimisé impression)
+            require_once __DIR__ . '/../Views/concours/editions-doc.php';
+            return;
+        }
+
+        require_once __DIR__ . '/../Views/layouts/header.php';
+        require_once __DIR__ . '/../Views/concours/editions.php';
+        require_once __DIR__ . '/../Views/layouts/footer.php';
+    }
+
+    /**
      * Page de saisie des scores d'un concours
      * La saisie varie selon le type de concours (Nature : score total + 20-15, 20-10, 15-15, 15-10)
      */
