@@ -1667,6 +1667,7 @@ class ConcoursController {
             }
         }
         $isNature = $abv_discipline && in_array($abv_discipline, ['N', '3', 'C', '3D']);
+        $isSalleTae = $abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H']);
 
         // Construire les libellés des départs pour le sélecteur
         $departsForSelect = [];
@@ -1732,8 +1733,14 @@ class ConcoursController {
             $nb_15_10 = (isset($data['nb_15_10']) && $data['nb_15_10'] !== '') ? (int)$data['nb_15_10'] : null;
             $nb_15 = (isset($data['nb_15']) && $data['nb_15'] !== '') ? (int)$data['nb_15'] : null;
             $nb_10 = (isset($data['nb_10']) && $data['nb_10'] !== '') ? (int)$data['nb_10'] : null;
+            $serie1_nb_10 = (isset($data['serie1_nb_10']) && $data['serie1_nb_10'] !== '') ? (int)$data['serie1_nb_10'] : null;
+            $serie1_nb_9 = (isset($data['serie1_nb_9']) && $data['serie1_nb_9'] !== '') ? (int)$data['serie1_nb_9'] : null;
+            $serie2_nb_10 = (isset($data['serie2_nb_10']) && $data['serie2_nb_10'] !== '') ? (int)$data['serie2_nb_10'] : null;
+            $serie2_nb_9 = (isset($data['serie2_nb_9']) && $data['serie2_nb_9'] !== '') ? (int)$data['serie2_nb_9'] : null;
 
-            if ($score === null && $nb_20_15 === null && $nb_20_10 === null && $nb_15_15 === null && $nb_15_10 === null && $nb_15 === null && $nb_10 === null) {
+            $hasSalleTae = $serie1_nb_10 !== null || $serie1_nb_9 !== null || $serie2_nb_10 !== null || $serie2_nb_9 !== null;
+            $hasNature = $score !== null || $nb_20_15 !== null || $nb_20_10 !== null || $nb_15_15 !== null || $nb_15_10 !== null || $nb_15 !== null || $nb_10 !== null;
+            if (!$hasSalleTae && !$hasNature) {
                 continue;
             }
 
@@ -1746,7 +1753,11 @@ class ConcoursController {
                     'nb_15_15' => $nb_15_15,
                     'nb_15_10' => $nb_15_10,
                     'nb_15' => $nb_15,
-                    'nb_10' => $nb_10
+                    'nb_10' => $nb_10,
+                    'serie1_nb_10' => $serie1_nb_10,
+                    'serie1_nb_9' => $serie1_nb_9,
+                    'serie2_nb_10' => $serie2_nb_10,
+                    'serie2_nb_9' => $serie2_nb_9
                 ];
                 $response = $this->apiService->makeRequest("concours/{$concoursId}/resultat", 'POST', $payload);
                 if ($response['success'] ?? false) {
