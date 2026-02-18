@@ -92,7 +92,7 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
             <h5 class="mb-0">
                 <?php if ($isNature): ?>
                     <i class="fas fa-leaf me-2"></i>Concours Nature – Saisie des scores
-                    <small class="d-block text-muted mt-1">Score total et détail des impacts (20-15, 20-10, 15-15, 15-10)</small>
+                    <small class="d-block text-muted mt-1">Score total et détail des impacts (20-15, 20-10, 15-15, 15-10, 15, 10)</small>
                 <?php else: ?>
                     <i class="fas fa-bullseye me-2"></i>Saisie des scores
                     <small class="d-block text-muted mt-1">Score total par archer</small>
@@ -118,6 +118,8 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                     <th>20-10</th>
                                     <th>15-15</th>
                                     <th>15-10</th>
+                                    <th>15</th>
+                                    <th>10</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>
@@ -135,6 +137,8 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                 $nb2010 = $res['nb_20_10'] ?? '';
                                 $nb1515 = $res['nb_15_15'] ?? '';
                                 $nb1510 = $res['nb_15_10'] ?? '';
+                                $nb15 = $res['nb_15'] ?? '';
+                                $nb10 = $res['nb_10'] ?? '';
                                 ?>
                                 <tr>
                                     <td><?= htmlspecialchars($userNom) ?></td>
@@ -166,6 +170,16 @@ $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][nb_15_10]" 
                                                    value="<?= htmlspecialchars($nb1510 !== '' ? $nb1510 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_15]" 
+                                                   value="<?= htmlspecialchars($nb15 !== '' ? $nb15 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_10]" 
+                                                   value="<?= htmlspecialchars($nb10 !== '' ? $nb10 : '') ?>" 
                                                    class="form-control form-control-sm" min="0" step="1" placeholder="0">
                                         </td>
                                     <?php endif; ?>
