@@ -349,6 +349,9 @@ $debugLicence = isset($_GET['debug_licence']);
                                 if (isset($colors[$piquetColor])) {
                                     $rowStyleParts[] = 'background-color: ' . $colors[$piquetColor] . ' !important';
                                 }
+                            } elseif ($isNature3DOrCampagne) {
+                                // Ligne grise si aucun piquet choisi
+                                $rowStyleParts[] = 'background-color: #dee2e6 !important';
                             }
 
                             $rowStyle = !empty($rowStyleParts) ? ' style="' . implode('; ', $rowStyleParts) . '"' : '';

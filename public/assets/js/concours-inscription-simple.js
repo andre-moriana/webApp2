@@ -1233,6 +1233,9 @@ function renderInscriptions(inscriptions) {
             if (colors[piquetColor]) {
                 rowStyle = ' style="background-color: ' + colors[piquetColor] + ' !important;"';
             }
+        } else if (isNature) {
+            rowClass = 'piquet-manquant';
+            rowStyle = ' style="background-color: #dee2e6 !important;"';
         }
 
         const inscriptionLicence = (inscription.numero_licence || '').toString().trim();
