@@ -1593,6 +1593,26 @@ class ConcoursController {
             return ($i['statut_inscription'] ?? '') === 'confirmee';
         });
 
+        // Normaliser les départs du concours
+        $departsRaw = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+        $departsList = array_values(is_array($departsRaw) ? $departsRaw : (array)$departsRaw);
+
+        // Construire la liste des départs pour le sélecteur (avant filtrage)
+        $numeroDepartsInscrits = array_unique(array_filter(array_map(function($i) {
+            $n = $i['numero_depart'] ?? null;
+            return ($n !== null && $n !== '') ? (int)$n : null;
+        }, $inscriptions)));
+        sort($numeroDepartsInscrits);
+
+        // Départ sélectionné (GET)
+        $departSelected = isset($_GET['depart']) && $_GET['depart'] !== '' ? (int)$_GET['depart'] : null;
+        if ($departSelected !== null) {
+            $inscriptions = array_filter($inscriptions, function($i) use ($departSelected) {
+                $num = isset($i['numero_depart']) ? (int)$i['numero_depart'] : null;
+                return $num === $departSelected;
+            });
+        }
+
         // Récupérer les résultats existants (indexés par inscription_id)
         $resultats = [];
         try {
@@ -1639,6 +1659,28 @@ class ConcoursController {
             }
         }
         $isNature = $abv_discipline && in_array($abv_discipline, ['N', '3', 'C', '3D']);
+
+        // Construire les libellés des départs pour le sélecteur
+        $departsForSelect = [];
+        foreach ($departsList as $d) {
+            $num = (int)($d['numero_depart'] ?? $d['numero'] ?? 0);
+            if ($num > 0) {
+                $dateDep = $d['date_depart'] ?? '';
+                $heure = $d['heure_greffe'] ?? '';
+                if ($dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
+                    $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
+                }
+                $heure = $heure ? substr((string)$heure, 0, 5) : '';
+                $label = trim($dateDep . ($heure ? ' à ' . $heure : ''));
+                if (empty($label)) $label = 'Départ ' . $num;
+                $departsForSelect[$num] = $label;
+            }
+        }
+        if (empty($departsForSelect) && !empty($numeroDepartsInscrits)) {
+            foreach ($numeroDepartsInscrits as $num) {
+                $departsForSelect[$num] = 'Départ ' . $num;
+            }
+        }
 
         $title = 'Saisie des scores - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
         include 'app/Views/layouts/header.php';
@@ -1704,7 +1746,11 @@ class ConcoursController {
             $_SESSION['success'] = $saved . ' score(s) enregistré(s) avec succès.';
         }
 
-        header('Location: /concours/' . $concoursId . '/saisie-scores');
+        $redirectUrl = '/concours/' . $concoursId . '/saisie-scores';
+        if (isset($_POST['depart']) && $_POST['depart'] !== '') {
+            $redirectUrl .= '?depart=' . (int)$_POST['depart'];
+        }
+        header('Location: ' . $redirectUrl);
         exit;
     }
 
