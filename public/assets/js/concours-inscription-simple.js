@@ -1163,7 +1163,12 @@ function loadInscriptions() {
     .then(response => parseJsonResponse(response))
     .then(data => {
         allInscriptionsCache = getInscriptionsFromResponse(data);
-        applyDepartFilterAndRender();
+        try {
+            applyDepartFilterAndRender();
+        } catch (err) {
+            console.error('Erreur renderInscriptions:', err);
+            tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-danger">Erreur lors de l\'affichage des inscriptions.</td></tr>';
+        }
     })
     .catch(error => {
         console.error('Erreur lors du chargement des inscriptions:', error);
@@ -1306,8 +1311,9 @@ function renderInscriptions(inscriptions) {
 }
 
 function escapeHtml(text) {
+    if (text == null || text === undefined) return '';
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = String(text);
     return div.innerHTML;
 }
 
