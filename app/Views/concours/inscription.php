@@ -201,6 +201,10 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 if (isset($colors[$piquetColor])) {
                                     $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
                                 }
+                            } elseif ($isNature3DOrCampagne) {
+                                $rowClass = 'piquet-manquant';
+                                $dataPiquet = '';
+                                $rowStyle = ' style="background-color: #dee2e6 !important;"';
                             } else {
                                 $rowClass = '';
                                 $dataPiquet = '';
