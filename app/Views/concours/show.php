@@ -429,6 +429,9 @@ $debugLicence = isset($_GET['debug_licence']);
         <a href="/concours/<?= htmlspecialchars($concoursId) ?>/inscription" class="btn btn-success">
             <i class="fas fa-user-plus"></i> Gérer les inscriptions
         </a>
+        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
+            <i class="fas fa-calculator"></i> Saisie des scores
+        </a>
     <?php endif; ?>
 </div>
 </div>

@@ -1556,6 +1556,159 @@ class ConcoursController {
     }
 
     /**
+     * Page de saisie des scores d'un concours
+     * La saisie varie selon le type de concours (Nature : score total + 20-15, 20-10, 15-15, 15-10)
+     */
+    public function saisieScores($concoursId)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+
+        $concoursResponse = $this->apiService->getConcoursById($concoursId);
+        if (!$concoursResponse['success']) {
+            $_SESSION['error'] = 'Concours introuvable';
+            header('Location: /concours');
+            exit;
+        }
+
+        $concours = $this->apiService->unwrapData($concoursResponse);
+        if (is_array($concours) && isset($concours['data']) && isset($concours['success'])) {
+            $concours = $concours['data'];
+        }
+        if (is_array($concours)) {
+            $concours = (object)$concours;
+        }
+
+        // Récupérer les inscriptions
+        $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
+        $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+        if (!is_array($inscriptions)) {
+            $inscriptions = [];
+        }
+
+        // Filtrer les inscriptions confirmées
+        $inscriptions = array_filter($inscriptions, function($i) {
+            return ($i['statut_inscription'] ?? '') === 'confirmee';
+        });
+
+        // Récupérer les résultats existants (indexés par inscription_id)
+        $resultats = [];
+        try {
+            $resultatsResponse = $this->apiService->makeRequest("concours/{$concoursId}/resultats", 'GET');
+            $resultatsRaw = $this->apiService->unwrapData($resultatsResponse);
+            if (is_array($resultatsRaw)) {
+                foreach ($resultatsRaw as $r) {
+                    $inscId = $r['inscription_id'] ?? $r['inscriptionId'] ?? null;
+                    if ($inscId) {
+                        $resultats[(int)$inscId] = $r;
+                    } else {
+                        // Fallback : lier par numero_licence si pas d'inscription_id
+                        $licence = $r['numero_licence'] ?? null;
+                        if ($licence) {
+                            foreach ($inscriptions as $insc) {
+                                if (($insc['numero_licence'] ?? '') === $licence) {
+                                    $resultats[(int)($insc['id'] ?? 0)] = $r;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // Pas de résultat ou API non disponible
+        }
+
+        // Déterminer le type de concours (Nature = abv N ou 3 ou C)
+        $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+        $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+        if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+            $disciplinesPayload = $disciplinesPayload['data'];
+        }
+        $disciplineId = $concours->discipline ?? null;
+        $abv_discipline = null;
+        if ($disciplineId && is_array($disciplinesPayload)) {
+            foreach ($disciplinesPayload as $disc) {
+                $discId = $disc['iddiscipline'] ?? $disc['id'] ?? null;
+                if ($discId == $disciplineId || (string)$discId === (string)$disciplineId) {
+                    $abv_discipline = $disc['abv_discipline'] ?? null;
+                    break;
+                }
+            }
+        }
+        $isNature = $abv_discipline && in_array($abv_discipline, ['N', '3', 'C', '3D']);
+
+        $title = 'Saisie des scores - ' . ($concours->titre_competition ?? $concours->nom ?? 'Concours');
+        include 'app/Views/layouts/header.php';
+        include 'app/Views/concours/saisie-scores.php';
+        include 'app/Views/layouts/footer.php';
+    }
+
+    /**
+     * Enregistrement des scores (POST)
+     */
+    public function storeScores($concoursId)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $_SESSION['error'] = 'Méthode non autorisée';
+            header('Location: /concours/' . $concoursId . '/saisie-scores');
+            exit;
+        }
+
+        $scores = $_POST['scores'] ?? [];
+        if (!is_array($scores)) {
+            $scores = [];
+        }
+
+        $saved = 0;
+        $errors = [];
+
+        foreach ($scores as $inscriptionId => $data) {
+            if (empty($inscriptionId) || !is_array($data)) continue;
+            $score = (isset($data['score']) && $data['score'] !== '') ? (int)$data['score'] : null;
+            $nb_20_15 = (isset($data['nb_20_15']) && $data['nb_20_15'] !== '') ? (int)$data['nb_20_15'] : null;
+            $nb_20_10 = (isset($data['nb_20_10']) && $data['nb_20_10'] !== '') ? (int)$data['nb_20_10'] : null;
+            $nb_15_15 = (isset($data['nb_15_15']) && $data['nb_15_15'] !== '') ? (int)$data['nb_15_15'] : null;
+            $nb_15_10 = (isset($data['nb_15_10']) && $data['nb_15_10'] !== '') ? (int)$data['nb_15_10'] : null;
+
+            if ($score === null && $nb_20_15 === null && $nb_20_10 === null && $nb_15_15 === null && $nb_15_10 === null) {
+                continue;
+            }
+
+            try {
+                $payload = [
+                    'inscription_id' => (int)$inscriptionId,
+                    'score' => $score,
+                    'nb_20_15' => $nb_20_15,
+                    'nb_20_10' => $nb_20_10,
+                    'nb_15_15' => $nb_15_15,
+                    'nb_15_10' => $nb_15_10
+                ];
+                $response = $this->apiService->makeRequest("concours/{$concoursId}/resultat", 'POST', $payload);
+                if ($response['success'] ?? false) {
+                    $saved++;
+                } else {
+                    $errors[] = 'Inscription ' . $inscriptionId . ': ' . ($response['message'] ?? $response['error'] ?? 'Erreur');
+                }
+            } catch (Exception $e) {
+                $errors[] = 'Inscription ' . $inscriptionId . ': ' . $e->getMessage();
+            }
+        }
+
+        if (!empty($errors)) {
+            $_SESSION['error'] = implode(' ; ', $errors);
+        }
+        if ($saved > 0) {
+            $_SESSION['success'] = $saved . ' score(s) enregistré(s) avec succès.';
+        }
+
+        header('Location: /concours/' . $concoursId . '/saisie-scores');
+        exit;
+    }
+
+    /**
      * Page d'inscription ciblée (publique, sans authentification)
      * Accès sécurisé par token transmis dans le lien de l'email
      */
