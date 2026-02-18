@@ -598,55 +598,48 @@ $debugLicence = isset($_GET['debug_licence']);
                                 <label for="edit-mobilite_reduite" class="form-check-label">Mobilité réduite</label>
                             </div>
                         </div>
-                        <?php if ($isNature3DOrCampagne): ?>
-                            <div class="col-md-3 mb-3">
-                                <label for="edit-piquet" class="form-label">Piquet</label>
-                                <select id="edit-piquet" name="piquet" class="form-control">
-                                    <option value="">Sélectionner</option>
-                                    <option value="rouge">Rouge</option>
-                                    <option value="bleu">Bleu</option>
-                                    <option value="blanc">Blanc</option>
-                                </select>
-                            </div>
-                        <?php else: ?>
-                            <div class="col-md-3 mb-3">
-                                <label for="edit-distance" class="form-label">Distance</label>
-                                <select id="edit-distance" class="form-control">
-                                    <option value="">Sélectionner</option>
-                                    <?php if (!empty($distancesTir)): ?>
-                                        <?php foreach ($distancesTir as $distance): ?>
-                                            <option value="<?= htmlspecialchars($distance['distance_valeur'] ?? '') ?>">
-                                                <?= htmlspecialchars($distance['lb_distance'] ?? '') ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-                        <?php endif; ?>
-                        <?php if (!$isNature3DOrCampagne): ?>
-                            <div class="col-md-3 mb-3">
-                                <label for="edit-blason" class="form-label">Blason</label>
-                                <input type="number" id="edit-blason" class="form-control" min="0" placeholder="Ex: 40">
-                            </div>
-                        <?php endif; ?>
+                        <div class="col-md-3 mb-3 edit-piquet-section <?= ($isNature3DOrCampagne ?? false) ? '' : 'd-none' ?>">
+                            <label for="edit-piquet" class="form-label">Piquet</label>
+                            <select id="edit-piquet" name="piquet" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <option value="rouge">Rouge</option>
+                                <option value="bleu">Bleu</option>
+                                <option value="blanc">Blanc</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3 edit-distance-section <?= ($isNature3DOrCampagne ?? false) ? 'd-none' : '' ?>">
+                            <label for="edit-distance" class="form-label">Distance</label>
+                            <select id="edit-distance" class="form-control">
+                                <option value="">Sélectionner</option>
+                                <?php if (!empty($distancesTir)): ?>
+                                    <?php foreach ($distancesTir as $distance): ?>
+                                        <option value="<?= htmlspecialchars($distance['distance_valeur'] ?? '') ?>">
+                                            <?= htmlspecialchars($distance['lb_distance'] ?? '') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3 edit-blason-section <?= ($isNature3DOrCampagne ?? false) ? 'd-none' : '' ?>">
+                            <label for="edit-blason" class="form-label">Blason</label>
+                            <input type="number" id="edit-blason" class="form-control" min="0" placeholder="Ex: 40">
+                        </div>
                     </div>
                     
-                    <?php if (!$isNature3DOrCampagne): ?>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="form-check mt-4">
-                                    <input type="checkbox" id="edit-duel" class="form-check-input">
-                                    <label for="edit-duel" class="form-check-label">Duel</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="form-check mt-4">
-                                    <input type="checkbox" id="edit-trispot" class="form-check-input">
-                                    <label for="edit-trispot" class="form-check-label">Trispot</label>
-                                </div>
+                    <div class="row edit-duel-trispot-section <?= ($isNature3DOrCampagne ?? false) ? 'd-none' : '' ?>">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" id="edit-duel" class="form-check-input">
+                                <label for="edit-duel" class="form-check-label">Duel</label>
                             </div>
                         </div>
-                    <?php endif; ?>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" id="edit-trispot" class="form-check-input">
+                                <label for="edit-trispot" class="form-check-label">Trispot</label>
+                            </div>
+                        </div>
+                    </div>
 
                     <h6 class="mt-4 mb-3"><i class="fas fa-coffee"></i> Buvette</h6>
                     <p class="text-muted small mb-2">Réservation optionnelle des articles de la buvette</p>
