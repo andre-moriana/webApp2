@@ -303,7 +303,6 @@ $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESS
                             $canManageInscription = $isDirigeant && !$isOwnInscription; // Dirigeant : actions sur les inscriptions des autres
                             $canEditDeleteInscription = $canManageInscription || $isOwnInscription; // Dirigeant sur autres OU archer sur sa propre inscription
                             $userNom = $inscription['user_nom'] ?? null;
-                            $userNumeroLicence = $inscription['numero_licence'] ?? null;
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
                             $piquetColorRaw = $inscription['piquet'] ?? null;
                             $piquetColor = null;
@@ -352,7 +351,7 @@ $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESS
                                     <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
                                     <?php endif; ?>
                                 </td>                               <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ) ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNumeroLicence) ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscriptionLicence ?: 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
