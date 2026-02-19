@@ -240,7 +240,9 @@ function setupBlasonAutoUpdate() {
 function searchArcherByLicense() {
     const licenceInput = document.getElementById('licence-search-input');
     const licence = licenceInput?.value?.trim();
-    
+    if (licence.length == 7) {
+        licence = '0' + licence;
+    }
     if (!licence) {
         alert('Veuillez entrer un numéro de licence');
         return;
