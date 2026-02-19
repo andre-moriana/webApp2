@@ -53,7 +53,7 @@ class AuthController {
             exit;
         }
 
-        $username = $_POST['email'] ?? ''; // On reçoit l'email du formulaire
+        $username = trim((string)($_POST['email'] ?? '')); // Champ identifiant (username ou numéro de licence)
         $password = $_POST['password'] ?? '';
 
         if (empty($username) || empty($password)) {
@@ -63,13 +63,11 @@ class AuthController {
         }
 
         try {
-            // Gérer le username : si c'est un email, extraire la partie avant @, sinon utiliser tel quel
+            // Normaliser le numéro de licence à 8 caractères si 7 chiffres (ex: 1234567 -> 01234567)
             $loginUsername = $username;
-            if (strpos($username, '@') !== false) {
-                // C'est un email, extraire la partie avant @
-                $loginUsername = explode('@', $username)[0];
+            if (ctype_digit($username) && strlen($username) === 7) {
+                $loginUsername = '0' . $username;
             }
-            // Sinon, c'est déjà un username, on l'utilise tel quel
             
             // Créer une nouvelle instance de ApiService
             $apiService = new ApiService();
