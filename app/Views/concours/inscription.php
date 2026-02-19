@@ -521,6 +521,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <option value="C">C</option>
                                 <option value="E">E</option>
                                 <option value="L">L</option>
+                                <option value="J">J</option>
                                 <option value="P">P</option>
                             </select>
                         </div>
