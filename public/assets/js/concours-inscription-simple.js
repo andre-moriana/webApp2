@@ -239,8 +239,8 @@ function setupBlasonAutoUpdate() {
  */
 function searchArcherByLicense() {
     const licenceInput = document.getElementById('licence-search-input');
-    const licence = licenceInput?.value?.trim();
-    if (licence.length == 7) {
+    let licence = licenceInput?.value?.trim() || '';
+    if (licence.length === 7) {
         licence = '0' + licence;
     }
     if (!licence) {
@@ -962,9 +962,13 @@ function submitInscription() {
 
     const emailValue = document.getElementById('email')?.value?.trim() || '';
     const batchToken = sortedDeparts.length > 1 ? Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('') : null;
+    let numeroLicence = (selectedArcher.licence_number || '').toString().trim();
+    if (numeroLicence.length === 7) {
+        numeroLicence = '0' + numeroLicence;
+    }
     const baseData = {
         user_nom: user_nom,
-        numero_licence: selectedArcher.licence_number,
+        numero_licence: numeroLicence,
         id_club: selectedArcher.id_club || '',
         email: emailValue,
         saison: document.getElementById('saison')?.value || '',
