@@ -2190,11 +2190,15 @@ class ConcoursController {
             }
         }
 
+        $numeroLicence = trim($_POST['numero_licence'] ?? '');
+        if ($numeroLicence !== '' && strlen($numeroLicence) === 7) {
+            $numeroLicence = '0' . $numeroLicence;
+        }
         $inscriptionData = [
             'user_id' => null,
             'user_nom' => $user_nom,
             'id_club' => $_POST['id_club'] ?? null,
-            'numero_licence' => trim($_POST['numero_licence'] ?? ''),
+            'numero_licence' => $numeroLicence,
             'email' => isset($_POST['email']) && $_POST['email'] !== '' ? trim($_POST['email']) : null,
             'numero_depart' => $numero_depart,
             'numero_tir' => $numero_tir,
