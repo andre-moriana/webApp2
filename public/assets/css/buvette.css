@@ -1,6 +1,9 @@
 /* Styles spécifiques à la page gestion buvette */
 #buvette-page .card {
     margin-top: 1rem;
+    width: 100%;
+    min-width: 0;
+    align-self: stretch; /* Prend toute la largeur malgré align-items: center du parent */
 }
 
 /* En-tête : titre + bouton Retour — passage à la ligne sur écran réduit */
@@ -23,5 +26,27 @@
     .buvette-header .btn {
         width: 100%;
         text-align: center;
+    }
+}
+
+/* Tableaux buvette : éviter la troncature sur écran réduit */
+#buvette-page .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    min-width: 0;
+}
+
+#buvette-page #table-buvette-reservations td,
+#buvette-page #table-buvette-reservations th,
+#buvette-page #table-buvette-produits td,
+#buvette-page #table-buvette-produits th {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+    #buvette-page #table-buvette-reservations,
+    #buvette-page #table-buvette-produits {
+        font-size: 0.9rem;
     }
 }
