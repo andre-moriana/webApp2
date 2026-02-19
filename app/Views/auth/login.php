@@ -60,7 +60,7 @@
                                        autocomplete="username"
                                        placeholder="Nom d'utilisateur, email ou numéro de licence">
                                 <small class="form-text text-muted">
-                                    Saisissez votre nom d'utilisateur, votre adresse email ou votre numéro de licence
+                                    Saisissez votre nom d'utilisateur ou votre numéro de licence
                                 </small>
                             </div>
                             
