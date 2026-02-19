@@ -453,6 +453,14 @@ class ConcoursController {
                 $departs = $decoded;
             }
         }
+        $arbitres_json = $_POST['arbitres_json'] ?? '';
+        $arbitres = [];
+        if ($arbitres_json !== '') {
+            $decoded = json_decode($arbitres_json, true);
+            if (is_array($decoded)) {
+                $arbitres = $decoded;
+            }
+        }
         
         // Validation des champs requis
         if (empty($titre_competition)) {
@@ -503,6 +511,7 @@ class ConcoursController {
                 'lien_inscription_cible' => $lien_inscription_cible ?: null,
                 'agreenum' => $club_code, // nameShort du club organisateur
                 'departs' => $departs,
+                'arbitres' => $arbitres,
                 'lieu_latitude' => $lieu_latitude ? (float)$lieu_latitude : null,
                 'lieu_longitude' => $lieu_longitude ? (float)$lieu_longitude : null
             ];
@@ -1150,6 +1159,12 @@ class ConcoursController {
             $data['departs'] = is_array($decoded) ? $decoded : [];
         }
         unset($data['departs_json']);
+        // Arbitres
+        if (isset($data['arbitres_json']) && $data['arbitres_json'] !== '') {
+            $decoded = json_decode($data['arbitres_json'], true);
+            $data['arbitres'] = is_array($decoded) ? $decoded : [];
+        }
+        unset($data['arbitres_json']);
         
         $response = $this->apiService->updateConcours($id, $data);
         // Optionally handle errors here
