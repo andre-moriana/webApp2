@@ -438,10 +438,10 @@ $debugLicence = isset($_GET['debug_licence']);
         <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
             <i class="fas fa-calculator"></i> Saisie des scores
         </a>
-        <?php endif; ?>
         <a href="/concours/<?= htmlspecialchars($concoursId) ?>/editions" class="btn btn-info">
             <i class="fas fa-print"></i> Éditions
         </a>
+        <?php endif; ?>
     <?php endif; ?>
 </div>
 </div>
