@@ -3,7 +3,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
 $concoursTitre = $concours->titre_competition ?? $concours->nom ?? 'Concours';
 ?>
 <div class="container-fluid concours-create-container" id="buvette-page" data-concours-id="<?= htmlspecialchars($concoursId) ?>">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="buvette-header d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1><i class="fas fa-coffee"></i> Gestion de la buvette</h1>
             <p class="text-muted mb-0"><?= htmlspecialchars($concoursTitre) ?></p>
