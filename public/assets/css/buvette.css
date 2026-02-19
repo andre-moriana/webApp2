@@ -2,3 +2,26 @@
 #buvette-page .card {
     margin-top: 1rem;
 }
+
+/* En-tête : titre + bouton Retour — passage à la ligne sur écran réduit */
+.buvette-header {
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.buvette-header .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+    .buvette-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .buvette-header .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
