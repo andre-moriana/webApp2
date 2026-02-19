@@ -539,14 +539,17 @@ class ApiService {
         try {
             $result = $this->makeRequest("auth/login", "POST", $loginData);
             
-            if ($result["success"] && isset($result["data"]["token"])) {
+            // Le backend peut retourner token/user dans data ou à la racine
+            $token = $result["data"]["token"] ?? $result["data"]["data"]["token"] ?? null;
+            $user = $result["data"]["data"]["user"] ?? $result["data"]["user"] ?? null;
+            if ($result["success"] && $token) {
                 // Stocker le token pour les futures requêtes
-                $this->token = $result["data"]["token"];
+                $this->token = $token;
                 
                 return [
                     "success" => true,
                     "token" => $this->token,
-                    "user" => $result["data"]["user"] ?? null,
+                    "user" => $user,
                     "message" => $result["data"]["message"] ?? "Connexion réussie"
                 ];
             }
