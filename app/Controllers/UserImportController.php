@@ -428,7 +428,7 @@ class UserImportController {
 
         $bowCode = substr($value, 0, 2);
         $genderCode = substr($value, -1);
-        if len($value) > 4) {
+        if (strlen($value) > 4) {
             $ageCode = substr($value, 3, -1);
         } else {
             $ageCode = substr($value, 2, -1);
