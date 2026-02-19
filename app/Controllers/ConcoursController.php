@@ -1565,6 +1565,15 @@ class ConcoursController {
             exit;
         }
 
+        // Éditions réservées aux dirigeants et admins
+        $isAdmin = $_SESSION['user']['is_admin'] ?? false;
+        $isDirigeant = ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+        if (!$isAdmin && !$isDirigeant) {
+            $_SESSION['error'] = 'Accès réservé aux dirigeants et administrateurs.';
+            header('Location: /concours/' . (int)$concoursId);
+            exit;
+        }
+
         $concoursResponse = $this->apiService->getConcoursById($concoursId);
         if (!$concoursResponse['success']) {
             $_SESSION['error'] = 'Concours introuvable';
