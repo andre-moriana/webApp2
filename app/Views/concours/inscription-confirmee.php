@@ -9,6 +9,8 @@
                         </div>
                         <h2 class="card-title text-success mb-3">Inscription confirmée</h2>
                         <p class="lead"><?= htmlspecialchars($message) ?></p>
+                        <p class="text-muted">Vous pouvez vous connecter avec votre numéro de licence et votre mot de passe.</p>
+                        <p class="text-muted">le mot de passe temporaires est générés automatiquement au format : Temp[6 derniers chiffres de l'ID licence]!  Exemple : Temp012345! ?></p>
                         <p class="text-muted">Nous vous attendons sur le pas de tir !</p>
                     <?php else: ?>
                         <div class="mb-4">
