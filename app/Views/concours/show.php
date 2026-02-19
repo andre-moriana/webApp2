@@ -541,6 +541,9 @@ $debugLicence = isset($_GET['debug_licence']);
                                 <option value="B">B</option>
                                 <option value="C">C</option>
                                 <option value="L">L</option>
+                                <option value="J">J</option>
+                                <option value="P">P</option>
+                                <option value="E">E</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
