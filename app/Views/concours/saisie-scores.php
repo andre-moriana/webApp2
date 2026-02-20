@@ -207,6 +207,13 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                                     <th>P1</th>
                                     <th>P2</th>
                                     <th>Score total</th>
+                                    <th>20-15</th>
+                                    <th>20-10</th>
+                                    <th>15-15</th>
+                                    <th>15-10</th>
+                                    <th>15</th>
+                                    <th>10</th>
+                                    <th>Manqués (0)</th>
                                 <?php elseif ($isNature): ?>
                                     <th>Score total</th>
                                     <th>20-15</th>
@@ -304,6 +311,41 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                                                    class="form-control form-control-sm serie2-score-input" min="0" step="1" placeholder="0" title="Score passage 2 (série 2)">
                                         </td>
                                         <td class="text-center score-total-cell"><?= ($s1_score !== '' && $s2_score !== '') ? ((int)$s1_score + (int)$s2_score) : '-' ?></td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_20_15]" 
+                                                   value="<?= htmlspecialchars($nb2015 !== '' ? $nb2015 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_20_10]" 
+                                                   value="<?= htmlspecialchars($nb2010 !== '' ? $nb2010 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_15_15]" 
+                                                   value="<?= htmlspecialchars($nb1515 !== '' ? $nb1515 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_15_10]" 
+                                                   value="<?= htmlspecialchars($nb1510 !== '' ? $nb1510 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_15]" 
+                                                   value="<?= htmlspecialchars($nb15 !== '' ? $nb15 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_10]" 
+                                                   value="<?= htmlspecialchars($nb10 !== '' ? $nb10 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_0]" 
+                                                   value="<?= htmlspecialchars($nb0 !== '' ? $nb0 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
                                     <?php elseif ($isNature): ?>
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][score]" 
