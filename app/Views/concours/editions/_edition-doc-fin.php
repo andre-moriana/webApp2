@@ -58,7 +58,8 @@ $clubOrgCode = $clubOrganisateurData ? ($clubOrganisateurData['nameShort'] ?? $c
 $clubNameStr = is_scalar($clubName ?? null) ? (string)($clubName ?? '') : '';
 $clubOrgDisplay = ($clubOrgCode ? $clubOrgCode . '  ' : '') . $clubNameStr;
 $arbitreRespDisplay = $arbitreResponsable ? $formatNom($arbitreResponsable) : '';
-$nbArchers = isset($inscriptions) ? count($inscriptions) : 0;
+// Pour le classement : utiliser le nombre après filtre (régional/départemental) ; sinon total inscriptions
+$nbArchers = ($doc === 'classement' && isset($inscriptions1erTir)) ? count($inscriptions1erTir) : (isset($inscriptions) ? count($inscriptions) : 0);
 ?>
 <div class="edition-doc-fin mt-4 pt-4">
     <table class="table table-borderless">
