@@ -163,6 +163,7 @@ class ConcoursController {
         $disciplines = []; // Initialiser à un tableau vide par défaut
         $typeCompetitions = []; // Initialiser à un tableau vide par défaut
         $niveauChampionnat = []; // Initialiser à un tableau vide par défaut
+        $typePublications = []; // Types de publication INTERNET
         
         try {
             // Récupérer les thèmes
@@ -397,6 +398,14 @@ class ConcoursController {
             error_log('Exception lors de la récupération des niveaux de championnat: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
         }
+
+        // Types de publication INTERNET (liste statique - pas d'appel API client)
+        $typePublications = [
+            ['id' => 1, 'name' => 'Public', 'nom' => 'Public', 'code' => 'public'],
+            ['id' => 2, 'name' => 'Privé', 'nom' => 'Privé', 'code' => 'prive'],
+            ['id' => 3, 'name' => 'Réservé aux membres', 'nom' => 'Réservé aux membres', 'code' => 'membres'],
+            ['id' => 4, 'name' => 'Réservé aux inscrits', 'nom' => 'Réservé aux inscrits', 'code' => 'inscrits']
+        ];
 
         // Log final avant de passer à la vue
         error_log('=== AVANT INCLUSION VUE ===');
@@ -1124,6 +1133,14 @@ class ConcoursController {
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des niveaux de championnat: ' . $e->getMessage());
         }
+        
+        // Types de publication INTERNET (liste statique - pas d'appel API client)
+        $typePublications = [
+            ['id' => 1, 'name' => 'Public', 'nom' => 'Public', 'code' => 'public'],
+            ['id' => 2, 'name' => 'Privé', 'nom' => 'Privé', 'code' => 'prive'],
+            ['id' => 3, 'name' => 'Réservé aux membres', 'nom' => 'Réservé aux membres', 'code' => 'membres'],
+            ['id' => 4, 'name' => 'Réservé aux inscrits', 'nom' => 'Réservé aux inscrits', 'code' => 'inscrits']
+        ];
         
         $title = 'Éditer un concours - Portail Archers de Gémenos';
         include 'app/Views/layouts/header.php';

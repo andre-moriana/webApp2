@@ -12,6 +12,7 @@
         window.disciplinesData = c.disciplines || [];
         window.typeCompetitionsData = c.typeCompetitions || [];
         window.niveauChampionnatData = c.niveauChampionnat || [];
+        window.typePublicationsData = c.typePublications || [];
         window.concoursData = c.concoursData || null;
     } catch (e) {
         console.warn('Config concours form parse error', e);
