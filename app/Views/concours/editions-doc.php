@@ -66,7 +66,7 @@ $docTitle = $docTitles[$doc] ?? 'Document';
         @media print {
             /* Réserver l'espace en haut de CHAQUE page pour l'en-tête */
             @page {
-                margin-top: 30mm;
+                margin-top: 32mm;
                 margin-bottom: 15mm;
             }
             .no-print { display: none !important; }
