@@ -359,8 +359,8 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     </div>
                     
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email <span class="text-muted">(pour confirmation d'inscription)</span></label>
-                        <input type="email" id="email" class="form-control" placeholder="exemple@email.com" autocomplete="email">
+                        <label for="email" class="form-label">Email <span class="text-danger">*</span> <span class="text-muted">(pour confirmation d'inscription)</span></label>
+                        <input type="email" id="email" class="form-control" placeholder="exemple@email.com" autocomplete="email" required>
                     </div>
                     
                     <h6 class="mt-4 mb-3">Classification et équipement</h6>

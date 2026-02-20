@@ -522,6 +522,15 @@ function showSearchResult() {
         setupLicenceTypeWarnings();
         // Charger les produits buvette
         if (typeof loadBuvetteProduits === 'function') loadBuvetteProduits();
+        
+        // Ajouter un listener pour retirer la classe is-invalid lorsque l'utilisateur saisit dans le champ email
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+            });
+        }
+        
         modalElement.removeEventListener('shown.bs.modal', onModalShown);
     }, { once: true });
     
@@ -1486,7 +1495,35 @@ function submitInscription() {
     const prenom = selectedArcher.first_name || '';
     const user_nom = `${prenom} ${nom}`.trim() || nom || prenom || '';
 
-    const emailValue = document.getElementById('email')?.value?.trim() || '';
+    const emailInput = document.getElementById('email');
+    const emailValue = emailInput?.value?.trim() || '';
+    
+    // Validation de l'email obligatoire
+    if (!emailValue) {
+        alert('Veuillez saisir une adresse email pour confirmer l\'inscription.');
+        if (emailInput) {
+            emailInput.focus();
+            emailInput.classList.add('is-invalid');
+        }
+        return;
+    }
+    
+    // Validation du format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailValue)) {
+        alert('Veuillez saisir une adresse email valide.');
+        if (emailInput) {
+            emailInput.focus();
+            emailInput.classList.add('is-invalid');
+        }
+        return;
+    }
+    
+    // Retirer la classe d'erreur si elle existe
+    if (emailInput) {
+        emailInput.classList.remove('is-invalid');
+    }
+    
     const batchToken = sortedDeparts.length > 1 ? Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('') : null;
     let numeroLicence = (selectedArcher.licence_number || '').toString().trim();
     if (numeroLicence.length === 7) {
