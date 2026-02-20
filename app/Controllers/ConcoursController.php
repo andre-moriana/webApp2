@@ -1682,8 +1682,9 @@ class ConcoursController {
             $inscriptions = [];
         }
 
-        // Résultats
+        // Résultats (indexés par inscription_id + fallback par numero_licence)
         $resultats = [];
+        $resultatsByLicence = [];
         try {
             $resultatsResponse = $this->apiService->makeRequest("concours/{$concoursId}/resultats", 'GET');
             $resultatsRaw = $this->apiService->unwrapData($resultatsResponse);
@@ -1693,10 +1694,15 @@ class ConcoursController {
                     if ($inscId) {
                         $resultats[(int)$inscId] = $r;
                     }
+                    $lic = trim((string)($r['numero_licence'] ?? ''));
+                    if ($lic !== '') {
+                        $resultatsByLicence[$lic] = $r;
+                    }
                 }
             }
         } catch (Exception $e) {
             $resultats = [];
+            $resultatsByLicence = [];
         }
 
         // Clubs, disciplines, types compétition, niveaux championnat
