@@ -616,8 +616,9 @@ function prefillFormFields(archer) {
                     console.log('Catégories correspondantes trouvées:', matchingCategories.length, matchingCategories.map(c => c.abv_categorie_classement));
                     
                     // Toujours essayer de trouver une correspondance avec CATEGORIE si disponible
-                    if (categorieXml) {
-                        console.log('Recherche avec CATEGORIE XML:', categorieXml);
+                    // Utiliser SEXE du XML (1=H, 2=F) pour construire la catégorie recherchée
+                    if (categorieXml && sexeLetter) {
+                        console.log('Recherche avec CATEGORIE XML:', categorieXml, 'SEXE:', sexeXml, '->', sexeLetter);
                         
                         // Essayer d'abord une correspondance exacte avec CATEGORIE
                         categorieFound = matchingCategories.find(cat => {
@@ -627,7 +628,7 @@ function prefillFormFields(archer) {
                             return match;
                         });
                         
-                        // Si pas trouvé, essayer avec transformations
+                        // Si pas trouvé, construire la catégorie recherchée en utilisant SEXE du XML
                         if (!categorieFound) {
                             let transformed = null;
                             let transformationType = '';
@@ -635,43 +636,42 @@ function prefillFormFields(archer) {
                             // Vérifier si c'est Nature/3D/Campagne pour transformation CL->TL
                             const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
                             
-                            // Transformation 1: Pour Nature/3D/Campagne, CLS2H -> S2HTL (Tir Libre)
+                            // Transformation 1: Pour Nature/3D/Campagne, CLS2H/CLS2D/CLU21/etc -> S2HTL/S2FTL/U21HTL/etc
                             if (isNature) {
-                                const clPattern = /^CL(S\d+)([HF])$/i;
+                                const clPattern = /^CL(.+)$/i;
                                 let match = categorieXml.match(clPattern);
                                 if (match) {
-                                    const sNumber = match[1]; // S2
-                                    const sexe = match[2]; // H ou F
-                                    transformed = sNumber + sexe + 'TL'; // S2HTL ou S2FTL
-                                    transformationType = 'CLS2H->S2HTL (Nature/3D/Campagne)';
+                                    const reste = match[1]; // S2H, S2D, U21, etc.
+                                    transformed = reste + sexeLetter + 'TL'; // S2HTL, U21HTL, etc.
+                                    transformationType = 'CL->TL (Nature/3D/Campagne) avec SEXE';
                                 }
                             }
                             
-                            // Transformation 2: ADS2H -> S2HAD (Arc Double Système)
+                            // Transformation 2: ADU21/ADS2H/ADS2D/etc -> U21HAD/S2HAD/S2FAD/etc (Arc Double Système)
+                            // Utiliser SEXE du XML directement
                             if (!transformed) {
-                                const adPattern = /^AD(S\d+)([HF])$/i;
+                                const adPattern = /^AD(.+)$/i;
                                 let match = categorieXml.match(adPattern);
                                 if (match) {
-                                    const sNumber = match[1]; // S2
-                                    const sexe = match[2]; // H ou F
-                                    transformed = sNumber + sexe + 'AD'; // S2HAD
-                                    transformationType = 'ADS2H->S2HAD';
+                                    const reste = match[1]; // U21, S2H, S2D, etc.
+                                    // Si le reste contient déjà H/F/D, le remplacer par le sexe du XML
+                                    const resteSansSexe = reste.replace(/[HFD]$/i, '');
+                                    transformed = resteSansSexe + sexeLetter + 'AD'; // U21HAD, S2HAD, etc.
+                                    transformationType = 'AD->AD avec SEXE du XML';
                                 }
                             }
                             
-                            // Transformation 3: BBS2D -> S2FBB (Barebow, D = Dame/Femme)
+                            // Transformation 3: BBU21/BBS2D/etc -> U21HBB/S2FBB/etc (Barebow)
+                            // Utiliser SEXE du XML directement
                             if (!transformed) {
-                                const bbPattern = /^BB(S\d+)([DF])$/i;
+                                const bbPattern = /^BB(.+)$/i;
                                 let match = categorieXml.match(bbPattern);
                                 if (match) {
-                                    const sNumber = match[1]; // S2
-                                    let sexe = match[2]; // D ou F
-                                    // Convertir D (Dame) en F (Femme)
-                                    if (sexe === 'D') {
-                                        sexe = 'F';
-                                    }
-                                    transformed = sNumber + sexe + 'BB'; // S2FBB
-                                    transformationType = 'BBS2D->S2FBB';
+                                    const reste = match[1]; // U21, S2D, etc.
+                                    // Si le reste contient déjà H/F/D, le remplacer par le sexe du XML
+                                    const resteSansSexe = reste.replace(/[HFD]$/i, '');
+                                    transformed = resteSansSexe + sexeLetter + 'BB'; // U21HBB, S2FBB, etc.
+                                    transformationType = 'BB->BB avec SEXE du XML';
                                 }
                             }
                             
@@ -701,20 +701,22 @@ function prefillFormFields(archer) {
                                             idarc: c.idarc || c.id_arc
                                         })));
                                         
-                                        // Chercher celle qui correspond aux critères
+                                        // Chercher celle qui correspond aux critères (CATAGE, TYPARC et SEXE du XML)
                                         const foundInAll = allCategoriesWithTransformed.find(cat => {
                                             const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
                                             const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
                                             
                                             // Vérifier CATAGE et TYPARC
                                             if (catIdcategorie === catage && catIdarc === typarc) {
-                                                // Vérifier aussi le sexe si disponible
+                                                // Vérifier aussi le sexe avec SEXE du XML (plus fiable)
                                                 if (sexeLetter) {
                                                     const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
+                                                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                                    // Utiliser SEXE du XML directement
                                                     if (catSexe) {
                                                         return catSexe === sexeLetter;
                                                     } else {
-                                                        const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                                        // Fallback: vérifier l'abréviation
                                                         return catAbv.startsWith(sexeLetter);
                                                     }
                                                 }
@@ -725,13 +727,14 @@ function prefillFormFields(archer) {
                                         
                                         if (foundInAll) {
                                             categorieFound = foundInAll;
-                                            console.log('  ✓ Catégorie', transformed, 'trouvée avec CATAGE:', catage, 'TYPARC:', typarc);
+                                            console.log('  ✓ Catégorie', transformed, 'trouvée avec CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter);
                                         } else {
-                                            // Si pas de correspondance exacte, prendre la première trouvée si elle correspond au sexe
+                                            // Si pas de correspondance exacte, prendre la première trouvée si elle correspond au sexe du XML
                                             const foundBySexe = allCategoriesWithTransformed.find(cat => {
                                                 if (sexeLetter) {
                                                     const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
                                                     const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                                    // Utiliser SEXE du XML directement
                                                     if (catSexe) {
                                                         return catSexe === sexeLetter;
                                                     } else {
@@ -743,7 +746,7 @@ function prefillFormFields(archer) {
                                             
                                             if (foundBySexe) {
                                                 categorieFound = foundBySexe;
-                                                console.log('  ⚠ Catégorie', transformed, 'trouvée mais avec CATAGE/TYPARC différents. Utilisation quand même.');
+                                                console.log('  ⚠ Catégorie', transformed, 'trouvée mais avec CATAGE/TYPARC différents. Utilisation quand même (SEXE correspond).');
                                             } else {
                                                 console.log('  ✗ Catégorie', transformed, 'existe mais ne correspond pas aux critères CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter);
                                             }
@@ -806,67 +809,60 @@ function prefillFormFields(archer) {
                     }
                     
                     // Fallback: essayer avec CATEGORIE si disponible
+                    // Utiliser SEXE du XML (1=H, 2=F) pour construire la catégorie recherchée
                     const categorieXmlFallback = (archer.CATEGORIE || '').trim().toUpperCase();
-                    if (categorieXmlFallback) {
+                    if (categorieXmlFallback && sexeLetter) {
+                        console.log('Fallback: Recherche avec CATEGORIE XML:', categorieXmlFallback, 'SEXE:', sexeXml, '->', sexeLetter);
+                        
                         // Essayer d'abord une correspondance exacte
                         let categorieFoundFallback = categoriesClassement.find(cat => {
                             const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
                             return abv === categorieXmlFallback;
                         });
                         
-                        // Si pas trouvé et que la catégorie XML ne commence pas par H/F, essayer avec le sexe
-                        if (!categorieFoundFallback && sexeXml && !categorieXmlFallback.match(/^[HF]/)) {
-                            const categorieXmlWithSexe = sexeLetter + categorieXmlFallback;
-                            categorieFoundFallback = categoriesClassement.find(cat => {
-                                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                return abv === categorieXmlWithSexe;
-                            });
-                        }
-                        
-                        // Si toujours pas trouvé, essayer de réorganiser les formats XML
-                        if (!categorieFoundFallback && categorieXmlFallback.length >= 4) {
+                        // Si pas trouvé, construire la catégorie recherchée en utilisant SEXE du XML
+                        if (!categorieFoundFallback) {
                             let transformed = null;
                             let transformationType = '';
                             
                             const isNatureFallback = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
                             
-                            // Transformation 1: Pour Nature/3D/Campagne, CLS2H -> S2HTL (Tir Libre)
+                            // Transformation 1: Pour Nature/3D/Campagne, CLU21/CLS2H/etc -> U21HTL/S2HTL/etc
                             if (isNatureFallback) {
-                                const clPattern = /^CL(S\d+)([HF])$/i;
+                                const clPattern = /^CL(.+)$/i;
                                 let match = categorieXmlFallback.match(clPattern);
                                 if (match) {
-                                    const sNumber = match[1]; // S2
-                                    const sexe = match[2]; // H ou F
-                                    transformed = sNumber + sexe + 'TL'; // S2HTL ou S2FTL
-                                    transformationType = 'CLS2H->S2HTL (Nature/3D/Campagne)';
+                                    const reste = match[1]; // U21, S2H, S2D, etc.
+                                    transformed = reste + sexeLetter + 'TL'; // U21HTL, S2HTL, etc.
+                                    transformationType = 'CL->TL (Nature/3D/Campagne) avec SEXE';
                                 }
                             }
                             
-                            // Transformation 2: ADS2H -> S2HAD (Arc Double Système)
+                            // Transformation 2: ADU21/ADS2H/etc -> U21HAD/S2HAD/etc (Arc Double Système)
+                            // Utiliser SEXE du XML directement
                             if (!transformed) {
-                                const adPattern = /^AD(S\d+)([HF])$/i;
+                                const adPattern = /^AD(.+)$/i;
                                 let match = categorieXmlFallback.match(adPattern);
                                 if (match) {
-                                    const sNumber = match[1]; // S2
-                                    const sexe = match[2]; // H ou F
-                                    transformed = sNumber + sexe + 'AD'; // S2HAD
-                                    transformationType = 'ADS2H->S2HAD';
+                                    const reste = match[1]; // U21, S2H, S2D, etc.
+                                    // Si le reste contient déjà H/F/D, le remplacer par le sexe du XML
+                                    const resteSansSexe = reste.replace(/[HFD]$/i, '');
+                                    transformed = resteSansSexe + sexeLetter + 'AD'; // U21HAD, S2HAD, etc.
+                                    transformationType = 'AD->AD avec SEXE du XML';
                                 }
                             }
                             
-                            // Transformation 3: BBS2D -> S2FBB (Barebow, D = Dame/Femme)
+                            // Transformation 3: BBU21/BBS2D/etc -> U21HBB/S2FBB/etc (Barebow)
+                            // Utiliser SEXE du XML directement
                             if (!transformed) {
-                                const bbPattern = /^BB(S\d+)([DF])$/i;
+                                const bbPattern = /^BB(.+)$/i;
                                 let match = categorieXmlFallback.match(bbPattern);
                                 if (match) {
-                                    const sNumber = match[1]; // S2
-                                    let sexe = match[2]; // D ou F
-                                    // Convertir D (Dame) en F (Femme)
-                                    if (sexe === 'D') {
-                                        sexe = 'F';
-                                    }
-                                    transformed = sNumber + sexe + 'BB'; // S2FBB
-                                    transformationType = 'BBS2D->S2FBB';
+                                    const reste = match[1]; // U21, S2D, etc.
+                                    // Si le reste contient déjà H/F/D, le remplacer par le sexe du XML
+                                    const resteSansSexe = reste.replace(/[HFD]$/i, '');
+                                    transformed = resteSansSexe + sexeLetter + 'BB'; // U21HBB, S2FBB, etc.
+                                    transformationType = 'BB->BB avec SEXE du XML';
                                 }
                             }
                             
