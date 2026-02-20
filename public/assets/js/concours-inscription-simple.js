@@ -770,6 +770,38 @@ function prefillFormFields(archer) {
                                 }
                             }
                             
+                            // Pour les catégories CL, chercher directement dans toutes les catégories
+                            // même si la correspondance exacte n'a pas été trouvée
+                            // (les catégories CL ne passent pas le filtre initial car elles ne commencent pas par H/F)
+                            if (!transformed && categorieXml.startsWith('CL')) {
+                                console.log('  Recherche catégorie CL pour CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter);
+                                // Chercher une catégorie CL dans toutes les catégories disponibles
+                                // en vérifiant qu'elle correspond aux critères CATAGE/TYPARC/SEXE
+                                categorieFound = categoriesClassement.find(cat => {
+                                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                    if (catAbv !== 'CL') return false;
+                                    
+                                    // Vérifier CATAGE et TYPARC
+                                    const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
+                                    const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
+                                    if (catIdcategorie !== catage || catIdarc !== typarc) return false;
+                                    
+                                    // Vérifier le sexe si disponible
+                                    if (sexeLetter) {
+                                        const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
+                                        // Pour CL, on accepte si le sexe correspond ou si le sexe n'est pas défini
+                                        if (catSexe && catSexe !== sexeLetter) return false;
+                                    }
+                                    
+                                    return true;
+                                });
+                                if (categorieFound) {
+                                    console.log('  ✓ Catégorie CL trouvée avec CATAGE:', catage, 'TYPARC:', typarc);
+                                } else {
+                                    console.log('  ✗ Aucune catégorie CL trouvée pour CATAGE:', catage, 'TYPARC:', typarc);
+                                }
+                            }
+                            
                             if (transformed) {
                                 console.log('  Transformation CATEGORIE XML:', categorieXml, '->', transformed, '(' + transformationType + ')');
                                 
@@ -1029,6 +1061,33 @@ function prefillFormFields(archer) {
                                     const resteSansSexe = reste.replace(/[HFD]$/i, '');
                                     transformedFallback = resteSansSexe + sexeLetter + 'BB'; // U21HBB, S2FBB, etc.
                                     transformationType = 'BB->BB avec SEXE du XML';
+                                }
+                            }
+                            
+                            // Pour les catégories CL, chercher directement dans toutes les catégories
+                            // même si la correspondance exacte n'a pas été trouvée
+                            if (!transformedFallback && categorieXmlFallback && categorieXmlFallback.startsWith('CL')) {
+                                // Chercher une catégorie CL dans toutes les catégories disponibles
+                                // en vérifiant qu'elle correspond aux critères CATAGE/TYPARC/SEXE
+                                categorieFoundFallback = categoriesClassement.find(cat => {
+                                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                    if (catAbv !== 'CL') return false;
+                                    
+                                    // Vérifier CATAGE et TYPARC
+                                    const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
+                                    const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
+                                    if (catIdcategorie !== catage || catIdarc !== typarc) return false;
+                                    
+                                    // Vérifier le sexe
+                                    if (sexeLetter) {
+                                        const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
+                                        if (catSexe && catSexe !== sexeLetter) return false;
+                                    }
+                                    
+                                    return true;
+                                });
+                                if (categorieFoundFallback) {
+                                    console.log('  ✓ Catégorie CL trouvée dans toutes les catégories (fallback)');
                                 }
                             }
                             
