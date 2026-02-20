@@ -46,8 +46,10 @@ $formatLigne = function($liste, $prefix) use ($formatNom) {
     return implode(' / ', $parts) . (empty($parts) ? '' : ' /');
 };
 
-$clubOrgId = $concours->club_organisateur ?? null;
-$clubOrgDisplay = ($clubOrgId ? $clubOrgId . '  ' : '') . ($clubName ?? '');
+$clubOrganisateurId = $concours->club_organisateur ?? null;
+$clubOrganisateurData = $clubOrganisateurId ? ($clubsMap[$clubOrganisateurId] ?? $clubsMap[(string)$clubOrganisateurId] ?? null) : null;
+$clubOrgCode = $clubOrganisateurData ? ($clubOrganisateurData['nameShort'] ?? $clubOrganisateurData['name_short'] ?? '') : '';
+$clubOrgDisplay = ($clubOrgCode ? $clubOrgCode . '  ' : '') . ($clubName ?? '');
 $arbitreRespDisplay = $arbitreResponsable ? $formatNom($arbitreResponsable, 'Me.') : '';
 $nbArchers = isset($inscriptions) ? count($inscriptions) : 0;
 ?>
@@ -70,11 +72,11 @@ $nbArchers = isset($inscriptions) ? count($inscriptions) : 0;
 
     <div class="mt-3">
         <strong>Liste des arbitres</strong>
-        <p class="mb-0 mt-1"><?= htmlspecialchars($formatLigne($listeArbitres, 'Me.')) ?></p>
+        <p class="mb-0 mt-1"><?= htmlspecialchars($formatLigne($listeArbitres)) ?></p>
     </div>
 
     <div class="mt-3">
         <strong>Liste des entraîneurs</strong>
-        <p class="mb-0 mt-1"><?= htmlspecialchars($formatLigne($listeEntraineurs, 'M.')) ?></p>
+        <p class="mb-0 mt-1"><?= htmlspecialchars($formatLigne($listeEntraineurs)) ?></p>
     </div>
 </div>
