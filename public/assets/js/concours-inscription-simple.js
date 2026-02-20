@@ -943,6 +943,11 @@ function prefillFormFields(archer) {
                         console.log('  Liste des catégories correspondantes:', matchingCategories.map(c => c.abv_categorie_classement));
                     }
                     
+                    // Appliquer la colorisation après un court délai pour s'assurer que le DOM est mis à jour
+                    setTimeout(() => {
+                        applyCategorieColorization();
+                    }, 100);
+                    
                     // Déclencher le remplissage automatique de la distance et du blason
                     setTimeout(() => {
                         fillDistanceAndBlasonFromCategorie(categorieFound.abv_categorie_classement);
