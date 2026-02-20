@@ -2,11 +2,21 @@
 /** Classement - calculé par catégorie de classement, uniquement 1er tir */
 $categoriesMap = $categoriesMap ?? [];
 $disciplineAbv = $disciplineAbv ?? null;
-// Nature : discipline N/3/C/3D OU présence des scores 20-15, 20-10, etc.
+// Nature : discipline N/3/C/3D OU présence des scores 20-15, 20-10, etc. OU libellé catégorie (ARC CHASSE, NATURE, 3D)
 $hasNatureScores = !empty(array_filter($resultats ?? [], function($r) {
     return isset($r['nb_20_15']) || isset($r['nb_20_10']) || isset($r['nb_15_15']) || isset($r['nb_15_10']);
 }));
-$isNature = ($disciplineAbv && in_array($disciplineAbv, ['N', '3', 'C', '3D'], true)) || $hasNatureScores;
+$hasNatureLabel = false;
+foreach ($categoriesMap as $abv => $lb) {
+    $abvUpper = strtoupper((string)$abv);
+    $lbUpper = strtoupper((string)$lb);
+    if (strpos($lbUpper, 'ARC CHASSE') !== false || strpos($lbUpper, 'NATURE') !== false || strpos($lbUpper, '3D') !== false
+        || strpos($lbUpper, 'CHASSE') !== false || strpos($abvUpper, 'FAC') !== false) {
+        $hasNatureLabel = true;
+        break;
+    }
+}
+$isNature = ($disciplineAbv && in_array($disciplineAbv, ['N', '3', 'C', '3D'], true)) || $hasNatureScores || $hasNatureLabel;
 $has2x21 = $isNature && !empty(array_filter($resultats ?? [], function($r) {
     return isset($r['serie1_score']) || isset($r['serie2_score']);
 }));

@@ -1725,8 +1725,15 @@ class ConcoursController {
             }
         } catch (Exception $e) {}
         try {
-            $disciplines = $this->apiService->unwrapData($this->apiService->makeRequest('disciplines/list', 'GET')) ?: [];
-        } catch (Exception $e) {}
+            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+            if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                $disciplinesPayload = $disciplinesPayload['data'];
+            }
+            $disciplines = ($disciplinesResponse['success'] ?? false) && is_array($disciplinesPayload) ? $disciplinesPayload : [];
+        } catch (Exception $e) {
+            $disciplines = [];
+        }
         try {
             $typeCompetitions = $this->apiService->unwrapData($this->apiService->makeRequest('type-competitions/list', 'GET')) ?: [];
         } catch (Exception $e) {}
