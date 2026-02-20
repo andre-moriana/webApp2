@@ -1833,13 +1833,30 @@ class ConcoursController {
         }
         $clubOrganisateurCode = '';
         $clubOrgId = $concours->club_organisateur ?? null;
-        if ($clubOrgId !== null) {
-            $clubOrg = $clubsMap[$clubOrgId] ?? $clubsMap[(string)$clubOrgId] ?? null;
+        if ($clubOrgId !== null && $clubOrgId !== '') {
+            $clubOrg = $clubsMap[$clubOrgId] ?? $clubsMap[(string)$clubOrgId] ?? $clubsMap[(int)$clubOrgId] ?? null;
             if (!$clubOrg && is_string($clubOrgId)) {
-                $clubOrg = $clubsMap[trim($clubOrgId)] ?? null;
+                $clubOrg = $clubsMap[trim((string)$clubOrgId)] ?? null;
             }
             if ($clubOrg) {
                 $clubOrganisateurCode = trim((string)($clubOrg['nameShort'] ?? $clubOrg['name_short'] ?? ''));
+            }
+            // Fallback : club_organisateur peut être le name_short (code club) directement (ex. import XML)
+            if ($clubOrganisateurCode === '' && is_string($clubOrgId) && preg_match('/^\d{4,7}$/', trim((string)$clubOrgId))) {
+                $clubOrganisateurCode = trim((string)$clubOrgId);
+            }
+            // Fallback : extraire le code depuis une inscription du club organisateur
+            if ($clubOrganisateurCode === '' && !empty($inscriptions)) {
+                foreach ($inscriptions as $insc) {
+                    $idClub = $insc['id_club'] ?? null;
+                    if ($idClub !== null && ($idClub == $clubOrgId || (string)$idClub === (string)$clubOrgId)) {
+                        $c = $clubsMap[$idClub] ?? $clubsMap[(string)$idClub] ?? null;
+                        if ($c) {
+                            $clubOrganisateurCode = trim((string)($c['nameShort'] ?? $c['name_short'] ?? ''));
+                            break;
+                        }
+                    }
+                }
             }
         }
 

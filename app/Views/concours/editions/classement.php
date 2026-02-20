@@ -31,18 +31,21 @@ $inscriptions1erTir = array_filter($inscriptions, function($insc) {
 });
 
 // Filtre type de classement : général (tous), régional (2 premiers chiffres licence = club organisateur), départemental (4 premiers chiffres)
+// Licence FFTA : 7 chiffres + 1 lettre (ex. 1313054V), parfois 8 chiffres + lettre. Normaliser pour comparaison.
 $typeClassement = $typeClassement ?? 'general';
-$clubOrganisateurCode = $clubOrganisateurCode ?? '';
+$clubOrganisateurCode = preg_replace('/\D/', '', (string)($clubOrganisateurCode ?? ''));
 if ($typeClassement === 'regional' && strlen($clubOrganisateurCode) >= 2) {
     $prefixOrg = substr($clubOrganisateurCode, 0, 2);
     $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg) {
-        $lic = trim((string)($insc['numero_licence'] ?? ''));
+        $lic = preg_replace('/\D/', '', trim((string)($insc['numero_licence'] ?? '')));
+        if (strlen($lic) === 7) $lic = '0' . $lic; // Normaliser 7 → 8 chiffres
         return $lic !== '' && strlen($lic) >= 2 && substr($lic, 0, 2) === $prefixOrg;
     });
 } elseif ($typeClassement === 'departemental' && strlen($clubOrganisateurCode) >= 4) {
     $prefixOrg = substr($clubOrganisateurCode, 0, 4);
     $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg) {
-        $lic = trim((string)($insc['numero_licence'] ?? ''));
+        $lic = preg_replace('/\D/', '', trim((string)($insc['numero_licence'] ?? '')));
+        if (strlen($lic) === 7) $lic = '0' . $lic;
         return $lic !== '' && strlen($lic) >= 4 && substr($lic, 0, 4) === $prefixOrg;
     });
 }
