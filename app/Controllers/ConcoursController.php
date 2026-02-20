@@ -529,6 +529,14 @@ class ConcoursController {
                 if (isset($apiResponse['success']) && $apiResponse['success']) {
                     $concoursId = $apiResponse['data']['id'] ?? null;
                     
+                    // Sauvegarde dédiée des arbitres (endpoint séparé pour garantir l'enregistrement)
+                    if ($concoursId && !empty($arbitres)) {
+                        $arbResp = $this->apiService->updateConcoursArbitres($concoursId, $arbitres);
+                        if (!$arbResp['success']) {
+                            error_log('Erreur sauvegarde arbitres après création: ' . ($arbResp['message'] ?? $arbResp['error'] ?? ''));
+                        }
+                    }
+                    
                     // Créer automatiquement les plans de cible si la discipline est S, T, I ou H
                     if ($concoursId && $discipline && $nombre_cibles > 0 && $nombre_tireurs_par_cibles > 0) {
                         try {
@@ -1175,6 +1183,14 @@ class ConcoursController {
         $response = $this->apiService->updateConcours($id, $data);
         if (!$response['success']) {
             $_SESSION['error'] = $response['message'] ?? $response['error'] ?? 'Erreur lors de la mise à jour du concours.';
+            header('Location: /concours/edit/' . $id);
+            exit();
+        }
+        // Sauvegarde dédiée des arbitres (endpoint séparé pour garantir l'enregistrement en BDD)
+        $arbitres = $data['arbitres'] ?? [];
+        $arbResp = $this->apiService->updateConcoursArbitres($id, $arbitres);
+        if (!$arbResp['success']) {
+            $_SESSION['error'] = 'Concours mis à jour mais erreur arbitres: ' . ($arbResp['message'] ?? $arbResp['error'] ?? '');
             header('Location: /concours/edit/' . $id);
             exit();
         }
