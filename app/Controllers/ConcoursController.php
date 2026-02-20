@@ -1768,6 +1768,30 @@ class ConcoursController {
         $typeCompetitionName = findLabelEditions($typeCompetitions, $concours->type_competition ?? null, 'idformat_competition', 'lb_format_competition');
         $niveauChampionnatName = findLabelEditions($niveauChampionnat, $concours->idniveau_championnat ?? null, 'idniveau_championnat', 'lb_niveauchampionnat');
 
+        // Enrichir arbitres avec nom (résolution licence → nom depuis le XML)
+        if (!isset($concours->arbitres) || !is_array($concours->arbitres)) {
+            $concours->arbitres = [];
+        }
+        $licencesArbitres = [];
+        foreach ($concours->arbitres as $a) {
+            $arr = is_array($a) ? $a : (array)$a;
+            $lic = trim($arr['IDLicence'] ?? $arr['id_licence'] ?? '');
+            if ($lic !== '') {
+                $licencesArbitres[] = $lic;
+            }
+        }
+        if (!empty($licencesArbitres)) {
+            $namesByLicence = ArcherSearchController::getDisplayNamesByLicences($licencesArbitres);
+            $concours->arbitres = array_map(function ($a) use ($namesByLicence) {
+                $arr = is_array($a) ? $a : (array)$a;
+                $lic = trim($arr['IDLicence'] ?? $arr['id_licence'] ?? '');
+                if ($lic !== '' && isset($namesByLicence[$lic])) {
+                    $arr['nom_display'] = $namesByLicence[$lic];
+                }
+                return $arr;
+            }, $concours->arbitres);
+        }
+
         // Enrichir inscriptions avec nom club
         foreach ($inscriptions as &$insc) {
             $clubId = $insc['id_club'] ?? null;

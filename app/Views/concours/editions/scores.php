@@ -58,8 +58,4 @@ foreach ($inscriptions as $insc) {
             <?php endforeach; ?>
         </tbody>
     </table>
-
-    <div class="mt-4 text-end">
-        <p><em>Document généré le <?= date('d/m/Y à H:i') ?></em></p>
-    </div>
 </div>

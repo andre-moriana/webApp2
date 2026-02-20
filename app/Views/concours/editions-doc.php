@@ -1,8 +1,8 @@
 <?php
 /**
- * Document à imprimer - avec en-tête et pied de page
+ * Document à imprimer - avec en-tête
  * En-tête : logo club organisateur (gauche) | titre compétition (centre)
- * Pied de page : nom document | date | club organisateur
+ * Fin de document : infos (nb archers, club, arbitres, entraîneurs)
  * $doc = avis | feuilles-marques | liste-participants | scores | classement
  */
 $concoursId = $concours->id ?? $concours->_id ?? null;
@@ -63,41 +63,29 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             padding: 0 8px;
         }
         .edition-doc-logo-placeholder { font-size: 10pt; color: #6c757d; }
-        .edition-doc-footer {
-            display: none;
-        }
         @media print {
-            /* Réserver l'espace en haut et en bas de CHAQUE page pour header/footer */
+            /* Réserver l'espace en haut de CHAQUE page pour l'en-tête */
             @page {
-                margin-top: 15mm;
+                margin-top: 30mm;
                 margin-bottom: 15mm;
             }
             .no-print { display: none !important; }
             body { font-size: 11pt; }
             .page-break { page-break-after: always; }
-            /* En-tête et pied de page - position fixe dans la zone réservée de chaque page */
-            .edition-doc-header, .edition-doc-footer {
+            /* En-tête - position fixe dans la zone réservée de chaque page */
+            .edition-doc-header {
                 display: block !important;
                 position: fixed;
+                top: 0;
                 left: 0;
                 right: 0;
                 width: 100%;
                 background: #fff;
                 z-index: 9999;
-            }
-            .edition-doc-header {
-                top: 0;
                 border-bottom: 1px solid #ddd;
                 padding: 4px 15px;
             }
-            .edition-doc-footer {
-                bottom: 0;
-                border-top: 1px solid #ddd;
-                padding: 4px 15px;
-                font-size: 9pt;
-                color: #666;
-            }
-            .edition-doc-header-inner, .edition-doc-footer-inner {
+            .edition-doc-header-inner {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
@@ -127,12 +115,6 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             .edition-doc-logo-placeholder {
                 font-size: 10pt;
             }
-            .edition-doc-footer-left, .edition-doc-footer-center, .edition-doc-footer-right {
-                flex: 1;
-            }
-            .edition-doc-footer-left { text-align: left; }
-            .edition-doc-footer-center { text-align: center; }
-            .edition-doc-footer-right { text-align: right; }
             /* Pas de padding body : @page margin gère l'espace sur chaque page */
             body {
                 padding-top: 0 !important;
@@ -173,5 +155,6 @@ switch ($doc) {
         echo '<p>Document inconnu.</p>';
 }
 ?>
+    <?php include __DIR__ . '/editions/_edition-doc-fin.php'; ?>
 </body>
 </html>
