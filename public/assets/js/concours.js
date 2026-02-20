@@ -505,8 +505,8 @@ async function loadTypePublications() {
             return;
         }
         
-        // Utiliser l'endpoint direct type-publications
-        const response = await fetch('/api/type-publications', {
+        // Endpoint type-publications (sous /api/concours/ comme les autres routes concours)
+        const response = await fetch('/api/concours/type-publications', {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
