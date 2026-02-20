@@ -1957,6 +1957,9 @@ class ConcoursController {
         }
         $isNature = $abv_discipline && in_array($abv_discipline, ['N', '3', 'C', '3D']);
         $isSalleTae = $abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H']);
+        // Nature 21 cibles x2 : 2 séries P1 et P2 (type_competition 14 = "21 cibles x 2")
+        $typeCompetition = $concours->type_competition ?? $concours['type_competition'] ?? null;
+        $isNature2x21 = $isNature && ((int)$typeCompetition === 14);
 
         // Construire les libellés des départs pour le sélecteur
         $departsForSelect = [];
@@ -2041,9 +2044,14 @@ class ConcoursController {
             }
 
             try {
+                // Pour Salle/TAE : si score non fourni mais serie1_score/serie2_score oui, calculer score pour l'API
+                $scoreToSend = $score;
+                if ($scoreToSend === null && ($serie1_score !== null || $serie2_score !== null)) {
+                    $scoreToSend = ($serie1_score ?? 0) + ($serie2_score ?? 0);
+                }
                 $payload = [
                     'inscription_id' => (int)$inscriptionId,
-                    'score' => $score,
+                    'score' => $scoreToSend,
                     'nb_20_15' => $nb_20_15,
                     'nb_20_10' => $nb_20_10,
                     'nb_15_15' => $nb_15_15,
