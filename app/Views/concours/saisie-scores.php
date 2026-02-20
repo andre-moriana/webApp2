@@ -8,24 +8,24 @@
 $concoursId = $concoursId ?? ($concours->id ?? $concours->_id ?? null);
 $isNature = $isNature ?? false;
 $isSalleTae = $isSalleTae ?? false;
-// Nature 21 cibles x2 : 2 séries P1 et P2
-// 1) Paramètre URL ?format=2x21 pour forcer l'affichage P1/P2
-// 2) Sinon détection via type_competition (14) ou libellé contenant "21 cibles x2" / "x 2"
+// Nature 21 cibles x2 : P1 + P2 (colonne P2 uniquement si concours 21 x2)
+// idformat_competition : 13 = 21 cibles (1 passage), 14 = 21 cibles x 2 (2 passages)
+// ?format=2x21 en secours si le type n'est pas détecté
 $force2x21 = isset($_GET['format']) && $_GET['format'] === '2x21';
 if (!isset($isNature2x21) || $force2x21) {
     $c = is_object($concours) ? (array)$concours : $concours;
-    $tc = $c['type_competition'] ?? null;
+    $tc = $c['type_competition'] ?? $c['idformat_competition'] ?? null;
     $tcName = $c['type_competition_name'] ?? '';
     $tcText = $c['type_competition_text'] ?? '';
     $nameOrText = (string)$tcName . ' ' . (string)$tcText;
-    $isNature2x21 = $force2x21 || ($isNature && (
+    $isNature2x21 = ($isNature && (
         ((int)$tc === 14) ||
         (stripos($nameOrText, '21 cibles x 2') !== false) ||
         (stripos($nameOrText, '21 cibles x2') !== false) ||
         (stripos($nameOrText, '21 *2') !== false) ||
         (stripos($nameOrText, '21x2') !== false) ||
         (preg_match('/21\s*cibles?\s*x\s*2/i', $nameOrText))
-    ));
+    )) || $force2x21;
 }
 $isNature2x21 = $isNature2x21 ?? false;
 $isTwoSeries = $isSalleTae || $isNature2x21; // Salle/TAE ou Nature 21 cibles x2
