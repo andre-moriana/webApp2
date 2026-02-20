@@ -507,6 +507,14 @@ function showSearchResult() {
         setupBlasonAutoUpdate();
         // Configurer les listeners pour les avertissements de licence
         setupLicenceTypeWarnings();
+        
+        // Sélectionner automatiquement la couleur de piquet pour Nature après que la modale soit affichée
+        const categorieSelect = document.getElementById('categorie_classement');
+        if (categorieSelect && categorieSelect.value) {
+            setTimeout(() => {
+                selectPiquetColorForNature(categorieSelect.value);
+            }, 100);
+        }
         // Charger les produits buvette
         if (typeof loadBuvetteProduits === 'function') loadBuvetteProduits();
         
@@ -1007,9 +1015,10 @@ function prefillFormFields(archer) {
                         }, 300);
                         
                         // Sélectionner automatiquement la couleur de piquet pour Nature
+                        // Utiliser un délai plus long pour s'assurer que la modale est ouverte
                         setTimeout(() => {
                             selectPiquetColorForNature(categorieFound.abv_categorie_classement);
-                        }, 350);
+                        }, 500);
                     }
                     
                     // Fallback: essayer avec CATEGORIE si disponible (si aucune catégorie n'a été trouvée)
@@ -1145,17 +1154,37 @@ function prefillFormFields(archer) {
  * - U15, U13 : arc nu (BB) : piquet blanc
  * @param {string} abvCategorie - L'abréviation de la catégorie (ex: "S3HCL", "U18HBB")
  * @param {boolean} isEditModal - Si true, utilise le champ edit-piquet au lieu de piquet
+ * @param {boolean} isRetry - Indique si c'est un retry (pour éviter la récursion infinie)
  */
-function selectPiquetColorForNature(abvCategorie, isEditModal = false) {
+function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry = false) {
     // Vérifier si c'est la discipline Nature
     if (typeof disciplineAbv === 'undefined' || disciplineAbv !== 'N') {
+        console.log('selectPiquetColorForNature: Pas Nature (disciplineAbv:', typeof disciplineAbv !== 'undefined' ? disciplineAbv : 'undefined', ')');
         return; // Pas Nature, ne rien faire
+    }
+    
+    if (!abvCategorie || abvCategorie.trim() === '') {
+        console.log('selectPiquetColorForNature: Catégorie vide');
+        return; // Catégorie vide
     }
     
     const piquetSelect = document.getElementById(isEditModal ? 'edit-piquet' : 'piquet');
     if (!piquetSelect) {
+        console.log('selectPiquetColorForNature: Champ piquet non trouvé (id:', isEditModal ? 'edit-piquet' : 'piquet', ')');
+        // Essayer de trouver le champ même s'il n'est pas encore dans le DOM
+        // Réessayer après un court délai (une seule fois pour éviter la récursion)
+        if (!isRetry) {
+            console.log('selectPiquetColorForNature: Tentative de retry après délai...');
+            setTimeout(() => {
+                selectPiquetColorForNature(abvCategorie, isEditModal, true);
+            }, 300);
+        } else {
+            console.log('selectPiquetColorForNature: Retry échoué, champ toujours introuvable');
+        }
         return; // Champ piquet non trouvé
     }
+    
+    console.log('selectPiquetColorForNature: Champ piquet trouvé, catégorie:', abvCategorie);
     
     if (!abvCategorie || abvCategorie.trim() === '') {
         return; // Catégorie vide
