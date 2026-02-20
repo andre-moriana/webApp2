@@ -72,11 +72,11 @@ $nbArchers = isset($inscriptions) ? count($inscriptions) : 0;
 
     <div class="mt-3">
         <strong>Liste des arbitres</strong>
-        <p class="mb-0 mt-1"><?= htmlspecialchars($formatLigne($listeArbitres)) ?></p>
+        <p class="mb-0 mt-1"><?= htmlspecialchars($listeArbitres) ?></p>
     </div>
 
     <div class="mt-3">
         <strong>Liste des entraîneurs</strong>
-        <p class="mb-0 mt-1"><?= htmlspecialchars($formatLigne($listeEntraineurs)) ?></p>
+        <p class="mb-0 mt-1"><?= htmlspecialchars($listeEntraineurs) ?></p>
     </div>
 </div>
