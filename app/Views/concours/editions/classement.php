@@ -2,7 +2,11 @@
 /** Classement - calculé par catégorie de classement, uniquement 1er tir */
 $categoriesMap = $categoriesMap ?? [];
 $disciplineAbv = $disciplineAbv ?? null;
-$isNature = $disciplineAbv && in_array($disciplineAbv, ['N', '3', 'C', '3D'], true);
+// Nature : discipline N/3/C/3D OU présence des scores 20-15, 20-10, etc.
+$hasNatureScores = !empty(array_filter($resultats ?? [], function($r) {
+    return isset($r['nb_20_15']) || isset($r['nb_20_10']) || isset($r['nb_15_15']) || isset($r['nb_15_10']);
+}));
+$isNature = ($disciplineAbv && in_array($disciplineAbv, ['N', '3', 'C', '3D'], true)) || $hasNatureScores;
 $has2x21 = $isNature && !empty(array_filter($resultats ?? [], function($r) {
     return isset($r['serie1_score']) || isset($r['serie2_score']);
 }));
