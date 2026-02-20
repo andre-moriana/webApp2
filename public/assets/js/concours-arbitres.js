@@ -59,7 +59,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         tr.querySelector('.btn-remove-arbitre').addEventListener('click', function() {
             tr.remove();
+            syncArbitresJson();
         });
+        syncArbitresJson();
     }
 
     function escapeHtml(text) {
@@ -91,6 +93,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Trier par no_ordre pour l'envoi
         arbitres.sort(function(a, b) { return a.no_ordre - b.no_ordre; });
         return arbitres;
+    }
+
+    function syncArbitresJson() {
+        if (arbitresJsonInput) {
+            const arbitres = collectArbitres();
+            arbitresJsonInput.value = JSON.stringify(arbitres);
+        }
     }
 
     // Ouvrir la modale
@@ -173,14 +182,27 @@ document.addEventListener('DOMContentLoaded', function() {
     tbody.querySelectorAll('.btn-remove-arbitre').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const tr = btn.closest('tr');
-            if (tr) tr.remove();
+            if (tr) {
+                tr.remove();
+                syncArbitresJson();
+            }
         });
+    });
+
+    tbody.addEventListener('change', function(e) {
+        if (e.target.matches('.arbitre-role, .arbitre-no-ordre') || e.target.classList.contains('arbitre-responsable')) {
+            syncArbitresJson();
+        }
+    });
+    tbody.addEventListener('input', function(e) {
+        if (e.target.matches('.arbitre-no-ordre')) syncArbitresJson();
     });
 
     if (form && arbitresJsonInput) {
         form.addEventListener('submit', function(e) {
-            const arbitres = collectArbitres();
-            arbitresJsonInput.value = JSON.stringify(arbitres);
+            syncArbitresJson();
         }, true);
     }
+
+    syncArbitresJson();
 });
