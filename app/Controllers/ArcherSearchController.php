@@ -160,6 +160,74 @@ class ArcherSearchController {
     }
     
     /**
+     * Retourne les noms d'affichage (Prénom NOM) pour une liste de numéros de licence.
+     * Une seule lecture du XML pour toutes les licences demandées.
+     * @param string[] $licences Liste de numéros de licence (seront trimés)
+     * @return array [licence => 'Prénom NOM'] (licences non trouvées absentes du tableau)
+     */
+    public static function getDisplayNamesByLicences(array $licences) {
+        $wanted = [];
+        foreach ($licences as $l) {
+            $t = trim((string) $l);
+            if ($t !== '') {
+                $wanted[$t] = true;
+            }
+        }
+        if (empty($wanted)) {
+            return [];
+        }
+        $xmlPath = __DIR__ . '/../../public/data/users-licences.xml';
+        $xmlPath = realpath($xmlPath);
+        if (!$xmlPath || !file_exists($xmlPath) || !is_readable($xmlPath)) {
+            return [];
+        }
+        $result = [];
+        $reader = new XMLReader();
+        if (!$reader->open($xmlPath)) {
+            return [];
+        }
+        libxml_clear_errors();
+        $currentEntry = [];
+        $inTableContenu = false;
+        $currentTag = '';
+        while ($reader->read()) {
+            if ($reader->nodeType === XMLReader::ELEMENT) {
+                $tagName = $reader->name;
+                if ($tagName === 'TABLE_CONTENU') {
+                    $inTableContenu = true;
+                    $currentEntry = [];
+                } elseif ($inTableContenu && !$reader->isEmptyElement) {
+                    $currentTag = $tagName;
+                }
+            } elseif ($reader->nodeType === XMLReader::TEXT && $inTableContenu && $currentTag) {
+                $currentEntry[$currentTag] = $reader->value;
+                $currentTag = '';
+            } elseif ($reader->nodeType === XMLReader::END_ELEMENT) {
+                if ($reader->name === 'TABLE_CONTENU' && $inTableContenu) {
+                    $entryLicence = trim($currentEntry['IDLicence'] ?? '');
+                    if ($entryLicence !== '' && isset($wanted[$entryLicence])) {
+                        $prenom = trim($currentEntry['PRENOM'] ?? '');
+                        $nom = trim($currentEntry['NOM'] ?? '');
+                        $result[$entryLicence] = trim($prenom . ' ' . $nom);
+                        unset($wanted[$entryLicence]);
+                        if (empty($wanted)) {
+                            $reader->close();
+                            libxml_clear_errors();
+                            return $result;
+                        }
+                    }
+                    $currentEntry = [];
+                    $inTableContenu = false;
+                }
+                $currentTag = '';
+            }
+        }
+        $reader->close();
+        libxml_clear_errors();
+        return $result;
+    }
+
+    /**
      * Traite une entrée XML et retourne les données archer
      */
     private function processUserEntry($entry) {
