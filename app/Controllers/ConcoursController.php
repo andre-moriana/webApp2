@@ -1859,6 +1859,10 @@ class ConcoursController {
                 }
             }
         }
+        // DEBUG filtre classement régional/départemental
+        if (($typeClassement ?? '') !== 'general') {
+            AppLogger::log('classement', '[Controller] typeClassement=' . ($typeClassement ?? 'null') . ' | clubOrgId=' . json_encode($clubOrgId ?? null) . ' | clubOrganisateurCode=' . json_encode($clubOrganisateurCode) . ' | clubsMap keys sample=' . json_encode(array_slice(array_keys($clubsMap), 0, 5)));
+        }
 
         $doc = $_GET['doc'] ?? null;
         $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement'];
