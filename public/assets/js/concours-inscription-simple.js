@@ -619,33 +619,60 @@ function prefillFormFields(archer) {
                     if (categorieXml) {
                         console.log('Recherche avec CATEGORIE XML:', categorieXml);
                         
-                        // Essayer d'abord une correspondance exacte avec CATEGORIE
+                        // Pour Nature/3D/Campagne, transformer CL en TL
+                        const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+                        let categorieXmlToSearch = categorieXml;
+                        if (isNature && categorieXml.startsWith('CL')) {
+                            categorieXmlToSearch = 'TL' + categorieXml.substring(2);
+                            console.log('  Transformation CL->TL pour Nature/3D/Campagne:', categorieXml, '->', categorieXmlToSearch);
+                        }
+                        
+                        // Essayer d'abord une correspondance exacte avec CATEGORIE (transformée si nécessaire)
                         categorieFound = matchingCategories.find(cat => {
                             const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                            const match = abv === categorieXml;
+                            const match = abv === categorieXmlToSearch;
                             if (match) console.log('  ✓ Correspondance exacte trouvée:', abv);
                             return match;
                         });
+                        
+                        // Si pas trouvé avec la transformation, essayer aussi avec l'original
+                        if (!categorieFound && categorieXmlToSearch !== categorieXml) {
+                            categorieFound = matchingCategories.find(cat => {
+                                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                return abv === categorieXml;
+                            });
+                        }
                         
                         // Si pas trouvé, essayer avec transformations
                         if (!categorieFound) {
                             let transformed = null;
                             let transformationType = '';
                             
-                            // Transformation 1: ADS2H -> S2HAD (Arc Double Système)
-                            const adPattern = /^AD(S\d+)([HF])$/i;
-                            let match = categorieXml.match(adPattern);
-                            if (match) {
-                                const sNumber = match[1]; // S2
-                                const sexe = match[2]; // H ou F
-                                transformed = sNumber + sexe + 'AD'; // S2HAD
-                                transformationType = 'ADS2H->S2HAD';
+                            // Vérifier si c'est Nature/3D/Campagne pour transformation CL->TL
+                            const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+                            
+                            // Transformation 1: Pour Nature/3D/Campagne, CL -> TL
+                            if (isNature && categorieXml.startsWith('CL')) {
+                                transformed = 'TL' + categorieXml.substring(2);
+                                transformationType = 'CL->TL (Nature/3D/Campagne)';
                             }
                             
-                            // Transformation 2: BBS2D -> S2FBB (Barebow, D = Dame/Femme)
+                            // Transformation 2: ADS2H -> S2HAD (Arc Double Système)
+                            if (!transformed) {
+                                const adPattern = /^AD(S\d+)([HF])$/i;
+                                let match = categorieXml.match(adPattern);
+                                if (match) {
+                                    const sNumber = match[1]; // S2
+                                    const sexe = match[2]; // H ou F
+                                    transformed = sNumber + sexe + 'AD'; // S2HAD
+                                    transformationType = 'ADS2H->S2HAD';
+                                }
+                            }
+                            
+                            // Transformation 3: BBS2D -> S2FBB (Barebow, D = Dame/Femme)
                             if (!transformed) {
                                 const bbPattern = /^BB(S\d+)([DF])$/i;
-                                match = categorieXml.match(bbPattern);
+                                let match = categorieXml.match(bbPattern);
                                 if (match) {
                                     const sNumber = match[1]; // S2
                                     let sexe = match[2]; // D ou F
@@ -791,11 +818,27 @@ function prefillFormFields(archer) {
                     // Fallback: essayer avec CATEGORIE si disponible
                     const categorieXmlFallback = (archer.CATEGORIE || '').trim().toUpperCase();
                     if (categorieXmlFallback) {
-                        // Essayer d'abord une correspondance exacte
+                        // Pour Nature/3D/Campagne, transformer CL en TL
+                        const isNatureFallback = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+                        let categorieXmlFallbackToSearch = categorieXmlFallback;
+                        if (isNatureFallback && categorieXmlFallback.startsWith('CL')) {
+                            categorieXmlFallbackToSearch = 'TL' + categorieXmlFallback.substring(2);
+                            console.log('Fallback: Transformation CL->TL pour Nature/3D/Campagne:', categorieXmlFallback, '->', categorieXmlFallbackToSearch);
+                        }
+                        
+                        // Essayer d'abord une correspondance exacte (avec transformation si nécessaire)
                         let categorieFoundFallback = categoriesClassement.find(cat => {
                             const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                            return abv === categorieXmlFallback;
+                            return abv === categorieXmlFallbackToSearch;
                         });
+                        
+                        // Si pas trouvé avec la transformation, essayer aussi avec l'original
+                        if (!categorieFoundFallback && categorieXmlFallbackToSearch !== categorieXmlFallback) {
+                            categorieFoundFallback = categoriesClassement.find(cat => {
+                                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                return abv === categorieXmlFallback;
+                            });
+                        }
                         
                         // Si pas trouvé et que la catégorie XML ne commence pas par H/F, essayer avec le sexe
                         if (!categorieFoundFallback && sexeXml && !categorieXmlFallback.match(/^[HF]/)) {
@@ -811,20 +854,30 @@ function prefillFormFields(archer) {
                             let transformed = null;
                             let transformationType = '';
                             
-                            // Transformation 1: ADS2H -> S2HAD (Arc Double Système)
-                            const adPattern = /^AD(S\d+)([HF])$/i;
-                            let match = categorieXmlFallback.match(adPattern);
-                            if (match) {
-                                const sNumber = match[1]; // S2
-                                const sexe = match[2]; // H ou F
-                                transformed = sNumber + sexe + 'AD'; // S2HAD
-                                transformationType = 'ADS2H->S2HAD';
+                            const isNatureFallback = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+                            
+                            // Transformation 1: Pour Nature/3D/Campagne, CL -> TL
+                            if (isNatureFallback && categorieXmlFallback.startsWith('CL')) {
+                                transformed = 'TL' + categorieXmlFallback.substring(2);
+                                transformationType = 'CL->TL (Nature/3D/Campagne)';
                             }
                             
-                            // Transformation 2: BBS2D -> S2FBB (Barebow, D = Dame/Femme)
+                            // Transformation 2: ADS2H -> S2HAD (Arc Double Système)
+                            if (!transformed) {
+                                const adPattern = /^AD(S\d+)([HF])$/i;
+                                let match = categorieXmlFallback.match(adPattern);
+                                if (match) {
+                                    const sNumber = match[1]; // S2
+                                    const sexe = match[2]; // H ou F
+                                    transformed = sNumber + sexe + 'AD'; // S2HAD
+                                    transformationType = 'ADS2H->S2HAD';
+                                }
+                            }
+                            
+                            // Transformation 3: BBS2D -> S2FBB (Barebow, D = Dame/Femme)
                             if (!transformed) {
                                 const bbPattern = /^BB(S\d+)([DF])$/i;
-                                match = categorieXmlFallback.match(bbPattern);
+                                let match = categorieXmlFallback.match(bbPattern);
                                 if (match) {
                                     const sNumber = match[1]; // S2
                                     let sexe = match[2]; // D ou F
