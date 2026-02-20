@@ -368,3 +368,15 @@ select.categorie-auto-selected {
     border-color: #dc3545;
     box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
+
+/* Style pour le champ piquet quand aucun choix ne correspond */
+#piquet.is-invalid,
+#edit-piquet.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+#piquet.is-invalid:focus,
+#edit-piquet.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
