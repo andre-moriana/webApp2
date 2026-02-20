@@ -64,15 +64,15 @@ $docTitle = $docTitles[$doc] ?? 'Document';
         }
         .edition-doc-logo-placeholder { font-size: 10pt; color: #6c757d; }
         @media print {
-            /* Réserver l'espace en haut de CHAQUE page pour l'en-tête */
+            /* Réserver l'espace en haut de CHAQUE page pour l'en-tête (éviter que le logo soit coupé) */
             @page {
-                margin-top: 32mm;
+                margin-top: 35mm;
                 margin-bottom: 15mm;
             }
             .no-print { display: none !important; }
             body { font-size: 11pt; }
             .page-break { page-break-after: always; }
-            /* En-tête - position fixe dans la zone réservée de chaque page */
+            /* En-tête - position fixe, ne pas couper au saut de page */
             .edition-doc-header {
                 display: block !important;
                 position: fixed;
@@ -80,10 +80,13 @@ $docTitle = $docTitles[$doc] ?? 'Document';
                 left: 0;
                 right: 0;
                 width: 100%;
+                max-height: 32mm;
                 background: #fff;
                 z-index: 9999;
                 border-bottom: 1px solid #ddd;
-                padding: 4px 15px;
+                padding: 3px 15px;
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
             .edition-doc-header-inner {
                 display: flex;
@@ -102,10 +105,11 @@ $docTitle = $docTitles[$doc] ?? 'Document';
                 font-size: 14pt;
                 font-weight: 600;
             }
-            /* Logo : 18mm min. à l'impression (charte FFTA) */
+            /* Logo : 14mm pour tenir dans la marge et éviter la coupure au saut de page */
             .edition-doc-logo {
-                height: 18mm;
-                max-width: 36mm;
+                height: 14mm;
+                max-width: 28mm;
+                max-height: 14mm;
                 object-fit: contain;
             }
             .edition-doc-header-left {
