@@ -30,6 +30,23 @@ $inscriptions1erTir = array_filter($inscriptions, function($insc) {
     return $nt === null || $nt === '' || (int)$nt === 1;
 });
 
+// Filtre type de classement : général (tous), régional (2 premiers chiffres licence = club organisateur), départemental (4 premiers chiffres)
+$typeClassement = $typeClassement ?? 'general';
+$clubOrganisateurCode = $clubOrganisateurCode ?? '';
+if ($typeClassement === 'regional' && strlen($clubOrganisateurCode) >= 2) {
+    $prefixOrg = substr($clubOrganisateurCode, 0, 2);
+    $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg) {
+        $lic = trim((string)($insc['numero_licence'] ?? ''));
+        return $lic !== '' && strlen($lic) >= 2 && substr($lic, 0, 2) === $prefixOrg;
+    });
+} elseif ($typeClassement === 'departemental' && strlen($clubOrganisateurCode) >= 4) {
+    $prefixOrg = substr($clubOrganisateurCode, 0, 4);
+    $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg) {
+        $lic = trim((string)($insc['numero_licence'] ?? ''));
+        return $lic !== '' && strlen($lic) >= 4 && substr($lic, 0, 4) === $prefixOrg;
+    });
+}
+
 // Grouper par catégorie de classement
 $byCategorie = [];
 foreach ($inscriptions1erTir as $insc) {
@@ -89,6 +106,11 @@ unset($items);
 <div class="edition-classement">
     <h1 class="text-center mb-4">Classement</h1>
     <p class="text-center text-muted small">(1er tir uniquement)</p>
+    <?php if ($typeClassement === 'regional'): ?>
+    <p class="text-center text-muted small"><strong>Classement régional</strong> — archers dont la licence commence par les 2 mêmes chiffres que le club organisateur</p>
+    <?php elseif ($typeClassement === 'departemental'): ?>
+    <p class="text-center text-muted small"><strong>Classement départemental</strong> — archers dont la licence commence par les 4 mêmes chiffres que le club organisateur</p>
+    <?php endif; ?>
     <p class="text-center"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong></p>
     <p class="text-center"><?= htmlspecialchars($concours->date_debut ?? '') ?> — <?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? '') ?></p>
 
