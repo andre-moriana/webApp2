@@ -184,9 +184,15 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
 
     <!-- Liste des arbitres (jury, arbitre, entraineur) -->
     <?php
-    $arbitresList = is_object($concours) ? ($concours->arbitres ?? []) : ($concours['arbitres'] ?? []);
-    if (is_object($arbitresList)) $arbitresList = array_values((array)$arbitresList);
-    $arbitresList = is_array($arbitresList) ? $arbitresList : [];
+    $arbitresList = [];
+    if (isset($concours)) {
+        $raw = is_object($concours) ? ($concours->arbitres ?? null) : ($concours['arbitres'] ?? null);
+        if (is_array($raw)) {
+            $arbitresList = $raw;
+        } elseif (is_object($raw)) {
+            $arbitresList = array_values((array)$raw);
+        }
+    }
     usort($arbitresList, function($a, $b) {
         $oa = (int)(is_array($a) ? ($a['no_ordre'] ?? 0) : ($a->no_ordre ?? 0));
         $ob = (int)(is_array($b) ? ($b['no_ordre'] ?? 0) : ($b->no_ordre ?? 0));
@@ -194,9 +200,9 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     });
     $roleLabels = [1 => 'Jury d\'appel', 2 => 'Arbitre', 3 => 'Entraineur'];
     ?>
-    <?php if (!empty($arbitresList)): ?>
     <div class="form-group" style="margin-top: 20px;">
         <label><strong>Arbitres :</strong></label>
+        <?php if (!empty($arbitresList)): ?>
         <div class="table-responsive" style="max-width: 600px;">
             <table class="table table-bordered table-sm">
                 <thead>
@@ -230,8 +236,10 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
                 </tbody>
             </table>
         </div>
+        <?php else: ?>
+        <p class="text-muted">Aucun arbitre renseigné pour ce concours.</p>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
     
     <!-- Bouton pour créer les plans de cible (uniquement pour les disciplines S, T, I, H) -->
     <?php

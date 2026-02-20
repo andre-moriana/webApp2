@@ -633,6 +633,10 @@ class ConcoursController {
         $response = $this->apiService->getConcoursById($id);
         if ($response['success'] && isset($response['data'])) {
             $concours = (object) $response['data'];
+            // S'assurer que arbitres est toujours un tableau (pour l'affichage show.php)
+            if (!isset($concours->arbitres) || !is_array($concours->arbitres)) {
+                $concours->arbitres = [];
+            }
         } else {
             $_SESSION['error'] = 'Impossible de récupérer le concours.';
             header('Location: /concours');
