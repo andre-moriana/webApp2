@@ -1,7 +1,7 @@
 <?php
 /**
  * Document à imprimer - avec en-tête et pied de page
- * En-tête : logo club organisateur (gauche) | titre compétition (centre) | logo FFTA (droite)
+ * En-tête : logo club organisateur (gauche) | titre compétition (centre)
  * Pied de page : nom document | date | club organisateur
  * $doc = avis | feuilles-marques | liste-participants | scores | classement
  */
@@ -39,14 +39,13 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             align-items: center;
             justify-content: space-between;
         }
-        .edition-doc-header-left, .edition-doc-header-center, .edition-doc-header-right {
+        .edition-doc-header-left, .edition-doc-header-center {
             flex: 1;
             display: flex;
             align-items: center;
         }
         .edition-doc-header-left { justify-content: flex-start; }
         .edition-doc-header-center { justify-content: center; }
-        .edition-doc-header-right { justify-content: flex-end; }
         .edition-doc-header-center .edition-doc-title {
             margin: 0;
             font-size: 1.1rem;
@@ -59,7 +58,7 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             object-fit: contain;
         }
         /* Espace libre autour du logo (charte FFTA) */
-        .edition-doc-header-left, .edition-doc-header-right {
+        .edition-doc-header-left {
             min-width: 100px;
             padding: 0 8px;
         }
@@ -68,10 +67,15 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             display: none;
         }
         @media print {
+            /* Réserver l'espace en haut et en bas de CHAQUE page pour header/footer */
+            @page {
+                margin-top: 30mm;
+                margin-bottom: 15mm;
+            }
             .no-print { display: none !important; }
             body { font-size: 11pt; }
             .page-break { page-break-after: always; }
-            /* En-tête et pied de page - impression */
+            /* En-tête et pied de page - position fixe dans la zone réservée de chaque page */
             .edition-doc-header, .edition-doc-footer {
                 display: block !important;
                 position: fixed;
@@ -83,15 +87,13 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             }
             .edition-doc-header {
                 top: 0;
-                right: 0;
-                width: 100%;
                 border-bottom: 1px solid #ddd;
-                padding: 8px 15px;
+                padding: 4px 15px;
             }
             .edition-doc-footer {
                 bottom: 0;
                 border-top: 1px solid #ddd;
-                padding: 6px 15px;
+                padding: 4px 15px;
                 font-size: 9pt;
                 color: #666;
             }
@@ -100,14 +102,13 @@ $docTitle = $docTitles[$doc] ?? 'Document';
                 align-items: center;
                 justify-content: space-between;
             }
-            .edition-doc-header-left, .edition-doc-header-center, .edition-doc-header-right {
+            .edition-doc-header-left, .edition-doc-header-center {
                 flex: 1;
                 display: flex;
                 align-items: center;
             }
             .edition-doc-header-left { justify-content: flex-start; }
             .edition-doc-header-center { justify-content: center; }
-            .edition-doc-header-right { justify-content: flex-end; }
             .edition-doc-header-center .edition-doc-title {
                 margin: 0;
                 font-size: 14pt;
@@ -119,7 +120,7 @@ $docTitle = $docTitles[$doc] ?? 'Document';
                 max-width: 36mm;
                 object-fit: contain;
             }
-            .edition-doc-header-left, .edition-doc-header-right {
+            .edition-doc-header-left {
                 min-width: 25mm;
                 padding: 0 2mm;
             }
@@ -132,10 +133,10 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             .edition-doc-footer-left { text-align: left; }
             .edition-doc-footer-center { text-align: center; }
             .edition-doc-footer-right { text-align: right; }
-            /* Espace pour éviter le chevauchement avec header/footer */
+            /* Pas de padding body : @page margin gère l'espace sur chaque page */
             body {
-                padding-top: 25mm !important;
-                padding-bottom: 40px !important;
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
             }
         }
         body { padding: 1rem; }

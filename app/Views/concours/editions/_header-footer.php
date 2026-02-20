@@ -1,10 +1,8 @@
 <?php
 /**
  * En-tête et pied de page pour les documents d'édition concours
- * En-tête : logo club organisateur (gauche) | titre compétition (centre) | logo FFTA (droite)
+ * En-tête : logo club organisateur (gauche) | titre compétition (centre)
  * Pied de page : informations standard
- * Logo FFTA : respect charte graphique https://www.ffta.fr/sites/default/files/2024-11/charte_graphique_ffta.pdf
- * (taille min. 15mm, espace libre autour)
  */
 $clubOrganisateurId = $concours->club_organisateur ?? null;
 $clubOrganisateur = $clubOrganisateurId ? ($clubsMap[$clubOrganisateurId] ?? $clubsMap[(string)$clubOrganisateurId] ?? null) : null;
@@ -23,9 +21,6 @@ if ($clubOrganisateur && !empty($clubOrganisateur['logo'])) {
     }
 }
 $titreCompetition = htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours');
-$fftaLogoPath = '/public/assets/images/ffta-logo.png';
-$fftaLogoFullPath = dirname(__DIR__, 4) . '/public/assets/images/ffta-logo.png';
-$fftaLogoExists = file_exists($fftaLogoFullPath);
 ?>
 <!-- En-tête document édition -->
 <header class="edition-doc-header">
@@ -39,13 +34,6 @@ $fftaLogoExists = file_exists($fftaLogoFullPath);
         </div>
         <div class="edition-doc-header-center">
             <h2 class="edition-doc-title"><?= $titreCompetition ?></h2>
-        </div>
-        <div class="edition-doc-header-right">
-            <?php if ($fftaLogoExists): ?>
-                <img src="<?= htmlspecialchars($fftaLogoPath) ?>" alt="Logo FFTA" class="edition-doc-logo edition-doc-logo-ffta">
-            <?php else: ?>
-                <span class="edition-doc-logo-placeholder text-muted small">FFTA</span>
-            <?php endif; ?>
         </div>
     </div>
 </header>
