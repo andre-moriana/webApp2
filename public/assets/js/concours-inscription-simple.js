@@ -736,7 +736,7 @@ function prefillFormFields(archer) {
                         } else {
                             console.log('  ✗ Correspondance exacte non trouvée pour:', categorieRecherchee);
                             
-                            // Chercher dans toutes les catégories avec la catégorie d'âge et le sexe
+                            // Pour toutes les armes (CL, AD, BB, etc.), chercher dans toutes les catégories avec la catégorie d'âge et le sexe
                             // (même si matchingCategories est vide, car certaines catégories comme CL ne passent pas le filtre initial)
                             const categoriesWithAgeAndSexe = categoriesClassement.filter(cat => {
                                 const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
@@ -766,12 +766,15 @@ function prefillFormFields(archer) {
                                 } else {
                                     // Prendre la première catégorie avec la catégorie d'âge et le sexe
                                     categorieFound = categoriesWithAgeAndSexe[0];
-                                    console.log('  ⚠ Première catégorie avec catégorie d\'âge + sexe sélectionnée:', categorieFound.abv_categorie_classement);
+                                    console.log('  ⚠ Première catégorie avec catégorie d\'âge + sexe sélectionnée:', categorieFound.abv_categorie_classement, '(arme XML:', parsed.arme + ')');
                                 }
                             } else {
-                                console.log('  ✗ Aucune catégorie trouvée avec catégorie d\'âge:', parsed.ageCategory, 'et sexe:', parsed.sexe);
+                                console.log('  ✗ Aucune catégorie trouvée avec catégorie d\'âge:', parsed.ageCategory, 'et sexe:', parsed.sexe, '(arme XML:', parsed.arme + ')');
+                                console.log('  Debug: Recherche dans', categoriesClassement.length, 'catégories disponibles');
                             }
                         }
+                    } else {
+                        console.log('  ✗ Impossible de parser la catégorie XML:', categorieXml);
                     }
                 }
                 
@@ -781,42 +784,63 @@ function prefillFormFields(archer) {
                     categorieFound = matchingCategories[0];
                 }
                 
-                // Si toujours pas trouvé, essayer les transformations AD et BB (pour compatibilité)
-                if (!categorieFound && categorieXml && sexeLetter && matchingCategories.length > 0) {
+                // Si toujours pas trouvé, essayer les transformations AD et BB (pour compatibilité avec anciennes versions)
+                // Cette section est un fallback si la recherche principale n'a pas fonctionné
+                // Note: La recherche principale (lignes 717-778) devrait déjà avoir trouvé les catégories CL, AD, BB, etc.
+                if (!categorieFound && categorieXml && sexeLetter) {
                     const parsed = parseCategorieXml(categorieXml, sexeLetter);
                     if (parsed) {
-                        // Pour AD et BB, construire la catégorie recherchée
+                        // Pour AD, construire la catégorie recherchée (format peut varier)
                         if (parsed.arme === 'AD') {
                             const categorieRecherchee1 = parsed.ageCategory + parsed.sexe + 'AD';
                             const categorieRecherchee2 = parsed.ageCategory + 'AD' + parsed.sexe;
                             
-                            categorieFound = matchingCategories.find(cat => {
-                                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                return abv === categorieRecherchee1 || abv === categorieRecherchee2;
-                            });
+                            // Chercher d'abord dans matchingCategories si disponible
+                            if (matchingCategories.length > 0) {
+                                categorieFound = matchingCategories.find(cat => {
+                                    const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                    return abv === categorieRecherchee1 || abv === categorieRecherchee2;
+                                });
+                            }
+                            
+                            // Si pas trouvé, chercher dans toutes les catégories
+                            if (!categorieFound) {
+                                categorieFound = categoriesClassement.find(cat => {
+                                    const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                    return abv === categorieRecherchee1 || abv === categorieRecherchee2;
+                                });
+                            }
                             
                             if (categorieFound) {
                                 transformed = categorieFound.abv_categorie_classement;
-                                console.log('  ✓ Catégorie AD trouvée:', categorieFound.abv_categorie_classement);
+                                console.log('  ✓ Catégorie AD trouvée (fallback):', categorieFound.abv_categorie_classement);
                             }
                         } else if (parsed.arme === 'BB') {
                             const categorieRecherchee = parsed.ageCategory + parsed.sexe + 'BB';
                             
-                            categorieFound = matchingCategories.find(cat => {
-                                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                return abv === categorieRecherchee;
-                            });
+                            // Chercher d'abord dans matchingCategories si disponible
+                            if (matchingCategories.length > 0) {
+                                categorieFound = matchingCategories.find(cat => {
+                                    const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                    return abv === categorieRecherchee;
+                                });
+                            }
+                            
+                            // Si pas trouvé, chercher dans toutes les catégories
+                            if (!categorieFound) {
+                                categorieFound = categoriesClassement.find(cat => {
+                                    const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                    return abv === categorieRecherchee;
+                                });
+                            }
                             
                             if (categorieFound) {
                                 transformed = categorieFound.abv_categorie_classement;
-                                console.log('  ✓ Catégorie BB trouvée:', categorieFound.abv_categorie_classement);
+                                console.log('  ✓ Catégorie BB trouvée (fallback):', categorieFound.abv_categorie_classement);
                             }
                         }
+                        // Note: CL est déjà géré dans la recherche principale (lignes 741-774)
                     }
-                }
-                
-                if (transformed && !categorieFound) {
-                            
                 }
                 
                 if (categorieFound) {
