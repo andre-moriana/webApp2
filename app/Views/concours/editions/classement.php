@@ -1,6 +1,11 @@
 <?php
 /** Classement - calculé par catégorie de classement, uniquement 1er tir */
 $categoriesMap = $categoriesMap ?? [];
+$disciplineAbv = $disciplineAbv ?? null;
+$isNature = $disciplineAbv && in_array($disciplineAbv, ['N', '3', 'C', '3D'], true);
+$has2x21 = $isNature && !empty(array_filter($resultats ?? [], function($r) {
+    return isset($r['serie1_score']) || isset($r['serie2_score']);
+}));
 
 // Ne prendre en compte que le 1er tir (numero_tir = 1 ou null)
 $inscriptions1erTir = array_filter($inscriptions, function($insc) {
@@ -60,22 +65,52 @@ unset($items);
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>Rang</th>
-                        <th>Nom</th>
-                        <th>N° Licence</th>
-                        <th>Club</th>
-                        <th>Score</th>
+                        <?php if ($isNature): ?>
+                            <th>Clt</th>
+                            <th>Nom</th>
+                            <th>Club</th>
+                            <th>Licence</th>
+                            <th>Cat.</th>
+                            <th>P1</th>
+                            <?php if ($has2x21): ?><th>P2</th><?php endif; ?>
+                            <th>Total</th>
+                            <th>20-15</th>
+                            <th>20-10</th>
+                            <th>15-15</th>
+                            <th>15-10</th>
+                        <?php else: ?>
+                            <th>Rang</th>
+                            <th>Nom</th>
+                            <th>N° Licence</th>
+                            <th>Club</th>
+                            <th>Score</th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($items as $item): ?>
                         <?php $insc = $item['inscription']; $r = $item['resultat']; ?>
                         <tr>
-                            <td><?= $item['rang'] ?></td>
-                            <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
-                            <td><?= $r ? ($r['score'] ?? '-') : '-' ?></td>
+                            <?php if ($isNature): ?>
+                                <td><?= $item['rang'] ?></td>
+                                <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
+                                <td><?= $r ? ($r['serie1_score'] ?? '-') : '-' ?></td>
+                                <?php if ($has2x21): ?><td><?= $r ? ($r['serie2_score'] ?? '-') : '-' ?></td><?php endif; ?>
+                                <td><?= $r ? ($r['score'] ?? '-') : '-' ?></td>
+                                <td><?= $r ? ($r['nb_20_15'] ?? '-') : '-' ?></td>
+                                <td><?= $r ? ($r['nb_20_10'] ?? '-') : '-' ?></td>
+                                <td><?= $r ? ($r['nb_15_15'] ?? '-') : '-' ?></td>
+                                <td><?= $r ? ($r['nb_15_10'] ?? '-') : '-' ?></td>
+                            <?php else: ?>
+                                <td><?= $item['rang'] ?></td>
+                                <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
+                                <td><?= $r ? ($r['score'] ?? '-') : '-' ?></td>
+                            <?php endif; ?>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

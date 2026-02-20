@@ -1765,6 +1765,14 @@ class ConcoursController {
 
         $clubName = findLabelEditions($clubs, $concours->club_organisateur ?? null, 'id', 'name');
         $disciplineName = findLabelEditions($disciplines, $concours->discipline ?? null, 'iddiscipline', 'lb_discipline');
+        $disciplineAbv = null;
+        foreach ($disciplines as $d) {
+            $discId = $d['iddiscipline'] ?? $d['id'] ?? null;
+            if ($discId == ($concours->discipline ?? null) || (string)$discId === (string)($concours->discipline ?? '')) {
+                $disciplineAbv = $d['abv_discipline'] ?? null;
+                break;
+            }
+        }
         $typeCompetitionName = findLabelEditions($typeCompetitions, $concours->type_competition ?? null, 'idformat_competition', 'lb_format_competition');
         $niveauChampionnatName = findLabelEditions($niveauChampionnat, $concours->idniveau_championnat ?? null, 'idniveau_championnat', 'lb_niveauchampionnat');
 
