@@ -1975,10 +1975,11 @@ class ConcoursController {
         }
         $isNature = $abv_discipline && in_array($abv_discipline, ['N', '3', 'C', '3D']);
         $isSalleTae = $abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H']);
-        // Nature 21 cibles x2 : type_competition 13 = 21 cibles (1 passage), 14 = 21 cibles x 2 (2 passages)
+        // Nature 21 cibles : type_competition 13 = 21 cibles (1 passage, P1), 14 = 21 cibles x 2 (P1 + P2)
         $c = is_object($concours) ? (array)$concours : $concours;
         $typeCompetition = (int)($c['type_competition'] ?? $c['idformat_competition'] ?? 0);
-        $isNature2x21 = $isNature && $typeCompetition === 14;
+        $isNature21cibles = $isNature && in_array($typeCompetition, [13, 14]);
+        $isNature2x21 = $isNature21cibles && $typeCompetition === 14;
 
         // Construire les libellés des départs pour le sélecteur
         $departsForSelect = [];
