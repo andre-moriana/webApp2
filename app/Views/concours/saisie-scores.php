@@ -8,7 +8,17 @@
 $concoursId = $concoursId ?? ($concours->id ?? $concours->_id ?? null);
 $isNature = $isNature ?? false;
 $isSalleTae = $isSalleTae ?? false;
-$isNature2x21 = $isNature2x21 ?? false; // Nature 21 cibles x2 : 2 séries P1 et P2
+// Nature 21 cibles x2 : 2 séries P1 et P2 (fallback dans la vue si le contrôleur ne l'a pas défini)
+if (!isset($isNature2x21)) {
+    $tc = $concours->type_competition ?? $concours['type_competition'] ?? null;
+    $tcName = $concours->type_competition_name ?? $concours['type_competition_name'] ?? '';
+    $isNature2x21 = $isNature && (
+        ((int)$tc === 14) ||
+        (stripos((string)$tcName, '21 cibles x 2') !== false) ||
+        (stripos((string)$tcName, '21 cibles x2') !== false)
+    );
+}
+$isNature2x21 = $isNature2x21 ?? false;
 $isTwoSeries = $isSalleTae || $isNature2x21; // Salle/TAE ou Nature 21 cibles x2
 $resultats = $resultats ?? [];
 $departsForSelect = $departsForSelect ?? [];

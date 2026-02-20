@@ -1958,8 +1958,13 @@ class ConcoursController {
         $isNature = $abv_discipline && in_array($abv_discipline, ['N', '3', 'C', '3D']);
         $isSalleTae = $abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H']);
         // Nature 21 cibles x2 : 2 séries P1 et P2 (type_competition 14 = "21 cibles x 2")
-        $typeCompetition = $concours->type_competition ?? $concours['type_competition'] ?? null;
-        $isNature2x21 = $isNature && ((int)$typeCompetition === 14);
+        $typeCompetition = $concours->type_competition ?? $concours['type_competition'] ?? $concours->idformat_competition ?? null;
+        $typeCompetitionName = $concours->type_competition_name ?? $concours['type_competition_name'] ?? $concours->lb_format_competition ?? '';
+        $isNature2x21 = $isNature && (
+            ((int)$typeCompetition === 14) ||
+            (stripos((string)$typeCompetitionName, '21 cibles x 2') !== false) ||
+            (stripos((string)$typeCompetitionName, '21 cibles x2') !== false)
+        );
 
         // Construire les libellés des départs pour le sélecteur
         $departsForSelect = [];
