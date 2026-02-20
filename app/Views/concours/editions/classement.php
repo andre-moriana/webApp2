@@ -30,40 +30,47 @@ $inscriptions1erTir = array_filter($inscriptions, function($insc) {
     return $nt === null || $nt === '' || (int)$nt === 1;
 });
 
-// Filtre type de classement : général (tous), régional (2 premiers chiffres licence = club organisateur), départemental (4 premiers chiffres)
-// Licence FFTA : 7 chiffres + 1 lettre (ex. 1313054V), parfois 8 chiffres + lettre. Normaliser pour comparaison.
+// Filtre type de classement : général (tous), régional (2 premiers chiffres id_club = club organisateur), départemental (4 premiers chiffres)
+// On compare le code du club de l'inscription (id_club → name_short) avec le club organisateur
 $typeClassement = $typeClassement ?? 'general';
 $clubOrganisateurCodeRaw = (string)($clubOrganisateurCode ?? '');
 $clubOrganisateurCode = preg_replace('/\D/', '', $clubOrganisateurCodeRaw);
+$clubsMap = $clubsMap ?? [];
 $prefixOrg = '';
 if ($typeClassement === 'regional' && strlen($clubOrganisateurCode) >= 2) {
     $prefixOrg = substr($clubOrganisateurCode, 0, 2);
-    $licencesSample = array_slice(array_map(function($i) {
-        $l = preg_replace('/\D/', '', trim((string)($i['numero_licence'] ?? '')));
-        if (strlen($l) === 7) $l = '0' . $l;
-        return $l;
-    }, $inscriptions1erTir), 0, 5);
     $nbAvant = count($inscriptions1erTir);
-    $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg) {
-        $lic = preg_replace('/\D/', '', trim((string)($insc['numero_licence'] ?? '')));
-        if (strlen($lic) === 7) $lic = '0' . $lic; // Normaliser 7 → 8 chiffres
-        return $lic !== '' && strlen($lic) >= 2 && substr($lic, 0, 2) === $prefixOrg;
+    $idClubsSample = array_slice(array_map(function($i) use ($clubsMap) {
+        $id = $i['id_club'] ?? null;
+        $c = $id ? ($clubsMap[$id] ?? $clubsMap[(string)$id] ?? null) : null;
+        $code = $c ? preg_replace('/\D/', '', (string)($c['nameShort'] ?? $c['name_short'] ?? '')) : (is_string($id) && preg_match('/^\d/', $id) ? preg_replace('/\D/', '', $id) : '');
+        return $code ?: $id;
+    }, $inscriptions1erTir), 0, 5);
+    $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg, $clubsMap) {
+        $idClub = $insc['id_club'] ?? null;
+        if ($idClub === null || $idClub === '') return false;
+        $club = $clubsMap[$idClub] ?? $clubsMap[(string)$idClub] ?? $clubsMap[(int)$idClub] ?? null;
+        $codeClub = $club ? preg_replace('/\D/', '', (string)($club['nameShort'] ?? $club['name_short'] ?? '')) : (is_string($idClub) && preg_match('/^\d/', $idClub) ? preg_replace('/\D/', '', $idClub) : '');
+        return $codeClub !== '' && strlen($codeClub) >= 2 && substr($codeClub, 0, 2) === $prefixOrg;
     });
-    AppLogger::log('classement', '[regional] typeClassement=' . $typeClassement . ' | clubOrganisateurCodeRaw=' . json_encode($clubOrganisateurCodeRaw) . ' | clubOrganisateurCode=' . json_encode($clubOrganisateurCode) . ' | prefixOrg=' . json_encode($prefixOrg) . ' | licencesSample=' . json_encode($licencesSample) . ' | nbAvant=' . $nbAvant . ' | nbApres=' . count($inscriptions1erTir));
+    AppLogger::log('classement', '[regional] prefixOrg=' . json_encode($prefixOrg) . ' | idClubsSample(avant filtre)=' . json_encode($idClubsSample) . ' | nbAvant=' . $nbAvant . ' | nbApres=' . count($inscriptions1erTir));
 } elseif ($typeClassement === 'departemental' && strlen($clubOrganisateurCode) >= 4) {
     $prefixOrg = substr($clubOrganisateurCode, 0, 4);
-    $licencesSample = array_slice(array_map(function($i) {
-        $l = preg_replace('/\D/', '', trim((string)($i['numero_licence'] ?? '')));
-        if (strlen($l) === 7) $l = '0' . $l;
-        return $l;
-    }, $inscriptions1erTir), 0, 5);
     $nbAvant = count($inscriptions1erTir);
-    $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg) {
-        $lic = preg_replace('/\D/', '', trim((string)($insc['numero_licence'] ?? '')));
-        if (strlen($lic) === 7) $lic = '0' . $lic;
-        return $lic !== '' && strlen($lic) >= 4 && substr($lic, 0, 4) === $prefixOrg;
+    $idClubsSample = array_slice(array_map(function($i) use ($clubsMap) {
+        $id = $i['id_club'] ?? null;
+        $c = $id ? ($clubsMap[$id] ?? $clubsMap[(string)$id] ?? null) : null;
+        $code = $c ? preg_replace('/\D/', '', (string)($c['nameShort'] ?? $c['name_short'] ?? '')) : (is_string($id) && preg_match('/^\d/', $id) ? preg_replace('/\D/', '', $id) : '');
+        return $code ?: $id;
+    }, $inscriptions1erTir), 0, 5);
+    $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg, $clubsMap) {
+        $idClub = $insc['id_club'] ?? null;
+        if ($idClub === null || $idClub === '') return false;
+        $club = $clubsMap[$idClub] ?? $clubsMap[(string)$idClub] ?? $clubsMap[(int)$idClub] ?? null;
+        $codeClub = $club ? preg_replace('/\D/', '', (string)($club['nameShort'] ?? $club['name_short'] ?? '')) : (is_string($idClub) && preg_match('/^\d/', $idClub) ? preg_replace('/\D/', '', $idClub) : '');
+        return $codeClub !== '' && strlen($codeClub) >= 4 && substr($codeClub, 0, 4) === $prefixOrg;
     });
-    AppLogger::log('classement', '[departemental] typeClassement=' . $typeClassement . ' | clubOrganisateurCodeRaw=' . json_encode($clubOrganisateurCodeRaw) . ' | clubOrganisateurCode=' . json_encode($clubOrganisateurCode) . ' | prefixOrg=' . json_encode($prefixOrg) . ' | licencesSample=' . json_encode($licencesSample) . ' | nbAvant=' . $nbAvant . ' | nbApres=' . count($inscriptions1erTir));
+    AppLogger::log('classement', '[departemental] prefixOrg=' . json_encode($prefixOrg) . ' | idClubsSample(avant filtre)=' . json_encode($idClubsSample) . ' | nbAvant=' . $nbAvant . ' | nbApres=' . count($inscriptions1erTir));
 } elseif (($typeClassement === 'regional' || $typeClassement === 'departemental')) {
     AppLogger::log('classement', '[filtre NON appliqué] typeClassement=' . $typeClassement . ' | clubOrganisateurCode=' . json_encode($clubOrganisateurCode) . ' | strlen=' . strlen($clubOrganisateurCode));
 }
@@ -128,9 +135,9 @@ unset($items);
     <h1 class="text-center mb-4">Classement</h1>
     <p class="text-center text-muted small">(1er tir uniquement)</p>
     <?php if ($typeClassement === 'regional'): ?>
-    <p class="text-center text-muted small"><strong>Classement régional</strong> — archers dont la licence commence par les 2 mêmes chiffres que le club organisateur</p>
+    <p class="text-center text-muted small"><strong>Classement régional</strong> — archers dont le club (id_club) a les 2 mêmes premiers chiffres que le club organisateur</p>
     <?php elseif ($typeClassement === 'departemental'): ?>
-    <p class="text-center text-muted small"><strong>Classement départemental</strong> — archers dont la licence commence par les 4 mêmes chiffres que le club organisateur</p>
+    <p class="text-center text-muted small"><strong>Classement départemental</strong> — archers dont le club (id_club) a les 4 mêmes premiers chiffres que le club organisateur</p>
     <?php endif; ?>
     <p class="text-center"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong></p>
     <p class="text-center"><?= htmlspecialchars($concours->date_debut ?? '') ?> — <?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? '') ?></p>
