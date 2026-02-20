@@ -8,27 +8,10 @@
 $concoursId = $concoursId ?? ($concours->id ?? $concours->_id ?? null);
 $isNature = $isNature ?? false;
 $isSalleTae = $isSalleTae ?? false;
-// Nature 21 cibles x2 : P1 + P2 — détection multi-sources (titre, type_competition, type_competition_text)
-// idformat_competition : 13 = 21 cibles (1 passage), 14 = 21 cibles x 2 (2 passages)
-// ?format=2x21 en secours manuel si le type n'est pas détecté
-$force2x21 = isset($_GET['format']) && $_GET['format'] === '2x21';
+// Nature 21 cibles x2 : type_competition 13 = 21 cibles (1 passage), 14 = 21 cibles x 2 (2 passages)
 $c = is_object($concours) ? (array)$concours : $concours;
-$tc = $c['type_competition'] ?? $c['idformat_competition'] ?? null;
-$tcName = $c['type_competition_name'] ?? $c['lb_format_competition'] ?? '';
-$tcText = $c['type_competition_text'] ?? '';
-$titre = $c['titre_competition'] ?? $c['nom'] ?? '';
-$searchText = (string)$tcName . ' ' . (string)$tcText . ' ' . (string)$titre;
-$detected2x21 = $isNature && (
-    ((int)$tc === 14) ||
-    (stripos($searchText, '21 cibles x 2') !== false) ||
-    (stripos($searchText, '21 cibles x2') !== false) ||
-    (stripos($searchText, '21 cibles × 2') !== false) ||
-    (stripos($searchText, '21 cibles ×2') !== false) ||
-    (stripos($searchText, '21x2') !== false) ||
-    (stripos($searchText, '21 *2') !== false) ||
-    (preg_match('/21\s*cibles?\s*[x×*]\s*2/i', $searchText))
-);
-$isNature2x21 = ($isNature2x21 ?? $detected2x21) || $force2x21;
+$typeCompetition = (int)($c['type_competition'] ?? $c['idformat_competition'] ?? 0);
+$isNature2x21 = ($isNature2x21 ?? ($isNature && $typeCompetition === 14)) || (isset($_GET['format']) && $_GET['format'] === '2x21');
 $isTwoSeries = $isSalleTae || $isNature2x21; // Salle/TAE ou Nature 21 cibles x2
 $resultats = $resultats ?? [];
 $departsForSelect = $departsForSelect ?? [];
