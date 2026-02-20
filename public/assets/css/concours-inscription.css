@@ -310,6 +310,20 @@ select.licence-warning {
     border-color: #fd7e14 !important;
 }
 
+/* Style pour les catégories sélectionnées automatiquement (catégorie exacte non trouvée) */
+.categorie-auto-selected,
+select.categorie-auto-selected,
+select.categorie-auto-selected option:checked {
+    color: #dc3545 !important;
+    font-weight: 600;
+    background-color: #fff5f5 !important;
+}
+
+select.categorie-auto-selected {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
 .licence-warning-message {
     font-size: 0.875rem;
     margin-top: 0.25rem;
