@@ -2015,7 +2015,11 @@ class ConcoursController {
 
         foreach ($scores as $inscriptionId => $data) {
             if (empty($inscriptionId) || !is_array($data)) continue;
-            $score = (isset($data['score']) && $data['score'] !== '') ? (int)$data['score'] : null;
+            // Score total : accepter toute valeur numérique saisie (y compris 0)
+            $score = null;
+            if (array_key_exists('score', $data) && $data['score'] !== '' && $data['score'] !== null) {
+                $score = (int)$data['score'];
+            }
             $nb_20_15 = (isset($data['nb_20_15']) && $data['nb_20_15'] !== '') ? (int)$data['nb_20_15'] : null;
             $nb_20_10 = (isset($data['nb_20_10']) && $data['nb_20_10'] !== '') ? (int)$data['nb_20_10'] : null;
             $nb_15_15 = (isset($data['nb_15_15']) && $data['nb_15_15'] !== '') ? (int)$data['nb_15_15'] : null;
