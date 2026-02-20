@@ -636,14 +636,82 @@ function prefillFormFields(archer) {
                                 const sexe = match[2]; // H ou F
                                 const transformed = sNumber + sexe + 'AD'; // S2HAD
                                 console.log('  Transformation CATEGORIE XML:', categorieXml, '->', transformed);
+                                
+                                // Chercher d'abord dans les catégories correspondantes
                                 categorieFound = matchingCategories.find(cat => {
                                     const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                    const match = abv === transformed;
-                                    if (match) console.log('  ✓ Catégorie trouvée après transformation:', abv);
-                                    return match;
+                                    return abv === transformed;
                                 });
+                                
+                                // Si pas trouvé dans les correspondantes, chercher dans TOUTES les catégories
                                 if (!categorieFound) {
-                                    console.log('  ✗ Aucune catégorie correspondant à', transformed, 'dans les catégories correspondantes');
+                                    console.log('  Recherche de', transformed, 'dans toutes les catégories disponibles');
+                                    
+                                    // D'abord, vérifier si cette catégorie existe dans la liste complète
+                                    const allCategoriesWithTransformed = categoriesClassement.filter(cat => {
+                                        const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                        return catAbv === transformed;
+                                    });
+                                    
+                                    if (allCategoriesWithTransformed.length > 0) {
+                                        console.log('  Catégorie', transformed, 'existe dans la liste. CATAGE/TYPARC:', allCategoriesWithTransformed.map(c => ({
+                                            abv: c.abv_categorie_classement,
+                                            idcategorie: c.idcategorie || c.id_categorie,
+                                            idarc: c.idarc || c.id_arc
+                                        })));
+                                        
+                                        // Chercher celle qui correspond aux critères
+                                        const foundInAll = allCategoriesWithTransformed.find(cat => {
+                                            const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
+                                            const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
+                                            
+                                            // Vérifier CATAGE et TYPARC
+                                            if (catIdcategorie === catage && catIdarc === typarc) {
+                                                // Vérifier aussi le sexe si disponible
+                                                if (sexeLetter) {
+                                                    const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
+                                                    if (catSexe) {
+                                                        return catSexe === sexeLetter;
+                                                    } else {
+                                                        const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                                        return catAbv.startsWith(sexeLetter);
+                                                    }
+                                                }
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                        
+                                        if (foundInAll) {
+                                            categorieFound = foundInAll;
+                                            console.log('  ✓ Catégorie', transformed, 'trouvée avec CATAGE:', catage, 'TYPARC:', typarc);
+                                        } else {
+                                            // Si pas de correspondance exacte, prendre la première trouvée si elle correspond au sexe
+                                            const foundBySexe = allCategoriesWithTransformed.find(cat => {
+                                                if (sexeLetter) {
+                                                    const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
+                                                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                                    if (catSexe) {
+                                                        return catSexe === sexeLetter;
+                                                    } else {
+                                                        return catAbv.startsWith(sexeLetter);
+                                                    }
+                                                }
+                                                return true;
+                                            });
+                                            
+                                            if (foundBySexe) {
+                                                categorieFound = foundBySexe;
+                                                console.log('  ⚠ Catégorie', transformed, 'trouvée mais avec CATAGE/TYPARC différents. Utilisation quand même.');
+                                            } else {
+                                                console.log('  ✗ Catégorie', transformed, 'existe mais ne correspond pas aux critères CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter);
+                                            }
+                                        }
+                                    } else {
+                                        console.log('  ✗ Catégorie', transformed, 'n\'existe pas dans la liste des catégories disponibles');
+                                    }
+                                } else {
+                                    console.log('  ✓ Catégorie trouvée après transformation dans les correspondantes:', categorieFound.abv_categorie_classement);
                                 }
                             } else {
                                 console.log('  ✗ Pattern ADS2H non reconnu pour:', categorieXml);
