@@ -58,8 +58,17 @@ $clubOrgCode = $clubOrganisateurData ? ($clubOrganisateurData['nameShort'] ?? $c
 $clubNameStr = is_scalar($clubName ?? null) ? (string)($clubName ?? '') : '';
 $clubOrgDisplay = ($clubOrgCode ? $clubOrgCode . '  ' : '') . $clubNameStr;
 $arbitreRespDisplay = $arbitreResponsable ? $formatNom($arbitreResponsable) : '';
-// Pour le classement : utiliser le nombre après filtre (régional/départemental) ; sinon total inscriptions
-$nbArchers = ($doc === 'classement' && isset($inscriptions1erTir)) ? count($inscriptions1erTir) : (isset($inscriptions) ? count($inscriptions) : 0);
+// Pour le classement : nombre après filtres (régional/départemental, et top3 si actif)
+if ($doc === 'classement') {
+    if (!empty($top3ParCategorie) && isset($byCategorie)) {
+        $nbArchers = 0;
+        foreach ($byCategorie as $items) { $nbArchers += count($items); }
+    } else {
+        $nbArchers = isset($inscriptions1erTir) ? count($inscriptions1erTir) : 0;
+    }
+} else {
+    $nbArchers = isset($inscriptions) ? count($inscriptions) : 0;
+}
 ?>
 <div class="edition-doc-fin mt-4 pt-4">
     <table class="table table-borderless">

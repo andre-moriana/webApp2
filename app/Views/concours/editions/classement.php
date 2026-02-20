@@ -130,6 +130,17 @@ foreach ($byCategorie as $cat => &$items) {
     unset($item);
 }
 unset($items);
+
+// Filtre Top 3 : n'afficher que les 3 premiers de chaque catégorie
+$top3ParCategorie = $top3ParCategorie ?? false;
+if ($top3ParCategorie) {
+    foreach ($byCategorie as $cat => &$items) {
+        $byCategorie[$cat] = array_values(array_filter($items, function($item) {
+            return ($item['rang'] ?? 0) <= 3;
+        }));
+    }
+    unset($items);
+}
 ?>
 <div class="edition-classement">
     <h1 class="text-center mb-4">Classement</h1>
@@ -139,10 +150,14 @@ unset($items);
     <?php elseif ($typeClassement === 'departemental'): ?>
     <p class="text-center text-muted small"><strong>Classement départemental</strong> — archers dont le club (id_club) a les 4 mêmes premiers chiffres que le club organisateur</p>
     <?php endif; ?>
+    <?php if (!empty($top3ParCategorie)): ?>
+    <p class="text-center text-muted small"><strong>Top 3</strong> — uniquement les 3 premiers de chaque catégorie</p>
+    <?php endif; ?>
     <p class="text-center"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong></p>
     <p class="text-center"><?= htmlspecialchars($concours->date_debut ?? '') ?> — <?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? '') ?></p>
 
     <?php foreach ($byCategorie as $catAbv => $items): ?>
+        <?php if (empty($items)) continue; ?>
         <?php $catLabel = $categoriesMap[$catAbv] ?? $catAbv; ?>
         <div class="classement-categorie mb-4 page-break">
             <h3 class="mb-3"><?= htmlspecialchars($catLabel) ?> <?= $catAbv !== 'Sans catégorie' ? '(' . htmlspecialchars($catAbv) . ')' : '' ?></h3>

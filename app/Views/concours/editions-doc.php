@@ -164,18 +164,23 @@ $dateFooter = date('d/m/Y H:i');
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
             <?php
             $baseClassementUrl = '/concours/' . (int)$concoursId . '/editions?doc=classement';
+            $top3Suffix = (!empty($top3ParCategorie)) ? '&top3=1' : '';
             $types = [
                 'general' => 'Général (tous les archers)',
                 'regional' => 'Régional (2 premiers chiffres du club de l\'archer = club organisateur)',
                 'departemental' => 'Départemental (4 premiers chiffres du club de l\'archer = club organisateur)'
             ];
             foreach ($types as $val => $label):
-                $url = $baseClassementUrl . '&type=' . $val;
+                $url = $baseClassementUrl . '&type=' . $val . $top3Suffix;
                 $sel = ($typeClassement ?? 'general') === $val ? ' selected' : '';
             ?>
             <option value="<?= htmlspecialchars($url) ?>"<?= $sel ?>><?= htmlspecialchars($label) ?></option>
             <?php endforeach; ?>
         </select>
+        <label class="ms-3 me-2">
+            <input type="checkbox" <?= !empty($top3ParCategorie) ? 'checked' : '' ?> onchange="var u='/concours/<?= (int)$concoursId ?>/editions?doc=classement&type=<?= htmlspecialchars($typeClassement ?? 'general') ?>'; if(this.checked) u+='&top3=1'; location.href=u;">
+            Top 3 par catégorie
+        </label>
         <?php endif; ?>
         <button type="button" class="btn btn-primary" onclick="window.print()">
             <i class="fas fa-print me-1"></i>Imprimer
