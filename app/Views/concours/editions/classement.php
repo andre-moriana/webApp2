@@ -60,10 +60,23 @@ uksort($byCategorie, function($a, $b) use ($categoriesMap) {
     return strcasecmp($lbA, $lbB);
 });
 
-// Pour chaque catégorie : trier par score décroissant et attribuer les rangs
+// Pour chaque catégorie : trier par score décroissant, puis en cas d'égalité Nature : 20-15, 20-10, 15-15, 15-10, 15, 10 (décroissant), manqués (croissant)
 foreach ($byCategorie as $cat => &$items) {
-    usort($items, function($a, $b) {
-        return $b['score'] - $a['score'];
+    usort($items, function($a, $b) use ($isNature) {
+        $diff = $b['score'] - $a['score'];
+        if ($diff !== 0) return $diff;
+        if (!$isNature) return 0;
+        $rA = $a['resultat'] ?? [];
+        $rB = $b['resultat'] ?? [];
+        $tiebreakers = ['nb_20_15', 'nb_20_10', 'nb_15_15', 'nb_15_10', 'nb_15', 'nb_10'];
+        foreach ($tiebreakers as $k) {
+            $vA = (int)($rA[$k] ?? 0);
+            $vB = (int)($rB[$k] ?? 0);
+            if ($vA !== $vB) return $vB - $vA;
+        }
+        $nb0A = (int)($rA['nb_0'] ?? 0);
+        $nb0B = (int)($rB['nb_0'] ?? 0);
+        return $nb0A - $nb0B;
     });
     $rang = 1;
     foreach ($items as &$item) {
