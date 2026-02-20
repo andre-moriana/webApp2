@@ -613,12 +613,18 @@ function prefillFormFields(archer) {
                 // Prioriser la catégorie qui correspond à CATEGORIE du XML
                 let categorieFound = null;
                 if (matchingCategories.length > 0) {
+                    console.log('Catégories correspondantes trouvées:', matchingCategories.length, matchingCategories.map(c => c.abv_categorie_classement));
+                    
                     // Toujours essayer de trouver une correspondance avec CATEGORIE si disponible
                     if (categorieXml) {
+                        console.log('Recherche avec CATEGORIE XML:', categorieXml);
+                        
                         // Essayer d'abord une correspondance exacte avec CATEGORIE
                         categorieFound = matchingCategories.find(cat => {
                             const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                            return abv === categorieXml;
+                            const match = abv === categorieXml;
+                            if (match) console.log('  ✓ Correspondance exacte trouvée:', abv);
+                            return match;
                         });
                         
                         // Si pas trouvé, essayer avec transformation ADS2H -> S2HAD
@@ -629,14 +635,18 @@ function prefillFormFields(archer) {
                                 const sNumber = match[1]; // S2
                                 const sexe = match[2]; // H ou F
                                 const transformed = sNumber + sexe + 'AD'; // S2HAD
-                                console.log('Transformation CATEGORIE XML:', categorieXml, '->', transformed);
+                                console.log('  Transformation CATEGORIE XML:', categorieXml, '->', transformed);
                                 categorieFound = matchingCategories.find(cat => {
                                     const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                    return abv === transformed;
+                                    const match = abv === transformed;
+                                    if (match) console.log('  ✓ Catégorie trouvée après transformation:', abv);
+                                    return match;
                                 });
-                                if (categorieFound) {
-                                    console.log('✓ Catégorie trouvée après transformation:', categorieFound.abv_categorie_classement);
+                                if (!categorieFound) {
+                                    console.log('  ✗ Aucune catégorie correspondant à', transformed, 'dans les catégories correspondantes');
                                 }
+                            } else {
+                                console.log('  ✗ Pattern ADS2H non reconnu pour:', categorieXml);
                             }
                         }
                     }
@@ -645,12 +655,20 @@ function prefillFormFields(archer) {
                     if (!categorieFound) {
                         categorieFound = matchingCategories[0];
                         console.log('⚠ Utilisation de la première catégorie trouvée:', categorieFound.abv_categorie_classement);
+                        if (categorieXml) {
+                            console.log('  (CATEGORIE XML:', categorieXml, 'non trouvée dans les correspondances)');
+                        }
                     }
                 }
                 
                 if (categorieFound) {
                     categorieSelect.value = categorieFound.abv_categorie_classement || '';
                     console.log('✓ Catégorie pré-remplie via CATAGE/TYPARC/SEXE:', categorieSelect.value);
+                    console.log('  CATEGORIE XML:', categorieXml || 'non disponible');
+                    console.log('  Catégories correspondantes trouvées:', matchingCategories.length);
+                    if (matchingCategories.length > 1) {
+                        console.log('  Liste des catégories correspondantes:', matchingCategories.map(c => c.abv_categorie_classement));
+                    }
                     
                     // Déclencher le remplissage automatique de la distance et du blason
                     setTimeout(() => {
