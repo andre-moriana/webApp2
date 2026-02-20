@@ -203,18 +203,6 @@ function applyCategorieColorization() {
             let isExactMatch = false;
             
             // Vérifier les transformations possibles
-            if (isNature && categorieXml.startsWith('CL')) {
-                const clPattern = /^CL(.+)$/i;
-                const match = categorieXml.match(clPattern);
-                if (match && sexeLetter) {
-                    const reste = match[1].replace(/[HFD]$/i, '');
-                    const transformed = reste + sexeLetter + 'TL';
-                    if (selectedAbv === transformed) {
-                        isExactMatch = true;
-                    }
-                }
-            }
-            
             if (!isExactMatch && categorieXml.startsWith('AD') && sexeLetter) {
                 const adPattern = /^AD(.+)$/i;
                 const match = categorieXml.match(adPattern);
@@ -726,21 +714,7 @@ function prefillFormFields(archer) {
                         if (!categorieFound) {
                             let transformationType = '';
                             
-                            // Vérifier si c'est Nature/3D/Campagne pour transformation CL->TL
-                            const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
-                            
-                            // Transformation 1: Pour Nature/3D/Campagne, CLS2H/CLS2D/CLU21/etc -> S2HTL/S2FTL/U21HTL/etc
-                            if (isNature) {
-                                const clPattern = /^CL(.+)$/i;
-                                let match = categorieXml.match(clPattern);
-                                if (match) {
-                                    const reste = match[1]; // S2H, S2D, U21, etc.
-                                    transformed = reste + sexeLetter + 'TL'; // S2HTL, U21HTL, etc.
-                                    transformationType = 'CL->TL (Nature/3D/Campagne) avec SEXE';
-                                }
-                            }
-                            
-                            // Transformation 2: ADU21/ADS2H/ADS2D/etc -> U21HAD/S2HAD/S2FAD/etc (Arc Double Système)
+                            // Transformation 1: ADU21/ADS2H/ADS2D/etc -> U21HAD/S2HAD/S2FAD/etc (Arc Double Système)
                             // Utiliser SEXE du XML directement
                             if (!transformed) {
                                 const adPattern = /^AD(.+)$/i;
@@ -1002,20 +976,7 @@ function prefillFormFields(archer) {
                         if (!categorieFoundFallback) {
                             let transformationType = '';
                             
-                            const isNatureFallback = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
-                            
-                            // Transformation 1: Pour Nature/3D/Campagne, CLU21/CLS2H/etc -> U21HTL/S2HTL/etc
-                            if (isNatureFallback) {
-                                const clPattern = /^CL(.+)$/i;
-                                let match = categorieXmlFallback.match(clPattern);
-                                if (match) {
-                                    const reste = match[1]; // U21, S2H, S2D, etc.
-                                    transformedFallback = reste + sexeLetter + 'TL'; // U21HTL, S2HTL, etc.
-                                    transformationType = 'CL->TL (Nature/3D/Campagne) avec SEXE';
-                                }
-                            }
-                            
-                            // Transformation 2: ADU21/ADS2H/etc -> U21HAD/S2HAD/etc (Arc Double Système)
+                            // Transformation 1: ADU21/ADS2H/etc -> U21HAD/S2HAD/etc (Arc Double Système)
                             // Utiliser SEXE du XML directement
                             if (!transformedFallback) {
                                 const adPattern = /^AD(.+)$/i;
