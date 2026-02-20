@@ -627,15 +627,39 @@ function prefillFormFields(archer) {
                             return match;
                         });
                         
-                        // Si pas trouvé, essayer avec transformation ADS2H -> S2HAD
+                        // Si pas trouvé, essayer avec transformations
                         if (!categorieFound) {
+                            let transformed = null;
+                            let transformationType = '';
+                            
+                            // Transformation 1: ADS2H -> S2HAD (Arc Double Système)
                             const adPattern = /^AD(S\d+)([HF])$/i;
-                            const match = categorieXml.match(adPattern);
+                            let match = categorieXml.match(adPattern);
                             if (match) {
                                 const sNumber = match[1]; // S2
                                 const sexe = match[2]; // H ou F
-                                const transformed = sNumber + sexe + 'AD'; // S2HAD
-                                console.log('  Transformation CATEGORIE XML:', categorieXml, '->', transformed);
+                                transformed = sNumber + sexe + 'AD'; // S2HAD
+                                transformationType = 'ADS2H->S2HAD';
+                            }
+                            
+                            // Transformation 2: BBS2D -> S2FBB (Barebow, D = Dame/Femme)
+                            if (!transformed) {
+                                const bbPattern = /^BB(S\d+)([DF])$/i;
+                                match = categorieXml.match(bbPattern);
+                                if (match) {
+                                    const sNumber = match[1]; // S2
+                                    let sexe = match[2]; // D ou F
+                                    // Convertir D (Dame) en F (Femme)
+                                    if (sexe === 'D') {
+                                        sexe = 'F';
+                                    }
+                                    transformed = sNumber + sexe + 'BB'; // S2FBB
+                                    transformationType = 'BBS2D->S2FBB';
+                                }
+                            }
+                            
+                            if (transformed) {
+                                console.log('  Transformation CATEGORIE XML:', categorieXml, '->', transformed, '(' + transformationType + ')');
                                 
                                 // Chercher d'abord dans les catégories correspondantes
                                 categorieFound = matchingCategories.find(cat => {
@@ -714,7 +738,7 @@ function prefillFormFields(archer) {
                                     console.log('  ✓ Catégorie trouvée après transformation dans les correspondantes:', categorieFound.abv_categorie_classement);
                                 }
                             } else {
-                                console.log('  ✗ Pattern ADS2H non reconnu pour:', categorieXml);
+                                console.log('  ✗ Aucun pattern de transformation reconnu pour:', categorieXml);
                             }
                         }
                     }
@@ -782,18 +806,39 @@ function prefillFormFields(archer) {
                             });
                         }
                         
-                        // Si toujours pas trouvé, essayer de réorganiser "ADS2H" -> "S2HAD"
-                        // Format XML: ADS2H (Arc Double Système S2 Homme)
-                        // Format DB: S2HAD (S2 Homme Arc Double Système)
+                        // Si toujours pas trouvé, essayer de réorganiser les formats XML
                         if (!categorieFoundFallback && categorieXmlFallback.length >= 4) {
-                            // Détecter le pattern ADS2H, ADS2F, etc.
+                            let transformed = null;
+                            let transformationType = '';
+                            
+                            // Transformation 1: ADS2H -> S2HAD (Arc Double Système)
                             const adPattern = /^AD(S\d+)([HF])$/i;
-                            const match = categorieXmlFallback.match(adPattern);
+                            let match = categorieXmlFallback.match(adPattern);
                             if (match) {
                                 const sNumber = match[1]; // S2
                                 const sexe = match[2]; // H ou F
-                                const transformed = sNumber + sexe + 'AD'; // S2HAD
-                                console.log('Fallback: Transformation CATEGORIE XML:', categorieXmlFallback, '->', transformed);
+                                transformed = sNumber + sexe + 'AD'; // S2HAD
+                                transformationType = 'ADS2H->S2HAD';
+                            }
+                            
+                            // Transformation 2: BBS2D -> S2FBB (Barebow, D = Dame/Femme)
+                            if (!transformed) {
+                                const bbPattern = /^BB(S\d+)([DF])$/i;
+                                match = categorieXmlFallback.match(bbPattern);
+                                if (match) {
+                                    const sNumber = match[1]; // S2
+                                    let sexe = match[2]; // D ou F
+                                    // Convertir D (Dame) en F (Femme)
+                                    if (sexe === 'D') {
+                                        sexe = 'F';
+                                    }
+                                    transformed = sNumber + sexe + 'BB'; // S2FBB
+                                    transformationType = 'BBS2D->S2FBB';
+                                }
+                            }
+                            
+                            if (transformed) {
+                                console.log('Fallback: Transformation CATEGORIE XML:', categorieXmlFallback, '->', transformed, '(' + transformationType + ')');
                                 categorieFoundFallback = categoriesClassement.find(cat => {
                                     const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
                                     return abv === transformed;
