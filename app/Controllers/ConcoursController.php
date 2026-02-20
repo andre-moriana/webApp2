@@ -1163,10 +1163,12 @@ class ConcoursController {
             $data['departs'] = is_array($decoded) ? $decoded : [];
         }
         unset($data['departs_json']);
-        // Arbitres
+        // Arbitres (toujours définir pour que l'API mette à jour)
         if (isset($data['arbitres_json']) && $data['arbitres_json'] !== '') {
             $decoded = json_decode($data['arbitres_json'], true);
             $data['arbitres'] = is_array($decoded) ? $decoded : [];
+        } else {
+            $data['arbitres'] = [];
         }
         unset($data['arbitres_json']);
         
