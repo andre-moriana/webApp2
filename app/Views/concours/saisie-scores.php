@@ -8,22 +8,24 @@
 $concoursId = $concoursId ?? ($concours->id ?? $concours->_id ?? null);
 $isNature = $isNature ?? false;
 $isSalleTae = $isSalleTae ?? false;
-// Nature 21 cibles x2 : type_competition 13 = 21 cibles (1 passage), 14 = 21 cibles x 2 (2 passages)
+// Nature 21 cibles : type_competition 13 = 21 cibles (1 passage, P1), 14 = 21 cibles x 2 (P1 + P2)
 $c = is_object($concours) ? (array)$concours : $concours;
 $typeCompetition = (int)($c['type_competition'] ?? $c['idformat_competition'] ?? 0);
-$isNature2x21 = ($isNature2x21 ?? ($isNature && $typeCompetition === 14)) || (isset($_GET['format']) && $_GET['format'] === '2x21');
-$isTwoSeries = $isSalleTae || $isNature2x21; // Salle/TAE ou Nature 21 cibles x2
+$isNature21cibles = $isNature21cibles ?? ($isNature && in_array($typeCompetition, [13, 14]));
+$isNature2x21 = $isNature2x21 ?? ($isNature21cibles && $typeCompetition === 14);
+$isNature2x21 = $isNature2x21 || (isset($_GET['format']) && $_GET['format'] === '2x21');
+$isTwoSeries = $isSalleTae || $isNature21cibles; // Salle/TAE ou Nature 21 cibles
 $resultats = $resultats ?? [];
 $departsForSelect = $departsForSelect ?? [];
 $departSelected = $departSelected ?? null;
 $serieMode = $serieMode ?? 'both';
 $baseUrlScores = '/concours/' . (int)$concoursId . '/saisie-scores';
-// Nature 21 cibles x2 : toujours afficher P1 et P2 (pas de filtre par passage)
+// Nature 21 cibles : P1 (type 13 ou 14), P2 (type 14 uniquement)
 // Salle/TAE : filtre par série possible
-$showSerie1 = $isNature2x21 ? true : ($isSalleTae && ($serieMode === '1' || $serieMode === 'both'));
+$showSerie1 = $isNature21cibles ? true : ($isSalleTae && ($serieMode === '1' || $serieMode === 'both'));
 $showSerie2 = $isNature2x21 ? true : ($isSalleTae && ($serieMode === '2' || $serieMode === 'both'));
-$showTotaux = $isNature2x21 ? true : ($isSalleTae && $serieMode === 'both');
-$serieLabel1 = $isNature2x21 ? 'P1' : 'S1';
+$showTotaux = $isNature21cibles ? true : ($isSalleTae && $serieMode === 'both');
+$serieLabel1 = $isNature21cibles ? 'P1' : 'S1';
 $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
 ?>
 <div class="container-fluid concours-saisie-scores">
@@ -128,9 +130,9 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                 <?php if ($isSalleTae): ?>
                     <i class="fas fa-bullseye me-2"></i>Concours Salle / TAE – Saisie des scores
                     <small class="d-block text-muted mt-1">2 séries par départ : nombre de 10 et de 9 par série, total général</small>
-                <?php elseif ($isNature2x21): ?>
-                    <i class="fas fa-leaf me-2"></i>Concours Nature 21 cibles x 2 – Saisie des scores
-                    <small class="d-block text-muted mt-1">P1 = passage 1 (série 1), P2 = passage 2 (série 2), score total = P1 + P2</small>
+                <?php elseif ($isNature21cibles): ?>
+                    <i class="fas fa-leaf me-2"></i>Concours Nature 21 cibles<?= $isNature2x21 ? ' x 2' : '' ?> – Saisie des scores
+                    <small class="d-block text-muted mt-1">P1 = passage 1<?= $isNature2x21 ? ', P2 = passage 2, score total = P1 + P2' : ', score total = P1' ?></small>
                 <?php elseif ($isNature): ?>
                     <i class="fas fa-leaf me-2"></i>Concours Nature – Saisie des scores
                     <small class="d-block text-muted mt-1">Score total et détail des impacts (20-15, 20-10, 15-15, 15-10, 15, 10, manqués)</small>
@@ -182,9 +184,9 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                                         <th>Total 10</th>
                                         <th>Total 9</th>
                                     <?php endif; ?>
-                                <?php elseif ($isNature2x21): ?>
+                                <?php elseif ($isNature21cibles): ?>
                                     <th>P1</th>
-                                    <th>P2</th>
+                                    <?php if ($isNature2x21): ?><th>P2</th><?php endif; ?>
                                     <th>Score total</th>
                                     <th>20-15</th>
                                     <th>20-10</th>
@@ -278,18 +280,20 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                                         <td class="text-center total-10-cell"><?= ($s1_10 !== '' && $s2_10 !== '') ? (int)$tot10 : '-' ?></td>
                                         <td class="text-center total-9-cell"><?= ($s1_9 !== '' && $s2_9 !== '') ? (int)$tot9 : '-' ?></td>
                                         <?php endif; ?>
-                                    <?php elseif ($isNature2x21): ?>
+                                    <?php elseif ($isNature21cibles): ?>
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][serie1_score]" 
                                                    value="<?= htmlspecialchars($s1_score !== '' ? $s1_score : '') ?>" 
                                                    class="form-control form-control-sm serie1-score-input" min="0" step="1" placeholder="0" title="Score passage 1 (série 1)">
                                         </td>
+                                        <?php if ($isNature2x21): ?>
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][serie2_score]" 
                                                    value="<?= htmlspecialchars($s2_score !== '' ? $s2_score : '') ?>" 
                                                    class="form-control form-control-sm serie2-score-input" min="0" step="1" placeholder="0" title="Score passage 2 (série 2)">
                                         </td>
-                                        <td class="text-center score-total-cell"><?= ($s1_score !== '' && $s2_score !== '') ? ((int)$s1_score + (int)$s2_score) : '-' ?></td>
+                                        <?php endif; ?>
+                                        <td class="text-center score-total-cell"><?= $isNature2x21 ? (($s1_score !== '' && $s2_score !== '') ? ((int)$s1_score + (int)$s2_score) : '-') : ($s1_score !== '' ? (int)$s1_score : '-') ?></td>
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][nb_20_15]" 
                                                    value="<?= htmlspecialchars($nb2015 !== '' ? $nb2015 : '') ?>" 
@@ -398,7 +402,10 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                         var scoreTotalCell = row.querySelector('.score-total-cell');
                         var tot10Cell = row.querySelector('.total-10-cell');
                         var tot9Cell = row.querySelector('.total-9-cell');
-                        if (scoreTotalCell) scoreTotalCell.textContent = (s1Score !== null && s2Score !== null) ? (s1Score + s2Score) : '-';
+                        if (scoreTotalCell) {
+                            if (s2ScoreInp) scoreTotalCell.textContent = (s1Score !== null && s2Score !== null) ? (s1Score + s2Score) : '-';
+                            else scoreTotalCell.textContent = s1Score !== null ? s1Score : '-';
+                        }
                         if (tot10Cell) tot10Cell.textContent = (s1_10 !== null && s2_10 !== null) ? (s1_10 + s2_10) : '-';
                         if (tot9Cell) tot9Cell.textContent = (s1_9 !== null && s2_9 !== null) ? (s1_9 + s2_9) : '-';
                     }
