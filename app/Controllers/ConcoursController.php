@@ -1828,6 +1828,7 @@ class ConcoursController {
         // Filtre type de classement (général / régional / départemental)
         $typeClassement = $_GET['type'] ?? 'general';
         $validTypes = ['general', 'regional', 'departemental'];
+        $top3ParCategorie = isset($_GET['top3']) && ($_GET['top3'] === '1' || $_GET['top3'] === 'true');
         if (!in_array($typeClassement, $validTypes, true)) {
             $typeClassement = 'general';
         }
