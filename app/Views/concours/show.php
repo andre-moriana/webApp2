@@ -181,6 +181,57 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         </ul>
     </div>
     <?php endif; ?>
+
+    <!-- Liste des arbitres (jury, arbitre, entraineur) -->
+    <?php
+    $arbitresList = is_object($concours) ? ($concours->arbitres ?? []) : ($concours['arbitres'] ?? []);
+    if (is_object($arbitresList)) $arbitresList = array_values((array)$arbitresList);
+    $arbitresList = is_array($arbitresList) ? $arbitresList : [];
+    usort($arbitresList, function($a, $b) {
+        $oa = (int)(is_array($a) ? ($a['no_ordre'] ?? 0) : ($a->no_ordre ?? 0));
+        $ob = (int)(is_array($b) ? ($b['no_ordre'] ?? 0) : ($b->no_ordre ?? 0));
+        return $oa - $ob;
+    });
+    $roleLabels = [1 => 'Jury d\'appel', 2 => 'Arbitre', 3 => 'Entraineur'];
+    ?>
+    <?php if (!empty($arbitresList)): ?>
+    <div class="form-group" style="margin-top: 20px;">
+        <label><strong>Arbitres :</strong></label>
+        <div class="table-responsive" style="max-width: 600px;">
+            <table class="table table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Licence</th>
+                        <th>Nom</th>
+                        <th>Rôle</th>
+                        <th>Responsable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($arbitresList as $a):
+                        $a = (array)$a;
+                        $licence = trim($a['IDLicence'] ?? $a['id_licence'] ?? '');
+                        $juryVal = (int)($a['Jury_arbitre'] ?? 2);
+                        if (!in_array($juryVal, [1, 2, 3])) $juryVal = 2;
+                        $roleLabel = $roleLabels[$juryVal] ?? 'Arbitre';
+                        $responsable = !empty($a['responsable']);
+                        $noOrdre = (int)($a['no_ordre'] ?? 0);
+                        $nom = $a['nom_display'] ?? trim(($a['first_name'] ?? '') . ' ' . ($a['name'] ?? '')) ?: $licence;
+                    ?>
+                    <tr>
+                        <td><?= $noOrdre ?></td>
+                        <td><?= htmlspecialchars($licence) ?></td>
+                        <td><?= htmlspecialchars($nom) ?></td>
+                        <td><?= htmlspecialchars($roleLabel) ?></td>
+                        <td><?= $responsable ? '<i class="fas fa-check text-success"></i>' : '-' ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
     
     <!-- Bouton pour créer les plans de cible (uniquement pour les disciplines S, T, I, H) -->
     <?php
