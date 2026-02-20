@@ -1,6 +1,7 @@
 <?php
 /** Classement - calculé par catégorie de classement, uniquement 1er tir */
 $categoriesMap = $categoriesMap ?? [];
+$resultatsByLicence = $resultatsByLicence ?? [];
 $disciplineAbv = $disciplineAbv ?? null;
 // Nature : discipline N/3/C/3D OU présence des scores 20-15, 20-10, etc. OU libellé catégorie (ARC CHASSE, NATURE, 3D)
 $hasNatureScores = !empty(array_filter($resultats ?? [], function($r) {
@@ -39,6 +40,10 @@ foreach ($inscriptions1erTir as $insc) {
     }
     $inscId = $insc['id'] ?? $insc['_id'] ?? null;
     $r = $inscId ? ($resultats[(int)$inscId] ?? null) : null;
+    if ($r === null) {
+        $lic = trim((string)($insc['numero_licence'] ?? ''));
+        $r = ($lic !== '' && isset($resultatsByLicence)) ? ($resultatsByLicence[$lic] ?? null) : null;
+    }
     $byCategorie[$cat][] = [
         'inscription' => $insc,
         'resultat' => $r,
