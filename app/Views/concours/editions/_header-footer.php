@@ -3,6 +3,8 @@
  * En-tête et pied de page pour les documents d'édition concours
  * En-tête : logo club organisateur (gauche) | titre compétition (centre) | logo FFTA (droite)
  * Pied de page : informations standard
+ * Logo FFTA : respect charte graphique https://www.ffta.fr/sites/default/files/2024-11/charte_graphique_ffta.pdf
+ * (taille min. 15mm, espace libre autour)
  */
 $clubOrganisateurId = $concours->club_organisateur ?? null;
 $clubOrganisateur = $clubOrganisateurId ? ($clubsMap[$clubOrganisateurId] ?? $clubsMap[(string)$clubOrganisateurId] ?? null) : null;

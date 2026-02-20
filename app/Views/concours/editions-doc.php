@@ -52,10 +52,16 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             font-size: 1.1rem;
             font-weight: 600;
         }
+        /* Logo : taille min. 15mm selon charte FFTA - 60px ≈ 16mm à 96dpi */
         .edition-doc-logo {
-            max-height: 45px;
-            max-width: 100px;
+            height: 60px;
+            max-width: 120px;
             object-fit: contain;
+        }
+        /* Espace libre autour du logo (charte FFTA) */
+        .edition-doc-header-left, .edition-doc-header-right {
+            min-width: 100px;
+            padding: 0 8px;
         }
         .edition-doc-logo-placeholder { font-size: 10pt; color: #6c757d; }
         .edition-doc-footer {
@@ -107,10 +113,15 @@ $docTitle = $docTitles[$doc] ?? 'Document';
                 font-size: 14pt;
                 font-weight: 600;
             }
+            /* Logo : 18mm min. à l'impression (charte FFTA) */
             .edition-doc-logo {
-                max-height: 45px;
-                max-width: 100px;
+                height: 18mm;
+                max-width: 36mm;
                 object-fit: contain;
+            }
+            .edition-doc-header-left, .edition-doc-header-right {
+                min-width: 25mm;
+                padding: 0 2mm;
             }
             .edition-doc-logo-placeholder {
                 font-size: 10pt;
@@ -123,7 +134,7 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             .edition-doc-footer-right { text-align: right; }
             /* Espace pour éviter le chevauchement avec header/footer */
             body {
-                padding-top: 70px !important;
+                padding-top: 25mm !important;
                 padding-bottom: 40px !important;
             }
         }
