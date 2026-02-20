@@ -192,48 +192,28 @@ function applyCategorieColorization() {
     if (selectedArcher && selectedArcher.CATEGORIE) {
         const categorieXml = (selectedArcher.CATEGORIE || '').trim().toUpperCase();
         const selectedAbv = categorieSelect.value.trim().toUpperCase();
+        const sexeXml = (selectedArcher.SEXE || '').trim();
+        const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
         
-        // Si ce n'est pas une correspondance exacte, colorer en rouge
-        if (selectedAbv !== categorieXml) {
-            // Vérifier aussi les transformations possibles
-            const sexeXml = (selectedArcher.SEXE || '').trim();
-            const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
-            const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
-            
-            let isExactMatch = false;
-            
-            // Vérifier les transformations possibles
-            if (!isExactMatch && categorieXml.startsWith('AD') && sexeLetter) {
-                const adPattern = /^AD(.+)$/i;
-                const match = categorieXml.match(adPattern);
-                if (match) {
-                    const reste = match[1].replace(/[HFD]$/i, '');
-                    const format1 = reste + sexeLetter + 'AD';
-                    const format2 = reste + 'AD' + sexeLetter;
-                    if (selectedAbv === format1 || selectedAbv === format2) {
-                        isExactMatch = true;
-                    }
+        let isExactMatch = false;
+        
+        // Correspondance exacte directe
+        if (selectedAbv === categorieXml) {
+            isExactMatch = true;
+        } else if (sexeLetter) {
+            // Vérifier avec le parsing : construire la catégorie attendue depuis le XML
+            const parsed = parseCategorieXml(categorieXml, sexeLetter);
+            if (parsed) {
+                const categorieAttendue = parsed.ageCategory + parsed.sexe + parsed.arme;
+                if (selectedAbv === categorieAttendue) {
+                    isExactMatch = true;
                 }
             }
-            
-            if (!isExactMatch && categorieXml.startsWith('BB') && sexeLetter) {
-                const bbPattern = /^BB(.+)$/i;
-                const match = categorieXml.match(bbPattern);
-                if (match) {
-                    const reste = match[1].replace(/[HFD]$/i, '');
-                    const transformed = reste + sexeLetter + 'BB';
-                    if (selectedAbv === transformed) {
-                        isExactMatch = true;
-                    }
-                }
-            }
-            
-            // Appliquer ou retirer la classe rouge
-            if (!isExactMatch) {
-                categorieSelect.classList.add('categorie-auto-selected');
-            } else {
-                categorieSelect.classList.remove('categorie-auto-selected');
-            }
+        }
+        
+        // Appliquer ou retirer la classe rouge
+        if (!isExactMatch) {
+            categorieSelect.classList.add('categorie-auto-selected');
         } else {
             categorieSelect.classList.remove('categorie-auto-selected');
         }
@@ -526,6 +506,45 @@ function showSearchResult() {
 }
 
 /**
+ * Parse la catégorie XML selon la structure :
+ * - 2 premiers caractères = arme (CL, AD, BB, CO, AC, TL)
+ * - Si commence par S après l'arme = S1, S2, S3 (2 caractères)
+ * - Sinon = U11, U13, U15, U18, U21 (3 caractères)
+ * - Le genre H/F vient de SEXE (1=H, 2=F)
+ * @param {string} categorieXml - La catégorie du XML (ex: "CLS3H")
+ * @param {string} sexeLetter - Le sexe sous forme de lettre (H ou F)
+ * @returns {Object|null} - {arme: string, ageCategory: string, sexe: string} ou null
+ */
+function parseCategorieXml(categorieXml, sexeLetter) {
+    if (!categorieXml || categorieXml.length < 3) {
+        return null;
+    }
+    
+    const categorieUpper = categorieXml.trim().toUpperCase();
+    
+    // Extraire l'arme (2 premiers caractères)
+    const arme = categorieUpper.substring(0, 2);
+    
+    // Extraire la catégorie d'âge
+    let ageCategory = '';
+    const reste = categorieUpper.substring(2);
+    
+    // Si le reste commence par S, prendre 2 caractères (S1, S2, S3)
+    if (reste.startsWith('S')) {
+        ageCategory = reste.substring(0, 2); // S1, S2, S3
+    } else {
+        // Sinon prendre 3 caractères (U11, U13, U15, U18, U21)
+        ageCategory = reste.substring(0, 3); // U11, U13, U15, U18, U21
+    }
+    
+    return {
+        arme: arme,
+        ageCategory: ageCategory,
+        sexe: sexeLetter || ''
+    };
+}
+
+/**
  * Pré-remplit les champs du formulaire avec les données de l'archer
  */
 function prefillFormFields(archer) {
@@ -694,229 +713,110 @@ function prefillFormFields(archer) {
                 
                 // Prioriser la catégorie qui correspond à CATEGORIE du XML
                 let categorieFound = null;
-                if (matchingCategories.length > 0) {
-                    console.log('Catégories correspondantes trouvées:', matchingCategories.length, matchingCategories.map(c => c.abv_categorie_classement));
-                    
-                    // Toujours essayer de trouver une correspondance avec CATEGORIE si disponible
-                    // Utiliser SEXE du XML (1=H, 2=F) pour construire la catégorie recherchée
-                    if (categorieXml && sexeLetter) {
-                        console.log('Recherche avec CATEGORIE XML:', categorieXml, 'SEXE:', sexeXml, '->', sexeLetter);
+                
+                // Parser la catégorie XML selon la structure définie
+                if (categorieXml && sexeLetter) {
+                    const parsed = parseCategorieXml(categorieXml, sexeLetter);
+                    if (parsed) {
+                        console.log('Catégorie XML parsée:', parsed, 'depuis:', categorieXml);
                         
-                        // Essayer d'abord une correspondance exacte avec CATEGORIE
-                        categorieFound = matchingCategories.find(cat => {
-                            const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                            const match = abv === categorieXml;
-                            if (match) console.log('  ✓ Correspondance exacte trouvée:', abv);
-                            return match;
+                        // Construire la catégorie recherchée : catégorie d'âge + sexe + arme
+                        // Format dans la DB: S3HCL, S3HTL, U18HAD, etc.
+                        const categorieRecherchee = parsed.ageCategory + parsed.sexe + parsed.arme;
+                        console.log('Catégorie recherchée construite:', categorieRecherchee);
+                        
+                        // Chercher d'abord une correspondance exacte dans toutes les catégories
+                        categorieFound = categoriesClassement.find(cat => {
+                            const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                            return catAbv === categorieRecherchee;
                         });
                         
-                        // Si pas trouvé, construire la catégorie recherchée en utilisant SEXE du XML
-                        if (!categorieFound) {
-                            let transformationType = '';
+                        if (categorieFound) {
+                            console.log('  ✓ Correspondance exacte trouvée:', categorieFound.abv_categorie_classement);
+                        } else {
+                            console.log('  ✗ Correspondance exacte non trouvée pour:', categorieRecherchee);
                             
-                            // Transformation 1: ADU21/ADS2H/ADS2D/etc -> U21HAD/S2HAD/S2FAD/etc (Arc Double Système)
-                            // Utiliser SEXE du XML directement
-                            if (!transformed) {
-                                const adPattern = /^AD(.+)$/i;
-                                let match = categorieXml.match(adPattern);
-                                if (match) {
-                                    const reste = match[1]; // U21, S2H, S2D, U18, etc.
-                                    // Si le reste contient déjà H/F/D, le remplacer par le sexe du XML
-                                    const resteSansSexe = reste.replace(/[HFD]$/i, '');
-                                    
-                                    // Essayer deux formats possibles :
-                                    // Format 1: U18FAD (U18 + F + AD) - pour S2, S1, etc.
-                                    // Format 2: U18ADF (U18 + AD + F) - pour U18, U21, etc.
-                                    const format1 = resteSansSexe + sexeLetter + 'AD'; // U18FAD, S2HAD
-                                    const format2 = resteSansSexe + 'AD' + sexeLetter; // U18ADF, S2ADH
-                                    
-                                    // Chercher d'abord le format 1
-                                    categorieFound = matchingCategories.find(cat => {
-                                        const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                        return abv === format1;
-                                    });
-                                    
-                                    // Si pas trouvé, essayer le format 2
-                                    if (!categorieFound) {
-                                        categorieFound = matchingCategories.find(cat => {
-                                            const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                            return abv === format2;
-                                        });
-                                        if (categorieFound) {
-                                            transformed = format2;
-                                            transformationType = 'AD->AD avec SEXE du XML (format U18ADF)';
-                                        } else {
-                                            transformed = format1;
-                                            transformationType = 'AD->AD avec SEXE du XML (format U18FAD)';
-                                        }
-                                    } else {
-                                        transformed = format1;
-                                        transformationType = 'AD->AD avec SEXE du XML (format U18FAD)';
-                                    }
-                                }
-                            }
+                            // Chercher dans toutes les catégories avec la catégorie d'âge et le sexe
+                            // (même si matchingCategories est vide, car certaines catégories comme CL ne passent pas le filtre initial)
+                            const categoriesWithAgeAndSexe = categoriesClassement.filter(cat => {
+                                const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
+                                
+                                // Vérifier que la catégorie commence par la catégorie d'âge + sexe
+                                const hasAgeCategoryAndSexe = catAbv.startsWith(parsed.ageCategory + parsed.sexe);
+                                // Ou vérifier le sexe dans le champ sexe et que la catégorie contient la catégorie d'âge
+                                const hasSexe = catSexe === parsed.sexe && catAbv.includes(parsed.ageCategory);
+                                
+                                return hasAgeCategoryAndSexe || hasSexe;
+                            });
                             
-                            // Transformation 3: BBU21/BBS2D/etc -> U21HBB/S2FBB/etc (Barebow)
-                            // Utiliser SEXE du XML directement
-                            if (!transformed) {
-                                const bbPattern = /^BB(.+)$/i;
-                                let match = categorieXml.match(bbPattern);
-                                if (match) {
-                                    const reste = match[1]; // U21, S2D, etc.
-                                    // Si le reste contient déjà H/F/D, le remplacer par le sexe du XML
-                                    const resteSansSexe = reste.replace(/[HFD]$/i, '');
-                                    transformed = resteSansSexe + sexeLetter + 'BB'; // U21HBB, S2FBB, etc.
-                                    transformationType = 'BB->BB avec SEXE du XML';
-                                }
-                            }
-                            
-                            // Pour les catégories CL, chercher directement dans toutes les catégories
-                            // même si la correspondance exacte n'a pas été trouvée
-                            // (les catégories CL ne passent pas le filtre initial car elles ne commencent pas par H/F)
-                            if (!transformed && categorieXml.startsWith('CL')) {
-                                console.log('  Recherche catégorie CL pour CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter);
-                                // Chercher une catégorie CL dans toutes les catégories disponibles
-                                // en vérifiant qu'elle correspond aux critères CATAGE/TYPARC/SEXE
-                                categorieFound = categoriesClassement.find(cat => {
-                                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                    if (catAbv !== 'CL') return false;
-                                    
-                                    // Vérifier CATAGE et TYPARC
+                            if (categoriesWithAgeAndSexe.length > 0) {
+                                console.log('Catégories trouvées avec catégorie d\'âge + sexe:', categoriesWithAgeAndSexe.length, categoriesWithAgeAndSexe.map(c => c.abv_categorie_classement));
+                                
+                                // Prioriser celles qui correspondent aussi à CATAGE et TYPARC
+                                const foundWithIds = categoriesWithAgeAndSexe.find(cat => {
                                     const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
                                     const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
-                                    if (catIdcategorie !== catage || catIdarc !== typarc) return false;
-                                    
-                                    // Vérifier le sexe si disponible
-                                    if (sexeLetter) {
-                                        const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
-                                        // Pour CL, on accepte si le sexe correspond ou si le sexe n'est pas défini
-                                        if (catSexe && catSexe !== sexeLetter) return false;
-                                    }
-                                    
-                                    return true;
-                                });
-                                if (categorieFound) {
-                                    console.log('  ✓ Catégorie CL trouvée avec CATAGE:', catage, 'TYPARC:', typarc);
-                                } else {
-                                    console.log('  ✗ Aucune catégorie CL trouvée pour CATAGE:', catage, 'TYPARC:', typarc);
-                                }
-                            }
-                            
-                            if (transformed) {
-                                console.log('  Transformation CATEGORIE XML:', categorieXml, '->', transformed, '(' + transformationType + ')');
-                                
-                                // Chercher d'abord dans les catégories correspondantes
-                                categorieFound = matchingCategories.find(cat => {
-                                    const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                    return abv === transformed;
+                                    return catIdcategorie === catage && catIdarc === typarc;
                                 });
                                 
-                                // Si pas trouvé dans les correspondantes, chercher dans TOUTES les catégories
-                                if (!categorieFound) {
-                                    console.log('  Recherche de', transformed, 'dans toutes les catégories disponibles');
-                                    
-                                    // Pour AD, essayer aussi le format alternatif (U18ADF au lieu de U18FAD)
-                                    let transformedAlternatives = [transformed];
-                                    if (transformationType && transformationType.includes('AD->AD')) {
-                                        const adPattern = /^AD(.+)$/i;
-                                        const match = categorieXml.match(adPattern);
-                                        if (match) {
-                                            const reste = match[1].replace(/[HFD]$/i, '');
-                                            const altFormat = reste + 'AD' + sexeLetter; // U18ADF au lieu de U18FAD
-                                            transformedAlternatives.push(altFormat);
-                                            console.log('  Essai aussi du format alternatif:', altFormat);
-                                        }
-                                    }
-                                    
-                                    // D'abord, vérifier si cette catégorie existe dans la liste complète
-                                    const allCategoriesWithTransformed = categoriesClassement.filter(cat => {
-                                        const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                        return transformedAlternatives.includes(catAbv);
-                                    });
-                                    
-                                    if (allCategoriesWithTransformed.length > 0) {
-                                        const foundAbv = allCategoriesWithTransformed[0].abv_categorie_classement;
-                                        console.log('  Catégorie trouvée:', foundAbv, '(format utilisé:', transformedAlternatives.find(f => categoriesClassement.some(c => (c.abv_categorie_classement || '').trim().toUpperCase() === f)), ')');
-                                        console.log('  CATAGE/TYPARC:', allCategoriesWithTransformed.map(c => ({
-                                            abv: c.abv_categorie_classement,
-                                            idcategorie: c.idcategorie || c.id_categorie,
-                                            idarc: c.idarc || c.id_arc
-                                        })));
-                                        
-                                        // Chercher celle qui correspond aux critères (CATAGE, TYPARC et SEXE du XML)
-                                        const foundInAll = allCategoriesWithTransformed.find(cat => {
-                                            const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
-                                            const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
-                                            
-                                            // Vérifier CATAGE et TYPARC
-                                            if (catIdcategorie === catage && catIdarc === typarc) {
-                                                // Vérifier aussi le sexe avec SEXE du XML (plus fiable)
-                                                if (sexeLetter) {
-                                                    const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
-                                                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                                    // Utiliser SEXE du XML directement
-                                                    if (catSexe) {
-                                                        return catSexe === sexeLetter;
-                                                    } else {
-                                                        // Fallback: vérifier l'abréviation
-                                                        return catAbv.startsWith(sexeLetter);
-                                                    }
-                                                }
-                                                return true;
-                                            }
-                                            return false;
-                                        });
-                                        
-                                        if (foundInAll) {
-                                            categorieFound = foundInAll;
-                                            console.log('  ✓ Catégorie', foundInAll.abv_categorie_classement, 'trouvée avec CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter);
-                                        } else {
-                                            // Si pas de correspondance exacte, prendre la première trouvée si elle correspond au sexe du XML
-                                            const foundBySexe = allCategoriesWithTransformed.find(cat => {
-                                                if (sexeLetter) {
-                                                    const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
-                                                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                                    // Utiliser SEXE du XML directement
-                                                    if (catSexe) {
-                                                        return catSexe === sexeLetter;
-                                                    } else {
-                                                        return catAbv.startsWith(sexeLetter);
-                                                    }
-                                                }
-                                                return true;
-                                            });
-                                            
-                                            if (foundBySexe) {
-                                                categorieFound = foundBySexe;
-                                                console.log('  ⚠ Catégorie', foundBySexe.abv_categorie_classement, 'trouvée mais avec CATAGE/TYPARC différents. Utilisation quand même (SEXE correspond).');
-                                            } else {
-                                                console.log('  ✗ Catégories trouvées mais ne correspondent pas aux critères CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter);
-                                            }
-                                        }
-                                    } else {
-                                        console.log('  ✗ Aucune catégorie trouvée parmi:', transformedAlternatives.join(', '));
-                                        console.log('  → La catégorie transformée n\'existe pas dans la base de données pour ce concours/discipline');
-                                    }
+                                if (foundWithIds) {
+                                    categorieFound = foundWithIds;
+                                    console.log('  ⚠ Catégorie trouvée avec catégorie d\'âge + sexe + CATAGE/TYPARC:', categorieFound.abv_categorie_classement);
                                 } else {
-                                    console.log('  ✓ Catégorie trouvée après transformation dans les correspondantes:', categorieFound.abv_categorie_classement);
+                                    // Prendre la première catégorie avec la catégorie d'âge et le sexe
+                                    categorieFound = categoriesWithAgeAndSexe[0];
+                                    console.log('  ⚠ Première catégorie avec catégorie d\'âge + sexe sélectionnée:', categorieFound.abv_categorie_classement);
                                 }
                             } else {
-                                console.log('  ✗ Aucun pattern de transformation reconnu pour:', categorieXml);
+                                console.log('  ✗ Aucune catégorie trouvée avec catégorie d\'âge:', parsed.ageCategory, 'et sexe:', parsed.sexe);
                             }
                         }
                     }
-                    
-                    // Si toujours pas trouvé, prendre la première correspondance
-                    let isAutoSelected = false;
-                    if (!categorieFound) {
-                        categorieFound = matchingCategories[0];
-                        isAutoSelected = true;
-                        console.log('⚠ Utilisation de la première catégorie trouvée:', categorieFound.abv_categorie_classement);
-                        if (categorieXml) {
-                            console.log('  (CATEGORIE XML:', categorieXml, 'non trouvée dans les correspondances)');
-                            console.log('  → La catégorie correspondant à CATEGORIE XML n\'existe pas, utilisation de la catégorie par défaut basée sur CATAGE/TYPARC/SEXE');
+                }
+                
+                // Si toujours pas trouvé et qu'on a des catégories correspondantes, utiliser la première
+                if (!categorieFound && matchingCategories.length > 0) {
+                    console.log('Aucune correspondance trouvée, utilisation de la première catégorie correspondante');
+                    categorieFound = matchingCategories[0];
+                }
+                
+                // Si toujours pas trouvé, essayer les transformations AD et BB (pour compatibilité)
+                if (!categorieFound && categorieXml && sexeLetter && matchingCategories.length > 0) {
+                    const parsed = parseCategorieXml(categorieXml, sexeLetter);
+                    if (parsed) {
+                        // Pour AD et BB, construire la catégorie recherchée
+                        if (parsed.arme === 'AD') {
+                            const categorieRecherchee1 = parsed.ageCategory + parsed.sexe + 'AD';
+                            const categorieRecherchee2 = parsed.ageCategory + 'AD' + parsed.sexe;
+                            
+                            categorieFound = matchingCategories.find(cat => {
+                                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                return abv === categorieRecherchee1 || abv === categorieRecherchee2;
+                            });
+                            
+                            if (categorieFound) {
+                                transformed = categorieFound.abv_categorie_classement;
+                                console.log('  ✓ Catégorie AD trouvée:', categorieFound.abv_categorie_classement);
+                            }
+                        } else if (parsed.arme === 'BB') {
+                            const categorieRecherchee = parsed.ageCategory + parsed.sexe + 'BB';
+                            
+                            categorieFound = matchingCategories.find(cat => {
+                                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                return abv === categorieRecherchee;
+                            });
+                            
+                            if (categorieFound) {
+                                transformed = categorieFound.abv_categorie_classement;
+                                console.log('  ✓ Catégorie BB trouvée:', categorieFound.abv_categorie_classement);
+                            }
                         }
                     }
+                }
+                
+                if (transformed && !categorieFound) {
+                            
                 }
                 
                 if (categorieFound) {
@@ -924,17 +824,22 @@ function prefillFormFields(archer) {
                     
                     // Vérifier si c'est une correspondance exacte avec CATEGORIE XML
                     let isExactMatch = false;
-                    if (categorieXml && categorieFound.abv_categorie_classement) {
+                    if (categorieXml && categorieFound.abv_categorie_classement && sexeLetter) {
                         const foundAbv = categorieFound.abv_categorie_classement.trim().toUpperCase();
                         const xmlAbv = categorieXml.trim().toUpperCase();
                         
-                        // Correspondance exacte
+                        // Correspondance exacte directe
                         if (foundAbv === xmlAbv) {
                             isExactMatch = true;
-                        }
-                        // Correspondance après transformation (vérifier si transformed existe et est défini)
-                        else if (typeof transformed !== 'undefined' && transformed && foundAbv === transformed.trim().toUpperCase()) {
-                            isExactMatch = true;
+                        } else {
+                            // Vérifier avec le parsing : construire la catégorie attendue depuis le XML
+                            const parsed = parseCategorieXml(categorieXml, sexeLetter);
+                            if (parsed) {
+                                const categorieAttendue = parsed.ageCategory + parsed.sexe + parsed.arme;
+                                if (foundAbv === categorieAttendue) {
+                                    isExactMatch = true;
+                                }
+                            }
                         }
                     }
                     
@@ -989,173 +894,135 @@ function prefillFormFields(archer) {
                             abv: c.abv_categorie_classement,
                             sexe: c.sexe || c.SEXE || 'N/A'
                         })));
+                        
+                        // Si aucune catégorie CL n'a été trouvée mais qu'il y a des catégories correspondant à CATAGE/TYPARC,
+                        // sélectionner la première qui correspond au sexe
+                        if (!categorieFound && categorieXml && categorieXml.startsWith('CL')) {
+                            const foundBySexe = matchingCategoriesDebug.find(cat => {
+                                if (sexeLetter) {
+                                    const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
+                                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                    if (catSexe) {
+                                        return catSexe === sexeLetter;
+                                    } else {
+                                        return catAbv.startsWith(sexeLetter);
+                                    }
+                                }
+                                return true;
+                            });
+                            
+                            if (foundBySexe) {
+                                categorieFound = foundBySexe;
+                                console.log('  ⚠ Catégorie sélectionnée (CL non trouvée, utilisation de', foundBySexe.abv_categorie_classement, 'avec CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter, ')');
+                            } else if (matchingCategoriesDebug.length > 0) {
+                                // Prendre la première catégorie même si le sexe ne correspond pas exactement
+                                categorieFound = matchingCategoriesDebug[0];
+                                console.log('  ⚠ Catégorie sélectionnée (CL non trouvée, utilisation de la première avec CATAGE:', catage, 'TYPARC:', typarc, ')');
+                            }
+                        }
                     }
                     
-                    // Fallback: essayer avec CATEGORIE si disponible
-                    // Utiliser SEXE du XML (1=H, 2=F) pour construire la catégorie recherchée
-                    const categorieXmlFallback = (archer.CATEGORIE || '').trim().toUpperCase();
-                    if (categorieXmlFallback && sexeLetter) {
-                        console.log('Fallback: Recherche avec CATEGORIE XML:', categorieXmlFallback, 'SEXE:', sexeXml, '->', sexeLetter);
+                    // Si une catégorie a été trouvée dans le bloc else, la sélectionner
+                    if (categorieFound && categorieSelect) {
+                        categorieSelect.value = categorieFound.abv_categorie_classement || '';
                         
-                        // Essayer d'abord une correspondance exacte
-                        let categorieFoundFallback = categoriesClassement.find(cat => {
-                            const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                            return abv === categorieXmlFallback;
-                        });
-                        
-                        // Si pas trouvé, construire la catégorie recherchée en utilisant SEXE du XML
-                        let transformedFallback = null; // Déclarer ici pour être accessible plus tard
-                        if (!categorieFoundFallback) {
-                            let transformationType = '';
-                            
-                            // Transformation 1: ADU21/ADS2H/etc -> U21HAD/S2HAD/etc (Arc Double Système)
-                            // Utiliser SEXE du XML directement
-                            if (!transformedFallback) {
-                                const adPattern = /^AD(.+)$/i;
-                                let match = categorieXmlFallback.match(adPattern);
-                                if (match) {
-                                    const reste = match[1]; // U21, S2H, S2D, U18, etc.
-                                    // Si le reste contient déjà H/F/D, le remplacer par le sexe du XML
-                                    const resteSansSexe = reste.replace(/[HFD]$/i, '');
-                                    
-                                    // Essayer deux formats possibles :
-                                    // Format 1: U18FAD (U18 + F + AD) - pour S2, S1, etc.
-                                    // Format 2: U18ADF (U18 + AD + F) - pour U18, U21, etc.
-                                    const format1 = resteSansSexe + sexeLetter + 'AD'; // U18FAD, S2HAD
-                                    const format2 = resteSansSexe + 'AD' + sexeLetter; // U18ADF, S2ADH
-                                    
-                                    // Chercher d'abord le format 1 dans toutes les catégories
-                                    categorieFoundFallback = categoriesClassement.find(cat => {
-                                        const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                        return abv === format1;
-                                    });
-                                    
-                                    // Si pas trouvé, essayer le format 2
-                                    if (!categorieFoundFallback) {
-                                        categorieFoundFallback = categoriesClassement.find(cat => {
-                                            const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                            return abv === format2;
-                                        });
-                                        if (categorieFoundFallback) {
-                                            transformedFallback = format2;
-                                            transformationType = 'AD->AD avec SEXE du XML (format U18ADF)';
-                                        } else {
-                                            transformedFallback = format1;
-                                            transformationType = 'AD->AD avec SEXE du XML (format U18FAD)';
-                                        }
-                                    } else {
-                                        transformedFallback = format1;
-                                        transformationType = 'AD->AD avec SEXE du XML (format U18FAD)';
-                                    }
-                                }
-                            }
-                            
-                            // Transformation 3: BBU21/BBS2D/etc -> U21HBB/S2FBB/etc (Barebow)
-                            // Utiliser SEXE du XML directement
-                            if (!transformedFallback) {
-                                const bbPattern = /^BB(.+)$/i;
-                                let match = categorieXmlFallback.match(bbPattern);
-                                if (match) {
-                                    const reste = match[1]; // U21, S2D, etc.
-                                    // Si le reste contient déjà H/F/D, le remplacer par le sexe du XML
-                                    const resteSansSexe = reste.replace(/[HFD]$/i, '');
-                                    transformedFallback = resteSansSexe + sexeLetter + 'BB'; // U21HBB, S2FBB, etc.
-                                    transformationType = 'BB->BB avec SEXE du XML';
-                                }
-                            }
-                            
-                            // Pour les catégories CL, chercher directement dans toutes les catégories
-                            // même si la correspondance exacte n'a pas été trouvée
-                            if (!transformedFallback && categorieXmlFallback && categorieXmlFallback.startsWith('CL')) {
-                                // Chercher une catégorie CL dans toutes les catégories disponibles
-                                // en vérifiant qu'elle correspond aux critères CATAGE/TYPARC/SEXE
-                                categorieFoundFallback = categoriesClassement.find(cat => {
-                                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                    if (catAbv !== 'CL') return false;
-                                    
-                                    // Vérifier CATAGE et TYPARC
-                                    const catIdcategorie = String(cat.idcategorie || cat.id_categorie || '').trim();
-                                    const catIdarc = String(cat.idarc || cat.id_arc || '').trim();
-                                    if (catIdcategorie !== catage || catIdarc !== typarc) return false;
-                                    
-                                    // Vérifier le sexe
-                                    if (sexeLetter) {
-                                        const catSexe = (cat.sexe || cat.SEXE || '').trim().toUpperCase();
-                                        if (catSexe && catSexe !== sexeLetter) return false;
-                                    }
-                                    
-                                    return true;
-                                });
-                                if (categorieFoundFallback) {
-                                    console.log('  ✓ Catégorie CL trouvée dans toutes les catégories (fallback)');
-                                }
-                            }
-                            
-                            if (transformedFallback) {
-                                console.log('Fallback: Transformation CATEGORIE XML:', categorieXmlFallback, '->', transformedFallback, '(' + transformationType + ')');
-                                categorieFoundFallback = categoriesClassement.find(cat => {
-                                    const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                    return abv === transformedFallback;
-                                });
-                                if (categorieFoundFallback) {
-                                    console.log('✓ Catégorie trouvée via fallback après transformation:', categorieFoundFallback.abv_categorie_classement);
-                                }
+                        // Vérifier si c'est une correspondance exacte avec CATEGORIE XML
+                        let isExactMatch = false;
+                        if (categorieXml && categorieFound.abv_categorie_classement) {
+                            const foundAbv = categorieFound.abv_categorie_classement.trim().toUpperCase();
+                            const xmlAbv = categorieXml.trim().toUpperCase();
+                            if (foundAbv === xmlAbv) {
+                                isExactMatch = true;
                             }
                         }
                         
-                        // Si toujours pas trouvé, essayer une recherche partielle (contient les mêmes lettres)
-                        if (!categorieFoundFallback) {
-                            const xmlLetters = categorieXmlFallback.split('').sort().join('');
-                            categorieFoundFallback = categoriesClassement.find(cat => {
-                                const abv = (cat.abv_categorie_classement || '').trim().toUpperCase();
-                                const abvLetters = abv.split('').sort().join('');
-                                // Vérifier que les lettres correspondent et que ça commence par le bon sexe si disponible
-                                if (xmlLetters === abvLetters) {
-                                    if (sexeLetter) {
-                                        return abv.startsWith(sexeLetter);
-                                    }
-                                    return true;
-                                }
-                                return false;
-                            });
-                        }
-                        
-                        if (categorieFoundFallback) {
-                            categorieSelect.value = categorieFoundFallback.abv_categorie_classement || '';
-                            
-                            // Vérifier si c'est une correspondance exacte avec CATEGORIE XML
-                            const foundAbvFallback = categorieFoundFallback.abv_categorie_classement.trim().toUpperCase();
-                            const xmlAbvFallback = categorieXmlFallback.trim().toUpperCase();
-                            const isExactMatchFallback = foundAbvFallback === xmlAbvFallback || 
-                                (transformedFallback && foundAbvFallback === transformedFallback.trim().toUpperCase());
-                            
-                            // Si la catégorie exacte n'a pas été trouvée, colorer en rouge
-                            if (!isExactMatchFallback) {
-                                categorieSelect.classList.add('categorie-auto-selected');
-                                console.log('  ⚠ Catégorie sélectionnée via fallback (non exacte) - colorée en rouge');
-                            } else {
-                                categorieSelect.classList.remove('categorie-auto-selected');
-                            }
-                            
-                            // Retirer la classe si l'utilisateur change manuellement la sélection
-                            const removeRedClassFallback = function() {
-                                categorieSelect.classList.remove('categorie-auto-selected');
-                                categorieSelect.removeEventListener('change', removeRedClassFallback);
-                            };
-                            categorieSelect.addEventListener('change', removeRedClassFallback);
-                            
-                            console.log('✓ Catégorie pré-remplie via CATEGORIE (fallback):', categorieSelect.value, 'depuis XML:', categorieXmlFallback);
-                            
-                            // Appliquer la colorisation après un court délai pour s'assurer que le DOM est mis à jour
-                            setTimeout(() => {
-                                applyCategorieColorization();
-                            }, 100);
-                            
-                            setTimeout(() => {
-                                fillDistanceAndBlasonFromCategorie(categorieFoundFallback.abv_categorie_classement);
-                            }, 300);
+                        // Si la catégorie exacte n'a pas été trouvée, colorer en rouge
+                        if (!isExactMatch && categorieXml) {
+                            categorieSelect.classList.add('categorie-auto-selected');
+                            console.log('  ⚠ Catégorie sélectionnée automatiquement (non exacte) - colorée en rouge');
                         } else {
-                            console.log('✗ Catégorie non trouvée avec CATEGORIE (fallback):', categorieXmlFallback);
+                            categorieSelect.classList.remove('categorie-auto-selected');
+                        }
+                        
+                        // Retirer la classe si l'utilisateur change manuellement la sélection
+                        const removeRedClass = function() {
+                            categorieSelect.classList.remove('categorie-auto-selected');
+                            categorieSelect.removeEventListener('change', removeRedClass);
+                        };
+                        categorieSelect.addEventListener('change', removeRedClass);
+                        
+                        console.log('✓ Catégorie pré-remplie:', categorieSelect.value);
+                        
+                        // Appliquer la colorisation après un court délai
+                        setTimeout(() => {
+                            applyCategorieColorization();
+                        }, 100);
+                        
+                        // Déclencher le remplissage automatique de la distance et du blason
+                        setTimeout(() => {
+                            fillDistanceAndBlasonFromCategorie(categorieFound.abv_categorie_classement);
+                        }, 300);
+                    }
+                    
+                    // Fallback: essayer avec CATEGORIE si disponible (si aucune catégorie n'a été trouvée)
+                    if (!categorieFound) {
+                        const categorieXmlFallback = (archer.CATEGORIE || '').trim().toUpperCase();
+                        if (categorieXmlFallback && sexeLetter) {
+                            console.log('Fallback: Recherche avec CATEGORIE XML:', categorieXmlFallback, 'SEXE:', sexeXml, '->', sexeLetter);
+                            
+                            // Parser la catégorie XML
+                            const parsedFallback = parseCategorieXml(categorieXmlFallback, sexeLetter);
+                            if (parsedFallback) {
+                                console.log('Fallback: Catégorie XML parsée:', parsedFallback);
+                                
+                                // Construire la catégorie recherchée
+                                const categorieRechercheeFallback = parsedFallback.ageCategory + parsedFallback.sexe + parsedFallback.arme;
+                                
+                                // Chercher dans toutes les catégories avec la catégorie d'âge et le sexe
+                                const categoriesWithAgeAndSexeFallback = categoriesClassement.filter(cat => {
+                                    const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
+                                    return catAbv.startsWith(parsedFallback.ageCategory + parsedFallback.sexe);
+                                });
+                                
+                                if (categoriesWithAgeAndSexeFallback.length > 0) {
+                                    categorieFound = categoriesWithAgeAndSexeFallback[0];
+                                    console.log('  ⚠ Catégorie sélectionnée via fallback (catégorie d\'âge + sexe):', categorieFound.abv_categorie_classement);
+                                    
+                                    categorieSelect.value = categorieFound.abv_categorie_classement || '';
+                                    
+                                    // Vérifier si c'est une correspondance exacte
+                                    const foundAbvFallback = categorieFound.abv_categorie_classement.trim().toUpperCase();
+                                    const isExactMatchFallback = foundAbvFallback === categorieRechercheeFallback;
+                                    
+                                    // Si la catégorie exacte n'a pas été trouvée, colorer en rouge
+                                    if (!isExactMatchFallback) {
+                                        categorieSelect.classList.add('categorie-auto-selected');
+                                        console.log('  ⚠ Catégorie sélectionnée via fallback (non exacte) - colorée en rouge');
+                                    } else {
+                                        categorieSelect.classList.remove('categorie-auto-selected');
+                                    }
+                                    
+                                    // Retirer la classe si l'utilisateur change manuellement la sélection
+                                    const removeRedClassFallback = function() {
+                                        categorieSelect.classList.remove('categorie-auto-selected');
+                                        categorieSelect.removeEventListener('change', removeRedClassFallback);
+                                    };
+                                    categorieSelect.addEventListener('change', removeRedClassFallback);
+                                    
+                                    console.log('✓ Catégorie pré-remplie via CATEGORIE (fallback):', categorieSelect.value, 'depuis XML:', categorieXmlFallback);
+                                    
+                                    // Appliquer la colorisation après un court délai
+                                    setTimeout(() => {
+                                        applyCategorieColorization();
+                                    }, 100);
+                                    
+                                    setTimeout(() => {
+                                        fillDistanceAndBlasonFromCategorie(categorieFound.abv_categorie_classement);
+                                    }, 300);
+                                } else {
+                                    console.log('✗ Aucune catégorie trouvée avec catégorie d\'âge + sexe (fallback)');
+                                }
+                            }
                         }
                     }
                 }
