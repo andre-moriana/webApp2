@@ -16,6 +16,8 @@ $docTitles = [
     'classement' => 'Classement'
 ];
 $docTitle = $docTitles[$doc] ?? 'Document';
+$version = defined('APP_VERSION') ? APP_VERSION : ($_ENV['APP_VERSION'] ?? '1.0');
+$dateFooter = date('d/m/Y H:i');
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -73,7 +75,22 @@ $docTitle = $docTitles[$doc] ?? 'Document';
         }
         @media print {
             @page {
-                margin: 15mm;
+                margin: 15mm 15mm 20mm 15mm;
+                @bottom-left {
+                    content: "<?= $dateFooter ?>";
+                    font-size: 9pt;
+                    color: #666;
+                }
+                @bottom-center {
+                    content: "Imprimé par Arc Training <?= htmlspecialchars($version) ?>";
+                    font-size: 9pt;
+                    color: #666;
+                }
+                @bottom-right {
+                    content: "Page " counter(page) " / " counter(pages);
+                    font-size: 9pt;
+                    color: #666;
+                }
             }
             .no-print { display: none !important; }
             body { font-size: 11pt; }
