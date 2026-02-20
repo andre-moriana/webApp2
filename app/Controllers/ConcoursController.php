@@ -654,6 +654,26 @@ class ConcoursController {
             if (!isset($concours->arbitres) || !is_array($concours->arbitres)) {
                 $concours->arbitres = [];
             }
+            // Enrichir les arbitres avec le nom (résolution licence → nom depuis le XML)
+            $licences = [];
+            foreach ($concours->arbitres as $a) {
+                $arr = (array) $a;
+                $lic = trim($arr['IDLicence'] ?? $arr['id_licence'] ?? '');
+                if ($lic !== '') {
+                    $licences[] = $lic;
+                }
+            }
+            if (!empty($licences)) {
+                $namesByLicence = ArcherSearchController::getDisplayNamesByLicences($licences);
+                $concours->arbitres = array_map(function ($a) use ($namesByLicence) {
+                    $arr = (array) $a;
+                    $lic = trim($arr['IDLicence'] ?? $arr['id_licence'] ?? '');
+                    if ($lic !== '' && isset($namesByLicence[$lic])) {
+                        $arr['nom_display'] = $namesByLicence[$lic];
+                    }
+                    return $arr;
+                }, $concours->arbitres);
+            }
         } else {
             $_SESSION['error'] = 'Impossible de récupérer le concours.';
             header('Location: /concours');
