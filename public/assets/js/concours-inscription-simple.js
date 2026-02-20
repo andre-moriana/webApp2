@@ -341,6 +341,25 @@ function setupBlasonAutoUpdate() {
     categorieSelect.addEventListener('change', blasonUpdateHandler);
     distanceSelect.addEventListener('change', blasonUpdateHandler);
     
+    // Ajouter un listener pour la sélection automatique du piquet en Nature
+    categorieSelect.addEventListener('change', function() {
+        const selectedCategorie = categorieSelect.value;
+        if (selectedCategorie) {
+            selectPiquetColorForNature(selectedCategorie);
+        }
+    });
+    
+    // Ajouter un listener sur le champ piquet pour retirer la classe is-invalid quand l'utilisateur sélectionne manuellement
+    const piquetSelect = document.getElementById('piquet');
+    if (piquetSelect) {
+        piquetSelect.addEventListener('change', function() {
+            // Retirer la classe is-invalid quand l'utilisateur sélectionne une valeur
+            if (this.value) {
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+    
     console.log('✓ Listeners pour mise à jour automatique du blason configurés');
     console.log('Éléments:', {
         categorieSelect: categorieSelect.id,
@@ -986,6 +1005,11 @@ function prefillFormFields(archer) {
                         setTimeout(() => {
                             fillDistanceAndBlasonFromCategorie(categorieFound.abv_categorie_classement);
                         }, 300);
+                        
+                        // Sélectionner automatiquement la couleur de piquet pour Nature
+                        setTimeout(() => {
+                            selectPiquetColorForNature(categorieFound.abv_categorie_classement);
+                        }, 350);
                     }
                     
                     // Fallback: essayer avec CATEGORIE si disponible (si aucune catégorie n'a été trouvée)
@@ -1110,6 +1134,97 @@ function prefillFormFields(archer) {
     // Pré-remplir l'affichage des départs sélectionnés
     if (typeof window.updateModalDepartDisplay === 'function') {
         window.updateModalDepartDisplay();
+    }
+}
+
+/**
+ * Sélectionne automatiquement la couleur de piquet selon les règles pour le tir Nature
+ * Règles :
+ * - S1, S2, S3, U21 : piquet rouge
+ * - U18 : arc nu (BB) et TL : piquet bleu
+ * - U15, U13 : arc nu (BB) : piquet blanc
+ * @param {string} abvCategorie - L'abréviation de la catégorie (ex: "S3HCL", "U18HBB")
+ * @param {boolean} isEditModal - Si true, utilise le champ edit-piquet au lieu de piquet
+ */
+function selectPiquetColorForNature(abvCategorie, isEditModal = false) {
+    // Vérifier si c'est la discipline Nature
+    if (typeof disciplineAbv === 'undefined' || disciplineAbv !== 'N') {
+        return; // Pas Nature, ne rien faire
+    }
+    
+    const piquetSelect = document.getElementById(isEditModal ? 'edit-piquet' : 'piquet');
+    if (!piquetSelect) {
+        return; // Champ piquet non trouvé
+    }
+    
+    if (!abvCategorie || abvCategorie.trim() === '') {
+        return; // Catégorie vide
+    }
+    
+    const categorieUpper = abvCategorie.trim().toUpperCase();
+    
+    // Extraire la catégorie d'âge (S1, S2, S3, U21, U18, U15, U13)
+    // Format des catégories : S3HCL, U18HBB, U15FTL, etc.
+    // Structure : Catégorie d'âge (2 ou 3 chars) + Sexe (1 char) + Arme (2 chars)
+    let ageCategory = '';
+    if (categorieUpper.startsWith('S1')) {
+        ageCategory = 'S1';
+    } else if (categorieUpper.startsWith('S2')) {
+        ageCategory = 'S2';
+    } else if (categorieUpper.startsWith('S3')) {
+        ageCategory = 'S3';
+    } else if (categorieUpper.startsWith('U21')) {
+        ageCategory = 'U21';
+    } else if (categorieUpper.startsWith('U18')) {
+        ageCategory = 'U18';
+    } else if (categorieUpper.startsWith('U15')) {
+        ageCategory = 'U15';
+    } else if (categorieUpper.startsWith('U13')) {
+        ageCategory = 'U13';
+    }
+    
+    // Extraire l'arme (BB = arc nu, TL = TL)
+    // L'arme est à la fin de la catégorie (2 derniers caractères)
+    // Format : Catégorie d'âge (2-3 chars) + Sexe (1 char) + Arme (2 chars)
+    // Exemples : S3HCL, U18HBB, U15FTL
+    let arme = '';
+    if (categorieUpper.length >= 2) {
+        const lastTwoChars = categorieUpper.substring(categorieUpper.length - 2);
+        if (lastTwoChars === 'BB') {
+            arme = 'BB';
+        } else if (lastTwoChars === 'TL') {
+            arme = 'TL';
+        }
+    }
+    
+    // Appliquer les règles
+    let piquetColor = '';
+    
+    if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21') {
+        // S1, S2, S3, U21 : piquet rouge
+        piquetColor = 'rouge';
+    } else if (ageCategory === 'U18') {
+        // U18 : arc nu (BB) et TL : piquet bleu
+        if (arme === 'BB' || arme === 'TL') {
+            piquetColor = 'bleu';
+        }
+    } else if (ageCategory === 'U15' || ageCategory === 'U13') {
+        // U15, U13 : arc nu (BB) : piquet blanc
+        if (arme === 'BB') {
+            piquetColor = 'blanc';
+        }
+    }
+    
+    // Sélectionner la couleur si trouvée
+    if (piquetColor) {
+        piquetSelect.value = piquetColor;
+        // Retirer la classe is-invalid si elle existe
+        piquetSelect.classList.remove('is-invalid');
+        console.log('✓ Piquet sélectionné automatiquement:', piquetColor, 'pour catégorie:', abvCategorie, '(âge:', ageCategory + ', arme:', arme + ')', isEditModal ? '(modale édition)' : '');
+    } else {
+        // Aucune règle ne correspond : colorer le champ en rouge
+        piquetSelect.classList.add('is-invalid');
+        console.log('⚠ Aucune règle de piquet trouvée pour catégorie:', abvCategorie, '(âge:', ageCategory + ', arme:', arme + ') - champ coloré en rouge');
     }
 }
 
@@ -1948,6 +2063,13 @@ window.editInscription = function(inscriptionId) {
             setVal('edit-depart-select', inscription.numero_depart);
             setVal('edit-categorie_classement', inscription.categorie_classement);
             setVal('edit-arme', inscription.arme);
+            
+            // Sélectionner automatiquement la couleur de piquet pour Nature
+            setTimeout(() => {
+                if (inscription.categorie_classement) {
+                    selectPiquetColorForNature(inscription.categorie_classement, true);
+                }
+            }, 100);
             setCheck('edit-mobilite_reduite', inscription.mobilite_reduite);
 
             if (typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne) {
@@ -1957,6 +2079,31 @@ window.editInscription = function(inscriptionId) {
                 setVal('edit-blason', inscription.blason);
                 setCheck('edit-duel', inscription.duel);
                 setCheck('edit-trispot', inscription.trispot);
+            }
+            
+            // Ajouter un listener pour la sélection automatique du piquet en Nature lors du changement de catégorie
+            const editCategorieSelect = document.getElementById('edit-categorie_classement');
+            if (editCategorieSelect) {
+                // Retirer l'ancien listener s'il existe (en créant une nouvelle fonction à chaque fois)
+                const editCategorieChangeHandler = function() {
+                    const selectedCategorie = editCategorieSelect.value;
+                    if (selectedCategorie) {
+                        selectPiquetColorForNature(selectedCategorie, true);
+                    }
+                };
+                editCategorieSelect.removeEventListener('change', editCategorieChangeHandler);
+                editCategorieSelect.addEventListener('change', editCategorieChangeHandler);
+            }
+            
+            // Ajouter un listener sur le champ edit-piquet pour retirer la classe is-invalid quand l'utilisateur sélectionne manuellement
+            const editPiquetSelect = document.getElementById('edit-piquet');
+            if (editPiquetSelect) {
+                editPiquetSelect.addEventListener('change', function() {
+                    // Retirer la classe is-invalid quand l'utilisateur sélectionne une valeur
+                    if (this.value) {
+                        this.classList.remove('is-invalid');
+                    }
+                });
             }
 
         };
