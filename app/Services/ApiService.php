@@ -86,6 +86,13 @@ class ApiService {
             return $this->makeRequest("concours/{$id}", "PUT", $data);
         }
 
+        public function updateConcoursArbitres($id, $arbitres) {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
+            }
+            return $this->makeRequest("concours/{$id}/arbitres", "PUT", $arbitres);
+        }
+
         public function deleteConcours($id) {
             if (!$this->token) {
                 return ["success" => false, "message" => "Token d'authentification requis"];
