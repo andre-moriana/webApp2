@@ -357,3 +357,14 @@ select.categorie-auto-selected {
         grid-template-columns: 1fr;
     }
 }
+
+/* Style pour les champs invalides (validation email) */
+#email.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+#email.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
