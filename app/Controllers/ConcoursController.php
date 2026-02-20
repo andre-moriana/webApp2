@@ -1782,11 +1782,15 @@ class ConcoursController {
         }
         if (!empty($licencesArbitres)) {
             $namesByLicence = ArcherSearchController::getDisplayNamesByLicences($licencesArbitres);
-            $concours->arbitres = array_map(function ($a) use ($namesByLicence) {
+            $sexeByLicence = ArcherSearchController::getSexeByLicences($licencesArbitres);
+            $concours->arbitres = array_map(function ($a) use ($namesByLicence, $sexeByLicence) {
                 $arr = is_array($a) ? $a : (array)$a;
                 $lic = trim($arr['IDLicence'] ?? $arr['id_licence'] ?? '');
                 if ($lic !== '' && isset($namesByLicence[$lic])) {
                     $arr['nom_display'] = $namesByLicence[$lic];
+                }
+                if ($lic !== '' && isset($sexeByLicence[$lic])) {
+                    $arr['sexe'] = $sexeByLicence[$lic];
                 }
                 return $arr;
             }, $concours->arbitres);

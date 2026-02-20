@@ -33,15 +33,21 @@ $listeEntraineurs = array_filter($arbitres, function($a) {
     return (int)($a['Jury_arbitre'] ?? $a['jury_arbitre'] ?? 0) === 3;
 });
 
-$formatNom = function($a, $prefix = 'Me.') {
+// Civilité selon le sexe : F = Me. (Madame), M = M. (Monsieur)
+$getCivilite = function($a) {
+    $s = $a['sexe'] ?? $a['gender'] ?? '';
+    return ($s === 'F') ? 'Me.' : 'M.';
+};
+$formatNom = function($a) use ($getCivilite) {
     $nom = $a['nom_display'] ?? trim(($a['first_name'] ?? '') . ' ' . ($a['name'] ?? '')) ?: ($a['IDLicence'] ?? $a['id_licence'] ?? '');
+    $prefix = $getCivilite($a);
     return $prefix . ' ' . mb_strtoupper($nom);
 };
-$formatLigne = function($liste, $prefix) use ($formatNom) {
+$formatLigne = function($liste) use ($formatNom) {
     $parts = [];
     foreach ($liste as $a) {
         $lic = trim($a['IDLicence'] ?? $a['id_licence'] ?? '');
-        $parts[] = $lic . ' - ' . $formatNom($a, $prefix);
+        $parts[] = $lic . ' - ' . $formatNom($a);
     }
     return implode(' / ', $parts) . (empty($parts) ? '' : ' /');
 };
@@ -49,8 +55,9 @@ $formatLigne = function($liste, $prefix) use ($formatNom) {
 $clubOrganisateurId = $concours->club_organisateur ?? null;
 $clubOrganisateurData = $clubOrganisateurId ? ($clubsMap[$clubOrganisateurId] ?? $clubsMap[(string)$clubOrganisateurId] ?? null) : null;
 $clubOrgCode = $clubOrganisateurData ? ($clubOrganisateurData['nameShort'] ?? $clubOrganisateurData['name_short'] ?? '') : '';
-$clubOrgDisplay = ($clubOrgCode ? $clubOrgCode . '  ' : '') . ($clubName ?? '');
-$arbitreRespDisplay = $arbitreResponsable ? $formatNom($arbitreResponsable, 'Me.') : '';
+$clubNameStr = is_scalar($clubName ?? null) ? (string)($clubName ?? '') : '';
+$clubOrgDisplay = ($clubOrgCode ? $clubOrgCode . '  ' : '') . $clubNameStr;
+$arbitreRespDisplay = $arbitreResponsable ? $formatNom($arbitreResponsable) : '';
 $nbArchers = isset($inscriptions) ? count($inscriptions) : 0;
 ?>
 <div class="edition-doc-fin mt-4 pt-4">
@@ -72,11 +79,11 @@ $nbArchers = isset($inscriptions) ? count($inscriptions) : 0;
 
     <div class="mt-3">
         <strong>Liste des arbitres</strong>
-        <p class="mb-0 mt-1"><?= htmlspecialchars($listeArbitres) ?></p>
+        <p class="mb-0 mt-1"><?= htmlspecialchars($formatLigne($listeArbitres)) ?></p>
     </div>
 
     <div class="mt-3">
         <strong>Liste des entraîneurs</strong>
-        <p class="mb-0 mt-1"><?= htmlspecialchars($listeEntraineurs) ?></p>
+        <p class="mb-0 mt-1"><?= htmlspecialchars($formatLigne($listeEntraineurs)) ?></p>
     </div>
 </div>
