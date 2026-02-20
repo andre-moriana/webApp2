@@ -650,6 +650,9 @@ function prefillFormFields(archer) {
     // Pré-remplir la catégorie de classement
     // Utiliser CATAGE (idcategorie), TYPARC (idarc) et SEXE (1=H, 2=F) pour trouver la catégorie
     const categorieSelect = document.getElementById('categorie_classement');
+    // Déclarer transformed et categorieXml dans un scope accessible pour la vérification de correspondance exacte
+    let transformed = null;
+    let categorieXml = '';
     if (categorieSelect) {
         if (typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0) {
             const catage = archer.CATAGE ? String(archer.CATAGE).trim() : '';
@@ -661,7 +664,7 @@ function prefillFormFields(archer) {
             
             if (catage && typarc) {
                 // Récupérer CATEGORIE du XML pour prioriser la bonne catégorie
-                const categorieXml = (archer.CATEGORIE || '').trim().toUpperCase();
+                categorieXml = (archer.CATEGORIE || '').trim().toUpperCase();
                 
                 // Chercher toutes les catégories correspondantes avec idcategorie = CATAGE, idarc = TYPARC et sexe = H/F
                 let matchingCategories = categoriesClassement.filter(cat => {
@@ -699,7 +702,6 @@ function prefillFormFields(archer) {
                     
                     // Toujours essayer de trouver une correspondance avec CATEGORIE si disponible
                     // Utiliser SEXE du XML (1=H, 2=F) pour construire la catégorie recherchée
-                    let transformed = null; // Déclarer ici pour être accessible plus tard
                     if (categorieXml && sexeLetter) {
                         console.log('Recherche avec CATEGORIE XML:', categorieXml, 'SEXE:', sexeXml, '->', sexeLetter);
                         
@@ -915,8 +917,8 @@ function prefillFormFields(archer) {
                         if (foundAbv === xmlAbv) {
                             isExactMatch = true;
                         }
-                        // Correspondance après transformation
-                        else if (transformed && foundAbv === transformed.trim().toUpperCase()) {
+                        // Correspondance après transformation (vérifier si transformed existe et est défini)
+                        else if (typeof transformed !== 'undefined' && transformed && foundAbv === transformed.trim().toUpperCase()) {
                             isExactMatch = true;
                         }
                     }
