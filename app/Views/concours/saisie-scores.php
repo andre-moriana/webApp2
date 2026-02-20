@@ -8,15 +8,21 @@
 $concoursId = $concoursId ?? ($concours->id ?? $concours->_id ?? null);
 $isNature = $isNature ?? false;
 $isSalleTae = $isSalleTae ?? false;
-// Nature 21 cibles x2 : 2 séries P1 et P2 (fallback dans la vue si le contrôleur ne l'a pas défini)
-if (!isset($isNature2x21)) {
+// Nature 21 cibles x2 : 2 séries P1 et P2
+// 1) Paramètre URL ?format=2x21 pour forcer l'affichage P1/P2
+// 2) Sinon détection via type_competition (14) ou libellé contenant "21 cibles x2" / "x 2"
+$force2x21 = isset($_GET['format']) && $_GET['format'] === '2x21';
+if (!isset($isNature2x21) || $force2x21) {
     $tc = $concours->type_competition ?? $concours['type_competition'] ?? null;
     $tcName = $concours->type_competition_name ?? $concours['type_competition_name'] ?? '';
-    $isNature2x21 = $isNature && (
+    $tcText = $concours->type_competition_text ?? $concours['type_competition_text'] ?? '';
+    $nameOrText = (string)$tcName . ' ' . (string)$tcText;
+    $isNature2x21 = $force2x21 || ($isNature && (
         ((int)$tc === 14) ||
-        (stripos((string)$tcName, '21 cibles x 2') !== false) ||
-        (stripos((string)$tcName, '21 cibles x2') !== false)
-    );
+        (stripos($nameOrText, '21 cibles x 2') !== false) ||
+        (stripos($nameOrText, '21 cibles x2') !== false) ||
+        (preg_match('/21\s*cibles\s*x\s*2/i', $nameOrText))
+    ));
 }
 $isNature2x21 = $isNature2x21 ?? false;
 $isTwoSeries = $isSalleTae || $isNature2x21; // Salle/TAE ou Nature 21 cibles x2
@@ -69,6 +75,9 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
             <form method="get" action="<?= htmlspecialchars($baseUrlScores) ?>" id="form-select-depart" class="d-flex align-items-center gap-3 flex-wrap">
                 <?php if ($departSelected !== null && empty($departsForSelect)): ?>
                 <input type="hidden" name="depart" value="<?= (int)$departSelected ?>">
+                <?php endif; ?>
+                <?php if (isset($_GET['format']) && $_GET['format'] === '2x21'): ?>
+                <input type="hidden" name="format" value="2x21">
                 <?php endif; ?>
                 <?php if (!empty($departsForSelect)): ?>
                 <div class="d-flex align-items-center gap-2">
@@ -136,6 +145,11 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                 <?php elseif ($isNature): ?>
                     <i class="fas fa-leaf me-2"></i>Concours Nature – Saisie des scores
                     <small class="d-block text-muted mt-1">Score total et détail des impacts (20-15, 20-10, 15-15, 15-10, 15, 10, manqués)</small>
+                    <small class="d-block mt-1">
+                        <a href="<?= htmlspecialchars($baseUrlScores . '?format=2x21' . ($departSelected !== null ? '&depart=' . $departSelected : '')) ?>" class="text-primary">
+                            <i class="fas fa-exchange-alt me-1"></i>Ce concours a 2 passages (P1 et P2) ? Cliquez ici pour afficher les colonnes P1/P2
+                        </a>
+                    </small>
                 <?php else: ?>
                     <i class="fas fa-bullseye me-2"></i>Saisie des scores
                     <small class="d-block text-muted mt-1">Score total par archer</small>
@@ -147,6 +161,7 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
             $formActionParams = [];
             if ($departSelected !== null) $formActionParams['depart'] = $departSelected;
             if ($isTwoSeries && $serieMode !== 'both') $formActionParams['serie'] = $serieMode;
+            if (isset($_GET['format']) && $_GET['format'] === '2x21') $formActionParams['format'] = '2x21';
             $formAction = $baseUrlScores . (!empty($formActionParams) ? '?' . http_build_query($formActionParams) : '');
             ?>
             <form method="post" action="<?= htmlspecialchars($formAction) ?>" id="form-scores">
@@ -155,6 +170,9 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                 <?php endif; ?>
                 <?php if ($isTwoSeries): ?>
                 <input type="hidden" name="serie_mode" value="<?= htmlspecialchars($serieMode) ?>">
+                <?php endif; ?>
+                <?php if (isset($_GET['format']) && $_GET['format'] === '2x21'): ?>
+                <input type="hidden" name="format" value="2x21">
                 <?php endif; ?>
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle">
