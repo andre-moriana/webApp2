@@ -26,12 +26,12 @@ $docTitle = $docTitles[$doc] ?? 'Document';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* En-tête et pied de page - affichage écran (prévisualisation) */
+        /* En-tête - affichage écran (prévisualisation) */
         .edition-doc-header {
             display: block;
             border-bottom: 1px solid #ddd;
             padding: 8px 15px;
-            margin: -1rem -1rem 1rem -1rem;
+            margin-bottom: 1rem;
             background: #f8f9fa;
         }
         .edition-doc-header-inner {
@@ -63,28 +63,46 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             padding: 0 8px;
         }
         .edition-doc-logo-placeholder { font-size: 10pt; color: #6c757d; }
+        /* Table structure pour impression (invisible à l'écran) */
+        .edition-doc-print-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .edition-doc-print-table td {
+            border: none;
+        }
         @media print {
-            /* Réserver l'espace en haut de CHAQUE page pour l'en-tête (éviter que le logo soit coupé) */
             @page {
-                margin-top: 35mm;
-                margin-bottom: 15mm;
+                margin: 15mm;
             }
             .no-print { display: none !important; }
             body { font-size: 11pt; }
             .page-break { page-break-after: always; }
-            /* En-tête - position fixe, ne pas couper au saut de page */
+            /* En-tête répété via table-header-group : évite la coupure du logo au saut de page */
+            .edition-doc-print-table {
+                display: table;
+                width: 100%;
+            }
+            .edition-doc-print-thead {
+                display: table-header-group;
+            }
+            .edition-doc-print-thead td {
+                padding: 0;
+                vertical-align: top;
+            }
+            .edition-doc-print-tbody {
+                display: table-row-group;
+            }
+            .edition-doc-print-tbody > tr > td {
+                display: block;
+                padding: 0;
+            }
             .edition-doc-header {
                 display: block !important;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                max-height: 32mm;
+                position: static !important;
                 background: #fff;
-                z-index: 9999;
                 border-bottom: 1px solid #ddd;
-                padding: 3px 15px;
+                padding: 4px 0 8px 0;
                 page-break-inside: avoid;
                 break-inside: avoid;
             }
@@ -105,11 +123,10 @@ $docTitle = $docTitles[$doc] ?? 'Document';
                 font-size: 14pt;
                 font-weight: 600;
             }
-            /* Logo : 14mm pour tenir dans la marge et éviter la coupure au saut de page */
+            /* Logo : taille raisonnable, jamais coupé grâce à table-header-group */
             .edition-doc-logo {
-                height: 14mm;
-                max-width: 28mm;
-                max-height: 14mm;
+                height: 16mm;
+                max-width: 32mm;
                 object-fit: contain;
             }
             .edition-doc-header-left {
@@ -119,18 +136,11 @@ $docTitle = $docTitles[$doc] ?? 'Document';
             .edition-doc-logo-placeholder {
                 font-size: 10pt;
             }
-            /* Pas de padding body : @page margin gère l'espace sur chaque page */
-            body {
-                padding-top: 0 !important;
-                padding-bottom: 0 !important;
-            }
         }
         body { padding: 1rem; }
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/editions/_header-footer.php'; ?>
-
     <div class="no-print mb-3">
         <button type="button" class="btn btn-primary" onclick="window.print()">
             <i class="fas fa-print me-1"></i>Imprimer
@@ -138,6 +148,15 @@ $docTitle = $docTitles[$doc] ?? 'Document';
         <a href="/concours/<?= (int)$concoursId ?>/editions" class="btn btn-secondary ms-2">Retour aux éditions</a>
     </div>
 
+    <table class="edition-doc-print-table">
+        <thead class="edition-doc-print-thead">
+            <tr>
+                <td><?php include __DIR__ . '/editions/_header-footer.php'; ?></td>
+            </tr>
+        </thead>
+        <tbody class="edition-doc-print-tbody">
+            <tr>
+                <td>
 <?php
 switch ($doc) {
     case 'avis':
@@ -159,6 +178,10 @@ switch ($doc) {
         echo '<p>Document inconnu.</p>';
 }
 ?>
-    <?php include __DIR__ . '/editions/_edition-doc-fin.php'; ?>
+                    <?php include __DIR__ . '/editions/_edition-doc-fin.php'; ?>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </body>
 </html>
