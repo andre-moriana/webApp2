@@ -11,17 +11,17 @@ $hasNatureLabel = false;
 foreach ($categoriesMap as $abv => $lb) {
     $abvUpper = strtoupper((string)$abv);
     $lbUpper = strtoupper((string)$lb);
-    if (strpos($lbUpper, 'ARC CHASSE') !== false || strpos($lbUpper, 'NATURE') !== false || strpos($lbUpper, '3D') !== false
-        || strpos($lbUpper, 'CHASSE') !== false || strpos($abvUpper, 'FAC') !== false) {
+    if (strpos($lbUpper, 'ARC CHASSE') !== false || strpos($lbUpper, 'ARC DROIT') !== false || strpos($lbUpper, 'NATURE') !== false || strpos($lbUpper, '3D') !== false
+        || strpos($lbUpper, 'CHASSE') !== false || strpos($abvUpper, 'FAC') !== false || strpos($abvUpper, 'HAD') !== false) {
         $hasNatureLabel = true;
         break;
     }
 }
 $isNature = ($disciplineAbv && in_array($disciplineAbv, ['N', '3', 'C', '3D'], true)) || $hasNatureScores || $hasNatureLabel;
-// P2 : uniquement pour Nature 2×21 cibles (présence série série2)
+// P2 : uniquement pour Nature 2×21 cibles (série2 réellement renseignée, pas 0)
 $has2x21 = $isNature && !empty(array_filter($resultats ?? [], function($r) {
     $s2 = $r['serie2_score'] ?? null;
-    return $s2 !== null && $s2 !== '';
+    return $s2 !== null && $s2 !== '' && (int)$s2 > 0;
 }));
 
 // Ne prendre en compte que le 1er tir (numero_tir = 1 ou null)
@@ -118,16 +118,9 @@ unset($items);
                                 <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
-                                <td><?php
-                                    if ($r) {
-                                        $p1 = $r['serie1_score'] ?? $r['score'] ?? null;
-                                        echo ($p1 !== null && $p1 !== '') ? (int)$p1 : '-';
-                                    } else {
-                                        echo '-';
-                                    }
-                                ?></td>
+                                <td><?= $r ? (($v = $r['serie1_score'] ?? $r['score'] ?? null) !== null && $v !== '' ? (int)$v : '-') : '-' ?></td>
                                 <?php if ($has2x21): ?><td><?= $r ? ($r['serie2_score'] ?? '-') : '-' ?></td><?php endif; ?>
-                                <td><?= $r ? ($r['score'] ?? '-') : '-' ?></td>
+                                <td><?= $r ? (($v = $r['score'] ?? null) !== null && $v !== '' ? (int)$v : '-') : '-' ?></td>
                                 <td><?= $r ? ($r['nb_20_15'] ?? '-') : '-' ?></td>
                                 <td><?= $r ? ($r['nb_20_10'] ?? '-') : '-' ?></td>
                                 <td><?= $r ? ($r['nb_15_15'] ?? '-') : '-' ?></td>
