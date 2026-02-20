@@ -335,11 +335,13 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <option value="A">A</option>
                                 <option value="B">B</option>
                                 <option value="C">C</option>
-                                <option value="E">E</option>
-                                <option value="L">L</option>
+                                <option value="E" class="licence-invalid">E</option>
+                                <option value="L" class="licence-invalid">L</option>
+                                <option value="D" class="licence-invalid">D</option>
                                 <option value="J">J</option>
-                                <option value="P">P</option>
+                                <option value="P" class="licence-warning">P</option>
                             </select>
+                            <div id="type_licence_warning" class="licence-warning-message d-none"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="creation_renouvellement" class="form-label">Création/Renouvellement</label>
@@ -519,11 +521,13 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <option value="A">A</option>
                                 <option value="B">B</option>
                                 <option value="C">C</option>
-                                <option value="E">E</option>
-                                <option value="L">L</option>
+                                <option value="E" class="licence-invalid">E</option>
+                                <option value="L" class="licence-invalid">L</option>
+                                <option value="D" class="licence-invalid">D</option>
                                 <option value="J">J</option>
-                                <option value="P">P</option>
+                                <option value="P" class="licence-warning">P</option>
                             </select>
+                            <div id="edit-type_licence_warning" class="licence-warning-message d-none"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit-creation_renouvellement" class="form-label">Création/Renouvellement</label>

@@ -287,6 +287,48 @@ table.table tbody tr.piquet-blanc:hover {
     background-color: #e8e8e8 !important;
 }
 
+/* Styles pour les types de licences non valides */
+.licence-invalid,
+select.licence-invalid,
+select.licence-invalid option {
+    color: #dc3545 !important;
+    font-weight: 600;
+}
+
+.licence-warning,
+select.licence-warning,
+select.licence-warning option {
+    color: #fd7e14 !important;
+    font-weight: 600;
+}
+
+select.licence-invalid {
+    border-color: #dc3545 !important;
+}
+
+select.licence-warning {
+    border-color: #fd7e14 !important;
+}
+
+.licence-warning-message {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.licence-warning-message.invalid {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.licence-warning-message.conditional {
+    color: #856404;
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .search-form {

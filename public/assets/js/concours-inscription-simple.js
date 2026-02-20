@@ -60,6 +60,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ajouter les listeners pour mettre à jour le blason automatiquement
     setupBlasonAutoUpdate();
     
+    // Ajouter les listeners pour les avertissements de type de licence
+    setupLicenceTypeWarnings();
+    
     // Mettre à jour l'affichage des départs dans la modale + "Tout sélectionner"
     window.updateModalDepartDisplay = function() {
         const modalDepartDisplay = document.getElementById('modal-depart-display');
@@ -111,6 +114,70 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Variable pour stocker la fonction de mise à jour du blason (pour pouvoir la retirer si nécessaire)
 let blasonUpdateHandler = null;
+
+/**
+ * Configure les listeners pour afficher les avertissements selon le type de licence
+ */
+function setupLicenceTypeWarnings() {
+    const typeLicenceSelect = document.getElementById('type_licence');
+    const editTypeLicenceSelect = document.getElementById('edit-type_licence');
+    
+    // Pour la modale de confirmation
+    if (typeLicenceSelect) {
+        typeLicenceSelect.addEventListener('change', function() {
+            updateLicenceWarning(this.value, 'type_licence_warning');
+        });
+    }
+    
+    // Pour la modale d'édition
+    if (editTypeLicenceSelect) {
+        editTypeLicenceSelect.addEventListener('change', function() {
+            updateLicenceWarning(this.value, 'edit-type_licence_warning');
+        });
+    }
+}
+
+/**
+ * Met à jour l'affichage du message d'avertissement selon le type de licence
+ */
+function updateLicenceWarning(licenceType, warningElementId) {
+    const warningEl = document.getElementById(warningElementId);
+    if (!warningEl) return;
+    
+    // Trouver le select correspondant
+    const selectId = warningElementId.replace('_warning', '');
+    const selectEl = document.getElementById(selectId);
+    
+    // Licences non valides en compétition (L, E, D) - Rouge
+    if (['L', 'E', 'D'].includes(licenceType)) {
+        warningEl.textContent = 'Attention non valide en compétition';
+        warningEl.className = 'licence-warning-message invalid';
+        warningEl.classList.remove('d-none');
+        // Appliquer le style rouge au select
+        if (selectEl) {
+            selectEl.classList.add('licence-invalid');
+            selectEl.classList.remove('licence-warning');
+        }
+    }
+    // Licence sous conditions (P) - Orange
+    else if (licenceType === 'P') {
+        warningEl.textContent = 'Sous conditions et limitations';
+        warningEl.className = 'licence-warning-message conditional';
+        warningEl.classList.remove('d-none');
+        // Appliquer le style orange au select
+        if (selectEl) {
+            selectEl.classList.add('licence-warning');
+            selectEl.classList.remove('licence-invalid');
+        }
+    }
+    // Autres licences - Masquer le message et retirer les styles
+    else {
+        warningEl.classList.add('d-none');
+        if (selectEl) {
+            selectEl.classList.remove('licence-invalid', 'licence-warning');
+        }
+    }
+}
 
 /**
  * Configure les listeners pour mettre à jour automatiquement le blason
@@ -369,6 +436,8 @@ function showSearchResult() {
         prefillFormFields(selectedArcher);
         // Configurer les listeners pour le blason maintenant que le modal est ouvert
         setupBlasonAutoUpdate();
+        // Configurer les listeners pour les avertissements de licence
+        setupLicenceTypeWarnings();
         // Charger les produits buvette
         if (typeof loadBuvetteProduits === 'function') loadBuvetteProduits();
         modalElement.removeEventListener('shown.bs.modal', onModalShown);
@@ -427,6 +496,8 @@ function prefillFormFields(archer) {
                     typeLicenceSelect.value = firstLetter;
                     typeLicenceSelect.disabled = true; // Re-désactiver
                     console.log('✓ Type licence pré-rempli:', firstLetter);
+                    // Afficher l'avertissement si nécessaire
+                    updateLicenceWarning(firstLetter, 'type_licence_warning');
                     found = true;
                     break;
                 }
@@ -1463,6 +1534,10 @@ window.editInscription = function(inscriptionId) {
             setVal('edit-saison', inscription.saison);
             setVal('edit-type_certificat_medical', inscription.type_certificat_medical);
             setVal('edit-type_licence', inscription.type_licence);
+            // Afficher l'avertissement si nécessaire
+            if (inscription.type_licence) {
+                updateLicenceWarning(inscription.type_licence, 'edit-type_licence_warning');
+            }
             let crVal = inscription.creation_renouvellement;
             if (crVal === 1 || crVal === '1') crVal = 'C';
             else if (crVal === 2 || crVal === '2') crVal = 'R';
