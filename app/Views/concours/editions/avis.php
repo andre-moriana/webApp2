@@ -39,8 +39,4 @@
         <h4>Informations</h4>
         <p>L'inscription à ce concours est obligatoire. Les inscriptions sont à effectuer auprès du club organisateur ou via le lien d'inscription fourni.</p>
     </div>
-
-    <div class="mt-4 text-end">
-        <p><em>Document généré le <?= date('d/m/Y à H:i') ?></em></p>
-    </div>
 </div>

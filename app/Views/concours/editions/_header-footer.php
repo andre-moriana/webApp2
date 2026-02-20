@@ -1,8 +1,7 @@
 <?php
 /**
- * En-tête et pied de page pour les documents d'édition concours
+ * En-tête pour les documents d'édition concours
  * En-tête : logo club organisateur (gauche) | titre compétition (centre)
- * Pied de page : informations standard
  */
 $clubOrganisateurId = $concours->club_organisateur ?? null;
 $clubOrganisateur = $clubOrganisateurId ? ($clubsMap[$clubOrganisateurId] ?? $clubsMap[(string)$clubOrganisateurId] ?? null) : null;
@@ -37,12 +36,3 @@ $titreCompetition = htmlspecialchars($concours->titre_competition ?? $concours->
         </div>
     </div>
 </header>
-
-<!-- Pied de page document édition -->
-<footer class="edition-doc-footer">
-    <div class="edition-doc-footer-inner">
-        <span class="edition-doc-footer-left"><?= htmlspecialchars($docTitle ?? 'Document') ?></span>
-        <span class="edition-doc-footer-center">Document généré le <?= date('d/m/Y à H:i') ?></span>
-        <span class="edition-doc-footer-right"><?= htmlspecialchars($clubName ?? '') ?></span>
-    </div>
-</footer>
