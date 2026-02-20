@@ -166,8 +166,8 @@ $dateFooter = date('d/m/Y H:i');
             $baseClassementUrl = '/concours/' . (int)$concoursId . '/editions?doc=classement';
             $types = [
                 'general' => 'Général (tous les archers)',
-                'regional' => 'Régional (2 premiers chiffres licence = club organisateur)',
-                'departemental' => 'Départemental (4 premiers chiffres licence = club organisateur)'
+                'regional' => 'Régional (2 premiers chiffres du club de l\'archer = club organisateur)',
+                'departemental' => 'Départemental (4 premiers chiffres du club de l\'archer = club organisateur)'
             ];
             foreach ($types as $val => $label):
                 $url = $baseClassementUrl . '&type=' . $val;
