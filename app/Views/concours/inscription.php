@@ -378,9 +378,23 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                     echo '<!-- DEBUG: $categoriesClassement count: ' . count($categoriesClassement) . ' -->';
                                 }
                                 if (!empty($categoriesClassement)): ?>
-                                    <?php foreach ($categoriesClassement as $categorie): ?>
-                                        <option value="<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>">
-                                            <?= htmlspecialchars($categorie['lb_categorie_classement'] ?? '') ?> (<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>)
+                                    <?php 
+                                    // Pour Nature et 3D, remplacer CL par TL dans l'affichage
+                                    $isNatureOr3D = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N'], true);
+                                    foreach ($categoriesClassement as $categorie): 
+                                        $abv = $categorie['abv_categorie_classement'] ?? '';
+                                        $lb = $categorie['lb_categorie_classement'] ?? '';
+                                        // Remplacer CL par TL dans l'affichage pour Nature et 3D
+                                        if ($isNatureOr3D && $abv === 'CL') {
+                                            $abvDisplay = 'TL';
+                                            $lbDisplay = str_replace('CL', 'TL', $lb);
+                                        } else {
+                                            $abvDisplay = $abv;
+                                            $lbDisplay = $lb;
+                                        }
+                                    ?>
+                                        <option value="<?= htmlspecialchars($abv) ?>">
+                                            <?= htmlspecialchars($lbDisplay) ?> (<?= htmlspecialchars($abvDisplay) ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -569,10 +583,24 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <label for="edit-categorie_classement" class="form-label">Catégorie de classement</label>
                             <select id="edit-categorie_classement" class="form-control">
                                 <option value="">Sélectionner une catégorie</option>
-                                <?php if (!empty($categoriesClassement)): ?>
-                                    <?php foreach ($categoriesClassement as $categorie): ?>
-                                        <option value="<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>">
-                                            <?= htmlspecialchars($categorie['lb_categorie_classement'] ?? '') ?> (<?= htmlspecialchars($categorie['abv_categorie_classement'] ?? '') ?>)
+                                <?php 
+                                // Pour Nature et 3D, remplacer CL par TL dans l'affichage
+                                $isNatureOr3D = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N'], true);
+                                if (!empty($categoriesClassement)): ?>
+                                    <?php foreach ($categoriesClassement as $categorie): 
+                                        $abv = $categorie['abv_categorie_classement'] ?? '';
+                                        $lb = $categorie['lb_categorie_classement'] ?? '';
+                                        // Remplacer CL par TL dans l'affichage pour Nature et 3D
+                                        if ($isNatureOr3D && $abv === 'CL') {
+                                            $abvDisplay = 'TL';
+                                            $lbDisplay = str_replace('CL', 'TL', $lb);
+                                        } else {
+                                            $abvDisplay = $abv;
+                                            $lbDisplay = $lb;
+                                        }
+                                    ?>
+                                        <option value="<?= htmlspecialchars($abv) ?>">
+                                            <?= htmlspecialchars($lbDisplay) ?> (<?= htmlspecialchars($abvDisplay) ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
