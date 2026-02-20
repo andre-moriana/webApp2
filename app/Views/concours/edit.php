@@ -205,6 +205,60 @@
             </div>
             <input type="hidden" name="departs_json" id="departs_json" value="">
         </div>
+
+        <!-- Section Arbitres -->
+        <div class="form-group arbitres-section" style="margin-top: 20px;">
+            <h4>Arbitres</h4>
+            <p class="text-muted small">Recherchez par numéro de licence dans le fichier XML, puis ajoutez les arbitres (jury, arbitre, entraineur) avec leur rôle et ordre.</p>
+            <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="btn-add-arbitre">
+                <i class="fas fa-plus"></i> Ajouter un arbitre
+            </button>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm" id="arbitres-table">
+                    <thead>
+                        <tr>
+                            <th>N° ordre</th>
+                            <th>Licence</th>
+                            <th>Nom</th>
+                            <th>Rôle</th>
+                            <th>Responsable</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="arbitres-tbody">
+                        <?php
+                        $arbitres = isset($concours->arbitres) ? $concours->arbitres : [];
+                        if (is_object($arbitres)) $arbitres = (array)$arbitres;
+                        if (!empty($arbitres)):
+                            foreach ($arbitres as $i => $a):
+                                $a = (array)$a;
+                                $licence = trim($a['IDLicence'] ?? $a['id_licence'] ?? '');
+                                $responsable = !empty($a['responsable']);
+                                $juryVal = (int)($a['Jury_arbitre'] ?? 2);
+                                if (!in_array($juryVal, [1, 2, 3])) $juryVal = 2;
+                                $noOrdre = (int)($a['no_ordre'] ?? $i);
+                                $nom = $a['nom_display'] ?? trim(($a['first_name'] ?? '') . ' ' . ($a['name'] ?? '')) ?: $licence;
+                        ?>
+                        <tr data-licence="<?= htmlspecialchars($licence) ?>" data-nom="<?= htmlspecialchars($nom) ?>" data-jury="<?= $juryVal ?>">
+                            <td><input type="number" class="form-control form-control-sm arbitre-no-ordre" value="<?= $noOrdre ?>" min="0" style="width: 70px;"></td>
+                            <td class="arbitre-licence"><?= htmlspecialchars($licence) ?></td>
+                            <td class="arbitre-nom"><?= htmlspecialchars($nom) ?></td>
+                            <td>
+                                <select class="form-select form-select-sm arbitre-role">
+                                    <option value="1" <?= $juryVal === 1 ? 'selected' : '' ?>>Jury d'appel</option>
+                                    <option value="2" <?= $juryVal === 2 ? 'selected' : '' ?>>Arbitre</option>
+                                    <option value="3" <?= $juryVal === 3 ? 'selected' : '' ?>>Entraineur</option>
+                                </select>
+                            </td>
+                            <td><input type="checkbox" class="form-check-input arbitre-responsable" <?= $responsable ? 'checked' : '' ?>></td>
+                            <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove-arbitre"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                        <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            <input type="hidden" name="arbitres_json" id="arbitres_json" value="">
+        </div>
     </div>
 
     <!-- Sections encadrées en bas -->
@@ -301,10 +355,62 @@
     </div>
 </div>
 
+<!-- Modale pour ajouter un arbitre -->
+<div class="modal fade" id="arbitreModal" tabindex="-1" aria-labelledby="arbitreModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="arbitreModalLabel">Ajouter un arbitre</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="arbitre-licence-search" class="form-label">Numéro de licence <span class="text-muted">(recherche dans le fichier XML)</span></label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="arbitre-licence-search" placeholder="Entrez le numéro de licence..." autocomplete="off">
+                        <button class="btn btn-primary" type="button" id="btn-search-arbitre">
+                            <i class="fas fa-search"></i> Rechercher
+                        </button>
+                    </div>
+                    <div id="arbitre-search-result" class="mt-2"></div>
+                </div>
+                <div id="arbitre-form-fields" class="border rounded p-3 mt-2" style="display: none;">
+                    <div class="mb-2"><strong id="arbitre-found-nom"></strong> <span class="text-muted" id="arbitre-found-licence"></span></div>
+                    <div class="mb-2">
+                        <label class="form-label">Rôle</label>
+                        <select class="form-select form-select-sm" id="arbitre-modal-role">
+                            <option value="1">Jury d'appel</option>
+                            <option value="2" selected>Arbitre</option>
+                            <option value="3">Entraineur</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" id="arbitre-modal-responsable">
+                            Responsable arbitre
+                        </label>
+                    </div>
+                    <div class="mb-2">
+                        <label for="arbitre-modal-ordre" class="form-label">N° ordre</label>
+                        <input type="number" class="form-control form-control-sm" id="arbitre-modal-ordre" min="0" value="0" style="width: 80px;">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" id="btn-add-arbitre-confirm">
+                        <i class="fas fa-plus"></i> Ajouter à la liste
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.js"></script>
 <script src="/public/assets/js/concours-form-config.js"></script>
 <script src="/public/assets/js/concours.js"></script>
 <script src="/public/assets/js/concours-departs.js"></script>
+<script src="/public/assets/js/concours-arbitres.js"></script>
 <script src="/public/assets/js/concours-lieu-map.js"></script>
