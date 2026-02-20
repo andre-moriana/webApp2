@@ -159,6 +159,24 @@ $dateFooter = date('d/m/Y H:i');
 </head>
 <body>
     <div class="no-print mb-3">
+        <?php if ($doc === 'classement'): ?>
+        <label class="me-2">Type de classement :</label>
+        <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
+            <?php
+            $baseClassementUrl = '/concours/' . (int)$concoursId . '/editions?doc=classement';
+            $types = [
+                'general' => 'Général (tous les archers)',
+                'regional' => 'Régional (2 premiers chiffres licence = club organisateur)',
+                'departemental' => 'Départemental (4 premiers chiffres licence = club organisateur)'
+            ];
+            foreach ($types as $val => $label):
+                $url = $baseClassementUrl . '&type=' . $val;
+                $sel = ($typeClassement ?? 'general') === $val ? ' selected' : '';
+            ?>
+            <option value="<?= htmlspecialchars($url) ?>"<?= $sel ?>><?= htmlspecialchars($label) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <?php endif; ?>
         <button type="button" class="btn btn-primary" onclick="window.print()">
             <i class="fas fa-print me-1"></i>Imprimer
         </button>

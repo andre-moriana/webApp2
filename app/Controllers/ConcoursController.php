@@ -1825,6 +1825,24 @@ class ConcoursController {
         }
         unset($insc);
 
+        // Filtre type de classement (général / régional / départemental)
+        $typeClassement = $_GET['type'] ?? 'general';
+        $validTypes = ['general', 'regional', 'departemental'];
+        if (!in_array($typeClassement, $validTypes, true)) {
+            $typeClassement = 'general';
+        }
+        $clubOrganisateurCode = '';
+        $clubOrgId = $concours->club_organisateur ?? null;
+        if ($clubOrgId !== null) {
+            $clubOrg = $clubsMap[$clubOrgId] ?? $clubsMap[(string)$clubOrgId] ?? null;
+            if (!$clubOrg && is_string($clubOrgId)) {
+                $clubOrg = $clubsMap[trim($clubOrgId)] ?? null;
+            }
+            if ($clubOrg) {
+                $clubOrganisateurCode = trim((string)($clubOrg['nameShort'] ?? $clubOrg['name_short'] ?? ''));
+            }
+        }
+
         $doc = $_GET['doc'] ?? null;
         $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement'];
 
