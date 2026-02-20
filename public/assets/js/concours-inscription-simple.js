@@ -180,6 +180,86 @@ function updateLicenceWarning(licenceType, warningElementId) {
 }
 
 /**
+ * Applique la colorisation rouge à la catégorie si elle n'est pas exacte
+ */
+function applyCategorieColorization() {
+    const categorieSelect = document.getElementById('categorie_classement');
+    if (!categorieSelect || !categorieSelect.value) {
+        return;
+    }
+    
+    // Vérifier si la catégorie sélectionnée correspond exactement à CATEGORIE du XML
+    if (selectedArcher && selectedArcher.CATEGORIE) {
+        const categorieXml = (selectedArcher.CATEGORIE || '').trim().toUpperCase();
+        const selectedAbv = categorieSelect.value.trim().toUpperCase();
+        
+        // Si ce n'est pas une correspondance exacte, colorer en rouge
+        if (selectedAbv !== categorieXml) {
+            // Vérifier aussi les transformations possibles
+            const sexeXml = (selectedArcher.SEXE || '').trim();
+            const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
+            const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
+            
+            let isExactMatch = false;
+            
+            // Vérifier les transformations possibles
+            if (isNature && categorieXml.startsWith('CL')) {
+                const clPattern = /^CL(.+)$/i;
+                const match = categorieXml.match(clPattern);
+                if (match && sexeLetter) {
+                    const reste = match[1].replace(/[HFD]$/i, '');
+                    const transformed = reste + sexeLetter + 'TL';
+                    if (selectedAbv === transformed) {
+                        isExactMatch = true;
+                    }
+                }
+            }
+            
+            if (!isExactMatch && categorieXml.startsWith('AD') && sexeLetter) {
+                const adPattern = /^AD(.+)$/i;
+                const match = categorieXml.match(adPattern);
+                if (match) {
+                    const reste = match[1].replace(/[HFD]$/i, '');
+                    const format1 = reste + sexeLetter + 'AD';
+                    const format2 = reste + 'AD' + sexeLetter;
+                    if (selectedAbv === format1 || selectedAbv === format2) {
+                        isExactMatch = true;
+                    }
+                }
+            }
+            
+            if (!isExactMatch && categorieXml.startsWith('BB') && sexeLetter) {
+                const bbPattern = /^BB(.+)$/i;
+                const match = categorieXml.match(bbPattern);
+                if (match) {
+                    const reste = match[1].replace(/[HFD]$/i, '');
+                    const transformed = reste + sexeLetter + 'BB';
+                    if (selectedAbv === transformed) {
+                        isExactMatch = true;
+                    }
+                }
+            }
+            
+            // Appliquer ou retirer la classe rouge
+            if (!isExactMatch) {
+                categorieSelect.classList.add('categorie-auto-selected');
+            } else {
+                categorieSelect.classList.remove('categorie-auto-selected');
+            }
+        } else {
+            categorieSelect.classList.remove('categorie-auto-selected');
+        }
+        
+        // Retirer la classe si l'utilisateur change manuellement la sélection
+        const removeRedClass = function() {
+            categorieSelect.classList.remove('categorie-auto-selected');
+            categorieSelect.removeEventListener('change', removeRedClass);
+        };
+        categorieSelect.addEventListener('change', removeRedClass);
+    }
+}
+
+/**
  * Configure les listeners pour mettre à jour automatiquement le blason
  * quand la catégorie ou la distance change
  */
@@ -434,6 +514,8 @@ function showSearchResult() {
     modalElement.addEventListener('shown.bs.modal', function onModalShown() {
         // Réessayer le pré-remplissage au cas où certains champs ne seraient pas encore disponibles
         prefillFormFields(selectedArcher);
+        // Vérifier et appliquer la colorisation rouge si nécessaire
+        applyCategorieColorization();
         // Configurer les listeners pour le blason maintenant que le modal est ouvert
         setupBlasonAutoUpdate();
         // Configurer les listeners pour les avertissements de licence
@@ -1027,6 +1109,11 @@ function prefillFormFields(archer) {
                             categorieSelect.addEventListener('change', removeRedClassFallback);
                             
                             console.log('✓ Catégorie pré-remplie via CATEGORIE (fallback):', categorieSelect.value, 'depuis XML:', categorieXmlFallback);
+                            
+                            // Appliquer la colorisation après un court délai pour s'assurer que le DOM est mis à jour
+                            setTimeout(() => {
+                                applyCategorieColorization();
+                            }, 100);
                             
                             setTimeout(() => {
                                 fillDistanceAndBlasonFromCategorie(categorieFoundFallback.abv_categorie_classement);
