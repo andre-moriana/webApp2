@@ -4,6 +4,7 @@ class Autoloader {
         'app/Controllers/',
         'app/Models/',
         'app/Services/',
+        'app/Helpers/',
         'app/Config/'
     ];
     public static function register() {

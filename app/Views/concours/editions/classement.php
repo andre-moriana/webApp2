@@ -33,21 +33,39 @@ $inscriptions1erTir = array_filter($inscriptions, function($insc) {
 // Filtre type de classement : général (tous), régional (2 premiers chiffres licence = club organisateur), départemental (4 premiers chiffres)
 // Licence FFTA : 7 chiffres + 1 lettre (ex. 1313054V), parfois 8 chiffres + lettre. Normaliser pour comparaison.
 $typeClassement = $typeClassement ?? 'general';
-$clubOrganisateurCode = preg_replace('/\D/', '', (string)($clubOrganisateurCode ?? ''));
+$clubOrganisateurCodeRaw = (string)($clubOrganisateurCode ?? '');
+$clubOrganisateurCode = preg_replace('/\D/', '', $clubOrganisateurCodeRaw);
+$prefixOrg = '';
 if ($typeClassement === 'regional' && strlen($clubOrganisateurCode) >= 2) {
     $prefixOrg = substr($clubOrganisateurCode, 0, 2);
+    $licencesSample = array_slice(array_map(function($i) {
+        $l = preg_replace('/\D/', '', trim((string)($i['numero_licence'] ?? '')));
+        if (strlen($l) === 7) $l = '0' . $l;
+        return $l;
+    }, $inscriptions1erTir), 0, 5);
+    $nbAvant = count($inscriptions1erTir);
     $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg) {
         $lic = preg_replace('/\D/', '', trim((string)($insc['numero_licence'] ?? '')));
         if (strlen($lic) === 7) $lic = '0' . $lic; // Normaliser 7 → 8 chiffres
         return $lic !== '' && strlen($lic) >= 2 && substr($lic, 0, 2) === $prefixOrg;
     });
+    AppLogger::log('classement', '[regional] typeClassement=' . $typeClassement . ' | clubOrganisateurCodeRaw=' . json_encode($clubOrganisateurCodeRaw) . ' | clubOrganisateurCode=' . json_encode($clubOrganisateurCode) . ' | prefixOrg=' . json_encode($prefixOrg) . ' | licencesSample=' . json_encode($licencesSample) . ' | nbAvant=' . $nbAvant . ' | nbApres=' . count($inscriptions1erTir));
 } elseif ($typeClassement === 'departemental' && strlen($clubOrganisateurCode) >= 4) {
     $prefixOrg = substr($clubOrganisateurCode, 0, 4);
+    $licencesSample = array_slice(array_map(function($i) {
+        $l = preg_replace('/\D/', '', trim((string)($i['numero_licence'] ?? '')));
+        if (strlen($l) === 7) $l = '0' . $l;
+        return $l;
+    }, $inscriptions1erTir), 0, 5);
+    $nbAvant = count($inscriptions1erTir);
     $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg) {
         $lic = preg_replace('/\D/', '', trim((string)($insc['numero_licence'] ?? '')));
         if (strlen($lic) === 7) $lic = '0' . $lic;
         return $lic !== '' && strlen($lic) >= 4 && substr($lic, 0, 4) === $prefixOrg;
     });
+    AppLogger::log('classement', '[departemental] typeClassement=' . $typeClassement . ' | clubOrganisateurCodeRaw=' . json_encode($clubOrganisateurCodeRaw) . ' | clubOrganisateurCode=' . json_encode($clubOrganisateurCode) . ' | prefixOrg=' . json_encode($prefixOrg) . ' | licencesSample=' . json_encode($licencesSample) . ' | nbAvant=' . $nbAvant . ' | nbApres=' . count($inscriptions1erTir));
+} elseif (($typeClassement === 'regional' || $typeClassement === 'departemental')) {
+    AppLogger::log('classement', '[filtre NON appliqué] typeClassement=' . $typeClassement . ' | clubOrganisateurCode=' . json_encode($clubOrganisateurCode) . ' | strlen=' . strlen($clubOrganisateurCode));
 }
 
 // Grouper par catégorie de classement
