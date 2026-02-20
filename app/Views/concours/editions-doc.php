@@ -69,7 +69,7 @@ $docTitle = $docTitles[$doc] ?? 'Document';
         @media print {
             /* Réserver l'espace en haut et en bas de CHAQUE page pour header/footer */
             @page {
-                margin-top: 35mm;
+                margin-top: 15mm;
                 margin-bottom: 15mm;
             }
             .no-print { display: none !important; }
