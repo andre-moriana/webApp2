@@ -410,7 +410,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.js"></script>
 <script src="/public/assets/js/concours-form-config.js"></script>
-<script src="/public/assets/js/concours.js"></script>
 <script src="/public/assets/js/concours-departs.js"></script>
 <script src="/public/assets/js/concours-arbitres.js"></script>
+<script src="/public/assets/js/concours.js"></script>
 <script src="/public/assets/js/concours-lieu-map.js"></script>

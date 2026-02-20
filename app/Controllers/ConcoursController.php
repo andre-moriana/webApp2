@@ -1173,7 +1173,11 @@ class ConcoursController {
         unset($data['arbitres_json']);
         
         $response = $this->apiService->updateConcours($id, $data);
-        // Optionally handle errors here
+        if (!$response['success']) {
+            $_SESSION['error'] = $response['message'] ?? $response['error'] ?? 'Erreur lors de la mise à jour du concours.';
+            header('Location: /concours/edit/' . $id);
+            exit();
+        }
         header('Location: /concours');
         exit();
     }
