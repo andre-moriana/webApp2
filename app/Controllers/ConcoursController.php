@@ -2109,6 +2109,9 @@ class ConcoursController {
         if (isset($_POST['serie_mode']) && $_POST['serie_mode'] !== '' && $_POST['serie_mode'] !== 'both') {
             $params['serie'] = $_POST['serie_mode'];
         }
+        if (isset($_POST['format']) && $_POST['format'] === '2x21') {
+            $params['format'] = '2x21';
+        }
         if (!empty($params)) {
             $redirectUrl .= '?' . http_build_query($params);
         }
