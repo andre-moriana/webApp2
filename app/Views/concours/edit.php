@@ -29,6 +29,7 @@
           'disciplines' => $disciplines ?? [],
           'typeCompetitions' => $typeCompetitions ?? [],
           'niveauChampionnat' => $niveauChampionnat ?? [],
+          'typePublications' => $typePublications ?? [],
           'concoursData' => isset($concours) ? $concours : null
       ], JSON_UNESCAPED_UNICODE)) ?>">
     
