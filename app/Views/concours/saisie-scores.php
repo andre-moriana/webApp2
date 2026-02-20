@@ -8,26 +8,27 @@
 $concoursId = $concoursId ?? ($concours->id ?? $concours->_id ?? null);
 $isNature = $isNature ?? false;
 $isSalleTae = $isSalleTae ?? false;
-// Nature 21 cibles x2 : P1 + P2 (colonne P2 uniquement si concours 21 x2)
+// Nature 21 cibles x2 : P1 + P2 — détection multi-sources (titre, type_competition, type_competition_text)
 // idformat_competition : 13 = 21 cibles (1 passage), 14 = 21 cibles x 2 (2 passages)
-// ?format=2x21 en secours si le type n'est pas détecté
+// ?format=2x21 en secours manuel si le type n'est pas détecté
 $force2x21 = isset($_GET['format']) && $_GET['format'] === '2x21';
-if (!isset($isNature2x21) || $force2x21) {
-    $c = is_object($concours) ? (array)$concours : $concours;
-    $tc = $c['type_competition'] ?? $c['idformat_competition'] ?? null;
-    $tcName = $c['type_competition_name'] ?? '';
-    $tcText = $c['type_competition_text'] ?? '';
-    $nameOrText = (string)$tcName . ' ' . (string)$tcText;
-    $isNature2x21 = ($isNature && (
-        ((int)$tc === 14) ||
-        (stripos($nameOrText, '21 cibles x 2') !== false) ||
-        (stripos($nameOrText, '21 cibles x2') !== false) ||
-        (stripos($nameOrText, '21 *2') !== false) ||
-        (stripos($nameOrText, '21x2') !== false) ||
-        (preg_match('/21\s*cibles?\s*x\s*2/i', $nameOrText))
-    )) || $force2x21;
-}
-$isNature2x21 = $isNature2x21 ?? false;
+$c = is_object($concours) ? (array)$concours : $concours;
+$tc = $c['type_competition'] ?? $c['idformat_competition'] ?? null;
+$tcName = $c['type_competition_name'] ?? $c['lb_format_competition'] ?? '';
+$tcText = $c['type_competition_text'] ?? '';
+$titre = $c['titre_competition'] ?? $c['nom'] ?? '';
+$searchText = (string)$tcName . ' ' . (string)$tcText . ' ' . (string)$titre;
+$detected2x21 = $isNature && (
+    ((int)$tc === 14) ||
+    (stripos($searchText, '21 cibles x 2') !== false) ||
+    (stripos($searchText, '21 cibles x2') !== false) ||
+    (stripos($searchText, '21 cibles × 2') !== false) ||
+    (stripos($searchText, '21 cibles ×2') !== false) ||
+    (stripos($searchText, '21x2') !== false) ||
+    (stripos($searchText, '21 *2') !== false) ||
+    (preg_match('/21\s*cibles?\s*[x×*]\s*2/i', $searchText))
+);
+$isNature2x21 = ($isNature2x21 ?? $detected2x21) || $force2x21;
 $isTwoSeries = $isSalleTae || $isNature2x21; // Salle/TAE ou Nature 21 cibles x2
 $resultats = $resultats ?? [];
 $departsForSelect = $departsForSelect ?? [];
@@ -150,11 +151,6 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                 <?php elseif ($isNature): ?>
                     <i class="fas fa-leaf me-2"></i>Concours Nature – Saisie des scores
                     <small class="d-block text-muted mt-1">Score total et détail des impacts (20-15, 20-10, 15-15, 15-10, 15, 10, manqués)</small>
-                    <small class="d-block mt-1">
-                        <a href="<?= htmlspecialchars($baseUrlScores . '?format=2x21' . ($departSelected !== null ? '&depart=' . $departSelected : '')) ?>" class="text-primary">
-                            <i class="fas fa-exchange-alt me-1"></i>Ce concours a 2 passages (P1 et P2) ? Cliquez ici pour afficher les colonnes P1/P2
-                        </a>
-                    </small>
                 <?php else: ?>
                     <i class="fas fa-bullseye me-2"></i>Saisie des scores
                     <small class="d-block text-muted mt-1">Score total par archer</small>
