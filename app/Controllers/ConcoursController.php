@@ -1975,23 +1975,10 @@ class ConcoursController {
         }
         $isNature = $abv_discipline && in_array($abv_discipline, ['N', '3', 'C', '3D']);
         $isSalleTae = $abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H']);
-        // Nature 21 cibles x2 : 2 séries P1 et P2 — détection multi-sources pour affichage direct du bon format
-        // idformat_competition : 13 = 21 cibles (1 passage), 14 = 21 cibles x 2 (2 passages)
-        $typeCompetition = $concours->type_competition ?? $concours['type_competition'] ?? $concours->idformat_competition ?? null;
-        $typeCompetitionName = $concours->type_competition_name ?? $concours['type_competition_name'] ?? $concours->lb_format_competition ?? '';
-        $typeCompetitionText = $concours->type_competition_text ?? $concours['type_competition_text'] ?? '';
-        $titreCompetition = $concours->titre_competition ?? $concours['titre_competition'] ?? $concours->nom ?? '';
-        $searchText = (string)$typeCompetitionName . ' ' . (string)$typeCompetitionText . ' ' . (string)$titreCompetition;
-        $isNature2x21 = $isNature && (
-            ((int)$typeCompetition === 14) ||
-            (stripos($searchText, '21 cibles x 2') !== false) ||
-            (stripos($searchText, '21 cibles x2') !== false) ||
-            (stripos($searchText, '21 cibles × 2') !== false) ||
-            (stripos($searchText, '21 cibles ×2') !== false) ||
-            (stripos($searchText, '21x2') !== false) ||
-            (stripos($searchText, '21 *2') !== false) ||
-            (preg_match('/21\s*cibles?\s*[x×*]\s*2/i', $searchText))
-        );
+        // Nature 21 cibles x2 : type_competition 13 = 21 cibles (1 passage), 14 = 21 cibles x 2 (2 passages)
+        $c = is_object($concours) ? (array)$concours : $concours;
+        $typeCompetition = (int)($c['type_competition'] ?? $c['idformat_competition'] ?? 0);
+        $isNature2x21 = $isNature && $typeCompetition === 14;
 
         // Construire les libellés des départs pour le sélecteur
         $departsForSelect = [];
