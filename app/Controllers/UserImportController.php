@@ -162,6 +162,77 @@ class UserImportController {
         exit;
     }
 
+    /**
+     * Import d'un seul utilisateur par numéro de licence (GET /users/import-one?licence=XXXXX)
+     */
+    public function importOneByLicence() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $_SESSION['error'] = 'Veuillez vous connecter.';
+            header('Location: /login');
+            exit;
+        }
+        try {
+            $clubId = $_SESSION['user']['clubId'] ?? null;
+            PermissionHelper::requirePermission(
+                PermissionService::RESOURCE_USERS_ALL,
+                PermissionService::ACTION_VIEW,
+                $clubId
+            );
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Permissions insuffisantes.';
+            header('Location: /users/import');
+            exit;
+        }
+        $licence = trim($_GET['licence'] ?? $_GET['licence_number'] ?? '');
+        if ($licence === '') {
+            $_SESSION['error'] = 'Paramètre licence requis (ex. ?licence=1055313R).';
+            header('Location: /users/import');
+            exit;
+        }
+        $result = $this->importOneUserByLicence($licence);
+        if ($result['success']) {
+            $_SESSION['success'] = 'Utilisateur importé : ' . ($result['data']['first_name'] ?? '') . ' ' . ($result['data']['name'] ?? '') . ' (licence ' . $licence . ').';
+        } else {
+            $_SESSION['error'] = $result['error'] ?? 'Erreur lors de l\'import.';
+        }
+        header('Location: /users/import');
+        exit;
+    }
+
+    /**
+     * Logique commune : importer un utilisateur par numéro de licence. Retourne ['success' => bool, 'data' => ..., 'error' => ...].
+     */
+    private function importOneUserByLicence($licence) {
+        $licence = trim($licence);
+        $xmlPath = __DIR__ . '/../../public/data/users-licences.xml';
+        if (!file_exists($xmlPath) || !is_readable($xmlPath)) {
+            return ['success' => false, 'error' => 'Fichier XML introuvable.'];
+        }
+        $entry = $this->findXmlEntryByLicence($xmlPath, $licence);
+        if (!$entry) {
+            return ['success' => false, 'error' => 'Licence non trouvée dans le XML : ' . $licence];
+        }
+        $userData = $this->processUserEntry($entry, '');
+        if ($userData === null) {
+            return ['success' => false, 'error' => 'Entrée XML invalide.'];
+        }
+        $results = $this->importUserBatch([$userData]);
+        $result = $results[0] ?? null;
+        if (!$result || empty($result['success'])) {
+            return ['success' => false, 'error' => $result['message'] ?? 'Erreur lors de l\'import.'];
+        }
+        return [
+            'success' => true,
+            'data' => [
+                'user_id' => $result['user_id'] ?? null,
+                'licenceNumber' => $userData['licenceNumber'] ?? null,
+                'first_name' => $userData['first_name'] ?? null,
+                'name' => $userData['name'] ?? null,
+                'club' => $userData['club'] ?? null
+            ]
+        ];
+    }
+
     public function importSingleXmlUser() {
         header('Content-Type: application/json');
 
@@ -197,56 +268,13 @@ class UserImportController {
             return;
         }
 
-        $xmlPath = __DIR__ . '/../../public/data/users-licences.xml';
-        if (!file_exists($xmlPath) || !is_readable($xmlPath)) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Fichier XML introuvable']);
+        $result = $this->importOneUserByLicence($licence);
+        if (!$result['success']) {
+            http_response_code(isset($result['error']) && strpos($result['error'], 'non trouvée') !== false ? 404 : 400);
+            echo json_encode(['success' => false, 'error' => $result['error']]);
             return;
         }
-
-        $entry = $this->findXmlEntryByLicence($xmlPath, $licence);
-        if (!$entry) {
-            http_response_code(404);
-            error_log("Licence non trouvée dans le XML: " . $licence);
-            echo json_encode(['success' => false, 'error' => 'Licence non trouvee dans le XML']);
-            return;
-        }
-
-        error_log("Entrée XML trouvée pour licence " . $licence);
-
-        $userData = $this->processUserEntry($entry, '');
-        if ($userData === null) {
-            http_response_code(400);
-            error_log("Erreur lors du traitement de l'entrée XML");
-            echo json_encode(['success' => false, 'error' => 'Entree XML invalide']);
-            return;
-        }
-
-        error_log("userData après traitement: " . json_encode($userData, JSON_UNESCAPED_UNICODE));
-
-        $results = $this->importUserBatch([$userData]);
-        error_log("Résultats importUserBatch: " . json_encode($results, JSON_UNESCAPED_UNICODE));
-        
-        $result = $results[0] ?? null;
-        if (!$result || empty($result['success'])) {
-            http_response_code(500);
-            error_log("ERREUR: importUserBatch a échoué. Result: " . json_encode($result, JSON_UNESCAPED_UNICODE));
-            echo json_encode(['success' => false, 'error' => $result['message'] ?? 'Erreur lors de l\'import']);
-            return;
-        }
-
-        error_log("user_id retourné: " . ($result['user_id'] ?? 'NULL'));
-
-        echo json_encode([
-            'success' => true,
-            'data' => [
-                'user_id' => $result['user_id'] ?? null,
-                'licenceNumber' => $userData['licenceNumber'] ?? null,
-                'first_name' => $userData['first_name'] ?? null,
-                'name' => $userData['name'] ?? null,
-                'club' => $userData['club'] ?? null
-            ]
-        ]);
+        echo json_encode(['success' => true, 'data' => $result['data']]);
     }
     
     /**

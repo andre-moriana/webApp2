@@ -106,6 +106,7 @@ class Router {
         
         // Routes d'import d'utilisateurs (protégées - admin seulement)
         $this->addRoute("GET", "/users/import", "UserImportController@index");
+        $this->addRoute("GET", "/users/import-one", "UserImportController@importOneByLicence");
         $this->addRoute("POST", "/users/import/process", "UserImportController@process");
         
         // Routes des messages privés (protégées)
