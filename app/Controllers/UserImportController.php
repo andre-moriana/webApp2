@@ -361,6 +361,11 @@ class UserImportController {
             $prenom = $parts[1] ?? '';
         }
         
+        // Le backend exige un prénom non vide : utiliser un tiret si absent (noms composés type "REVELLO-ENCABO" sans prénom dans le XML)
+        if (empty($prenom) && (!empty($nom) || !empty($nomComplet))) {
+            $prenom = '-';
+        }
+        
         // Générer un email si absent
         if (empty($email)) {
             $email = $this->generateEmail($nom, $prenom, $idLicence);
@@ -463,16 +468,22 @@ class UserImportController {
     
     private function generateUsername($nom, $prenom, $idLicence) {
         // Générer un username basé sur le nom, prénom et ID licence
+        // Le backend n'accepte que 3 à 20 caractères (a-zA-Z0-9_-)
+        $maxLength = 20;
         $base = strtolower($prenom . $nom);
         $base = preg_replace('/[^a-z0-9]/', '', $base);
         if (empty($base)) {
             $base = 'user' . substr($idLicence, -6);
         }
-        // S'assurer que le username est unique en ajoutant l'ID licence si nécessaire
+        $suffix = '';
         if (!empty($idLicence)) {
-            $base .= substr($idLicence, -4);
+            $suffix = substr(preg_replace('/[^a-zA-Z0-9]/', '', $idLicence), -4);
         }
-        return $base;
+        $maxBaseLen = $maxLength - strlen($suffix);
+        if (strlen($base) > $maxBaseLen) {
+            $base = substr($base, 0, $maxBaseLen);
+        }
+        return $base . $suffix;
     }
     
     private function generatePassword($idLicence) {
