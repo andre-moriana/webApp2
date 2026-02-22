@@ -268,7 +268,53 @@ class ApiService {
                 "message" => "Erreur cURL: " . $curlError
             ];
         }
-        curl_close($ch);
+        
+        // Gérer les erreurs 429 (Too Many Requests) - Rate limiting : retry avec backoff
+        $maxRetries = 3;
+        $retryCount = 0;
+        while ($httpCode === 429 && $retryCount < $maxRetries) {
+            $retryCount++;
+            $waitSeconds = 2 * $retryCount; // 2s, 4s, 6s
+            error_log("Erreur 429 (trop de requêtes). Nouvelle tentative dans {$waitSeconds}s ({$retryCount}/{$maxRetries})");
+            sleep($waitSeconds);
+            curl_close($ch);
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_HEADER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+            if (strpos($url, 'https://') === 0) {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            }
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            if ($method === 'POST') {
+                curl_setopt($ch, CURLOPT_POST, true);
+                if ($data !== null) {
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
+                }
+            } else if ($method === 'PUT') {
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+                if ($data !== null) {
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
+                }
+            } else if ($method === 'DELETE') {
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+            } else if ($method === 'PATCH') {
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+                if ($data !== null) {
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, ['Content-Type: application/json']));
+                }
+            }
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        }
         
         // Gérer les erreurs 401 (Unauthorized) - Token invalide
         if ($httpCode === 401) {
@@ -289,6 +335,22 @@ class ApiService {
                 'unauthorized' => true,
                 'message' => 'Session expirée, veuillez vous reconnecter'
             ];
+        }
+        
+        // Après retries, si on a encore 429, retourner une erreur explicite
+        if ($httpCode === 429) {
+            if (isset($ch)) {
+                curl_close($ch);
+            }
+            return [
+                'success' => false,
+                'status_code' => 429,
+                'message' => 'Trop de requêtes (429). Veuillez ralentir l\'import ou réessayer plus tard.'
+            ];
+        }
+        
+        if (isset($ch)) {
+            curl_close($ch);
         }
         
         // Nettoyer le BOM (Byte Order Mark) qui peut causer des erreurs de décodage

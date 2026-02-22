@@ -511,7 +511,7 @@ class UserImportController {
      */
     private function importUsersFromXMLReader($filePath, $selectedClub = '') {
         $results = [];
-        $batchSize = 50; // Traiter par lots de 50 utilisateurs
+        $batchSize = 20; // Lots plus petits pour éviter le rate limiting (HTTP 429)
         $currentBatch = [];
         $processedCount = 0;
         
@@ -569,7 +569,8 @@ class UserImportController {
                                 $batchResults = $this->importUserBatch($currentBatch);
                                 $results = array_merge($results, $batchResults);
                                 $currentBatch = [];
-                                
+                                // Pause entre les lots pour éviter HTTP 429 (trop de requêtes)
+                                sleep(1);
                                 // Libérer la mémoire
                                 gc_collect_cycles();
                             }
@@ -653,6 +654,8 @@ class UserImportController {
         
         foreach ($users as $userData) {
             try {
+                // Délai entre chaque utilisateur pour éviter le rate limiting (HTTP 429)
+                usleep(400000); // 400 ms
                 // Créer l'utilisateur de base
                 $createData = [
                     'first_name' => $userData['first_name'],
