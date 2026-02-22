@@ -1,5 +1,5 @@
 <?php
-$title = "Créer un nouveau groupe - Portail Archers de Gémenos";
+$title = "Créer un nouveau groupe - Portail Arc Training";
 ?>
 
 <div class="container-fluid">

@@ -1,5 +1,5 @@
 <?php
-$title = "Gestion des clubs - Portail Archers de Gémenos";
+$title = "Gestion des clubs - Portail Arc Training";
 ?>
 <link href="/public/assets/css/clubs-index.css" rel="stylesheet">
 

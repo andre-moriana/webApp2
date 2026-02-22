@@ -82,7 +82,7 @@
                 <div class="text-center mt-4">
                     <small class="text-white">
                         <i class="fas fa-code me-1"></i>
-                        Développé par André Moriana pour les Archers de Gémenos
+                        Développé par André Moriana pour Arc Training
                     </small>
                 </div>
             </div>

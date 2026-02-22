@@ -1,5 +1,5 @@
 <?php
-$title = htmlspecialchars($topic['title'] ?? 'Sujet') . " - Portail Archers de Gémenos";
+$title = htmlspecialchars($topic['title'] ?? 'Sujet') . " - Portail Arc Training";
 ?>
 
 <link rel="stylesheet" href="/public/assets/css/groups-chat.css">

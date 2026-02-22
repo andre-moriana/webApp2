@@ -1,5 +1,5 @@
 <?php
-$title = "Import d'utilisateurs depuis XML - Portail Archers de Gémenos";
+$title = "Import d'utilisateurs depuis XML - Portail Arc Training";
 ?>
 
 <div class="container mt-4">

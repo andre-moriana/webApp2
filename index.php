@@ -1,6 +1,6 @@
 <?php
 /**
- * Portail Web - Archers de Gémenos
+ * Portail Web - Arc Training
  * Point d'entrée principal de l'application
  */
 // Chargement de l'autoloader personnalisé

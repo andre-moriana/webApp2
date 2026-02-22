@@ -329,7 +329,7 @@ class EmailService {
         </div>
         <hr style="border: none; border-top: 1px solid #dee2e6; margin: 20px 0;">
         <p style="font-size: 12px; color: #666;">
-            Ce message a été envoyé depuis le formulaire de contact du Portail Archers de Gémenos.<br>
+            Ce message a été envoyé depuis le formulaire de contact du Portail Arc Training.<br>
             Date : ' . date('d/m/Y à H:i') . '
         </p>
     </div>

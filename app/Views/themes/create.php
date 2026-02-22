@@ -1,5 +1,5 @@
 <?php
-$title = "Créer un thème - Portail Archers de Gémenos";
+$title = "Créer un thème - Portail Arc Training";
 ?>
 
 <div class="container-fluid">

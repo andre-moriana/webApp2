@@ -1,6 +1,6 @@
 <!-- Liste des concours -->
 <?php
-$title = "Gestion des concours - Portail Archers de Gémenos";
+$title = "Gestion des concours - Portail Arc Training";
 ?>
 <div class="container-fluid" data-concours-index data-user-id="<?= htmlspecialchars($_SESSION['user']['id'] ?? '') ?>">
     <?php if (isset($_SESSION['error'])): ?>

@@ -1,5 +1,5 @@
 <?php
-$title = "Portail Archers de Gémenos - Détails de l'événement";
+$title = "Portail Arc Training - Détails de l'événement";
 ?>
 <!-- Inclusion des styles -->
 <link rel="stylesheet" href="/public/assets/css/events.css">

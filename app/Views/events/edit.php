@@ -1,5 +1,5 @@
 <?php
-$title = "Modifier l'événement - Portail Archers de Gémenos";
+$title = "Modifier l'événement - Portail Arc Training";
 ?>
 
 <div class="container">

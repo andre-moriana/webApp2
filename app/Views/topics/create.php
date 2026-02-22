@@ -1,5 +1,5 @@
 <?php
-$title = "Nouveau sujet - Portail Archers de Gémenos";
+$title = "Nouveau sujet - Portail Arc Training";
 ?>
 
 <div class="container-fluid">

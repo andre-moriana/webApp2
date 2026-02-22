@@ -1,5 +1,5 @@
 <?php
-$title = "Gestion des événements - Portail Archers de Gémenos";
+$title = "Gestion des événements - Portail Arc Training";
 ?>
 
 <!-- Inclusion des styles -->

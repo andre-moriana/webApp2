@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajouter un utilisateur - Portail Archers de Gémenos</title>
+    <title>Ajouter un utilisateur - Portail Arc Training</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -317,7 +317,7 @@
                 <div class="text-center mt-4">
                     <small class="text-white">
                         <i class="fas fa-code me-1"></i>
-                        Développé par André Moriana pour les Archers de Gémenos
+                        Développé par André Moriana pour Arc Training
                     </small>
                 </div>
             </div>

@@ -1,5 +1,5 @@
 <?php
-$title = "Paramètres utilisateur - Portail Archers de Gémenos";
+$title = "Paramètres utilisateur - Portail Arc Training";
 include __DIR__ . '/../layouts/header.php';
 ?>
 

@@ -1,5 +1,5 @@
 <?php
-$title = "Gestion des utilisateurs - Portail Archers de Gémenos";
+$title = "Gestion des utilisateurs - Portail Arc Training";
 ?>
 <div class="container-fluid">
     <?php if (isset($_SESSION['error'])): ?>

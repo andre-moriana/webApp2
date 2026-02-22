@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page non trouvée - Archers de Gémenos</title>
+    <title>Page non trouvée - Arc Training</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -19,7 +19,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container-fluid">
             <a class="navbar-brand" href="/dashboard">
-                <i class="fas fa-bullseye me-2"></i> Archers de Gémenos
+                <i class="fas fa-bullseye me-2"></i> Arc Training
             </a>
         </div>
     </nav>
@@ -67,13 +67,13 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-6">
-                    <h5>Portail Archers de Gémenos</h5>
+                    <h5>Portail Arc Training</h5>
                     <p class="mb-0">Gestion de l'application mobile de tir à l'arc</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p class="mb-0">
                         <i class="fas fa-code me-1"></i>
-                        Développé par André Moriana pour les Archers de Gémenos
+                        Développé par André Moriana pour Arc Training
                     </p>
                     <small class="text-muted">Version 1.0.0</small>
                 </div>

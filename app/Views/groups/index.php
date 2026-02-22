@@ -1,5 +1,5 @@
 <?php
-$title = "Gestion des groupes - Portail Archers de Gémenos";
+$title = "Gestion des groupes - Portail Arc Training";
 ?>
 
 <!-- Inclusion des styles -->

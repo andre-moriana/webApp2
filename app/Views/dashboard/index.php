@@ -22,7 +22,7 @@
                 <i class="fas fa-check-circle me-2"></i>
                 Connexion réussie !
             </h4>
-            <p>Bienvenue dans le portail d'administration des Archers de Gémenos.</p>
+            <p>Bienvenue dans le portail d'administration de Arc Training.</p>
             <hr>
             <p class="mb-0">
                 <strong>Utilisateur connecté :</strong> 
