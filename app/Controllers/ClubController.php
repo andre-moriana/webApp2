@@ -45,7 +45,7 @@ class ClubController {
             $error = 'Erreur lors de la récupération des clubs: ' . $e->getMessage();
         }
 
-        $title = 'Gestion des clubs - Portail Archers de Gémenos';
+        $title = 'Gestion des clubs - Portail Arc Training';
         
         // Définir les fichiers JS spécifiques
         $additionalJS = ['/public/assets/js/clubs-table.js'];
@@ -80,7 +80,7 @@ class ClubController {
             error_log('Erreur lors de la récupération des thèmes: ' . $e->getMessage());
         }
 
-        $title = 'Créer un club - Portail Archers de Gémenos';
+        $title = 'Créer un club - Portail  Arc Training';
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/clubs/create.php';

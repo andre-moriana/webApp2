@@ -416,7 +416,7 @@ class ConcoursController {
             error_log('Première discipline (avant vue): ' . json_encode($disciplines[0], JSON_UNESCAPED_UNICODE));
         }
 
-        $title = 'Créer un concours - Portail Archers de Gémenos';
+        $title = 'Créer un concours - Portail Arc Training';
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/create.php';
         include 'app/Views/layouts/footer.php';
@@ -1000,7 +1000,7 @@ class ConcoursController {
             } catch (Exception $e) {}
         }
         
-        $title = 'Détails du concours - Portail Archers de Gémenos';
+        $title = 'Détails du concours - Portail Arc Training';
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/show.php';
         include 'app/Views/layouts/footer.php';
@@ -1162,7 +1162,7 @@ class ConcoursController {
             ['id' => 4, 'name' => 'Réservé aux inscrits', 'nom' => 'Réservé aux inscrits', 'code' => 'inscrits']
         ];
         
-        $title = 'Éditer un concours - Portail Archers de Gémenos';
+        $title = 'Éditer un concours - Portail Arc Training';
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/edit.php';
         include 'app/Views/layouts/footer.php';

@@ -339,7 +339,7 @@ class TrainingController {
             }
         }
         
-        $title = 'Détails de l\'entraînement - Portail Archers de Gémenos';
+        $title = 'Détails de l\'entraînement - Portail Arc Training';
         
         // Passer les variables nécessaires à la vue
         $currentUser = $_SESSION['user'];

@@ -105,7 +105,7 @@ class ScoredTrainingController {
         
         $stats = $this->calculateScoredTrainingStats($scoredTrainings);
         
-        $title = 'Tirs comptés - Portail Archers de Gémenos';
+        $title = 'Tirs comptés - Portail Arc Training';
         
         // Définir les fichiers CSS et JS spécifiques
         $additionalCSS = ['/public/assets/css/scored-trainings.css'];
@@ -218,7 +218,7 @@ class ScoredTrainingController {
         // Récupérer les informations de l'utilisateur
         $selectedUser = $this->getUserInfo($selectedUserId);
         
-        $title = 'Détails du tir compté - Portail Archers de Gémenos';
+        $title = 'Détails du tir compté - Portail Arc Training';
         
         // Inclure le header
         include 'app/Views/layouts/header.php';
@@ -295,7 +295,7 @@ class ScoredTrainingController {
         // Récupérer les configurations des types de tir
         $shootingConfigurations = $this->getShootingConfigurations();
         
-        $title = 'Nouveau tir compté - Portail Archers de Gémenos';
+        $title = 'Nouveau tir compté - Portail Arc Training';
         
         // Définir les fichiers CSS et JS spécifiques AVANT d'inclure le header
         $additionalCSS = ['/public/assets/css/scored-trainings.css'];

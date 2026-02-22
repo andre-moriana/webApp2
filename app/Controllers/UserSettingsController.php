@@ -11,7 +11,7 @@ class UserSettingsController {
      * Afficher la page des paramètres utilisateur
      */
     public function index() {
-        $pageTitle = "Paramètres utilisateur - Portail Archers de Gémenos";
+        $pageTitle = "Paramètres utilisateur - Portail Arc Training";
         
         // Vérifier que l'utilisateur est connecté
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || !isset($_SESSION['user'])) {
@@ -146,10 +146,10 @@ class UserSettingsController {
             }
             
             // S'assurer que l'email est bien celui de la base de données (pas celui construit)
-            // Si l'email dans $user semble être construit (contient '@archers-gemenos.fr' et correspond au username),
+            // Si l'email dans $user semble être construit (contient '@arctraining.fr' et correspond au username),
             // et qu'on a un email différent dans la session, vérifier lequel est le bon
-            if (isset($user['email']) && strpos($user['email'], '@archers-gemenos.fr') !== false) {
-                $emailFromUsername = ($user['username'] ?? '') . '@archers-gemenos.fr';
+            if (isset($user['email']) && strpos($user['email'], '@arctraining.fr') !== false) {
+                $emailFromUsername = ($user['username'] ?? '') . '@arctraining.fr';
             }
             
             // S'assurer que l'ID de l'utilisateur correspond bien à celui de la session

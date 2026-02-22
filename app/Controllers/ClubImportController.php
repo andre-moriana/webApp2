@@ -22,7 +22,7 @@ class ClubImportController {
             exit;
         }
         
-        $title = 'Import de clubs depuis XML - Portail Archers de Gémenos';
+        $title = 'Import de clubs depuis XML - Portail Arc Training';
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/clubs/import.php';

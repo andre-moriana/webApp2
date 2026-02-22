@@ -169,7 +169,7 @@ class GroupController {
             exit;
         }
         
-        $title = 'Créer un groupe - Portail Archers de Gémenos';
+        $title = 'Créer un groupe - Portail Arc Training';
 
         
         include 'app/Views/layouts/header.php';
@@ -271,7 +271,7 @@ class GroupController {
             header('Location: /groups');
             exit;
         }
-        $title = 'Modifier le groupe - Portail Archers de Gémenos';
+        $title = 'Modifier le groupe - Portail Arc Training';
 
         
         include 'app/Views/layouts/header.php';

@@ -105,49 +105,11 @@ class UserController {
             $error = 'Erreur de connexion à l\'API ';
         }
         
-        $title = 'Gestion des utilisateurs - Portail Archers de Gémenos';
+        $title = 'Gestion des utilisateurs - Portail Arc Training';
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/users/index.php';
         include 'app/Views/layouts/footer.php';
-    }
-    
-    /**
-     * Retourne des utilisateurs simulés réalistes
-     */
-    private function getSimulatedUsers() {
-        return [
-            [
-                "id" => 1,
-                "first_name" => "Admin",
-                "last_name" => "Gémenos",
-                "name" => "Gémenos",
-                "email" => "admin@archers-gemenos.fr",
-                "role" => "admin",
-                "status" => "active",
-                "created_at" => "2024-01-01 10:00:00"
-            ],
-            [
-                "id" => 2,
-                "first_name" => "Jean",
-                "last_name" => "Dupont",
-                "name" => "Dupont",
-                "email" => "jean.dupont@archers-gemenos.fr",
-                "role" => "user",
-                "status" => "active",
-                "created_at" => "2024-01-15 14:30:00"
-            ],
-            [
-                "id" => 3,
-                "first_name" => "Marie",
-                "last_name" => "Martin",
-                "name" => "Martin",
-                "email" => "marie.martin@archers-gemenos.fr",
-                "role" => "user",
-                "status" => "active",
-                "created_at" => "2024-02-01 09:15:00"
-            ]
-        ];
     }
     
     public function show($id) {
@@ -213,7 +175,7 @@ class UserController {
             $error = 'Erreur lors de la récupération de l\'utilisateur';
         }
         
-        $title = 'Détails de l\'utilisateur - Portail Archers de Gémenos';
+        $title = 'Détails de l\'utilisateur - Portail Arc training';
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/users/show.php';
@@ -235,7 +197,7 @@ class UserController {
             $clubId
         );
         
-        $title = 'Créer un utilisateur - Portail Archers de Gémenos';
+        $title = 'Créer un utilisateur - Portail Arc Training';
         
         // Définir les fichiers JS spécifiques
         $additionalJS = ['/public/assets/js/user-create.js'];
@@ -392,7 +354,7 @@ class UserController {
             $error = 'Erreur lors de la récupération de l\'utilisateur';
         }
         
-        $title = 'Modifier l\'utilisateur - Portail Archers de Gémenos';
+        $title = 'Modifier l\'utilisateur - Portail Arc Training';
         
         // Définir les fichiers JS spécifiques
         $additionalJS = ['/public/assets/js/user-edit.js'];

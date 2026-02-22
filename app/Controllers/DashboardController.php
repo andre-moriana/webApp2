@@ -20,7 +20,7 @@ class DashboardController {
         
         error_log("DashboardController::index() - Session valide, chargement des stats");
         
-        $title = 'Tableau de bord - Portail Archers de Gémenos';
+        $title = 'Tableau de bord - Portail Arc Training';
         
         // Récupérer les statistiques
         $stats = $this->getStats();

@@ -131,7 +131,7 @@ class AuthController {
                     'name' => $userData['name'] ?? $userData['last_name'] ?? '',
                     'last_name' => $userData['last_name'] ?? $userData['name'] ?? '',
                     'username' => $userData['username'] ?? $loginUsername,
-                    'email' => $userData['email'] ?? ($loginUsername . '@archers-gemenos.fr'),
+                    'email' => $userData['email'] ?? ($loginUsername . '@arctraining.fr'),
                     'role' => $userData['role'] ?? 'user',
                     'is_admin' => $userData['is_admin'] ?? $userData['isAdmin'] ?? false,
                     'isAdmin' => $userData['isAdmin'] ?? $userData['is_admin'] ?? false,
@@ -166,7 +166,7 @@ class AuthController {
                         'id' => 1,
                         'last_name' => 'Gémenos',
                         'username' => 'admin',
-                        'email' => 'admin@archers-gemenos.fr',
+                        'email' => 'admin@arctraining.fr',
                         'role' => 'admin',
                         'is_admin' => true,
                         'status' => 'active'
@@ -195,7 +195,7 @@ class AuthController {
                     'id' => 1,
                     'first_name' => 'Admin',
                     'last_name' => 'Gémenos',
-                    'email' => 'admin@archers-gemenos.fr',
+                    'email' => 'admin@arctraining.fr',
                     'role' => 'admin',
                     'is_admin' => true,
                     'status' => 'active'
@@ -234,7 +234,7 @@ class AuthController {
             exit;
         }
 
-        $title = 'Nouveau mot de passe - Portail Archers de Gémenos';
+        $title = 'Nouveau mot de passe - Portail Arc Training';
         include 'app/Views/layouts/header.php';
         include 'app/Views/auth/reset-password.php';
         include 'app/Views/layouts/footer.php';

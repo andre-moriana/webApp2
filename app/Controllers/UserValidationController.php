@@ -73,7 +73,7 @@ class UserValidationController {
             error_log('EXCEPTION UserValidation - Erreur lors de la récupération des utilisateurs en attente de suppression: ' . $e->getMessage());
         }
 
-        $title = 'Validation des utilisateurs - Portail Archers de Gémenos';
+        $title = 'Validation des utilisateurs - Portail Arc Training';
         
         // CSS spécifique à la page
         $additionalCSS = [

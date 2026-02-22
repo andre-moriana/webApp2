@@ -4,7 +4,7 @@ class PrivacyController {
     
     public function index() {
         // Cette page est publique, pas besoin de vérifier l'authentification
-        $title = 'Protection des données personnelles - Portail Archers de Gémenos';
+        $title = 'Protection des données personnelles - Portail Arc Training';
         
         // Définir $pageTitle pour le header
         $pageTitle = $title;

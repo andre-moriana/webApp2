@@ -21,7 +21,7 @@ class ScoreSheetController {
         $isCoach = ($currentUser['role'] ?? '') === 'Coach';
         $isDirigeant = ($currentUser['role'] ?? '') === 'Dirigeant';
         
-        $pageTitle = 'Feuille de marque - Portail Archers de Gémenos';
+        $pageTitle = 'Feuille de marque - Portail  Arc Training';
         
         // Définir les fichiers CSS et JS spécifiques
         $additionalCSS = [

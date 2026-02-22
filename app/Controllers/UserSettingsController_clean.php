@@ -11,7 +11,7 @@ class UserSettingsController {
      * Afficher la page des paramètres utilisateur
      */
     public function index() {
-        $pageTitle = "Paramètres utilisateur - Portail Archers de Gémenos";
+        $pageTitle = "Paramètres utilisateur - Portail Arc Training";
         
         // Récupérer les informations de l'utilisateur connecté
         $userId = $_SESSION['user']['id'] ?? null;

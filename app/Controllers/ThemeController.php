@@ -37,7 +37,7 @@ class ThemeController {
             $error = 'Erreur lors de la récupération des thèmes: ' . $e->getMessage();
         }
 
-        $title = 'Gestion des thèmes - Portail Archers de Gémenos';
+        $title = 'Gestion des thèmes - Portail Arc Training';
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/themes/index.php';
@@ -57,7 +57,7 @@ class ThemeController {
             exit;
         }
 
-        $title = 'Créer un thème - Portail Archers de Gémenos';
+        $title = 'Créer un thème - Portail Arc Training';
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/themes/create.php';

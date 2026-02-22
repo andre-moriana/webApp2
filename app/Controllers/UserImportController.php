@@ -25,7 +25,7 @@ class UserImportController {
             exit;
         }
         
-        $title = 'Import d\'utilisateurs depuis XML - Portail Archers de Gémenos';
+        $title = 'Import d\'utilisateurs depuis XML - Portail Arc Training';
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/users/import.php';
@@ -458,7 +458,7 @@ class UserImportController {
         if (empty($base)) {
             $base = 'user' . substr($idLicence, -6);
         }
-        return $base . '@archers-gemenos.fr';
+        return $base . '@arctraining.fr';
     }
     
     private function generateUsername($nom, $prenom, $idLicence) {

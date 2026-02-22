@@ -9,7 +9,7 @@ require_once __DIR__ . '/../Services/EmailService.php';
 class ContactController {
     
     public function index() {
-        $title = 'Contact - Portail Archers de Gémenos';
+        $title = 'Contact - Portail Arc Training';
         $pageTitle = $title;
         
         include 'app/Views/layouts/header-public.php';

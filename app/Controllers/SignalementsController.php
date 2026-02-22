@@ -19,7 +19,7 @@ class SignalementsController {
         // Vérifier la session
         SessionGuard::check();
         
-        $title = 'Gestion des Signalements - Portail Archers de Gémenos';
+        $title = 'Gestion des Signalements - Portail Arc Training';
         
         // Récupérer les paramètres de filtrage
         $status = $_GET['status'] ?? null;
@@ -78,7 +78,7 @@ class SignalementsController {
         // Vérifier la session
         SessionGuard::check();
         
-        $title = 'Détails du Signalement - Portail Archers de Gémenos';
+        $title = 'Détails du Signalement - Portail Arc Training';
         
         // Récupérer le signalement
         $report = null;

@@ -73,7 +73,7 @@ class TopicController {
                 $group = $groupResponse['data'];
             }
             
-            $title = htmlspecialchars($topic['title'] ?? 'Sujet') . ' - Portail Archers de Gémenos';
+            $title = htmlspecialchars($topic['title'] ?? 'Sujet') . ' - Portail Arc Training';
             
             include 'app/Views/layouts/header.php';
             include 'app/Views/topics/show.php';
@@ -102,7 +102,7 @@ class TopicController {
             exit;
         }
         
-        $title = 'Nouveau sujet - Portail Archers de Gémenos';
+        $title = 'Nouveau sujet - Portail  Arc Training';
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/topics/create.php';

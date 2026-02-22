@@ -21,7 +21,7 @@ class PrivateMessagesController {
         
         error_log("PrivateMessagesController::index() - Session valide, chargement des conversations");
         
-        $pageTitle = 'Messages Privés - Portail Archers de Gémenos';
+        $pageTitle = 'Messages Privés - Portail Arc Training';
         
         // Récupérer toutes les conversations de l'utilisateur connecté
         $conversations = $this->getConversations();
