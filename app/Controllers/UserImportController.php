@@ -122,6 +122,7 @@ class UserImportController {
         
         // Préparer les messages de résultat
         $successCount = 0;
+        $skippedCount = 0;
         $errorCount = 0;
         $totalCount = 0;
         $errors = [];
@@ -129,7 +130,11 @@ class UserImportController {
         foreach ($results as $result) {
             $totalCount++;
             if ($result['success']) {
-                $successCount++;
+                if (!empty($result['skipped'])) {
+                    $skippedCount++;
+                } else {
+                    $successCount++;
+                }
             } else {
                 $errorCount++;
                 if (count($errors) < 50) { // Limiter à 50 erreurs pour éviter de surcharger la session
@@ -148,14 +153,23 @@ class UserImportController {
         $_SESSION['import_results'] = [
             'total' => $totalCount,
             'success' => $successCount,
+            'skipped' => $skippedCount,
             'errors' => $errorCount,
             'error_messages' => $errors
         ];
         
+        $msgParts = [];
+        if ($successCount > 0) {
+            $msgParts[] = "{$successCount} importé(s)";
+        }
+        if ($skippedCount > 0) {
+            $msgParts[] = "{$skippedCount} déjà existant(s) (même numéro de licence)";
+        }
         if ($errorCount === 0) {
-            $_SESSION['success'] = "Import réussi : {$successCount} utilisateur(s) importé(s) avec succès.";
+            $_SESSION['success'] = "Import terminé : " . implode(', ', $msgParts) . ".";
         } else {
-            $_SESSION['warning'] = "Import partiel : {$successCount} utilisateur(s) importé(s), {$errorCount} erreur(s).";
+            $msgParts[] = "{$errorCount} erreur(s)";
+            $_SESSION['warning'] = "Import partiel : " . implode(', ', $msgParts) . ".";
         }
         
         header('Location: /users/import');
@@ -191,7 +205,12 @@ class UserImportController {
         }
         $result = $this->importOneUserByLicence($licence);
         if ($result['success']) {
-            $_SESSION['success'] = 'Utilisateur importé : ' . ($result['data']['first_name'] ?? '') . ' ' . ($result['data']['name'] ?? '') . ' (licence ' . $licence . ').';
+            $name = trim(($result['data']['first_name'] ?? '') . ' ' . ($result['data']['name'] ?? ''));
+            if (!empty($result['skipped'])) {
+                $_SESSION['warning'] = 'Utilisateur déjà existant (licence ' . $licence . ') : ' . $name . '. Aucune duplication.';
+            } else {
+                $_SESSION['success'] = 'Utilisateur importé : ' . $name . ' (licence ' . $licence . ').';
+            }
         } else {
             $_SESSION['error'] = $result['error'] ?? 'Erreur lors de l\'import.';
         }
@@ -223,6 +242,7 @@ class UserImportController {
         }
         return [
             'success' => true,
+            'skipped' => !empty($result['skipped']),
             'data' => [
                 'user_id' => $result['user_id'] ?? null,
                 'licenceNumber' => $userData['licenceNumber'] ?? null,
@@ -693,6 +713,18 @@ class UserImportController {
         
         foreach ($users as $userData) {
             try {
+                // Ne pas dupliquer : si un utilisateur avec ce numéro de licence existe déjà, le passer
+                $licenceNumber = trim($userData['licenceNumber'] ?? '');
+                if ($licenceNumber !== '' && $this->apiService->userExistsByLicenceNumber($licenceNumber)) {
+                    $results[] = [
+                        'success' => true,
+                        'skipped' => true,
+                        'user' => $userData['username'],
+                        'message' => "Déjà existant (licence {$licenceNumber}), non importé"
+                    ];
+                    continue;
+                }
+                
                 // Délai entre chaque utilisateur pour éviter le rate limiting (HTTP 429)
                 usleep(400000); // 400 ms
                 // Créer l'utilisateur de base

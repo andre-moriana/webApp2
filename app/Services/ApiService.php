@@ -1207,6 +1207,20 @@ class ApiService {
     }
 
     /**
+     * Vérifie si un utilisateur existe déjà par numéro de licence (éviter les doublons à l'import).
+     * @param string $licenceNumber Numéro de licence
+     * @return bool true si un utilisateur avec cette licence existe, false sinon
+     */
+    public function userExistsByLicenceNumber($licenceNumber) {
+        $licenceNumber = trim((string) $licenceNumber);
+        if ($licenceNumber === '') {
+            return false;
+        }
+        $result = $this->makeRequest("users?licence_number=" . urlencode($licenceNumber), "GET");
+        return !empty($result['success']) && isset($result['data']) && ($result['status_code'] ?? 0) >= 200 && ($result['status_code'] ?? 0) < 300;
+    }
+
+    /**
      * Récupère tous les utilisateurs
      * @return array Liste de tous les utilisateurs
      */

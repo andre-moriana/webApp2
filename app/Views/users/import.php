@@ -50,7 +50,10 @@ $title = "Import d'utilisateurs depuis XML - Portail Archers de Gémenos";
                             <h5><i class="fas fa-info-circle me-2"></i>Résultats de l'import</h5>
                             <ul class="mb-0">
                                 <li>Total d'utilisateurs traités : <?php echo $_SESSION['import_results']['total']; ?></li>
-                                <li>Succès : <span class="text-success"><?php echo $_SESSION['import_results']['success']; ?></span></li>
+                                <li>Importés : <span class="text-success"><?php echo $_SESSION['import_results']['success']; ?></span></li>
+                                <?php if (!empty($_SESSION['import_results']['skipped'])): ?>
+                                <li>Déjà existants (même licence) : <span class="text-secondary"><?php echo (int)$_SESSION['import_results']['skipped']; ?></span></li>
+                                <?php endif; ?>
                                 <li>Erreurs : <span class="text-danger"><?php echo $_SESSION['import_results']['errors']; ?></span></li>
                             </ul>
                             <?php if (!empty($_SESSION['import_results']['error_messages'])): ?>
@@ -85,7 +88,7 @@ $title = "Import d'utilisateurs depuis XML - Portail Archers de Gémenos";
                         <strong>Identifiants générés :</strong>
                         <ul class="mb-0 mt-2">
                             <li><strong>Username :</strong> Généré à partir du prénom + nom + 4 derniers chiffres de l'ID licence (ex: jeanmartin6142)</li>
-                            <li><strong>Email :</strong> Généré au format prénom.nom@archers-gemenos.fr (ex: jean.martin@archers-gemenos.fr)</li>
+                            <li><strong>Email :</strong> Généré au format prénom.nom@arctrianing.fr (ex: jean.martin@arctraining.fr.fr)</li>
                             <li><strong>Mot de passe :</strong> Temp[6 derniers chiffres de l'ID licence]! (ex: Temp6142Y!)</li>
                             <li>Pour se connecter, utilisez le <strong>username</strong> ou l'<strong>email complet</strong> avec le mot de passe généré</li>
                         </ul>
