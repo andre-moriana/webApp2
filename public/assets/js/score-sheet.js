@@ -449,7 +449,7 @@ async function prefillArchersFromConcours() {
     if (archerInfo) archerInfo.style.display = 'block';
     if (scoreTable) scoreTable.style.display = 'block';
     
-    displayCurrentArcher();
+    await displayCurrentArcher();
     
     // Défiler vers la section archer pour que l'utilisateur voie les données chargées
     if (archerInfo) {
@@ -880,7 +880,9 @@ async function addMissingCategoryOptions(categoryAbvs) {
     const missing = [...new Set(categoryAbvs.map(a => String(a).trim()).filter(Boolean))].filter(abv => !existingAbvs.has(abv));
     if (missing.length === 0) return;
     try {
-        const url = `/score-sheet/categories?abv_categorie_classement=${missing.map(encodeURIComponent).join(',')}`;
+        const iddiscipline = concoursDetails?.discipline ?? concoursDetails?.iddiscipline ?? null;
+        let url = `/score-sheet/categories?abv_categorie_classement=${missing.map(encodeURIComponent).join(',')}`;
+        if (iddiscipline) url += `&iddiscipline=${encodeURIComponent(iddiscipline)}`;
         const res = await fetch(url).then(r => r.json()).catch(() => null);
         let cats = res?.data ?? (Array.isArray(res) ? res : []);
         if (!Array.isArray(cats) && res?.data?.data) cats = res.data.data;
@@ -931,7 +933,7 @@ function setSelectValueWithFallback(selectId, value) {
     sel.value = v;
 }
 
-function displayCurrentArcher() {
+async function displayCurrentArcher() {
     if (userSheets.length === 0) return;
     
     const sheet = userSheets[currentUserIndex];
@@ -945,6 +947,10 @@ function displayCurrentArcher() {
     
     document.getElementById('archerName').value = sheet.archerInfo.name;
     document.getElementById('archerLicense').value = sheet.archerInfo.licenseNumber;
+    // S'assurer que la catégorie de l'archer sélectionné est dans le select (discipline + archer)
+    if (sheet.archerInfo.category) {
+        await addMissingCategoryOptions([sheet.archerInfo.category]);
+    }
     setSelectValueWithFallback('archerCategory', sheet.archerInfo.category);
     setSelectValueWithFallback('archerWeapon', sheet.archerInfo.weapon);
     document.getElementById('archerGender').value = sheet.archerInfo.gender || '';
@@ -1072,7 +1078,7 @@ function navigateArcher(direction) {
     currentUserIndex += direction;
     currentUserIndex = Math.max(0, Math.min(NUM_USERS - 1, currentUserIndex));
     
-    displayCurrentArcher();
+    displayCurrentArcher(); // async - charge catégorie archer si manquante
 }
 
 function saveCurrentArcherInfo() {
