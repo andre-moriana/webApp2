@@ -166,8 +166,8 @@ function setupConcoursSelector() {
                     if (!Array.isArray(categories) && catRes?.data?.data) categories = catRes.data.data;
                     concoursCategories = Array.isArray(categories) ? categories : [];
                     (concoursCategories || []).forEach(c => {
-                        const abv = String(c.abv_categorie_classement ?? c.abv ?? '').trim();
-                        const label = String(c.lb_categorie_classement ?? c.name ?? c.nom ?? c.lb_categorie ?? abv).trim();
+                        const abv = String(c.abv_categorie_classement ?? '').trim();
+                        const label = String(c.lb_categorie_classement ?? abv).trim();
                         if (abv && label) {
                             const opt = document.createElement('option');
                             opt.value = abv;
@@ -492,7 +492,7 @@ function extractCategoryFromInscription(insc) {
     const lb = insc.lb_categorie_classement ?? insc.lb_categorie ?? '';
     if (lb && concoursCategories.length > 0) {
         const c = concoursCategories.find(x => (x.lb_categorie_classement ?? '').toLowerCase() === String(lb).toLowerCase());
-        return c ? (c.abv_categorie_classement ?? c.abv ?? '') : lb;
+        return c ? (c.abv_categorie_classement ?? '') : lb;
     }
     return lb ? String(lb).trim() : '';
 }
@@ -863,8 +863,8 @@ async function addMissingCategoryOptions(categoryAbvs) {
         if (!Array.isArray(cats) && res?.data?.data) cats = res.data.data;
         cats = Array.isArray(cats) ? cats : [];
         cats.forEach(c => {
-            const abv = String(c.abv_categorie_classement ?? c.abv ?? '').trim();
-            const label = String(c.lb_categorie_classement ?? c.name ?? c.nom ?? abv).trim();
+            const abv = String(c.abv_categorie_classement ?? '').trim();
+            const label = String(c.lb_categorie_classement ?? abv).trim();
             if (abv && label && !existingAbvs.has(abv)) {
                 const opt = document.createElement('option');
                 opt.value = abv;
@@ -895,8 +895,8 @@ function setSelectValueWithFallback(selectId, value) {
     // Option absente : utiliser le libellé depuis concoursCategories si dispo (catégorie), sinon la valeur
     let label = v;
     if (selectId === 'archerCategory' && concoursCategories?.length) {
-        const c = concoursCategories.find(x => (x.abv_categorie_classement ?? x.abv ?? '').trim() === v);
-        if (c) label = String(c.lb_categorie_classement ?? c.name ?? c.nom ?? v).trim();
+        const c = concoursCategories.find(x => (x.abv_categorie_classement ?? '').trim() === v);
+        if (c) label = String(c.lb_categorie_classement ?? v).trim();
     } else if (selectId === 'archerWeapon' && concoursArcs?.length) {
         const a = concoursArcs.find(x => (x.lb_arc ?? x.name ?? '').trim() === v);
         if (a) label = String(a.lb_arc ?? a.name ?? a.nom ?? v).trim();

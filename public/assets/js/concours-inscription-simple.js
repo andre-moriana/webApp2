@@ -11,20 +11,16 @@
             window.apiInscriptionsUrl = c.apiInscriptionsUrl;
             window.inscriptionCible = !!c.inscriptionCible;
             window.archerSearchUrl = c.archerSearchUrl;
-            // Normaliser les catégories : s'assurer que abv_categorie_classement, lb_categorie_classement, idcategorie, idarc existent (jamais undefined)
+            // Catégories : noms canoniques uniquement (abv_categorie_classement, lb_categorie_classement, idcategorie, idarc)
             var rawCats = c.categoriesClassement || [];
             if (Array.isArray(rawCats)) {
                 window.categoriesClassement = rawCats.map(function(cat) {
                     if (!cat || typeof cat !== 'object') return { abv_categorie_classement: '', lb_categorie_classement: '', idcategorie: null, idarc: null };
-                    var abv = (cat.abv_categorie_classement != null && String(cat.abv_categorie_classement).trim() !== '') ? String(cat.abv_categorie_classement).trim() : (cat.abv != null ? String(cat.abv).trim() : '');
-                    var lb = (cat.lb_categorie_classement != null && String(cat.lb_categorie_classement).trim() !== '') ? String(cat.lb_categorie_classement).trim() : (cat.name != null ? String(cat.name).trim() : (cat.nom != null ? String(cat.nom).trim() : ''));
-                    var idCat = cat.idcategorie != null ? cat.idcategorie : (cat.id_categorie != null ? cat.id_categorie : (cat.idcategorie_classement != null ? cat.idcategorie_classement : null));
-                    var idArc = cat.idarc != null ? cat.idarc : (cat.id_arc != null ? cat.id_arc : null);
                     return Object.assign({}, cat, {
-                        abv_categorie_classement: abv !== '' ? abv : (cat.abv_categorie_classement != null ? String(cat.abv_categorie_classement) : ''),
-                        lb_categorie_classement: lb !== '' ? lb : (cat.lb_categorie_classement != null ? String(cat.lb_categorie_classement) : ''),
-                        idcategorie: idCat != null ? idCat : (cat.idcategorie != null ? cat.idcategorie : null),
-                        idarc: idArc != null ? idArc : (cat.idarc != null ? cat.idarc : null)
+                        abv_categorie_classement: cat.abv_categorie_classement != null ? String(cat.abv_categorie_classement).trim() : '',
+                        lb_categorie_classement: cat.lb_categorie_classement != null ? String(cat.lb_categorie_classement).trim() : '',
+                        idcategorie: cat.idcategorie != null ? cat.idcategorie : null,
+                        idarc: cat.idarc != null ? cat.idarc : null
                     });
                 });
             }

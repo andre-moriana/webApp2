@@ -374,8 +374,8 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 $cats = $categoriesClassement ?? [];
                                 foreach ($cats as $c):
                                     if (!is_array($c)) continue;
-                                    $abv   = trim((string)($c['abv_categorie_classement'] ?? $c['abv'] ?? ''));
-                                    $label = trim((string)($c['lb_categorie_classement'] ?? $c['name'] ?? $c['nom'] ?? $c['lb_categorie'] ?? $abv));
+                                    $abv   = trim((string)($c['abv_categorie_classement'] ?? ''));
+                                    $label = trim((string)($c['lb_categorie_classement'] ?? ''));
                                     if ($abv === '' && $label === '') continue;
                                     if ($label === '') $label = $abv;
                                     if ($abv === '') $abv = $label;
@@ -567,8 +567,8 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <?php
                                 foreach ($categoriesClassement ?? [] as $c):
                                     if (!is_array($c)) continue;
-                                    $abv   = trim((string)($c['abv_categorie_classement'] ?? $c['abv'] ?? ''));
-                                    $label = trim((string)($c['lb_categorie_classement'] ?? $c['name'] ?? $c['nom'] ?? $c['lb_categorie'] ?? $abv));
+                                    $abv   = trim((string)($c['abv_categorie_classement'] ?? ''));
+                                    $label = trim((string)($c['lb_categorie_classement'] ?? ''));
                                     if ($abv === '' && $label === '') continue;
                                     if ($label === '') $label = $abv;
                                     if ($abv === '') $abv = $label;
