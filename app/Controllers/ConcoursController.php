@@ -1424,6 +1424,9 @@ class ConcoursController {
             } else {
                 $categoriesPayload = [];
             }
+            if ($categoriesPayload === false || $categoriesPayload === null) {
+                $categoriesPayload = [];
+            }
             if (empty($categoriesPayload) && $iddiscipline) {
                 $categoriesResponse = $this->apiService->makeRequest('concours/categories-classement', 'GET');
                 $categoriesPayload = $this->apiService->unwrapData($categoriesResponse);
@@ -1433,21 +1436,32 @@ class ConcoursController {
                     $categoriesPayload = [];
                 }
             }
-            if (is_array($categoriesPayload) && !empty($categoriesPayload)) {
+            if ($categoriesPayload === false || $categoriesPayload === null || !is_array($categoriesPayload)) {
+                $categoriesPayload = [];
+            }
+            if (!empty($categoriesPayload)) {
                 foreach ($categoriesPayload as &$c) {
-                    if (!isset($c['id']) && isset($c['_id'])) $c['id'] = $c['_id'];
-                    $abv = trim((string)($c['abv_categorie_classement'] ?? $c['abv'] ?? ''));
-                    $lb = trim((string)($c['lb_categorie_classement'] ?? $c['name'] ?? $c['nom'] ?? ''));
-                    $c['abv_categorie_classement'] = $abv !== '' ? $abv : (isset($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
-                    $c['lb_categorie_classement'] = $lb !== '' ? $lb : (isset($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
+                    if (!is_array($c)) {
+                        continue;
+                    }
+                    if (!isset($c['id']) && isset($c['_id'])) {
+                        $c['id'] = $c['_id'];
+                    }
+                    $abv = trim((string)(isset($c['abv_categorie_classement']) ? $c['abv_categorie_classement'] : (isset($c['abv']) ? $c['abv'] : '')));
+                    $lb = trim((string)(isset($c['lb_categorie_classement']) ? $c['lb_categorie_classement'] : (isset($c['name']) ? $c['name'] : (isset($c['nom']) ? $c['nom'] : ''))));
+                    $c['abv_categorie_classement'] = $abv !== '' ? $abv : (isset($c['lb_categorie_classement']) && is_scalar($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
+                    $c['lb_categorie_classement'] = $lb !== '' ? $lb : (isset($c['lb_categorie_classement']) && is_scalar($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
                 }
                 unset($c);
                 usort($categoriesPayload, function ($a, $b) {
+                    if (!is_array($a) || !is_array($b)) {
+                        return 0;
+                    }
                     $la = $a['lb_categorie_classement'] ?? $a['name'] ?? $a['nom'] ?? '';
                     $lb = $b['lb_categorie_classement'] ?? $b['name'] ?? $b['nom'] ?? '';
-                    return strcasecmp($la, $lb);
+                    return strcasecmp((string)$la, (string)$lb);
                 });
-                $categoriesClassement = array_values($categoriesPayload);
+                $categoriesClassement = array_values(array_filter($categoriesPayload, 'is_array'));
             }
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des catégories de classement: ' . $e->getMessage());
@@ -2208,21 +2222,32 @@ class ConcoursController {
             } elseif (!is_array($categoriesPayload)) {
                 $categoriesPayload = [];
             }
-            if (is_array($categoriesPayload) && !empty($categoriesPayload)) {
+            if ($categoriesPayload === false || $categoriesPayload === null) {
+                $categoriesPayload = [];
+            }
+            if (!empty($categoriesPayload)) {
                 foreach ($categoriesPayload as &$c) {
-                    if (!isset($c['id']) && isset($c['_id'])) $c['id'] = $c['_id'];
-                    $abv = trim((string)($c['abv_categorie_classement'] ?? $c['abv'] ?? ''));
-                    $lb = trim((string)($c['lb_categorie_classement'] ?? $c['name'] ?? $c['nom'] ?? ''));
-                    $c['abv_categorie_classement'] = $abv !== '' ? $abv : (isset($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
-                    $c['lb_categorie_classement'] = $lb !== '' ? $lb : (isset($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
+                    if (!is_array($c)) {
+                        continue;
+                    }
+                    if (!isset($c['id']) && isset($c['_id'])) {
+                        $c['id'] = $c['_id'];
+                    }
+                    $abv = trim((string)(isset($c['abv_categorie_classement']) ? $c['abv_categorie_classement'] : (isset($c['abv']) ? $c['abv'] : '')));
+                    $lb = trim((string)(isset($c['lb_categorie_classement']) ? $c['lb_categorie_classement'] : (isset($c['name']) ? $c['name'] : (isset($c['nom']) ? $c['nom'] : ''))));
+                    $c['abv_categorie_classement'] = $abv !== '' ? $abv : (isset($c['lb_categorie_classement']) && is_scalar($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
+                    $c['lb_categorie_classement'] = $lb !== '' ? $lb : (isset($c['lb_categorie_classement']) && is_scalar($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
                 }
                 unset($c);
                 usort($categoriesPayload, function ($a, $b) {
+                    if (!is_array($a) || !is_array($b)) {
+                        return 0;
+                    }
                     $la = $a['lb_categorie_classement'] ?? $a['name'] ?? $a['nom'] ?? '';
                     $lb = $b['lb_categorie_classement'] ?? $b['name'] ?? $b['nom'] ?? '';
-                    return strcasecmp($la, $lb);
+                    return strcasecmp((string)$la, (string)$lb);
                 });
-                $categoriesClassement = array_values($categoriesPayload);
+                $categoriesClassement = array_values(array_filter($categoriesPayload, 'is_array'));
             }
         } catch (Exception $e) {
             error_log('inscriptionCible: erreur catégories: ' . $e->getMessage());

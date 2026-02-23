@@ -176,7 +176,7 @@ class ArcherSearchController {
         if (empty($wanted)) {
             return [];
         }
-        $xmlPath = __DIR__ . '/../../public/data/users-licences.xml';
+        $xmlPath = __DIR__ . '/../../public/data/licences-users.xml';
         $xmlPath = realpath($xmlPath);
         if (!$xmlPath || !file_exists($xmlPath) || !is_readable($xmlPath)) {
             return [];
@@ -244,7 +244,7 @@ class ArcherSearchController {
         if (empty($wanted)) {
             return [];
         }
-        $xmlPath = __DIR__ . '/../../public/data/users-licences.xml';
+        $xmlPath = __DIR__ . '/../../public/data/licences-users.xml';
         $xmlPath = realpath($xmlPath);
         if (!$xmlPath || !file_exists($xmlPath) || !is_readable($xmlPath)) {
             return [];
