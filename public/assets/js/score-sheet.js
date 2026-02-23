@@ -25,10 +25,17 @@ let archerSignatures = {}; // Stocker les signatures des archers
 let scorerSignature = ''; // Signature du marqueur
 let showSignatureModal = false;
 
+// Données concours pour préremplissage
+let selectedConcoursId = null;
+let concoursPlansPeloton = null;
+let concoursInscriptions = null;
+let concoursDetails = null;
+
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
     initializeScoreSheet();
     initializeSignatureCanvas();
+    setupConcoursSelector();
 });
 
 function initializeScoreSheet() {
@@ -59,6 +66,191 @@ function initializeScoreSheet() {
     if (modalElement) {
         scoreModal = new bootstrap.Modal(modalElement);
     }
+}
+
+// Configuration du sélecteur de concours et peloton
+function setupConcoursSelector() {
+    const concoursSelect = document.getElementById('concoursSelect');
+    const pelotonWrapper = document.getElementById('pelotonSelectorWrapper');
+    const prefillRow = document.getElementById('prefillArchersRow');
+    const prefillBtn = document.getElementById('prefillArchersBtn');
+    const departSelect = document.getElementById('departSelect');
+    const pelotonSelect = document.getElementById('pelotonSelect');
+    
+    if (!concoursSelect) return;
+    
+    concoursSelect.addEventListener('change', async function() {
+        selectedConcoursId = this.value || null;
+        concoursPlansPeloton = null;
+        concoursInscriptions = null;
+        concoursDetails = null;
+        
+        pelotonWrapper.style.display = 'none';
+        prefillRow.style.display = 'none';
+        departSelect.innerHTML = '<option value="">-- Départ --</option>';
+        pelotonSelect.innerHTML = '<option value="">-- Peloton --</option>';
+        
+        if (!selectedConcoursId) return;
+        
+        try {
+            // Charger les détails du concours et les données
+            const [concoursRes, planRes, inscRes] = await Promise.all([
+                fetch(`/api/concours/${selectedConcoursId}/public`).then(r => r.json()).catch(() => null),
+                fetch(`/api/concours/${selectedConcoursId}/plan-peloton`).then(r => r.json()).catch(() => null),
+                fetch(`/api/concours/${selectedConcoursId}/inscriptions`).then(r => r.json()).catch(() => null)
+            ]);
+            
+            concoursDetails = concoursRes?.data || concoursRes;
+            if (concoursDetails && concoursDetails.titre_competition) {
+                document.getElementById('trainingTitle').value = concoursDetails.titre_competition || '';
+            }
+            
+            // Plan peloton - structure: { "1": [plan, plan, ...], "2": [...] } ou { data: { "1": [...] } }
+            let plans = planRes?.data || planRes;
+            if (plans && typeof plans === 'object' && !Array.isArray(plans) && plans.data) {
+                plans = plans.data;
+            }
+            if (plans && typeof plans === 'object' && !Array.isArray(plans)) {
+                concoursPlansPeloton = plans;
+            }
+            
+            // Inscriptions - filtrer confirmées (format API: { data: [...] } ou tableau direct)
+            let inscriptions = Array.isArray(inscRes) ? inscRes : (inscRes?.data || []);
+            if (Array.isArray(inscriptions)) {
+                concoursInscriptions = inscriptions.filter(i => (i.statut_inscription || i.statutInscription || '') === 'confirmee');
+            } else {
+                concoursInscriptions = [];
+            }
+            
+            // Si plan peloton avec données : afficher sélecteur départ/peloton
+            if (concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0) {
+                pelotonWrapper.style.display = 'block';
+                const departs = Object.keys(concoursPlansPeloton).sort((a, b) => parseInt(a) - parseInt(b));
+                departSelect.innerHTML = '<option value="">-- Départ --</option>';
+                departs.forEach(dep => {
+                    departSelect.innerHTML += `<option value="${dep}">Départ ${dep}</option>`;
+                });
+                
+                departSelect.onchange = function() {
+                    const dep = this.value;
+                    pelotonSelect.innerHTML = '<option value="">-- Peloton --</option>';
+                    if (!dep || !concoursPlansPeloton[dep]) return;
+                    const pelotons = [...new Set((concoursPlansPeloton[dep] || []).map(p => p.numero_peloton).filter(Boolean))].sort((a, b) => a - b);
+                    pelotons.forEach(pel => {
+                        pelotonSelect.innerHTML += `<option value="${pel}">Peloton ${pel}</option>`;
+                    });
+                    prefillRow.style.display = (dep && pelotonSelect.options.length > 1) ? 'block' : 'none';
+                };
+                
+                departSelect.dispatchEvent(new Event('change'));
+            }
+            
+            prefillRow.style.display = 'block';
+            if (prefillBtn) {
+                prefillBtn.onclick = prefillArchersFromConcours;
+            }
+        } catch (e) {
+            console.error('Erreur chargement concours:', e);
+            showStatus('Erreur lors du chargement des données du concours', 'danger');
+        }
+    });
+}
+
+// Préremplir les archers depuis le concours (peloton ou inscriptions)
+async function prefillArchersFromConcours() {
+    const departSelect = document.getElementById('departSelect');
+    const pelotonSelect = document.getElementById('pelotonSelect');
+    
+    let archers = [];
+    
+    // Si plan peloton existe (tir N/3/C), exiger départ + peloton
+    if (concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0) {
+        if (!departSelect?.value || !pelotonSelect?.value) {
+            showStatus('Veuillez sélectionner un départ et un peloton.', 'warning');
+            return;
+        }
+    }
+    
+    if (concoursPlansPeloton && departSelect?.value && pelotonSelect?.value) {
+        // Mode peloton (N/3/C) : extraire les archers du peloton
+        const dep = departSelect.value;
+        const pel = parseInt(pelotonSelect.value);
+        const plans = (concoursPlansPeloton[dep] || []).filter(p => (p.numero_peloton || 0) == pel);
+        const inscriptionsMap = {};
+        (concoursInscriptions || []).forEach(i => {
+            const lic = i.numero_licence || i.numeroLicence;
+            if (lic) inscriptionsMap[lic] = i;
+        });
+        
+        plans.sort((a, b) => (a.position_archer || '').localeCompare(b.position_archer || ''));
+        archers = plans.map(p => {
+            const lic = p.numero_licence || '';
+            const insc = inscriptionsMap[lic] || {};
+            const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
+            const arme = insc.arme || '';
+            const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
+            return {
+                name: nom,
+                licenseNumber: lic,
+                category: cat,
+                weapon: mapWeaponFromInscription(arme),
+                gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
+                userId: insc.user_id || insc.userId || insc.id_user
+            };
+        });
+    } else if (concoursInscriptions && concoursInscriptions.length > 0) {
+        // Mode inscriptions : utiliser les 6 premiers (ou tous)
+        archers = concoursInscriptions.slice(0, NUM_USERS).map(i => ({
+            name: i.user_nom || i.nom || i.name || '',
+            licenseNumber: i.numero_licence || i.numeroLicence || '',
+            category: i.categorie_classement || i.categorieClassement || i.abv_categorie_classement || '',
+            weapon: mapWeaponFromInscription(i.arme || ''),
+            gender: (i.genre || i.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
+            userId: i.user_id || i.userId || i.id_user
+        }));
+    }
+    
+    if (archers.length === 0) {
+        showStatus('Aucun archer à préremplir. Sélectionnez un peloton ou vérifiez les inscriptions.', 'warning');
+        return;
+    }
+    
+    // S'assurer que le type de tir est sélectionné et les feuilles initialisées
+    if (!selectedShootingType) {
+        showStatus('Veuillez d\'abord sélectionner le type de tir.', 'warning');
+        return;
+    }
+    if (userSheets.length === 0) {
+        initializeSheets();
+    }
+    
+    // Appliquer les archers
+    archers.forEach((archer, idx) => {
+        if (userSheets[idx]) {
+            userSheets[idx].archerInfo = {
+                name: archer.name,
+                licenseNumber: archer.licenseNumber,
+                category: archer.category,
+                weapon: archer.weapon,
+                gender: archer.gender
+            };
+            if (archer.userId) userSheets[idx].userId = archer.userId;
+        }
+    });
+    
+    displayCurrentArcher();
+    showStatus(`${archers.length} archer(s) prérempli(s) depuis le concours`, 'success');
+}
+
+function mapWeaponFromInscription(arme) {
+    if (!arme) return '';
+    const a = String(arme).toLowerCase();
+    if (a.includes('poulies') || a.includes('compound')) return 'Arc à poulies';
+    if (a.includes('classique')) return 'Arc classique';
+    if (a.includes('barebow') || a.includes('nu')) return 'Arc nu (barebow)';
+    if (a.includes('longbow')) return 'Longbow';
+    if (a.includes('chasse')) return 'Arc de chasse';
+    return arme;
 }
 
 // Variables pour la recherche par licence

@@ -23,6 +23,20 @@ class ScoreSheetController {
         
         $pageTitle = 'Feuille de marque - Portail  Arc Training';
         
+        // Charger la liste des concours pour la sélection
+        $concours = [];
+        try {
+            $response = $this->apiService->getConcours();
+            $apiResponse = $response['data'] ?? null;
+            if ($response['success'] && isset($apiResponse) && is_array($apiResponse)) {
+                $concours = isset($apiResponse[0]) && is_array($apiResponse[0]) 
+                    ? $apiResponse 
+                    : ($apiResponse['concours'] ?? []);
+            }
+        } catch (Exception $e) {
+            error_log('Erreur chargement concours pour feuille de marque: ' . $e->getMessage());
+        }
+        
         // Définir les fichiers CSS et JS spécifiques
         $additionalCSS = [
             '/public/assets/css/score-sheet.css',
