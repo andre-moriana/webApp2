@@ -14,33 +14,30 @@ class ConcoursController {
     /**
      * Charge les catégories de classement (table concour_categories_classement), filtrées par iddiscipline.
      * @param int|null $iddiscipline
-     * @param bool $usePublic true pour inscription ciblée (makeRequestPublic)
-     * @return array liste d'items avec abv_categorie_classement, lb_categorie_classement
+     * @param bool $useAuth true = makeRequest (comme la feuille de marque), false = makeRequestPublic (inscription ciblée)
      */
-    private function loadCategoriesClassement($iddiscipline, $usePublic = false) {
+    private function loadCategoriesClassement($iddiscipline, $useAuth = true) {
         $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
-        try {
-            $response = $usePublic
-                ? $this->apiService->makeRequestPublic($endpoint, 'GET')
-                : $this->apiService->makeRequest($endpoint, 'GET');
+        $extract = function($response) {
             $body = $response['data'] ?? null;
-            if (is_array($body) && isset($body['data']) && is_array($body['data'])) {
-                return $body['data'];
+            if (!is_array($body)) return null;
+            if (isset($body['data']) && is_array($body['data'])) return $body['data'];
+            if (isset($body[0])) return $body;
+            return null;
+        };
+        try {
+            if ($useAuth) {
+                $response = $this->apiService->makeRequest($endpoint, 'GET');
+                $list = $extract($response);
+                if (is_array($list) && !empty($list)) return $list;
             }
-            if (is_array($body) && isset($body[0])) {
-                return $body;
-            }
+            $response = $this->apiService->makeRequestPublic($endpoint, 'GET');
+            $list = $extract($response);
+            if (is_array($list)) return $list;
             if ($iddiscipline) {
-                $response = $usePublic
-                    ? $this->apiService->makeRequestPublic('concours/categories-classement', 'GET')
-                    : $this->apiService->makeRequest('concours/categories-classement', 'GET');
-                $body = $response['data'] ?? null;
-                if (is_array($body) && isset($body['data']) && is_array($body['data'])) {
-                    return $body['data'];
-                }
-                if (is_array($body) && isset($body[0])) {
-                    return $body;
-                }
+                $response = $this->apiService->makeRequestPublic('concours/categories-classement', 'GET');
+                $list = $extract($response);
+                if (is_array($list)) return $list;
             }
         } catch (Exception $e) {
             error_log('loadCategoriesClassement: ' . $e->getMessage());
@@ -1443,7 +1440,7 @@ class ConcoursController {
         unset($inscription);
 
         $iddiscipline = is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null);
-        $categoriesClassement = $this->loadCategoriesClassement($iddiscipline, false);
+        $categoriesClassement = $this->loadCategoriesClassement($iddiscipline);
 
         // Récupérer les arcs
         $arcs = [];
@@ -2190,7 +2187,7 @@ class ConcoursController {
         $disciplineAbv = null;
 
         $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
-        $categoriesClassement = $this->loadCategoriesClassement($iddiscipline, true);
+        $categoriesClassement = $this->loadCategoriesClassement($iddiscipline, false);
 
         // Récupérer les arcs
         try {
