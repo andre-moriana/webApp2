@@ -45,8 +45,47 @@ var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concou
     (document.querySelector('input[name="concours_id"]')?.value ||
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
 
+/**
+ * Remplit les selects catégorie de classement (formulaire + modale édition) comme la feuille de marque :
+ * fetch API puis options value=abv_categorie_classement, label=lb_categorie_classement.
+ * Utilise l’URL publique pour que ça marche aussi en inscription ciblée (sans auth).
+ */
+function fillCategorieClassementSelect() {
+    var categorySelect = document.getElementById('categorie_classement');
+    var editSelect = document.getElementById('edit-categorie_classement');
+    if (!categorySelect) return;
+    var iddiscipline = (typeof concoursDiscipline !== 'undefined' && concoursDiscipline) ? concoursDiscipline : null;
+    var url = '/api/concours/categories-classement/public' + (iddiscipline ? '?iddiscipline=' + encodeURIComponent(iddiscipline) : '');
+    var setOptions = function(select, categories) {
+        if (!select) return;
+        select.innerHTML = '<option value="">Sélectionner une catégorie</option>';
+        (categories || []).forEach(function(c) {
+            var abv = (c.abv_categorie_classement != null ? String(c.abv_categorie_classement).trim() : '');
+            var label = (c.lb_categorie_classement != null ? String(c.lb_categorie_classement).trim() : abv);
+            if (abv || label) {
+                var opt = document.createElement('option');
+                opt.value = abv || label;
+                opt.textContent = label || abv;
+                select.appendChild(opt);
+            }
+        });
+    };
+    categorySelect.innerHTML = '<option value="">Sélectionner une catégorie</option>';
+    if (editSelect) editSelect.innerHTML = '<option value="">Sélectionner une catégorie</option>';
+    fetch(url).then(function(r) { return r.json(); }).then(function(catRes) {
+        var categories = catRes && (catRes.data !== undefined ? catRes.data : (Array.isArray(catRes) ? catRes : []));
+        if (!Array.isArray(categories) && categories && categories.data) categories = categories.data;
+        if (!Array.isArray(categories)) categories = [];
+        setOptions(categorySelect, categories);
+        setOptions(editSelect, categories);
+        if (categories.length > 0) window.categoriesClassement = categories;
+    }).catch(function(e) { console.warn('Erreur chargement catégories inscription:', e); });
+}
+
 // Ajouter event listener au bouton de recherche
 document.addEventListener('DOMContentLoaded', function() {
+    fillCategorieClassementSelect();
+
     const searchBtn = document.getElementById('archer-search-btn');
     const licenceInput = document.getElementById('licence-search-input');
     const confirmBtn = document.getElementById('btn-confirm-inscription');

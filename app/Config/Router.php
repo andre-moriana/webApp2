@@ -225,6 +225,7 @@ class Router {
         $this->addRoute("GET", "/api/concours/distance-recommandee", "ApiController@proxyConcoursDistanceRecommandee");
         $this->addRoute("GET", "/api/concours/blason-recommandee", "ApiController@proxyConcoursBlasonRecommandee");
         $this->addRoute("GET", "/api/concours/categories-classement", "ApiController@proxyConcoursCategoriesClassement");
+        $this->addRoute("GET", "/api/concours/categories-classement/public", "ApiController@getCategoriesClassementPublic");
         $this->addRoute("GET", "/api/concours/arcs", "ApiController@proxyConcoursArcs");
         $this->addRoute("GET", "/api/concours/{id}/plan-cible", "ApiController@proxyConcoursPlanCible");
         $this->addRoute("POST", "/api/concours/{id}/plan-cible", "ApiController@proxyConcoursPlanCible");

@@ -2554,7 +2554,7 @@ class ApiController {
     }
     
     /**
-     * Proxy pour /api/concours/categories-classement - Catégories de classement filtrées par iddiscipline
+     * Proxy pour /api/concours/categories-classement - Catégories de classement filtrées par iddiscipline (authentifié)
      */
     public function proxyConcoursCategoriesClassement() {
         if (!$this->isAuthenticated()) {
@@ -2574,6 +2574,33 @@ class ApiController {
             $this->sendJsonResponse([
                 'success' => false,
                 'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Catégories de classement en accès public (inscription ciblée sans auth).
+     * Même format que getCategories feuille de marque : { success, data: [...] }
+     */
+    public function getCategoriesClassementPublic() {
+        header('Content-Type: application/json');
+        try {
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $endpoint = "concours/categories-classement" . ($queryString ? "?{$queryString}" : "");
+            $response = $this->apiService->makeRequestPublic($endpoint, 'GET');
+            $raw = $response['data'] ?? null;
+            $categories = [];
+            if (is_array($raw) && isset($raw['data']) && is_array($raw['data'])) {
+                $categories = $raw['data'];
+            } elseif (is_array($raw) && isset($raw[0])) {
+                $categories = $raw;
+            }
+            $this->sendJsonResponse(['success' => true, 'data' => $categories]);
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'data' => [],
+                'message' => 'Erreur: ' . $e->getMessage()
             ], 500);
         }
     }
