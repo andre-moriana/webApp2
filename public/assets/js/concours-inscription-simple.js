@@ -1,5 +1,6 @@
 // Charger la config depuis data-config (séparation PHP/JS)
 (function() {
+    window.categoriesClassement = []; // défaut pour éviter "non défini"
     var el = document.getElementById('inscription-page');
     var cfg = el && el.getAttribute('data-config');
     if (cfg) {
@@ -12,18 +13,21 @@
             window.archerSearchUrl = c.archerSearchUrl;
             // Normaliser les catégories : s'assurer que abv_categorie_classement, lb_categorie_classement, idcategorie, idarc existent (jamais undefined)
             var rawCats = c.categoriesClassement || [];
-            window.categoriesClassement = rawCats.map(function(cat) {
-                var abv = (cat.abv_categorie_classement != null && String(cat.abv_categorie_classement).trim() !== '') ? String(cat.abv_categorie_classement).trim() : (cat.abv != null ? String(cat.abv).trim() : '');
-                var lb = (cat.lb_categorie_classement != null && String(cat.lb_categorie_classement).trim() !== '') ? String(cat.lb_categorie_classement).trim() : (cat.name != null ? String(cat.name).trim() : (cat.nom != null ? String(cat.nom).trim() : ''));
-                var idCat = cat.idcategorie != null ? cat.idcategorie : (cat.id_categorie != null ? cat.id_categorie : (cat.idcategorie_classement != null ? cat.idcategorie_classement : null));
-                var idArc = cat.idarc != null ? cat.idarc : (cat.id_arc != null ? cat.id_arc : null);
-                return Object.assign({}, cat, {
-                    abv_categorie_classement: abv !== '' ? abv : (cat.abv_categorie_classement != null ? String(cat.abv_categorie_classement) : ''),
-                    lb_categorie_classement: lb !== '' ? lb : (cat.lb_categorie_classement != null ? String(cat.lb_categorie_classement) : ''),
-                    idcategorie: idCat != null ? idCat : (cat.idcategorie != null ? cat.idcategorie : null),
-                    idarc: idArc != null ? idArc : (cat.idarc != null ? cat.idarc : null)
+            if (Array.isArray(rawCats)) {
+                window.categoriesClassement = rawCats.map(function(cat) {
+                    if (!cat || typeof cat !== 'object') return { abv_categorie_classement: '', lb_categorie_classement: '', idcategorie: null, idarc: null };
+                    var abv = (cat.abv_categorie_classement != null && String(cat.abv_categorie_classement).trim() !== '') ? String(cat.abv_categorie_classement).trim() : (cat.abv != null ? String(cat.abv).trim() : '');
+                    var lb = (cat.lb_categorie_classement != null && String(cat.lb_categorie_classement).trim() !== '') ? String(cat.lb_categorie_classement).trim() : (cat.name != null ? String(cat.name).trim() : (cat.nom != null ? String(cat.nom).trim() : ''));
+                    var idCat = cat.idcategorie != null ? cat.idcategorie : (cat.id_categorie != null ? cat.id_categorie : (cat.idcategorie_classement != null ? cat.idcategorie_classement : null));
+                    var idArc = cat.idarc != null ? cat.idarc : (cat.id_arc != null ? cat.id_arc : null);
+                    return Object.assign({}, cat, {
+                        abv_categorie_classement: abv !== '' ? abv : (cat.abv_categorie_classement != null ? String(cat.abv_categorie_classement) : ''),
+                        lb_categorie_classement: lb !== '' ? lb : (cat.lb_categorie_classement != null ? String(cat.lb_categorie_classement) : ''),
+                        idcategorie: idCat != null ? idCat : (cat.idcategorie != null ? cat.idcategorie : null),
+                        idarc: idArc != null ? idArc : (cat.idarc != null ? cat.idarc : null)
+                    });
                 });
-            });
+            }
             window.arcs = c.arcs || [];
             window.distancesTir = c.distancesTir || [];
             window.concoursDiscipline = c.concoursDiscipline;
@@ -1100,7 +1104,11 @@ function prefillFormFields(archer) {
                 console.log('✗ CATAGE ou TYPARC manquant. CATAGE:', catage, 'TYPARC:', typarc);
             }
         } else {
-            console.error('✗ categoriesClassement non défini ou vide');
+            if (typeof categoriesClassement === 'undefined') {
+                console.warn('✗ categoriesClassement non défini (config non chargée)');
+            } else {
+                console.log('✗ Aucune catégorie disponible pour le pré-remplissage');
+            }
         }
     } else {
         console.error('✗ Champ categorie_classement introuvable');
