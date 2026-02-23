@@ -150,32 +150,33 @@ function setupConcoursSelector() {
                 initializeSheets();
             }
             
-            // Charger les catégories de classement depuis concour_categories_classement filtrées par iddiscipline du concours
-            // Valeur affichée = lb_categorie_classement | Valeur enregistrée = abv_categorie_classement
+            // Charger les catégories de classement depuis concour_categories_classement
+            // Filtrées par iddiscipline du concours | Affichage = lb_categorie_classement | Enregistré = abv_categorie_classement
             const categorySelect = document.getElementById('archerCategory');
             if (categorySelect) {
                 categorySelect.innerHTML = '<option value="">--</option>';
                 const iddiscipline = concoursDetails?.discipline ?? concoursDetails?.iddiscipline ?? null;
-                if (iddiscipline) {
-                    try {
-                        const catRes = await fetch(`/api/concours/categories-classement?iddiscipline=${encodeURIComponent(iddiscipline)}`).then(r => r.json()).catch(() => null);
-                        const categories = catRes?.data ?? (Array.isArray(catRes) ? catRes : []);
-                        concoursCategories = Array.isArray(categories) ? categories : [];
-                        if (Array.isArray(categories) && categories.length > 0) {
-                            categories.forEach(c => {
-                                const abv = String(c.abv_categorie_classement ?? c.abv ?? '').trim();
-                                const label = String(c.lb_categorie_classement ?? c.name ?? c.nom ?? abv).trim();
-                                if (abv && label) {
-                                    const opt = document.createElement('option');
-                                    opt.value = abv;
-                                    opt.textContent = label;
-                                    categorySelect.appendChild(opt);
-                                }
-                            });
+                const url = iddiscipline
+                    ? `/score-sheet/categories?iddiscipline=${encodeURIComponent(iddiscipline)}`
+                    : '/score-sheet/categories';
+                try {
+                    const catRes = await fetch(url).then(r => r.json()).catch(() => null);
+                    let categories = catRes?.data ?? catRes?.categories ?? (Array.isArray(catRes) ? catRes : []);
+                    if (!Array.isArray(categories) && categories?.data) categories = categories.data;
+                    if (!Array.isArray(categories) && catRes?.data?.data) categories = catRes.data.data;
+                    concoursCategories = Array.isArray(categories) ? categories : [];
+                    (concoursCategories || []).forEach(c => {
+                        const abv = String(c.abv_categorie_classement ?? c.abv ?? '').trim();
+                        const label = String(c.lb_categorie_classement ?? c.name ?? c.nom ?? c.lb_categorie ?? abv).trim();
+                        if (abv && label) {
+                            const opt = document.createElement('option');
+                            opt.value = abv;
+                            opt.textContent = label;
+                            categorySelect.appendChild(opt);
                         }
-                    } catch (e) {
-                        console.warn('Erreur chargement catégories:', e);
-                    }
+                    });
+                } catch (e) {
+                    console.warn('Erreur chargement catégories:', e);
                 }
             }
             
@@ -879,10 +880,12 @@ async function addMissingCategoryOptions(categoryAbvs) {
     const missing = [...new Set(categoryAbvs.map(a => String(a).trim()).filter(Boolean))].filter(abv => !existingAbvs.has(abv));
     if (missing.length === 0) return;
     try {
-        const url = `/api/concours/categories-classement?abv_categorie_classement=${missing.map(encodeURIComponent).join(',')}`;
+        const url = `/score-sheet/categories?abv_categorie_classement=${missing.map(encodeURIComponent).join(',')}`;
         const res = await fetch(url).then(r => r.json()).catch(() => null);
-        const cats = res?.data ?? (Array.isArray(res) ? res : []);
-        (Array.isArray(cats) ? cats : []).forEach(c => {
+        let cats = res?.data ?? (Array.isArray(res) ? res : []);
+        if (!Array.isArray(cats) && res?.data?.data) cats = res.data.data;
+        cats = Array.isArray(cats) ? cats : [];
+        cats.forEach(c => {
             const abv = String(c.abv_categorie_classement ?? c.abv ?? '').trim();
             const label = String(c.lb_categorie_classement ?? c.name ?? c.nom ?? abv).trim();
             if (abv && label && !existingAbvs.has(abv)) {

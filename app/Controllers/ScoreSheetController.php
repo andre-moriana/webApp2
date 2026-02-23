@@ -71,6 +71,36 @@ class ScoreSheetController {
         include 'app/Views/layouts/footer.php';
     }
     
+    /**
+     * Retourne les catégories de classement (concour_categories_classement)
+     * Filtrées par iddiscipline si fourni. Format: value=abv_categorie_classement, affichage=lb_categorie_classement
+     */
+    public function getCategories() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Non connecté'], 401);
+        }
+        $iddiscipline = isset($_GET['iddiscipline']) ? (int)$_GET['iddiscipline'] : null;
+        $abvs = isset($_GET['abv_categorie_classement']) ? trim($_GET['abv_categorie_classement']) : '';
+        $endpoint = 'concours/categories-classement';
+        $params = [];
+        if ($iddiscipline) $params[] = 'iddiscipline=' . $iddiscipline;
+        if ($abvs !== '') $params[] = 'abv_categorie_classement=' . urlencode($abvs);
+        if (!empty($params)) $endpoint .= '?' . implode('&', $params);
+        try {
+            $response = $this->apiService->makeRequest($endpoint, 'GET');
+            $raw = $response['data'] ?? null;
+            $categories = [];
+            if (is_array($raw) && isset($raw['data']) && is_array($raw['data'])) {
+                $categories = $raw['data'];
+            } elseif (is_array($raw) && isset($raw[0])) {
+                $categories = $raw;
+            }
+            $this->sendJsonResponse(['success' => true, 'data' => $categories]);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'data' => [], 'message' => $e->getMessage()]);
+        }
+    }
+    
     public function save() {
         // Vérifier si l'utilisateur est connecté
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
@@ -260,11 +290,11 @@ class ScoreSheetController {
         }
     }
     
-    private function sendJsonResponse($data) {
+    private function sendJsonResponse($data, $httpCode = 200) {
         while (ob_get_level()) {
             ob_end_clean();
         }
-        
+        http_response_code($httpCode);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
         exit;
