@@ -30,6 +30,7 @@ let selectedConcoursId = null;
 let concoursPlansPeloton = null;
 let concoursPlansCible = null;
 let concoursInscriptions = null;
+let concoursInscriptionsAll = [];  // Toutes les inscriptions (pour lookup plan)
 let concoursDetails = null;
 let concoursArcs = [];  // Liste des arcs (concour_arcs) pour lookup typarc/idarc
 let concoursCategories = [];  // Catégories pour lookup
@@ -93,6 +94,7 @@ function setupConcoursSelector() {
         isPlanPelotonMode = false;
         isPlanCibleMode = false;
         concoursInscriptions = null;
+        concoursInscriptionsAll = [];
         concoursDetails = null;
         
         pelotonWrapper.style.display = 'none';
@@ -218,13 +220,12 @@ function setupConcoursSelector() {
                 concoursPlansCible = plansCible;
             }
             
-            // Inscriptions - filtrer confirmées (format API: { data: [...] } ou tableau direct)
-            let inscriptions = Array.isArray(inscRes) ? inscRes : (inscRes?.data || []);
-            if (Array.isArray(inscriptions)) {
-                concoursInscriptions = inscriptions.filter(i => (i.statut_inscription || i.statutInscription || '') === 'confirmee');
-            } else {
-                concoursInscriptions = [];
-            }
+            // Inscriptions - format API: { data: [...] } ou tableau direct
+            let inscriptions = Array.isArray(inscRes) ? inscRes : (inscRes?.data || inscRes?.inscriptions || []);
+            if (!Array.isArray(inscriptions)) inscriptions = [];
+            concoursInscriptions = inscriptions.filter(i => (i.statut_inscription || i.statutInscription || '') === 'confirmee');
+            // Garder toutes les inscriptions pour le lookup (plan peut avoir des archers non confirmés)
+            concoursInscriptionsAll = inscriptions;
             
             isPlanCibleMode = ['T', 'S', 'I', 'H'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
             isPlanPelotonMode = ['3', 'N', 'C'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
@@ -344,24 +345,22 @@ async function prefillArchersFromConcours() {
         const plans = (concoursPlansPeloton[dep] || concoursPlansPeloton[String(dep)] || [])
             .filter(p => (getNumPeloton(p) || 0) == pel)
             .filter(p => getLicence(p));
-        const inscriptionsMap = {};
-        (concoursInscriptions || []).forEach(i => {
-            const lic = String(i.numero_licence ?? i.numeroLicence ?? '').trim();
-            if (lic) inscriptionsMap[lic] = i;
-        });
+        const inscriptionsMap = buildInscriptionsMap(concoursInscriptionsAll?.length ? concoursInscriptionsAll : concoursInscriptions);
         plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
         archers = plans.map(p => {
             const lic = String(getLicence(p)).trim();
-            const insc = inscriptionsMap[lic] || inscriptionsMap[getLicence(p)] || {};
+            const licNorm = lic.replace(/^0+/, '') || lic;
+            const insc = inscriptionsMap[lic] || inscriptionsMap[licNorm] || inscriptionsMap[lic.toUpperCase()] || findInscriptionByLicence(lic) || {};
             const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
             const cat = extractCategoryFromInscription(insc);
             const weapon = extractWeaponFromInscription(insc, p);
+            const gender = extractGenderFromInscription(insc) || ((insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H');
             return {
                 name: nom,
                 licenseNumber: lic,
                 category: cat,
                 weapon: weapon,
-                gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
+                gender: gender,
                 userId: insc.user_id || insc.userId || insc.id_user || p.user_id
             };
         });
@@ -370,24 +369,22 @@ async function prefillArchersFromConcours() {
         const dep = departSelect.value;
         const cible = parseInt(pelotonSelect.value);
         const plans = (concoursPlansCible[dep] || []).filter(p => (p.numero_cible || 0) == cible);
-        const inscriptionsMap = {};
-        (concoursInscriptions || []).forEach(i => {
-            const lic = String(i.numero_licence ?? i.numeroLicence ?? '').trim();
-            if (lic) inscriptionsMap[lic] = i;
-        });
+        const inscriptionsMap = buildInscriptionsMap(concoursInscriptionsAll?.length ? concoursInscriptionsAll : concoursInscriptions);
         plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
         archers = plans.map(p => {
             const lic = String(p.numero_licence ?? p.numeroLicence ?? '').trim();
-            const insc = inscriptionsMap[lic] || inscriptionsMap[p.numero_licence ?? p.numeroLicence] || {};
+            const licNorm = lic.replace(/^0+/, '') || lic;
+            const insc = inscriptionsMap[lic] || inscriptionsMap[licNorm] || inscriptionsMap[lic.toUpperCase()] || findInscriptionByLicence(lic) || {};
             const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
             const cat = extractCategoryFromInscription(insc);
             const weapon = extractWeaponFromInscription(insc, p);
+            const gender = extractGenderFromInscription(insc) || ((insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H');
             return {
                 name: nom,
                 licenseNumber: lic,
                 category: cat,
                 weapon: weapon,
-                gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
+                gender: gender,
                 userId: insc.user_id || insc.userId || insc.id_user || p.user_id
             };
         });
@@ -398,7 +395,7 @@ async function prefillArchersFromConcours() {
             licenseNumber: String(i.numero_licence ?? i.numeroLicence ?? '').trim(),
             category: extractCategoryFromInscription(i),
             weapon: extractWeaponFromInscription(i, null),
-            gender: (i.genre || i.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
+            gender: extractGenderFromInscription(i) || ((i.genre || i.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H'),
             userId: i.user_id || i.userId || i.id_user
         }));
     }
@@ -407,6 +404,9 @@ async function prefillArchersFromConcours() {
         showStatus('Aucun archer à préremplir. Sélectionnez une cible/peloton ou vérifiez les inscriptions.', 'warning');
         return;
     }
+    
+    // Enrichir avec l'API users (catégorie, arme, genre) pour les données manquantes
+    archers = await Promise.all(archers.map(a => enrichArcherFromUserApi(a)));
     
     // S'assurer que le type de tir est sélectionné et les feuilles initialisées
     if (!selectedShootingType) {
@@ -495,6 +495,77 @@ function extractWeaponFromInscription(insc, plan) {
         return arc ? (arc.lb_arc ?? arc.name ?? arc.nom ?? '') : '';
     }
     return '';
+}
+
+// Construit un map licence -> inscription avec variantes (trim, sans zéros initiaux, casse)
+function buildInscriptionsMap(inscriptions) {
+    const map = {};
+    (inscriptions || []).forEach(i => {
+        const lic = String(i.numero_licence ?? i.numeroLicence ?? i.licence_number ?? '').trim();
+        if (lic) {
+            map[lic] = i;
+            map[lic.toUpperCase()] = i;
+            map[lic.toLowerCase()] = i;
+            const licNoLead = lic.replace(/^0+/, '') || lic;
+            if (licNoLead !== lic) {
+                map[licNoLead] = i;
+                map[licNoLead.toUpperCase()] = i;
+            }
+        }
+    });
+    return map;
+}
+
+// Trouve une inscription par licence (recherche flexible)
+function findInscriptionByLicence(lic) {
+    const list = concoursInscriptionsAll?.length ? concoursInscriptionsAll : concoursInscriptions;
+    if (!lic || !list?.length) return null;
+    const licNorm = String(lic).trim().toLowerCase();
+    return list.find(i => {
+        const l = String(i.numero_licence ?? i.numeroLicence ?? '').trim().toLowerCase();
+        return l === licNorm || l.replace(/^0+/, '') === licNorm.replace(/^0+/, '');
+    }) || null;
+}
+
+// Extrait le genre depuis une inscription (H/F)
+function extractGenderFromInscription(insc) {
+    if (!insc) return '';
+    const g = insc.genre ?? insc.gender ?? insc.sexe ?? '';
+    if (g) {
+        const s = String(g).toUpperCase().trim();
+        if (s === 'F' || s === 'FEMME' || s === '2') return 'F';
+        if (s === 'H' || s === 'HOMME' || s === '1') return 'H';
+    }
+    return '';
+}
+
+// Enrichit un archer avec les données user (catégorie, arme, genre) via l'API users
+async function enrichArcherFromUserApi(archer) {
+    const lic = archer?.licenseNumber?.trim();
+    if (!lic || lic.length < 3) return archer;
+    const needsCategory = !archer.category || archer.category === '';
+    const needsWeapon = !archer.weapon || archer.weapon === '';
+    const needsGender = !archer.gender || archer.gender === '';
+    if (!needsCategory && !needsWeapon && !needsGender) return archer;
+    try {
+        const res = await fetch(`/api/users?licence_number=${encodeURIComponent(lic)}`);
+        if (!res.ok) return archer;
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch (_) { return archer; }
+        // Réponse possible: { data: user } ou { success, data: user } ou { success, data: { success, data: user } }
+        let user = data?.data ?? data;
+        if (user && typeof user === 'object' && user.data && (user.success || user.id)) user = user.data;
+        if (!user || typeof user !== 'object') return archer;
+        const weaponMapping = { 'Classique': 'Arc classique', 'classique': 'Arc classique', 'Poulies': 'Arc à poulies', 'poulies': 'Arc à poulies', 'Compound': 'Arc à poulies', 'compound': 'Arc à poulies', 'Barebow': 'Arc nu (barebow)', 'barebow': 'Arc nu (barebow)', 'Longbow': 'Longbow', 'Chasse': 'Arc de chasse', 'Recurve': 'Arc classique', 'recurve': 'Arc classique' };
+        if (needsCategory && (user.age_category || user.ageCategory)) archer.category = String(user.age_category ?? user.ageCategory ?? '').trim();
+        if (needsWeapon && (user.bow_type || user.bowType)) archer.weapon = weaponMapping[user.bow_type ?? user.bowType] || mapWeaponFromInscription(user.bow_type ?? user.bowType) || String(user.bow_type ?? user.bowType ?? '').trim();
+        if (needsGender && (user.gender || user.genre)) {
+            const g = String(user.gender ?? user.genre ?? '').toUpperCase().trim();
+            archer.gender = (g === 'F' || g === 'FEMME' || g === '2') ? 'F' : (g === 'H' || g === 'HOMME' || g === 'M' || g === '1') ? 'H' : '';
+        }
+    } catch (_) {}
+    return archer;
 }
 
 // Variables pour la recherche par licence
@@ -790,6 +861,27 @@ function initializeSheets() {
     displayCurrentArcher();
 }
 
+// Définit la valeur d'un select, en ajoutant l'option si elle n'existe pas
+function setSelectValueWithFallback(selectId, value) {
+    const sel = document.getElementById(selectId);
+    if (!sel || value === '' || value == null) {
+        if (sel) sel.value = '';
+        return;
+    }
+    const v = String(value).trim();
+    const hasOption = Array.from(sel.options).some(o => o.value === v);
+    if (hasOption) {
+        sel.value = v;
+        return;
+    }
+    // Option absente : l'ajouter pour que la valeur s'affiche
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v;
+    sel.appendChild(opt);
+    sel.value = v;
+}
+
 function displayCurrentArcher() {
     if (userSheets.length === 0) return;
     
@@ -804,9 +896,9 @@ function displayCurrentArcher() {
     
     document.getElementById('archerName').value = sheet.archerInfo.name;
     document.getElementById('archerLicense').value = sheet.archerInfo.licenseNumber;
-    document.getElementById('archerCategory').value = sheet.archerInfo.category;
-    document.getElementById('archerWeapon').value = sheet.archerInfo.weapon;
-    document.getElementById('archerGender').value = sheet.archerInfo.gender;
+    setSelectValueWithFallback('archerCategory', sheet.archerInfo.category);
+    setSelectValueWithFallback('archerWeapon', sheet.archerInfo.weapon);
+    document.getElementById('archerGender').value = sheet.archerInfo.gender || '';
     
     // Mettre à jour le tableau des scores
     updateScoreTable(sheet);
