@@ -438,8 +438,9 @@ async function prefillArchersFromConcours() {
         }
     });
     
-    // Charger les libellés des catégories manquantes (archers peuvent avoir des cat. hors iddiscipline)
+    // Charger les libellés des catégories et armes manquantes (archers peuvent avoir des valeurs hors liste)
     await addMissingCategoryOptions(archers.map(a => a.category).filter(Boolean));
+    addMissingWeaponOptions(archers.map(a => a.weapon).filter(Boolean));
     
     // S'assurer que les sections archers sont visibles avant d'afficher
     const archerNav = document.getElementById('archerNavigation');
@@ -731,55 +732,10 @@ async function searchUserByLicense(licenseNumber) {
             }
             
             if (weaponField) {
-                // Récupérer bow_type depuis l'API
-                const weaponRaw = user.bow_type || user.bowType || '';
-                
-                // Mapping entre les valeurs de la base de données et les options du select
-                const weaponMapping = {
-                    'Classique': 'Arc classique',
-                    'classique': 'Arc classique',
-                    'Arc classique': 'Arc classique',
-                    'Poulies': 'Arc à poulies',
-                    'poulies': 'Arc à poulies',
-                    'Arc à poulies': 'Arc à poulies',
-                    'Barebow': 'Arc nu (barebow)',
-                    'barebow': 'Arc nu (barebow)',
-                    'Arc nu (barebow)': 'Arc nu (barebow)',
-                    'Arc nu': 'Arc nu (barebow)',
-                    'Longbow': 'Longbow',
-                    'longbow': 'Longbow',
-                    'Chasse': 'Arc de chasse',
-                    'chasse': 'Arc de chasse',
-                    'Arc de chasse': 'Arc de chasse'
-                };
-                
-                // Mapper la valeur si elle existe dans le mapping, sinon utiliser la valeur brute
-                const weapon = weaponMapping[weaponRaw] || weaponRaw;
-                
-                console.log('Valeur weapon brute:', weaponRaw);
-                console.log('Valeur weapon mappée:', weapon);
-                
-                if (weapon && weapon !== 'null' && weapon !== '') {
-                    // Vérifier si la valeur existe dans les options du select
-                    const options = Array.from(weaponField.options).map(opt => opt.value);
-                    if (options.includes(weapon)) {
-                        weaponField.value = weapon;
-                        console.log('Champ weapon rempli avec:', weapon);
-                    } else {
-                        console.warn('Valeur weapon non trouvée dans les options du select:', weapon);
-                        console.warn('Options disponibles:', options);
-                        // Essayer de trouver une correspondance partielle
-                        const partialMatch = options.find(opt => 
-                            opt.toLowerCase().includes(weaponRaw.toLowerCase()) || 
-                            weaponRaw.toLowerCase().includes(opt.toLowerCase().replace('arc ', '').replace('(', '').replace(')', ''))
-                        );
-                        if (partialMatch) {
-                            weaponField.value = partialMatch;
-                            console.log('Correspondance partielle trouvée:', partialMatch);
-                        }
-                    }
-                } else {
-                    console.warn('Aucune valeur weapon trouvée dans les données utilisateur');
+                const weapon = (user.bow_type || user.bowType || '').trim();
+                if (weapon && weapon !== 'null') {
+                    addMissingWeaponOptions([weapon]);
+                    setSelectValueWithFallback('archerWeapon', weapon);
                 }
             }
             
@@ -872,6 +828,21 @@ function initializeSheets() {
     displayCurrentArcher();
 }
 
+// Ajoute les armes manquantes dans le select (archer peut avoir une arme hors liste concour_arcs)
+function addMissingWeaponOptions(weaponLabels) {
+    const weaponSelect = document.getElementById('archerWeapon');
+    if (!weaponSelect || !weaponLabels?.length) return;
+    const existing = new Set(Array.from(weaponSelect.options).map(o => o.value).filter(Boolean));
+    const missing = [...new Set(weaponLabels.map(w => String(w).trim()).filter(Boolean))].filter(w => !existing.has(w));
+    missing.forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w;
+        opt.textContent = w;
+        weaponSelect.appendChild(opt);
+        existing.add(w);
+    });
+}
+
 // Charge les libellés des catégories manquantes dans le select (abvs des archers hors filtre iddiscipline)
 async function addMissingCategoryOptions(categoryAbvs) {
     const categorySelect = document.getElementById('archerCategory');
@@ -947,9 +918,12 @@ async function displayCurrentArcher() {
     
     document.getElementById('archerName').value = sheet.archerInfo.name;
     document.getElementById('archerLicense').value = sheet.archerInfo.licenseNumber;
-    // S'assurer que la catégorie de l'archer sélectionné est dans le select (discipline + archer)
+    // S'assurer que catégorie et arme de l'archer sélectionné sont dans les selects
     if (sheet.archerInfo.category) {
         await addMissingCategoryOptions([sheet.archerInfo.category]);
+    }
+    if (sheet.archerInfo.weapon) {
+        addMissingWeaponOptions([sheet.archerInfo.weapon]);
     }
     setSelectValueWithFallback('archerCategory', sheet.archerInfo.category);
     setSelectValueWithFallback('archerWeapon', sheet.archerInfo.weapon);

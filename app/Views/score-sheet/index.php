@@ -136,23 +136,23 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                             <label for="archerName" class="form-label">Nom</label>
                             <input type="text" class="form-control" id="archerName" placeholder="Nom de l'archer">
                         </div>
-                        <div class="col-md-3">
-                            <label for="archerLicense" class="form-label">Numéro de licence</label>
+                        <div class="col-md-2">
+                            <label for="archerLicense" class="form-label">N° licence</label>
                             <input type="text" class="form-control" id="archerLicense" placeholder="Ex: 660035U">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label for="archerCategory" class="form-label">Catégorie (classement)</label>
                             <select class="form-select" id="archerCategory">
                                 <option value="">-- Sélectionner un concours --</option>
                             </select>
-                            <small class="text-muted">Rempli selon la discipline du concours</small>
+                            <small class="text-muted">Discipline + archer sélectionné</small>
                         </div>
                         <div class="col-md-2">
                             <label for="archerWeapon" class="form-label">Arme</label>
                             <select class="form-select" id="archerWeapon">
                                 <option value="">-- Sélectionner un concours --</option>
                             </select>
-                            <small class="text-muted">Rempli depuis concour_arcs</small>
+                            <small class="text-muted">concour_arcs + archer</small>
                         </div>
                         <div class="col-md-2">
                             <label for="archerGender" class="form-label">Genre</label>

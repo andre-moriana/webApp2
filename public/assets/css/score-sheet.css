@@ -73,6 +73,11 @@
     background-color: #fff;
 }
 
+/* Champ licence compact pour laisser plus de place à la catégorie */
+#archerLicense {
+    max-width: 9rem;
+}
+
 #scoreTableSection .card-body {
     padding: 0;
 }
