@@ -1436,8 +1436,10 @@ class ConcoursController {
             if (is_array($categoriesPayload) && !empty($categoriesPayload)) {
                 foreach ($categoriesPayload as &$c) {
                     if (!isset($c['id']) && isset($c['_id'])) $c['id'] = $c['_id'];
-                    if (empty($c['abv_categorie_classement']) && isset($c['abv'])) $c['abv_categorie_classement'] = trim((string)$c['abv']);
-                    if (empty($c['lb_categorie_classement']) && (isset($c['name']) || isset($c['nom']))) $c['lb_categorie_classement'] = trim((string)($c['name'] ?? $c['nom'] ?? ''));
+                    $abv = trim((string)($c['abv_categorie_classement'] ?? $c['abv'] ?? ''));
+                    $lb = trim((string)($c['lb_categorie_classement'] ?? $c['name'] ?? $c['nom'] ?? ''));
+                    $c['abv_categorie_classement'] = $abv !== '' ? $abv : (isset($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
+                    $c['lb_categorie_classement'] = $lb !== '' ? $lb : (isset($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
                 }
                 unset($c);
                 usort($categoriesPayload, function ($a, $b) {
@@ -2209,8 +2211,10 @@ class ConcoursController {
             if (is_array($categoriesPayload) && !empty($categoriesPayload)) {
                 foreach ($categoriesPayload as &$c) {
                     if (!isset($c['id']) && isset($c['_id'])) $c['id'] = $c['_id'];
-                    if (empty($c['abv_categorie_classement']) && isset($c['abv'])) $c['abv_categorie_classement'] = trim((string)$c['abv']);
-                    if (empty($c['lb_categorie_classement']) && (isset($c['name']) || isset($c['nom']))) $c['lb_categorie_classement'] = trim((string)($c['name'] ?? $c['nom'] ?? ''));
+                    $abv = trim((string)($c['abv_categorie_classement'] ?? $c['abv'] ?? ''));
+                    $lb = trim((string)($c['lb_categorie_classement'] ?? $c['name'] ?? $c['nom'] ?? ''));
+                    $c['abv_categorie_classement'] = $abv !== '' ? $abv : (isset($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
+                    $c['lb_categorie_classement'] = $lb !== '' ? $lb : (isset($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : '');
                 }
                 unset($c);
                 usort($categoriesPayload, function ($a, $b) {
