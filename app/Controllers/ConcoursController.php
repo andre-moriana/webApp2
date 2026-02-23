@@ -2396,7 +2396,8 @@ class ConcoursController {
             'numero_depart' => $numero_depart,
             'numero_tir' => $numero_tir,
             'categorie_classement' => isset($_POST['categorie_classement']) && $_POST['categorie_classement'] !== '' ? trim((string)$_POST['categorie_classement']) : null,
-            'arme' => isset($_POST['arme']) && $_POST['arme'] !== '' ? trim((string)$_POST['arme']) : null,
+            'idarc' => isset($_POST['idarc']) && $_POST['idarc'] !== '' ? (int)$_POST['idarc'] : (isset($_POST['arme']) && $_POST['arme'] !== '' ? (is_numeric($_POST['arme']) ? (int)$_POST['arme'] : null) : null),
+            'arme' => isset($_POST['arme']) && $_POST['arme'] !== '' && !is_numeric($_POST['arme']) ? trim((string)$_POST['arme']) : null,
             'distance' => isset($_POST['distance']) && $_POST['distance'] !== '' ? (int)$_POST['distance'] : null,
             'blason' => isset($_POST['blason']) && $_POST['blason'] !== '' ? (int)$_POST['blason'] : null,
             'piquet' => $_POST['piquet'] ?? null,
@@ -2797,7 +2798,8 @@ class ConcoursController {
                 (in_array(strtoupper(trim($_POST['creation_renouvellement'])), ['C', 'R'], true) ? 
                     strtoupper(trim($_POST['creation_renouvellement'])) : null) : null,
             'categorie_classement' => $_POST['categorie_classement'] ?? null,
-            'arme' => $_POST['arme'] ?? null,
+            'idarc' => isset($_POST['idarc']) && $_POST['idarc'] !== '' ? (int)$_POST['idarc'] : (isset($_POST['arme']) && is_numeric($_POST['arme']) ? (int)$_POST['arme'] : null),
+            'arme' => isset($_POST['arme']) && $_POST['arme'] !== '' && !is_numeric($_POST['arme']) ? trim((string)$_POST['arme']) : null,
             'mobilite_reduite' => isset($_POST['mobilite_reduite']) ? (int)$_POST['mobilite_reduite'] : 0,
             'numero_tir' => $numero_tir,
             'tarif_competition' => $_POST['tarif_competition'] ?? null,
@@ -3407,7 +3409,7 @@ class ConcoursController {
                                     'nom' => $insc['user_nom'] ?? '',
                                     'name' => $insc['user_nom'] ?? '',
                                     'clubName' => $insc['club_name'] ?? null,
-                                    'arme' => $insc['arme'] ?? null,
+                                    'arme' => $insc['lb_arc'] ?? $insc['arme'] ?? null,
                                     'categorie_classement' => $insc['categorie_classement'] ?? null
                                 ];
                             }

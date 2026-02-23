@@ -399,7 +399,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <option value="">Sélectionner</option>
                                 <?php if (!empty($arcs)): ?>
                                     <?php foreach ($arcs as $arc): ?>
-                                        <option value="<?= htmlspecialchars($arc['lb_arc'] ?? '') ?>">
+                                        <option value="<?= (int)($arc['idarc'] ?? $arc['id_arc'] ?? '') ?>">
                                             <?= htmlspecialchars($arc['lb_arc'] ?? '') ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -592,7 +592,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <option value="">Sélectionner</option>
                                 <?php if (!empty($arcs)): ?>
                                     <?php foreach ($arcs as $arc): ?>
-                                        <option value="<?= htmlspecialchars($arc['lb_arc'] ?? '') ?>">
+                                        <option value="<?= (int)($arc['idarc'] ?? $arc['id_arc'] ?? '') ?>">
                                             <?= htmlspecialchars($arc['lb_arc'] ?? '') ?>
                                         </option>
                                     <?php endforeach; ?>
