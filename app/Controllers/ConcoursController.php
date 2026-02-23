@@ -9,67 +9,7 @@ class ConcoursController {
 
     public function __construct() {
         $this->apiService = new ApiService();
-     * Retourne l'ID discipline (entier) à partir de la valeur renvoyée par l'API concours (objet, tableau ou scalaire).
-     */
-    private function normalizeIdDiscipline($disciplineOrId) {
-     * @param int|null $iddiscipline
-     * @param bool $usePublic true pour inscription ciblée (makeRequestPublic)
-     * @return array liste d'items avec abv_categorie_classement, lb_categorie_classement
-        if ($disciplineOrId === null || $disciplineOrId === '') return null;
-        if (is_numeric($disciplineOrId)) return (int)$disciplineOrId;
-        if (is_object($disciplineOrId)) {
-            if (isset($disciplineOrId->iddiscipline)) return (int)$disciplineOrId->iddiscipline;
-            if (isset($disciplineOrId->id)) return (int)$disciplineOrId->id;
-        }
-        if (is_array($disciplineOrId)) {
-            if (isset($disciplineOrId['iddiscipline'])) return (int)$disciplineOrId['iddiscipline'];
-            if (isset($disciplineOrId['id'])) return (int)$disciplineOrId['id'];
-        }
-        return null;
-    }
-        return [];
-
-    /**
-     * Retourne l'ID discipline (entier) à partir de la valeur renvoyée par l'API concours (objet, tableau ou scalaire).
-     */
-    private function normalizeIdDiscipline($disciplineOrId) {
-     * @param int|null $iddiscipline
-     * @param bool $usePublic true pour inscription ciblée (makeRequestPublic)
-     * @return array liste d'items avec abv_categorie_classement, lb_categorie_classement
-        if ($disciplineOrId === null || $disciplineOrId === '') return null;
-        if (is_numeric($disciplineOrId)) return (int)$disciplineOrId;
-        if (is_object($disciplineOrId)) {
-            if (isset($disciplineOrId->iddiscipline)) return (int)$disciplineOrId->iddiscipline;
-            if (isset($disciplineOrId->id)) return (int)$disciplineOrId->id;
-        }
-        if (is_array($disciplineOrId)) {
-            if (isset($disciplineOrId['iddiscipline'])) return (int)$disciplineOrId['iddiscipline'];
-            if (isset($disciplineOrId['id'])) return (int)$disciplineOrId['id'];
-        }
-        return null;
-    }
-        return [];
-
-    /**
-    }
-
-    /**
-     * Charge les catégories de classement (table concour_categories_classement), filtrées par iddiscipline.
-     */
-    private function loadCategoriesClassement($iddiscipline) {
-        $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
-        try {
-            $response = $this->apiService->makeRequestPublic($endpoint, 'GET');
-            $body = $response['data'] ?? null;
-            if (!is_array($body)) return [];
-            if (isset($body['data']) && is_array($body['data'])) return $body['data'];
-            if (isset($body[0])) return $body;
-            return [];
-        } catch (Exception $e) {
-            error_log('loadCategoriesClassement: ' . $e->getMessage());
-            return [];
-        }
-    }
+    }         
 
     public function index() {
         // Vider le cache opcache temporairement
