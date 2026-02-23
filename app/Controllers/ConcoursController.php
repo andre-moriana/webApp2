@@ -2202,7 +2202,7 @@ class ConcoursController {
         // Récupérer les catégories de classement (filtrées par discipline)
         $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
         try {
-            $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
+            $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=3' . (int)$iddiscipline : '');
             $categoriesResponse = $this->apiService->makeRequestPublic($endpoint, 'GET');
             if ($categoriesResponse['success'] ?? false) {
                 $categoriesPayload = $categoriesResponse['data'] ?? [];
