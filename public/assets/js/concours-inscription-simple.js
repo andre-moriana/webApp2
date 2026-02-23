@@ -45,79 +45,10 @@ var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concou
     (document.querySelector('input[name="concours_id"]')?.value ||
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
 
-/**
- * Remplit les selects catégorie de classement (formulaire + modale) comme la feuille de marque.
- * 1) Essaie /score-sheet/categories (même URL que feuille de marque, avec auth).
- * 2) Si 401, essaie /api/concours/categories-classement/public (inscription ciblée).
- */
-function fillCategorieClassementSelect() {
-    var categorySelect = document.getElementById('categorie_classement');
-    var editSelect = document.getElementById('edit-categorie_classement');
-    if (!categorySelect) return;
-    var iddiscipline = (typeof concoursDiscipline !== 'undefined' && concoursDiscipline) ? concoursDiscipline : null;
-    var qs = iddiscipline ? '?iddiscipline=' + encodeURIComponent(iddiscipline) : '';
-
-    function setOptions(select, categories) {
-        if (!select) return;
-        select.innerHTML = '<option value="">Sélectionner une catégorie</option>';
-        (categories || []).forEach(function(c) {
-            var abv = (c.abv_categorie_classement != null ? String(c.abv_categorie_classement).trim() : '');
-            var label = (c.lb_categorie_classement != null ? String(c.lb_categorie_classement).trim() : abv);
-            if (abv || label) {
-                var opt = document.createElement('option');
-                opt.value = abv || label;
-                opt.textContent = label || abv;
-                select.appendChild(opt);
-            }
-        });
-    }
-
-    // Remplir tout de suite avec la config PHP si dispo (évite select vide avant le fetch)
-    if (window.categoriesClassement && window.categoriesClassement.length > 0) {
-        setOptions(categorySelect, window.categoriesClassement);
-        setOptions(editSelect, window.categoriesClassement);
-    }
-
-    function extractCategories(catRes) {
-        var categories = catRes && (catRes.data !== undefined ? catRes.data : (Array.isArray(catRes) ? catRes : []));
-        if (!Array.isArray(categories) && categories && categories.data) categories = categories.data;
-        return Array.isArray(categories) ? categories : [];
-    }
-
-    function applyAndDone(categories) {
-        if (categories.length > 0) {
-            setOptions(categorySelect, categories);
-            setOptions(editSelect, categories);
-            window.categoriesClassement = categories;
-        }
-    }
-
-    function tryFetch(url) {
-        return fetch(url).then(function(r) {
-            if (!r.ok) return r.status === 401 ? null : Promise.reject(new Error(url + ' ' + r.status));
-            return r.json();
-        });
-    }
-
-    // 1) Même URL que la feuille de marque (connecté)
-    tryFetch('/score-sheet/categories' + qs).then(function(data) {
-        if (data) { applyAndDone(extractCategories(data)); return; }
-        // 2) Si 401, URL publique (inscription ciblée)
-        return tryFetch('/api/concours/categories-classement/public' + qs).then(function(data2) {
-            if (data2) applyAndDone(extractCategories(data2));
-        });
-    }).catch(function(e) {
-        console.warn('Erreur chargement catégories:', e);
-        tryFetch('/api/concours/categories-classement/public' + qs).then(function(data) {
-            if (data) applyAndDone(extractCategories(data));
-        }).catch(function() {});
-    });
-}
+// Le select catégorie est rempli côté PHP (table filtrée par discipline). window.categoriesClassement vient de la config pour le pré-remplissage.
 
 // Ajouter event listener au bouton de recherche
 document.addEventListener('DOMContentLoaded', function() {
-    fillCategorieClassementSelect();
-
     const searchBtn = document.getElementById('archer-search-btn');
     const licenceInput = document.getElementById('licence-search-input');
     const confirmBtn = document.getElementById('btn-confirm-inscription');

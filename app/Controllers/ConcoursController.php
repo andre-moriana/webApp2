@@ -11,6 +11,43 @@ class ConcoursController {
         $this->apiService = new ApiService();
     }
 
+    /**
+     * Charge les catégories de classement (table concour_categories_classement), filtrées par iddiscipline.
+     * @param int|null $iddiscipline
+     * @param bool $usePublic true pour inscription ciblée (makeRequestPublic)
+     * @return array liste d'items avec abv_categorie_classement, lb_categorie_classement
+     */
+    private function loadCategoriesClassement($iddiscipline, $usePublic = false) {
+        $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
+        try {
+            $response = $usePublic
+                ? $this->apiService->makeRequestPublic($endpoint, 'GET')
+                : $this->apiService->makeRequest($endpoint, 'GET');
+            $body = $response['data'] ?? null;
+            if (is_array($body) && isset($body['data']) && is_array($body['data'])) {
+                return $body['data'];
+            }
+            if (is_array($body) && isset($body[0])) {
+                return $body;
+            }
+            if ($iddiscipline) {
+                $response = $usePublic
+                    ? $this->apiService->makeRequestPublic('concours/categories-classement', 'GET')
+                    : $this->apiService->makeRequest('concours/categories-classement', 'GET');
+                $body = $response['data'] ?? null;
+                if (is_array($body) && isset($body['data']) && is_array($body['data'])) {
+                    return $body['data'];
+                }
+                if (is_array($body) && isset($body[0])) {
+                    return $body;
+                }
+            }
+        } catch (Exception $e) {
+            error_log('loadCategoriesClassement: ' . $e->getMessage());
+        }
+        return [];
+    }
+
     public function index() {
         // Vider le cache opcache temporairement
         if (function_exists('opcache_reset')) {
@@ -1405,30 +1442,8 @@ class ConcoursController {
         }
         unset($inscription);
 
-        // Catégories de classement : même source et extraction que ScoreSheetController::getCategories
-        $categoriesClassement = [];
-        try {
-            $iddiscipline = is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null);
-            $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
-            $response = $this->apiService->makeRequest($endpoint, 'GET');
-            $raw = $response['data'] ?? null;
-            $categories = [];
-            if (is_array($raw) && isset($raw['data']) && is_array($raw['data'])) {
-                $categories = $raw['data'];
-            } elseif (is_array($raw) && isset($raw[0])) {
-                $categories = $raw;
-            }
-            if (empty($categories) && $iddiscipline) {
-                $response = $this->apiService->makeRequest('concours/categories-classement', 'GET');
-                $raw = $response['data'] ?? null;
-                if (is_array($raw) && isset($raw['data']) && is_array($raw['data'])) {
-                    $categories = $raw['data'];
-                }
-            }
-            $categoriesClassement = is_array($categories) ? $categories : [];
-        } catch (Exception $e) {
-            error_log('Erreur catégories classement: ' . $e->getMessage());
-        }
+        $iddiscipline = is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null);
+        $categoriesClassement = $this->loadCategoriesClassement($iddiscipline, false);
 
         // Récupérer les arcs
         $arcs = [];
@@ -2174,29 +2189,8 @@ class ConcoursController {
         $distancesTir = [];
         $disciplineAbv = null;
 
-        // Récupérer les catégories de classement (même logique que inscription)
         $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
-        try {
-            $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
-            $raw = $this->apiService->makeRequestPublic($endpoint, 'GET');
-            $body = $raw['data'] ?? [];
-            $list = is_array($body) && isset($body['data']) && is_array($body['data']) ? $body['data'] : (is_array($body) && isset($body[0]) ? $body : []);
-            foreach ($list as $c) {
-                if (!is_array($c)) continue;
-                $abv = isset($c['abv_categorie_classement']) ? trim((string)$c['abv_categorie_classement']) : (isset($c['abv']) ? trim((string)$c['abv']) : '');
-                $lb  = isset($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : (isset($c['name']) ? trim((string)$c['name']) : (isset($c['nom']) ? trim((string)$c['nom']) : ''));
-                if ($abv === '' && $lb === '') continue;
-                $categoriesClassement[] = array_merge($c, [
-                    'abv_categorie_classement' => $abv ?: ($lb ?: ''),
-                    'lb_categorie_classement'  => $lb ?: ($abv ?: ''),
-                ]);
-            }
-            usort($categoriesClassement, function ($a, $b) {
-                return strcasecmp((string)($a['lb_categorie_classement'] ?? ''), (string)($b['lb_categorie_classement'] ?? ''));
-            });
-        } catch (Exception $e) {
-            error_log('inscriptionCible: erreur catégories: ' . $e->getMessage());
-        }
+        $categoriesClassement = $this->loadCategoriesClassement($iddiscipline, true);
 
         // Récupérer les arcs
         try {
