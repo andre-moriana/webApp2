@@ -437,6 +437,9 @@ async function prefillArchersFromConcours() {
         }
     });
     
+    // Charger les libellés des catégories manquantes (archers peuvent avoir des cat. hors iddiscipline)
+    await addMissingCategoryOptions(archers.map(a => a.category).filter(Boolean));
+    
     // S'assurer que les sections archers sont visibles avant d'afficher
     const archerNav = document.getElementById('archerNavigation');
     const archerInfo = document.getElementById('archerInfoSection');
@@ -721,7 +724,8 @@ async function searchUserByLicense(licenseNumber) {
             if (categoryField) {
                 const category = user.age_category || user.ageCategory || '';
                 if (category) {
-                    categoryField.value = category;
+                    await addMissingCategoryOptions([category]);
+                    setSelectValueWithFallback('archerCategory', category);
                 }
             }
             
@@ -867,6 +871,34 @@ function initializeSheets() {
     displayCurrentArcher();
 }
 
+// Charge les libellés des catégories manquantes dans le select (abvs des archers hors filtre iddiscipline)
+async function addMissingCategoryOptions(categoryAbvs) {
+    const categorySelect = document.getElementById('archerCategory');
+    if (!categorySelect || !categoryAbvs?.length) return;
+    const existingAbvs = new Set(Array.from(categorySelect.options).map(o => o.value).filter(Boolean));
+    const missing = [...new Set(categoryAbvs.map(a => String(a).trim()).filter(Boolean))].filter(abv => !existingAbvs.has(abv));
+    if (missing.length === 0) return;
+    try {
+        const url = `/api/concours/categories-classement?abv_categorie_classement=${missing.map(encodeURIComponent).join(',')}`;
+        const res = await fetch(url).then(r => r.json()).catch(() => null);
+        const cats = res?.data ?? (Array.isArray(res) ? res : []);
+        (Array.isArray(cats) ? cats : []).forEach(c => {
+            const abv = String(c.abv_categorie_classement ?? c.abv ?? '').trim();
+            const label = String(c.lb_categorie_classement ?? c.name ?? c.nom ?? abv).trim();
+            if (abv && label && !existingAbvs.has(abv)) {
+                const opt = document.createElement('option');
+                opt.value = abv;
+                opt.textContent = label;
+                categorySelect.appendChild(opt);
+                existingAbvs.add(abv);
+                concoursCategories.push(c);
+            }
+        });
+    } catch (e) {
+        console.warn('Erreur chargement catégories manquantes:', e);
+    }
+}
+
 // Définit la valeur d'un select, en ajoutant l'option si elle n'existe pas
 function setSelectValueWithFallback(selectId, value) {
     const sel = document.getElementById(selectId);
@@ -880,10 +912,18 @@ function setSelectValueWithFallback(selectId, value) {
         sel.value = v;
         return;
     }
-    // Option absente : l'ajouter pour que la valeur s'affiche
+    // Option absente : utiliser le libellé depuis concoursCategories si dispo (catégorie), sinon la valeur
+    let label = v;
+    if (selectId === 'archerCategory' && concoursCategories?.length) {
+        const c = concoursCategories.find(x => (x.abv_categorie_classement ?? x.abv ?? '').trim() === v);
+        if (c) label = String(c.lb_categorie_classement ?? c.name ?? c.nom ?? v).trim();
+    } else if (selectId === 'archerWeapon' && concoursArcs?.length) {
+        const a = concoursArcs.find(x => (x.lb_arc ?? x.name ?? '').trim() === v);
+        if (a) label = String(a.lb_arc ?? a.name ?? a.nom ?? v).trim();
+    }
     const opt = document.createElement('option');
     opt.value = v;
-    opt.textContent = v;
+    opt.textContent = label;
     sel.appendChild(opt);
     sel.value = v;
 }
