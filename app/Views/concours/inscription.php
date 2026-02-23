@@ -369,7 +369,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         <div class="col-md-6 mb-3">
                             <label for="categorie_classement" class="form-label">Catégorie de classement</label>
                             <select id="categorie_classement" class="form-control">
-                                <option value="">Sélectionner une catégorieAAA</option>
+                                <option value="">Sélectionner une catégorie =<?= htmlspecialchars(count($categoriesClassement)) ?></option>
                                 <?php 
                                 // Debug temporaire - à retirer après test
                                 if (!isset($categoriesClassement)) {
