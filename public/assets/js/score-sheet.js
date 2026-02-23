@@ -31,6 +31,8 @@ let concoursPlansPeloton = null;
 let concoursPlansCible = null;
 let concoursInscriptions = null;
 let concoursDetails = null;
+let isPlanPelotonMode = false;  // true = Départ/Peloton (N/3/C), false ou plan cible = Départ/Cible (T/S/I/H)
+let isPlanCibleMode = false;
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
@@ -83,6 +85,8 @@ function setupConcoursSelector() {
     concoursSelect.addEventListener('change', async function() {
         selectedConcoursId = this.value || null;
         concoursPlansPeloton = null;
+        isPlanPelotonMode = false;
+        isPlanCibleMode = false;
         concoursPlansCible = null;
         concoursInscriptions = null;
         concoursDetails = null;
@@ -216,8 +220,8 @@ function setupConcoursSelector() {
                 concoursInscriptions = [];
             }
             
-            const isPlanCibleMode = ['T', 'S', 'I', 'H'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
-            const isPlanPelotonMode = ['3', 'N', 'C', '3D'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
+            isPlanCibleMode = ['T', 'S', 'I', 'H'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
+            isPlanPelotonMode = ['3', 'N', 'C'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
             
             // Afficher sélecteur Départ / Cible (T/S/I/H) ou Départ / Peloton (N/3/C)
             if (isPlanCibleMode || isPlanPelotonMode) {
@@ -297,20 +301,23 @@ async function prefillArchersFromConcours() {
         }
     }
     
-    if (concoursPlansCible && departSelect?.value && pelotonSelect?.value) {
-        // Mode plan cible (T/S/I/H) : extraire les archers de la cible
-        const dep = departSelect.value;
-        const cible = parseInt(pelotonSelect.value);
-        const plans = (concoursPlansCible[dep] || []).filter(p => (p.numero_cible || 0) == cible);
+    if (isPlanPelotonMode && concoursPlansPeloton && departSelect?.value && pelotonSelect?.value) {
+        // Mode peloton (N/3/C) : extraire les archers du peloton (priorité sur plan cible)
+        const dep = String(departSelect.value);
+        const pel = parseInt(pelotonSelect.value, 10);
+        const getNumPeloton = p => p.numero_peloton ?? p.numeroPeloton ?? 0;
+        const getLicence = p => p.numero_licence ?? p.numeroLicence ?? '';
+        const plans = (concoursPlansPeloton[dep] || concoursPlansPeloton[String(dep)] || [])
+            .filter(p => (getNumPeloton(p) || 0) == pel)
+            .filter(p => getLicence(p));
         const inscriptionsMap = {};
         (concoursInscriptions || []).forEach(i => {
             const lic = i.numero_licence || i.numeroLicence;
             if (lic) inscriptionsMap[lic] = i;
         });
-        
         plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
         archers = plans.map(p => {
-            const lic = p.numero_licence || p.numeroLicence || '';
+            const lic = getLicence(p);
             const insc = inscriptionsMap[lic] || {};
             const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
             const arme = insc.arme || '';
@@ -324,16 +331,11 @@ async function prefillArchersFromConcours() {
                 userId: insc.user_id || insc.userId || insc.id_user || p.user_id
             };
         });
-    } else if (concoursPlansPeloton && departSelect?.value && pelotonSelect?.value) {
-        // Mode peloton (N/3/C) : extraire les archers du peloton
-        const dep = String(departSelect.value);
-        const pel = parseInt(pelotonSelect.value, 10);
-        const getNumPeloton = p => p.numero_peloton ?? p.numeroPeloton ?? 0;
-        const getLicence = p => p.numero_licence ?? p.numeroLicence ?? '';
-        // Filtrer par peloton et ne garder que les plans avec archer assigné (numero_licence)
-        const plans = (concoursPlansPeloton[dep] || concoursPlansPeloton[String(dep)] || [])
-            .filter(p => (getNumPeloton(p) || 0) == pel)
-            .filter(p => getLicence(p));
+    } else if (isPlanCibleMode && concoursPlansCible && departSelect?.value && pelotonSelect?.value) {
+        // Mode plan cible (T/S/I/H) : extraire les archers de la cible
+        const dep = departSelect.value;
+        const cible = parseInt(pelotonSelect.value);
+        const plans = (concoursPlansCible[dep] || []).filter(p => (p.numero_cible || 0) == cible);
         const inscriptionsMap = {};
         (concoursInscriptions || []).forEach(i => {
             const lic = i.numero_licence || i.numeroLicence;
@@ -342,7 +344,7 @@ async function prefillArchersFromConcours() {
         
         plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
         archers = plans.map(p => {
-            const lic = getLicence(p);
+            const lic = p.numero_licence || p.numeroLicence || '';
             const insc = inscriptionsMap[lic] || {};
             const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
             const arme = insc.arme || '';
