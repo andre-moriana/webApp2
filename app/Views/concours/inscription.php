@@ -370,29 +370,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <label for="categorie_classement" class="form-label">Catégorie de classement</label>
                             <select id="categorie_classement" class="form-control">
                                 <option value="">Sélectionner une catégorie</option>
-                                <?php 
-                                // Debug temporaire - à retirer après test
-                                if (!isset($categoriesClassement)) {
-                                    echo '<!-- DEBUG: $categoriesClassement n\'est pas définie -->';
-                                } else {
-                                    echo '<!-- DEBUG: $categoriesClassement count: ' . count($categoriesClassement) . ' -->';
-                                }
-                                if (!empty($categoriesClassement)): ?>
-                                <?php 
-                                foreach ($categoriesClassement as $categorie): 
-                                    $abv = trim((string)($categorie['abv_categorie_classement'] ?? $categorie['abv'] ?? ''));
-                                    $lb = trim((string)($categorie['lb_categorie_classement'] ?? $categorie['name'] ?? $categorie['nom'] ?? ''));
-                                    if ($abv === '' && $lb === '') continue;
-                                    $label = $lb !== '' ? ($abv !== '' ? $lb . ' (' . $abv . ')' : $lb) : $abv;
-                                ?>
-                                    <option value="<?= htmlspecialchars($abv) ?>">
-                                        <?= htmlspecialchars($label) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                                <?php else: ?>
-                                    <!-- Debug: Aucune catégorie disponible -->
-                                    <?php error_log('DEBUG: Aucune catégorie dans $categoriesClassement'); ?>
-                                <?php endif; ?>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -575,19 +552,14 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <label for="edit-categorie_classement" class="form-label">Catégorie de classement</label>
                             <select id="edit-categorie_classement" class="form-control">
                                 <option value="">Sélectionner une catégorie</option>
-                                <?php 
-                                if (!empty($categoriesClassement)): ?>
-                                    <?php foreach ($categoriesClassement as $categorie): 
-                                        $abv = trim((string)($categorie['abv_categorie_classement'] ?? $categorie['abv'] ?? ''));
-                                        $lb = trim((string)($categorie['lb_categorie_classement'] ?? $categorie['name'] ?? $categorie['nom'] ?? ''));
+                                <?php foreach ($categoriesClassement ?? [] as $categorie): ?>
+                                    <?php if (!is_array($categorie)) continue;
+                                        $abv = isset($categorie['abv_categorie_classement']) ? trim((string)$categorie['abv_categorie_classement']) : (isset($categorie['abv']) ? trim((string)$categorie['abv']) : '');
+                                        $lb  = isset($categorie['lb_categorie_classement']) ? trim((string)$categorie['lb_categorie_classement']) : (isset($categorie['name']) ? trim((string)$categorie['name']) : (isset($categorie['nom']) ? trim((string)$categorie['nom']) : ''));
                                         if ($abv === '' && $lb === '') continue;
-                                        $label = $lb !== '' ? ($abv !== '' ? $lb . ' (' . $abv . ')' : $lb) : $abv;
-                                    ?>
-                                        <option value="<?= htmlspecialchars($abv) ?>">
-                                            <?= htmlspecialchars($label) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
+                                        $label = $lb !== '' ? ($abv !== '' ? $lb . ' (' . $abv . ')' : $lb) : $abv; ?>
+                                    <option value="<?= htmlspecialchars($abv) ?>"><?= htmlspecialchars($label) ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
