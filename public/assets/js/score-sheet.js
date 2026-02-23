@@ -253,11 +253,11 @@ async function prefillArchersFromConcours() {
             if (lic) inscriptionsMap[lic] = i;
         });
         
-        plans.sort((a, b) => (a.position_archer || '').localeCompare(b.position_archer || ''));
+        plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
         archers = plans.map(p => {
-            const lic = p.numero_licence || '';
+            const lic = p.numero_licence || p.numeroLicence || '';
             const insc = inscriptionsMap[lic] || {};
-            const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
+            const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
             const arme = insc.arme || '';
             const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
             return {
@@ -280,11 +280,11 @@ async function prefillArchersFromConcours() {
             if (lic) inscriptionsMap[lic] = i;
         });
         
-        plans.sort((a, b) => (a.position_archer || '').localeCompare(b.position_archer || ''));
+        plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
         archers = plans.map(p => {
-            const lic = p.numero_licence || '';
+            const lic = p.numero_licence || p.numeroLicence || '';
             const insc = inscriptionsMap[lic] || {};
-            const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
+            const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
             const arme = insc.arme || '';
             const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
             return {
@@ -293,7 +293,7 @@ async function prefillArchersFromConcours() {
                 category: cat,
                 weapon: mapWeaponFromInscription(arme),
                 gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
-                userId: insc.user_id || insc.userId || insc.id_user
+                userId: insc.user_id || insc.userId || insc.id_user || p.user_id
             };
         });
     } else if (concoursInscriptions && concoursInscriptions.length > 0) {
@@ -336,7 +336,21 @@ async function prefillArchersFromConcours() {
         }
     });
     
+    // S'assurer que les sections archers sont visibles avant d'afficher
+    const archerNav = document.getElementById('archerNavigation');
+    const archerInfo = document.getElementById('archerInfoSection');
+    const scoreTable = document.getElementById('scoreTableSection');
+    if (archerNav) archerNav.style.display = 'block';
+    if (archerInfo) archerInfo.style.display = 'block';
+    if (scoreTable) scoreTable.style.display = 'block';
+    
     displayCurrentArcher();
+    
+    // Défiler vers la section archer pour que l'utilisateur voie les données chargées
+    if (archerInfo) {
+        archerInfo.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    
     showStatus(`${archers.length} archer(s) prérempli(s) depuis le concours`, 'success');
 }
 
@@ -661,6 +675,7 @@ function displayCurrentArcher() {
     
     const sheet = userSheets[currentUserIndex];
     const config = SHOOTING_CONFIGS[selectedShootingType];
+    if (!config) return;
     
     // Mettre à jour les informations de l'archer
     document.getElementById('archerHeaderNumber').textContent = currentUserIndex + 1;
