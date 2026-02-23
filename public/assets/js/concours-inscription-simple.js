@@ -46,17 +46,24 @@ var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concou
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
 
 /**
- * Remplit les selects catégorie de classement (formulaire + modale édition) comme la feuille de marque :
- * fetch API puis options value=abv_categorie_classement, label=lb_categorie_classement.
- * Utilise l’URL publique pour que ça marche aussi en inscription ciblée (sans auth).
+ * Remplit les selects catégorie de classement (formulaire + modale) comme la feuille de marque.
+ * 1) Essaie /score-sheet/categories (même URL que feuille de marque, avec auth).
+ * 2) Si 401, essaie /api/concours/categories-classement/public (inscription ciblée).
  */
 function fillCategorieClassementSelect() {
     var categorySelect = document.getElementById('categorie_classement');
     var editSelect = document.getElementById('edit-categorie_classement');
     if (!categorySelect) return;
     var iddiscipline = (typeof concoursDiscipline !== 'undefined' && concoursDiscipline) ? concoursDiscipline : null;
-    var url = '/api/concours/categories-classement/public' + (iddiscipline ? '?iddiscipline=' + encodeURIComponent(iddiscipline) : '');
-    var setOptions = function(select, categories) {
+    var qs = iddiscipline ? '?iddiscipline=' + encodeURIComponent(iddiscipline) : '';
+
+    function extractCategories(catRes) {
+        var categories = catRes && (catRes.data !== undefined ? catRes.data : (Array.isArray(catRes) ? catRes : []));
+        if (!Array.isArray(categories) && categories && categories.data) categories = categories.data;
+        return Array.isArray(categories) ? categories : [];
+    }
+
+    function setOptions(select, categories) {
         if (!select) return;
         select.innerHTML = '<option value="">Sélectionner une catégorie</option>';
         (categories || []).forEach(function(c) {
@@ -69,17 +76,41 @@ function fillCategorieClassementSelect() {
                 select.appendChild(opt);
             }
         });
-    };
-    categorySelect.innerHTML = '<option value="">Sélectionner une catégorie</option>';
-    if (editSelect) editSelect.innerHTML = '<option value="">Sélectionner une catégorie</option>';
-    fetch(url).then(function(r) { return r.json(); }).then(function(catRes) {
-        var categories = catRes && (catRes.data !== undefined ? catRes.data : (Array.isArray(catRes) ? catRes : []));
-        if (!Array.isArray(categories) && categories && categories.data) categories = categories.data;
-        if (!Array.isArray(categories)) categories = [];
-        setOptions(categorySelect, categories);
-        setOptions(editSelect, categories);
-        if (categories.length > 0) window.categoriesClassement = categories;
-    }).catch(function(e) { console.warn('Erreur chargement catégories inscription:', e); });
+    }
+
+    function applyAndDone(categories) {
+        if (categories.length > 0) {
+            setOptions(categorySelect, categories);
+            setOptions(editSelect, categories);
+            window.categoriesClassement = categories;
+        }
+    }
+
+    // 1) Même URL que la feuille de marque (fonctionne en connecté)
+    fetch('/score-sheet/categories' + qs)
+        .then(function(r) {
+            if (r.status === 401) {
+                return fetch('/api/concours/categories-classement/public' + qs);
+            }
+            return r.json().then(function(data) { return { ok: r.ok, data: data }; });
+        })
+        .then(function(result) {
+            if (result && result.ok !== undefined) {
+                applyAndDone(extractCategories(result.data));
+                return;
+            }
+            if (result && typeof result.json === 'function') {
+                return result.json().then(function(data) { applyAndDone(extractCategories(data)); });
+            }
+            applyAndDone(extractCategories(result));
+        })
+        .catch(function(e) {
+            console.warn('Erreur chargement catégories inscription:', e);
+            fetch('/api/concours/categories-classement/public' + qs)
+                .then(function(r) { return r.json(); })
+                .then(function(data) { applyAndDone(extractCategories(data)); })
+                .catch(function() {});
+        });
 }
 
 // Ajouter event listener au bouton de recherche
