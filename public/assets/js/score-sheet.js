@@ -137,9 +137,19 @@ function setupConcoursSelector() {
             }
             
             // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] }
-            let plansPeloton = planPelotonRes?.data || planPelotonRes;
+            let plansPeloton = (planPelotonRes?.success && planPelotonRes?.data) ? planPelotonRes.data : (planPelotonRes?.data || planPelotonRes);
             if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton) && plansPeloton.data) {
                 plansPeloton = plansPeloton.data;
+            }
+            // Normaliser : si tableau d'objets, grouper par numero_depart (compat API)
+            if (Array.isArray(plansPeloton) && plansPeloton.length > 0) {
+                const grouped = {};
+                plansPeloton.forEach(p => {
+                    const dep = String(p.numero_depart ?? p.numeroDepart ?? 0);
+                    if (!grouped[dep]) grouped[dep] = [];
+                    grouped[dep].push(p);
+                });
+                plansPeloton = grouped;
             }
             if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton)) {
                 concoursPlansPeloton = plansPeloton;
@@ -174,7 +184,7 @@ function setupConcoursSelector() {
                 if (hintEl) hintEl.textContent = isPlanCibleMode ? 'Pour les disciplines Salle, TAE (T, S, I, H)' : 'Pour les disciplines Nature, 3D et Campagne';
                 
                 const plansSource = isPlanCibleMode ? concoursPlansCible : concoursPlansPeloton;
-                const departs = Object.keys(plansSource).sort((a, b) => parseInt(a) - parseInt(b));
+                const departs = Object.keys(plansSource || {}).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
                 departSelect.innerHTML = '<option value="">-- Départ --</option>';
                 departs.forEach(dep => {
                     departSelect.innerHTML += `<option value="${dep}">Départ ${dep}</option>`;
@@ -190,7 +200,8 @@ function setupConcoursSelector() {
                             pelotonSelect.innerHTML += `<option value="${c}">Cible ${c}</option>`;
                         });
                     } else {
-                        const pelotons = [...new Set((plansSource[dep] || []).map(p => p.numero_peloton).filter(Boolean))].sort((a, b) => a - b);
+                        const getNumPeloton = p => p.numero_peloton ?? p.numeroPeloton;
+                        const pelotons = [...new Set((plansSource[dep] || []).map(getNumPeloton).filter(Boolean))].sort((a, b) => a - b);
                         pelotons.forEach(pel => {
                             pelotonSelect.innerHTML += `<option value="${pel}">Peloton ${pel}</option>`;
                         });
@@ -271,9 +282,14 @@ async function prefillArchersFromConcours() {
         });
     } else if (concoursPlansPeloton && departSelect?.value && pelotonSelect?.value) {
         // Mode peloton (N/3/C) : extraire les archers du peloton
-        const dep = departSelect.value;
-        const pel = parseInt(pelotonSelect.value);
-        const plans = (concoursPlansPeloton[dep] || []).filter(p => (p.numero_peloton || 0) == pel);
+        const dep = String(departSelect.value);
+        const pel = parseInt(pelotonSelect.value, 10);
+        const getNumPeloton = p => p.numero_peloton ?? p.numeroPeloton ?? 0;
+        const getLicence = p => p.numero_licence ?? p.numeroLicence ?? '';
+        // Filtrer par peloton et ne garder que les plans avec archer assigné (numero_licence)
+        const plans = (concoursPlansPeloton[dep] || concoursPlansPeloton[String(dep)] || [])
+            .filter(p => (getNumPeloton(p) || 0) == pel)
+            .filter(p => getLicence(p));
         const inscriptionsMap = {};
         (concoursInscriptions || []).forEach(i => {
             const lic = i.numero_licence || i.numeroLicence;
@@ -282,7 +298,7 @@ async function prefillArchersFromConcours() {
         
         plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
         archers = plans.map(p => {
-            const lic = p.numero_licence || p.numeroLicence || '';
+            const lic = getLicence(p);
             const insc = inscriptionsMap[lic] || {};
             const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
             const arme = insc.arme || '';
