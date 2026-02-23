@@ -368,7 +368,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="categorie_classement" class="form-label">Catégorie de classement</label>
-                            <select id="categorie_classement" class="form-control" name="categorie_classement">
+                            <select id="categorie_classement" class="form-control">
                                 <option value="">Sélectionner une catégorie</option>
                                 <?php
                                 $cats = $categoriesClassement ?? [];
@@ -383,9 +383,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <option value="<?= htmlspecialchars($abv) ?>"><?= htmlspecialchars($label) ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <?php if (empty($cats)): ?>
-                            <small class="text-muted">Liste vide : vérifier dans .env que <code>API_BASE_URL</code> pointe vers le BackendPHP (ex. <code>http://localhost/BackendPHP/public/api</code>) et que <code>GET concours/categories-classement</code> répond.</small>
-                            <?php endif; ?>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="arme" class="form-label">Arme (utilisée sur le pas de tir)</label>

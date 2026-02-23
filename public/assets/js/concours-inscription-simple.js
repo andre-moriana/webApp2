@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Charger la liste des inscriptions depuis le backend
     loadInscriptions();
-    
+
     // Initialiser les handlers pour l'édition
     initEditInscriptionHandlers();
 

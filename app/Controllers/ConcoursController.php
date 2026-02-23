@@ -13,36 +13,20 @@ class ConcoursController {
 
     /**
      * Charge les catégories de classement (table concour_categories_classement), filtrées par iddiscipline.
-     * @param int|null $iddiscipline
-     * @param bool $useAuth true = makeRequest (comme la feuille de marque), false = makeRequestPublic (inscription ciblée)
      */
-    private function loadCategoriesClassement($iddiscipline, $useAuth = true) {
+    private function loadCategoriesClassement($iddiscipline) {
         $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
-        $extract = function($response) {
+        try {
+            $response = $this->apiService->makeRequestPublic($endpoint, 'GET');
             $body = $response['data'] ?? null;
-            if (!is_array($body)) return null;
+            if (!is_array($body)) return [];
             if (isset($body['data']) && is_array($body['data'])) return $body['data'];
             if (isset($body[0])) return $body;
-            return null;
-        };
-        try {
-            if ($useAuth) {
-                $response = $this->apiService->makeRequest($endpoint, 'GET');
-                $list = $extract($response);
-                if (is_array($list) && !empty($list)) return $list;
-            }
-            $response = $this->apiService->makeRequestPublic($endpoint, 'GET');
-            $list = $extract($response);
-            if (is_array($list)) return $list;
-            if ($iddiscipline) {
-                $response = $this->apiService->makeRequestPublic('concours/categories-classement', 'GET');
-                $list = $extract($response);
-                if (is_array($list)) return $list;
-            }
+            return [];
         } catch (Exception $e) {
             error_log('loadCategoriesClassement: ' . $e->getMessage());
+            return [];
         }
-        return [];
     }
 
     public function index() {
@@ -2187,7 +2171,7 @@ class ConcoursController {
         $disciplineAbv = null;
 
         $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
-        $categoriesClassement = $this->loadCategoriesClassement($iddiscipline, false);
+        $categoriesClassement = $this->loadCategoriesClassement($iddiscipline);
 
         // Récupérer les arcs
         try {
