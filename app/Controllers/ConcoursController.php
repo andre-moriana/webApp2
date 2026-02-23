@@ -1417,14 +1417,9 @@ class ConcoursController {
             $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
             $categoriesResponse = $this->apiService->makeRequest($endpoint, 'GET');
             $categoriesPayload = $this->apiService->unwrapData($categoriesResponse);
-            // Extraire le tableau : réponse API = { success, data: [...] } ou déjà la liste
             if (is_array($categoriesPayload)) {
-                if (isset($categoriesPayload['data']) && is_array($categoriesPayload['data'])) {
-                    $categoriesPayload = $categoriesPayload['data'];
-                } elseif (!isset($categoriesPayload['data']) && (isset($categoriesPayload[0]) || array_key_exists(0, $categoriesPayload))) {
-                    // déjà une liste indexée
-                } else {
-                    $categoriesPayload = [];
+                if (isset($categoriesPayload['data'], $categoriesPayload['success'])) {
+                    $categoriesPayload = is_array($categoriesPayload['data']) ? $categoriesPayload['data'] : [];
                 }
             } else {
                 $categoriesPayload = [];
@@ -1432,18 +1427,17 @@ class ConcoursController {
             if (empty($categoriesPayload) && $iddiscipline) {
                 $categoriesResponse = $this->apiService->makeRequest('concours/categories-classement', 'GET');
                 $categoriesPayload = $this->apiService->unwrapData($categoriesResponse);
-                if (is_array($categoriesPayload) && isset($categoriesPayload['data']) && is_array($categoriesPayload['data'])) {
+                if (is_array($categoriesPayload) && isset($categoriesPayload['data'], $categoriesPayload['success']) && is_array($categoriesPayload['data'])) {
                     $categoriesPayload = $categoriesPayload['data'];
                 } else {
-                    $categoriesPayload = is_array($categoriesPayload) && (isset($categoriesPayload[0]) || array_key_exists(0, $categoriesPayload)) ? $categoriesPayload : [];
+                    $categoriesPayload = [];
                 }
             }
-            if (!empty($categoriesPayload)) {
+            if (is_array($categoriesPayload) && !empty($categoriesPayload)) {
                 foreach ($categoriesPayload as &$c) {
                     if (!isset($c['id']) && isset($c['_id'])) $c['id'] = $c['_id'];
-                    $c['abv_categorie_classement'] = trim((string)($c['abv_categorie_classement'] ?? $c['abv'] ?? ''));
-                    if ($c['abv_categorie_classement'] === '' && isset($c['lb_categorie_classement'])) $c['abv_categorie_classement'] = trim((string)$c['lb_categorie_classement']);
-                    $c['lb_categorie_classement'] = trim((string)($c['lb_categorie_classement'] ?? $c['name'] ?? $c['nom'] ?? ''));
+                    if (empty($c['abv_categorie_classement']) && isset($c['abv'])) $c['abv_categorie_classement'] = trim((string)$c['abv']);
+                    if (empty($c['lb_categorie_classement']) && (isset($c['name']) || isset($c['nom']))) $c['lb_categorie_classement'] = trim((string)($c['name'] ?? $c['nom'] ?? ''));
                 }
                 unset($c);
                 usort($categoriesPayload, function ($a, $b) {
@@ -2207,17 +2201,16 @@ class ConcoursController {
             $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
             $categoriesResponse = $this->apiService->makeRequestPublic($endpoint, 'GET');
             $categoriesPayload = $categoriesResponse['data'] ?? [];
-            if (is_array($categoriesPayload) && isset($categoriesPayload['data']) && is_array($categoriesPayload['data'])) {
+            if (is_array($categoriesPayload) && isset($categoriesPayload['data'], $categoriesPayload['success']) && is_array($categoriesPayload['data'])) {
                 $categoriesPayload = $categoriesPayload['data'];
-            } elseif (is_array($categoriesPayload) && !isset($categoriesPayload['data']) && !isset($categoriesPayload[0]) && !array_key_exists(0, $categoriesPayload)) {
+            } elseif (!is_array($categoriesPayload)) {
                 $categoriesPayload = [];
             }
-            if (!empty($categoriesPayload)) {
+            if (is_array($categoriesPayload) && !empty($categoriesPayload)) {
                 foreach ($categoriesPayload as &$c) {
                     if (!isset($c['id']) && isset($c['_id'])) $c['id'] = $c['_id'];
-                    $c['abv_categorie_classement'] = trim((string)($c['abv_categorie_classement'] ?? $c['abv'] ?? ''));
-                    if ($c['abv_categorie_classement'] === '' && isset($c['lb_categorie_classement'])) $c['abv_categorie_classement'] = trim((string)$c['lb_categorie_classement']);
-                    $c['lb_categorie_classement'] = trim((string)($c['lb_categorie_classement'] ?? $c['name'] ?? $c['nom'] ?? ''));
+                    if (empty($c['abv_categorie_classement']) && isset($c['abv'])) $c['abv_categorie_classement'] = trim((string)$c['abv']);
+                    if (empty($c['lb_categorie_classement']) && (isset($c['name']) || isset($c['nom']))) $c['lb_categorie_classement'] = trim((string)($c['name'] ?? $c['nom'] ?? ''));
                 }
                 unset($c);
                 usort($categoriesPayload, function ($a, $b) {
