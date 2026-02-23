@@ -150,7 +150,8 @@ function setupConcoursSelector() {
                 initializeSheets();
             }
             
-            // Charger les catégories de classement filtrées par discipline (concour_categories_classement)
+            // Charger les catégories de classement depuis concour_categories_classement filtrées par iddiscipline du concours
+            // Valeur affichée = lb_categorie_classement | Valeur enregistrée = abv_categorie_classement
             const categorySelect = document.getElementById('archerCategory');
             if (categorySelect) {
                 categorySelect.innerHTML = '<option value="">--</option>';
@@ -162,9 +163,14 @@ function setupConcoursSelector() {
                         concoursCategories = Array.isArray(categories) ? categories : [];
                         if (Array.isArray(categories) && categories.length > 0) {
                             categories.forEach(c => {
-                                const abv = c.abv_categorie_classement ?? c.abv ?? '';
-                                const label = c.lb_categorie_classement ?? c.name ?? c.nom ?? abv;
-                                if (abv) categorySelect.innerHTML += `<option value="${abv}">${label}</option>`;
+                                const abv = String(c.abv_categorie_classement ?? c.abv ?? '').trim();
+                                const label = String(c.lb_categorie_classement ?? c.name ?? c.nom ?? abv).trim();
+                                if (abv && label) {
+                                    const opt = document.createElement('option');
+                                    opt.value = abv;
+                                    opt.textContent = label;
+                                    categorySelect.appendChild(opt);
+                                }
                             });
                         }
                     } catch (e) {
