@@ -1,10 +1,12 @@
 <?php
-// Variables disponibles depuis le contrôleur : $concours (liste des concours)
+// Variables disponibles depuis le contrôleur : $concours (liste des concours), $disciplines
 $concoursList = $concours ?? [];
+$disciplinesList = $disciplines ?? [];
 $concoursJson = htmlspecialchars(json_encode($concoursList, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+$disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
 ?>
 
-<div class="container-fluid score-sheet-container" data-concours-list="<?= $concoursJson ?>">
+<div class="container-fluid score-sheet-container" data-concours-list="<?= $concoursJson ?>" data-disciplines="<?= $disciplinesJson ?>">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -43,7 +45,7 @@ $concoursJson = htmlspecialchars(json_encode($concoursList, JSON_UNESCAPED_UNICO
                             </select>
                         </div>
                         <div class="col-md-6" id="pelotonSelectorWrapper" style="display: none;">
-                            <label for="departSelect" class="form-label">Départ / Peloton</label>
+                            <label for="departSelect" class="form-label" id="departCibleLabel">Départ / Peloton</label>
                             <div class="row g-2">
                                 <div class="col-6">
                                     <select class="form-select" id="departSelect">
@@ -56,7 +58,7 @@ $concoursJson = htmlspecialchars(json_encode($concoursList, JSON_UNESCAPED_UNICO
                                     </select>
                                 </div>
                             </div>
-                            <small class="text-muted">Pour les disciplines Nature, 3D et Campagne</small>
+                            <small class="text-muted" id="selectorHint">Pour les disciplines Nature, 3D et Campagne</small>
                         </div>
                     </div>
                     <div class="row mt-2" id="prefillArchersRow" style="display: none;">

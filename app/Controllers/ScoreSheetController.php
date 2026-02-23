@@ -25,6 +25,7 @@ class ScoreSheetController {
         
         // Charger la liste des concours pour la sélection
         $concours = [];
+        $disciplines = [];
         try {
             $response = $this->apiService->getConcours();
             $apiResponse = $response['data'] ?? null;
@@ -35,6 +36,20 @@ class ScoreSheetController {
             }
         } catch (Exception $e) {
             error_log('Erreur chargement concours pour feuille de marque: ' . $e->getMessage());
+        }
+        
+        // Charger les disciplines pour mapper vers le type de tir
+        try {
+            $discResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $discPayload = $this->apiService->unwrapData($discResponse);
+            if (is_array($discPayload) && isset($discPayload['data']) && isset($discPayload['success'])) {
+                $discPayload = $discPayload['data'];
+            }
+            if (($discResponse['success'] ?? false) && is_array($discPayload)) {
+                $disciplines = array_values($discPayload);
+            }
+        } catch (Exception $e) {
+            error_log('Erreur chargement disciplines pour feuille de marque: ' . $e->getMessage());
         }
         
         // Définir les fichiers CSS et JS spécifiques

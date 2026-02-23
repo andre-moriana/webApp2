@@ -28,6 +28,7 @@ let showSignatureModal = false;
 // Données concours pour préremplissage
 let selectedConcoursId = null;
 let concoursPlansPeloton = null;
+let concoursPlansCible = null;
 let concoursInscriptions = null;
 let concoursDetails = null;
 
@@ -82,6 +83,7 @@ function setupConcoursSelector() {
     concoursSelect.addEventListener('change', async function() {
         selectedConcoursId = this.value || null;
         concoursPlansPeloton = null;
+        concoursPlansCible = null;
         concoursInscriptions = null;
         concoursDetails = null;
         
@@ -90,13 +92,25 @@ function setupConcoursSelector() {
         departSelect.innerHTML = '<option value="">-- Départ --</option>';
         pelotonSelect.innerHTML = '<option value="">-- Peloton --</option>';
         
-        if (!selectedConcoursId) return;
+        if (!selectedConcoursId) {
+            // Réinitialiser le type de tir et le titre
+            const shootingTypeSelect = document.getElementById('shootingType');
+            const trainingTitleInput = document.getElementById('trainingTitle');
+            if (shootingTypeSelect) shootingTypeSelect.value = '';
+            if (trainingTitleInput) trainingTitleInput.value = '';
+            selectedShootingType = '';
+            document.getElementById('archerNavigation')?.style?.setProperty('display', 'none');
+            document.getElementById('archerInfoSection')?.style?.setProperty('display', 'none');
+            document.getElementById('scoreTableSection')?.style?.setProperty('display', 'none');
+            return;
+        }
         
         try {
-            // Charger les détails du concours et les données
-            const [concoursRes, planRes, inscRes] = await Promise.all([
+            // Charger les détails du concours et les données (plan-cible pour T/S/I/H, plan-peloton pour N/3/C)
+            const [concoursRes, planPelotonRes, planCibleRes, inscRes] = await Promise.all([
                 fetch(`/api/concours/${selectedConcoursId}/public`).then(r => r.json()).catch(() => null),
                 fetch(`/api/concours/${selectedConcoursId}/plan-peloton`).then(r => r.json()).catch(() => null),
+                fetch(`/api/concours/${selectedConcoursId}/plan-cible`).then(r => r.json()).catch(() => null),
                 fetch(`/api/concours/${selectedConcoursId}/inscriptions`).then(r => r.json()).catch(() => null)
             ]);
             
@@ -105,13 +119,39 @@ function setupConcoursSelector() {
                 document.getElementById('trainingTitle').value = concoursDetails.titre_competition || '';
             }
             
-            // Plan peloton - structure: { "1": [plan, plan, ...], "2": [...] } ou { data: { "1": [...] } }
-            let plans = planRes?.data || planRes;
-            if (plans && typeof plans === 'object' && !Array.isArray(plans) && plans.data) {
-                plans = plans.data;
+            // Déduire le type de tir depuis la discipline du concours
+            const shootingTypeSelect = document.getElementById('shootingType');
+            const container = document.querySelector('.score-sheet-container');
+            const disciplines = container?.dataset?.disciplines ? JSON.parse(container.dataset.disciplines) : [];
+            const discId = concoursDetails?.discipline ?? concoursDetails?.iddiscipline ?? null;
+            let abvDiscipline = null;
+            if (discId && Array.isArray(disciplines)) {
+                const disc = disciplines.find(d => (d.iddiscipline ?? d.id ?? d._id) == discId);
+                abvDiscipline = disc?.abv_discipline ?? disc?.abv ?? null;
             }
-            if (plans && typeof plans === 'object' && !Array.isArray(plans)) {
-                concoursPlansPeloton = plans;
+            const shootingTypeFromDisc = mapDisciplineToShootingType(abvDiscipline);
+            if (shootingTypeFromDisc && shootingTypeSelect) {
+                shootingTypeSelect.value = shootingTypeFromDisc;
+                selectedShootingType = shootingTypeFromDisc;
+                initializeSheets();
+            }
+            
+            // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] }
+            let plansPeloton = planPelotonRes?.data || planPelotonRes;
+            if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton) && plansPeloton.data) {
+                plansPeloton = plansPeloton.data;
+            }
+            if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton)) {
+                concoursPlansPeloton = plansPeloton;
+            }
+            
+            // Plan cible (T/S/I/H) - structure: { "1": [plan, ...], "2": [...] }
+            let plansCible = planCibleRes?.data || planCibleRes;
+            if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible) && plansCible.data) {
+                plansCible = plansCible.data;
+            }
+            if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible)) {
+                concoursPlansCible = plansCible;
             }
             
             // Inscriptions - filtrer confirmées (format API: { data: [...] } ou tableau direct)
@@ -122,10 +162,19 @@ function setupConcoursSelector() {
                 concoursInscriptions = [];
             }
             
-            // Si plan peloton avec données : afficher sélecteur départ/peloton
-            if (concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0) {
+            const isPlanCibleMode = ['T', 'S', 'I', 'H'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
+            const isPlanPelotonMode = ['3', 'N', 'C', '3D'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
+            
+            // Afficher sélecteur Départ / Cible (T/S/I/H) ou Départ / Peloton (N/3/C)
+            if (isPlanCibleMode || isPlanPelotonMode) {
                 pelotonWrapper.style.display = 'block';
-                const departs = Object.keys(concoursPlansPeloton).sort((a, b) => parseInt(a) - parseInt(b));
+                const labelEl = document.getElementById('departCibleLabel');
+                const hintEl = document.getElementById('selectorHint');
+                if (labelEl) labelEl.textContent = isPlanCibleMode ? 'Départ / Cible' : 'Départ / Peloton';
+                if (hintEl) hintEl.textContent = isPlanCibleMode ? 'Pour les disciplines Salle, TAE (T, S, I, H)' : 'Pour les disciplines Nature, 3D et Campagne';
+                
+                const plansSource = isPlanCibleMode ? concoursPlansCible : concoursPlansPeloton;
+                const departs = Object.keys(plansSource).sort((a, b) => parseInt(a) - parseInt(b));
                 departSelect.innerHTML = '<option value="">-- Départ --</option>';
                 departs.forEach(dep => {
                     departSelect.innerHTML += `<option value="${dep}">Départ ${dep}</option>`;
@@ -133,12 +182,19 @@ function setupConcoursSelector() {
                 
                 departSelect.onchange = function() {
                     const dep = this.value;
-                    pelotonSelect.innerHTML = '<option value="">-- Peloton --</option>';
-                    if (!dep || !concoursPlansPeloton[dep]) return;
-                    const pelotons = [...new Set((concoursPlansPeloton[dep] || []).map(p => p.numero_peloton).filter(Boolean))].sort((a, b) => a - b);
-                    pelotons.forEach(pel => {
-                        pelotonSelect.innerHTML += `<option value="${pel}">Peloton ${pel}</option>`;
-                    });
+                    pelotonSelect.innerHTML = '<option value="">-- ' + (isPlanCibleMode ? 'Cible' : 'Peloton') + ' --</option>';
+                    if (!dep || !plansSource[dep]) return;
+                    if (isPlanCibleMode) {
+                        const cibles = [...new Set((plansSource[dep] || []).map(p => p.numero_cible).filter(Boolean))].sort((a, b) => a - b);
+                        cibles.forEach(c => {
+                            pelotonSelect.innerHTML += `<option value="${c}">Cible ${c}</option>`;
+                        });
+                    } else {
+                        const pelotons = [...new Set((plansSource[dep] || []).map(p => p.numero_peloton).filter(Boolean))].sort((a, b) => a - b);
+                        pelotons.forEach(pel => {
+                            pelotonSelect.innerHTML += `<option value="${pel}">Peloton ${pel}</option>`;
+                        });
+                    }
                     prefillRow.style.display = (dep && pelotonSelect.options.length > 1) ? 'block' : 'none';
                 };
                 
@@ -156,12 +212,20 @@ function setupConcoursSelector() {
     });
 }
 
-// Préremplir les archers depuis le concours (peloton ou inscriptions)
+// Préremplir les archers depuis le concours (plan cible, peloton ou inscriptions)
 async function prefillArchersFromConcours() {
     const departSelect = document.getElementById('departSelect');
     const pelotonSelect = document.getElementById('pelotonSelect');
     
     let archers = [];
+    
+    // Si plan cible existe (T/S/I/H), exiger départ + cible
+    if (concoursPlansCible && Object.keys(concoursPlansCible).length > 0) {
+        if (!departSelect?.value || !pelotonSelect?.value) {
+            showStatus('Veuillez sélectionner un départ et une cible.', 'warning');
+            return;
+        }
+    }
     
     // Si plan peloton existe (tir N/3/C), exiger départ + peloton
     if (concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0) {
@@ -171,7 +235,34 @@ async function prefillArchersFromConcours() {
         }
     }
     
-    if (concoursPlansPeloton && departSelect?.value && pelotonSelect?.value) {
+    if (concoursPlansCible && departSelect?.value && pelotonSelect?.value) {
+        // Mode plan cible (T/S/I/H) : extraire les archers de la cible
+        const dep = departSelect.value;
+        const cible = parseInt(pelotonSelect.value);
+        const plans = (concoursPlansCible[dep] || []).filter(p => (p.numero_cible || 0) == cible);
+        const inscriptionsMap = {};
+        (concoursInscriptions || []).forEach(i => {
+            const lic = i.numero_licence || i.numeroLicence;
+            if (lic) inscriptionsMap[lic] = i;
+        });
+        
+        plans.sort((a, b) => (a.position_archer || '').localeCompare(b.position_archer || ''));
+        archers = plans.map(p => {
+            const lic = p.numero_licence || '';
+            const insc = inscriptionsMap[lic] || {};
+            const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
+            const arme = insc.arme || '';
+            const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
+            return {
+                name: nom,
+                licenseNumber: lic,
+                category: cat,
+                weapon: mapWeaponFromInscription(arme),
+                gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
+                userId: insc.user_id || insc.userId || insc.id_user || p.user_id
+            };
+        });
+    } else if (concoursPlansPeloton && departSelect?.value && pelotonSelect?.value) {
         // Mode peloton (N/3/C) : extraire les archers du peloton
         const dep = departSelect.value;
         const pel = parseInt(pelotonSelect.value);
@@ -211,7 +302,7 @@ async function prefillArchersFromConcours() {
     }
     
     if (archers.length === 0) {
-        showStatus('Aucun archer à préremplir. Sélectionnez un peloton ou vérifiez les inscriptions.', 'warning');
+        showStatus('Aucun archer à préremplir. Sélectionnez une cible/peloton ou vérifiez les inscriptions.', 'warning');
         return;
     }
     
@@ -240,6 +331,18 @@ async function prefillArchersFromConcours() {
     
     displayCurrentArcher();
     showStatus(`${archers.length} archer(s) prérempli(s) depuis le concours`, 'success');
+}
+
+// Mappe abv_discipline (API concours) vers le type de tir de la feuille de marque
+function mapDisciplineToShootingType(abv) {
+    if (!abv) return null;
+    const a = String(abv).toUpperCase().trim();
+    if (a === 'S' || a === 'I' || a === 'H') return 'Salle';
+    if (a === 'T') return 'TAE';
+    if (a === 'N') return 'Nature';
+    if (a === '3' || a === '3D') return '3D';
+    if (a === 'C') return 'Campagne';
+    return null;
 }
 
 function mapWeaponFromInscription(arme) {
