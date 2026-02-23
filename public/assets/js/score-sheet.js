@@ -31,6 +31,8 @@ let concoursPlansPeloton = null;
 let concoursPlansCible = null;
 let concoursInscriptions = null;
 let concoursDetails = null;
+let concoursArcs = [];  // Liste des arcs (concour_arcs) pour lookup typarc/idarc
+let concoursCategories = [];  // Catégories pour lookup
 let isPlanPelotonMode = false;  // true = Départ/Peloton (N/3/C), false ou plan cible = Départ/Cible (T/S/I/H)
 let isPlanCibleMode = false;
 
@@ -85,9 +87,11 @@ function setupConcoursSelector() {
     concoursSelect.addEventListener('change', async function() {
         selectedConcoursId = this.value || null;
         concoursPlansPeloton = null;
+        concoursPlansCible = null;
+        concoursArcs = [];
+        concoursCategories = [];
         isPlanPelotonMode = false;
         isPlanCibleMode = false;
-        concoursPlansCible = null;
         concoursInscriptions = null;
         concoursDetails = null;
         
@@ -153,6 +157,7 @@ function setupConcoursSelector() {
                     try {
                         const catRes = await fetch(`/api/concours/categories-classement?iddiscipline=${encodeURIComponent(iddiscipline)}`).then(r => r.json()).catch(() => null);
                         const categories = catRes?.data ?? (Array.isArray(catRes) ? catRes : []);
+                        concoursCategories = Array.isArray(categories) ? categories : [];
                         if (Array.isArray(categories) && categories.length > 0) {
                             categories.forEach(c => {
                                 const abv = c.abv_categorie_classement ?? c.abv ?? '';
@@ -173,6 +178,7 @@ function setupConcoursSelector() {
                 try {
                     const arcsRes = await fetch('/api/concours/arcs').then(r => r.json()).catch(() => null);
                     const arcs = arcsRes?.data ?? (Array.isArray(arcsRes) ? arcsRes : []);
+                    concoursArcs = Array.isArray(arcs) ? arcs : [];
                     if (Array.isArray(arcs) && arcs.length > 0) {
                         arcs.forEach(a => {
                             const label = a.lb_arc ?? a.name ?? a.nom ?? a.abv_arc ?? '';
@@ -239,6 +245,7 @@ function setupConcoursSelector() {
                 });
                 
                 departSelect.onchange = function() {
+                    resetArchersInSheets();
                     const dep = this.value;
                     pelotonSelect.innerHTML = '<option value="">-- ' + (isPlanCibleMode ? 'Cible' : 'Peloton') + ' --</option>';
                     if (!dep || !plansSource[dep]) return;
@@ -259,6 +266,7 @@ function setupConcoursSelector() {
                 
                 // Préremplissage automatique quand peloton/cible est sélectionné
                 pelotonSelect.onchange = function() {
+                    resetArchersInSheets();
                     if (departSelect.value && this.value) {
                         prefillArchersFromConcours();
                     }
@@ -276,6 +284,32 @@ function setupConcoursSelector() {
             showStatus('Erreur lors du chargement des données du concours', 'danger');
         }
     });
+}
+
+// Réinitialiser les archers et scores des feuilles (appelé lors du changement de départ/peloton/cible)
+function resetArchersInSheets() {
+    if (userSheets.length === 0) return;
+    const config = selectedShootingType && SHOOTING_CONFIGS[selectedShootingType] ? SHOOTING_CONFIGS[selectedShootingType] : null;
+    userSheets.forEach((sheet, idx) => {
+        sheet.archerInfo = {
+            name: `Archer ${idx + 1}`,
+            licenseNumber: '',
+            category: '',
+            weapon: '',
+            gender: ''
+        };
+        if (sheet.userId !== undefined) sheet.userId = undefined;
+        if (config && sheet.scoreRows) {
+            sheet.scoreRows.forEach(row => {
+                row.arrows?.forEach(a => { if (a) a.value = 0; });
+                row.endTotal = 0;
+                row.cumulativeTotal = 0;
+            });
+        }
+    });
+    archerSignatures = {};
+    currentUserIndex = 0;
+    displayCurrentArcher();
 }
 
 // Préremplir les archers depuis le concours (plan cible, peloton ou inscriptions)
@@ -312,21 +346,21 @@ async function prefillArchersFromConcours() {
             .filter(p => getLicence(p));
         const inscriptionsMap = {};
         (concoursInscriptions || []).forEach(i => {
-            const lic = i.numero_licence || i.numeroLicence;
+            const lic = String(i.numero_licence ?? i.numeroLicence ?? '').trim();
             if (lic) inscriptionsMap[lic] = i;
         });
         plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
         archers = plans.map(p => {
-            const lic = getLicence(p);
-            const insc = inscriptionsMap[lic] || {};
+            const lic = String(getLicence(p)).trim();
+            const insc = inscriptionsMap[lic] || inscriptionsMap[getLicence(p)] || {};
             const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
-            const arme = insc.arme || '';
-            const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
+            const cat = extractCategoryFromInscription(insc);
+            const weapon = extractWeaponFromInscription(insc, p);
             return {
                 name: nom,
                 licenseNumber: lic,
                 category: cat,
-                weapon: mapWeaponFromInscription(arme),
+                weapon: weapon,
                 gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
                 userId: insc.user_id || insc.userId || insc.id_user || p.user_id
             };
@@ -338,22 +372,21 @@ async function prefillArchersFromConcours() {
         const plans = (concoursPlansCible[dep] || []).filter(p => (p.numero_cible || 0) == cible);
         const inscriptionsMap = {};
         (concoursInscriptions || []).forEach(i => {
-            const lic = i.numero_licence || i.numeroLicence;
+            const lic = String(i.numero_licence ?? i.numeroLicence ?? '').trim();
             if (lic) inscriptionsMap[lic] = i;
         });
-        
         plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
         archers = plans.map(p => {
-            const lic = p.numero_licence || p.numeroLicence || '';
-            const insc = inscriptionsMap[lic] || {};
+            const lic = String(p.numero_licence ?? p.numeroLicence ?? '').trim();
+            const insc = inscriptionsMap[lic] || inscriptionsMap[p.numero_licence ?? p.numeroLicence] || {};
             const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
-            const arme = insc.arme || '';
-            const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
+            const cat = extractCategoryFromInscription(insc);
+            const weapon = extractWeaponFromInscription(insc, p);
             return {
                 name: nom,
                 licenseNumber: lic,
                 category: cat,
-                weapon: mapWeaponFromInscription(arme),
+                weapon: weapon,
                 gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
                 userId: insc.user_id || insc.userId || insc.id_user || p.user_id
             };
@@ -362,9 +395,9 @@ async function prefillArchersFromConcours() {
         // Mode inscriptions : utiliser les 6 premiers (ou tous)
         archers = concoursInscriptions.slice(0, NUM_USERS).map(i => ({
             name: i.user_nom || i.nom || i.name || '',
-            licenseNumber: i.numero_licence || i.numeroLicence || '',
-            category: i.categorie_classement || i.categorieClassement || i.abv_categorie_classement || '',
-            weapon: mapWeaponFromInscription(i.arme || ''),
+            licenseNumber: String(i.numero_licence ?? i.numeroLicence ?? '').trim(),
+            category: extractCategoryFromInscription(i),
+            weapon: extractWeaponFromInscription(i, null),
             gender: (i.genre || i.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
             userId: i.user_id || i.userId || i.id_user
         }));
@@ -437,6 +470,31 @@ function mapWeaponFromInscription(arme) {
     if (a.includes('longbow')) return 'Longbow';
     if (a.includes('chasse')) return 'Arc de chasse';
     return arme;
+}
+
+// Extrait la catégorie depuis une inscription (abv pour le select)
+function extractCategoryFromInscription(insc) {
+    if (!insc) return '';
+    const v = insc.categorie_classement ?? insc.categorieClassement ?? insc.abv_categorie_classement ?? insc.abv_categorie ?? insc.abv ?? '';
+    if (v) return String(v).trim();
+    const lb = insc.lb_categorie_classement ?? insc.lb_categorie ?? '';
+    if (lb && concoursCategories.length > 0) {
+        const c = concoursCategories.find(x => (x.lb_categorie_classement ?? '').toLowerCase() === String(lb).toLowerCase());
+        return c ? (c.abv_categorie_classement ?? c.abv ?? '') : lb;
+    }
+    return lb ? String(lb).trim() : '';
+}
+
+// Extrait l'arme depuis une inscription ou un plan (lb_arc pour le select)
+function extractWeaponFromInscription(insc, plan) {
+    const arme = insc?.arme ?? insc?.type_arc ?? insc?.lb_arc ?? plan?.arme ?? plan?.lb_arc ?? '';
+    if (arme) return mapWeaponFromInscription(arme);
+    const typarc = insc?.typarc ?? insc?.TYPARC ?? insc?.idarc ?? plan?.typarc ?? plan?.idarc ?? '';
+    if (typarc && concoursArcs.length > 0) {
+        const arc = concoursArcs.find(a => String(a.idarc ?? a.id_arc ?? a.no_arc ?? '').trim() === String(typarc).trim());
+        return arc ? (arc.lb_arc ?? arc.name ?? arc.nom ?? '') : '';
+    }
+    return '';
 }
 
 // Variables pour la recherche par licence
