@@ -2531,6 +2531,54 @@ class ApiController {
     }
     
     /**
+     * Proxy pour /api/concours/arcs - Liste des types d'arcs (concour_arcs)
+     */
+    public function proxyConcoursArcs() {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $response = $this->apiService->makeRequest('concours/arcs', 'GET');
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Proxy pour /api/concours/categories-classement - Catégories de classement filtrées par iddiscipline
+     */
+    public function proxyConcoursCategoriesClassement() {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $endpoint = "concours/categories-classement" . ($queryString ? "?{$queryString}" : "");
+            $response = $this->apiService->makeRequest($endpoint, 'GET');
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'appel API: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
      * Proxy pour /api/concours/{id}/inscription/{userId}
      */
     public function proxyConcoursInscription($concoursId, $userId) {

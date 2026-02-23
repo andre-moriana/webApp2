@@ -141,29 +141,18 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                             <input type="text" class="form-control" id="archerLicense" placeholder="Ex: 660035U">
                         </div>
                         <div class="col-md-2">
-                            <label for="archerCategory" class="form-label">Catégorie</label>
+                            <label for="archerCategory" class="form-label">Catégorie (classement)</label>
                             <select class="form-select" id="archerCategory">
-                                <option value="">--</option>
-                                <option value="U11">U11</option>
-                                <option value="U13">U13</option>
-                                <option value="U15">U15</option>
-                                <option value="U18">U18</option>
-                                <option value="U21">U21</option>
-                                <option value="S1">S1</option>
-                                <option value="S2">S2</option>
-                                <option value="S3">S3</option>
+                                <option value="">-- Sélectionner un concours --</option>
                             </select>
+                            <small class="text-muted">Rempli selon la discipline du concours</small>
                         </div>
                         <div class="col-md-2">
                             <label for="archerWeapon" class="form-label">Arme</label>
                             <select class="form-select" id="archerWeapon">
-                                <option value="">--</option>
-                                <option value="Arc classique">Arc classique</option>
-                                <option value="Arc à poulies">Arc à poulies</option>
-                                <option value="Arc nu (barebow)">Arc nu (barebow)</option>
-                                <option value="Longbow">Longbow</option>
-                                <option value="Arc de chasse">Arc de chasse</option>
+                                <option value="">-- Sélectionner un concours --</option>
                             </select>
+                            <small class="text-muted">Rempli depuis concour_arcs</small>
                         </div>
                         <div class="col-md-2">
                             <label for="archerGender" class="form-label">Genre</label>

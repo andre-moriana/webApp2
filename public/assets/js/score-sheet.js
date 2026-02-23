@@ -91,6 +91,10 @@ function setupConcoursSelector() {
         prefillRow.style.display = 'none';
         departSelect.innerHTML = '<option value="">-- Départ --</option>';
         pelotonSelect.innerHTML = '<option value="">-- Peloton --</option>';
+        const categorySelect = document.getElementById('archerCategory');
+        if (categorySelect) categorySelect.innerHTML = '<option value="">-- Sélectionner un concours --</option>';
+        const weaponSelect = document.getElementById('archerWeapon');
+        if (weaponSelect) weaponSelect.innerHTML = '<option value="">-- Sélectionner un concours --</option>';
         
         if (!selectedConcoursId) {
             // Réinitialiser le type de tir et le titre
@@ -134,6 +138,46 @@ function setupConcoursSelector() {
                 shootingTypeSelect.value = shootingTypeFromDisc;
                 selectedShootingType = shootingTypeFromDisc;
                 initializeSheets();
+            }
+            
+            // Charger les catégories de classement filtrées par discipline (concour_categories_classement)
+            const categorySelect = document.getElementById('archerCategory');
+            if (categorySelect) {
+                categorySelect.innerHTML = '<option value="">--</option>';
+                const iddiscipline = concoursDetails?.discipline ?? concoursDetails?.iddiscipline ?? null;
+                if (iddiscipline) {
+                    try {
+                        const catRes = await fetch(`/api/concours/categories-classement?iddiscipline=${encodeURIComponent(iddiscipline)}`).then(r => r.json()).catch(() => null);
+                        const categories = catRes?.data ?? (Array.isArray(catRes) ? catRes : []);
+                        if (Array.isArray(categories) && categories.length > 0) {
+                            categories.forEach(c => {
+                                const abv = c.abv_categorie_classement ?? c.abv ?? '';
+                                const label = c.lb_categorie_classement ?? c.name ?? c.nom ?? abv;
+                                if (abv) categorySelect.innerHTML += `<option value="${abv}">${label}</option>`;
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Erreur chargement catégories:', e);
+                    }
+                }
+            }
+            
+            // Charger les arcs depuis concour_arcs
+            const weaponSelect = document.getElementById('archerWeapon');
+            if (weaponSelect) {
+                weaponSelect.innerHTML = '<option value="">--</option>';
+                try {
+                    const arcsRes = await fetch('/api/concours/arcs').then(r => r.json()).catch(() => null);
+                    const arcs = arcsRes?.data ?? (Array.isArray(arcsRes) ? arcsRes : []);
+                    if (Array.isArray(arcs) && arcs.length > 0) {
+                        arcs.forEach(a => {
+                            const label = a.lb_arc ?? a.name ?? a.nom ?? a.abv_arc ?? '';
+                            if (label) weaponSelect.innerHTML += `<option value="${label}">${label}</option>`;
+                        });
+                    }
+                } catch (e) {
+                    console.warn('Erreur chargement arcs:', e);
+                }
             }
             
             // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] }
