@@ -333,7 +333,7 @@ window.editInscription = function(inscriptionId) {
         setVal('edit-creation_renouvellement', crVal || '');
         setVal('edit-depart-select', inscription.numero_depart);
         setVal('edit-categorie_classement', inscription.categorie_classement);
-        setVal('edit-arme', inscription.arme);
+        setVal('edit-arme', inscription.idarc ?? inscription.arme ?? '');
         setCheck('edit-mobilite_reduite', inscription.mobilite_reduite);
 
         const isNature = !!(typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne) || !!(inscription.piquet && String(inscription.piquet).trim() !== '');
@@ -457,7 +457,8 @@ function initEditInscriptionHandlers() {
             creation_renouvellement: document.getElementById('edit-creation_renouvellement')?.value || '',
             numero_depart: numeroDepart,
             categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
-            arme: document.getElementById('edit-arme')?.value || '',
+            idarc: (() => { const v = document.getElementById('edit-arme')?.value; return v && /^\d+$/.test(String(v)) ? parseInt(v, 10) : null; })(),
+            arme: (() => { const v = document.getElementById('edit-arme')?.value; return v && !/^\d+$/.test(String(v)) ? v : null; })(),
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
             numero_tir: currentEditInscription?.numero_tir ?? '',
         };

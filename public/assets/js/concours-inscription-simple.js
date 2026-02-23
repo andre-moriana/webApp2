@@ -1108,8 +1108,9 @@ function prefillFormFields(archer) {
                 });
                 
                 if (arcFound) {
-                    armeSelect.value = arcFound.lb_arc || '';
-                    console.log('✓ Arme pré-remplie via TYPARC:', armeSelect.value);
+                    const val = arcFound.idarc ?? arcFound.id_arc ?? arcFound.lb_arc ?? '';
+                    armeSelect.value = String(val);
+                    console.log('✓ Arme pré-remplie via TYPARC (idarc):', armeSelect.value);
                 } else {
                     console.log('✗ Arc non trouvé pour TYPARC (idarc):', typarc);
                     console.log('Arcs disponibles:', arcs.map(a => ({
@@ -1124,7 +1125,8 @@ function prefillFormFields(archer) {
                     });
                     
                     if (arcFoundFallback) {
-                        armeSelect.value = arcFoundFallback.lb_arc || '';
+                        const val = arcFoundFallback.idarc ?? arcFoundFallback.id_arc ?? arcFoundFallback.lb_arc ?? '';
+                        armeSelect.value = String(val);
                         console.log('✓ Arme pré-remplie via nom (fallback):', armeSelect.value);
                     }
                 }
@@ -1594,7 +1596,8 @@ function submitInscription() {
         type_licence: document.getElementById('type_licence')?.value || '',
         creation_renouvellement: document.getElementById('creation_renouvellement')?.value || '',
         categorie_classement: document.getElementById('categorie_classement')?.value || '',
-        arme: document.getElementById('arme')?.value || '',
+        idarc: (() => { const v = document.getElementById('arme')?.value; return v && /^\d+$/.test(String(v)) ? parseInt(v, 10) : null; })(),
+        arme: (() => { const v = document.getElementById('arme')?.value; return v && !/^\d+$/.test(String(v)) ? v : null; })(),
         mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0
     };
     const piquetSelect = document.getElementById('piquet');
@@ -2091,7 +2094,7 @@ window.editInscription = function(inscriptionId) {
             setVal('edit-creation_renouvellement', crVal || '');
             setVal('edit-depart-select', inscription.numero_depart);
             setVal('edit-categorie_classement', inscription.categorie_classement);
-            setVal('edit-arme', inscription.arme);
+            setVal('edit-arme', inscription.idarc ?? inscription.arme ?? '');
             
             // Sélectionner automatiquement la couleur de piquet pour Nature
             setTimeout(() => {
@@ -2175,7 +2178,8 @@ function initEditInscriptionHandlers() {
             creation_renouvellement: document.getElementById('edit-creation_renouvellement')?.value || '',
             numero_depart: numeroDepart,
             categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
-            arme: document.getElementById('edit-arme')?.value || '',
+            idarc: (() => { const v = document.getElementById('edit-arme')?.value; return v && /^\d+$/.test(String(v)) ? parseInt(v, 10) : null; })(),
+            arme: (() => { const v = document.getElementById('edit-arme')?.value; return v && !/^\d+$/.test(String(v)) ? v : null; })(),
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
             numero_tir: currentEditInscription?.numero_tir ?? '',
         };

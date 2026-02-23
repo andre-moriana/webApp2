@@ -497,9 +497,12 @@ function extractCategoryFromInscription(insc) {
     return lb ? String(lb).trim() : '';
 }
 
-// Extrait l'arme depuis une inscription ou un plan (lb_arc pour le select)
+// Extrait l'arme (libellé lb_arc) depuis une inscription ou un plan
 function extractWeaponFromInscription(insc, plan) {
-    const arme = insc?.arme ?? insc?.type_arc ?? insc?.lb_arc ?? plan?.arme ?? plan?.lb_arc ?? '';
+    // Priorité: lb_arc (API via JOIN), puis arme (legacy), puis lookup par idarc
+    const lbArc = insc?.lb_arc ?? plan?.lb_arc ?? '';
+    if (lbArc) return mapWeaponFromInscription(lbArc);
+    const arme = insc?.arme ?? insc?.type_arc ?? plan?.arme ?? '';
     if (arme) return mapWeaponFromInscription(arme);
     const typarc = insc?.typarc ?? insc?.TYPARC ?? insc?.idarc ?? plan?.typarc ?? plan?.idarc ?? '';
     if (typarc && concoursArcs.length > 0) {

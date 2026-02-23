@@ -62,7 +62,7 @@ class ArcherSearchController {
             return;
         }
         
-        $xmlPath = __DIR__ . '/../../public/data/users-licences.xml';
+        $xmlPath = __DIR__ . '/../../public/data/licences-users.xml';
         $xmlPath = realpath($xmlPath);
         
         error_log("ArcherSearchController: Recherche licence '$licenceNumber'");

@@ -7,7 +7,7 @@ class EmailConfig {
         if (self::$config === null) {
             self::loadConfig();
         }
-        return self::$config['contact_email'] ?? 'andremoriana@gmail.com';
+        return self::$config['contact_email'] ?? 'webmaster@arctraining.fr';
     }
     
     public static function getFromEmail() {
@@ -69,7 +69,7 @@ class EmailConfig {
     private static function loadConfig() {
         // Configuration par défaut
         self::$config = [
-            'contact_email' => 'andremoriana@gmail.com',
+            'contact_email' => 'webmaster@arctraining.fr',
             'from_email' => 'noreply@ArcTraining.eu',
             'from_name' => 'Portail Arc Training',
             'use_smtp' => false,
