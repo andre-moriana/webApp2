@@ -57,12 +57,6 @@ function fillCategorieClassementSelect() {
     var iddiscipline = (typeof concoursDiscipline !== 'undefined' && concoursDiscipline) ? concoursDiscipline : null;
     var qs = iddiscipline ? '?iddiscipline=' + encodeURIComponent(iddiscipline) : '';
 
-    function extractCategories(catRes) {
-        var categories = catRes && (catRes.data !== undefined ? catRes.data : (Array.isArray(catRes) ? catRes : []));
-        if (!Array.isArray(categories) && categories && categories.data) categories = categories.data;
-        return Array.isArray(categories) ? categories : [];
-    }
-
     function setOptions(select, categories) {
         if (!select) return;
         select.innerHTML = '<option value="">Sélectionner une catégorie</option>';
@@ -78,6 +72,18 @@ function fillCategorieClassementSelect() {
         });
     }
 
+    // Remplir tout de suite avec la config PHP si dispo (évite select vide avant le fetch)
+    if (window.categoriesClassement && window.categoriesClassement.length > 0) {
+        setOptions(categorySelect, window.categoriesClassement);
+        setOptions(editSelect, window.categoriesClassement);
+    }
+
+    function extractCategories(catRes) {
+        var categories = catRes && (catRes.data !== undefined ? catRes.data : (Array.isArray(catRes) ? catRes : []));
+        if (!Array.isArray(categories) && categories && categories.data) categories = categories.data;
+        return Array.isArray(categories) ? categories : [];
+    }
+
     function applyAndDone(categories) {
         if (categories.length > 0) {
             setOptions(categorySelect, categories);
@@ -86,31 +92,26 @@ function fillCategorieClassementSelect() {
         }
     }
 
-    // 1) Même URL que la feuille de marque (fonctionne en connecté)
-    fetch('/score-sheet/categories' + qs)
-        .then(function(r) {
-            if (r.status === 401) {
-                return fetch('/api/concours/categories-classement/public' + qs);
-            }
-            return r.json().then(function(data) { return { ok: r.ok, data: data }; });
-        })
-        .then(function(result) {
-            if (result && result.ok !== undefined) {
-                applyAndDone(extractCategories(result.data));
-                return;
-            }
-            if (result && typeof result.json === 'function') {
-                return result.json().then(function(data) { applyAndDone(extractCategories(data)); });
-            }
-            applyAndDone(extractCategories(result));
-        })
-        .catch(function(e) {
-            console.warn('Erreur chargement catégories inscription:', e);
-            fetch('/api/concours/categories-classement/public' + qs)
-                .then(function(r) { return r.json(); })
-                .then(function(data) { applyAndDone(extractCategories(data)); })
-                .catch(function() {});
+    function tryFetch(url) {
+        return fetch(url).then(function(r) {
+            if (!r.ok) return r.status === 401 ? null : Promise.reject(new Error(url + ' ' + r.status));
+            return r.json();
         });
+    }
+
+    // 1) Même URL que la feuille de marque (connecté)
+    tryFetch('/score-sheet/categories' + qs).then(function(data) {
+        if (data) { applyAndDone(extractCategories(data)); return; }
+        // 2) Si 401, URL publique (inscription ciblée)
+        return tryFetch('/api/concours/categories-classement/public' + qs).then(function(data2) {
+            if (data2) applyAndDone(extractCategories(data2));
+        });
+    }).catch(function(e) {
+        console.warn('Erreur chargement catégories:', e);
+        tryFetch('/api/concours/categories-classement/public' + qs).then(function(data) {
+            if (data) applyAndDone(extractCategories(data));
+        }).catch(function() {});
+    });
 }
 
 // Ajouter event listener au bouton de recherche
