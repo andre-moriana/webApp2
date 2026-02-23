@@ -770,10 +770,12 @@ window.showConfirmModal = function(archer) {
                         <option value="">Sélectionner une catégorie</option>
                         ${typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0
                             ? categoriesClassement.map(cat => {
-                                const abv = cat.abv_categorie_classement || '';
-                                const libelle = cat.lb_categorie_classement || '';
-                                return `<option value="${abv}">${libelle} (${abv})</option>`;
-                            }).join('')
+                                const abv = (cat.abv_categorie_classement || cat.abv || '').trim();
+                                const libelle = (cat.lb_categorie_classement || cat.name || cat.nom || '').trim();
+                                if (!abv && !libelle) return '';
+                                const label = libelle ? (abv ? libelle + ' (' + abv + ')' : libelle) : abv;
+                                return `<option value="${abv}">${label}</option>`;
+                            }).filter(Boolean).join('')
                             : ''
                         }
                     </select>

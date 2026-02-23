@@ -380,11 +380,13 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 if (!empty($categoriesClassement)): ?>
                                 <?php 
                                 foreach ($categoriesClassement as $categorie): 
-                                    $abv = $categorie['abv_categorie_classement'] ?? '';
-                                    $lb = $categorie['lb_categorie_classement'] ?? '';
+                                    $abv = trim((string)($categorie['abv_categorie_classement'] ?? $categorie['abv'] ?? ''));
+                                    $lb = trim((string)($categorie['lb_categorie_classement'] ?? $categorie['name'] ?? $categorie['nom'] ?? ''));
+                                    if ($abv === '' && $lb === '') continue;
+                                    $label = $lb !== '' ? ($abv !== '' ? $lb . ' (' . $abv . ')' : $lb) : $abv;
                                 ?>
                                     <option value="<?= htmlspecialchars($abv) ?>">
-                                        <?= htmlspecialchars($lb) ?> (<?= htmlspecialchars($abv) ?>)
+                                        <?= htmlspecialchars($label) ?>
                                     </option>
                                 <?php endforeach; ?>
                                 <?php else: ?>
@@ -576,11 +578,13 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <?php 
                                 if (!empty($categoriesClassement)): ?>
                                     <?php foreach ($categoriesClassement as $categorie): 
-                                        $abv = $categorie['abv_categorie_classement'] ?? '';
-                                        $lb = $categorie['lb_categorie_classement'] ?? '';
+                                        $abv = trim((string)($categorie['abv_categorie_classement'] ?? $categorie['abv'] ?? ''));
+                                        $lb = trim((string)($categorie['lb_categorie_classement'] ?? $categorie['name'] ?? $categorie['nom'] ?? ''));
+                                        if ($abv === '' && $lb === '') continue;
+                                        $label = $lb !== '' ? ($abv !== '' ? $lb . ' (' . $abv . ')' : $lb) : $abv;
                                     ?>
                                         <option value="<?= htmlspecialchars($abv) ?>">
-                                            <?= htmlspecialchars($lb) ?> (<?= htmlspecialchars($abv) ?>)
+                                            <?= htmlspecialchars($label) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
