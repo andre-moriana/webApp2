@@ -49,62 +49,8 @@ var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concou
     (document.querySelector('input[name="concours_id"]')?.value ||
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
 
-/**
- * Remplit le select catégories de classement comme dans la feuille de marque :
- * - Appel GET /score-sheet/categories?iddiscipline=X
- * - value = abv_categorie_classement | abv, affichage = lb_categorie_classement | name | nom | lb_categorie | abv
- */
-function fillCategorieClassementSelect() {
-    const categorySelect = document.getElementById('categorie_classement');
-    if (!categorySelect) return;
-    const iddiscipline = (typeof concoursDiscipline !== 'undefined' && concoursDiscipline) ? concoursDiscipline : null;
-    const url = iddiscipline
-        ? '/score-sheet/categories?iddiscipline=' + encodeURIComponent(iddiscipline)
-        : '/score-sheet/categories';
-
-    function buildOptionsFromList(categories) {
-        if (!Array.isArray(categories)) return;
-        categories.forEach(function(c) {
-            var abv = String(c.abv_categorie_classement ?? c.abv ?? '').trim();
-            var label = String(c.lb_categorie_classement ?? c.name ?? c.nom ?? c.lb_categorie ?? abv).trim();
-            if (abv || label) {
-                var opt = document.createElement('option');
-                opt.value = abv || label;
-                opt.textContent = label || abv;
-                categorySelect.appendChild(opt);
-            }
-        });
-    }
-
-    function extractCategoriesArray(catRes) {
-        var categories = catRes && (catRes.data ?? catRes.categories ?? (Array.isArray(catRes) ? catRes : null));
-        if (!Array.isArray(categories) && categories && categories.data) categories = categories.data;
-        if (!Array.isArray(categories) && catRes && catRes.data && catRes.data.data) categories = catRes.data.data;
-        return Array.isArray(categories) ? categories : [];
-    }
-
-    categorySelect.innerHTML = '<option value="">Sélectionner une catégorie</option>';
-    fetch(url).then(function(r) { return r.json(); }).then(function(catRes) {
-        var categories = extractCategoriesArray(catRes);
-        if (categories.length > 0) {
-            window.categoriesClassement = categories;
-            buildOptionsFromList(categories);
-        } else {
-            if (window.categoriesClassement && window.categoriesClassement.length > 0) {
-                buildOptionsFromList(window.categoriesClassement);
-            }
-        }
-    }).catch(function() {
-        if (window.categoriesClassement && window.categoriesClassement.length > 0) {
-            buildOptionsFromList(window.categoriesClassement);
-        }
-    });
-}
-
 // Ajouter event listener au bouton de recherche
 document.addEventListener('DOMContentLoaded', function() {
-    fillCategorieClassementSelect();
-
     const searchBtn = document.getElementById('archer-search-btn');
     const licenceInput = document.getElementById('licence-search-input');
     const confirmBtn = document.getElementById('btn-confirm-inscription');

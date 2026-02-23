@@ -1405,32 +1405,27 @@ class ConcoursController {
         }
         unset($inscription);
 
-        // Récupérer les catégories de classement pour le select (API retourne { success, data: [ { abv_categorie_classement, lb_categorie_classement, ... } ] })
+        // Catégories de classement : même source et extraction que ScoreSheetController::getCategories
         $categoriesClassement = [];
         try {
             $iddiscipline = is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null);
             $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
-            $raw = $this->apiService->makeRequest($endpoint, 'GET');
-            $body = $this->apiService->unwrapData($raw);
-            $list = is_array($body) && isset($body['data']) && is_array($body['data']) ? $body['data'] : (is_array($body) && isset($body[0]) ? $body : []);
-            if (empty($list) && $iddiscipline) {
-                $raw = $this->apiService->makeRequest('concours/categories-classement', 'GET');
-                $body = $this->apiService->unwrapData($raw);
-                $list = is_array($body) && isset($body['data']) && is_array($body['data']) ? $body['data'] : [];
+            $response = $this->apiService->makeRequest($endpoint, 'GET');
+            $raw = $response['data'] ?? null;
+            $categories = [];
+            if (is_array($raw) && isset($raw['data']) && is_array($raw['data'])) {
+                $categories = $raw['data'];
+            } elseif (is_array($raw) && isset($raw[0])) {
+                $categories = $raw;
             }
-            foreach ($list as $c) {
-                if (!is_array($c)) continue;
-                $abv = isset($c['abv_categorie_classement']) ? trim((string)$c['abv_categorie_classement']) : (isset($c['abv']) ? trim((string)$c['abv']) : '');
-                $lb  = isset($c['lb_categorie_classement']) ? trim((string)$c['lb_categorie_classement']) : (isset($c['name']) ? trim((string)$c['name']) : (isset($c['nom']) ? trim((string)$c['nom']) : ''));
-                if ($abv === '' && $lb === '') continue;
-                $categoriesClassement[] = array_merge($c, [
-                    'abv_categorie_classement' => $abv ?: ($lb ?: ''),
-                    'lb_categorie_classement'  => $lb ?: ($abv ?: ''),
-                ]);
+            if (empty($categories) && $iddiscipline) {
+                $response = $this->apiService->makeRequest('concours/categories-classement', 'GET');
+                $raw = $response['data'] ?? null;
+                if (is_array($raw) && isset($raw['data']) && is_array($raw['data'])) {
+                    $categories = $raw['data'];
+                }
             }
-            usort($categoriesClassement, function ($a, $b) {
-                return strcasecmp((string)($a['lb_categorie_classement'] ?? ''), (string)($b['lb_categorie_classement'] ?? ''));
-            });
+            $categoriesClassement = is_array($categories) ? $categories : [];
         } catch (Exception $e) {
             error_log('Erreur catégories classement: ' . $e->getMessage());
         }

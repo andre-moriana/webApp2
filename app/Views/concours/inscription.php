@@ -370,6 +370,18 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <label for="categorie_classement" class="form-label">Catégorie de classement</label>
                             <select id="categorie_classement" class="form-control">
                                 <option value="">Sélectionner une catégorie</option>
+                                <?php
+                                $cats = $categoriesClassement ?? [];
+                                foreach ($cats as $c):
+                                    if (!is_array($c)) continue;
+                                    $abv   = trim((string)($c['abv_categorie_classement'] ?? $c['abv'] ?? ''));
+                                    $label = trim((string)($c['lb_categorie_classement'] ?? $c['name'] ?? $c['nom'] ?? $c['lb_categorie'] ?? $abv));
+                                    if ($abv === '' && $label === '') continue;
+                                    if ($label === '') $label = $abv;
+                                    if ($abv === '') $abv = $label;
+                                ?>
+                                <option value="<?= htmlspecialchars($abv) ?>"><?= htmlspecialchars($label) ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -552,13 +564,16 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <label for="edit-categorie_classement" class="form-label">Catégorie de classement</label>
                             <select id="edit-categorie_classement" class="form-control">
                                 <option value="">Sélectionner une catégorie</option>
-                                <?php foreach ($categoriesClassement ?? [] as $categorie): ?>
-                                    <?php if (!is_array($categorie)) continue;
-                                        $abv = isset($categorie['abv_categorie_classement']) ? trim((string)$categorie['abv_categorie_classement']) : (isset($categorie['abv']) ? trim((string)$categorie['abv']) : '');
-                                        $lb  = isset($categorie['lb_categorie_classement']) ? trim((string)$categorie['lb_categorie_classement']) : (isset($categorie['name']) ? trim((string)$categorie['name']) : (isset($categorie['nom']) ? trim((string)$categorie['nom']) : ''));
-                                        if ($abv === '' && $lb === '') continue;
-                                        $label = $lb !== '' ? ($abv !== '' ? $lb . ' (' . $abv . ')' : $lb) : $abv; ?>
-                                    <option value="<?= htmlspecialchars($abv) ?>"><?= htmlspecialchars($label) ?></option>
+                                <?php
+                                foreach ($categoriesClassement ?? [] as $c):
+                                    if (!is_array($c)) continue;
+                                    $abv   = trim((string)($c['abv_categorie_classement'] ?? $c['abv'] ?? ''));
+                                    $label = trim((string)($c['lb_categorie_classement'] ?? $c['name'] ?? $c['nom'] ?? $c['lb_categorie'] ?? $abv));
+                                    if ($abv === '' && $label === '') continue;
+                                    if ($label === '') $label = $abv;
+                                    if ($abv === '') $abv = $label;
+                                ?>
+                                <option value="<?= htmlspecialchars($abv) ?>"><?= htmlspecialchars($label) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
