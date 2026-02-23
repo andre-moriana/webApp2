@@ -180,18 +180,19 @@ function setupConcoursSelector() {
                 }
             }
             
-            // Charger les arcs depuis concour_arcs
+            // Charger les arcs depuis concour_arcs (même extraction imbriquée que catégories)
             const weaponSelect = document.getElementById('archerWeapon');
             if (weaponSelect) {
                 weaponSelect.innerHTML = '<option value="">--</option>';
                 try {
                     const arcsRes = await fetch('/api/concours/arcs').then(r => r.json()).catch(() => null);
-                    const arcs = arcsRes?.data ?? (Array.isArray(arcsRes) ? arcsRes : []);
+                    let arcs = arcsRes?.data ?? (Array.isArray(arcsRes) ? arcsRes : []);
+                    if (!Array.isArray(arcs) && arcsRes?.data?.data) arcs = arcsRes.data.data;
                     concoursArcs = Array.isArray(arcs) ? arcs : [];
-                    if (Array.isArray(arcs) && arcs.length > 0) {
-                        arcs.forEach(a => {
-                            const label = a.lb_arc ?? a.name ?? a.nom ?? a.abv_arc ?? '';
-                            if (label) weaponSelect.innerHTML += `<option value="${label}">${label}</option>`;
+                    if (concoursArcs.length > 0) {
+                        concoursArcs.forEach(a => {
+                            const label = (a.lb_arc ?? a.name ?? a.nom ?? a.abv_arc ?? '').trim();
+                            if (label) weaponSelect.appendChild(new Option(label, label));
                         });
                     }
                 } catch (e) {
