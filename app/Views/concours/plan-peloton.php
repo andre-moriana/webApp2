@@ -33,7 +33,7 @@ $getArcherDisplayInfo = function($plan, $inscriptionsMap = []) {
 $isCompound = function($numeroLicence, $inscriptionsMap = []) {
     if (!$numeroLicence || !isset($inscriptionsMap[$numeroLicence])) return false;
     $i = $inscriptionsMap[$numeroLicence];
-    $arme = strtolower(trim($i['arme'] ?? $i['lb_arc'] ?? ''));
+    $arme = strtolower(trim($i['arme'] ?? ''));
     $cat = strtoupper(trim($i['categorie_classement'] ?? ''));
     if (!empty($arme) && (strpos($arme, 'poulies') !== false || strpos($arme, 'compound') !== false)) return true;
     if (!empty($cat) && substr($cat, -2) === 'CO') return true;

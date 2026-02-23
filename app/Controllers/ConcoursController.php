@@ -9,6 +9,48 @@ class ConcoursController {
 
     public function __construct() {
         $this->apiService = new ApiService();
+     * Retourne l'ID discipline (entier) à partir de la valeur renvoyée par l'API concours (objet, tableau ou scalaire).
+     */
+    private function normalizeIdDiscipline($disciplineOrId) {
+     * @param int|null $iddiscipline
+     * @param bool $usePublic true pour inscription ciblée (makeRequestPublic)
+     * @return array liste d'items avec abv_categorie_classement, lb_categorie_classement
+        if ($disciplineOrId === null || $disciplineOrId === '') return null;
+        if (is_numeric($disciplineOrId)) return (int)$disciplineOrId;
+        if (is_object($disciplineOrId)) {
+            if (isset($disciplineOrId->iddiscipline)) return (int)$disciplineOrId->iddiscipline;
+            if (isset($disciplineOrId->id)) return (int)$disciplineOrId->id;
+        }
+        if (is_array($disciplineOrId)) {
+            if (isset($disciplineOrId['iddiscipline'])) return (int)$disciplineOrId['iddiscipline'];
+            if (isset($disciplineOrId['id'])) return (int)$disciplineOrId['id'];
+        }
+        return null;
+    }
+        return [];
+
+    /**
+     * Retourne l'ID discipline (entier) à partir de la valeur renvoyée par l'API concours (objet, tableau ou scalaire).
+     */
+    private function normalizeIdDiscipline($disciplineOrId) {
+     * @param int|null $iddiscipline
+     * @param bool $usePublic true pour inscription ciblée (makeRequestPublic)
+     * @return array liste d'items avec abv_categorie_classement, lb_categorie_classement
+        if ($disciplineOrId === null || $disciplineOrId === '') return null;
+        if (is_numeric($disciplineOrId)) return (int)$disciplineOrId;
+        if (is_object($disciplineOrId)) {
+            if (isset($disciplineOrId->iddiscipline)) return (int)$disciplineOrId->iddiscipline;
+            if (isset($disciplineOrId->id)) return (int)$disciplineOrId->id;
+        }
+        if (is_array($disciplineOrId)) {
+            if (isset($disciplineOrId['iddiscipline'])) return (int)$disciplineOrId['iddiscipline'];
+            if (isset($disciplineOrId['id'])) return (int)$disciplineOrId['id'];
+        }
+        return null;
+    }
+        return [];
+
+    /**
     }
 
     /**
@@ -1363,6 +1405,7 @@ class ConcoursController {
                     $clubId = $club['id'] ?? $club['_id'] ?? null;
                     if ($clubId) {
                         $clubsMap[$clubId] = $club;
+            // Récupérer l'iddiscipline du concours
                         $clubsMap[(string)$clubId] = $club;
                         $clubsMap[(int)$clubId] = $club;
                     }
@@ -1379,44 +1422,84 @@ class ConcoursController {
                 unset($club);
                 $clubs = array_values($clubsPayload);
             }
+                // Si data contient encore { success, data }, unwrap une deuxième fois
         } catch (Exception $e) {
             // Ignorer les erreurs pour continuer l'affichage
         }
         
+                
+            // Si filtre par discipline et aucun résultat, réessayer sans filtre pour afficher toutes les catégories
         // Enrichir les inscriptions avec le nom du club directement
+            // Récupérer l'iddiscipline du concours
         // id_club peut contenir soit un ID numérique, soit un name_short
         foreach ($inscriptions as &$inscription) {
             $clubId = $inscription['id_club'] ?? null;
+                    
             if ($clubId) {
                 // Normaliser la valeur (trim, convertir en string)
                 $clubIdStr = trim((string)$clubId);
                 
                 // Chercher dans le mapping (par ID ou par name_short) - essayer toutes les variantes
+                    
+                    // Réindexer le tableau pour avoir des clés séquentielles
                 $club = null;
                 if (isset($clubsMap[$clubIdStr])) {
                     $club = $clubsMap[$clubIdStr];
+                    unset($categorie);
+                    // Trier par ordre alphabétique sur lb_categorie_classement
+                    usort($categoriesPayload, function($a, $b) {
+                        $libelleA = $a['lb_categorie_classement'] ?? '';
+                        $libelleB = $b['lb_categorie_classement'] ?? '';
+                        return strcasecmp($libelleA, $libelleB);
+                    });
+                    $categoriesClassement = array_values($categoriesPayload);
                 } elseif (isset($clubsMap[(string)$clubId])) {
                     $club = $clubsMap[(string)$clubId];
                 } elseif (isset($clubsMap[(int)$clubId])) {
                     $club = $clubsMap[(int)$clubId];
                 } elseif (isset($clubsMap[$clubId])) {
+                // Si data contient encore { success, data }, unwrap une deuxième fois
                     $club = $clubsMap[$clubId];
                 } else {
                     // Si pas trouvé dans le mapping, chercher directement dans les clubs
                     if (isset($clubs) && is_array($clubs)) {
+                
+            // Si filtre par discipline et aucun résultat, réessayer sans filtre pour afficher toutes les catégories
                         foreach ($clubs as $c) {
                             $nameShort = trim((string)($c['nameShort'] ?? $c['name_short'] ?? ''));
                             if ($nameShort === $clubIdStr) {
                                 $club = $c;
+                    unset($arc);
+                    
+                    // Trier par ordre alphabétique sur lb_arc
+                    usort($arcsPayload, function($a, $b) {
+                        $libelleA = $a['lb_arc'] ?? '';
+                        $libelleB = $b['lb_arc'] ?? '';
+                        return strcasecmp($libelleA, $libelleB);
+                    });
+                    
+                    // Réindexer le tableau pour avoir des clés séquentielles
+                    $arcs = array_values($arcsPayload);
                                 break;
+                    
                             }
                         }
                     }
                 }
                 
+                    
+                    // Réindexer le tableau pour avoir des clés séquentielles
                 if ($club) {
                     // Utiliser le champ "name" (nom complet) comme demandé
                     $inscription['club_name'] = $club['name'] ?? null;
+                    unset($categorie);
+                    // Trier par ordre alphabétique sur lb_categorie_classement
+                    usort($categoriesPayload, function($a, $b) {
+                        $libelleA = $a['lb_categorie_classement'] ?? '';
+                        $libelleB = $b['lb_categorie_classement'] ?? '';
+                        return strcasecmp($libelleA, $libelleB);
+                    });
+                    $categoriesClassement = array_values($categoriesPayload);
                     $inscription['club_name_short'] = $club['nameShort'] ?? $club['name_short'] ?? null;
                 }
             }
@@ -1433,6 +1516,17 @@ class ConcoursController {
             $arcsPayload = $this->apiService->unwrapData($arcsResponse);
             if (is_array($arcsPayload)) {
                 if (isset($arcsPayload['data']) && isset($arcsPayload['success'])) {
+                    unset($arc);
+                    
+                    // Trier par ordre alphabétique sur lb_arc
+                    usort($arcsPayload, function($a, $b) {
+                        $libelleA = $a['lb_arc'] ?? '';
+                        $libelleB = $b['lb_arc'] ?? '';
+                        return strcasecmp($libelleA, $libelleB);
+                    });
+                    
+                    // Réindexer le tableau pour avoir des clés séquentielles
+                    $arcs = array_values($arcsPayload);
                     $arcsPayload = $arcsPayload['data'];
                 }
             }
@@ -2118,6 +2212,7 @@ class ConcoursController {
         header('Location: ' . $redirectUrl);
         exit;
     }
+        // Récupérer les catégories de classement (filtrées par discipline)
 
     /**
      * Page d'inscription ciblée (publique, sans authentification)
@@ -2165,6 +2260,7 @@ class ConcoursController {
 
         $usersMap = [];
         $clubs = [];
+        // Récupérer les catégories de classement (filtrées par discipline)
         $categoriesClassement = [];
         $arcs = [];
         $distancesTir = [];

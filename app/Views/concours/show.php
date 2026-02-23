@@ -660,7 +660,7 @@ $debugLicence = isset($_GET['debug_licence']);
                                 <option value="">Sélectionner</option>
                                 <?php if (!empty($arcs)): ?>
                                     <?php foreach ($arcs as $arc): ?>
-                                        <option value="<?= (int)($arc['idarc'] ?? $arc['id_arc'] ?? '') ?>">
+                                        <option value="<?= htmlspecialchars($arc['lb_arc'] ?? '') ?>">
                                             <?= htmlspecialchars($arc['lb_arc'] ?? '') ?>
                                         </option>
                                     <?php endforeach; ?>

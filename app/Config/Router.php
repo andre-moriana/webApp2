@@ -91,7 +91,6 @@ class Router {
         
         // Routes des feuilles de marque (protégées)
         $this->addRoute("GET", "/score-sheet", "ScoreSheetController@index");
-        $this->addRoute("GET", "/score-sheet/categories", "ScoreSheetController@getCategories");
         $this->addRoute("POST", "/score-sheet/save", "ScoreSheetController@save");
         
         // Routes des utilisateurs (protégées)
@@ -218,16 +217,12 @@ class Router {
         $this->addRoute("DELETE", "/events/{id}", "EventController@destroy");
         
         // Routes API pour les concours (proxy vers backend)
-        // Routes spécifiques AVANT {id} pour éviter que categories-classement/public soit capturé par {id}/public
-        $this->addRoute("GET", "/api/concours/categories-classement/public", "ApiController@getCategoriesClassementPublic");
-        $this->addRoute("GET", "/api/concours/categories-classement", "ApiController@proxyConcoursCategoriesClassement");
         // Routes publiques (sans auth - inscription ciblée)
         $this->addRoute("GET", "/api/concours/{id}/public", "ApiController@proxyConcoursPublic");
         $this->addRoute("GET", "/api/concours/{id}/inscriptions/public", "ApiController@proxyConcoursInscriptionsPublic");
         $this->addRoute("POST", "/api/concours/{id}/inscription/public", "ApiController@proxyConcoursInscriptionPublic");
         $this->addRoute("GET", "/api/concours/distance-recommandee", "ApiController@proxyConcoursDistanceRecommandee");
         $this->addRoute("GET", "/api/concours/blason-recommandee", "ApiController@proxyConcoursBlasonRecommandee");
-        $this->addRoute("GET", "/api/concours/arcs", "ApiController@proxyConcoursArcs");
         $this->addRoute("GET", "/api/concours/{id}/plan-cible", "ApiController@proxyConcoursPlanCible");
         $this->addRoute("POST", "/api/concours/{id}/plan-cible", "ApiController@proxyConcoursPlanCible");
         $this->addRoute("GET", "/api/concours/{id}/plan-cible/{depart}/cibles", "ApiController@proxyConcoursPlanCibleCibles");

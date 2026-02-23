@@ -114,14 +114,7 @@
                     }
                 });
                 
-                const text = await response.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch {
-                    console.warn('[SessionManager] Réponse non-JSON reçue (probable erreur serveur), ignorée');
-                    return;
-                }
+                const data = await response.json();
                 
                 if (!data.success || response.status === 401) {
                     // console.log('[SessionManager] Session expirée, redirection vers login');

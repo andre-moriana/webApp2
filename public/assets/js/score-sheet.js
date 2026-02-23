@@ -30,12 +30,7 @@ let selectedConcoursId = null;
 let concoursPlansPeloton = null;
 let concoursPlansCible = null;
 let concoursInscriptions = null;
-let concoursInscriptionsAll = [];  // Toutes les inscriptions (pour lookup plan)
 let concoursDetails = null;
-let concoursArcs = [];  // Liste des arcs (concour_arcs) pour lookup typarc/idarc
-let concoursCategories = [];  // Catégories pour lookup
-let isPlanPelotonMode = false;  // true = Départ/Peloton (N/3/C), false ou plan cible = Départ/Cible (T/S/I/H)
-let isPlanCibleMode = false;
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
@@ -89,22 +84,13 @@ function setupConcoursSelector() {
         selectedConcoursId = this.value || null;
         concoursPlansPeloton = null;
         concoursPlansCible = null;
-        concoursArcs = [];
-        concoursCategories = [];
-        isPlanPelotonMode = false;
-        isPlanCibleMode = false;
         concoursInscriptions = null;
-        concoursInscriptionsAll = [];
         concoursDetails = null;
         
         pelotonWrapper.style.display = 'none';
         prefillRow.style.display = 'none';
         departSelect.innerHTML = '<option value="">-- Départ --</option>';
         pelotonSelect.innerHTML = '<option value="">-- Peloton --</option>';
-        const categorySelect = document.getElementById('archerCategory');
-        if (categorySelect) categorySelect.innerHTML = '<option value="">-- Sélectionner un concours --</option>';
-        const weaponSelect = document.getElementById('archerWeapon');
-        if (weaponSelect) weaponSelect.innerHTML = '<option value="">-- Sélectionner un concours --</option>';
         
         if (!selectedConcoursId) {
             // Réinitialiser le type de tir et le titre
@@ -150,70 +136,10 @@ function setupConcoursSelector() {
                 initializeSheets();
             }
             
-            // Charger les catégories de classement depuis concour_categories_classement
-            // Filtrées par iddiscipline du concours | Affichage = lb_categorie_classement | Enregistré = abv_categorie_classement
-            const categorySelect = document.getElementById('archerCategory');
-            if (categorySelect) {
-                categorySelect.innerHTML = '<option value="">--</option>';
-                const iddiscipline = concoursDetails?.discipline ?? concoursDetails?.iddiscipline ?? null;
-                const url = iddiscipline
-                    ? `/score-sheet/categories?iddiscipline=${encodeURIComponent(iddiscipline)}`
-                    : '/score-sheet/categories';
-                try {
-                    const catRes = await fetch(url).then(r => r.json()).catch(() => null);
-                    let categories = catRes?.data ?? catRes?.categories ?? (Array.isArray(catRes) ? catRes : []);
-                    if (!Array.isArray(categories) && categories?.data) categories = categories.data;
-                    if (!Array.isArray(categories) && catRes?.data?.data) categories = catRes.data.data;
-                    concoursCategories = Array.isArray(categories) ? categories : [];
-                    (concoursCategories || []).forEach(c => {
-                        const abv = String(c.abv_categorie_classement ?? '').trim();
-                        const label = String(c.lb_categorie_classement ?? abv).trim();
-                        if (abv && label) {
-                            const opt = document.createElement('option');
-                            opt.value = abv;
-                            opt.textContent = label;
-                            categorySelect.appendChild(opt);
-                        }
-                    });
-                } catch (e) {
-                    console.warn('Erreur chargement catégories:', e);
-                }
-            }
-            
-            // Charger les arcs depuis concour_arcs (même extraction imbriquée que catégories)
-            const weaponSelect = document.getElementById('archerWeapon');
-            if (weaponSelect) {
-                weaponSelect.innerHTML = '<option value="">--</option>';
-                try {
-                    const arcsRes = await fetch('/api/concours/arcs').then(r => r.json()).catch(() => null);
-                    let arcs = arcsRes?.data ?? (Array.isArray(arcsRes) ? arcsRes : []);
-                    if (!Array.isArray(arcs) && arcsRes?.data?.data) arcs = arcsRes.data.data;
-                    concoursArcs = Array.isArray(arcs) ? arcs : [];
-                    if (concoursArcs.length > 0) {
-                        concoursArcs.forEach(a => {
-                            const label = (a.lb_arc ?? a.name ?? a.nom ?? a.abv_arc ?? '').trim();
-                            if (label) weaponSelect.appendChild(new Option(label, label));
-                        });
-                    }
-                } catch (e) {
-                    console.warn('Erreur chargement arcs:', e);
-                }
-            }
-            
             // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] }
-            let plansPeloton = (planPelotonRes?.success && planPelotonRes?.data) ? planPelotonRes.data : (planPelotonRes?.data || planPelotonRes);
+            let plansPeloton = planPelotonRes?.data || planPelotonRes;
             if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton) && plansPeloton.data) {
                 plansPeloton = plansPeloton.data;
-            }
-            // Normaliser : si tableau d'objets, grouper par numero_depart (compat API)
-            if (Array.isArray(plansPeloton) && plansPeloton.length > 0) {
-                const grouped = {};
-                plansPeloton.forEach(p => {
-                    const dep = String(p.numero_depart ?? p.numeroDepart ?? 0);
-                    if (!grouped[dep]) grouped[dep] = [];
-                    grouped[dep].push(p);
-                });
-                plansPeloton = grouped;
             }
             if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton)) {
                 concoursPlansPeloton = plansPeloton;
@@ -228,15 +154,16 @@ function setupConcoursSelector() {
                 concoursPlansCible = plansCible;
             }
             
-            // Inscriptions - format API: { data: [...] } ou tableau direct
-            let inscriptions = Array.isArray(inscRes) ? inscRes : (inscRes?.data || inscRes?.inscriptions || []);
-            if (!Array.isArray(inscriptions)) inscriptions = [];
-            concoursInscriptions = inscriptions.filter(i => (i.statut_inscription || i.statutInscription || '') === 'confirmee');
-            // Garder toutes les inscriptions pour le lookup (plan peut avoir des archers non confirmés)
-            concoursInscriptionsAll = inscriptions;
+            // Inscriptions - filtrer confirmées (format API: { data: [...] } ou tableau direct)
+            let inscriptions = Array.isArray(inscRes) ? inscRes : (inscRes?.data || []);
+            if (Array.isArray(inscriptions)) {
+                concoursInscriptions = inscriptions.filter(i => (i.statut_inscription || i.statutInscription || '') === 'confirmee');
+            } else {
+                concoursInscriptions = [];
+            }
             
-            isPlanCibleMode = ['T', 'S', 'I', 'H'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
-            isPlanPelotonMode = ['3', 'N', 'C'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
+            const isPlanCibleMode = ['T', 'S', 'I', 'H'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
+            const isPlanPelotonMode = ['3', 'N', 'C', '3D'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
             
             // Afficher sélecteur Départ / Cible (T/S/I/H) ou Départ / Peloton (N/3/C)
             if (isPlanCibleMode || isPlanPelotonMode) {
@@ -247,14 +174,13 @@ function setupConcoursSelector() {
                 if (hintEl) hintEl.textContent = isPlanCibleMode ? 'Pour les disciplines Salle, TAE (T, S, I, H)' : 'Pour les disciplines Nature, 3D et Campagne';
                 
                 const plansSource = isPlanCibleMode ? concoursPlansCible : concoursPlansPeloton;
-                const departs = Object.keys(plansSource || {}).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+                const departs = Object.keys(plansSource).sort((a, b) => parseInt(a) - parseInt(b));
                 departSelect.innerHTML = '<option value="">-- Départ --</option>';
                 departs.forEach(dep => {
                     departSelect.innerHTML += `<option value="${dep}">Départ ${dep}</option>`;
                 });
                 
                 departSelect.onchange = function() {
-                    resetArchersInSheets();
                     const dep = this.value;
                     pelotonSelect.innerHTML = '<option value="">-- ' + (isPlanCibleMode ? 'Cible' : 'Peloton') + ' --</option>';
                     if (!dep || !plansSource[dep]) return;
@@ -264,21 +190,12 @@ function setupConcoursSelector() {
                             pelotonSelect.innerHTML += `<option value="${c}">Cible ${c}</option>`;
                         });
                     } else {
-                        const getNumPeloton = p => p.numero_peloton ?? p.numeroPeloton;
-                        const pelotons = [...new Set((plansSource[dep] || []).map(getNumPeloton).filter(Boolean))].sort((a, b) => a - b);
+                        const pelotons = [...new Set((plansSource[dep] || []).map(p => p.numero_peloton).filter(Boolean))].sort((a, b) => a - b);
                         pelotons.forEach(pel => {
                             pelotonSelect.innerHTML += `<option value="${pel}">Peloton ${pel}</option>`;
                         });
                     }
                     prefillRow.style.display = (dep && pelotonSelect.options.length > 1) ? 'block' : 'none';
-                };
-                
-                // Préremplissage automatique quand peloton/cible est sélectionné
-                pelotonSelect.onchange = function() {
-                    resetArchersInSheets();
-                    if (departSelect.value && this.value) {
-                        prefillArchersFromConcours();
-                    }
                 };
                 
                 departSelect.dispatchEvent(new Event('change'));
@@ -293,32 +210,6 @@ function setupConcoursSelector() {
             showStatus('Erreur lors du chargement des données du concours', 'danger');
         }
     });
-}
-
-// Réinitialiser les archers et scores des feuilles (appelé lors du changement de départ/peloton/cible)
-function resetArchersInSheets() {
-    if (userSheets.length === 0) return;
-    const config = selectedShootingType && SHOOTING_CONFIGS[selectedShootingType] ? SHOOTING_CONFIGS[selectedShootingType] : null;
-    userSheets.forEach((sheet, idx) => {
-        sheet.archerInfo = {
-            name: `Archer ${idx + 1}`,
-            licenseNumber: '',
-            category: '',
-            weapon: '',
-            gender: ''
-        };
-        if (sheet.userId !== undefined) sheet.userId = undefined;
-        if (config && sheet.scoreRows) {
-            sheet.scoreRows.forEach(row => {
-                row.arrows?.forEach(a => { if (a) a.value = 0; });
-                row.endTotal = 0;
-                row.cumulativeTotal = 0;
-            });
-        }
-    });
-    archerSignatures = {};
-    currentUserIndex = 0;
-    displayCurrentArcher();
 }
 
 // Préremplir les archers depuis le concours (plan cible, peloton ou inscriptions)
@@ -344,66 +235,68 @@ async function prefillArchersFromConcours() {
         }
     }
     
-    if (isPlanPelotonMode && concoursPlansPeloton && departSelect?.value && pelotonSelect?.value) {
-        // Mode peloton (N/3/C) : extraire les archers du peloton (priorité sur plan cible)
-        const dep = String(departSelect.value);
-        const pel = parseInt(pelotonSelect.value, 10);
-        const getNumPeloton = p => p.numero_peloton ?? p.numeroPeloton ?? 0;
-        const getLicence = p => p.numero_licence ?? p.numeroLicence ?? '';
-        const plans = (concoursPlansPeloton[dep] || concoursPlansPeloton[String(dep)] || [])
-            .filter(p => (getNumPeloton(p) || 0) == pel)
-            .filter(p => getLicence(p));
-        const inscriptionsMap = buildInscriptionsMap(concoursInscriptionsAll?.length ? concoursInscriptionsAll : concoursInscriptions);
-        plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
-        archers = plans.map(p => {
-            const lic = String(getLicence(p)).trim();
-            const licNorm = lic.replace(/^0+/, '') || lic;
-            const insc = inscriptionsMap[lic] || inscriptionsMap[licNorm] || inscriptionsMap[lic.toUpperCase()] || findInscriptionByLicence(lic) || {};
-            const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
-            const cat = extractCategoryFromInscription(insc);
-            const weapon = extractWeaponFromInscription(insc, p);
-            const gender = extractGenderFromInscription(insc) || ((insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H');
-            return {
-                name: nom,
-                licenseNumber: lic,
-                category: cat,
-                weapon: weapon,
-                gender: gender,
-                userId: insc.user_id || insc.userId || insc.id_user || p.user_id
-            };
-        });
-    } else if (isPlanCibleMode && concoursPlansCible && departSelect?.value && pelotonSelect?.value) {
+    if (concoursPlansCible && departSelect?.value && pelotonSelect?.value) {
         // Mode plan cible (T/S/I/H) : extraire les archers de la cible
         const dep = departSelect.value;
         const cible = parseInt(pelotonSelect.value);
         const plans = (concoursPlansCible[dep] || []).filter(p => (p.numero_cible || 0) == cible);
-        const inscriptionsMap = buildInscriptionsMap(concoursInscriptionsAll?.length ? concoursInscriptionsAll : concoursInscriptions);
-        plans.sort((a, b) => (a.position_archer || a.positionArcher || '').localeCompare(b.position_archer || b.positionArcher || ''));
+        const inscriptionsMap = {};
+        (concoursInscriptions || []).forEach(i => {
+            const lic = i.numero_licence || i.numeroLicence;
+            if (lic) inscriptionsMap[lic] = i;
+        });
+        
+        plans.sort((a, b) => (a.position_archer || '').localeCompare(b.position_archer || ''));
         archers = plans.map(p => {
-            const lic = String(p.numero_licence ?? p.numeroLicence ?? '').trim();
-            const licNorm = lic.replace(/^0+/, '') || lic;
-            const insc = inscriptionsMap[lic] || inscriptionsMap[licNorm] || inscriptionsMap[lic.toUpperCase()] || findInscriptionByLicence(lic) || {};
-            const nom = insc.user_nom || insc.userNom || insc.nom || insc.name || p.user_nom || p.userNom || '';
-            const cat = extractCategoryFromInscription(insc);
-            const weapon = extractWeaponFromInscription(insc, p);
-            const gender = extractGenderFromInscription(insc) || ((insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H');
+            const lic = p.numero_licence || '';
+            const insc = inscriptionsMap[lic] || {};
+            const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
+            const arme = insc.arme || '';
+            const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
             return {
                 name: nom,
                 licenseNumber: lic,
                 category: cat,
-                weapon: weapon,
-                gender: gender,
+                weapon: mapWeaponFromInscription(arme),
+                gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
                 userId: insc.user_id || insc.userId || insc.id_user || p.user_id
+            };
+        });
+    } else if (concoursPlansPeloton && departSelect?.value && pelotonSelect?.value) {
+        // Mode peloton (N/3/C) : extraire les archers du peloton
+        const dep = departSelect.value;
+        const pel = parseInt(pelotonSelect.value);
+        const plans = (concoursPlansPeloton[dep] || []).filter(p => (p.numero_peloton || 0) == pel);
+        const inscriptionsMap = {};
+        (concoursInscriptions || []).forEach(i => {
+            const lic = i.numero_licence || i.numeroLicence;
+            if (lic) inscriptionsMap[lic] = i;
+        });
+        
+        plans.sort((a, b) => (a.position_archer || '').localeCompare(b.position_archer || ''));
+        archers = plans.map(p => {
+            const lic = p.numero_licence || '';
+            const insc = inscriptionsMap[lic] || {};
+            const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
+            const arme = insc.arme || '';
+            const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
+            return {
+                name: nom,
+                licenseNumber: lic,
+                category: cat,
+                weapon: mapWeaponFromInscription(arme),
+                gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
+                userId: insc.user_id || insc.userId || insc.id_user
             };
         });
     } else if (concoursInscriptions && concoursInscriptions.length > 0) {
         // Mode inscriptions : utiliser les 6 premiers (ou tous)
         archers = concoursInscriptions.slice(0, NUM_USERS).map(i => ({
             name: i.user_nom || i.nom || i.name || '',
-            licenseNumber: String(i.numero_licence ?? i.numeroLicence ?? '').trim(),
-            category: extractCategoryFromInscription(i),
-            weapon: extractWeaponFromInscription(i, null),
-            gender: extractGenderFromInscription(i) || ((i.genre || i.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H'),
+            licenseNumber: i.numero_licence || i.numeroLicence || '',
+            category: i.categorie_classement || i.categorieClassement || i.abv_categorie_classement || '',
+            weapon: mapWeaponFromInscription(i.arme || ''),
+            gender: (i.genre || i.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
             userId: i.user_id || i.userId || i.id_user
         }));
     }
@@ -412,9 +305,6 @@ async function prefillArchersFromConcours() {
         showStatus('Aucun archer à préremplir. Sélectionnez une cible/peloton ou vérifiez les inscriptions.', 'warning');
         return;
     }
-    
-    // Enrichir avec l'API users (catégorie, arme, genre) pour les données manquantes
-    archers = await Promise.all(archers.map(a => enrichArcherFromUserApi(a)));
     
     // S'assurer que le type de tir est sélectionné et les feuilles initialisées
     if (!selectedShootingType) {
@@ -439,25 +329,7 @@ async function prefillArchersFromConcours() {
         }
     });
     
-    // Charger les libellés des catégories et armes manquantes (archers peuvent avoir des valeurs hors liste)
-    await addMissingCategoryOptions(archers.map(a => a.category).filter(Boolean));
-    addMissingWeaponOptions(archers.map(a => a.weapon).filter(Boolean));
-    
-    // S'assurer que les sections archers sont visibles avant d'afficher
-    const archerNav = document.getElementById('archerNavigation');
-    const archerInfo = document.getElementById('archerInfoSection');
-    const scoreTable = document.getElementById('scoreTableSection');
-    if (archerNav) archerNav.style.display = 'block';
-    if (archerInfo) archerInfo.style.display = 'block';
-    if (scoreTable) scoreTable.style.display = 'block';
-    
-    await displayCurrentArcher();
-    
-    // Défiler vers la section archer pour que l'utilisateur voie les données chargées
-    if (archerInfo) {
-        archerInfo.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-    
+    displayCurrentArcher();
     showStatus(`${archers.length} archer(s) prérempli(s) depuis le concours`, 'success');
 }
 
@@ -482,105 +354,6 @@ function mapWeaponFromInscription(arme) {
     if (a.includes('longbow')) return 'Longbow';
     if (a.includes('chasse')) return 'Arc de chasse';
     return arme;
-}
-
-// Extrait la catégorie depuis une inscription (abv pour le select)
-function extractCategoryFromInscription(insc) {
-    if (!insc) return '';
-    const v = insc.categorie_classement ?? insc.categorieClassement ?? insc.abv_categorie_classement ?? insc.abv_categorie ?? insc.abv ?? '';
-    if (v) return String(v).trim();
-    const lb = insc.lb_categorie_classement ?? insc.lb_categorie ?? '';
-    if (lb && concoursCategories.length > 0) {
-        const c = concoursCategories.find(x => (x.lb_categorie_classement ?? '').toLowerCase() === String(lb).toLowerCase());
-        return c ? (c.abv_categorie_classement ?? '') : lb;
-    }
-    return lb ? String(lb).trim() : '';
-}
-
-// Extrait l'arme (libellé lb_arc) depuis une inscription ou un plan
-function extractWeaponFromInscription(insc, plan) {
-    // Priorité: lb_arc (API via JOIN), puis arme (legacy), puis lookup par idarc
-    const lbArc = insc?.lb_arc ?? plan?.lb_arc ?? '';
-    if (lbArc) return mapWeaponFromInscription(lbArc);
-    const arme = insc?.arme ?? insc?.type_arc ?? plan?.arme ?? '';
-    if (arme) return mapWeaponFromInscription(arme);
-    const typarc = insc?.typarc ?? insc?.TYPARC ?? insc?.idarc ?? plan?.typarc ?? plan?.idarc ?? '';
-    if (typarc && concoursArcs.length > 0) {
-        const arc = concoursArcs.find(a => String(a.idarc ?? a.id_arc ?? a.no_arc ?? '').trim() === String(typarc).trim());
-        return arc ? (arc.lb_arc ?? arc.name ?? arc.nom ?? '') : '';
-    }
-    return '';
-}
-
-// Construit un map licence -> inscription avec variantes (trim, sans zéros initiaux, casse)
-function buildInscriptionsMap(inscriptions) {
-    const map = {};
-    (inscriptions || []).forEach(i => {
-        const lic = String(i.numero_licence ?? i.numeroLicence ?? i.licence_number ?? '').trim();
-        if (lic) {
-            map[lic] = i;
-            map[lic.toUpperCase()] = i;
-            map[lic.toLowerCase()] = i;
-            const licNoLead = lic.replace(/^0+/, '') || lic;
-            if (licNoLead !== lic) {
-                map[licNoLead] = i;
-                map[licNoLead.toUpperCase()] = i;
-            }
-        }
-    });
-    return map;
-}
-
-// Trouve une inscription par licence (recherche flexible)
-function findInscriptionByLicence(lic) {
-    const list = concoursInscriptionsAll?.length ? concoursInscriptionsAll : concoursInscriptions;
-    if (!lic || !list?.length) return null;
-    const licNorm = String(lic).trim().toLowerCase();
-    return list.find(i => {
-        const l = String(i.numero_licence ?? i.numeroLicence ?? '').trim().toLowerCase();
-        return l === licNorm || l.replace(/^0+/, '') === licNorm.replace(/^0+/, '');
-    }) || null;
-}
-
-// Extrait le genre depuis une inscription (H/F)
-function extractGenderFromInscription(insc) {
-    if (!insc) return '';
-    const g = insc.genre ?? insc.gender ?? insc.sexe ?? '';
-    if (g) {
-        const s = String(g).toUpperCase().trim();
-        if (s === 'F' || s === 'FEMME' || s === '2') return 'F';
-        if (s === 'H' || s === 'HOMME' || s === '1') return 'H';
-    }
-    return '';
-}
-
-// Enrichit un archer avec les données user (catégorie, arme, genre) via l'API users
-async function enrichArcherFromUserApi(archer) {
-    const lic = archer?.licenseNumber?.trim();
-    if (!lic || lic.length < 3) return archer;
-    const needsCategory = !archer.category || archer.category === '';
-    const needsWeapon = !archer.weapon || archer.weapon === '';
-    const needsGender = !archer.gender || archer.gender === '';
-    if (!needsCategory && !needsWeapon && !needsGender) return archer;
-    try {
-        const res = await fetch(`/api/users?licence_number=${encodeURIComponent(lic)}`);
-        if (!res.ok) return archer;
-        const text = await res.text();
-        let data;
-        try { data = JSON.parse(text); } catch (_) { return archer; }
-        // Réponse possible: { data: user } ou { success, data: user } ou { success, data: { success, data: user } }
-        let user = data?.data ?? data;
-        if (user && typeof user === 'object' && user.data && (user.success || user.id)) user = user.data;
-        if (!user || typeof user !== 'object') return archer;
-        const weaponMapping = { 'Classique': 'Arc classique', 'classique': 'Arc classique', 'Poulies': 'Arc à poulies', 'poulies': 'Arc à poulies', 'Compound': 'Arc à poulies', 'compound': 'Arc à poulies', 'Barebow': 'Arc nu (barebow)', 'barebow': 'Arc nu (barebow)', 'Longbow': 'Longbow', 'Chasse': 'Arc de chasse', 'Recurve': 'Arc classique', 'recurve': 'Arc classique' };
-        if (needsCategory && (user.age_category || user.ageCategory)) archer.category = String(user.age_category ?? user.ageCategory ?? '').trim();
-        if (needsWeapon && (user.bow_type || user.bowType)) archer.weapon = weaponMapping[user.bow_type ?? user.bowType] || mapWeaponFromInscription(user.bow_type ?? user.bowType) || String(user.bow_type ?? user.bowType ?? '').trim();
-        if (needsGender && (user.gender || user.genre)) {
-            const g = String(user.gender ?? user.genre ?? '').toUpperCase().trim();
-            archer.gender = (g === 'F' || g === 'FEMME' || g === '2') ? 'F' : (g === 'H' || g === 'HOMME' || g === 'M' || g === '1') ? 'H' : '';
-        }
-    } catch (_) {}
-    return archer;
 }
 
 // Variables pour la recherche par licence
@@ -730,16 +503,60 @@ async function searchUserByLicense(licenseNumber) {
             if (categoryField) {
                 const category = user.age_category || user.ageCategory || '';
                 if (category) {
-                    await addMissingCategoryOptions([category]);
-                    setSelectValueWithFallback('archerCategory', category);
+                    categoryField.value = category;
                 }
             }
             
             if (weaponField) {
-                const weapon = (user.bow_type || user.bowType || '').trim();
-                if (weapon && weapon !== 'null') {
-                    addMissingWeaponOptions([weapon]);
-                    setSelectValueWithFallback('archerWeapon', weapon);
+                // Récupérer bow_type depuis l'API
+                const weaponRaw = user.bow_type || user.bowType || '';
+                
+                // Mapping entre les valeurs de la base de données et les options du select
+                const weaponMapping = {
+                    'Classique': 'Arc classique',
+                    'classique': 'Arc classique',
+                    'Arc classique': 'Arc classique',
+                    'Poulies': 'Arc à poulies',
+                    'poulies': 'Arc à poulies',
+                    'Arc à poulies': 'Arc à poulies',
+                    'Barebow': 'Arc nu (barebow)',
+                    'barebow': 'Arc nu (barebow)',
+                    'Arc nu (barebow)': 'Arc nu (barebow)',
+                    'Arc nu': 'Arc nu (barebow)',
+                    'Longbow': 'Longbow',
+                    'longbow': 'Longbow',
+                    'Chasse': 'Arc de chasse',
+                    'chasse': 'Arc de chasse',
+                    'Arc de chasse': 'Arc de chasse'
+                };
+                
+                // Mapper la valeur si elle existe dans le mapping, sinon utiliser la valeur brute
+                const weapon = weaponMapping[weaponRaw] || weaponRaw;
+                
+                console.log('Valeur weapon brute:', weaponRaw);
+                console.log('Valeur weapon mappée:', weapon);
+                
+                if (weapon && weapon !== 'null' && weapon !== '') {
+                    // Vérifier si la valeur existe dans les options du select
+                    const options = Array.from(weaponField.options).map(opt => opt.value);
+                    if (options.includes(weapon)) {
+                        weaponField.value = weapon;
+                        console.log('Champ weapon rempli avec:', weapon);
+                    } else {
+                        console.warn('Valeur weapon non trouvée dans les options du select:', weapon);
+                        console.warn('Options disponibles:', options);
+                        // Essayer de trouver une correspondance partielle
+                        const partialMatch = options.find(opt => 
+                            opt.toLowerCase().includes(weaponRaw.toLowerCase()) || 
+                            weaponRaw.toLowerCase().includes(opt.toLowerCase().replace('arc ', '').replace('(', '').replace(')', ''))
+                        );
+                        if (partialMatch) {
+                            weaponField.value = partialMatch;
+                            console.log('Correspondance partielle trouvée:', partialMatch);
+                        }
+                    }
+                } else {
+                    console.warn('Aucune valeur weapon trouvée dans les données utilisateur');
                 }
             }
             
@@ -832,88 +649,11 @@ function initializeSheets() {
     displayCurrentArcher();
 }
 
-// Ajoute les armes manquantes dans le select (archer peut avoir une arme hors liste concour_arcs)
-function addMissingWeaponOptions(weaponLabels) {
-    const weaponSelect = document.getElementById('archerWeapon');
-    if (!weaponSelect || !weaponLabels?.length) return;
-    const existing = new Set(Array.from(weaponSelect.options).map(o => o.value).filter(Boolean));
-    const missing = [...new Set(weaponLabels.map(w => String(w).trim()).filter(Boolean))].filter(w => !existing.has(w));
-    missing.forEach(w => {
-        const opt = document.createElement('option');
-        opt.value = w;
-        opt.textContent = w;
-        weaponSelect.appendChild(opt);
-        existing.add(w);
-    });
-}
-
-// Charge les libellés des catégories manquantes dans le select (abvs des archers hors filtre iddiscipline)
-async function addMissingCategoryOptions(categoryAbvs) {
-    const categorySelect = document.getElementById('archerCategory');
-    if (!categorySelect || !categoryAbvs?.length) return;
-    const existingAbvs = new Set(Array.from(categorySelect.options).map(o => o.value).filter(Boolean));
-    const missing = [...new Set(categoryAbvs.map(a => String(a).trim()).filter(Boolean))].filter(abv => !existingAbvs.has(abv));
-    if (missing.length === 0) return;
-    try {
-        const iddiscipline = concoursDetails?.discipline ?? concoursDetails?.iddiscipline ?? null;
-        let url = `/score-sheet/categories?abv_categorie_classement=${missing.map(encodeURIComponent).join(',')}`;
-        if (iddiscipline) url += `&iddiscipline=${encodeURIComponent(iddiscipline)}`;
-        const res = await fetch(url).then(r => r.json()).catch(() => null);
-        let cats = res?.data ?? (Array.isArray(res) ? res : []);
-        if (!Array.isArray(cats) && res?.data?.data) cats = res.data.data;
-        cats = Array.isArray(cats) ? cats : [];
-        cats.forEach(c => {
-            const abv = String(c.abv_categorie_classement ?? '').trim();
-            const label = String(c.lb_categorie_classement ?? abv).trim();
-            if (abv && label && !existingAbvs.has(abv)) {
-                const opt = document.createElement('option');
-                opt.value = abv;
-                opt.textContent = label;
-                categorySelect.appendChild(opt);
-                existingAbvs.add(abv);
-                concoursCategories.push(c);
-            }
-        });
-    } catch (e) {
-        console.warn('Erreur chargement catégories manquantes:', e);
-    }
-}
-
-// Définit la valeur d'un select, en ajoutant l'option si elle n'existe pas
-function setSelectValueWithFallback(selectId, value) {
-    const sel = document.getElementById(selectId);
-    if (!sel || value === '' || value == null) {
-        if (sel) sel.value = '';
-        return;
-    }
-    const v = String(value).trim();
-    const hasOption = Array.from(sel.options).some(o => o.value === v);
-    if (hasOption) {
-        sel.value = v;
-        return;
-    }
-    // Option absente : utiliser le libellé depuis concoursCategories si dispo (catégorie), sinon la valeur
-    let label = v;
-    if (selectId === 'archerCategory' && concoursCategories?.length) {
-        const c = concoursCategories.find(x => (x.abv_categorie_classement ?? '').trim() === v);
-        if (c) label = String(c.lb_categorie_classement ?? v).trim();
-    } else if (selectId === 'archerWeapon' && concoursArcs?.length) {
-        const a = concoursArcs.find(x => (x.lb_arc ?? x.name ?? '').trim() === v);
-        if (a) label = String(a.lb_arc ?? a.name ?? a.nom ?? v).trim();
-    }
-    const opt = document.createElement('option');
-    opt.value = v;
-    opt.textContent = label;
-    sel.appendChild(opt);
-    sel.value = v;
-}
-
-async function displayCurrentArcher() {
+function displayCurrentArcher() {
     if (userSheets.length === 0) return;
     
     const sheet = userSheets[currentUserIndex];
     const config = SHOOTING_CONFIGS[selectedShootingType];
-    if (!config) return;
     
     // Mettre à jour les informations de l'archer
     document.getElementById('archerHeaderNumber').textContent = currentUserIndex + 1;
@@ -922,16 +662,9 @@ async function displayCurrentArcher() {
     
     document.getElementById('archerName').value = sheet.archerInfo.name;
     document.getElementById('archerLicense').value = sheet.archerInfo.licenseNumber;
-    // S'assurer que catégorie et arme de l'archer sélectionné sont dans les selects
-    if (sheet.archerInfo.category) {
-        await addMissingCategoryOptions([sheet.archerInfo.category]);
-    }
-    if (sheet.archerInfo.weapon) {
-        addMissingWeaponOptions([sheet.archerInfo.weapon]);
-    }
-    setSelectValueWithFallback('archerCategory', sheet.archerInfo.category);
-    setSelectValueWithFallback('archerWeapon', sheet.archerInfo.weapon);
-    document.getElementById('archerGender').value = sheet.archerInfo.gender || '';
+    document.getElementById('archerCategory').value = sheet.archerInfo.category;
+    document.getElementById('archerWeapon').value = sheet.archerInfo.weapon;
+    document.getElementById('archerGender').value = sheet.archerInfo.gender;
     
     // Mettre à jour le tableau des scores
     updateScoreTable(sheet);
@@ -1056,7 +789,7 @@ function navigateArcher(direction) {
     currentUserIndex += direction;
     currentUserIndex = Math.max(0, Math.min(NUM_USERS - 1, currentUserIndex));
     
-    displayCurrentArcher(); // async - charge catégorie archer si manquante
+    displayCurrentArcher();
 }
 
 function saveCurrentArcherInfo() {

@@ -1,6 +1,5 @@
 // Charger la config depuis data-config (séparation PHP/JS)
 (function() {
-    window.categoriesClassement = []; // défaut pour éviter "non défini"
     var el = document.getElementById('inscription-page');
     var cfg = el && el.getAttribute('data-config');
     if (cfg) {
@@ -11,19 +10,7 @@
             window.apiInscriptionsUrl = c.apiInscriptionsUrl;
             window.inscriptionCible = !!c.inscriptionCible;
             window.archerSearchUrl = c.archerSearchUrl;
-            // Catégories : noms canoniques uniquement (abv_categorie_classement, lb_categorie_classement, idcategorie, idarc)
-            var rawCats = c.categoriesClassement || [];
-            if (Array.isArray(rawCats)) {
-                window.categoriesClassement = rawCats.map(function(cat) {
-                    if (!cat || typeof cat !== 'object') return { abv_categorie_classement: '', lb_categorie_classement: '', idcategorie: null, idarc: null };
-                    return Object.assign({}, cat, {
-                        abv_categorie_classement: cat.abv_categorie_classement != null ? String(cat.abv_categorie_classement).trim() : '',
-                        lb_categorie_classement: cat.lb_categorie_classement != null ? String(cat.lb_categorie_classement).trim() : '',
-                        idcategorie: cat.idcategorie != null ? cat.idcategorie : null,
-                        idarc: cat.idarc != null ? cat.idarc : null
-                    });
-                });
-            }
+            window.categoriesClassement = c.categoriesClassement || [];
             window.arcs = c.arcs || [];
             window.distancesTir = c.distancesTir || [];
             window.concoursDiscipline = c.concoursDiscipline;
@@ -44,8 +31,6 @@ var allInscriptionsCache = []; // Liste complète pour filtrage par départs coc
 var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concoursId :
     (document.querySelector('input[name="concours_id"]')?.value ||
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
-
-// Le select catégorie est rempli côté PHP (table filtrée par discipline). window.categoriesClassement vient de la config pour le pré-remplissage.
 
 // Ajouter event listener au bouton de recherche
 document.addEventListener('DOMContentLoaded', function() {
@@ -104,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Charger la liste des inscriptions depuis le backend
     loadInscriptions();
-
+    
     // Initialiser les handlers pour l'édition
     initEditInscriptionHandlers();
 
@@ -1102,11 +1087,7 @@ function prefillFormFields(archer) {
                 console.log('✗ CATAGE ou TYPARC manquant. CATAGE:', catage, 'TYPARC:', typarc);
             }
         } else {
-            if (typeof categoriesClassement === 'undefined') {
-                console.warn('✗ categoriesClassement non défini (config non chargée)');
-            } else {
-                console.log('✗ Aucune catégorie disponible pour le pré-remplissage');
-            }
+            console.error('✗ categoriesClassement non défini ou vide');
         }
     } else {
         console.error('✗ Champ categorie_classement introuvable');
@@ -1127,9 +1108,8 @@ function prefillFormFields(archer) {
                 });
                 
                 if (arcFound) {
-                    const val = arcFound.idarc ?? arcFound.id_arc ?? arcFound.lb_arc ?? '';
-                    armeSelect.value = String(val);
-                    console.log('✓ Arme pré-remplie via TYPARC (idarc):', armeSelect.value);
+                    armeSelect.value = arcFound.lb_arc || '';
+                    console.log('✓ Arme pré-remplie via TYPARC:', armeSelect.value);
                 } else {
                     console.log('✗ Arc non trouvé pour TYPARC (idarc):', typarc);
                     console.log('Arcs disponibles:', arcs.map(a => ({
@@ -1144,8 +1124,7 @@ function prefillFormFields(archer) {
                     });
                     
                     if (arcFoundFallback) {
-                        const val = arcFoundFallback.idarc ?? arcFoundFallback.id_arc ?? arcFoundFallback.lb_arc ?? '';
-                        armeSelect.value = String(val);
+                        armeSelect.value = arcFoundFallback.lb_arc || '';
                         console.log('✓ Arme pré-remplie via nom (fallback):', armeSelect.value);
                     }
                 }
@@ -1615,8 +1594,7 @@ function submitInscription() {
         type_licence: document.getElementById('type_licence')?.value || '',
         creation_renouvellement: document.getElementById('creation_renouvellement')?.value || '',
         categorie_classement: document.getElementById('categorie_classement')?.value || '',
-        idarc: (() => { const v = document.getElementById('arme')?.value; return v && /^\d+$/.test(String(v)) ? parseInt(v, 10) : null; })(),
-        arme: (() => { const v = document.getElementById('arme')?.value; return v && !/^\d+$/.test(String(v)) ? v : null; })(),
+        arme: document.getElementById('arme')?.value || '',
         mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0
     };
     const piquetSelect = document.getElementById('piquet');
@@ -2113,7 +2091,7 @@ window.editInscription = function(inscriptionId) {
             setVal('edit-creation_renouvellement', crVal || '');
             setVal('edit-depart-select', inscription.numero_depart);
             setVal('edit-categorie_classement', inscription.categorie_classement);
-            setVal('edit-arme', inscription.idarc ?? inscription.arme ?? '');
+            setVal('edit-arme', inscription.arme);
             
             // Sélectionner automatiquement la couleur de piquet pour Nature
             setTimeout(() => {
@@ -2197,8 +2175,7 @@ function initEditInscriptionHandlers() {
             creation_renouvellement: document.getElementById('edit-creation_renouvellement')?.value || '',
             numero_depart: numeroDepart,
             categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
-            idarc: (() => { const v = document.getElementById('edit-arme')?.value; return v && /^\d+$/.test(String(v)) ? parseInt(v, 10) : null; })(),
-            arme: (() => { const v = document.getElementById('edit-arme')?.value; return v && !/^\d+$/.test(String(v)) ? v : null; })(),
+            arme: document.getElementById('edit-arme')?.value || '',
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
             numero_tir: currentEditInscription?.numero_tir ?? '',
         };

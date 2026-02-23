@@ -770,12 +770,10 @@ window.showConfirmModal = function(archer) {
                         <option value="">Sélectionner une catégorie</option>
                         ${typeof categoriesClassement !== 'undefined' && categoriesClassement && categoriesClassement.length > 0
                             ? categoriesClassement.map(cat => {
-                                const abv = (cat.abv_categorie_classement || cat.abv || '').trim();
-                                const libelle = (cat.lb_categorie_classement || cat.name || cat.nom || '').trim();
-                                if (!abv && !libelle) return '';
-                                const label = libelle ? (abv ? libelle + ' (' + abv + ')' : libelle) : abv;
-                                return `<option value="${abv}">${label}</option>`;
-                            }).filter(Boolean).join('')
+                                const abv = cat.abv_categorie_classement || '';
+                                const libelle = cat.lb_categorie_classement || '';
+                                return `<option value="${abv}">${libelle} (${abv})</option>`;
+                            }).join('')
                             : ''
                         }
                     </select>
@@ -1134,9 +1132,8 @@ window.showConfirmModal = function(archer) {
                         });
                         
                         if (arcFound) {
-                            const val = arcFound.idarc ?? arcFound.id_arc ?? arcFound.lb_arc ?? '';
-                            armeSelect.value = String(val);
-                            console.log('✓ showConfirmModal - Arme pré-remplie:', val, '(idarc)');
+                            armeSelect.value = arcFound.lb_arc || '';
+                            console.log('✓ showConfirmModal - Arme pré-remplie:', arcFound.lb_arc);
                         }
                     }
                 }
@@ -3581,9 +3578,8 @@ function selectArcher(archer, cardElement) {
                     });
                     
                     if (arcFound) {
-                        const val = arcFound.idarc ?? arcFound.id_arc ?? arcFound.lb_arc ?? '';
-                        armeSelect.value = String(val);
-                        console.log('✓ Arme pré-remplie avec succès:', val, '(idarc, depuis XML TYPARC:', typarcXml, ')');
+                        armeSelect.value = arcFound.lb_arc || '';
+                        console.log('✓ Arme pré-remplie avec succès:', arcFound.lb_arc, '(depuis XML TYPARC:', typarcXml, 'idarc:', idarc, ')');
                     } else {
                         console.warn('✗ Arc non trouvé pour TYPARC:', typarcXml, 'idarc:', idarc);
                     }
@@ -3853,9 +3849,7 @@ function proceedWithInscriptionSubmission() {
         typeLicenceSelect.disabled = true;
     }
     const categorieClassement = document.getElementById('categorie_classement')?.value || null;
-    const armeVal = document.getElementById('arme')?.value || null;
-    const idarc = armeVal && /^\d+$/.test(String(armeVal)) ? parseInt(armeVal, 10) : null;
-    const arme = !idarc && armeVal ? armeVal : null;
+    const arme = document.getElementById('arme')?.value || null;
     const mobiliteReduite = document.getElementById('mobilite_reduite')?.checked ? 1 : 0;
     
     // Pour les disciplines 3D, Nature et Campagne : utiliser piquet au lieu de distance, pas de blason
@@ -3912,7 +3906,6 @@ function proceedWithInscriptionSubmission() {
         'type_licence': typeLicence,
         'creation_renouvellement': creationRenouvellement,
         'categorie_classement': categorieClassement,
-        'idarc': idarc,
         'arme': arme,
         'mobilite_reduite': mobiliteReduite,
         'numero_tir': numeroTir,
@@ -4211,8 +4204,7 @@ window.editInscription = function(inscriptionId) {
                 
                 const armeSelect = document.getElementById('edit-arme');
                 if (armeSelect) {
-                    const armeVal = inscription.idarc ?? inscription.arme ?? '';
-                    armeSelect.value = armeVal !== null && armeVal !== undefined ? String(armeVal) : '';
+                    armeSelect.value = inscription.arme || '';
                 }
                 
                 const mobiliteReduiteCheckbox = document.getElementById('edit-mobilite_reduite');
@@ -4358,8 +4350,7 @@ const initEditInscriptionHandlers = () => {
                 numero_cible: getValue('edit-numero_cible') ? parseInt(getValue('edit-numero_cible')) : null,
                 position_archer: getValue('edit-position_archer') || null,
                 categorie_classement: getValue('edit-categorie_classement') || null,
-                idarc: (() => { const v = getValue('edit-arme'); return v && /^\d+$/.test(String(v)) ? parseInt(v, 10) : null; })(),
-                arme: (() => { const v = getValue('edit-arme'); return v && !/^\d+$/.test(String(v)) ? v : null; })(),
+                arme: getValue('edit-arme') || null,
                 mobilite_reduite: getChecked('edit-mobilite_reduite') ? 1 : 0,
                 numero_tir: getValue('edit-numero_tir') ? parseInt(getValue('edit-numero_tir')) : null,
                 tarif_competition: getValue('edit-tarif_competition') || null,
