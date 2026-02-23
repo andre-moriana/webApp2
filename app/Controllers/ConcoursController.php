@@ -1423,34 +1423,33 @@ class ConcoursController {
             }
             
             $categoriesResponse = $this->apiService->makeRequest($endpoint, 'GET');
-            
-            if ($categoriesResponse['success'] && isset($categoriesResponse['data'])) {
-                $categoriesPayload = $categoriesResponse['data'];
-                
-                // Si data contient encore { success, data }, unwrap une deuxième fois
+            $categoriesPayload = $this->apiService->unwrapData($categoriesResponse);
+            if (is_array($categoriesPayload)) {
+                if (isset($categoriesPayload['data']) && isset($categoriesPayload['success'])) {
+                    $categoriesPayload = $categoriesPayload['data'];
+                }
+            }
+            // Si filtre par discipline et aucun résultat, réessayer sans filtre pour afficher toutes les catégories
+            if (empty($categoriesPayload) && $iddiscipline) {
+                $categoriesResponse = $this->apiService->makeRequest('concours/categories-classement', 'GET');
+                $categoriesPayload = $this->apiService->unwrapData($categoriesResponse);
                 if (is_array($categoriesPayload) && isset($categoriesPayload['data']) && isset($categoriesPayload['success'])) {
                     $categoriesPayload = $categoriesPayload['data'];
                 }
-                
-                if (is_array($categoriesPayload)) {
-                    // Normaliser l'ID de chaque catégorie
-                    foreach ($categoriesPayload as &$categorie) {
-                        if (!isset($categorie['id']) && isset($categorie['_id'])) {
-                            $categorie['id'] = $categorie['_id'];
-                        }
+            }
+            if (is_array($categoriesPayload)) {
+                foreach ($categoriesPayload as &$categorie) {
+                    if (!isset($categorie['id']) && isset($categorie['_id'])) {
+                        $categorie['id'] = $categorie['_id'];
                     }
-                    unset($categorie);
-                    
-                    // Trier par ordre alphabétique sur lb_categorie_classement
-                    usort($categoriesPayload, function($a, $b) {
-                        $libelleA = $a['lb_categorie_classement'] ?? '';
-                        $libelleB = $b['lb_categorie_classement'] ?? '';
-                        return strcasecmp($libelleA, $libelleB);
-                    });
-                    
-                    // Réindexer le tableau pour avoir des clés séquentielles
-                    $categoriesClassement = array_values($categoriesPayload);
                 }
+                unset($categorie);
+                usort($categoriesPayload, function($a, $b) {
+                    $libelleA = $a['lb_categorie_classement'] ?? '';
+                    $libelleB = $b['lb_categorie_classement'] ?? '';
+                    return strcasecmp($libelleA, $libelleB);
+                });
+                $categoriesClassement = array_values($categoriesPayload);
             }
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des catégories de classement: ' . $e->getMessage());
@@ -1460,34 +1459,27 @@ class ConcoursController {
         $arcs = [];
         try {
             $arcsResponse = $this->apiService->makeRequest('concours/arcs', 'GET');
-            
-            if ($arcsResponse['success'] && isset($arcsResponse['data'])) {
-                $arcsPayload = $arcsResponse['data'];
-                
-                // Si data contient encore { success, data }, unwrap une deuxième fois
-                if (is_array($arcsPayload) && isset($arcsPayload['data']) && isset($arcsPayload['success'])) {
+            $arcsPayload = $this->apiService->unwrapData($arcsResponse);
+            if (is_array($arcsPayload)) {
+                if (isset($arcsPayload['data']) && isset($arcsPayload['success'])) {
                     $arcsPayload = $arcsPayload['data'];
                 }
-                
-                if (is_array($arcsPayload)) {
-                    // Normaliser l'ID de chaque arc
-                    foreach ($arcsPayload as &$arc) {
-                        if (!isset($arc['id']) && isset($arc['_id'])) {
-                            $arc['id'] = $arc['_id'];
-                        }
+            }
+            if (is_array($arcsPayload)) {
+                // Normaliser l'ID de chaque arc
+                foreach ($arcsPayload as &$arc) {
+                    if (!isset($arc['id']) && isset($arc['_id'])) {
+                        $arc['id'] = $arc['_id'];
                     }
-                    unset($arc);
-                    
-                    // Trier par ordre alphabétique sur lb_arc
-                    usort($arcsPayload, function($a, $b) {
-                        $libelleA = $a['lb_arc'] ?? '';
-                        $libelleB = $b['lb_arc'] ?? '';
-                        return strcasecmp($libelleA, $libelleB);
-                    });
-                    
-                    // Réindexer le tableau pour avoir des clés séquentielles
-                    $arcs = array_values($arcsPayload);
                 }
+                unset($arc);
+                // Trier par ordre alphabétique sur lb_arc
+                usort($arcsPayload, function($a, $b) {
+                    $libelleA = $a['lb_arc'] ?? '';
+                    $libelleB = $b['lb_arc'] ?? '';
+                    return strcasecmp($libelleA, $libelleB);
+                });
+                $arcs = array_values($arcsPayload);
             }
         } catch (Exception $e) {
             error_log('Erreur lors de la récupération des arcs: ' . $e->getMessage());
