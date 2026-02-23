@@ -198,6 +198,13 @@ function setupConcoursSelector() {
                     prefillRow.style.display = (dep && pelotonSelect.options.length > 1) ? 'block' : 'none';
                 };
                 
+                // Préremplissage automatique quand peloton/cible est sélectionné
+                pelotonSelect.onchange = function() {
+                    if (departSelect.value && this.value) {
+                        prefillArchersFromConcours();
+                    }
+                };
+                
                 departSelect.dispatchEvent(new Event('change'));
             }
             
