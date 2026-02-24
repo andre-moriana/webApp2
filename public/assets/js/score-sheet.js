@@ -312,6 +312,7 @@ async function prefillArchersFromConcours() {
         }
     }
     console.log('concoursPlansCible:', concoursPlansCible);
+    console.log('concoursPlansPeloton:', concoursPlansPeloton);
     console.log('departSelect:', departSelect.value);
     console.log('pelotonSelect:', pelotonSelect.value);
     if (concoursPlansCible && departSelect?.value && pelotonSelect?.value) {
