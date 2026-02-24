@@ -22,10 +22,6 @@
             <td><?= htmlspecialchars($niveauChampionnatName ?: 'Non renseigné') ?></td>
         </tr>
         <tr>
-            <th>Lieu</th>
-            <td><?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? 'Non renseigné') ?></td>
-        </tr>
-        <tr>
             <th>Dates</th>
             <td><?= htmlspecialchars($concours->date_debut ?? '') ?> <?= ($concours->date_debut && $concours->date_fin) ? ' - ' : '' ?> <?= htmlspecialchars($concours->date_fin ?? '') ?></td>
         </tr>
