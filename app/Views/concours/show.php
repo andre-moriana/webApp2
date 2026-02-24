@@ -156,11 +156,27 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     $getD = function($d, $key, $default = '') {
         return is_array($d) ? ($d[$key] ?? $default) : ($d->$key ?? $default);
     };
+    // Nombre d'inscrits par départ (confirmées ou en attente)
+    $countByDepart = [];
+    if (!empty($inscriptions) && is_array($inscriptions)) {
+        foreach ($inscriptions as $i) {
+            $statut = $i['statut_inscription'] ?? 'en_attente';
+            if (!in_array($statut, ['confirmee', 'en_attente'], true)) continue;
+            $nd = $i['numero_depart'] ?? null;
+            if ($nd !== null && $nd !== '') {
+                $key = (int)$nd;
+                $countByDepart[$key] = ($countByDepart[$key] ?? 0) + 1;
+            }
+        }
+    }
+    $nombreCibles = (int)($concours->nombre_cibles ?? 0);
+    $nombreTireurs = (int)($concours->nombre_tireurs_par_cibles ?? 0);
+    $placesParDepart = ($nombreCibles > 0 && $nombreTireurs > 0) ? $nombreCibles * $nombreTireurs : 0;
     ?>
     <?php if (!empty($departsList)): ?>
     <div class="form-group" style="margin-top: 20px;">
         <label><strong>Liste des départs :</strong></label>
-        <ul class="list-group list-group-flush" style="max-width: 400px;">
+        <ul class="list-group list-group-flush" style="max-width: 500px;">
             <?php foreach ($departsList as $d): ?>
                 <?php
                 $dateDep = $getD($d, 'date_depart', '');
@@ -172,10 +188,14 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
                 $heureGreffe = $heureGreffe ? substr((string)$heureGreffe, 0, 5) : '';
                 $label = trim($dateDep . ($heureGreffe ? ' à ' . $heureGreffe : ''));
                 if (empty($label)) $label = 'Départ ' . $numero;
+                $inscritsDepart = $numero ? ($countByDepart[$numero] ?? 0) : 0;
                 ?>
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-flag text-muted me-2"></i><?= htmlspecialchars($label) ?></span>
-                    <?php if ($numero): ?><span class="badge bg-secondary">N°<?= $numero ?></span><?php endif; ?>
+                    <span class="d-flex align-items-center gap-2">
+                        <?php if ($numero): ?><span class="badge bg-secondary">N°<?= $numero ?></span><?php endif; ?>
+                        <span class="text-muted small"><?= $inscritsDepart ?> / <?= $placesParDepart ?></span>
+                    </span>
                 </li>
             <?php endforeach; ?>
         </ul>
