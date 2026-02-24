@@ -216,8 +216,6 @@ function setupConcoursSelector() {
             let plansPeloton = planPelotonRes?.data || planPelotonRes;
             if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton) && plansPeloton.data) {
                 plansPeloton = plansPeloton.data;
-            }
-            if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton)) {
                 concoursPlansPeloton = plansPeloton;
                 concoursPlansCible = null;
             }
@@ -226,8 +224,6 @@ function setupConcoursSelector() {
             let plansCible = planCibleRes?.data || planCibleRes;
             if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible) && plansCible.data) {
                 plansCible = plansCible.data;
-            }
-            if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible)) {
                 concoursPlansCible = plansCible;
                 concoursPlansPeloton = null;
             }
