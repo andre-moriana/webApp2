@@ -311,7 +311,9 @@ async function prefillArchersFromConcours() {
             return;
         }
     }
-    
+    console.log('concoursPlansCible:', concoursPlansCible);
+    console.log('departSelect:', departSelect.value);
+    console.log('pelotonSelect:', pelotonSelect.value);
     if (concoursPlansCible && departSelect?.value && pelotonSelect?.value) {
         // Mode plan cible (T/S/I/H) : extraire les archers de la cible
         const dep = departSelect.value;
