@@ -1770,7 +1770,20 @@ class ConcoursController {
             $typeCompetitions = $this->apiService->unwrapData($this->apiService->makeRequest('type-competitions/list', 'GET')) ?: [];
         } catch (Exception $e) {}
         try {
-            $niveauChampionnat = $this->apiService->unwrapData($this->apiService->makeRequest('concours/niveau-championnat', 'GET')) ?: [];
+            $niveauChampionnatResponse = $this->apiService->makeRequest('concours/niveau-championnat', 'GET');
+            $niveauChampionnatPayload = $this->apiService->unwrapData($niveauChampionnatResponse);
+            if (is_array($niveauChampionnatPayload) && isset($niveauChampionnatPayload['data']) && isset($niveauChampionnatPayload['success'])) {
+                $niveauChampionnatPayload = $niveauChampionnatPayload['data'];
+            }
+            if ($niveauChampionnatResponse['success'] && is_array($niveauChampionnatPayload)) {
+                foreach ($niveauChampionnatPayload as &$niveau) {
+                    if (!isset($niveau['id']) && isset($niveau['_id'])) {
+                        $niveau['id'] = $niveau['_id'];
+                    }
+                }
+                unset($niveau);
+                $niveauChampionnat = array_values($niveauChampionnatPayload);
+            }
         } catch (Exception $e) {}
         $categoriesClassement = [];
         $categoriesMap = [];
