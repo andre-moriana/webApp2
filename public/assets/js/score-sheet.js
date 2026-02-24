@@ -117,6 +117,9 @@ function initializeScoreSheet() {
     if (modalElement) {
         scoreModal = new bootstrap.Modal(modalElement);
     }
+    
+    // Initialiser le select catégories (placeholder) pour que loadCategoriesForDiscipline soit bien relié
+    loadCategoriesForDiscipline(null);
 }
 
 // Configuration du sélecteur de concours et peloton
@@ -188,9 +191,11 @@ function setupConcoursSelector() {
                     selectedShootingType = opt.value;
                     initializeSheets();
                 }
+                // Déclencher le change pour charger les catégories (sinon le handler ne s'exécute pas quand on met la valeur en JS)
+                shootingTypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            } else if (discId) {
+                loadCategoriesForDiscipline(discId);
             }
-            // Catégories (concour_categories_classement) filtrées par iddiscipline du concours
-            loadCategoriesForDiscipline(discId);
             
             // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] }
             let plansPeloton = planPelotonRes?.data || planPelotonRes;
