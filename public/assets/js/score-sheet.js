@@ -144,8 +144,6 @@ function initializeScoreSheet() {
 function setupConcoursSelector() {
     const concoursSelect = document.getElementById('concoursSelect');
     const pelotonWrapper = document.getElementById('pelotonSelectorWrapper');
-    const prefillRow = document.getElementById('prefillArchersRow');
-    const prefillBtn = document.getElementById('prefillArchersBtn');
     const departSelect = document.getElementById('departSelect');
     const pelotonSelect = document.getElementById('pelotonSelect');
     
@@ -159,7 +157,6 @@ function setupConcoursSelector() {
         concoursDetails = null;
         
         pelotonWrapper.style.display = 'none';
-        prefillRow.style.display = 'none';
         departSelect.innerHTML = '<option value="">-- Départ --</option>';
         pelotonSelect.innerHTML = '<option value="">-- Peloton --</option>';
         
@@ -274,15 +271,16 @@ function setupConcoursSelector() {
                             pelotonSelect.innerHTML += `<option value="${pel}">Peloton ${pel}</option>`;
                         });
                     }
-                    prefillRow.style.display = (dep && pelotonSelect.options.length > 1) ? 'block' : 'none';
+                };
+                
+                // Préremplir les archers automatiquement à la sélection d'une cible ou d'un peloton
+                pelotonSelect.onchange = function() {
+                    if (departSelect.value && this.value) {
+                        prefillArchersFromConcours();
+                    }
                 };
                 
                 departSelect.dispatchEvent(new Event('change'));
-            }
-            
-            prefillRow.style.display = 'block';
-            if (prefillBtn) {
-                prefillBtn.onclick = prefillArchersFromConcours;
             }
         } catch (e) {
             console.error('Erreur chargement concours:', e);

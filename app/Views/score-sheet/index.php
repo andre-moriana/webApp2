@@ -61,13 +61,6 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                             <small class="text-muted" id="selectorHint">Pour les disciplines Nature, 3D et Campagne</small>
                         </div>
                     </div>
-                    <div class="row mt-2" id="prefillArchersRow" style="display: none;">
-                        <div class="col-12">
-                            <button type="button" class="btn btn-outline-primary" id="prefillArchersBtn">
-                                <i class="fas fa-users"></i> Préremplir les archers depuis le concours
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
 
