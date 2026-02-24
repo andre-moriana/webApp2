@@ -11,15 +11,15 @@
         </tr>
         <tr>
             <th>Discipline</th>
-            <td><?= htmlspecialchars($disciplineName ?: 'Non renseigné') ?></td>
+            <td><?= htmlspecialchars($concourq->discipline_name ?: 'Non renseigné') ?></td>
         </tr>
         <tr>
             <th>Type de compétition</th>
-            <td><?= htmlspecialchars($typeCompetitionName ?: 'Non renseigné') ?></td>
+            <td><?= htmlspecialchars($concours->type_competition_name ?: 'Non renseigné') ?></td>
         </tr>
         <tr>
             <th>Niveau championnat</th>
-            <td><?= htmlspecialchars($niveauChampionnatName ?: 'Non renseigné') ?></td>
+            <td><?= htmlspecialchars($concours->niveau_championnat_name ?: 'Non renseigné') ?></td>
         </tr>
         <tr>
             <th>Dates</th>
