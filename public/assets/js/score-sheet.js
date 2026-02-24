@@ -293,7 +293,9 @@ function setupConcoursSelector() {
 async function prefillArchersFromConcours() {
     const departSelect = document.getElementById('departSelect');
     const pelotonSelect = document.getElementById('pelotonSelect');
-    
+    const isPlanCibleMode = ['T', 'S', 'I', 'H'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
+    const isPlanPelotonMode = ['3', 'N', 'C'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
+
     let archers = [];
     
     // Si plan cible existe (T/S/I/H), exiger départ + cible
@@ -315,7 +317,7 @@ async function prefillArchersFromConcours() {
     console.log('concoursPlansPeloton:', concoursPlansPeloton);
     console.log('departSelect:', departSelect.value);
     console.log('pelotonSelect:', pelotonSelect.value);
-    if (concoursPlansCible && departSelect?.value && pelotonSelect?.value) {
+    if (concoursPlansCible && departSelect?.value && pelotonSelect?.value &&isPlanCibleMode) {
         // Mode plan cible (T/S/I/H) : extraire les archers de la cible
         const dep = departSelect.value;
         const cible = parseInt(pelotonSelect.value);
@@ -340,7 +342,7 @@ async function prefillArchersFromConcours() {
                 userId: insc.user_id || insc.userId || insc.id_user || p.user_id
             };
         });
-    } else if (concoursPlansPeloton && departSelect?.value && pelotonSelect?.value) {
+    } else if (concoursPlansPeloton && departSelect?.value && pelotonSelect?.value && isPlanPelotonMode) {
         console.log('concoursPlansPeloton:', concoursPlansPeloton);
         console.log('departSelect:', departSelect.value);
         console.log('pelotonSelect:', pelotonSelect.value);
