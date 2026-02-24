@@ -95,13 +95,13 @@ $dateFooter = date('d/m/Y H:i');
             .no-print { display: none !important; }
             body { font-size: 11pt; }
             .page-break { page-break-after: always; }
-            /* En-tête répété via table-header-group : évite la coupure du logo au saut de page */
+            /* En-tête uniquement sur la 1re page (table-row-group = pas de répétition) */
             .edition-doc-print-table {
                 display: table;
                 width: 100%;
             }
             .edition-doc-print-thead {
-                display: table-header-group;
+                display: table-row-group;
             }
             .edition-doc-print-thead td {
                 padding: 0;
