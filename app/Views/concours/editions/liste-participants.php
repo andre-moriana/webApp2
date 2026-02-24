@@ -16,7 +16,7 @@ foreach ($inscriptions as $insc) {
     if (!isset($groupes[$cle])) $groupes[$cle] = [];
     $groupes[$cle][] = $insc;
 }
-// Ordre naturel pour départ (numérique), alphabétique pour club et catégorie
+// Ordre des groupes : naturel pour départ (numérique), alphabétique pour club et catégorie
 if ($tri === 'depart') {
     uksort($groupes, function ($a, $b) {
         if ($a === '—' || $b === '—') return strcmp($a, $b);
@@ -24,6 +24,15 @@ if ($tri === 'depart') {
     });
 } else {
     ksort($groupes, SORT_FLAG_CASE | SORT_STRING);
+}
+// Dans chaque groupe : ordre alphabétique par nom
+$getNom = function ($i) {
+    return trim((string)($i['user_nom'] ?? $i['nom'] ?? ''));
+};
+foreach ($groupes as $cle => $liste) {
+    usort($groupes[$cle], function ($a, $b) use ($getNom) {
+        return strcasecmp($getNom($a), $getNom($b));
+    });
 }
 ?>
 <div class="edition-liste-participants">
