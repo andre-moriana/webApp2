@@ -142,8 +142,8 @@ $dateFooter = date('d/m/Y H:i');
             }
             /* Logo : taille agrandie à l'impression */
             .edition-doc-logo {
-                height: 22mm;
-                max-width: 44mm;
+                height: 44mm;
+                max-width: 88mm;
                 object-fit: contain;
             }
             .edition-doc-header-left {
