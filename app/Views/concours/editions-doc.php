@@ -92,6 +92,13 @@ $dateFooter = date('d/m/Y H:i');
                     color: #666;
                 }
             }
+            /* Liste des participants : pas de footer imprimé (date, page, etc.) */
+            @page edition-liste-participants {
+                margin: 15mm 15mm 20mm 15mm;
+            }
+            body.edition-doc-liste-participants {
+                page: edition-liste-participants;
+            }
             .no-print { display: none !important; }
             body { font-size: 11pt; }
             .page-break { page-break-after: always; }
@@ -157,7 +164,7 @@ $dateFooter = date('d/m/Y H:i');
         body { padding: 1rem; }
     </style>
 </head>
-<body>
+<body<?= ($doc === 'liste-participants') ? ' class="edition-doc-liste-participants"' : '' ?>>
     <div class="no-print mb-3">
         <?php if ($doc === 'liste-participants'): ?>
         <label class="me-2">Tri :</label>
@@ -236,7 +243,7 @@ switch ($doc) {
         echo '<p>Document inconnu.</p>';
 }
 ?>
-                    <?php include __DIR__ . '/editions/_edition-doc-fin.php'; ?>
+                    <?php if ($doc !== 'liste-participants') include __DIR__ . '/editions/_edition-doc-fin.php'; ?>
                 </td>
             </tr>
         </tbody>
