@@ -37,23 +37,26 @@
         <h4>Liste des départs</h4>
         <table class="table table-bordered table-sm">
             <thead>
-                <tr><th>N°</th><th>Date</th><th>Heure de greffe</th></tr>
+                <tr><th>N°</th><th>Date</th><th>Heure de greffe</th><th>Heure du départ</th></tr>
             </thead>
             <tbody>
                 <?php foreach ($departsAvis as $d): ?>
                 <?php
                 $dateDep = $getD($d, 'date_depart', '');
                 $heureGreffe = $getD($d, 'heure_greffe', '');
+                $heureDepart = $getD($d, 'heure_depart', '');
                 $numero = (int)$getD($d, 'numero_depart', 0);
                 if ($dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
                     $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
                 }
                 $heureGreffe = $heureGreffe ? substr((string)$heureGreffe, 0, 5) : '';
+                $heureDepart = $heureDepart ? substr((string)$heureDepart, 0, 5) : '';
                 ?>
                 <tr>
                     <td><?= $numero ?: '—' ?></td>
                     <td><?= htmlspecialchars($dateDep) ?></td>
                     <td><?= htmlspecialchars($heureGreffe) ?></td>
+                    <td><?= htmlspecialchars($heureDepart) ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
