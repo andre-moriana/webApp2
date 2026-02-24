@@ -55,8 +55,8 @@ $dateFooter = date('d/m/Y H:i');
         }
         /* Logo : taille agrandie pour l'en-tête des éditions */
         .edition-doc-logo {
-            height: 90px;
-            max-width: 180px;
+            height: 190px;
+            max-width: 380px;
             object-fit: contain;
         }
         /* Espace libre autour du logo */
