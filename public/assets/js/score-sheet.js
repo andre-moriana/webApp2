@@ -32,6 +32,20 @@ let concoursPlansCible = null;
 let concoursInscriptions = null;
 let concoursDetails = null;
 
+/** Groupe un tableau plat de plans par numero_depart (clés "1", "2", ...). */
+function groupPlansByDepart(plansArray, _keyHint) {
+    const grouped = {};
+    for (const p of plansArray) {
+        const dep = p.numero_depart != null ? String(p.numero_depart) : '';
+        if (!grouped[dep]) grouped[dep] = [];
+        grouped[dep].push(p);
+    }
+    const keys = Object.keys(grouped).filter(k => k !== '').sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+    const out = {};
+    keys.forEach(k => { out[k] = grouped[k]; });
+    return out;
+}
+
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
     initializeScoreSheet();
@@ -136,28 +150,39 @@ function setupConcoursSelector() {
                 initializeSheets();
             }
             
-            // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] }
-            let plansPeloton = planPelotonRes?.data || planPelotonRes;
-            if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton) && plansPeloton.data) {
+            // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] } ou tableau plat
+            let plansPeloton = planPelotonRes?.data ?? planPelotonRes;
+            if (plansPeloton && typeof plansPeloton === 'object' && plansPeloton.data) {
                 plansPeloton = plansPeloton.data;
             }
-            if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton)) {
+            if (Array.isArray(plansPeloton) && plansPeloton.length > 0) {
+                concoursPlansPeloton = groupPlansByDepart(plansPeloton, 'numero_peloton');
+            } else if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton) && Object.keys(plansPeloton).length > 0) {
                 concoursPlansPeloton = plansPeloton;
             }
             
-            // Plan cible (T/S/I/H) - structure: { "1": [plan, ...], "2": [...] }
-            let plansCible = planCibleRes?.data || planCibleRes;
-            if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible) && plansCible.data) {
+            // Plan cible (T/S/I/H) - structure: { "1": [plan, ...], "2": [...] } ou tableau plat
+            let plansCible = planCibleRes?.data ?? planCibleRes;
+            if (plansCible && typeof plansCible === 'object' && plansCible.data) {
                 plansCible = plansCible.data;
             }
-            if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible)) {
+            if (Array.isArray(plansCible) && plansCible.length > 0) {
+                concoursPlansCible = groupPlansByDepart(plansCible, 'numero_cible');
+            } else if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible) && Object.keys(plansCible).length > 0) {
                 concoursPlansCible = plansCible;
             }
             
-            // Inscriptions - filtrer confirmées (format API: { data: [...] } ou tableau direct)
+            // Inscriptions - accepter confirmées (confirmee, confirmée, confirmed) et format API flexible
             let inscriptions = Array.isArray(inscRes) ? inscRes : (inscRes?.data || []);
             if (Array.isArray(inscriptions)) {
-                concoursInscriptions = inscriptions.filter(i => (i.statut_inscription || i.statutInscription || '') === 'confirmee');
+                const statutConfirme = (s) => {
+                    const v = String(s || '').toLowerCase().trim();
+                    return v === 'confirmee' || v === 'confirmée' || v === 'confirmed';
+                };
+                concoursInscriptions = inscriptions.filter(i => statutConfirme(i.statut_inscription || i.statutInscription || i.statut));
+                if (concoursInscriptions.length === 0 && inscriptions.length > 0) {
+                    concoursInscriptions = inscriptions;
+                }
             } else {
                 concoursInscriptions = [];
             }
