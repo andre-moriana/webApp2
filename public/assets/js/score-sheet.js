@@ -226,6 +226,7 @@ function setupConcoursSelector() {
                 plansCible = plansCible.data;
                 concoursPlansCible = plansCible;
                 concoursPlansPeloton = null;
+                console.log('aaaaaaaaa');
             }
             
             // Inscriptions - filtrer confirmées (format API: { data: [...] } ou tableau direct)
