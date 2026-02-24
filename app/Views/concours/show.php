@@ -100,7 +100,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     <?php if ($informationsConcours !== ''): ?>
     <div class="form-group">
         <label><strong>Informations :</strong></label>
-        <div class="informations-concours-display border rounded p-3 bg-light" style="white-space: pre-wrap;"><?= nl2br(htmlspecialchars($informationsConcours)) ?></div>
+        <div class="informations-concours-display border rounded p-3 bg-light"><?= nl2br(htmlspecialchars($informationsConcours)) ?></div>
     </div>
     <?php endif; ?>
 

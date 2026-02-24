@@ -72,6 +72,17 @@
     margin-bottom: 8px;
 }
 
+/* Cadre Informations du concours */
+.informations-concours-display {
+    white-space: pre-wrap;
+    line-height: 1.35;
+    margin: 0;
+    font-size: 0.95em;
+}
+.informations-concours-display br + br {
+    display: none; /* évite double interligne entre paragraphes */
+}
+
 /* QR Code inscription ciblé */
 .lien-inscription-cible-qr {
     padding: 12px;
