@@ -19,7 +19,7 @@
         </tr>
         <tr>
             <th>Niveau championnat</th>
-            <td><?= htmlspecialchars($niveauChampionnatName ?: 'Non renseigné') ?></td>
+            <td><?= htmlspecialchars($niveauChampionnatName ?: (trim(is_object($concours) ? ($concours->niveau_championnat_autre ?? '') : ($concours['niveau_championnat_autre'] ?? '')) ?: 'Non renseigné')) ?></td>
         </tr>
         <tr>
             <th>Dates</th>

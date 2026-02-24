@@ -1770,7 +1770,7 @@ class ConcoursController {
             $typeCompetitions = $this->apiService->unwrapData($this->apiService->makeRequest('type-competitions/list', 'GET')) ?: [];
         } catch (Exception $e) {}
         try {
-            $niveauChampionnat = $this->apiService->unwrapData($this->apiService->makeRequest('niveau-championnat/list', 'GET')) ?: [];
+            $niveauChampionnat = $this->apiService->unwrapData($this->apiService->makeRequest('concours/niveau-championnat', 'GET')) ?: [];
         } catch (Exception $e) {}
         $categoriesClassement = [];
         $categoriesMap = [];
