@@ -58,4 +58,23 @@
         </div>
     </div>
     <?php endif; ?>
+
+    <?php
+    $lat = is_object($concours) ? ($concours->lieu_latitude ?? null) : ($concours['lieu_latitude'] ?? null);
+    $lng = is_object($concours) ? ($concours->lieu_longitude ?? null) : ($concours['lieu_longitude'] ?? null);
+    $lieuAdresse = is_object($concours) ? ($concours->lieu_competition ?? $concours->lieu ?? '') : ($concours['lieu_competition'] ?? $concours['lieu'] ?? '');
+    $hasGps = ($lat !== null && $lat !== '' && $lng !== null && $lng !== '');
+    if ($hasGps): $lat = (float)$lat; $lng = (float)$lng; ?>
+    <div class="mt-4">
+        <h4>Plan – S'y rendre</h4>
+        <p class="mb-2"><strong>Coordonnées GPS :</strong> <?= htmlspecialchars($lat) ?>, <?= htmlspecialchars($lng) ?></p>
+        <?php if (trim((string)$lieuAdresse) !== ''): ?>
+        <p class="mb-2"><strong>Lieu :</strong> <?= htmlspecialchars($lieuAdresse) ?></p>
+        <?php endif; ?>
+        <p class="mb-0">
+            <a href="https://www.google.com/maps?q=<?= urlencode($lat . ',' . $lng) ?>" target="_blank" rel="noopener noreferrer" class="me-3">Voir sur Google Maps</a>
+            <a href="https://www.openstreetmap.org/?mlat=<?= urlencode($lat) ?>&amp;mlon=<?= urlencode($lng) ?>&amp;zoom=16" target="_blank" rel="noopener noreferrer">Voir sur OpenStreetMap</a>
+        </p>
+    </div>
+    <?php endif; ?>
 </div>
