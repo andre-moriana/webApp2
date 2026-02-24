@@ -96,7 +96,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         </div>
     </div>
 
-    <?php $informationsConcours = trim($concours->informations ?? $concours['informations'] ?? ''); ?>
+    <?php $informationsConcours = trim(is_object($concours) ? ($concours->informations ?? '') : ($concours['informations'] ?? '')); ?>
     <?php if ($informationsConcours !== ''): ?>
     <div class="form-group">
         <label><strong>Informations :</strong></label>
