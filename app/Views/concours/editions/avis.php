@@ -11,7 +11,7 @@
         </tr>
         <tr>
             <th>Discipline</th>
-            <td><?= htmlspecialchars($disciplinename ?: 'Non renseigné') ?></td>
+            <td><?= htmlspecialchars($disciplineName ?: 'Non renseigné') ?></td>
         </tr>
         <tr>
             <th>Type de compétition</th>
