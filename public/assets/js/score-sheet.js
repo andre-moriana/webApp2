@@ -40,6 +40,46 @@ let concoursPlansCible = null;
 let concoursInscriptions = null;
 let concoursDetails = null;
 
+/** Retourne l'iddiscipline (de data-disciplines) pour un abv_discipline donné, ou null. */
+function getDisciplineIdForAbv(abv) {
+    if (!abv) return null;
+    const container = document.querySelector('.score-sheet-container');
+    const disciplines = container?.dataset?.disciplines ? JSON.parse(container.dataset.disciplines) : [];
+    if (!Array.isArray(disciplines)) return null;
+    const d = disciplines.find(disc => String(disc.abv_discipline || disc.abv || '').toUpperCase() === String(abv).toUpperCase());
+    return d ? (d.iddiscipline ?? d.id ?? d._id ?? null) : null;
+}
+
+/** Charge les catégories (concour_categories_classement) filtrées par iddiscipline et remplit le select archerCategory (value=abv_categorie_classement, text=lb_categorie_classement). */
+async function loadCategoriesForDiscipline(iddiscipline) {
+    const categorySelect = document.getElementById('archerCategory');
+    if (!categorySelect) return;
+    categorySelect.innerHTML = '<option value="">--</option>';
+    if (iddiscipline == null || iddiscipline === '') {
+        categorySelect.options[0].text = '-- Choisir un type de tir pour charger les catégories --';
+        return;
+    }
+    try {
+        const res = await fetch('/api/concours/categories-classement?iddiscipline=' + encodeURIComponent(iddiscipline)).then(r => r.json()).catch(() => null);
+        const data = res?.data ?? (Array.isArray(res) ? res : []);
+        const list = Array.isArray(data) ? data : [];
+        categorySelect.options[0].text = '--';
+        list.forEach(cat => {
+            const abv = cat.abv_categorie_classement ?? cat.abv ?? '';
+            const libelle = cat.lb_categorie_classement ?? cat.name ?? cat.nom ?? abv;
+            if (abv !== '') {
+                const opt = document.createElement('option');
+                opt.value = abv;
+                opt.textContent = libelle;
+                categorySelect.appendChild(opt);
+            }
+        });
+    } catch (e) {
+        console.error('Erreur chargement catégories:', e);
+        categorySelect.options[0].text = '-- Erreur chargement --';
+    }
+}
+
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
     initializeScoreSheet();
@@ -57,6 +97,7 @@ function initializeScoreSheet() {
             if (selectedShootingType) {
                 initializeSheets();
             }
+            loadCategoriesForDiscipline(getDisciplineIdForAbv(selectedShootingType));
         });
     }
     
@@ -101,12 +142,13 @@ function setupConcoursSelector() {
         pelotonSelect.innerHTML = '<option value="">-- Peloton --</option>';
         
         if (!selectedConcoursId) {
-            // Réinitialiser le type de tir et le titre
+            // Réinitialiser le type de tir, le titre et les catégories
             const shootingTypeSelect = document.getElementById('shootingType');
             const trainingTitleInput = document.getElementById('trainingTitle');
             if (shootingTypeSelect) shootingTypeSelect.value = '';
             if (trainingTitleInput) trainingTitleInput.value = '';
             selectedShootingType = '';
+            loadCategoriesForDiscipline(null);
             document.getElementById('archerNavigation')?.style?.setProperty('display', 'none');
             document.getElementById('archerInfoSection')?.style?.setProperty('display', 'none');
             document.getElementById('scoreTableSection')?.style?.setProperty('display', 'none');
@@ -146,6 +188,8 @@ function setupConcoursSelector() {
                     initializeSheets();
                 }
             }
+            // Catégories (concour_categories_classement) filtrées par iddiscipline du concours
+            loadCategoriesForDiscipline(discId);
             
             // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] }
             let plansPeloton = planPelotonRes?.data || planPelotonRes;

@@ -2531,6 +2531,32 @@ class ApiController {
     }
     
     /**
+     * Proxy pour /api/concours/categories-classement (concour_categories_classement filtré par iddiscipline)
+     * Query: ?iddiscipline=X ou ?iddiscipline=1,2,3
+     */
+    public function proxyConcoursCategoriesClassement() {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $endpoint = "concours/categories-classement" . ($queryString ? "?{$queryString}" : "");
+            $response = $this->apiService->makeRequest($endpoint, 'GET');
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des catégories: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
      * Proxy pour /api/concours/{id}/inscription/{userId}
      */
     public function proxyConcoursInscription($concoursId, $userId) {

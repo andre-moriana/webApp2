@@ -144,15 +144,7 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                         <div class="col-md-2">
                             <label for="archerCategory" class="form-label">Catégorie</label>
                             <select class="form-select" id="archerCategory">
-                                <option value="">--</option>
-                                <option value="U11">U11</option>
-                                <option value="U13">U13</option>
-                                <option value="U15">U15</option>
-                                <option value="U18">U18</option>
-                                <option value="U21">U21</option>
-                                <option value="S1">S1</option>
-                                <option value="S2">S2</option>
-                                <option value="S3">S3</option>
+                                <option value="">-- Choisir un type de tir pour charger les catégories --</option>
                             </select>
                         </div>
                         <div class="col-md-2">
