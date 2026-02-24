@@ -52,6 +52,7 @@ function getDisciplineIdForAbv(abv) {
 
 /** Charge les catégories (concour_categories_classement) filtrées par iddiscipline et remplit le select archerCategory (value=abv_categorie_classement, text=lb_categorie_classement). */
 async function loadCategoriesForDiscipline(iddiscipline) {
+    console.log('loadCategoriesForDiscipline', iddiscipline);
     const categorySelect = document.getElementById('archerCategory');
     if (!categorySelect) return;
     categorySelect.innerHTML = '<option value="">--</option>';
