@@ -38,7 +38,7 @@
     <div class="mt-4">
         <h4>Informations</h4>
         <?php if ($avisInformations !== ''): ?>
-        <div class="informations-avis-concours" style="white-space: pre-wrap; line-height: 1.35;"><?= nl2br(htmlspecialchars($avisInformations)) ?></div>
+        <div class="informations-avis-concours" style="line-height: 1.35;"><?= nl2br(htmlspecialchars($avisInformations)) ?></div>
         <?php else: ?>
         <p class="informations-avis-concours" style="line-height: 1.35;"><?= htmlspecialchars($texteInformationsDefaut) ?></p>
         <?php endif; ?>

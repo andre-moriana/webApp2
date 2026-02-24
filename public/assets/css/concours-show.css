@@ -74,7 +74,7 @@
 
 /* Cadre Informations du concours */
 .informations-concours-display {
-/*    white-space: pre-wrap;*/
+    white-space: pre-wrap;
     line-height: 1.25;
     margin: 0;
     font-size: 0.95em;
