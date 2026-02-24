@@ -293,6 +293,12 @@ function setupConcoursSelector() {
 async function prefillArchersFromConcours() {
     const departSelect = document.getElementById('departSelect');
     const pelotonSelect = document.getElementById('pelotonSelect');
+    let abvDiscipline = null;
+    if (discId && Array.isArray(disciplines)) {
+        const disc = disciplines.find(d => (d.iddiscipline ?? d.id ?? d._id) == discId);
+        abvDiscipline = disc?.abv_discipline ?? disc?.abv ?? null;
+    }
+
     const isPlanCibleMode = ['T', 'S', 'I', 'H'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
     const isPlanPelotonMode = ['3', 'N', 'C'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
 
