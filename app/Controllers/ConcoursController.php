@@ -518,6 +518,7 @@ class ConcoursController {
                 'code_authentification' => $code_authentification,
                 'type_publication_internet' => $type_publication_internet,
                 'lien_inscription_cible' => $lien_inscription_cible ?: null,
+                'informations' => $_POST['informations'] ?? null,
                 'agreenum' => $club_code, // nameShort du club organisateur
                 'departs' => $departs,
                 'arbitres' => $arbitres,

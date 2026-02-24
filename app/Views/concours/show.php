@@ -96,6 +96,14 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         </div>
     </div>
 
+    <?php $informationsConcours = trim($concours->informations ?? $concours['informations'] ?? ''); ?>
+    <?php if ($informationsConcours !== ''): ?>
+    <div class="form-group">
+        <label><strong>Informations :</strong></label>
+        <div class="informations-concours-display border rounded p-3 bg-light" style="white-space: pre-wrap;"><?= nl2br(htmlspecialchars($informationsConcours)) ?></div>
+    </div>
+    <?php endif; ?>
+
     <!-- Dates -->
     <div class="date-fields-row">
         <div class="form-group">
