@@ -61,19 +61,37 @@ async function loadCategoriesForDiscipline(iddiscipline) {
         return;
     }
     try {
-        const res = await fetch('/api/concours/categories-classement?iddiscipline=' + encodeURIComponent(iddiscipline)).then(r => r.json()).catch(() => null);
-        const data = res?.data ?? (Array.isArray(res) ? res : []);
-        const list = Array.isArray(data) ? data : [];
-        categorySelect.options[0].text = '--';
+        const response = await fetch('/api/concours/categories-classement?iddiscipline=' + encodeURIComponent(iddiscipline));
+        const res = await response.json().catch(() => null);
+        if (!response.ok) {
+            categorySelect.options[0].text = '-- Erreur ' + (response.status || '') + ' --';
+            return;
+        }
+        // Accepter plusieurs formats : { data: [...] }, { success, data: [...] }, ou tableau direct
+        let list = [];
+        if (Array.isArray(res)) {
+            list = res;
+        } else if (res && Array.isArray(res.data)) {
+            list = res.data;
+        } else if (res && res.data && Array.isArray(res.data.data)) {
+            list = res.data.data;
+        } else if (res && typeof res.data === 'object' && res.data !== null && !Array.isArray(res.data)) {
+            list = Object.values(res.data);
+        }
+        if (list.length === 0 && res) {
+            console.warn('loadCategoriesForDiscipline: réponse reçue mais liste vide. res=', res);
+        }
+        // Re-récupérer le select au cas où le DOM aurait été mis à jour pendant le fetch
+        const select = document.getElementById('archerCategory');
+        if (!select) return;
+        select.options[0].text = '--';
         list.forEach(cat => {
-            const abv = cat.abv_categorie_classement ?? cat.abv ?? '';
-            const libelle = cat.lb_categorie_classement ?? cat.name ?? cat.nom ?? abv;
-            if (abv !== '') {
-                const opt = document.createElement('option');
-                opt.value = abv;
-                opt.textContent = libelle;
-                categorySelect.appendChild(opt);
-            }
+            const abv = String(cat.abv_categorie_classement ?? cat.abv ?? '').trim();
+            const libelle = String(cat.lb_categorie_classement ?? cat.name ?? cat.nom ?? abv).trim() || '—';
+            const opt = document.createElement('option');
+            opt.value = abv;
+            opt.textContent = libelle;
+            select.appendChild(opt);
         });
     } catch (e) {
         console.error('Erreur chargement catégories:', e);
