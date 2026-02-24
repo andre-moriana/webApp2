@@ -2,7 +2,7 @@
  * JavaScript pour la feuille de marque
  */
 
-// Configuration des types de tir
+// Configuration des types de tir (clé = type logique pour volées/flèches ; le select stocke abv_discipline)
 const SHOOTING_CONFIGS = {
     'Salle': { total_ends: 20, arrows_per_end: 3, total_arrows: 60, series: 2 },
     'TAE': { total_ends: 12, arrows_per_end: 6, total_arrows: 72, series: 2 },
@@ -10,6 +10,14 @@ const SHOOTING_CONFIGS = {
     '3D': { total_ends: 24, arrows_per_end: 2, total_arrows: 48 },
     'Campagne': { total_ends: 24, arrows_per_end: 3, total_arrows: 72 },
 };
+
+/** Retourne la clé SHOOTING_CONFIGS (Salle, TAE, Nature, 3D, Campagne) pour une valeur du select (abv_discipline ou ancienne valeur). */
+function getShootingConfigKey(val) {
+    if (!val) return '';
+    const v = String(val).trim();
+    if (SHOOTING_CONFIGS[v]) return v;
+    return mapDisciplineToShootingType(v) || v;
+}
 
 const NUM_USERS = 6;
 
@@ -31,20 +39,6 @@ let concoursPlansPeloton = null;
 let concoursPlansCible = null;
 let concoursInscriptions = null;
 let concoursDetails = null;
-
-/** Groupe un tableau plat de plans par numero_depart (clés "1", "2", ...). */
-function groupPlansByDepart(plansArray, _keyHint) {
-    const grouped = {};
-    for (const p of plansArray) {
-        const dep = p.numero_depart != null ? String(p.numero_depart) : '';
-        if (!grouped[dep]) grouped[dep] = [];
-        grouped[dep].push(p);
-    }
-    const keys = Object.keys(grouped).filter(k => k !== '').sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-    const out = {};
-    keys.forEach(k => { out[k] = grouped[k]; });
-    return out;
-}
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
@@ -143,52 +137,44 @@ function setupConcoursSelector() {
                 const disc = disciplines.find(d => (d.iddiscipline ?? d.id ?? d._id) == discId);
                 abvDiscipline = disc?.abv_discipline ?? disc?.abv ?? null;
             }
-            const shootingTypeFromDisc = mapDisciplineToShootingType(abvDiscipline);
-            if (shootingTypeFromDisc && shootingTypeSelect) {
-                shootingTypeSelect.value = shootingTypeFromDisc;
-                selectedShootingType = shootingTypeFromDisc;
-                initializeSheets();
+            // Sélectionner le type de tir = abv_discipline du concours (valeurs du select = abv_discipline)
+            if (abvDiscipline && shootingTypeSelect) {
+                const opt = Array.from(shootingTypeSelect.options).find(o => (o.value || '').toUpperCase() === String(abvDiscipline).toUpperCase());
+                if (opt) {
+                    shootingTypeSelect.value = opt.value;
+                    selectedShootingType = opt.value;
+                    initializeSheets();
+                }
             }
             
-            // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] } ou tableau plat
-            let plansPeloton = planPelotonRes?.data ?? planPelotonRes;
-            if (plansPeloton && typeof plansPeloton === 'object' && plansPeloton.data) {
+            // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] }
+            let plansPeloton = planPelotonRes?.data || planPelotonRes;
+            if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton) && plansPeloton.data) {
                 plansPeloton = plansPeloton.data;
             }
-            if (Array.isArray(plansPeloton) && plansPeloton.length > 0) {
-                concoursPlansPeloton = groupPlansByDepart(plansPeloton, 'numero_peloton');
-            } else if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton) && Object.keys(plansPeloton).length > 0) {
+            if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton)) {
                 concoursPlansPeloton = plansPeloton;
             }
             
-            // Plan cible (T/S/I/H) - structure: { "1": [plan, ...], "2": [...] } ou tableau plat
-            let plansCible = planCibleRes?.data ?? planCibleRes;
-            if (plansCible && typeof plansCible === 'object' && plansCible.data) {
+            // Plan cible (T/S/I/H) - structure: { "1": [plan, ...], "2": [...] }
+            let plansCible = planCibleRes?.data || planCibleRes;
+            if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible) && plansCible.data) {
                 plansCible = plansCible.data;
             }
-            if (Array.isArray(plansCible) && plansCible.length > 0) {
-                concoursPlansCible = groupPlansByDepart(plansCible, 'numero_cible');
-            } else if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible) && Object.keys(plansCible).length > 0) {
+            if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible)) {
                 concoursPlansCible = plansCible;
             }
             
-            // Inscriptions - accepter confirmées (confirmee, confirmée, confirmed) et format API flexible
+            // Inscriptions - filtrer confirmées (format API: { data: [...] } ou tableau direct)
             let inscriptions = Array.isArray(inscRes) ? inscRes : (inscRes?.data || []);
             if (Array.isArray(inscriptions)) {
-                const statutConfirme = (s) => {
-                    const v = String(s || '').toLowerCase().trim();
-                    return v === 'confirmee' || v === 'confirmée' || v === 'confirmed';
-                };
-                concoursInscriptions = inscriptions.filter(i => statutConfirme(i.statut_inscription || i.statutInscription || i.statut));
-                if (concoursInscriptions.length === 0 && inscriptions.length > 0) {
-                    concoursInscriptions = inscriptions;
-                }
+                concoursInscriptions = inscriptions.filter(i => (i.statut_inscription || i.statutInscription || '') === 'confirmee');
             } else {
                 concoursInscriptions = [];
             }
             
             const isPlanCibleMode = ['T', 'S', 'I', 'H'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
-            const isPlanPelotonMode = ['3', 'N', 'C', '3D'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
+            const isPlanPelotonMode = ['3', 'N', 'C'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
             
             // Afficher sélecteur Départ / Cible (T/S/I/H) ou Départ / Peloton (N/3/C)
             if (isPlanCibleMode || isPlanPelotonMode) {
@@ -380,7 +366,7 @@ function mapDisciplineToShootingType(abv) {
     if (a === 'S' || a === 'I' || a === 'H') return 'Salle';
     if (a === 'T') return 'TAE';
     if (a === 'N') return 'Nature';
-    if (a === '3' || a === '3D') return '3D';
+    if (a === '3') return '3D';
     if (a === 'C') return 'Campagne';
     return null;
 }
@@ -640,11 +626,11 @@ function initializeSignatureCanvas() {
 }
 
 function initializeSheets() {
-    if (!selectedShootingType || !SHOOTING_CONFIGS[selectedShootingType]) {
+    if (!selectedShootingType || !SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)]) {
         return;
     }
     
-    const config = SHOOTING_CONFIGS[selectedShootingType];
+    const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     userSheets = [];
     
     // Créer les feuilles pour chaque archer
@@ -716,7 +702,7 @@ function displayCurrentArcher() {
     if (genderSelect) genderSelect.value = sheet.archerInfo.gender || '';
     
     // Mettre à jour le tableau des scores (uniquement si type de tir et config valides)
-    const config = SHOOTING_CONFIGS[selectedShootingType];
+    const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     if (config) {
         updateScoreTable(sheet);
     }
@@ -729,7 +715,7 @@ function displayCurrentArcher() {
 }
 
 function updateScoreTable(sheet) {
-    const config = SHOOTING_CONFIGS[selectedShootingType];
+    const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     const tableBody = document.getElementById('scoreTableBody');
     const arrowHeaders = document.getElementById('arrowHeaders');
     const cumulativeHeader = document.getElementById('cumulativeHeader');
@@ -865,7 +851,7 @@ function openScoreModal(rowIndex) {
     
     const sheet = userSheets[currentUserIndex];
     const row = sheet.scoreRows[rowIndex];
-    const config = SHOOTING_CONFIGS[selectedShootingType];
+    const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     
     document.getElementById('modalVolleyNumber').textContent = row.endNumber;
     
@@ -985,7 +971,7 @@ function saveVolleyScores() {
     
     const sheet = userSheets[currentModalUserIndex];
     const row = sheet.scoreRows[currentModalRow];
-    const config = SHOOTING_CONFIGS[selectedShootingType];
+    const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     
     // Vérifier si on est en mode cible interactive
     const targetTab = document.getElementById('target-tab');
@@ -1379,7 +1365,7 @@ function calculateScoreFromPosition(x, y) {
     const targetCategory = targetCategorySelect ? targetCategorySelect.value : 'blason_80';
     
     // Pour le blason campagne, détecter par le type de tir, pas par la catégorie
-    const isBlasonCampagne = selectedShootingType === 'Campagne';
+    const isBlasonCampagne = getShootingConfigKey(selectedShootingType) === 'Campagne';
     
     let zones;
     
@@ -1938,7 +1924,8 @@ function exportToPDF() {
     yPosition += 10;
     
     doc.setFontSize(12);
-    doc.text(`Type de tir: ${selectedShootingType}`, 20, yPosition);
+    const shootingTypeLabel = document.getElementById('shootingType')?.selectedOptions?.[0]?.textContent ?? selectedShootingType;
+    doc.text(`Type de tir: ${shootingTypeLabel}`, 20, yPosition);
     yPosition += 10;
     if (trainingTitle) {
         doc.text(`Titre: ${trainingTitle}`, 20, yPosition);

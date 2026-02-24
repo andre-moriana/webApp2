@@ -82,11 +82,12 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                             <label for="shootingType" class="form-label">Sélectionner le type de tir</label>
                             <select class="form-select" id="shootingType" required>
                                 <option value="">-- Sélectionner --</option>
-                                <option value="Salle">Salle (2 x 10 volées de 3 flèches)</option>
-                                <option value="TAE">TAE (2 x 6 volées de 6 flèches)</option>
-                                <option value="Nature">Nature (21 volées de 2 flèches)</option>
-                                <option value="3D">3D (24 volées de 2 flèches)</option>
-                                <option value="Campagne">Campagne (24 volées de 3 flèches)</option>
+                                <?php foreach ($disciplinesList as $d): 
+                                    $abv = $d['abv_discipline'] ?? $d['abv'] ?? '';
+                                    $lb = $d['lb_discipline'] ?? $d['name'] ?? $d['nom'] ?? $abv;
+                                    if ($abv !== ''): ?>
+                                <option value="<?= htmlspecialchars($abv) ?>"><?= htmlspecialchars($lb) ?></option>
+                                <?php endif; endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6">
