@@ -53,15 +53,15 @@ $dateFooter = date('d/m/Y H:i');
             font-size: 1.1rem;
             font-weight: 600;
         }
-        /* Logo : taille min. 15mm selon charte FFTA - 60px ≈ 16mm à 96dpi */
+        /* Logo : taille agrandie pour l'en-tête des éditions */
         .edition-doc-logo {
-            height: 60px;
-            max-width: 120px;
+            height: 90px;
+            max-width: 180px;
             object-fit: contain;
         }
-        /* Espace libre autour du logo (charte FFTA) */
+        /* Espace libre autour du logo */
         .edition-doc-header-left {
-            min-width: 100px;
+            min-width: 150px;
             padding: 0 8px;
         }
         .edition-doc-logo-placeholder { font-size: 10pt; color: #6c757d; }
@@ -140,14 +140,14 @@ $dateFooter = date('d/m/Y H:i');
                 font-size: 14pt;
                 font-weight: 600;
             }
-            /* Logo : taille raisonnable, jamais coupé grâce à table-header-group */
+            /* Logo : taille agrandie à l'impression */
             .edition-doc-logo {
-                height: 16mm;
-                max-width: 32mm;
+                height: 22mm;
+                max-width: 44mm;
                 object-fit: contain;
             }
             .edition-doc-header-left {
-                min-width: 25mm;
+                min-width: 32mm;
                 padding: 0 2mm;
             }
             .edition-doc-logo-placeholder {
