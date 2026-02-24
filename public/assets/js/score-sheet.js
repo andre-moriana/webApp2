@@ -329,6 +329,21 @@ async function prefillArchersFromConcours() {
         }
     });
     
+    // Afficher les blocs navigation + infos archer + tableau des scores pour que le préremplissage soit visible
+    const navEl = document.getElementById('archerNavigation');
+    const archerSectionEl = document.getElementById('archerInfoSection');
+    const scoreSectionEl = document.getElementById('scoreTableSection');
+    if (navEl) navEl.style.display = 'block';
+    if (archerSectionEl) archerSectionEl.style.display = 'block';
+    if (scoreSectionEl) scoreSectionEl.style.display = 'block';
+    const saveBtn = document.getElementById('saveScoreSheetBtn');
+    const sigBtn = document.getElementById('signaturesBtn');
+    const exportBtn = document.getElementById('exportPdfBtn');
+    if (saveBtn) saveBtn.style.display = 'inline-block';
+    if (sigBtn) sigBtn.style.display = 'inline-block';
+    if (exportBtn) exportBtn.style.display = 'inline-block';
+    
+    currentUserIndex = 0;
     displayCurrentArcher();
     showStatus(`${archers.length} archer(s) prérempli(s) depuis le concours`, 'success');
 }
@@ -653,25 +668,39 @@ function displayCurrentArcher() {
     if (userSheets.length === 0) return;
     
     const sheet = userSheets[currentUserIndex];
+    if (!sheet || !sheet.archerInfo) return;
+    
+    // Mettre à jour les informations de l'archer (toujours en premier pour que le tableau se remplisse)
+    const headerNum = document.getElementById('archerHeaderNumber');
+    const currentNum = document.getElementById('currentArcherNumber');
+    const totalNum = document.getElementById('totalArchers');
+    const nameInput = document.getElementById('archerName');
+    const licenseInput = document.getElementById('archerLicense');
+    const categorySelect = document.getElementById('archerCategory');
+    const weaponSelect = document.getElementById('archerWeapon');
+    const genderSelect = document.getElementById('archerGender');
+    
+    if (headerNum) headerNum.textContent = currentUserIndex + 1;
+    if (currentNum) currentNum.textContent = currentUserIndex + 1;
+    if (totalNum) totalNum.textContent = NUM_USERS;
+    
+    if (nameInput) nameInput.value = sheet.archerInfo.name || '';
+    if (licenseInput) licenseInput.value = sheet.archerInfo.licenseNumber || '';
+    if (categorySelect) categorySelect.value = sheet.archerInfo.category || '';
+    if (weaponSelect) weaponSelect.value = sheet.archerInfo.weapon || '';
+    if (genderSelect) genderSelect.value = sheet.archerInfo.gender || '';
+    
+    // Mettre à jour le tableau des scores (uniquement si type de tir et config valides)
     const config = SHOOTING_CONFIGS[selectedShootingType];
-    
-    // Mettre à jour les informations de l'archer
-    document.getElementById('archerHeaderNumber').textContent = currentUserIndex + 1;
-    document.getElementById('currentArcherNumber').textContent = currentUserIndex + 1;
-    document.getElementById('totalArchers').textContent = NUM_USERS;
-    
-    document.getElementById('archerName').value = sheet.archerInfo.name;
-    document.getElementById('archerLicense').value = sheet.archerInfo.licenseNumber;
-    document.getElementById('archerCategory').value = sheet.archerInfo.category;
-    document.getElementById('archerWeapon').value = sheet.archerInfo.weapon;
-    document.getElementById('archerGender').value = sheet.archerInfo.gender;
-    
-    // Mettre à jour le tableau des scores
-    updateScoreTable(sheet);
+    if (config) {
+        updateScoreTable(sheet);
+    }
     
     // Gérer les boutons de navigation
-    document.getElementById('prevArcherBtn').disabled = currentUserIndex === 0;
-    document.getElementById('nextArcherBtn').disabled = currentUserIndex === NUM_USERS - 1;
+    const prevBtn = document.getElementById('prevArcherBtn');
+    const nextBtn = document.getElementById('nextArcherBtn');
+    if (prevBtn) prevBtn.disabled = currentUserIndex === 0;
+    if (nextBtn) nextBtn.disabled = currentUserIndex === NUM_USERS - 1;
 }
 
 function updateScoreTable(sheet) {
