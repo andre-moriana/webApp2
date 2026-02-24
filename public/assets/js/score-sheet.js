@@ -175,11 +175,9 @@ function setupConcoursSelector() {
         }
         
         try {
-            // Charger les détails du concours et les données (plan-cible pour T/S/I/H, plan-peloton pour N/3/C)
-            const [concoursRes, planPelotonRes, planCibleRes, inscRes] = await Promise.all([
+            // Charger d'abord le concours et les inscriptions pour connaître la discipline
+            const [concoursRes, inscRes] = await Promise.all([
                 fetch(`/api/concours/${selectedConcoursId}/public`).then(r => r.json()).catch(() => null),
-                fetch(`/api/concours/${selectedConcoursId}/plan-peloton`).then(r => r.json()).catch(() => null),
-                fetch(`/api/concours/${selectedConcoursId}/plan-cible`).then(r => r.json()).catch(() => null),
                 fetch(`/api/concours/${selectedConcoursId}/inscriptions`).then(r => r.json()).catch(() => null)
             ]);
             
@@ -198,7 +196,34 @@ function setupConcoursSelector() {
                 const disc = disciplines.find(d => (d.iddiscipline ?? d.id ?? d._id) == discId);
                 abvDiscipline = disc?.abv_discipline ?? disc?.abv ?? null;
             }
-            // Sélectionner le type de tir = abv_discipline du concours (valeurs du select = abv_discipline)
+            const abvUpper = String(abvDiscipline || '').toUpperCase();
+            const isCibleDiscipline = ['T', 'S', 'I', 'H'].includes(abvUpper);
+            const isPelotonDiscipline = ['3', 'N', 'C', '3D'].includes(abvUpper);
+            
+            // N'appeler que l'API du plan correspondant à la discipline (plan-cible pour T/S/I/H, plan-peloton pour N/3/C)
+            concoursPlansCible = null;
+            concoursPlansPeloton = null;
+            if (isCibleDiscipline) {
+                const planCibleRes = await fetch(`/api/concours/${selectedConcoursId}/plan-cible`).then(r => r.json()).catch(() => null);
+                let plansCible = planCibleRes?.data ?? planCibleRes;
+                if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible) && plansCible.data) {
+                    plansCible = plansCible.data;
+                }
+                if (plansCible && typeof plansCible === 'object' && Object.keys(plansCible).length > 0) {
+                    concoursPlansCible = plansCible;
+                }
+            } else if (isPelotonDiscipline) {
+                const planPelotonRes = await fetch(`/api/concours/${selectedConcoursId}/plan-peloton`).then(r => r.json()).catch(() => null);
+                let plansPeloton = planPelotonRes?.data ?? planPelotonRes;
+                if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton) && plansPeloton.data) {
+                    plansPeloton = plansPeloton.data;
+                }
+                if (plansPeloton && typeof plansPeloton === 'object' && Object.keys(plansPeloton).length > 0) {
+                    concoursPlansPeloton = plansPeloton;
+                }
+            }
+            
+            // Sélectionner le type de tir = abv_discipline du concours
             if (abvDiscipline && shootingTypeSelect) {
                 const opt = Array.from(shootingTypeSelect.options).find(o => (o.value || '').toUpperCase() === String(abvDiscipline).toUpperCase());
                 if (opt) {
@@ -206,27 +231,9 @@ function setupConcoursSelector() {
                     selectedShootingType = opt.value;
                     initializeSheets();
                 }
-                // Déclencher le change pour charger les catégories (sinon le handler ne s'exécute pas quand on met la valeur en JS)
                 shootingTypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
             } else if (discId) {
                 loadCategoriesForDiscipline(discId);
-            }
-            
-            // Plan peloton (N/3/C) - structure: { "1": [plan, ...], "2": [...] }
-            let plansPeloton = planPelotonRes?.data || planPelotonRes;
-            if (plansPeloton && typeof plansPeloton === 'object' && !Array.isArray(plansPeloton) && plansPeloton.data) {
-                plansPeloton = plansPeloton.data;
-                concoursPlansPeloton = plansPeloton;
-                concoursPlansCible = null;
-            }
-            
-            // Plan cible (T/S/I/H) - structure: { "1": [plan, ...], "2": [...] }
-            let plansCible = planCibleRes?.data || planCibleRes;
-            if (plansCible && typeof plansCible === 'object' && !Array.isArray(plansCible) && plansCible.data) {
-                plansCible = plansCible.data;
-                concoursPlansCible = plansCible;
-                concoursPlansPeloton = null;
-                console.log('aaaaaaaaa');
             }
             
             // Inscriptions - filtrer confirmées (format API: { data: [...] } ou tableau direct)
