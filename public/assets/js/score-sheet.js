@@ -315,7 +315,7 @@ async function prefillArchersFromConcours() {
     console.log('concoursPlansPeloton:', concoursPlansPeloton);
     console.log('departSelect:', departSelect.value);
     console.log('pelotonSelect:', pelotonSelect.value);
-    if (concoursPlansCible && departSelect?.value && pelotonSelect?.value &&isPlanCibleMode) {
+    if (concoursPlansCible && departSelect?.value && pelotonSelect?.value && isPlanCibleMode) {
         // Mode plan cible (T/S/I/H) : extraire les archers de la cible
         const dep = departSelect.value;
         const cible = parseInt(pelotonSelect.value);
