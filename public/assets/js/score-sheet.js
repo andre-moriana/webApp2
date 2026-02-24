@@ -295,7 +295,8 @@ async function prefillArchersFromConcours() {
     const pelotonSelect = document.getElementById('pelotonSelect');
 
     let archers = [];
-    
+    const isPlanCibleMode = concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
+    const isPlanPelotonMode = concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
     // Si plan cible existe (T/S/I/H), exiger départ + cible
     if (concoursPlansCible && Object.keys(concoursPlansCible).length > 0) {
         if (!departSelect?.value || !pelotonSelect?.value) {
