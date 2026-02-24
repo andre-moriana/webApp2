@@ -574,7 +574,6 @@ async function searchUserByLicense(licenseNumber) {
             const nameField = document.getElementById('archerName');
             const categoryField = document.getElementById('archerCategory');
             const weaponField = document.getElementById('archerWeapon');
-            const genderField = document.getElementById('archerGender');
             
             if (nameField) {
                 // Construire le nom complet en concaténant first_name et name
@@ -651,18 +650,6 @@ async function searchUserByLicense(licenseNumber) {
                     }
                 } else {
                     console.warn('Aucune valeur weapon trouvée dans les données utilisateur');
-                }
-            }
-            
-            if (genderField && user.gender) {
-                // Convertir différents formats de genre
-                const gender = user.gender.toUpperCase();
-                if (gender === 'M' || gender === 'HOMME' || gender === 'H') {
-                    genderField.value = 'H';
-                } else if (gender === 'F' || gender === 'FEMME' || gender === 'F') {
-                    genderField.value = 'F';
-                } else {
-                    genderField.value = user.gender;
                 }
             }
             
@@ -757,7 +744,6 @@ function displayCurrentArcher() {
     const licenseInput = document.getElementById('archerLicense');
     const categorySelect = document.getElementById('archerCategory');
     const weaponSelect = document.getElementById('archerWeapon');
-    const genderSelect = document.getElementById('archerGender');
     
     if (headerNum) headerNum.textContent = currentUserIndex + 1;
     if (currentNum) currentNum.textContent = currentUserIndex + 1;
@@ -767,7 +753,6 @@ function displayCurrentArcher() {
     if (licenseInput) licenseInput.value = sheet.archerInfo.licenseNumber || '';
     if (categorySelect) categorySelect.value = sheet.archerInfo.category || '';
     if (weaponSelect) weaponSelect.value = sheet.archerInfo.weapon || '';
-    if (genderSelect) genderSelect.value = sheet.archerInfo.gender || '';
     
     // Mettre à jour le tableau des scores (uniquement si type de tir et config valides)
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
@@ -908,7 +893,6 @@ function saveCurrentArcherInfo() {
     sheet.archerInfo.licenseNumber = document.getElementById('archerLicense').value;
     sheet.archerInfo.category = document.getElementById('archerCategory').value;
     sheet.archerInfo.weapon = document.getElementById('archerWeapon').value;
-    sheet.archerInfo.gender = document.getElementById('archerGender').value;
 }
 
 function openScoreModal(rowIndex) {

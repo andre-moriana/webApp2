@@ -158,14 +158,6 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                                 <option value="Arc de chasse">Arc de chasse</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label for="archerGender" class="form-label">Genre</label>
-                            <select class="form-select" id="archerGender">
-                                <option value="">--</option>
-                                <option value="H">Homme</option>
-                                <option value="F">Femme</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
             </div>
