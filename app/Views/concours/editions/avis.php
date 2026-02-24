@@ -4,10 +4,6 @@
 <div class="edition-avis">
     <h1 class="text-center mb-4">Avis de concours</h1>
 
-    <div class="text-center mb-4">
-        <h2><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?></h2>
-    </div>
-
     <table class="table table-bordered">
         <tr>
             <th width="35%">Club organisateur</th>
@@ -42,9 +38,9 @@
     <div class="mt-4">
         <h4>Informations</h4>
         <?php if ($avisInformations !== ''): ?>
-        <div class="informations-avis-concours" style="white-space: pre-wrap;"><?= nl2br(htmlspecialchars($avisInformations)) ?></div>
+        <div class="informations-avis-concours" style="white-space: pre-wrap; line-height: 1.35;"><?= nl2br(htmlspecialchars($avisInformations)) ?></div>
         <?php else: ?>
-        <p><?= htmlspecialchars($texteInformationsDefaut) ?></p>
+        <p class="informations-avis-concours" style="line-height: 1.35;"><?= htmlspecialchars($texteInformationsDefaut) ?></p>
         <?php endif; ?>
     </div>
 </div>

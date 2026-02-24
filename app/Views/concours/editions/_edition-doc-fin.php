@@ -73,11 +73,6 @@ if ($doc === 'classement') {
 <div class="edition-doc-fin mt-4 pt-4">
     <table class="table table-borderless">
         <tr>
-            <th class="align-top" style="width: 35%;">Nombre total d'archers</th>
-            <td><?= (int)$nbArchers ?></td>
-        </tr>
-        <tr><td colspan="2">&nbsp;</td></tr>
-        <tr>
             <th class="align-top">Club Organisateur</th>
             <th class="align-top">Arbitre Responsable</th>
         </tr>
