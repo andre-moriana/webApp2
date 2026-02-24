@@ -1843,11 +1843,13 @@ class ConcoursController {
             }, $concours->arbitres);
         }
 
-        // Enrichir inscriptions avec nom club
+        // Enrichir inscriptions avec nom club et libellé catégorie
         foreach ($inscriptions as &$insc) {
             $clubId = $insc['id_club'] ?? null;
             $c = $clubId ? ($clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? null) : null;
             $insc['club_nom'] = $c ? ($c['name'] ?? $c['nameShort'] ?? $c['name_short'] ?? '') : '';
+            $abvCat = trim((string)($insc['categorie_classement'] ?? ''));
+            $insc['categorie_libelle'] = $abvCat !== '' ? ($categoriesMap[$abvCat] ?? $abvCat) : '';
         }
         unset($insc);
 
@@ -1893,6 +1895,35 @@ class ConcoursController {
 
         $doc = $_GET['doc'] ?? null;
         $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement'];
+
+        // Tri liste des participants (club, départ, catégorie)
+        $triListeParticipants = 'club';
+        if ($doc === 'liste-participants') {
+            $triListeParticipants = $_GET['tri'] ?? 'club';
+            $validTri = ['club', 'depart', 'categorie'];
+            if (!in_array($triListeParticipants, $validTri, true)) {
+                $triListeParticipants = 'club';
+            }
+            usort($inscriptions, function ($a, $b) use ($triListeParticipants) {
+                if ($triListeParticipants === 'club') {
+                    $cmp = strcasecmp($a['club_nom'] ?? '', $b['club_nom'] ?? '');
+                    if ($cmp !== 0) return $cmp;
+                    return strcasecmp($a['user_nom'] ?? $a['nom'] ?? '', $b['user_nom'] ?? $b['nom'] ?? '');
+                }
+                if ($triListeParticipants === 'depart') {
+                    $na = (int)($a['numero_depart'] ?? 0);
+                    $nb = (int)($b['numero_depart'] ?? 0);
+                    if ($na !== $nb) return $na - $nb;
+                    return strcasecmp($a['user_nom'] ?? $a['nom'] ?? '', $b['user_nom'] ?? $b['nom'] ?? '');
+                }
+                if ($triListeParticipants === 'categorie') {
+                    $cmp = strcasecmp($a['categorie_libelle'] ?? $a['categorie_classement'] ?? '', $b['categorie_libelle'] ?? $b['categorie_classement'] ?? '');
+                    if ($cmp !== 0) return $cmp;
+                    return strcasecmp($a['user_nom'] ?? $a['nom'] ?? '', $b['user_nom'] ?? $b['nom'] ?? '');
+                }
+                return 0;
+            });
+        }
 
         if ($doc && in_array($doc, $validDocs)) {
             // Affichage d'un document spécifique (optimisé impression)

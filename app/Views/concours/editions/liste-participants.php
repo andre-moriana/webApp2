@@ -16,6 +16,7 @@
                 <th>N° Licence</th>
                 <th>Club</th>
                 <th>Départ</th>
+                <th>Catégorie</th>
             </tr>
         </thead>
         <tbody>
@@ -26,6 +27,7 @@
                     <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['numero_depart'] ?? '-') ?></td>
+                    <td><?= htmlspecialchars($insc['categorie_libelle'] ?? $insc['categorie_classement'] ?? '—') ?></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>

@@ -159,6 +159,24 @@ $dateFooter = date('d/m/Y H:i');
 </head>
 <body>
     <div class="no-print mb-3">
+        <?php if ($doc === 'liste-participants'): ?>
+        <label class="me-2">Tri :</label>
+        <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
+            <?php
+            $baseListeUrl = '/concours/' . (int)$concoursId . '/editions?doc=liste-participants';
+            $triOptions = [
+                'club' => 'Par club',
+                'depart' => 'Par départ',
+                'categorie' => 'Par catégorie'
+            ];
+            foreach ($triOptions as $val => $label):
+                $url = $baseListeUrl . '&tri=' . $val;
+                $sel = ($triListeParticipants ?? 'club') === $val ? ' selected' : '';
+            ?>
+            <option value="<?= htmlspecialchars($url) ?>"<?= $sel ?>><?= htmlspecialchars($label) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <?php endif; ?>
         <?php if ($doc === 'classement'): ?>
         <label class="me-2">Type de classement :</label>
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
