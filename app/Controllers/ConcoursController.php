@@ -1814,6 +1814,10 @@ class ConcoursController {
         }
         $typeCompetitionName = findLabelEditions($typeCompetitions, $concours->type_competition ?? null, 'idformat_competition', 'lb_format_competition');
         $niveauChampionnatName = findLabelEditions($niveauChampionnat, $concours->idniveau_championnat ?? null, 'idniveau_championnat', 'lb_niveauchampionnat');
+        $abvNiveau = is_object($concours) ? ($concours->niveau_championnat ?? null) : ($concours['niveau_championnat'] ?? null);
+        if ($niveauChampionnatName === '' && $abvNiveau !== null && trim((string)$abvNiveau) !== '') {
+            $niveauChampionnatName = findLabelEditions($niveauChampionnat, trim((string)$abvNiveau), 'abv_niveauchampionnat', 'lb_niveauchampionnat');
+        }
 
         // Enrichir arbitres avec nom (résolution licence → nom depuis le XML)
         if (!isset($concours->arbitres) || !is_array($concours->arbitres)) {
