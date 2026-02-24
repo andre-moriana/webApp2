@@ -1704,7 +1704,12 @@ function submitInscription() {
                 const otherMsg = otherFailures.map(f => f.body?.error || f.body?.message || 'Erreur ' + f.status).join('\n');
                 alert('Attention : Cet archer est déjà inscrit pour certains départs.\n\nErreur(s) pour d\'autres départs :\n' + otherMsg);
             } else {
-                const msg = failures.map(f => f.body?.error || f.body?.message || 'Erreur ' + f.status).join('\n');
+                const msg = failures.map(f => {
+                    const err = f.body?.error || f.body?.message || f.body?.data?.error || f.body?.data?.message;
+                    if (err) return err;
+                    if (f.status === 409) return 'Cet archer est déjà inscrit pour ce concours (même départ ou même numéro de tir).';
+                    return 'Erreur HTTP ' + (f.status || 'réseau');
+                }).join('\n');
                 alert('Erreur(s) lors de l\'enregistrement :\n' + msg);
             }
             if (successes.length > 0) loadInscriptions();

@@ -2628,7 +2628,13 @@ class ApiController {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true);
             $response = $this->apiService->makeRequest("concours/{$id}/inscription", 'POST', $data);
-            $this->sendJsonResponse($response, 200);
+            $statusCode = $response['status_code'] ?? 200;
+            // Envoyer un corps avec error au premier niveau pour que le frontend l'affiche
+            $body = $response['data'] ?? $response;
+            if (isset($response['data']) && is_array($response['data']) && !isset($body['error']) && isset($response['data']['error'])) {
+                $body = array_merge($body, ['error' => $response['data']['error']]);
+            }
+            $this->sendJsonResponse($body, $statusCode);
         } catch (Exception $e) {
             $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage()], 500);
         }
