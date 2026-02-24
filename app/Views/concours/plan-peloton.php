@@ -65,7 +65,7 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
 <?php else: ?>
     <div class="plan-cible-legend">
         <h4><i class="fas fa-info-circle"></i> Règles</h4>
-        <p>Max 50% d'archers du même club par peloton (ex: 2 pour 4, 3 pour 6). Max 2 couleurs de piquet par peloton.</p>
+        <p>Max 50% d'archers du même club par peloton (ex: 2 pour 4, 3 pour 6). Max 2 couleurs de piquet par peloton. Pour chaque couleur de piquet dans un peloton, le nombre d'archers doit être <strong>pair</strong>.</p>
         <div class="legend-items">
             <div class="legend-item"><div class="legend-color assigne"></div><span>Position assignée</span></div>
             <div class="legend-item"><div class="legend-color libre"></div><span>Position libre</span></div>
@@ -125,6 +125,20 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                 $nbCompound++;
                             }
                         }
+                        // Règle : nombre pair d'archers par couleur de piquet
+                        $countByPiquet = [];
+                        foreach ($pelotonPlans as $p) {
+                            $pq = isset($p['piquet']) && $p['piquet'] !== '' && $p['piquet'] !== null ? trim(strtolower((string)$p['piquet'])) : null;
+                            if ($pq) {
+                                $countByPiquet[$pq] = ($countByPiquet[$pq] ?? 0) + 1;
+                            }
+                        }
+                        $piquetImpair = [];
+                        foreach ($countByPiquet as $couleur => $count) {
+                            if ($count % 2 !== 0) {
+                                $piquetImpair[] = ucfirst($couleur) . ' (' . $count . ')';
+                            }
+                        }
                         ?>
                         <div class="pas-de-tir peloton-card">
                             <div class="pas-de-tir-header">
@@ -132,6 +146,11 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                 <?php if ($nbCompound >= 2): ?>
                                     <div class="alert alert-warning py-2 px-3 mt-2 mb-0" role="alert">
                                         <i class="fas fa-exclamation-triangle"></i> <strong>Attention :</strong> <?= $nbCompound ?> tireur(s) à compound dans ce peloton (max 2 recommandé).
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (!empty($piquetImpair)): ?>
+                                    <div class="alert alert-warning py-2 px-3 mt-2 mb-0" role="alert">
+                                        <i class="fas fa-exclamation-triangle"></i> <strong>Règle piquet :</strong> le nombre d'archers de la même couleur de piquet doit être pair. Actuellement impair : <?= htmlspecialchars(implode(', ', $piquetImpair)) ?>.
                                     </div>
                                 <?php endif; ?>
                             </div>

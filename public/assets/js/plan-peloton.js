@@ -145,8 +145,12 @@
                 return r.json().catch(function() { return { success: false, error: 'Réponse invalide du serveur' }; });
             })
             .then(function(data) {
-                if (data.success) window.location.reload();
-                else {
+                if (data.success) {
+                    if (data.warning || (data.data && data.data.warning)) {
+                        alert((data.warning || data.data.warning) + '\n\nVérifiez le plan de peloton après rechargement.');
+                    }
+                    window.location.reload();
+                } else {
                     var err = (data.data && data.data.error) || data.error || data.message || 'Erreur';
                     console.warn('Assign peloton erreur:', err, 'Réponse:', data);
                     setListMessage(err, 'danger');
