@@ -587,6 +587,10 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
+                            <label for="edit-catage" class="form-label">Catégorie âge (CATAGE)</label>
+                            <input type="text" id="edit-catage" class="form-control" placeholder="Ex: 13" maxlength="20">
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label for="edit-arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
                             <select id="edit-arme" class="form-control">
                                 <option value="">Sélectionner</option>

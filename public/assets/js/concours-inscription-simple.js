@@ -1594,6 +1594,7 @@ function submitInscription() {
         type_licence: document.getElementById('type_licence')?.value || '',
         creation_renouvellement: document.getElementById('creation_renouvellement')?.value || '',
         categorie_classement: document.getElementById('categorie_classement')?.value || '',
+        catage: (selectedArcher.CATAGE != null && selectedArcher.CATAGE !== '') ? String(selectedArcher.CATAGE).trim() : '',
         arme: document.getElementById('arme')?.value || '',
         mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0
     };
@@ -2096,6 +2097,7 @@ window.editInscription = function(inscriptionId) {
             setVal('edit-creation_renouvellement', crVal || '');
             setVal('edit-depart-select', inscription.numero_depart);
             setVal('edit-categorie_classement', inscription.categorie_classement);
+            setVal('edit-catage', inscription.catage ?? '');
             setVal('edit-arme', inscription.arme);
             
             // Sélectionner automatiquement la couleur de piquet pour Nature
@@ -2180,6 +2182,7 @@ function initEditInscriptionHandlers() {
             creation_renouvellement: document.getElementById('edit-creation_renouvellement')?.value || '',
             numero_depart: numeroDepart,
             categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
+            catage: document.getElementById('edit-catage')?.value ?? currentEditInscription?.catage ?? '',
             arme: document.getElementById('edit-arme')?.value || '',
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
             numero_tir: currentEditInscription?.numero_tir ?? '',
