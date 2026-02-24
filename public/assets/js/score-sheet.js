@@ -571,7 +571,6 @@ async function searchUserByLicense(licenseNumber) {
             // Remplir automatiquement les informations
             const nameField = document.getElementById('archerName');
             const categoryField = document.getElementById('archerCategory');
-            const weaponField = document.getElementById('archerWeapon');
             
             if (nameField) {
                 // Construire le nom complet en concaténant first_name et name
@@ -595,59 +594,6 @@ async function searchUserByLicense(licenseNumber) {
                 const category = user.age_category || user.ageCategory || '';
                 if (category) {
                     categoryField.value = category;
-                }
-            }
-            
-            if (weaponField) {
-                // Récupérer bow_type depuis l'API
-                const weaponRaw = user.bow_type || user.bowType || '';
-                
-                // Mapping entre les valeurs de la base de données et les options du select
-                const weaponMapping = {
-                    'Classique': 'Arc classique',
-                    'classique': 'Arc classique',
-                    'Arc classique': 'Arc classique',
-                    'Poulies': 'Arc à poulies',
-                    'poulies': 'Arc à poulies',
-                    'Arc à poulies': 'Arc à poulies',
-                    'Barebow': 'Arc nu (barebow)',
-                    'barebow': 'Arc nu (barebow)',
-                    'Arc nu (barebow)': 'Arc nu (barebow)',
-                    'Arc nu': 'Arc nu (barebow)',
-                    'Longbow': 'Longbow',
-                    'longbow': 'Longbow',
-                    'Chasse': 'Arc de chasse',
-                    'chasse': 'Arc de chasse',
-                    'Arc de chasse': 'Arc de chasse'
-                };
-                
-                // Mapper la valeur si elle existe dans le mapping, sinon utiliser la valeur brute
-                const weapon = weaponMapping[weaponRaw] || weaponRaw;
-                
-                console.log('Valeur weapon brute:', weaponRaw);
-                console.log('Valeur weapon mappée:', weapon);
-                
-                if (weapon && weapon !== 'null' && weapon !== '') {
-                    // Vérifier si la valeur existe dans les options du select
-                    const options = Array.from(weaponField.options).map(opt => opt.value);
-                    if (options.includes(weapon)) {
-                        weaponField.value = weapon;
-                        console.log('Champ weapon rempli avec:', weapon);
-                    } else {
-                        console.warn('Valeur weapon non trouvée dans les options du select:', weapon);
-                        console.warn('Options disponibles:', options);
-                        // Essayer de trouver une correspondance partielle
-                        const partialMatch = options.find(opt => 
-                            opt.toLowerCase().includes(weaponRaw.toLowerCase()) || 
-                            weaponRaw.toLowerCase().includes(opt.toLowerCase().replace('arc ', '').replace('(', '').replace(')', ''))
-                        );
-                        if (partialMatch) {
-                            weaponField.value = partialMatch;
-                            console.log('Correspondance partielle trouvée:', partialMatch);
-                        }
-                    }
-                } else {
-                    console.warn('Aucune valeur weapon trouvée dans les données utilisateur');
                 }
             }
             
@@ -741,7 +687,6 @@ function displayCurrentArcher() {
     const nameInput = document.getElementById('archerName');
     const licenseInput = document.getElementById('archerLicense');
     const categorySelect = document.getElementById('archerCategory');
-    const weaponSelect = document.getElementById('archerWeapon');
     
     if (headerNum) headerNum.textContent = currentUserIndex + 1;
     if (currentNum) currentNum.textContent = currentUserIndex + 1;
@@ -750,7 +695,6 @@ function displayCurrentArcher() {
     if (nameInput) nameInput.value = sheet.archerInfo.name || '';
     if (licenseInput) licenseInput.value = sheet.archerInfo.licenseNumber || '';
     if (categorySelect) categorySelect.value = sheet.archerInfo.category || '';
-    if (weaponSelect) weaponSelect.value = sheet.archerInfo.weapon || '';
     
     // Mettre à jour le tableau des scores (uniquement si type de tir et config valides)
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
@@ -890,7 +834,6 @@ function saveCurrentArcherInfo() {
     sheet.archerInfo.name = document.getElementById('archerName').value;
     sheet.archerInfo.licenseNumber = document.getElementById('archerLicense').value;
     sheet.archerInfo.category = document.getElementById('archerCategory').value;
-    sheet.archerInfo.weapon = document.getElementById('archerWeapon').value;
 }
 
 function openScoreModal(rowIndex) {
@@ -2002,8 +1945,6 @@ function exportToPDF() {
         doc.text(`Licence: ${sheet.archerInfo.licenseNumber || 'N/A'}`, 20, yPosition);
         yPosition += 5;
         doc.text(`Catégorie: ${sheet.archerInfo.category || 'N/A'}`, 20, yPosition);
-        yPosition += 5;
-        doc.text(`Arme: ${sheet.archerInfo.weapon || 'N/A'}`, 20, yPosition);
         yPosition += 10;
         
         // Tableau des scores

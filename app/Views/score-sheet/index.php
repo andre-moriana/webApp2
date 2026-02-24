@@ -135,20 +135,9 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                             <input type="text" class="form-control" id="archerLicense" placeholder="Ex: 660035U">
                         </div>
                         <div class="col-md-2">
-                            <label for="archerCategory" class="form-label">Catégorie</label>
+                            <label for="archerCategory" class="form-label">Catégorie de classement</label>
                             <select class="form-select" id="archerCategory">
                                 <option value="">-- Choisir un type de tir pour charger les catégories --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="archerWeapon" class="form-label">Arme</label>
-                            <select class="form-select" id="archerWeapon">
-                                <option value="">--</option>
-                                <option value="Arc classique">Arc classique</option>
-                                <option value="Arc à poulies">Arc à poulies</option>
-                                <option value="Arc nu (barebow)">Arc nu (barebow)</option>
-                                <option value="Longbow">Longbow</option>
-                                <option value="Arc de chasse">Arc de chasse</option>
                             </select>
                         </div>
                     </div>
