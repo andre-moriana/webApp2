@@ -73,6 +73,10 @@ $dateFooter = date('d/m/Y H:i');
         .edition-doc-print-table td {
             border: none;
         }
+        /* Lisibilité : griser 1 ligne sur 2 dans les tableaux */
+        .edition-doc-print-tbody table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
         @media print {
             @page {
                 margin: 15mm 15mm 20mm 15mm;
@@ -159,6 +163,11 @@ $dateFooter = date('d/m/Y H:i');
             }
             .edition-doc-logo-placeholder {
                 font-size: 10pt;
+            }
+            .edition-doc-print-tbody table tbody tr:nth-child(even) {
+                background-color: #f0f0f0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
         body { padding: 1rem; }
