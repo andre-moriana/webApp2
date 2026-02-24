@@ -35,8 +35,16 @@
         </tr>
     </table>
 
+    <?php
+    $avisInformations = trim(is_object($concours) ? ($concours->informations ?? '') : ($concours['informations'] ?? ''));
+    $texteInformationsDefaut = "L'inscription à ce concours est obligatoire. Les inscriptions sont à effectuer auprès du club organisateur ou via le lien d'inscription fourni.";
+    ?>
     <div class="mt-4">
         <h4>Informations</h4>
-        <p>L'inscription à ce concours est obligatoire. Les inscriptions sont à effectuer auprès du club organisateur ou via le lien d'inscription fourni.</p>
+        <?php if ($avisInformations !== ''): ?>
+        <div class="informations-avis-concours" style="white-space: pre-wrap;"><?= nl2br(htmlspecialchars($avisInformations)) ?></div>
+        <?php else: ?>
+        <p><?= htmlspecialchars($texteInformationsDefaut) ?></p>
+        <?php endif; ?>
     </div>
 </div>
