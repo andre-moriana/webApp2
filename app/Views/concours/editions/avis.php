@@ -11,7 +11,7 @@
         </tr>
         <tr>
             <th>Discipline</th>
-            <td><?= htmlspecialchars($concours->discipline_name ?: 'Non renseigné') ?></td>
+            <td><?= htmlspecialchars($disciplinename ?: 'Non renseigné') ?></td>
         </tr>
         <tr>
             <th>Type de compétition</th>
@@ -28,6 +28,7 @@
     </table>
 
     <?php
+
     $departsAvis = isset($departsList) && is_array($departsList) ? $departsList : [];
     $getD = function($d, $key, $default = '') {
         return is_array($d) ? ($d[$key] ?? $default) : ($d->$key ?? $default);
