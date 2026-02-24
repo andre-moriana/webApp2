@@ -19,7 +19,7 @@
         </tr>
         <tr>
             <th>Niveau championnat</th>
-            <td><?= htmlspecialchars($niveauChampionnat ?: 'Non renseigné') ?></td>
+            <td><?= htmlspecialchars($niveau_championnat_autre ?: 'Non renseigné') ?></td>
         </tr>
         <tr>
             <th>Dates</th>
