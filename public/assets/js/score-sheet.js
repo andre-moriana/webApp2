@@ -241,7 +241,7 @@ function setupConcoursSelector() {
             }
             
             const isPlanCibleMode = ['T', 'S', 'I', 'H'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansCible && Object.keys(concoursPlansCible).length > 0;
-            const isPlanPelotonMode = ['3', 'N', 'C'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
+            const isPlanPelotonMode = ['3', 'N', 'C', '3D'].includes(String(abvDiscipline || '').toUpperCase()) && concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0;
             console.log('isPlanCibleMode:', isPlanCibleMode);
             console.log('isPlanPelotonMode:', isPlanPelotonMode);
             // Afficher sélecteur Départ / Cible (T/S/I/H) ou Départ / Peloton (N/3/C)
