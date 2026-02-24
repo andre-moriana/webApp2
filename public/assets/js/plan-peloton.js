@@ -111,7 +111,8 @@
             peloton: item.dataset.peloton,
             position: item.dataset.position,
             numeroLicence: item.dataset.numeroLicence,
-            userNom: item.dataset.userNom
+            userNom: item.dataset.userNom,
+            piquetSouhaites: (item.getAttribute('data-piquet-souhaites') || '').trim()
         };
         if (infoContainer) {
             infoContainer.textContent = 'Départ ' + currentTarget.depart + ' - Peloton ' + currentTarget.peloton +
@@ -126,6 +127,15 @@
         listContainer.addEventListener('click', function(e) {
             var btn = e.target.closest('.js-assign-peloton');
             if (!btn || !currentTarget) return;
+            var piquetArcher = (btn.getAttribute('data-piquet') || '').trim().toLowerCase();
+            var piquetSouhaites = currentTarget.piquetSouhaites || '';
+            if (piquetSouhaites) {
+                var listSouhaites = piquetSouhaites.split(',').map(function(s) { return s.trim().toLowerCase(); }).filter(Boolean);
+                if (listSouhaites.length && listSouhaites.indexOf(piquetArcher) === -1) {
+                    var msg = 'Cet archer n\'a pas la couleur de piquet souhaitée pour respecter la règle du nombre pair dans ce peloton.\nSouhaité : ' + listSouhaites.map(function(c) { return c.charAt(0).toUpperCase() + c.slice(1); }).join(', ') + '.\n\nVoulez-vous quand même l\'affecter ?';
+                    if (!confirm(msg)) return;
+                }
+            }
             var payload = {
                 numero_depart: parseInt(currentTarget.depart, 10),
                 numero_peloton: parseInt(currentTarget.peloton, 10),
@@ -146,9 +156,6 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    if (data.warning || (data.data && data.data.warning)) {
-                        alert((data.warning || data.data.warning) + '\n\nVérifiez le plan de peloton après rechargement.');
-                    }
                     window.location.reload();
                 } else {
                     var err = (data.data && data.data.error) || data.error || data.message || 'Erreur';

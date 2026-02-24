@@ -65,7 +65,7 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
 <?php else: ?>
     <div class="plan-cible-legend">
         <h4><i class="fas fa-info-circle"></i> Règles</h4>
-        <p>Max 50% d'archers du même club par peloton (ex: 2 pour 4, 3 pour 6). Max 2 couleurs de piquet par peloton. Pour chaque couleur de piquet dans un peloton, le nombre d'archers doit être <strong>pair</strong>.</p>
+        <p>Max 50% d'archers du même club par peloton (ex: 2 pour 4, 3 pour 6). Max 2 couleurs de piquet par peloton. S'il y a plus de 2 archers inscrits dans un peloton : pour chaque couleur de piquet, le nombre d'archers doit être <strong>pair</strong>.</p>
         <div class="legend-items">
             <div class="legend-item"><div class="legend-color assigne"></div><span>Position assignée</span></div>
             <div class="legend-item"><div class="legend-color libre"></div><span>Position libre</span></div>
@@ -120,12 +120,16 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                             $ordrePositions[] = chr(64 + $i);
                         }
                         $nbCompound = 0;
+                        $nbArchersAssignes = 0;
                         foreach ($pelotonPlans as $p) {
                             if (!empty($p['numero_licence']) && $isCompound($p['numero_licence'], $inscriptionsMap ?? [])) {
                                 $nbCompound++;
                             }
+                            if (!empty($p['numero_licence']) && !empty($p['user_nom'])) {
+                                $nbArchersAssignes++;
+                            }
                         }
-                        // Règle : nombre pair d'archers par couleur de piquet
+                        // Règle : nombre pair d'archers par couleur de piquet (s'applique si plus de 2 archers dans le peloton)
                         $countByPiquet = [];
                         foreach ($pelotonPlans as $p) {
                             $pq = isset($p['piquet']) && $p['piquet'] !== '' && $p['piquet'] !== null ? trim(strtolower((string)$p['piquet'])) : null;
@@ -134,11 +138,16 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                             }
                         }
                         $piquetImpair = [];
+                        $piquetSouhaites = [];
                         foreach ($countByPiquet as $couleur => $count) {
                             if ($count % 2 !== 0) {
                                 $piquetImpair[] = ucfirst($couleur) . ' (' . $count . ')';
+                                $piquetSouhaites[] = $couleur;
                             }
                         }
+                        $afficherReglePiquet = $nbArchersAssignes > 2 && !empty($piquetImpair);
+                        // Pour l'avertissement à l'affectation : couleurs souhaitées si au moins 2 archers (la prochaine affectation fera > 2)
+                        $piquetSouhaitesStr = $nbArchersAssignes >= 2 ? implode(',', $piquetSouhaites) : '';
                         ?>
                         <div class="pas-de-tir peloton-card">
                             <div class="pas-de-tir-header">
@@ -148,7 +157,7 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                         <i class="fas fa-exclamation-triangle"></i> <strong>Attention :</strong> <?= $nbCompound ?> tireur(s) à compound dans ce peloton (max 2 recommandé).
                                     </div>
                                 <?php endif; ?>
-                                <?php if (!empty($piquetImpair)): ?>
+                                <?php if ($afficherReglePiquet): ?>
                                     <div class="alert alert-warning py-2 px-3 mt-2 mb-0" role="alert">
                                         <i class="fas fa-exclamation-triangle"></i> <strong>Règle piquet :</strong> le nombre d'archers de la même couleur de piquet doit être pair. Actuellement impair : <?= htmlspecialchars(implode(', ', $piquetImpair)) ?>.
                                     </div>
@@ -176,6 +185,7 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                         data-numero-licence="<?= htmlspecialchars($plan['numero_licence'] ?? '') ?>"
                                         data-user-nom="<?= htmlspecialchars($plan['user_nom'] ?? '') ?>"
                                         data-assignable="<?= $isAssigne ? '0' : '1' ?>"
+                                        data-piquet-souhaites="<?= htmlspecialchars($piquetSouhaitesStr) ?>"
                                         title="<?= htmlspecialchars($tooltipText) ?>">
                                         <span class="peloton-position-letter"<?= $letterRectStyle ? ' style="' . $letterRectStyle . '"' : '' ?>><?= htmlspecialchars($position) ?></span>
                                         <div class="peloton-position-content">
