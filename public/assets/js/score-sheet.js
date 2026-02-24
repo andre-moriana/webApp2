@@ -338,6 +338,9 @@ async function prefillArchersFromConcours() {
             };
         });
     } else if (concoursPlansPeloton && departSelect?.value && pelotonSelect?.value) {
+        console.log('concoursPlansPeloton:', concoursPlansPeloton);
+        console.log('departSelect:', departSelect.value);
+        console.log('pelotonSelect:', pelotonSelect.value);
         // Mode peloton (N/3/C) : extraire les archers du peloton
         const dep = departSelect.value;
         const pel = parseInt(pelotonSelect.value);
@@ -359,7 +362,7 @@ async function prefillArchersFromConcours() {
                 licenseNumber: lic,
                 category: cat,
                 gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
-                userId: insc.user_id || insc.userId || insc.id_user
+                userId: insc.user_id || insc.userId || insc.id_user || p.user_id
             };
         });
     } else if (concoursInscriptions && concoursInscriptions.length > 0) {
