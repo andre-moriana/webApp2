@@ -328,13 +328,11 @@ async function prefillArchersFromConcours() {
             const lic = p.numero_licence || '';
             const insc = inscriptionsMap[lic] || {};
             const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
-            const arme = insc.arme || '';
             const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
             return {
                 name: nom,
                 licenseNumber: lic,
                 category: cat,
-                weapon: mapWeaponFromInscription(arme),
                 gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
                 userId: insc.user_id || insc.userId || insc.id_user || p.user_id
             };
@@ -355,13 +353,11 @@ async function prefillArchersFromConcours() {
             const lic = p.numero_licence || '';
             const insc = inscriptionsMap[lic] || {};
             const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
-            const arme = insc.arme || '';
             const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
             return {
                 name: nom,
                 licenseNumber: lic,
                 category: cat,
-                weapon: mapWeaponFromInscription(arme),
                 gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
                 userId: insc.user_id || insc.userId || insc.id_user
             };
@@ -372,7 +368,6 @@ async function prefillArchersFromConcours() {
             name: i.user_nom || i.nom || i.name || '',
             licenseNumber: i.numero_licence || i.numeroLicence || '',
             category: i.categorie_classement || i.categorieClassement || i.abv_categorie_classement || '',
-            weapon: mapWeaponFromInscription(i.arme || ''),
             gender: (i.genre || i.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
             userId: i.user_id || i.userId || i.id_user
         }));
@@ -399,7 +394,6 @@ async function prefillArchersFromConcours() {
                 name: archer.name,
                 licenseNumber: archer.licenseNumber,
                 category: archer.category,
-                weapon: archer.weapon,
                 gender: archer.gender
             };
             if (archer.userId) userSheets[idx].userId = archer.userId;
@@ -435,17 +429,6 @@ function mapDisciplineToShootingType(abv) {
     if (a === '3') return '3D';
     if (a === 'C') return 'Campagne';
     return null;
-}
-
-function mapWeaponFromInscription(arme) {
-    if (!arme) return '';
-    const a = String(arme).toLowerCase();
-    if (a.includes('poulies') || a.includes('compound')) return 'Arc à poulies';
-    if (a.includes('classique')) return 'Arc classique';
-    if (a.includes('barebow') || a.includes('nu')) return 'Arc nu (barebow)';
-    if (a.includes('longbow')) return 'Longbow';
-    if (a.includes('chasse')) return 'Arc de chasse';
-    return arme;
 }
 
 // Variables pour la recherche par licence
@@ -564,9 +547,6 @@ async function searchUserByLicense(licenseNumber) {
             const user = data.data;
             console.log('Utilisateur trouvé (complet):', JSON.stringify(user, null, 2));
             console.log('Champs utilisateur disponibles:', Object.keys(user));
-            console.log('bow_type:', user.bow_type);
-            console.log('bowType:', user.bowType);
-            console.log('weapon:', user.weapon);
             
             // Remplir automatiquement les informations
             const nameField = document.getElementById('archerName');
@@ -651,7 +631,6 @@ function initializeSheets() {
                 name: `Archer ${userIndex + 1}`,
                 licenseNumber: '',
                 category: '',
-                weapon: '',
                 gender: ''
             },
             scoreRows: rows
