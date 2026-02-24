@@ -73,6 +73,12 @@ $dateFooter = date('d/m/Y H:i');
         .edition-doc-print-table td {
             border: none;
         }
+        /* Liste des participants : taille de police réduite dans les tableaux */
+        .edition-liste-participants table,
+        .edition-liste-participants table th,
+        .edition-liste-participants table td {
+            font-size: 0.8rem;
+        }
         /* Lisibilité : griser 1 ligne sur 2 dans les tableaux (tr + td pour override Bootstrap) */
         .edition-doc-print-tbody table tbody tr:nth-child(even) td,
         .edition-liste-participants table tbody tr:nth-child(even) td,
@@ -166,6 +172,11 @@ $dateFooter = date('d/m/Y H:i');
             }
             .edition-doc-logo-placeholder {
                 font-size: 10pt;
+            }
+            .edition-liste-participants table,
+            .edition-liste-participants table th,
+            .edition-liste-participants table td {
+                font-size: 9pt;
             }
             .edition-doc-print-tbody table tbody tr:nth-child(even) td,
             .edition-liste-participants table tbody tr:nth-child(even) td,
