@@ -152,6 +152,12 @@
             <input type="hidden" id="lieu_longitude" name="lieu_longitude" value="<?= htmlspecialchars($concours->lieu_longitude ?? '') ?>">
         </div>
 
+        <!-- Informations (texte libre) -->
+        <div class="form-group">
+            <label>Informations :</label>
+            <textarea name="informations" id="informations" class="form-control" rows="4" placeholder="Informations complémentaires affichées sur la page détail du concours (optionnel)"><?= htmlspecialchars($concours->informations ?? '') ?></textarea>
+        </div>
+
         <!-- Dates -->
         <div class="date-fields-row">
             <label>Début Compétition : <input type="date" name="date_debut" value="<?= htmlspecialchars($concours->date_debut ?? '') ?>" required></label>
