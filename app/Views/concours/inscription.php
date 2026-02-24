@@ -86,6 +86,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     $getD = function($d, $key, $default = '') {
                         return is_array($d) ? ($d[$key] ?? $default) : ($d->$key ?? $default);
                     };
+                    $placesParDepart = $placesParDepart ?? [];
                     foreach ($departsList as $idx => $d): 
                         $dateDep = $getD($d, 'date_depart', '');
                         $heureGreffe = $getD($d, 'heure_greffe', '');
@@ -97,22 +98,36 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         $heureGreffe = $heureGreffe ? substr((string)$heureGreffe, 0, 5) : '';
                         $label = trim($dateDep . ($heureGreffe ? ' ' . $heureGreffe : ''));
                         if (empty($label)) $label = 'Départ ' . $numero;
+                        $placesDispo = isset($placesParDepart[$numero]) ? (int)$placesParDepart[$numero] : null;
                         $cbId = 'depart-cb-' . $departId;
                         ?>
                         <div class="form-check">
                             <input type="checkbox" id="<?= htmlspecialchars($cbId) ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $numero ?>" data-date-depart="<?= htmlspecialchars($getD($d, 'date_depart', '')) ?>" data-heure-greffe="<?= htmlspecialchars($getD($d, 'heure_greffe', '')) ?>">
-                            <label for="<?= htmlspecialchars($cbId) ?>" class="form-check-label"><?= htmlspecialchars($label) ?></label>
+                            <label for="<?= htmlspecialchars($cbId) ?>" class="form-check-label">
+                                <?= htmlspecialchars($label) ?>
+                                <?php if ($placesDispo !== null): ?>
+                                    <span class="text-muted ms-1">(<?= $placesDispo ?> place<?= $placesDispo !== 1 ? 's' : '' ?> disponible<?= $placesDispo !== 1 ? 's' : '' ?>)</span>
+                                <?php endif; ?>
+                            </label>
                         </div>
                     <?php endforeach; ?>
                 <?php elseif ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0): ?>
+                    <?php $placesParDepart = $placesParDepart ?? []; ?>
                     <div class="form-check mb-1">
                         <input type="checkbox" id="depart-select-all" class="form-check-input">
                         <label for="depart-select-all" class="form-check-label fw-bold">Tout sélectionner</label>
                     </div>
-                    <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): ?>
+                    <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): 
+                        $placesDispo = isset($placesParDepart[$i]) ? (int)$placesParDepart[$i] : null;
+                    ?>
                         <div class="form-check">
                             <input type="checkbox" id="depart-cb-<?= $i ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $i ?>" data-date-depart="" data-heure-greffe="">
-                            <label for="depart-cb-<?= $i ?>" class="form-check-label">Départ <?= $i ?></label>
+                            <label for="depart-cb-<?= $i ?>" class="form-check-label">
+                                Départ <?= $i ?>
+                                <?php if ($placesDispo !== null): ?>
+                                    <span class="text-muted ms-1">(<?= $placesDispo ?> place<?= $placesDispo !== 1 ? 's' : '' ?> disponible<?= $placesDispo !== 1 ? 's' : '' ?>)</span>
+                                <?php endif; ?>
+                            </label>
                         </div>
                     <?php endfor; ?>
                 <?php else: ?>

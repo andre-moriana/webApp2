@@ -1619,6 +1619,39 @@ class ConcoursController {
             }
         }
 
+        // Places disponibles par départ : (nb cibles ou pelotons × nb archers par unité) - nb inscrits
+        $placesParDepart = [];
+        $inscritsParDepart = [];
+        foreach ($inscriptions as $insc) {
+            $num = isset($insc['numero_depart']) ? (int)$insc['numero_depart'] : null;
+            if ($num !== null && ($insc['statut_inscription'] ?? '') !== 'annule') {
+                $inscritsParDepart[$num] = ($inscritsParDepart[$num] ?? 0) + 1;
+            }
+        }
+        $abv = $disciplineAbv ?? '';
+        $isCible = in_array(strtoupper($abv), ['T', 'S', 'I', 'H'], true);
+        $isPeloton = in_array($abv, ['3', 'N', 'C', '3D'], true);
+        if ($isCible || $isPeloton) {
+            try {
+                $endpoint = $isCible ? "concours/{$concoursId}/plan-cible" : "concours/{$concoursId}/plan-peloton";
+                $planResponse = $this->apiService->makeRequest($endpoint, 'GET');
+                $planData = $this->apiService->unwrapData($planResponse);
+                if (is_array($planData) && isset($planData['data']) && isset($planData['success'])) {
+                    $planData = $planData['data'];
+                }
+                if (is_array($planData) && !isset($planData[0])) {
+                    foreach ($planData as $numDep => $slots) {
+                        $numDep = (int)$numDep;
+                        $capacity = is_array($slots) ? count($slots) : 0;
+                        $inscrits = $inscritsParDepart[$numDep] ?? 0;
+                        $placesParDepart[$numDep] = max(0, $capacity - $inscrits);
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Erreur récupération plan pour places départ: ' . $e->getMessage());
+            }
+        }
+
         // Inclure header et footer
         require_once __DIR__ . '/../Views/layouts/header.php';
         require_once __DIR__ . '/../Views/concours/inscription.php';
@@ -2319,6 +2352,39 @@ class ConcoursController {
             $nbDeparts = $concours->nombre_depart ?? 1;
             for ($i = 1; $i <= (int)$nbDeparts; $i++) {
                 $departs[] = ['numero_depart' => $i, 'date_depart' => '', 'heure_greffe' => ''];
+            }
+        }
+
+        // Places disponibles par départ (même formule que page inscription classique)
+        $placesParDepart = [];
+        $inscritsParDepart = [];
+        foreach ($inscriptions as $insc) {
+            $num = isset($insc['numero_depart']) ? (int)$insc['numero_depart'] : null;
+            if ($num !== null && ($insc['statut_inscription'] ?? '') !== 'annule') {
+                $inscritsParDepart[$num] = ($inscritsParDepart[$num] ?? 0) + 1;
+            }
+        }
+        $abv = $disciplineAbv ?? '';
+        $isCible = in_array(strtoupper($abv), ['T', 'S', 'I', 'H'], true);
+        $isPeloton = in_array($abv, ['3', 'N', 'C', '3D'], true);
+        if ($isCible || $isPeloton) {
+            try {
+                $endpoint = $isCible ? "concours/{$concoursId}/plan-cible" : "concours/{$concoursId}/plan-peloton";
+                $planResponse = $this->apiService->makeRequestPublic($endpoint, 'GET');
+                $planData = $planResponse['data'] ?? $planResponse;
+                if (is_array($planData) && isset($planData['data']) && isset($planData['success'])) {
+                    $planData = $planData['data'];
+                }
+                if (is_array($planData) && !isset($planData[0])) {
+                    foreach ($planData as $numDep => $slots) {
+                        $numDep = (int)$numDep;
+                        $capacity = is_array($slots) ? count($slots) : 0;
+                        $inscrits = $inscritsParDepart[$numDep] ?? 0;
+                        $placesParDepart[$numDep] = max(0, $capacity - $inscrits);
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('inscriptionCible: erreur plan pour places: ' . $e->getMessage());
             }
         }
 
