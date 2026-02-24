@@ -28,6 +28,40 @@
     </table>
 
     <?php
+    $departsAvis = isset($departsList) && is_array($departsList) ? $departsList : [];
+    $getD = function($d, $key, $default = '') {
+        return is_array($d) ? ($d[$key] ?? $default) : ($d->$key ?? $default);
+    };
+    if (!empty($departsAvis)): ?>
+    <div class="mt-4">
+        <h4>Liste des départs</h4>
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr><th>N°</th><th>Date</th><th>Heure de greffe</th></tr>
+            </thead>
+            <tbody>
+                <?php foreach ($departsAvis as $d): ?>
+                <?php
+                $dateDep = $getD($d, 'date_depart', '');
+                $heureGreffe = $getD($d, 'heure_greffe', '');
+                $numero = (int)$getD($d, 'numero_depart', 0);
+                if ($dateDep && preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $dateDep, $m)) {
+                    $dateDep = $m[3] . '/' . $m[2] . '/' . $m[1];
+                }
+                $heureGreffe = $heureGreffe ? substr((string)$heureGreffe, 0, 5) : '';
+                ?>
+                <tr>
+                    <td><?= $numero ?: '—' ?></td>
+                    <td><?= htmlspecialchars($dateDep) ?></td>
+                    <td><?= htmlspecialchars($heureGreffe) ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php endif; ?>
+
+    <?php
     $avisInformations = trim(is_object($concours) ? ($concours->informations ?? '') : ($concours['informations'] ?? ''));
     $texteInformationsDefaut = "L'inscription à ce concours est obligatoire. Les inscriptions sont à effectuer auprès du club organisateur ou via le lien d'inscription fourni.";
     ?>
