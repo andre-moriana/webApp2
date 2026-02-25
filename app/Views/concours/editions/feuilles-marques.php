@@ -310,7 +310,7 @@ if ($isNature) {
                         <div class="feuille-marque-archer-block">
                             <div class="feuille-marque-archer-header border-bottom pb-1 mb-2 d-flex justify-content-between align-items-start">
                                 <span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?><br><span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></span>
-                                <span class="feuille-marque-blason text-nowrap">Blason : <?= htmlspecialchars(trim($archer['position_archer'] ?? '') ?: '—') ?></span>
+                                <span class="feuille-marque-blason text-nowrap">N° peloton : <?= (int)($f['peloton'] ?? 0) ?></span>
                             </div>
                             <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-nature">
                                 <thead>

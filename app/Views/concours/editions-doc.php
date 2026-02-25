@@ -213,6 +213,18 @@ $dateFooter = date('d/m/Y H:i');
             gap: 0.75rem 1rem;
             align-items: start;
         }
+        /* Nature : en-tête réduit de moitié (titre page + bloc archer) */
+        .edition-feuilles-marques .feuille-marque-nature > p.text-center {
+            font-size: 0.65rem;
+            margin-bottom: 0.5rem !important;
+        }
+        .edition-feuilles-marques .feuille-marque-nature .feuille-marque-archer-header {
+            font-size: 0.5rem;
+            padding-bottom: 0.25rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        .edition-feuilles-marques .feuille-marque-nature .feuille-marque-blason { font-size: 0.5rem; }
+        .edition-feuilles-marques .feuille-marque-nature .feuille-marque-signatures { font-size: 0.55rem; margin-top: 0.25rem; }
         /* Nature : 21 volées, police réduite pour tenir sur la page */
         .edition-feuilles-marques .feuille-marque-table-nature { font-size: 0.65rem; }
         .edition-feuilles-marques .feuille-marque-table-nature th,
