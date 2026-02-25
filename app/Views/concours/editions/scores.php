@@ -80,8 +80,9 @@ $hasDetail = !empty(array_filter($resultats, function ($r) { return isset($r['nb
             <tbody>
                 <?php $n = 1; foreach ($rows as $insc):
                     $r = $insc['_resultat'] ?? null;
+                    $rowEven = ($n % 2 === 0);
                 ?>
-                <tr>
+                <tr class="<?= $rowEven ? 'edition-scores-row-even' : '' ?>">
                     <td><?= $n++ ?></td>
                     <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
