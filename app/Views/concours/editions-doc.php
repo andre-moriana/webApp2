@@ -268,6 +268,11 @@ $dateFooter = date('d/m/Y H:i');
             background-color: transparent !important;
             background: transparent !important;
         }
+        /* Lignes paires grisées (priorité sur transparent pour voir les bandes) */
+        .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature tbody tr.feuille-marque-row-even td {
+            background-color: #e9ecef !important;
+            background: #e9ecef !important;
+        }
         .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature tr.table-secondary td {
             background-color: rgba(233, 236, 239, 0.85) !important;
         }
@@ -402,9 +407,11 @@ $dateFooter = date('d/m/Y H:i');
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            /* Nature : conserver fond logo et cellules transparentes à l'impression */
-            .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature tbody tr:nth-child(even) td {
-                background-color: transparent !important;
+            /* Nature : lignes paires grisées à l'impression */
+            .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature tbody tr.feuille-marque-row-even td {
+                background-color: #e9ecef !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
         body { padding: 1rem; }

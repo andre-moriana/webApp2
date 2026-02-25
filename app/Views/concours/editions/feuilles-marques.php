@@ -340,7 +340,7 @@ if ($isNature) {
                                         $rowEven = ($v % 2 === 0);
                                         $tdBgNature = $rowEven ? ' style="background-color: #e9ecef;"' : '';
                                     ?>
-                                    <tr>
+                                    <tr class="<?= $rowEven ? 'feuille-marque-row-even' : '' ?>">
                                         <td<?= $tdBgNature ?>><?= $v ?></td>
                                         <td<?= $tdBgNature ?>>20</td>
                                         <td<?= $tdBgNature ?>>15</td>
