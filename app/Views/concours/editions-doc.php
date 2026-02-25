@@ -176,11 +176,27 @@ $dateFooter = date('d/m/Y H:i');
             background-color: #e9ecef !important;
         }
         .edition-scores-block { page-break-inside: avoid; }
-        /* Feuilles de marques Salle : bloc par archer, tableau volées */
+        /* Feuilles de marques Salle : 4 tableaux côte à côte, page paysage */
+        .edition-feuilles-marques .feuille-marque-salle-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem 1rem;
+            align-items: start;
+        }
         .edition-feuilles-marques .feuille-marque-archer-block { page-break-inside: avoid; }
-        .edition-feuilles-marques .feuille-marque-table-volees { font-size: 0.8rem; table-layout: fixed; width: 100%; }
-        .edition-feuilles-marques .feuille-marque-archer-header { font-size: 0.95rem; }
-        .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.5rem; }
+        .edition-feuilles-marques .feuille-marque-table-volees {
+            font-size: 0.75rem;
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .edition-feuilles-marques .feuille-marque-table-volees th,
+        .edition-feuilles-marques .feuille-marque-table-volees td {
+            border: 1px solid #333;
+            padding: 2px 4px;
+        }
+        .edition-feuilles-marques .feuille-marque-archer-header { font-size: 0.85rem; }
+        .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.5rem; font-size: 0.7rem; }
         .edition-feuilles-marques .feuille-marque-ligne-resume td { text-align: center; }
         .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 1.8em; }
         @media print {
@@ -201,6 +217,14 @@ $dateFooter = date('d/m/Y H:i');
                     font-size: 9pt;
                     color: #666;
                 }
+            }
+            /* Feuilles de marques Salle : format paysage */
+            @page feuilles-marques-landscape {
+                size: landscape;
+                margin: 15mm 12mm 20mm 12mm;
+            }
+            .edition-feuilles-marques .feuille-marque-salle-landscape {
+                page: feuilles-marques-landscape;
             }
             /* Liste des participants : pas de footer imprimé (date, page, etc.) */
             @page edition-liste-participants {

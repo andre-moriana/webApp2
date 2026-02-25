@@ -110,12 +110,13 @@ if ($isSalle && !empty($archersParCible)) {
     <?php if ($isSalle && !empty($feuillesSalle)): ?>
         <?php foreach ($feuillesSalle as $f): ?>
             <?php foreach (range(1, $nbSeriesSalle) as $numSerie): ?>
-                <div class="feuille-marque-salle mb-4 page-break">
+                <div class="feuille-marque-salle feuille-marque-salle-landscape mb-4 page-break">
                     <h2 class="text-center mb-2">Feuille de marques</h2>
                     <p class="text-center mb-3"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong> — Départ <?= (int)$f['depart'] ?> — Série <?= $numSerie ?></p>
 
+                    <div class="feuille-marque-salle-grid">
                     <?php foreach ($f['archers'] as $archer): ?>
-                        <div class="feuille-marque-archer-block mb-4">
+                        <div class="feuille-marque-archer-block">
                             <div class="feuille-marque-archer-header border-bottom pb-1 mb-2">
                                 <strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong> — N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?>
                             </div>
@@ -159,6 +160,7 @@ if ($isSalle && !empty($archersParCible)) {
                             </div>
                         </div>
                     <?php endforeach; ?>
+                    </div>
                 </div>
             <?php endforeach; ?>
         <?php endforeach; ?>
