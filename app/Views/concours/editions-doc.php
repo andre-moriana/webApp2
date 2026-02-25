@@ -85,6 +85,83 @@ $dateFooter = date('d/m/Y H:i');
         .edition-classement table td {
             font-size: 0.8rem;
         }
+        /* Colonnes de largeur identique dans tous les tableaux d'édition */
+        .edition-liste-participants table,
+        .edition-scores table,
+        .edition-classement table {
+            table-layout: fixed;
+            width: 100%;
+        }
+        .edition-liste-participants table th,
+        .edition-liste-participants table td,
+        .edition-scores table th,
+        .edition-scores table td,
+        .edition-classement table th,
+        .edition-classement table td {
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+        .edition-liste-participants table th:nth-child(1),
+        .edition-liste-participants table td:nth-child(1),
+        .edition-scores table th:nth-child(1),
+        .edition-scores table td:nth-child(1),
+        .edition-classement table th:nth-child(1),
+        .edition-classement table td:nth-child(1) { width: 4%; min-width: 2rem; }
+        .edition-liste-participants table th:nth-child(2),
+        .edition-liste-participants table td:nth-child(2),
+        .edition-scores table th:nth-child(2),
+        .edition-scores table td:nth-child(2),
+        .edition-classement table th:nth-child(2),
+        .edition-classement table td:nth-child(2) { width: 20%; }
+        .edition-liste-participants table th:nth-child(3),
+        .edition-liste-participants table td:nth-child(3),
+        .edition-scores table th:nth-child(3),
+        .edition-scores table td:nth-child(3),
+        .edition-classement table th:nth-child(3),
+        .edition-classement table td:nth-child(3) { width: 11%; }
+        .edition-liste-participants table th:nth-child(4),
+        .edition-liste-participants table td:nth-child(4),
+        .edition-scores table th:nth-child(4),
+        .edition-scores table td:nth-child(4),
+        .edition-classement table th:nth-child(4),
+        .edition-classement table td:nth-child(4) { width: 15%; }
+        .edition-liste-participants table th:nth-child(5),
+        .edition-liste-participants table td:nth-child(5),
+        .edition-scores table th:nth-child(5),
+        .edition-scores table td:nth-child(5),
+        .edition-classement table th:nth-child(5),
+        .edition-classement table td:nth-child(5) { width: 12%; }
+        .edition-liste-participants table th:nth-child(6),
+        .edition-liste-participants table td:nth-child(6),
+        .edition-scores table th:nth-child(6),
+        .edition-scores table td:nth-child(6),
+        .edition-classement table th:nth-child(6),
+        .edition-classement table td:nth-child(6) { width: 8%; }
+        .edition-liste-participants table th:nth-child(7),
+        .edition-liste-participants table td:nth-child(7),
+        .edition-scores table th:nth-child(7),
+        .edition-scores table td:nth-child(7),
+        .edition-classement table th:nth-child(7),
+        .edition-classement table td:nth-child(7) { width: 8%; }
+        .edition-liste-participants table th:nth-child(n+8),
+        .edition-liste-participants table td:nth-child(n+8),
+        .edition-scores table th:nth-child(n+8),
+        .edition-scores table td:nth-child(n+8),
+        .edition-classement table th:nth-child(n+8),
+        .edition-classement table td:nth-child(n+8) { width: 5%; }
+        /* Tableau liste des départs (avis) */
+        .edition-avis table.table-sm {
+            table-layout: fixed;
+            width: 100%;
+        }
+        .edition-avis table.table-sm th:nth-child(1),
+        .edition-avis table.table-sm td:nth-child(1) { width: 8%; }
+        .edition-avis table.table-sm th:nth-child(2),
+        .edition-avis table.table-sm td:nth-child(2) { width: 25%; }
+        .edition-avis table.table-sm th:nth-child(3),
+        .edition-avis table.table-sm td:nth-child(3) { width: 25%; }
+        .edition-avis table.table-sm th:nth-child(4),
+        .edition-avis table.table-sm td:nth-child(4) { width: 25%; }
         /* Lisibilité : griser 1 ligne sur 2 dans les tableaux (tr + td pour override Bootstrap) */
         .edition-doc-print-tbody table tbody tr:nth-child(even) td,
         .edition-liste-participants table tbody tr:nth-child(even) td,
