@@ -90,49 +90,55 @@ if ($isPeloton && !empty($plansPeloton)) {
     ksort($archersParPeloton);
 }
 
-// Construire les "feuilles" (groupes de 4 à 8 archers). Toujours 4 tableaux par page minimum, même sans archers affectés.
+// Construire les "feuilles" : une feuille par cible (tous les archers d'une feuille sont affectés à la même cible). 4 ou 8 tableaux par page.
 $feuillesSalle = [];
 if ($isSalle) {
-    $tousArchers = [];
-    foreach ($archersParCible as $g) {
-        foreach ($g['archers'] as $a) {
-            $tousArchers[] = array_merge($a, ['depart' => $g['depart']]);
-        }
-    }
     $departDefaut = 1;
     if (!empty($departsList)) {
         $first = is_array($departsList[0] ?? null) ? ($departsList[0]['numero_depart'] ?? 1) : ($departsList[0]->numero_depart ?? 1);
         $departDefaut = (int)$first ?: 1;
     }
-    // Archer vide pour remplir les emplacements sans affectation
     $archerVide = ['user_nom' => '', 'numero_licence' => '', 'numero_cible' => 0, 'depart' => $departDefaut];
-    if (empty($tousArchers)) {
-        $feuillesSalle[] = ['depart' => $departDefaut, 'archers' => array_fill(0, 4, $archerVide)];
+    $maxParFeuille = 8;
+
+    if (empty($archersParCible)) {
+        // Aucun archer affecté : une feuille avec 4 emplacements vides (cible = filtre ou 1)
+        $cibleVide = ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'tout') ? (int)$filterCibleFeuilles : 1;
+        $feuillesSalle[] = ['depart' => $departDefaut, 'cible' => $cibleVide, 'archers' => array_fill(0, 4, $archerVide)];
     } else {
-        $chunk = [];
-        $maxParFeuille = 8;
-        foreach ($tousArchers as $a) {
-            $chunk[] = $a;
-            if (count($chunk) >= 4) {
-                $feuillesSalle[] = ['depart' => $a['depart'], 'archers' => $chunk];
-                $chunk = [];
-            } elseif (count($chunk) >= $maxParFeuille) {
-                $feuillesSalle[] = ['depart' => $a['depart'], 'archers' => $chunk];
-                $chunk = [];
+        // Une feuille par cible (par groupe depart+cible) : on ne mélange jamais deux cibles sur une même page
+        foreach ($archersParCible as $g) {
+            $dep = (int)($g['depart'] ?? $departDefaut);
+            $numCible = (int)($g['cible'] ?? 0);
+            $archers = $g['archers'];
+            foreach ($archers as $i => $a) {
+                $archers[$i] = array_merge($a, ['depart' => $dep, 'numero_cible' => $numCible]);
+            }
+            $chunk = [];
+            foreach ($archers as $a) {
+                $chunk[] = $a;
+                if (count($chunk) >= 4) {
+                    $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => $chunk];
+                    $chunk = [];
+                } elseif (count($chunk) >= $maxParFeuille) {
+                    $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => $chunk];
+                    $chunk = [];
+                }
+            }
+            if (!empty($chunk)) {
+                $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => $chunk];
             }
         }
-        if (!empty($chunk)) {
-            $dep = $chunk[0]['depart'] ?? $departDefaut;
-            $feuillesSalle[] = ['depart' => $dep, 'archers' => $chunk];
-        }
     }
-    // Compléter chaque feuille à 4 ou 8 tableaux pour que toutes les cases soient toujours dessinées
+
+    // Compléter chaque feuille à 4 ou 8 tableaux
     foreach ($feuillesSalle as $i => $f) {
-        $n = count($f['archers']);
+        $n = count($feuillesSalle[$i]['archers']);
         $cible = 4;
         if ($n > 4) $cible = 8;
+        $numCible = (int)($f['cible'] ?? 0);
         while (count($feuillesSalle[$i]['archers']) < $cible) {
-            $feuillesSalle[$i]['archers'][] = array_merge($archerVide, ['depart' => $f['depart']]);
+            $feuillesSalle[$i]['archers'][] = array_merge($archerVide, ['depart' => $f['depart'], 'numero_cible' => $numCible]);
         }
     }
 }
@@ -148,7 +154,7 @@ if ($isSalle) {
             <?php foreach ($seriesAffichees as $numSerie): ?>
                 <div class="feuille-marque-salle feuille-marque-salle-landscape mb-4 page-break">
                     <h2 class="text-center mb-2">Feuille de marques</h2>
-                    <p class="text-center mb-3"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong> — Départ <?= (int)$f['depart'] ?> — Série <?= $numSerie ?></p>
+                    <p class="text-center mb-3"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong> — Départ <?= (int)$f['depart'] ?> — Cible <?= (int)($f['cible'] ?? 0) ?> — Série <?= $numSerie ?></p>
 
                     <div class="feuille-marque-salle-grid">
                     <?php foreach ($f['archers'] as $archer): ?>
