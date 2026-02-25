@@ -224,7 +224,7 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-blason { margin-left: 0.35rem; font-weight: 600; font-size: 0.65rem; }
         .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.25rem; font-size: 0.6rem; }
         .edition-feuilles-marques .feuille-marque-ligne-resume td { text-align: center; font-size: 0.65rem; }
-        .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 2.8em; padding: 4px 6px; }
+        .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 5.6em; padding: 8px 12px; }
         /* Nature : 2 archers par page, grille 2 colonnes */
         .edition-feuilles-marques .feuille-marque-nature-grid {
             display: grid;
