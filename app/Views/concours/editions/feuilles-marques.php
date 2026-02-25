@@ -98,7 +98,7 @@ if ($isSalle) {
         $first = is_array($departsList[0] ?? null) ? ($departsList[0]['numero_depart'] ?? 1) : ($departsList[0]->numero_depart ?? 1);
         $departDefaut = (int)$first ?: 1;
     }
-    $archerVide = ['user_nom' => '', 'numero_licence' => '', 'numero_cible' => 0, 'depart' => $departDefaut];
+    $archerVide = ['user_nom' => '', 'numero_licence' => '', 'position_archer' => '', 'numero_cible' => 0, 'depart' => $departDefaut];
     $maxParFeuille = 8;
 
     if (empty($archersParCible)) {
@@ -158,8 +158,9 @@ if ($isSalle) {
                     <div class="feuille-marque-salle-grid">
                     <?php foreach ($f['archers'] as $archer): ?>
                         <div class="feuille-marque-archer-block">
-                            <div class="feuille-marque-archer-header border-bottom pb-1 mb-2">
-                                <strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?>
+                            <div class="feuille-marque-archer-header border-bottom pb-1 mb-2 d-flex justify-content-between align-items-start">
+                                <span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?></span>
+                                <span class="feuille-marque-blason text-nowrap">Blason : <?= htmlspecialchars(trim($archer['position_archer'] ?? '') ?: '—') ?></span>
                             </div>
                             <table class="table table-bordered table-sm feuille-marque-table-volees">
                                 <thead>

@@ -202,6 +202,7 @@ $dateFooter = date('d/m/Y H:i');
             padding: 2px 4px;
         }
         .edition-feuilles-marques .feuille-marque-archer-header { font-size: 0.85rem; }
+        .edition-feuilles-marques .feuille-marque-blason { margin-left: 0.5rem; font-weight: 600; }
         .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.5rem; font-size: 0.7rem; }
         .edition-feuilles-marques .feuille-marque-ligne-resume td { text-align: center; }
         .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 6.4em; padding: 12px 14px; }
