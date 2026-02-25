@@ -59,6 +59,11 @@ $dateFooter = date('d/m/Y H:i');
             max-width: 380px;
             object-fit: contain;
         }
+        /* Feuilles de marques : logo réduit de 50 % */
+        body.edition-doc-feuilles-marques .edition-doc-logo {
+            height: 95px;
+            max-width: 190px;
+        }
         /* Espace libre autour du logo */
         .edition-doc-header-left {
             min-width: 150px;
@@ -236,13 +241,16 @@ $dateFooter = date('d/m/Y H:i');
             .no-print { display: none !important; }
             body { font-size: 11pt; }
             .page-break { page-break-after: always; }
-            /* En-tête uniquement sur la 1re page (table-row-group = pas de répétition) */
+            /* En-tête : répétition sur toutes les pages pour feuilles de marques */
             .edition-doc-print-table {
                 display: table;
                 width: 100%;
             }
             .edition-doc-print-thead {
                 display: table-row-group;
+            }
+            body.edition-doc-feuilles-marques .edition-doc-print-thead {
+                display: table-header-group;
             }
             .edition-doc-print-thead td {
                 padding: 0;
@@ -287,9 +295,17 @@ $dateFooter = date('d/m/Y H:i');
                 max-width: 88mm;
                 object-fit: contain;
             }
+            /* Feuilles de marques : logo réduit de 50 % à l'impression */
+            body.edition-doc-feuilles-marques .edition-doc-logo {
+                height: 22mm;
+                max-width: 44mm;
+            }
             .edition-doc-header-left {
                 min-width: 32mm;
                 padding: 0 2mm;
+            }
+            body.edition-doc-feuilles-marques .edition-doc-header-left {
+                min-width: 16mm;
             }
             .edition-doc-logo-placeholder {
                 font-size: 10pt;
@@ -311,7 +327,12 @@ $dateFooter = date('d/m/Y H:i');
         body { padding: 1rem; }
     </style>
 </head>
-<body<?= ($doc === 'liste-participants') ? ' class="edition-doc-liste-participants"' : '' ?>>
+<body<?php
+$bodyClasses = [];
+if ($doc === 'liste-participants') $bodyClasses[] = 'edition-doc-liste-participants';
+if ($doc === 'feuilles-marques') $bodyClasses[] = 'edition-doc-feuilles-marques';
+echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
+?>>
     <div class="no-print mb-3">
         <?php if ($doc === 'liste-participants'): ?>
         <?php
