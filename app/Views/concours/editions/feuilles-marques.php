@@ -20,8 +20,8 @@ $isCible = in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
 $isPeloton = in_array($disciplineAbv, ['3', 'N', 'C'], true);
 
 // Filtres d'édition (série et cible)
-$filterSerieFeuilles = isset($serieFeuilles) ? (string)$serieFeuilles : 'tout';
-$filterCibleFeuilles = isset($cibleFeuilles) ? (string)$cibleFeuilles : 'tout';
+$filterSerieFeuilles = isset($serieFeuilles) ? (string)$serieFeuilles : 'toutes';
+$filterCibleFeuilles = isset($cibleFeuilles) ? (string)$cibleFeuilles : 'toutes';
 
 // Nombre de volées et de séries pour salle (18m = 10 volées de 3 flèches, 2 séries)
 $nbVoleesSalle = 10;
@@ -156,7 +156,7 @@ if ($isSalle) {
 <div class="edition-feuilles-marques">
     <?php if ($isSalle && !empty($feuillesSalle)): ?>
         <?php
-        $seriesAffichees = ($filterSerieFeuilles !== '' && $filterSerieFeuilles !== 'tout')
+        $seriesAffichees = ($filterSerieFeuilles !== '' && $filterSerieFeuilles !== 'toutes')
             ? [max(1, min((int)$filterSerieFeuilles, $nbSeriesSalle))]
             : range(1, $nbSeriesSalle);
         ?>
