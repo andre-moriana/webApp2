@@ -164,18 +164,15 @@ if ($isSalle) {
                             <table class="table table-bordered table-sm feuille-marque-table-volees">
                                 <thead>
                                     <tr>
-                                        <th >rowspan="2"</th>
+                                        <th rowspan="2">N°</th>
                                         <th colspan="3">Flèches</th>
-                                        <th rowspan="2"></th>
-                                        <th rowspan="2"></th>
+                                        <th rowspan="2">Total</th>
+                                        <th rowspan="2">Cumul</th>
                                     </tr>
                                     <tr>
-                                        <th style="width:10%">N°</th>
-                                        <th style="width:16%">Flèche 1</th>
-                                        <th style="width:16%">Flèche 2</th>
-                                        <th style="width:16%">Flèche 3</th>
-                                        <th style="width:21%">Total</th>
-                                        <th style="width:21%">Cumul</th>
+                                        <th style="width:16%">1</th>
+                                        <th style="width:16%">2</th>
+                                        <th style="width:16%">3</th>
                                     </tr>
                                 </thead>
                                 <tbody>
