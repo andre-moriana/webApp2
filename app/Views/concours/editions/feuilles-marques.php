@@ -184,12 +184,12 @@ if ($isNature) {
         $departDefaut = (int)$first ?: 1;
     }
     $archerVideNature = ['user_nom' => '', 'numero_licence' => '', 'abv_categorie_classement' => '', 'position_archer' => '', 'numero_peloton' => 0, 'depart' => $departDefaut];
-    $nbSlotsParPage = 4;
+    $nbSlotsParPageNature = 2;
 
     if (empty($archersParPeloton)) {
         $pelotonVide = 1;
         $archersOrdre = [];
-        for ($idx = 0; $idx < $nbSlotsParPage; $idx++) {
+        for ($idx = 0; $idx < $nbSlotsParPageNature; $idx++) {
             $archersOrdre[] = array_merge($archerVideNature, ['depart' => $departDefaut, 'numero_peloton' => $pelotonVide, 'position_archer' => $positionsBlasonOrdre[$idx]]);
         }
         $feuillesNature[] = ['depart' => $departDefaut, 'peloton' => $pelotonVide, 'archers' => $archersOrdre];
@@ -224,9 +224,10 @@ if ($isNature) {
                     $listeComplete[] = array_merge($archerVideNature, ['depart' => $dep, 'numero_peloton' => $numPeloton, 'position_archer' => $lettre]);
                 }
             }
-            $feuillesNature[] = ['depart' => $dep, 'peloton' => $numPeloton, 'archers' => array_slice($listeComplete, 0, 4)];
-            if (count($archers) >= 5) {
-                $feuillesNature[] = ['depart' => $dep, 'peloton' => $numPeloton, 'archers' => array_slice($listeComplete, 4, 4)];
+            // Nature : 2 archers par page (A,B puis C,D etc.), au plus 4 pages
+            $nbPagesNature = min(4, max(1, (int)ceil(count($archers) / $nbSlotsParPageNature)));
+            for ($p = 0; $p < $nbPagesNature; $p++) {
+                $feuillesNature[] = ['depart' => $dep, 'peloton' => $numPeloton, 'archers' => array_slice($listeComplete, $p * $nbSlotsParPageNature, $nbSlotsParPageNature)];
             }
         }
     }
@@ -304,7 +305,7 @@ if ($isNature) {
                 <div class="feuille-marque-nature feuille-marque-salle-landscape mb-4 page-break">
                     <p class="text-center mb-3"><strong>Feuille de marques Nature</strong> — Départ <?= (int)$f['depart'] ?> — Peloton <?= (int)($f['peloton'] ?? 0) ?></p>
 
-                    <div class="feuille-marque-salle-grid">
+                    <div class="feuille-marque-nature-grid">
                     <?php foreach ($f['archers'] as $archer): ?>
                         <div class="feuille-marque-archer-block">
                             <div class="feuille-marque-archer-header border-bottom pb-1 mb-2 d-flex justify-content-between align-items-start">
