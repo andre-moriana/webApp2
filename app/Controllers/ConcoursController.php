@@ -1938,6 +1938,53 @@ class ConcoursController {
             });
         }
 
+        // Filtre par départ et tri (catégorie, club, départ) pour l'édition scores
+        $departFilterScores = $_GET['depart'] ?? '';
+        $triScores = $_GET['tri'] ?? 'club';
+        $departsListScores = [];
+        if ($doc === 'scores') {
+            $departsRaw = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+            $departsListScores = array_values(is_array($departsRaw) ? $departsRaw : (array)$departsRaw);
+            if (empty($departsListScores)) {
+                $nums = [];
+                foreach ($inscriptions as $i) {
+                    $nd = (int)($i['numero_depart'] ?? 0);
+                    if ($nd > 0) $nums[$nd] = true;
+                }
+                ksort($nums);
+                $departsListScores = array_map(function ($n) { return ['numero_depart' => $n]; }, array_keys($nums));
+            }
+            if ($departFilterScores !== '' && $departFilterScores !== 'tout' && $departFilterScores !== 'all') {
+                $departNum = (int) $departFilterScores;
+                $inscriptions = array_values(array_filter($inscriptions, function ($i) use ($departNum) {
+                    return ((int)($i['numero_depart'] ?? 0)) === $departNum;
+                }));
+            }
+            $validTriScores = ['club', 'categorie', 'depart'];
+            if (!in_array($triScores, $validTriScores, true)) {
+                $triScores = 'club';
+            }
+            usort($inscriptions, function ($a, $b) use ($triScores) {
+                if ($triScores === 'club') {
+                    $cmp = strcasecmp($a['club_nom'] ?? '', $b['club_nom'] ?? '');
+                    if ($cmp !== 0) return $cmp;
+                    return strcasecmp($a['user_nom'] ?? $a['nom'] ?? '', $b['user_nom'] ?? $b['nom'] ?? '');
+                }
+                if ($triScores === 'categorie') {
+                    $cmp = strcasecmp($a['categorie_libelle'] ?? $a['categorie_classement'] ?? '', $b['categorie_libelle'] ?? $b['categorie_classement'] ?? '');
+                    if ($cmp !== 0) return $cmp;
+                    return strcasecmp($a['user_nom'] ?? $a['nom'] ?? '', $b['user_nom'] ?? $b['nom'] ?? '');
+                }
+                if ($triScores === 'depart') {
+                    $na = (int)($a['numero_depart'] ?? 0);
+                    $nb = (int)($b['numero_depart'] ?? 0);
+                    if ($na !== $nb) return $na - $nb;
+                    return strcasecmp($a['user_nom'] ?? $a['nom'] ?? '', $b['user_nom'] ?? $b['nom'] ?? '');
+                }
+                return 0;
+            });
+        }
+
         if ($doc && in_array($doc, $validDocs)) {
             // Affichage d'un document spécifique (optimisé impression)
             require_once __DIR__ . '/../Views/concours/editions-doc.php';

@@ -19,6 +19,7 @@ foreach ($inscriptions as $insc) {
                 <th>Nom</th>
                 <th>Licence</th>
                 <th>Club</th>
+                <th>Catégorie</th>
                 <th>Départ</th>
                 <th>Score</th>
                 <?php if (!empty(array_filter($resultats, function($r) { return isset($r['serie1_score']) || isset($r['serie2_score']); }))): ?>
@@ -42,6 +43,7 @@ foreach ($inscriptions as $insc) {
                     <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($insc['categorie_libelle'] ?? $insc['categorie_classement'] ?? '-') ?></td>
                     <td><?= htmlspecialchars($insc['numero_depart'] ?? '-') ?></td>
                     <td><?= $r ? ($r['score'] ?? '-') : '-' ?></td>
                     <?php if (!empty(array_filter($resultats, function($r) { return isset($r['serie1_score']) || isset($r['serie2_score']); }))): ?>

@@ -215,6 +215,38 @@ $dateFooter = date('d/m/Y H:i');
             <?php endforeach; ?>
         </select>
         <?php endif; ?>
+        <?php if ($doc === 'scores'): ?>
+        <?php
+        $baseScoresUrl = '/concours/' . (int)$concoursId . '/editions?doc=scores';
+        $currentTriScores = $triScores ?? 'club';
+        $currentDepartScores = isset($departFilterScores) && $departFilterScores !== '' && $departFilterScores !== 'tout' && $departFilterScores !== 'all' ? $departFilterScores : 'tout';
+        ?>
+        <label class="me-2">Départ :</label>
+        <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
+            <option value="<?= htmlspecialchars($baseScoresUrl . '&tri=' . $currentTriScores . '&depart=tout') ?>"<?= $currentDepartScores === 'tout' ? ' selected' : '' ?>>Tous</option>
+            <?php
+            $departsScores = isset($departsListScores) && is_array($departsListScores) ? $departsListScores : (isset($departsList) && is_array($departsList) ? $departsList : []);
+            foreach ($departsScores as $d):
+                $num = (int)($d['numero_depart'] ?? 0);
+                if ($num <= 0) continue;
+                $url = $baseScoresUrl . '&tri=' . $currentTriScores . '&depart=' . $num;
+                $sel = $currentDepartScores === (string)$num ? ' selected' : '';
+            ?>
+            <option value="<?= htmlspecialchars($url) ?>"<?= $sel ?>><?= $num ?></option>
+            <?php endforeach; ?>
+        </select>
+        <label class="me-2">Tri :</label>
+        <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
+            <?php
+            $triOptionsScores = ['club' => 'Par club', 'categorie' => 'Par catégorie', 'depart' => 'Par départ'];
+            foreach ($triOptionsScores as $val => $label):
+                $url = $baseScoresUrl . '&depart=' . $currentDepartScores . '&tri=' . $val;
+                $sel = $currentTriScores === $val ? ' selected' : '';
+            ?>
+            <option value="<?= htmlspecialchars($url) ?>"<?= $sel ?>><?= htmlspecialchars($label) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <?php endif; ?>
         <?php if ($doc === 'classement'): ?>
         <label class="me-2">Type de classement :</label>
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
