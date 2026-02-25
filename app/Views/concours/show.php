@@ -44,7 +44,28 @@ $disciplineName = findLabel($disciplines, $concours->discipline ?? null, 'iddisc
 $typeCompetitionName = findLabel($typeCompetitions, $concours->type_competition ?? null, 'idformat_competition', 'lb_format_competition');
 $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_championnat ?? null, 'idniveau_championnat', 'lb_niveauchampionnat');
 ?>
-
+<div class="actions-section">
+    <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
+    <?php if (isset($concours->id) || isset($concours->_id)): ?>
+        <?php 
+        $concoursId = $concours->id ?? $concours->_id;
+        $isAdmin = $_SESSION['user']['is_admin'] ?? false;
+        $isDirigeantShow = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+        $canSaisieScores = $isAdmin || $isDirigeantShow;
+        ?>
+        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/inscription" class="btn btn-success">
+            <i class="fas fa-user-plus"></i> Gérer les inscriptions
+        </a>
+        <?php if ($canSaisieScores): ?>
+        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
+            <i class="fas fa-calculator"></i> Saisie des scores
+        </a>
+        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/editions" class="btn btn-info">
+            <i class="fas fa-print"></i> Éditions
+        </a>
+        <?php endif; ?>
+    <?php endif; ?>
+</div>
 <!-- Section principale -->
 <div class="form-section">
     <!-- Club Organisateur -->
@@ -509,28 +530,7 @@ $debugLicence = isset($_GET['debug_licence']);
     <?php endif; ?>
 </div>
 
-<div class="actions-section">
-    <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
-    <?php if (isset($concours->id) || isset($concours->_id)): ?>
-        <?php 
-        $concoursId = $concours->id ?? $concours->_id;
-        $isAdmin = $_SESSION['user']['is_admin'] ?? false;
-        $isDirigeantShow = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
-        $canSaisieScores = $isAdmin || $isDirigeantShow;
-        ?>
-        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/inscription" class="btn btn-success">
-            <i class="fas fa-user-plus"></i> Gérer les inscriptions
-        </a>
-        <?php if ($canSaisieScores): ?>
-        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
-            <i class="fas fa-calculator"></i> Saisie des scores
-        </a>
-        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/editions" class="btn btn-info">
-            <i class="fas fa-print"></i> Éditions
-        </a>
-        <?php endif; ?>
-    <?php endif; ?>
-</div>
+
 </div>
 
 <!-- Modale pour afficher la carte (lecture seule) -->
