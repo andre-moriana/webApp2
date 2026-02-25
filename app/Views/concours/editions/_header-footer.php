@@ -19,8 +19,8 @@ if ($clubOrganisateur && !empty($clubOrganisateur['logo'])) {
         $clubLogoUrl = $apiBase . (strpos($logo, '/') === 0 ? '' : '/') . $logo;
     }
 }
-$titreCompetition = htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours');
-$editionHeaderTitle = ($doc ?? '') === 'feuilles-marques' ? 'Feuille de marques' : $titreCompetition;
+
+$titreCompetition = htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '');
 ?>
 <!-- En-tête document édition -->
 <header class="edition-doc-header">
@@ -33,7 +33,7 @@ $editionHeaderTitle = ($doc ?? '') === 'feuilles-marques' ? 'Feuille de marques'
             <?php endif; ?>
         </div>
         <div class="edition-doc-header-center">
-            <h2 class="edition-doc-title-center"><?= $editionHeaderTitle ?></h2>
+            <h2 class="edition-doc-title-center"><?= $titreCompetition ?></h2>
         </div>
     </div>
 </header>
