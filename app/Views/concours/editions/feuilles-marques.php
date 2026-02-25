@@ -153,7 +153,6 @@ if ($isSalle) {
         <?php foreach ($feuillesSalle as $f): ?>
             <?php foreach ($seriesAffichees as $numSerie): ?>
                 <div class="feuille-marque-salle feuille-marque-salle-landscape mb-4 page-break">
-                    <h2 class="text-center mb-2">Feuille de marques</h2>
                     <p class="text-center mb-3"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong> — Départ <?= (int)$f['depart'] ?> — Cible <?= (int)($f['cible'] ?? 0) ?> — Série <?= $numSerie ?></p>
 
                     <div class="feuille-marque-salle-grid">
@@ -185,8 +184,8 @@ if ($isSalle) {
                                     </tr>
                                     <?php endfor; ?>
                                     <tr class="table-secondary feuille-marque-ligne-resume">
-                                        <td colspan="2"><strong>Nombre 10</strong></td>
-                                        <td colspan="2"><strong>Nombre  9</strong></td>
+                                        <td colspan="2"><strong>Nbre 10</strong></td>
+                                        <td colspan="2"><strong>Nbre  9</strong></td>
                                         <td colspan="2"><strong>Total général</strong></td>
                                     </tr>
                                     <tr class="feuille-marque-ligne-resume-valeurs">
