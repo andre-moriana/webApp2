@@ -206,6 +206,10 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.5rem; font-size: 0.7rem; }
         .edition-feuilles-marques .feuille-marque-ligne-resume td { text-align: center; }
         .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 6.4em; padding: 12px 14px; }
+        /* Nature : 21 volées, police réduite pour tenir sur la page */
+        .edition-feuilles-marques .feuille-marque-table-nature { font-size: 0.65rem; }
+        .edition-feuilles-marques .feuille-marque-table-nature th,
+        .edition-feuilles-marques .feuille-marque-table-nature td { padding: 1px 3px; }
         @media print {
             @page {
                 margin: 15mm 15mm 20mm 15mm;

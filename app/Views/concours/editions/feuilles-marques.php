@@ -16,6 +16,7 @@ $disciplineAbv = $disciplineAbv ?? '';
 $plansCible = $plansCibleFeuilles ?? [];
 $plansPeloton = $plansPelotonFeuilles ?? [];
 $isSalle = ($disciplineAbv === 'S');
+$isNature = ($disciplineAbv === 'N');
 $isCible = in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
 $isPeloton = in_array($disciplineAbv, ['3', 'N', 'C'], true);
 
@@ -40,6 +41,10 @@ if (!empty($inscriptions) && is_array($inscriptions)) {
 // Nombre de volées et de séries pour salle (18m = 10 volées de 3 flèches, 2 séries)
 $nbVoleesSalle = 10;
 $nbSeriesSalle = 2;
+
+// Nature : 21 volées de 2 flèches, comptage 20-15, 20-10, 15-15, 15-10
+$nbVoleesNature = 21;
+$nbFlechesNature = 2;
 
 // Extraire les archers assignés du plan cible, groupés par (depart, cible)
 $archersParCible = [];
@@ -169,6 +174,63 @@ if ($isSalle) {
         }
     }
 }
+
+// Feuilles Nature : même principe que Salle mais 21 volées x 2 flèches, archers du plan peloton, une feuille par peloton
+$feuillesNature = [];
+if ($isNature) {
+    $departDefaut = 1;
+    if (!empty($departsList)) {
+        $first = is_array($departsList[0] ?? null) ? ($departsList[0]['numero_depart'] ?? 1) : ($departsList[0]->numero_depart ?? 1);
+        $departDefaut = (int)$first ?: 1;
+    }
+    $archerVideNature = ['user_nom' => '', 'numero_licence' => '', 'abv_categorie_classement' => '', 'position_archer' => '', 'numero_peloton' => 0, 'depart' => $departDefaut];
+    $nbSlotsParPage = 4;
+
+    if (empty($archersParPeloton)) {
+        $pelotonVide = 1;
+        $archersOrdre = [];
+        for ($idx = 0; $idx < $nbSlotsParPage; $idx++) {
+            $archersOrdre[] = array_merge($archerVideNature, ['depart' => $departDefaut, 'numero_peloton' => $pelotonVide, 'position_archer' => $positionsBlasonOrdre[$idx]]);
+        }
+        $feuillesNature[] = ['depart' => $departDefaut, 'peloton' => $pelotonVide, 'archers' => $archersOrdre];
+    } else {
+        foreach ($archersParPeloton as $g) {
+            $dep = (int)($g['depart'] ?? $departDefaut);
+            $numPeloton = (int)($g['peloton'] ?? 0);
+            $archers = $g['archers'];
+            foreach ($archers as $i => $a) {
+                $archers[$i] = array_merge($a, ['depart' => $dep, 'numero_peloton' => $numPeloton]);
+            }
+            $byPosition = [];
+            $sansPosition = [];
+            foreach ($archers as $a) {
+                $pos = strtoupper(trim($a['position_archer'] ?? ''));
+                if ($pos !== '' && in_array($pos, $positionsBlasonOrdre, true) && !isset($byPosition[$pos])) {
+                    $byPosition[$pos] = $a;
+                } else {
+                    $sansPosition[] = $a;
+                }
+            }
+            $idxSans = 0;
+            $listeComplete = [];
+            for ($idx = 0; $idx < 8; $idx++) {
+                $lettre = $positionsBlasonOrdre[$idx];
+                if (isset($byPosition[$lettre])) {
+                    $listeComplete[] = $byPosition[$lettre];
+                } elseif ($idxSans < count($sansPosition)) {
+                    $a = $sansPosition[$idxSans++];
+                    $listeComplete[] = array_merge($a, ['position_archer' => $lettre]);
+                } else {
+                    $listeComplete[] = array_merge($archerVideNature, ['depart' => $dep, 'numero_peloton' => $numPeloton, 'position_archer' => $lettre]);
+                }
+            }
+            $feuillesNature[] = ['depart' => $dep, 'peloton' => $numPeloton, 'archers' => array_slice($listeComplete, 0, 4)];
+            if (count($archers) >= 5) {
+                $feuillesNature[] = ['depart' => $dep, 'peloton' => $numPeloton, 'archers' => array_slice($listeComplete, 4, 4)];
+            }
+        }
+    }
+}
 ?>
 <div class="edition-feuilles-marques">
     <?php if ($isSalle && !empty($feuillesSalle)): ?>
@@ -235,6 +297,64 @@ if ($isSalle) {
                     </div>
                 </div>
             <?php endforeach; ?>
+        <?php endforeach; ?>
+
+    <?php elseif ($isNature && !empty($feuillesNature)): ?>
+        <?php foreach ($feuillesNature as $f): ?>
+                <div class="feuille-marque-nature feuille-marque-salle-landscape mb-4 page-break">
+                    <p class="text-center mb-3"><strong>Feuille de marques Nature</strong> — Départ <?= (int)$f['depart'] ?> — Peloton <?= (int)($f['peloton'] ?? 0) ?></p>
+
+                    <div class="feuille-marque-salle-grid">
+                    <?php foreach ($f['archers'] as $archer): ?>
+                        <div class="feuille-marque-archer-block">
+                            <div class="feuille-marque-archer-header border-bottom pb-1 mb-2 d-flex justify-content-between align-items-start">
+                                <span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?><br><span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></span>
+                                <span class="feuille-marque-blason text-nowrap">Blason : <?= htmlspecialchars(trim($archer['position_archer'] ?? '') ?: '—') ?></span>
+                            </div>
+                            <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-nature">
+                                <thead>
+                                    <tr>
+                                        <th>N°</th>
+                                        <th>Flèche 1</th>
+                                        <th>Flèche 2</th>
+                                        <th>Total</th>
+                                        <th>Cumul</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php for ($v = 1; $v <= $nbVoleesNature; $v++): ?>
+                                    <tr>
+                                        <td><?= $v ?></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <?php endfor; ?>
+                                    <tr class="table-secondary feuille-marque-ligne-resume">
+                                        <td><strong>20-15</strong></td>
+                                        <td><strong>20-10</strong></td>
+                                        <td><strong>15-15</strong></td>
+                                        <td><strong>15-10</strong></td>
+                                        <td><strong>Tot. série</strong></td>
+                                    </tr>
+                                    <tr class="feuille-marque-ligne-resume-valeurs">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="feuille-marque-signatures row g-2 small mt-2">
+                                <div class="col-6">Signature du marqueur </div>
+                                <div class="col-6">Signature de l'archer </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    </div>
+                </div>
         <?php endforeach; ?>
 
     <?php elseif ($isPeloton && !empty($archersParPeloton)): ?>
