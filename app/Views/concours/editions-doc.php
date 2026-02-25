@@ -187,6 +187,10 @@ $dateFooter = date('d/m/Y H:i');
         .edition-doc-fin table tbody tr:nth-child(even) td {
             background-color: #e9ecef !important;
         }
+        /* Tableau scores : griser une ligne sur deux (lignes paires) */
+        .edition-scores .edition-scores-table tbody tr:nth-child(even) td {
+            background-color: #e9ecef !important;
+        }
         .edition-scores-block { page-break-inside: avoid; }
         /* Feuilles de marques Salle : 4 tableaux côte à côte, page paysage, en-tête réduit pour tenir sur une page */
         .edition-feuilles-marques .feuille-marque-salle > p.text-center,
@@ -249,7 +253,7 @@ $dateFooter = date('d/m/Y H:i');
             position: relative;
             background-repeat: no-repeat;
             background-position: center;
-            background-size: 55%;
+            background-size: 45%;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -392,7 +396,8 @@ $dateFooter = date('d/m/Y H:i');
             .edition-doc-print-tbody table tbody tr:nth-child(even) td,
             .edition-liste-participants table tbody tr:nth-child(even) td,
             .edition-avis table tbody tr:nth-child(even) td,
-            .edition-scores table tbody tr:nth-child(even) td {
+            .edition-scores table tbody tr:nth-child(even) td,
+            .edition-scores .edition-scores-table tbody tr:nth-child(even) td {
                 background-color: #e9ecef !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;

@@ -55,7 +55,7 @@ $hasDetail = !empty(array_filter($resultats, function ($r) { return isset($r['nb
     ?>
     <div class="edition-scores-block mb-4">
         <h2 class="h5 mb-2 mt-3"><?= htmlspecialchars($groupLabel) ?> : <?= htmlspecialchars($libelle) ?></h2>
-        <table class="table table-bordered">
+        <table class="table table-bordered edition-scores-table">
             <thead>
                 <tr>
                     <th>N°</th>
