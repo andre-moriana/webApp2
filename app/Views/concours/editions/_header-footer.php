@@ -21,7 +21,7 @@ if ($clubOrganisateur && !empty($clubOrganisateur['logo'])) {
 }
 $titreCompetition = htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours');
 $editionHeaderTitle = ($doc ?? '') === 'feuilles-marques' ? 'Feuille de marques' : $titreCompetition;
-$editionHeaderSubtitle = ($doc ?? '') === 'feuilles-marques' ? $titreCompetition : null;
+$editionHeaderSubtitle = ($doc ?? '') === 'feuilles-marques' ? null : null;
 ?>
 <!-- En-tête document édition -->
 <header class="edition-doc-header">
