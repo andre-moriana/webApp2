@@ -118,17 +118,17 @@ if ($isSalle && !empty($archersParCible)) {
                     <?php foreach ($f['archers'] as $archer): ?>
                         <div class="feuille-marque-archer-block">
                             <div class="feuille-marque-archer-header border-bottom pb-1 mb-2">
-                                <strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong> — N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?>
+                                <strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?>
                             </div>
                             <table class="table table-bordered table-sm feuille-marque-table-volees">
                                 <thead>
                                     <tr>
-                                        <th style="width:10%">N° volée</th>
-                                        <th style="width:18%">Flèche 1</th>
-                                        <th style="width:18%">Flèche 2</th>
-                                        <th style="width:18%">Flèche 3</th>
-                                        <th style="width:18%">Total</th>
-                                        <th style="width:18%">Cumul</th>
+                                        <th style="width:10%">N°</th>
+                                        <th style="width:16%">Flèche 1</th>
+                                        <th style="width:16%">Flèche 2</th>
+                                        <th style="width:16%">Flèche 3</th>
+                                        <th style="width:21%">Total</th>
+                                        <th style="width:21%">Cumul</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -143,9 +143,9 @@ if ($isSalle && !empty($archersParCible)) {
                                     </tr>
                                     <?php endfor; ?>
                                     <tr class="table-secondary feuille-marque-ligne-resume">
-                                        <td colspan="2"><strong>Nombre de 10</strong></td>
-                                        <td colspan="2"><strong>Nombre de 9</strong></td>
-                                        <td colspan="2"><strong>Total général de la série</strong></td>
+                                        <td colspan="2"><strong>Nombre 10</strong></td>
+                                        <td colspan="2"><strong>Nombre  9</strong></td>
+                                        <td colspan="2"><strong>Total général</strong></td>
                                     </tr>
                                     <tr class="feuille-marque-ligne-resume-valeurs">
                                         <td colspan="2"></td>
@@ -155,8 +155,8 @@ if ($isSalle && !empty($archersParCible)) {
                                 </tbody>
                             </table>
                             <div class="feuille-marque-signatures row g-2 small mt-2">
-                                <div class="col-6">Signature du marqueur : _________________________</div>
-                                <div class="col-6">Signature de l'archer : _________________________</div>
+                                <div class="col-6">Signature du marqueur </div>
+                                <div class="col-6">Signature de l'archer </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
