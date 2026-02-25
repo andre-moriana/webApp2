@@ -213,7 +213,7 @@
         });
     }
 
-    function openModalForItem(item) {
+    function openModalForItem(item, positionAlreadyAssigned) {
         if (!item || !modalElement) return;
         var trispotValue = item.dataset.trispot === '1' ? 1 : 0;
         currentTarget = {
@@ -230,15 +230,16 @@
             userNom: item.dataset.userNom || null
         };
         if (infoContainer) infoContainer.textContent = formatTargetInfo(currentTarget);
-        // Libération : uniquement admin, dirigeant ou l'archer concerné (propre affectation)
-        if (releaseContainer) {
-            var isAssigned = currentTarget.userId || currentTarget.numeroLicence;
-            var assignedLicence = (currentTarget.numeroLicence || '').trim();
-            var isOwnAssignment = !!assignedLicence && assignedLicence === currentUserLicence;
-            var canRelease = isAssigned && (canReleaseAdminDirigeant || isOwnAssignment);
-            releaseContainer.style.display = canRelease ? 'block' : 'none';
+        var isAssigned = currentTarget.userId || currentTarget.numeroLicence;
+        var assignedLicence = (currentTarget.numeroLicence || '').trim();
+        var isOwnAssignment = !!assignedLicence && assignedLicence === currentUserLicence;
+        var canRelease = isAssigned && (canReleaseAdminDirigeant || isOwnAssignment);
+        if (releaseContainer) releaseContainer.style.display = canRelease ? 'block' : 'none';
+        if (positionAlreadyAssigned && canRelease) {
+            setListMessage('Position déjà affectée. Utilisez le bouton ci-dessous pour libérer l\'emplacement.', 'info');
+        } else if (!positionAlreadyAssigned) {
+            fetchArchersDisponibles(currentTarget);
         }
-        fetchArchersDisponibles(currentTarget);
         if (modalInstance) modalInstance.show();
         else showModalFallback();
     }
@@ -246,7 +247,13 @@
     document.addEventListener('click', function(event) {
         if (!canEditPlanCible) return;
         var item = event.target.closest('.blason-item');
-        if (item) openModalForItem(item);
+        if (!item) return;
+        var isAssigned = !!(item.dataset.userId || item.dataset.numeroLicence);
+        var assignedLicence = (item.dataset.numeroLicence || '').trim();
+        var isOwnAssignment = !!assignedLicence && assignedLicence === currentUserLicence;
+        var canRelease = canReleaseAdminDirigeant || isOwnAssignment;
+        if (isAssigned && !canRelease) return;
+        openModalForItem(item, isAssigned);
     });
 
     if (listContainer) {

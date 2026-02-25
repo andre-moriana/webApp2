@@ -414,6 +414,15 @@
     z-index: 10;
 }
 
+/* Position affectée sans droit de libération : pas de clic */
+.blason-item.blason-item-no-click {
+    cursor: default !important;
+}
+.blason-item.blason-item-no-click:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 .blason-item.libre {
     background: linear-gradient(135deg, #e9ecef 0%, #ced4da 100%);
     border-color: #adb5bd;

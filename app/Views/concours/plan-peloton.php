@@ -176,8 +176,10 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                     $letterRectStyle = ($isAssigne && $piquetColor) ? 'background-color:' . $piquetColor . ';' : '';
                                     $frameBorderStyle = ($isAssigne && $piquetColor) ? 'border-color:' . $piquetColor . ' !important;' : '';
                                     $tooltipText = $isAssigne ? $nomComplet . (!empty($clubComplet) ? ' - ' . $clubComplet : '') : 'Cliquer pour assigner un archer';
+                                    $canReleaseThis = $isAssigne && ($canReleaseAsAdminOrDirigeant || (trim($plan['numero_licence'] ?? '') === ($currentUserLicence ?? '')));
+                                    $noClickClass = ($isAssigne && !$canReleaseThis) ? ' blason-item-no-click' : '';
                                     ?>
-                                    <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?>" <?= $frameBorderStyle ? 'style="' . $frameBorderStyle . '"' : '' ?>
+                                    <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?><?= $noClickClass ?>" <?= $frameBorderStyle ? 'style="' . $frameBorderStyle . '"' : '' ?>
                                         data-concours-id="<?= htmlspecialchars($concoursId) ?>"
                                         data-depart="<?= htmlspecialchars($numeroDepart) ?>"
                                         data-peloton="<?= htmlspecialchars($numeroPeloton) ?>"
@@ -186,7 +188,7 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
                                         data-user-nom="<?= htmlspecialchars($plan['user_nom'] ?? '') ?>"
                                         data-assignable="<?= $isAssigne ? '0' : '1' ?>"
                                         data-piquet-souhaites="<?= htmlspecialchars($piquetSouhaitesStr) ?>"
-                                        title="<?= htmlspecialchars($tooltipText) ?>">
+                                        title="<?= htmlspecialchars($isAssigne && !$canReleaseThis ? 'Position affectée (vous ne pouvez pas la libérer)' : $tooltipText) ?>">
                                         <span class="peloton-position-letter"<?= $letterRectStyle ? ' style="' . $letterRectStyle . '"' : '' ?>><?= htmlspecialchars($position) ?></span>
                                         <div class="peloton-position-content">
                                             <span class="peloton-position-name"><?= htmlspecialchars($nomComplet) ?></span>

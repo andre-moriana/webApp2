@@ -108,6 +108,11 @@
         if (!item) return;
         if (!canEditPlanPeloton) return;
         var assignable = item.getAttribute('data-assignable') === '1';
+        var assignedLicence = (item.dataset.numeroLicence || '').trim();
+        var isOwnAssignment = !!assignedLicence && assignedLicence === currentUserLicence;
+        var canRelease = !assignable && (canReleaseAdminDirigeant || isOwnAssignment);
+        // Position déjà affectée sans droit de libération : interdire le clic (ne pas ouvrir la modale)
+        if (!assignable && !canRelease) return;
         currentTarget = {
             concoursId: item.dataset.concoursId,
             depart: item.dataset.depart,
@@ -118,14 +123,18 @@
             piquetSouhaites: (item.getAttribute('data-piquet-souhaites') || '').trim()
         };
         if (infoContainer) {
-            infoContainer.textContent = 'Départ ' + currentTarget.depart + ' - Peloton ' + currentTarget.peloton +
-                ' - Position ' + currentTarget.position + ' : sélectionnez un archer à affecter';
+            infoContainer.textContent = assignable
+                ? 'Départ ' + currentTarget.depart + ' - Peloton ' + currentTarget.peloton +
+                    ' - Position ' + currentTarget.position + ' : sélectionnez un archer à affecter'
+                : 'Départ ' + currentTarget.depart + ' - Peloton ' + currentTarget.peloton +
+                    ' - Position ' + currentTarget.position + ' (déjà affectée)';
         }
-        // Libération : uniquement admin, dirigeant ou l'archer concerné (propre affectation)
-        var isOwnAssignment = currentTarget.numeroLicence && String(currentTarget.numeroLicence).trim() === currentUserLicence;
-        var canRelease = !assignable && (canReleaseAdminDirigeant || isOwnAssignment);
         if (releaseBtn) releaseBtn.style.display = canRelease ? 'block' : 'none';
-        fetchArchersDispo(currentTarget);
+        if (assignable) {
+            fetchArchersDispo(currentTarget);
+        } else {
+            setListMessage('Position déjà affectée. Utilisez le bouton ci-dessous pour libérer cette position.', 'info');
+        }
         if (modalInstance) modalInstance.show();
     });
 

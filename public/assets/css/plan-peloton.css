@@ -42,6 +42,14 @@
     opacity: 1 !important;
 }
 
+/* Position affectée sans droit de libération : pas de clic */
+.peloton-position-item.blason-item-no-click {
+    cursor: default !important;
+}
+.peloton-position-item.blason-item-no-click:hover {
+    background-color: #f8f9fa !important;
+}
+
 .peloton-position-item {
     cursor: pointer;
     display: flex;

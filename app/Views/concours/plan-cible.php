@@ -473,8 +473,11 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                 $dataTrispot = ($dispositionType === 'trispot' || $trispotCible == 1 || $trispotCible === '1' || $trispotCible === true || $blasonCible === 'T40') ? '1' : '0';
                                 $dataBlason = $planBlason ?? $blasonCible;
                                 $dataDistance = $planDistance ?? $distanceCible;
+                                $canReleaseThis = $isAssigne && ($canReleaseAsAdminOrDirigeant || (trim($dataNumeroLicence ?? '') === ($currentUserLicence ?? '')));
+                                $noClickClass = ($isAssigne && !$canReleaseThis) ? ' blason-item-no-click' : '';
+                                $titleText = ($isAssigne && !$canReleaseThis) ? 'Position affectée (vous ne pouvez pas la libérer)' : $tooltipText;
                             ?>
-                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?> <?= $dispositionType === 'blason80' ? 'blason-80-size' : '' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>"
+                            <div class="blason-item <?= $isAssigne ? 'assigne' : 'libre' ?><?= $noClickClass ?> <?= $dispositionType === 'blason80' ? 'blason-80-size' : '' ?> <?= $dispositionType === 'blason60' ? 'blason-60-size' : '' ?>"
                                  data-concours-id="<?= htmlspecialchars($concoursId) ?>"
                                  data-depart="<?= htmlspecialchars($numeroDepart) ?>"
                                  data-cible="<?= htmlspecialchars($numeroCible) ?>"
@@ -487,7 +490,7 @@ $concoursId = $concours->id ?? $concours->_id ?? null;
                                  data-numero-licence="<?= htmlspecialchars($dataNumeroLicence ?? '') ?>"
                                  data-user-nom="<?= htmlspecialchars($dataUserNom ?? '') ?>"
                                  data-assignable="<?= $isAssigne ? '0' : '1' ?>"
-                                <?= !empty($tooltipText) ? ' title="' . htmlspecialchars($tooltipText) . '"' : '' ?>>
+                                <?= !empty($titleText) ? ' title="' . htmlspecialchars($titleText) . '"' : '' ?>>
                                 <?php if ($dispositionType === 'trispot'): ?>
                                     <!-- Pour les trispots, afficher le numéro du blason (1, 2, 3) au lieu du numéro de la cible -->
                                     <?php
