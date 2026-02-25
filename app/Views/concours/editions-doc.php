@@ -253,7 +253,7 @@ $dateFooter = date('d/m/Y H:i');
             position: relative;
             background-repeat: no-repeat;
             background-position: center;
-            background-size: 45%;
+            background-size: 35%;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }

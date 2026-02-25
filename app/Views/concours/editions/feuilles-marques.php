@@ -305,7 +305,7 @@ if ($isNature) {
             $logoBgStyleNature = '';
             if (!empty($clubLogoUrl)) {
                 $logoEsc = htmlspecialchars($clubLogoUrl, ENT_QUOTES, 'UTF-8');
-                $logoBgStyleNature = "background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)), url('" . $logoEsc . "') no-repeat center; background-size: 55%;";
+                $logoBgStyleNature = "background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)), url('" . $logoEsc . "') no-repeat center; background-size: 35%;";
             }
         ?>
         <?php foreach ($feuillesNature as $f): ?>
