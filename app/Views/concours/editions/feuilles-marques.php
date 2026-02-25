@@ -122,11 +122,12 @@ if ($isSalle && !empty($archersParCible)) {
                             <table class="table table-bordered table-sm feuille-marque-table-volees">
                                 <thead>
                                     <tr>
-                                        <th style="width:12%">Volée</th>
-                                        <th style="width:22%">Flèche 1</th>
-                                        <th style="width:22%">Flèche 2</th>
-                                        <th style="width:22%">Flèche 3</th>
-                                        <th style="width:22%">Total</th>
+                                        <th style="width:10%">N° volée</th>
+                                        <th style="width:18%">Flèche 1</th>
+                                        <th style="width:18%">Flèche 2</th>
+                                        <th style="width:18%">Flèche 3</th>
+                                        <th style="width:18%">Total</th>
+                                        <th style="width:18%">Cumul</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -137,20 +138,22 @@ if ($isSalle && !empty($archersParCible)) {
                                         <td></td>
                                         <td></td>
                                         <td></td>
+                                        <td></td>
                                     </tr>
                                     <?php endfor; ?>
-                                    <tr class="table-secondary">
-                                        <td><strong>Cumul</strong></td>
-                                        <td colspan="4"></td>
+                                    <tr class="table-secondary feuille-marque-ligne-resume">
+                                        <td colspan="2"><strong>Nombre de 10</strong></td>
+                                        <td colspan="2"><strong>Nombre de 9</strong></td>
+                                        <td colspan="2"><strong>Total général de la série</strong></td>
+                                    </tr>
+                                    <tr class="feuille-marque-ligne-resume-valeurs">
+                                        <td colspan="2"></td>
+                                        <td colspan="2"></td>
+                                        <td colspan="2"></td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <div class="feuille-marque-footer row g-1 small mb-2">
-                                <div class="col-4">Nombre de 10 : ____________</div>
-                                <div class="col-4">Nombre de 9 : ____________</div>
-                                <div class="col-4">Total série : ____________</div>
-                            </div>
-                            <div class="feuille-marque-signatures row g-1 small">
+                            <div class="feuille-marque-signatures row g-2 small mt-2">
                                 <div class="col-6">Signature du marqueur : _________________________</div>
                                 <div class="col-6">Signature de l'archer : _________________________</div>
                             </div>

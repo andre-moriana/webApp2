@@ -181,6 +181,8 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-table-volees { font-size: 0.8rem; table-layout: fixed; width: 100%; }
         .edition-feuilles-marques .feuille-marque-archer-header { font-size: 0.95rem; }
         .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.5rem; }
+        .edition-feuilles-marques .feuille-marque-ligne-resume td { text-align: center; }
+        .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 1.8em; }
         @media print {
             @page {
                 margin: 15mm 15mm 20mm 15mm;
