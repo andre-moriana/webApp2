@@ -245,10 +245,27 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-table-nature th,
         .edition-feuilles-marques .feuille-marque-table-nature td { padding: 1px 3px; }
         /* Nature : logo en fond de tableau, transparence 10 % (overlay blanc 90 %) */
-        .edition-feuilles-marques .feuille-marque-table-nature.has-logo-bg {
+        .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap {
+            position: relative;
             background-repeat: no-repeat;
             background-position: center;
             background-size: 55%;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature {
+            background: transparent !important;
+        }
+        .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature thead,
+        .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature tbody,
+        .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature tr,
+        .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature th,
+        .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature td {
+            background-color: transparent !important;
+            background: transparent !important;
+        }
+        .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature tr.table-secondary td {
+            background-color: rgba(233, 236, 239, 0.85) !important;
         }
         @media print {
             @page {
@@ -379,6 +396,10 @@ $dateFooter = date('d/m/Y H:i');
                 background-color: #e9ecef !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+            }
+            /* Nature : conserver fond logo et cellules transparentes à l'impression */
+            .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature tbody tr:nth-child(even) td {
+                background-color: transparent !important;
             }
         }
         body { padding: 1rem; }

@@ -317,7 +317,8 @@ if ($isNature) {
                                 <span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?><br><span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></span>
                                 <span class="feuille-marque-blason text-nowrap">N° peloton : <?= (int)($f['peloton'] ?? 0) ?></span>
                             </div>
-                            <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-nature<?= $logoBgStyleNature !== '' ? ' has-logo-bg' : '' ?>"<?= $logoBgStyleNature !== '' ? ' style="' . $logoBgStyleNature . '"' : '' ?>>
+                            <?php if ($logoBgStyleNature !== ''): ?><div class="feuille-marque-table-nature-logo-wrap" style="<?= $logoBgStyleNature ?>"><?php endif; ?>
+                            <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-nature<?= $logoBgStyleNature !== '' ? ' has-logo-bg' : '' ?>">
                                 <thead>
                                     <tr>
                                         <th >N° cible</th>
@@ -359,6 +360,7 @@ if ($isNature) {
                                     </tr>
                                 </tbody>
                             </table>
+                            <?php if ($logoBgStyleNature !== ''): ?></div><?php endif; ?>
                             <div class="feuille-marque-signatures row g-2 small mt-2">
                                 <div class="col-6">Signature du marqueur </div>
                                 <div class="col-6">Signature de l'archer </div>
