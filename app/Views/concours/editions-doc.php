@@ -137,6 +137,11 @@ $dateFooter = date('d/m/Y H:i');
         .edition-scores table td:nth-child(6),
         .edition-classement table th:nth-child(6),
         .edition-classement table td:nth-child(6) { width: 8%; }
+        /* Liste des participants : Départ plus étroit, Catégorie plus large */
+        .edition-liste-participants table th:nth-child(5),
+        .edition-liste-participants table td:nth-child(5) { width: 6%; }
+        .edition-liste-participants table th:nth-child(6),
+        .edition-liste-participants table td:nth-child(6) { width: 14%; }
         .edition-liste-participants table th:nth-child(7),
         .edition-liste-participants table td:nth-child(7),
         .edition-scores table th:nth-child(7),
