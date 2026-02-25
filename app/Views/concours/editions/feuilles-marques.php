@@ -163,7 +163,7 @@ if ($isSalle) {
         <?php foreach ($feuillesSalle as $f): ?>
             <?php foreach ($seriesAffichees as $numSerie): ?>
                 <div class="feuille-marque-salle feuille-marque-salle-landscape mb-4 page-break">
-                    <p class="text-center mb-3"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong> — Départ <?= (int)$f['depart'] ?> — Cible <?= (int)($f['cible'] ?? 0) ?> — Série <?= $numSerie ?></p>
+                    <p class="text-center mb-3"><strong>Feuille de marques</strong> — Départ <?= (int)$f['depart'] ?> — Cible <?= (int)($f['cible'] ?? 0) ?> — Série <?= $numSerie ?></p>
 
                     <div class="feuille-marque-salle-grid">
                     <?php foreach ($f['archers'] as $archer): ?>
