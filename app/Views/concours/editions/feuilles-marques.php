@@ -23,6 +23,20 @@ $isPeloton = in_array($disciplineAbv, ['3', 'N', 'C'], true);
 $filterSerieFeuilles = isset($serieFeuilles) ? (string)$serieFeuilles : 'toutes';
 $filterCibleFeuilles = isset($cibleFeuilles) ? (string)$cibleFeuilles : 'toutes';
 
+// Index licence -> abv catégorie de classement (depuis les inscriptions du concours)
+$categorieParLicence = [];
+if (!empty($inscriptions) && is_array($inscriptions)) {
+    foreach ($inscriptions as $insc) {
+        $lic = trim((string)($insc['numero_licence'] ?? ''));
+        if ($lic !== '') {
+            $cat = trim((string)($insc['categorie_classement'] ?? $insc['abv_categorie_classement'] ?? ''));
+            if ($cat !== '') {
+                $categorieParLicence[$lic] = $cat;
+            }
+        }
+    }
+}
+
 // Nombre de volées et de séries pour salle (18m = 10 volées de 3 flèches, 2 séries)
 $nbVoleesSalle = 10;
 $nbSeriesSalle = 2;
@@ -37,13 +51,14 @@ if ($isCible && !empty($plansCible)) {
             $nom = trim($p['user_nom'] ?? '');
             $lic = trim($p['numero_licence'] ?? '');
             if ($nom !== '' || $lic !== '') {
+                $abvCat = $categorieParLicence[$lic] ?? trim($p['abv_categorie_classement'] ?? $p['categorie_classement'] ?? '');
                 $flat[] = [
                     'numero_depart' => (int)($p['numero_depart'] ?? $departNum),
                     'numero_cible' => (int)($p['numero_cible'] ?? 0),
                     'position_archer' => $p['position_archer'] ?? '',
                     'user_nom' => $nom,
                     'numero_licence' => $lic,
-                    'categorie_classement' => trim($p['categorie_classement'] ?? $p['categorie_classement'] ?? '')
+                    'abv_categorie_classement' => $abvCat
                 ];
             }
         }
@@ -79,7 +94,7 @@ if ($isPeloton && !empty($plansPeloton)) {
                     'position_archer' => $p['position_archer'] ?? '',
                     'user_nom' => $nom,
                     'numero_licence' => $lic,
-                    'categorie_classement' => trim($p['categorie_classement'] ?? $p['categorie_classement'] ?? '')
+                    'abv_categorie_classement' => $categorieParLicence[$lic] ?? trim($p['abv_categorie_classement'] ?? $p['categorie_classement'] ?? '')
                 ];
             }
         }
