@@ -189,7 +189,7 @@ if ($isSalle) {
                                     <tr class="table-secondary feuille-marque-ligne-resume">
                                         <td colspan="2"><strong>Nbre 10</strong></td>
                                         <td colspan="2"><strong>Nbre  9</strong></td>
-                                        <td colspan="2"><strong>Total général</strong></td>
+                                        <td colspan="2"><strong>Tot. série</strong></td>
                                     </tr>
                                     <tr class="feuille-marque-ligne-resume-valeurs">
                                         <td colspan="2"></td>
