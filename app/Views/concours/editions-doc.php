@@ -89,9 +89,11 @@ $dateFooter = date('d/m/Y H:i');
         .edition-doc-print-tbody table tbody tr:nth-child(even) td,
         .edition-liste-participants table tbody tr:nth-child(even) td,
         .edition-avis table tbody tr:nth-child(even) td,
+        .edition-scores table tbody tr:nth-child(even) td,
         .edition-doc-fin table tbody tr:nth-child(even) td {
             background-color: #e9ecef !important;
         }
+        .edition-scores-block { page-break-inside: avoid; }
         @media print {
             @page {
                 margin: 15mm 15mm 20mm 15mm;
@@ -186,7 +188,8 @@ $dateFooter = date('d/m/Y H:i');
             }
             .edition-doc-print-tbody table tbody tr:nth-child(even) td,
             .edition-liste-participants table tbody tr:nth-child(even) td,
-            .edition-avis table tbody tr:nth-child(even) td {
+            .edition-avis table tbody tr:nth-child(even) td,
+            .edition-scores table tbody tr:nth-child(even) td {
                 background-color: #e9ecef !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
