@@ -314,17 +314,29 @@ if ($isNature) {
                             <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-nature">
                                 <thead>
                                     <tr>
-                                        <th>N°</th>
-                                        <th>Flèche 1</th>
-                                        <th>Flèche 2</th>
-                                        <th>Total</th>
-                                        <th>Cumul</th>
+                                        <th >N° cible</th>
+                                        <th colspan="3">Flèche 1</th>
+                                        <th colspan="3">Flèche 2</th>
+                                        <th >Total</th>
+                                        <th >Cumul</th>
+                                        <th >20-15</th>
+                                        <th >20-10</th>
+                                        <th >15-15</th>
+                                        <th >15-10</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php for ($v = 1; $v <= $nbVoleesNature; $v++): ?>
                                     <tr>
                                         <td><?= $v ?></td>
+                                        <td>20</td>
+                                        <td>15</td>
+                                        <td>0</td>
+                                        <td>15</td>
+                                        <td>10</td>
+                                        <td>0</td>
+                                        <td></td>
+                                        <td></td>
                                         <td></td>
                                         <td></td>
                                         <td></td>
@@ -332,15 +344,9 @@ if ($isNature) {
                                     </tr>
                                     <?php endfor; ?>
                                     <tr class="table-secondary feuille-marque-ligne-resume">
-                                        <td><strong>20-15</strong></td>
-                                        <td><strong>20-10</strong></td>
-                                        <td><strong>15-15</strong></td>
-                                        <td><strong>15-10</strong></td>
-                                        <td><strong>Tot. série</strong></td>
-                                    </tr>
-                                    <tr class="feuille-marque-ligne-resume-valeurs">
+                                        <td colspan="8"><strong>Total des cibles</strong></td>
                                         <td></td>
-                                        <td></td>
+                                        <td></td>   
                                         <td></td>
                                         <td></td>
                                         <td></td>
