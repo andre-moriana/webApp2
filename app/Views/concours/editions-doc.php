@@ -60,11 +60,15 @@ $dateFooter = date('d/m/Y H:i');
             max-width: 380px;
             object-fit: contain;
         }
-        /* Feuilles de marques : logo réduit de 50 % */
+        /* Feuilles de marques : en-tête réduit pour tenir sur une page */
         body.edition-doc-feuilles-marques .edition-doc-logo {
-            height: 95px;
-            max-width: 190px;
+            height: 55px;
+            max-width: 110px;
         }
+        body.edition-doc-feuilles-marques .edition-doc-header .edition-doc-title { font-size: 0.9rem; }
+        body.edition-doc-feuilles-marques .edition-doc-header .edition-doc-subtitle { font-size: 0.7rem; }
+        body.edition-doc-feuilles-marques .edition-doc-header { padding: 4px 8px 6px; margin-bottom: 0.5rem; }
+        body.edition-doc-feuilles-marques .edition-doc-header-left { min-width: 80px; padding: 0 4px; }
         /* Espace libre autour du logo */
         .edition-doc-header-left {
             min-width: 150px;
@@ -182,16 +186,21 @@ $dateFooter = date('d/m/Y H:i');
             background-color: #e9ecef !important;
         }
         .edition-scores-block { page-break-inside: avoid; }
-        /* Feuilles de marques Salle : 4 tableaux côte à côte, page paysage */
+        /* Feuilles de marques Salle : 4 tableaux côte à côte, page paysage, en-tête réduit pour tenir sur une page */
+        .edition-feuilles-marques .feuille-marque-salle > p.text-center,
+        .edition-feuilles-marques .feuille-marque-salle-landscape > p.text-center {
+            font-size: 0.75rem;
+            margin-bottom: 0.35rem !important;
+        }
         .edition-feuilles-marques .feuille-marque-salle-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 0.75rem 1rem;
+            gap: 0.5rem 0.75rem;
             align-items: start;
         }
         .edition-feuilles-marques .feuille-marque-archer-block { page-break-inside: avoid; }
         .edition-feuilles-marques .feuille-marque-table-volees {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             table-layout: fixed;
             width: 100%;
             border-collapse: collapse;
@@ -199,13 +208,17 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-table-volees th,
         .edition-feuilles-marques .feuille-marque-table-volees td {
             border: 1px solid #333;
-            padding: 2px 4px;
+            padding: 1px 3px;
         }
-        .edition-feuilles-marques .feuille-marque-archer-header { font-size: 0.85rem; }
-        .edition-feuilles-marques .feuille-marque-blason { margin-left: 0.5rem; font-weight: 600; }
-        .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.5rem; font-size: 0.7rem; }
-        .edition-feuilles-marques .feuille-marque-ligne-resume td { text-align: center; }
-        .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 6.4em; padding: 12px 14px; }
+        .edition-feuilles-marques .feuille-marque-archer-header {
+            font-size: 0.65rem;
+            padding-bottom: 0.2rem !important;
+            margin-bottom: 0.35rem !important;
+        }
+        .edition-feuilles-marques .feuille-marque-blason { margin-left: 0.35rem; font-weight: 600; font-size: 0.65rem; }
+        .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.25rem; font-size: 0.6rem; }
+        .edition-feuilles-marques .feuille-marque-ligne-resume td { text-align: center; font-size: 0.65rem; }
+        .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 2.8em; padding: 4px 6px; }
         /* Nature : 2 archers par page, grille 2 colonnes */
         .edition-feuilles-marques .feuille-marque-nature-grid {
             display: grid;
@@ -323,15 +336,21 @@ $dateFooter = date('d/m/Y H:i');
             }
             /* Feuilles de marques : logo réduit de 50 % à l'impression */
             body.edition-doc-feuilles-marques .edition-doc-logo {
-                height: 22mm;
-                max-width: 44mm;
+                height: 12mm;
+                max-width: 24mm;
             }
+            body.edition-doc-feuilles-marques .edition-doc-header {
+                padding: 2px 0 4px 0 !important;
+                margin-bottom: 0 !important;
+            }
+            body.edition-doc-feuilles-marques .edition-doc-header-center .edition-doc-title { font-size: 9pt !important; }
+            body.edition-doc-feuilles-marques .edition-doc-header-center .edition-doc-subtitle { font-size: 7pt !important; }
             .edition-doc-header-left {
                 min-width: 32mm;
                 padding: 0 2mm;
             }
             body.edition-doc-feuilles-marques .edition-doc-header-left {
-                min-width: 16mm;
+                min-width: 14mm;
             }
             .edition-doc-logo-placeholder {
                 font-size: 10pt;
