@@ -76,7 +76,10 @@ $dateFooter = date('d/m/Y H:i');
         /* Liste des participants : taille de police réduite dans les tableaux */
         .edition-liste-participants table,
         .edition-liste-participants table th,
-        .edition-liste-participants table td {
+        .edition-liste-participants table td,
+        .edition-classement table,
+        .edition-classement table th,
+        .edition-classement table td {
             font-size: 0.8rem;
         }
         /* Lisibilité : griser 1 ligne sur 2 dans les tableaux (tr + td pour override Bootstrap) */

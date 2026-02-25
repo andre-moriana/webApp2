@@ -146,9 +146,9 @@ if ($top3ParCategorie) {
     <h1 class="text-center mb-4">Classement</h1>
     <p class="text-center text-muted small">(1er tir uniquement)</p>
     <?php if ($typeClassement === 'regional'): ?>
-    <p class="text-center text-muted small"><strong>Classement régional</strong> — archers dont le club (id_club) a les 2 mêmes premiers chiffres que le club organisateur</p>
+    <p class="text-center text-muted small"><strong>Classement régional</strong></p>
     <?php elseif ($typeClassement === 'departemental'): ?>
-    <p class="text-center text-muted small"><strong>Classement départemental</strong> — archers dont le club (id_club) a les 4 mêmes premiers chiffres que le club organisateur</p>
+    <p class="text-center text-muted small"><strong>Classement départemental</strong></p>
     <?php endif; ?>
     <?php if (!empty($top3ParCategorie)): ?>
     <p class="text-center text-muted small"><strong>Top 3</strong> — uniquement les 3 premiers de chaque catégorie</p>

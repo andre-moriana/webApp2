@@ -37,8 +37,6 @@ foreach ($groupes as $cle => $liste) {
 ?>
 <div class="edition-liste-participants">
     <h1 class="text-center mb-4">Liste des participants</h1>
-    <p class="text-center"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong></p>
-    <p class="text-center"><?= htmlspecialchars($concours->date_debut ?? '') ?> — <?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? '') ?></p>
 
     <div class="mb-3"><strong>Total : <?= count($inscriptions) ?> participant(s)</strong></div>
 
