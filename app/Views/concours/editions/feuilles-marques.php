@@ -54,7 +54,7 @@ if ($isCible && !empty($plansCible)) {
     }
     ksort($archersParCible);
     // Filtre par cible : ne garder que la cible sélectionnée si différent de TOUT
-    if ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'tout') {
+    if ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'toutes') {
         $cibleNum = (int)$filterCibleFeuilles;
         $archersParCible = array_filter($archersParCible, function ($g) use ($cibleNum) {
             return ((int)($g['cible'] ?? 0)) === $cibleNum;
@@ -106,7 +106,7 @@ if ($isSalle) {
 
     if (empty($archersParCible)) {
         // Aucun archer affecté : une feuille avec 4 emplacements vides (A, B, C, D)
-        $cibleVide = ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'tout') ? (int)$filterCibleFeuilles : 1;
+        $cibleVide = ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'toutes') ? (int)$filterCibleFeuilles : 1;
         $archersOrdre = [];
         for ($idx = 0; $idx < $nbSlotsParPage; $idx++) {
             $archersOrdre[] = array_merge($archerVide, ['depart' => $departDefaut, 'numero_cible' => $cibleVide, 'position_archer' => $positionsBlasonOrdre[$idx]]);
