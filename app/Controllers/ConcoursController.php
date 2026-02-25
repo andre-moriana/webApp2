@@ -2004,6 +2004,34 @@ class ConcoursController {
             });
         }
 
+        // Feuilles de marques : charger le plan cible (S, T, I, H) ou peloton (3, N, C) pour affecter les archers
+        $plansCibleFeuilles = [];
+        $plansPelotonFeuilles = [];
+        if ($doc === 'feuilles-marques') {
+            $abv = $disciplineAbv ?? '';
+            if (in_array($abv, ['S', 'T', 'I', 'H'], true)) {
+                try {
+                    $resp = $this->apiService->getPlanCible($concoursId);
+                    $data = $this->apiService->unwrapData($resp);
+                    if (is_array($data)) {
+                        $plansCibleFeuilles = isset($data['data']) ? $data['data'] : $data;
+                    }
+                } catch (Exception $e) {
+                    $plansCibleFeuilles = [];
+                }
+            } elseif (in_array($abv, ['3', 'N', 'C'], true)) {
+                try {
+                    $resp = $this->apiService->getPlanPeloton($concoursId);
+                    $data = $this->apiService->unwrapData($resp);
+                    if (is_array($data)) {
+                        $plansPelotonFeuilles = isset($data['data']) ? $data['data'] : $data;
+                    }
+                } catch (Exception $e) {
+                    $plansPelotonFeuilles = [];
+                }
+            }
+        }
+
         if ($doc && in_array($doc, $validDocs)) {
             // Affichage d'un document spécifique (optimisé impression)
             require_once __DIR__ . '/../Views/concours/editions-doc.php';

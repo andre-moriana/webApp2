@@ -176,6 +176,11 @@ $dateFooter = date('d/m/Y H:i');
             background-color: #e9ecef !important;
         }
         .edition-scores-block { page-break-inside: avoid; }
+        /* Feuilles de marques Salle : bloc par archer, tableau volées */
+        .edition-feuilles-marques .feuille-marque-archer-block { page-break-inside: avoid; }
+        .edition-feuilles-marques .feuille-marque-table-volees { font-size: 0.8rem; table-layout: fixed; width: 100%; }
+        .edition-feuilles-marques .feuille-marque-archer-header { font-size: 0.95rem; }
+        .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.5rem; }
         @media print {
             @page {
                 margin: 15mm 15mm 20mm 15mm;
