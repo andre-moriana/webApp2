@@ -244,7 +244,7 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-table-nature { font-size: 0.65rem; }
         .edition-feuilles-marques .feuille-marque-table-nature th,
         .edition-feuilles-marques .feuille-marque-table-nature td { padding: 1px 3px; }
-        /* Nature : logo en fond de tableau, transparence 10 % (overlay blanc 90 %) */
+        /* Nature : logo en fond de tableau, transparence 20 % (overlay blanc 80 %) */
         .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap {
             position: relative;
             background-repeat: no-repeat;
