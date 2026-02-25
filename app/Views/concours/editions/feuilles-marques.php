@@ -42,7 +42,8 @@ if ($isCible && !empty($plansCible)) {
                     'numero_cible' => (int)($p['numero_cible'] ?? 0),
                     'position_archer' => $p['position_archer'] ?? '',
                     'user_nom' => $nom,
-                    'numero_licence' => $lic
+                    'numero_licence' => $lic,
+                    'abv_categorie_classement' => trim($p['abv_categorie_classement'] ?? $p['categorie_classement'] ?? '')
                 ];
             }
         }
@@ -54,7 +55,7 @@ if ($isCible && !empty($plansCible)) {
     }
     ksort($archersParCible);
     // Filtre par cible : ne garder que la cible sélectionnée si différent de TOUT
-    if ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'toutes') {
+    if ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'tout') {
         $cibleNum = (int)$filterCibleFeuilles;
         $archersParCible = array_filter($archersParCible, function ($g) use ($cibleNum) {
             return ((int)($g['cible'] ?? 0)) === $cibleNum;
@@ -77,7 +78,8 @@ if ($isPeloton && !empty($plansPeloton)) {
                     'numero_peloton' => (int)($p['numero_peloton'] ?? 0),
                     'position_archer' => $p['position_archer'] ?? '',
                     'user_nom' => $nom,
-                    'numero_licence' => $lic
+                    'numero_licence' => $lic,
+                    'abv_categorie_classement' => trim($p['abv_categorie_classement'] ?? $p['categorie_classement'] ?? '')
                 ];
             }
         }
@@ -101,12 +103,12 @@ if ($isSalle) {
         $first = is_array($departsList[0] ?? null) ? ($departsList[0]['numero_depart'] ?? 1) : ($departsList[0]->numero_depart ?? 1);
         $departDefaut = (int)$first ?: 1;
     }
-    $archerVide = ['user_nom' => '', 'numero_licence' => '', 'position_archer' => '', 'numero_cible' => 0, 'depart' => $departDefaut];
+    $archerVide = ['user_nom' => '', 'numero_licence' => '', 'abv_categorie_classement' => '', 'position_archer' => '', 'numero_cible' => 0, 'depart' => $departDefaut];
     $nbSlotsParPage = 4;
 
     if (empty($archersParCible)) {
         // Aucun archer affecté : une feuille avec 4 emplacements vides (A, B, C, D)
-        $cibleVide = ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'toutes') ? (int)$filterCibleFeuilles : 1;
+        $cibleVide = ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'tout') ? (int)$filterCibleFeuilles : 1;
         $archersOrdre = [];
         for ($idx = 0; $idx < $nbSlotsParPage; $idx++) {
             $archersOrdre[] = array_merge($archerVide, ['depart' => $departDefaut, 'numero_cible' => $cibleVide, 'position_archer' => $positionsBlasonOrdre[$idx]]);
@@ -169,7 +171,7 @@ if ($isSalle) {
                     <?php foreach ($f['archers'] as $archer): ?>
                         <div class="feuille-marque-archer-block">
                             <div class="feuille-marque-archer-header border-bottom pb-1 mb-2 d-flex justify-content-between align-items-start">
-                                <span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?></span>
+                                <span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?> <span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></span>
                                 <span class="feuille-marque-blason text-nowrap">Blason : <?= htmlspecialchars(trim($archer['position_archer'] ?? '') ?: '—') ?></span>
                             </div>
                             <table class="table table-bordered table-sm feuille-marque-table-volees">
