@@ -1909,9 +1909,28 @@ class ConcoursController {
         $doc = $_GET['doc'] ?? null;
         $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement'];
 
-        // Tri liste des participants (club, départ, catégorie)
+        // Filtre par départ et tri pour liste des participants
+        $departFilterListe = $_GET['depart'] ?? '';
         $triListeParticipants = 'club';
+        $departsListListe = [];
         if ($doc === 'liste-participants') {
+            $departsRaw = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+            $departsListListe = array_values(is_array($departsRaw) ? $departsRaw : (array)$departsRaw);
+            if (empty($departsListListe)) {
+                $nums = [];
+                foreach ($inscriptions as $i) {
+                    $nd = (int)($i['numero_depart'] ?? 0);
+                    if ($nd > 0) $nums[$nd] = true;
+                }
+                ksort($nums);
+                $departsListListe = array_map(function ($n) { return ['numero_depart' => $n]; }, array_keys($nums));
+            }
+            if ($departFilterListe !== '' && $departFilterListe !== 'tout' && $departFilterListe !== 'all') {
+                $departNum = (int) $departFilterListe;
+                $inscriptions = array_values(array_filter($inscriptions, function ($i) use ($departNum) {
+                    return ((int)($i['numero_depart'] ?? 0)) === $departNum;
+                }));
+            }
             $triListeParticipants = $_GET['tri'] ?? 'club';
             $validTri = ['club', 'depart', 'categorie'];
             if (!in_array($triListeParticipants, $validTri, true)) {

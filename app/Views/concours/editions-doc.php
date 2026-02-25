@@ -201,18 +201,32 @@ $dateFooter = date('d/m/Y H:i');
 <body<?= ($doc === 'liste-participants') ? ' class="edition-doc-liste-participants"' : '' ?>>
     <div class="no-print mb-3">
         <?php if ($doc === 'liste-participants'): ?>
+        <?php
+        $baseListeUrl = '/concours/' . (int)$concoursId . '/editions?doc=liste-participants';
+        $currentTriListe = $triListeParticipants ?? 'club';
+        $currentDepartListe = isset($departFilterListe) && $departFilterListe !== '' && $departFilterListe !== 'tout' && $departFilterListe !== 'all' ? $departFilterListe : 'tout';
+        ?>
+        <label class="me-2">Départ :</label>
+        <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
+            <option value="<?= htmlspecialchars($baseListeUrl . '&tri=' . $currentTriListe . '&depart=tout') ?>"<?= $currentDepartListe === 'tout' ? ' selected' : '' ?>>Tous</option>
+            <?php
+            $departsListe = isset($departsListListe) && is_array($departsListListe) ? $departsListListe : (isset($departsList) && is_array($departsList) ? $departsList : []);
+            foreach ($departsListe as $d):
+                $num = (int)($d['numero_depart'] ?? 0);
+                if ($num <= 0) continue;
+                $url = $baseListeUrl . '&tri=' . $currentTriListe . '&depart=' . $num;
+                $sel = $currentDepartListe === (string)$num ? ' selected' : '';
+            ?>
+            <option value="<?= htmlspecialchars($url) ?>"<?= $sel ?>><?= $num ?></option>
+            <?php endforeach; ?>
+        </select>
         <label class="me-2">Tri :</label>
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
             <?php
-            $baseListeUrl = '/concours/' . (int)$concoursId . '/editions?doc=liste-participants';
-            $triOptions = [
-                'club' => 'Par club',
-                'depart' => 'Par départ',
-                'categorie' => 'Par catégorie'
-            ];
+            $triOptions = ['club' => 'Par club', 'depart' => 'Par départ', 'categorie' => 'Par catégorie'];
             foreach ($triOptions as $val => $label):
-                $url = $baseListeUrl . '&tri=' . $val;
-                $sel = ($triListeParticipants ?? 'club') === $val ? ' selected' : '';
+                $url = $baseListeUrl . '&depart=' . $currentDepartListe . '&tri=' . $val;
+                $sel = $currentTriListe === $val ? ' selected' : '';
             ?>
             <option value="<?= htmlspecialchars($url) ?>"<?= $sel ?>><?= htmlspecialchars($label) ?></option>
             <?php endforeach; ?>
