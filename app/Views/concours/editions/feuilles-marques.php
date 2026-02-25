@@ -144,9 +144,11 @@ if ($isSalle) {
                     $listeComplete[] = array_merge($archerVide, ['depart' => $dep, 'numero_cible' => $numCible, 'position_archer' => $lettre]);
                 }
             }
-            // Séparer en pages de 4 : page 1 = ABCD (indices 0-3), page 2 = EFGH (indices 4-7)
+            // Page 1 = ABCD. Page 2 = EFGH uniquement si au moins 5 archers sur la cible.
             $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => array_slice($listeComplete, 0, 4)];
-            $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => array_slice($listeComplete, 4, 4)];
+            if (count($archers) >= 5) {
+                $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => array_slice($listeComplete, 4, 4)];
+            }
         }
     }
 }
