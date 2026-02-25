@@ -90,30 +90,50 @@ if ($isPeloton && !empty($plansPeloton)) {
     ksort($archersParPeloton);
 }
 
-// Construire les "feuilles" (groupes de 4 à 8 archers, minimum 4 par page)
+// Construire les "feuilles" (groupes de 4 à 8 archers). Toujours 4 tableaux par page minimum, même sans archers affectés.
 $feuillesSalle = [];
-if ($isSalle && !empty($archersParCible)) {
+if ($isSalle) {
     $tousArchers = [];
     foreach ($archersParCible as $g) {
         foreach ($g['archers'] as $a) {
             $tousArchers[] = array_merge($a, ['depart' => $g['depart']]);
         }
     }
-    $chunk = [];
-    $maxParFeuille = 8;
-    foreach ($tousArchers as $a) {
-        $chunk[] = $a;
-        if (count($chunk) >= 4) {
-            $feuillesSalle[] = ['depart' => $a['depart'], 'archers' => $chunk];
-            $chunk = [];
-        } elseif (count($chunk) >= $maxParFeuille) {
-            $feuillesSalle[] = ['depart' => $a['depart'], 'archers' => $chunk];
-            $chunk = [];
+    $departDefaut = 1;
+    if (!empty($departsList)) {
+        $first = is_array($departsList[0] ?? null) ? ($departsList[0]['numero_depart'] ?? 1) : ($departsList[0]->numero_depart ?? 1);
+        $departDefaut = (int)$first ?: 1;
+    }
+    // Archer vide pour remplir les emplacements sans affectation
+    $archerVide = ['user_nom' => '', 'numero_licence' => '', 'numero_cible' => 0, 'depart' => $departDefaut];
+    if (empty($tousArchers)) {
+        $feuillesSalle[] = ['depart' => $departDefaut, 'archers' => array_fill(0, 4, $archerVide)];
+    } else {
+        $chunk = [];
+        $maxParFeuille = 8;
+        foreach ($tousArchers as $a) {
+            $chunk[] = $a;
+            if (count($chunk) >= 4) {
+                $feuillesSalle[] = ['depart' => $a['depart'], 'archers' => $chunk];
+                $chunk = [];
+            } elseif (count($chunk) >= $maxParFeuille) {
+                $feuillesSalle[] = ['depart' => $a['depart'], 'archers' => $chunk];
+                $chunk = [];
+            }
+        }
+        if (!empty($chunk)) {
+            $dep = $chunk[0]['depart'] ?? $departDefaut;
+            $feuillesSalle[] = ['depart' => $dep, 'archers' => $chunk];
         }
     }
-    if (!empty($chunk)) {
-        $dep = $chunk[0]['depart'] ?? 1;
-        $feuillesSalle[] = ['depart' => $dep, 'archers' => $chunk];
+    // Compléter chaque feuille à 4 ou 8 tableaux pour que toutes les cases soient toujours dessinées
+    foreach ($feuillesSalle as $i => $f) {
+        $n = count($f['archers']);
+        $cible = 4;
+        if ($n > 4) $cible = 8;
+        while (count($feuillesSalle[$i]['archers']) < $cible) {
+            $feuillesSalle[$i]['archers'][] = array_merge($archerVide, ['depart' => $f['depart']]);
+        }
     }
 }
 ?>
