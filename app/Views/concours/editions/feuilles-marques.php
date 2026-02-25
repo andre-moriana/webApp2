@@ -164,6 +164,12 @@ if ($isSalle) {
                             <table class="table table-bordered table-sm feuille-marque-table-volees">
                                 <thead>
                                     <tr>
+                                        <th ></th>
+                                        <th colspan="3">Flèches</th>
+                                        <th ></th>
+                                        <th ></th>
+                                    </tr>
+                                    <tr>
                                         <th style="width:10%">N°</th>
                                         <th style="width:16%">Flèche 1</th>
                                         <th style="width:16%">Flèche 2</th>
