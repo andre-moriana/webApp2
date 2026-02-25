@@ -3,7 +3,7 @@
 <link href="/public/assets/css/plan-cible.css" rel="stylesheet">
 
 <!-- Affichage du plan de cible d'un concours -->
-<div class="container-fluid concours-create-container" data-can-edit-plan="<?= !empty($canEditPlan) ? '1' : '0' ?>">
+<div class="container-fluid concours-create-container" data-can-edit-plan="<?= !empty($canEditPlan) ? '1' : '0' ?>" data-can-release-admin-dirigeant="<?= !empty($canReleaseAsAdminOrDirigeant) ? '1' : '0' ?>" data-current-user-licence="<?= htmlspecialchars($currentUserLicence ?? '') ?>">
 <h1>Plan de cible - <?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?></h1>
 
 <?php if (isset($_SESSION['error'])): ?>

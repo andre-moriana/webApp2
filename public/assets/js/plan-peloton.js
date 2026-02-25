@@ -99,6 +99,9 @@
     }
 
     var canEditPlanPeloton = document.querySelector('[data-can-edit-plan]')?.getAttribute('data-can-edit-plan') === '1';
+    var planContainer = document.querySelector('.concours-create-container[data-can-edit-plan]');
+    var canReleaseAdminDirigeant = planContainer?.getAttribute('data-can-release-admin-dirigeant') === '1';
+    var currentUserLicence = (planContainer?.getAttribute('data-current-user-licence') || '').trim();
 
     document.addEventListener('click', function(e) {
         var item = e.target.closest('.blason-item');
@@ -118,7 +121,10 @@
             infoContainer.textContent = 'Départ ' + currentTarget.depart + ' - Peloton ' + currentTarget.peloton +
                 ' - Position ' + currentTarget.position + ' : sélectionnez un archer à affecter';
         }
-        if (releaseBtn) releaseBtn.style.display = assignable ? 'none' : 'block';
+        // Libération : uniquement admin, dirigeant ou l'archer concerné (propre affectation)
+        var isOwnAssignment = currentTarget.numeroLicence && String(currentTarget.numeroLicence).trim() === currentUserLicence;
+        var canRelease = !assignable && (canReleaseAdminDirigeant || isOwnAssignment);
+        if (releaseBtn) releaseBtn.style.display = canRelease ? 'block' : 'none';
         fetchArchersDispo(currentTarget);
         if (modalInstance) modalInstance.show();
     });

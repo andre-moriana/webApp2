@@ -154,7 +154,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     <button type="button" class="btn btn-primary w-100" id="archer-search-btn">Chercher</button>
                 </div>
             </div>
-            <small class="text-muted d-block mt-2">Recherche uniquement dans le fichier XML.</small>
         </div>
     </div>
 

@@ -6,6 +6,9 @@
     'use strict';
 
     var canEditPlanCible = document.querySelector('[data-can-edit-plan]')?.getAttribute('data-can-edit-plan') === '1';
+    var planContainer = document.querySelector('.concours-create-container[data-can-edit-plan]');
+    var canReleaseAdminDirigeant = planContainer?.getAttribute('data-can-release-admin-dirigeant') === '1';
+    var currentUserLicence = (planContainer?.getAttribute('data-current-user-licence') || '').trim();
 
     // Création du plan (bouton quand aucun plan n'existe)
     var btnCreate = document.getElementById('btn-create-plan-cible-empty');
@@ -227,9 +230,13 @@
             userNom: item.dataset.userNom || null
         };
         if (infoContainer) infoContainer.textContent = formatTargetInfo(currentTarget);
+        // Libération : uniquement admin, dirigeant ou l'archer concerné (propre affectation)
         if (releaseContainer) {
             var isAssigned = currentTarget.userId || currentTarget.numeroLicence;
-            releaseContainer.style.display = isAssigned ? 'block' : 'none';
+            var assignedLicence = (currentTarget.numeroLicence || '').trim();
+            var isOwnAssignment = !!assignedLicence && assignedLicence === currentUserLicence;
+            var canRelease = isAssigned && (canReleaseAdminDirigeant || isOwnAssignment);
+            releaseContainer.style.display = canRelease ? 'block' : 'none';
         }
         fetchArchersDisponibles(currentTarget);
         if (modalInstance) modalInstance.show();
