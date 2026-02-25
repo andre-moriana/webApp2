@@ -34,7 +34,7 @@ $editionHeaderSubtitle = ($doc ?? '') === 'feuilles-marques' ? $titreCompetition
             <?php endif; ?>
         </div>
         <div class="edition-doc-header-center">
-            <h2 class="edition-doc-title"><?= $editionHeaderTitle ?></h2>
+            <h2 class="edition-doc-title-center"><?= $editionHeaderTitle ?></h2>
             <?php if ($editionHeaderSubtitle !== null): ?>
             <p class="edition-doc-subtitle mb-0 mt-1 small text-muted"><?= $editionHeaderSubtitle ?></p>
             <?php endif; ?>
