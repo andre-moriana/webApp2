@@ -93,7 +93,7 @@ if ($isPeloton && !empty($plansPeloton)) {
 // Ordre des positions blason : tableau 1 = A, tableau 2 = B, etc.
 $positionsBlasonOrdre = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
-// Construire les "feuilles" : une feuille par cible (tous les archers d'une feuille sont affectés à la même cible). 4 ou 8 tableaux par page.
+// Construire les "feuilles" : une feuille par cible, 4 tableaux par page. Page 1 = A,B,C,D, page 2 = E,F,G,H (pages séparées).
 $feuillesSalle = [];
 if ($isSalle) {
     $departDefaut = 1;
@@ -102,18 +102,17 @@ if ($isSalle) {
         $departDefaut = (int)$first ?: 1;
     }
     $archerVide = ['user_nom' => '', 'numero_licence' => '', 'position_archer' => '', 'numero_cible' => 0, 'depart' => $departDefaut];
-    $maxParFeuille = 8;
+    $nbSlotsParPage = 4;
 
     if (empty($archersParCible)) {
         // Aucun archer affecté : une feuille avec 4 emplacements vides (A, B, C, D)
         $cibleVide = ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'tout') ? (int)$filterCibleFeuilles : 1;
         $archersOrdre = [];
-        for ($idx = 0; $idx < 4; $idx++) {
+        for ($idx = 0; $idx < $nbSlotsParPage; $idx++) {
             $archersOrdre[] = array_merge($archerVide, ['depart' => $departDefaut, 'numero_cible' => $cibleVide, 'position_archer' => $positionsBlasonOrdre[$idx]]);
         }
         $feuillesSalle[] = ['depart' => $departDefaut, 'cible' => $cibleVide, 'archers' => $archersOrdre];
     } else {
-        // Une feuille par cible (par groupe depart+cible) : on ne mélange jamais deux cibles sur une même page
         foreach ($archersParCible as $g) {
             $dep = (int)($g['depart'] ?? $departDefaut);
             $numCible = (int)($g['cible'] ?? 0);
@@ -121,61 +120,34 @@ if ($isSalle) {
             foreach ($archers as $i => $a) {
                 $archers[$i] = array_merge($a, ['depart' => $dep, 'numero_cible' => $numCible]);
             }
-            $chunk = [];
+            // Construire la liste ordonnée sur 8 slots (A à H), puis découper en 2 pages de 4 : ABCD et EFGH
+            $byPosition = [];
+            $sansPosition = [];
             foreach ($archers as $a) {
-                $chunk[] = $a;
-                if (count($chunk) >= 4) {
-                    $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => $chunk];
-                    $chunk = [];
-                } elseif (count($chunk) >= $maxParFeuille) {
-                    $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => $chunk];
-                    $chunk = [];
+                $pos = strtoupper(trim($a['position_archer'] ?? ''));
+                if ($pos !== '' && in_array($pos, $positionsBlasonOrdre, true) && !isset($byPosition[$pos])) {
+                    $byPosition[$pos] = $a;
+                } else {
+                    $sansPosition[] = $a;
                 }
             }
-            if (!empty($chunk)) {
-                $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => $chunk];
+            $idxSans = 0;
+            $listeComplete = [];
+            for ($idx = 0; $idx < 8; $idx++) {
+                $lettre = $positionsBlasonOrdre[$idx];
+                if (isset($byPosition[$lettre])) {
+                    $listeComplete[] = $byPosition[$lettre];
+                } elseif ($idxSans < count($sansPosition)) {
+                    $a = $sansPosition[$idxSans++];
+                    $listeComplete[] = array_merge($a, ['position_archer' => $lettre]);
+                } else {
+                    $listeComplete[] = array_merge($archerVide, ['depart' => $dep, 'numero_cible' => $numCible, 'position_archer' => $lettre]);
+                }
             }
+            // Séparer en pages de 4 : page 1 = ABCD (indices 0-3), page 2 = EFGH (indices 4-7)
+            $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => array_slice($listeComplete, 0, 4)];
+            $feuillesSalle[] = ['depart' => $dep, 'cible' => $numCible, 'archers' => array_slice($listeComplete, 4, 4)];
         }
-    }
-
-    // Compléter chaque feuille à 4 ou 8 tableaux puis placer chaque archer dans le tableau correspondant à sa position (A=1, B=2, C=3, D=4...)
-    foreach ($feuillesSalle as $i => $f) {
-        $n = count($feuillesSalle[$i]['archers']);
-        $nbSlots = 4;
-        if ($n > 4) $nbSlots = 8;
-        $numCible = (int)($f['cible'] ?? 0);
-        $dep = (int)($f['depart'] ?? $departDefaut);
-        $archersList = $feuillesSalle[$i]['archers'];
-        while (count($archersList) < $nbSlots) {
-            $archersList[] = array_merge($archerVide, ['depart' => $dep, 'numero_cible' => $numCible]);
-        }
-        // Séparer : archers avec position reconnue (A-H) vs sans position / autre
-        $lettresValides = array_slice($positionsBlasonOrdre, 0, $nbSlots);
-        $byPosition = [];
-        $sansPosition = [];
-        foreach ($archersList as $a) {
-            $pos = strtoupper(trim($a['position_archer'] ?? ''));
-            if ($pos !== '' && in_array($pos, $lettresValides, true) && !isset($byPosition[$pos])) {
-                $byPosition[$pos] = $a;
-            } else {
-                $sansPosition[] = $a;
-            }
-        }
-        // Construire l'ordre : slot 0 = A, slot 1 = B, ... ; si pas d'archer pour cette lettre, prendre un "sans position" ou vide
-        $archersOrdre = [];
-        $idxSans = 0;
-        for ($idx = 0; $idx < $nbSlots; $idx++) {
-            $lettre = $positionsBlasonOrdre[$idx];
-            if (isset($byPosition[$lettre])) {
-                $archersOrdre[] = $byPosition[$lettre];
-            } elseif ($idxSans < count($sansPosition)) {
-                $a = $sansPosition[$idxSans++];
-                $archersOrdre[] = array_merge($a, ['position_archer' => $lettre]);
-            } else {
-                $archersOrdre[] = array_merge($archerVide, ['depart' => $dep, 'numero_cible' => $numCible, 'position_archer' => $lettre]);
-            }
-        }
-        $feuillesSalle[$i]['archers'] = $archersOrdre;
     }
 }
 ?>
