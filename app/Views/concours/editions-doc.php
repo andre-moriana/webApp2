@@ -78,6 +78,9 @@ $dateFooter = date('d/m/Y H:i');
         .edition-liste-participants table th,
         .edition-liste-participants table td,
         .edition-classement table,
+        .edition-scores table,
+        .edition-scores table th,
+        .edition-scores table td,
         .edition-classement table th,
         .edition-classement table td {
             font-size: 0.8rem;
