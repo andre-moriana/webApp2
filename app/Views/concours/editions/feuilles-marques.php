@@ -267,14 +267,17 @@ if ($isNature) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php for ($v = 1; $v <= $nbVoleesSalle; $v++): ?>
+                                    <?php for ($v = 1; $v <= $nbVoleesSalle; $v++):
+                                        $rowEven = ($v % 2 === 0);
+                                        $tdBgSalle = $rowEven ? ' style="background-color: #e9ecef;"' : '';
+                                    ?>
                                     <tr>
-                                        <td><?= $v ?></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
+                                        <td<?= $tdBgSalle ?>><?= $v ?></td>
+                                        <td<?= $tdBgSalle ?>></td>
+                                        <td<?= $tdBgSalle ?>></td>
+                                        <td<?= $tdBgSalle ?>></td>
+                                        <td<?= $tdBgSalle ?>></td>
+                                        <td<?= $tdBgSalle ?>></td>
                                     </tr>
                                     <?php endfor; ?>
                                     <tr class="table-secondary feuille-marque-ligne-resume">
@@ -333,21 +336,24 @@ if ($isNature) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php for ($v = 1; $v <= $nbVoleesNature; $v++): ?>
+                                    <?php for ($v = 1; $v <= $nbVoleesNature; $v++):
+                                        $rowEven = ($v % 2 === 0);
+                                        $tdBgNature = $rowEven ? ' style="background-color: #e9ecef;"' : '';
+                                    ?>
                                     <tr>
-                                        <td><?= $v ?></td>
-                                        <td>20</td>
-                                        <td>15</td>
-                                        <td>0</td>
-                                        <td>15</td>
-                                        <td>10</td>
-                                        <td>0</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
+                                        <td<?= $tdBgNature ?>><?= $v ?></td>
+                                        <td<?= $tdBgNature ?>>20</td>
+                                        <td<?= $tdBgNature ?>>15</td>
+                                        <td<?= $tdBgNature ?>>0</td>
+                                        <td<?= $tdBgNature ?>>15</td>
+                                        <td<?= $tdBgNature ?>>10</td>
+                                        <td<?= $tdBgNature ?>>0</td>
+                                        <td<?= $tdBgNature ?>></td>
+                                        <td<?= $tdBgNature ?>></td>
+                                        <td<?= $tdBgNature ?>></td>
+                                        <td<?= $tdBgNature ?>></td>
+                                        <td<?= $tdBgNature ?>></td>
+                                        <td<?= $tdBgNature ?>></td>
                                     </tr>
                                     <?php endfor; ?>
                                     <tr class="table-secondary feuille-marque-ligne-resume">
