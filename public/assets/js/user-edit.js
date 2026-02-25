@@ -11,7 +11,7 @@ function loadUsersXml() {
         }
         
         // Charger le fichier XML depuis le dossier public/data
-        fetch('/public/data/users-licences.xml')
+        fetch('/public/data/licences-users.xml')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Impossible de charger le fichier XML');
