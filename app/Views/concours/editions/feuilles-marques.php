@@ -19,6 +19,10 @@ $isSalle = ($disciplineAbv === 'S');
 $isCible = in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
 $isPeloton = in_array($disciplineAbv, ['3', 'N', 'C'], true);
 
+// Filtres d'édition (série et cible)
+$filterSerieFeuilles = isset($serieFeuilles) ? (string)$serieFeuilles : 'tout';
+$filterCibleFeuilles = isset($cibleFeuilles) ? (string)$cibleFeuilles : 'tout';
+
 // Nombre de volées et de séries pour salle (18m = 10 volées de 3 flèches, 2 séries)
 $nbVoleesSalle = 10;
 $nbSeriesSalle = 2;
@@ -49,6 +53,13 @@ if ($isCible && !empty($plansCible)) {
         $archersParCible[$k]['archers'][] = $a;
     }
     ksort($archersParCible);
+    // Filtre par cible : ne garder que la cible sélectionnée si différent de TOUT
+    if ($filterCibleFeuilles !== '' && $filterCibleFeuilles !== 'tout') {
+        $cibleNum = (int)$filterCibleFeuilles;
+        $archersParCible = array_filter($archersParCible, function ($g) use ($cibleNum) {
+            return ((int)($g['cible'] ?? 0)) === $cibleNum;
+        });
+    }
 }
 
 // Extraire les archers du plan peloton, groupés par (depart, peloton)
@@ -108,8 +119,13 @@ if ($isSalle && !empty($archersParCible)) {
 ?>
 <div class="edition-feuilles-marques">
     <?php if ($isSalle && !empty($feuillesSalle)): ?>
+        <?php
+        $seriesAffichees = ($filterSerieFeuilles !== '' && $filterSerieFeuilles !== 'tout')
+            ? [max(1, min((int)$filterSerieFeuilles, $nbSeriesSalle))]
+            : range(1, $nbSeriesSalle);
+        ?>
         <?php foreach ($feuillesSalle as $f): ?>
-            <?php foreach (range(1, $nbSeriesSalle) as $numSerie): ?>
+            <?php foreach ($seriesAffichees as $numSerie): ?>
                 <div class="feuille-marque-salle feuille-marque-salle-landscape mb-4 page-break">
                     <h2 class="text-center mb-2">Feuille de marques</h2>
                     <p class="text-center mb-3"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong> — Départ <?= (int)$f['depart'] ?> — Série <?= $numSerie ?></p>

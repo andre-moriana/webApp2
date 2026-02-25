@@ -2030,6 +2030,21 @@ class ConcoursController {
                     $plansPelotonFeuilles = [];
                 }
             }
+            // Filtres d'édition : série (1, 2 ou tout) et cible (numéro ou tout)
+            $serieFeuilles = isset($_GET['serie']) ? (string)$_GET['serie'] : 'tout';
+            $cibleFeuilles = isset($_GET['cible']) ? (string)$_GET['cible'] : 'tout';
+            $ciblesListFeuilles = [];
+            if (in_array($abv, ['S', 'T', 'I', 'H'], true) && !empty($plansCibleFeuilles)) {
+                foreach ($plansCibleFeuilles as $departNum => $plans) {
+                    if (!is_array($plans)) continue;
+                    foreach ($plans as $p) {
+                        $nc = (int)($p['numero_cible'] ?? 0);
+                        if ($nc > 0) $ciblesListFeuilles[$nc] = true;
+                    }
+                }
+                $ciblesListFeuilles = array_keys($ciblesListFeuilles);
+                sort($ciblesListFeuilles);
+            }
         }
 
         if ($doc && in_array($doc, $validDocs)) {
