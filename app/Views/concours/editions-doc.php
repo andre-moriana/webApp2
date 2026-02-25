@@ -69,6 +69,8 @@ $dateFooter = date('d/m/Y H:i');
         body.edition-doc-feuilles-marques .edition-doc-header .edition-doc-subtitle { font-size: 0.7rem; }
         body.edition-doc-feuilles-marques .edition-doc-header { padding: 4px 8px 6px; margin-bottom: 0.5rem; }
         body.edition-doc-feuilles-marques .edition-doc-header-left { min-width: 80px; padding: 0 4px; }
+        /* Nature : masquer l'en-tête (logo + titre) à l'écran */
+        body.edition-doc-feuilles-marques-nature .edition-doc-print-thead { display: none; }
         /* Espace libre autour du logo */
         .edition-doc-header-left {
             min-width: 150px;
@@ -242,6 +244,12 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-table-nature { font-size: 0.65rem; }
         .edition-feuilles-marques .feuille-marque-table-nature th,
         .edition-feuilles-marques .feuille-marque-table-nature td { padding: 1px 3px; }
+        /* Nature : logo en fond de tableau, transparence 10 % (overlay blanc 90 %) */
+        .edition-feuilles-marques .feuille-marque-table-nature.has-logo-bg {
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 55%;
+        }
         @media print {
             @page {
                 margin: 15mm 15mm 20mm 15mm;
@@ -289,6 +297,10 @@ $dateFooter = date('d/m/Y H:i');
             }
             body.edition-doc-feuilles-marques .edition-doc-print-thead {
                 display: table-header-group;
+            }
+            /* Nature : masquer l'en-tête document (logo + titre) */
+            body.edition-doc-feuilles-marques-nature .edition-doc-print-thead {
+                display: none !important;
             }
             .edition-doc-print-thead td {
                 padding: 0;
@@ -376,6 +388,7 @@ $dateFooter = date('d/m/Y H:i');
 $bodyClasses = [];
 if ($doc === 'liste-participants') $bodyClasses[] = 'edition-doc-liste-participants';
 if ($doc === 'feuilles-marques') $bodyClasses[] = 'edition-doc-feuilles-marques';
+if ($doc === 'feuilles-marques' && ($disciplineAbv ?? '') === 'N') $bodyClasses[] = 'edition-doc-feuilles-marques-nature';
 echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
 ?>>
     <div class="no-print mb-3">

@@ -301,10 +301,15 @@ if ($isNature) {
         <?php endforeach; ?>
 
     <?php elseif ($isNature && !empty($feuillesNature)): ?>
+        <?php
+            $logoBgStyleNature = '';
+            if (!empty($clubLogoUrl)) {
+                $logoEsc = htmlspecialchars($clubLogoUrl, ENT_QUOTES, 'UTF-8');
+                $logoBgStyleNature = "background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url('" . $logoEsc . "') no-repeat center; background-size: 55%;";
+            }
+        ?>
         <?php foreach ($feuillesNature as $f): ?>
                 <div class="feuille-marque-nature feuille-marque-salle-landscape mb-4 page-break">
-                    <p class="text-center mb-3"><strong>Feuille de marques Nature</strong> — Départ <?= (int)$f['depart'] ?> — Peloton <?= (int)($f['peloton'] ?? 0) ?></p>
-
                     <div class="feuille-marque-nature-grid">
                     <?php foreach ($f['archers'] as $archer): ?>
                         <div class="feuille-marque-archer-block">
@@ -312,7 +317,7 @@ if ($isNature) {
                                 <span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?><br><span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></span>
                                 <span class="feuille-marque-blason text-nowrap">N° peloton : <?= (int)($f['peloton'] ?? 0) ?></span>
                             </div>
-                            <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-nature">
+                            <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-nature<?= $logoBgStyleNature !== '' ? ' has-logo-bg' : '' ?>"<?= $logoBgStyleNature !== '' ? ' style="' . $logoBgStyleNature . '"' : '' ?>>
                                 <thead>
                                     <tr>
                                         <th >N° cible</th>
