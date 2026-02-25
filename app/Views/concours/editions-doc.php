@@ -47,12 +47,13 @@ $dateFooter = date('d/m/Y H:i');
             align-items: center;
         }
         .edition-doc-header-left { justify-content: flex-start; }
-        .edition-doc-header-center { justify-content: center; }
+        .edition-doc-header-center { justify-content: center; text-align: center; }
         .edition-doc-header-center .edition-doc-title {
             margin: 0;
             font-size: 1.1rem;
             font-weight: 600;
         }
+        .edition-doc-header-center .edition-doc-subtitle { text-align: center; }
         /* Logo : taille agrandie pour l'en-tête des éditions */
         .edition-doc-logo {
             height: 190px;
@@ -203,7 +204,7 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-archer-header { font-size: 0.85rem; }
         .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.5rem; font-size: 0.7rem; }
         .edition-feuilles-marques .feuille-marque-ligne-resume td { text-align: center; }
-        .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 3.2em; padding: 6px 8px; }
+        .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 6.4em; padding: 10px 12px; }
         @media print {
             @page {
                 margin: 15mm 15mm 20mm 15mm;
@@ -283,12 +284,13 @@ $dateFooter = date('d/m/Y H:i');
                 align-items: center;
             }
             .edition-doc-header-left { justify-content: flex-start; }
-            .edition-doc-header-center { justify-content: center; }
+            .edition-doc-header-center { justify-content: center; text-align: center; }
             .edition-doc-header-center .edition-doc-title {
                 margin: 0;
                 font-size: 14pt;
                 font-weight: 600;
             }
+            .edition-doc-header-center .edition-doc-subtitle { text-align: center; }
             /* Logo : taille agrandie à l'impression */
             .edition-doc-logo {
                 height: 44mm;
