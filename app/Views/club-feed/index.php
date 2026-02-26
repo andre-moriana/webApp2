@@ -61,17 +61,24 @@ if ($flashSuccess !== '') unset($_SESSION['club_feed_success']);
                         <?php if ($feedError !== ''): ?>
                             <p class="text-warning mb-2">Le fil n'a pas pu être chargé.</p>
                             <p class="small text-muted mb-3"><?php echo htmlspecialchars($feedError); ?></p>
-                            <div class="small text-muted mb-3 text-start" style="max-width: 560px; margin-left: auto; margin-right: auto;">
+                            <div class="small text-muted mb-3 text-start" style="max-width: 600px; margin-left: auto; margin-right: auto;">
                                 <p class="mb-2"><strong>Procédure recommandée :</strong></p>
                                 <ol class="mb-2 ps-3">
                                     <li class="mb-1">Cliquez sur <strong>«&nbsp;Déconnecter la page Facebook&nbsp;»</strong> ci‑dessous.</li>
                                     <li class="mb-1">Sur <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a>, ouvrez votre app.</li>
-                                    <li class="mb-1">Allez dans <strong>Paramètres &gt; Utilisation de l’app &gt; Autorisations et fonctionnalités</strong> et ajoutez <strong>pages_read_engagement</strong> (et <strong>pages_show_list</strong> si besoin).</li>
-                                    <li class="mb-1"><strong>En mode Développement :</strong> le compte qui connecte la page doit être <strong>Administrateur, Développeur ou Testeur</strong> de l’app (<strong>Rôles &gt; Rôles de l’application</strong>).</li>
+                                    <li class="mb-1"><strong>Ajouter la permission via les Cas d’usage :</strong>
+                                        <ul class="mt-1 mb-0">
+                                            <li>Dans le <strong>menu de gauche</strong> du tableau de bord, cliquez sur <strong>«&nbsp;Cas d’usage&nbsp;»</strong> (ou <em>Use cases</em>).</li>
+                                            <li>Si besoin, ajoutez le cas d’usage <strong>«&nbsp;Gérer tout sur votre Page&nbsp;»</strong> (<em>Manage everything on your Page</em>).</li>
+                                            <li>Cliquez sur ce cas d’usage, puis ajoutez la permission optionnelle <strong>pages_read_engagement</strong> (bouton <strong>Ajouter</strong> / <em>Add</em> à côté de la permission).</li>
+                                            <li>Sinon, cherchez <strong>«&nbsp;Facebook Login&nbsp;»</strong> dans le menu gauche → <strong>Paramètres</strong> → onglet <strong>Autorisations et fonctionnalités</strong> pour les anciennes apps.</li>
+                                        </ul>
+                                    </li>
+                                    <li class="mb-1"><strong>En mode Développement :</strong> le compte qui connecte la page doit être dans <strong>Rôles &gt; Rôles de l’application</strong> (vous l’avez déjà).</li>
                                     <li class="mb-1"><strong>En mode Live :</strong> soumettre une demande d’<strong>App Review</strong> pour «&nbsp;Pages Read Engagement&nbsp;» ou «&nbsp;Page Public Content Access&nbsp;».</li>
                                     <li class="mb-1">Revenez ici, cliquez sur <strong>«&nbsp;Déconnecter&nbsp;»</strong> puis sur <strong>«&nbsp;Connecter la page Facebook&nbsp;»</strong> pour réautoriser.</li>
                                 </ol>
-                                <p class="mb-0 small"><strong>Important :</strong> En mode Développement, le compte Facebook qui clique sur « Connecter » doit figurer dans <strong>Rôles &gt; Rôles de l’application</strong> (Administrateur, Développeur ou Testeur).</p>
+                                <p class="mb-0 small"><strong>Important :</strong> En mode Développement, seul un compte <strong>Administrateur, Développeur ou Testeur</strong> de l’app peut connecter une page.</p>
                             </div>
                             <a href="/club-feed/disconnect" class="btn btn-outline-danger me-2"><i class="fas fa-unlink me-1"></i>Déconnecter la page Facebook</a>
                             <a href="/club-feed/connect" class="btn btn-primary">Connecter la page Facebook</a>
