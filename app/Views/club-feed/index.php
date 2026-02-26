@@ -39,11 +39,16 @@ if ($flashSuccess !== '') unset($_SESSION['club_feed_success']);
                     <div class="card-body text-center py-5">
                         <i class="fab fa-facebook fa-4x text-muted mb-3"></i>
                         <p class="text-muted mb-0">
-                            Aucune page Facebook n'est configurée pour <?php echo htmlspecialchars($clubName); ?>.
+                            Aucune page Facebook n'est configurée pour <strong><?php echo htmlspecialchars($clubName); ?></strong>.
                         </p>
                         <p class="small text-muted mt-2">
-                            Votre dirigeant ou administrateur peut ajouter l'URL de la page Facebook dans les informations du club.
+                            Cette page affiche les actualités du club auquel votre compte est rattaché. Pour voir un fil Facebook ici, un dirigeant ou administrateur doit&nbsp;:
                         </p>
+                        <ol class="small text-muted text-start mt-2 mb-3" style="max-width: 400px; margin-left: auto; margin-right: auto;">
+                            <li>Aller dans <strong>Club</strong> puis modifier les infos du club <strong><?php echo htmlspecialchars($clubName); ?></strong>.</li>
+                            <li>Renseigner l'URL de la page Facebook du club (ex. https://www.facebook.com/ArchersDeGemenos).</li>
+                            <li>Revenir sur cette page et cliquer sur «&nbsp;Connecter la page Facebook&nbsp;» pour afficher les publications.</li>
+                        </ol>
                         <a href="/dashboard" class="btn btn-outline-primary mt-3">
                             <i class="fas fa-tachometer-alt me-1"></i> Aller au tableau de bord
                         </a>
