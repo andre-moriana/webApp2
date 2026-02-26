@@ -30,6 +30,19 @@ class ClubFeedController
         $feedError = '';
         $fbHref = '';
 
+        if (!$clubId) {
+            try {
+                $listResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+                $list = $this->apiService->unwrapData($listResponse);
+                if (!empty($listResponse['success']) && is_array($list) && count($list) > 0) {
+                    $first = $list[0];
+                    $clubId = $first['id'] ?? $first['_id'] ?? $first['nameShort'] ?? $first['name_short'] ?? null;
+                }
+            } catch (Exception $e) {
+                error_log('ClubFeedController list: ' . $e->getMessage());
+            }
+        }
+
         if ($clubId) {
             try {
                 $response = $this->apiService->makeRequest("clubs/{$clubId}", 'GET');
