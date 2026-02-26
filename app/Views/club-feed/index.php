@@ -1,17 +1,7 @@
 <?php
-$facebookUrl = isset($facebookUrl) ? trim((string)$facebookUrl) : '';
+$facebookDisabled = isset($facebookDisabled) && $facebookDisabled;
 $clubName = $clubName ?? 'votre club';
-$posts = $posts ?? [];
-$facebookConnected = $facebookConnected ?? false;
-$feedError = $feedError ?? '';
 $fbHref = $fbHref ?? '';
-if ($facebookUrl !== '' && $fbHref === '') {
-    $fbHref = (strpos($facebookUrl, 'http') === 0) ? $facebookUrl : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
-}
-$flashError = $_SESSION['club_feed_error'] ?? '';
-$flashSuccess = $_SESSION['club_feed_success'] ?? '';
-if ($flashError !== '') unset($_SESSION['club_feed_error']);
-if ($flashSuccess !== '') unset($_SESSION['club_feed_success']);
 ?>
 <div class="container-fluid py-4">
     <div class="row">
@@ -21,6 +11,35 @@ if ($flashSuccess !== '') unset($_SESSION['club_feed_success']);
                 Actualités du club
             </h1>
 
+            <?php if ($facebookDisabled): ?>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="fab fa-facebook fa-4x text-muted mb-3"></i>
+                        <p class="text-muted mb-2">Le fil d’actualités Facebook n’est pas affiché sur ce site.</p>
+                        <p class="small text-muted mb-4">Vous pouvez suivre les actualités de <strong><?php echo htmlspecialchars($clubName); ?></strong> directement sur Facebook.</p>
+                        <?php if ($fbHref !== ''): ?>
+                            <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary me-2">
+                                <i class="fab fa-facebook me-1"></i> Page Facebook du club
+                            </a>
+                        <?php endif; ?>
+                        <a href="/dashboard" class="btn btn-primary">
+                            <i class="fas fa-tachometer-alt me-1"></i> Tableau de bord
+                        </a>
+                    </div>
+                </div>
+            <?php else:
+                $facebookUrl = isset($facebookUrl) ? trim((string)$facebookUrl) : '';
+                $posts = $posts ?? [];
+                $facebookConnected = $facebookConnected ?? false;
+                $feedError = $feedError ?? '';
+                if ($facebookUrl !== '' && $fbHref === '') {
+                    $fbHref = (strpos($facebookUrl, 'http') === 0) ? $facebookUrl : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
+                }
+                $flashError = $_SESSION['club_feed_error'] ?? '';
+                $flashSuccess = $_SESSION['club_feed_success'] ?? '';
+                if ($flashError !== '') unset($_SESSION['club_feed_error']);
+                if ($flashSuccess !== '') unset($_SESSION['club_feed_success']);
+            ?>
             <?php if ($flashError): ?>
                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                     <?php echo htmlspecialchars($flashError); ?>
@@ -79,6 +98,8 @@ if ($flashSuccess !== '') unset($_SESSION['club_feed_success']);
                                     <li class="mb-1">Revenez ici, cliquez sur <strong>«&nbsp;Déconnecter&nbsp;»</strong> puis sur <strong>«&nbsp;Connecter la page Facebook&nbsp;»</strong> pour réautoriser.</li>
                                 </ol>
                                 <p class="mb-0 small"><strong>Important :</strong> En mode Développement, seul un compte <strong>Administrateur, Développeur ou Testeur</strong> de l’app peut connecter une page.</p>
+                                <p class="mt-2 mb-0 small text-muted"><strong>Alternative :</strong> Demander <strong>« Page Public Content Access »</strong> en Contrôle d’application. Une fois approuvé, le fil peut s’afficher à partir de l’URL Facebook du club (sans « Connecter la page »). Il faut alors ajouter <code>FACEBOOK_APP_ID</code> et <code>FACEBOOK_APP_SECRET</code> dans le fichier .env du <strong>backend</strong> (BackendPHP).</p>
+                                <p class="mt-2 mb-0 small">Un guide pas à pas (avec les noms de menus que vous voyez) est dans le fichier <strong>FACEBOOK-FIL-CLUB-CONFIG.md</strong> à la racine du projet WebApp2.</p>
                             </div>
                             <a href="/club-feed/disconnect" class="btn btn-outline-danger me-2"><i class="fas fa-unlink me-1"></i>Déconnecter la page Facebook</a>
                             <a href="/club-feed/connect" class="btn btn-primary">Connecter la page Facebook</a>
@@ -146,6 +167,7 @@ if ($flashSuccess !== '') unset($_SESSION['club_feed_success']);
                         </p>
                     </div>
                 </div>
+            <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
