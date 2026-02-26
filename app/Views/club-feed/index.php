@@ -3,6 +3,7 @@ $facebookUrl = isset($facebookUrl) ? trim((string)$facebookUrl) : '';
 $clubName = $clubName ?? 'votre club';
 $posts = $posts ?? [];
 $facebookConnected = $facebookConnected ?? false;
+$feedError = $feedError ?? '';
 $fbHref = $fbHref ?? '';
 if ($facebookUrl !== '' && $fbHref === '') {
     $fbHref = (strpos($facebookUrl, 'http') === 0) ? $facebookUrl : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
@@ -52,7 +53,13 @@ if ($flashSuccess !== '') unset($_SESSION['club_feed_success']);
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center py-4">
                         <i class="fab fa-facebook fa-3x text-primary mb-3"></i>
-                        <p class="text-muted mb-3">Page connectée. Aucune publication récente pour le moment.</p>
+                        <?php if ($feedError !== ''): ?>
+                            <p class="text-warning mb-2">Le fil n'a pas pu être chargé.</p>
+                            <p class="small text-muted mb-3"><?php echo htmlspecialchars($feedError); ?></p>
+                            <p class="small text-muted mb-3">Vérifiez que l'app Facebook a bien la permission &laquo;&nbsp;pages_read_engagement&nbsp;&raquo; et que la page est en mode publication publique.</p>
+                        <?php else: ?>
+                            <p class="text-muted mb-3">Page connectée. Aucune publication récente pour le moment.</p>
+                        <?php endif; ?>
                         <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
                             <i class="fab fa-facebook me-1"></i> Voir la page Facebook
                         </a>

@@ -27,6 +27,7 @@ class ClubFeedController
         $clubName = 'votre club';
         $posts = [];
         $facebookConnected = false;
+        $feedError = '';
         $fbHref = '';
 
         if ($clubId) {
@@ -41,9 +42,10 @@ class ClubFeedController
                     $facebookConnected = !empty($club['facebookConnected']);
                 }
                 $feedResponse = $this->apiService->makeRequest("clubs/{$clubId}/facebook-feed", 'GET');
-                if (!empty($feedResponse['success']) && !empty($feedResponse['data'])) {
+                if (!empty($feedResponse['success']) && isset($feedResponse['data'])) {
                     $posts = $feedResponse['data']['posts'] ?? [];
                     $facebookConnected = !empty($feedResponse['data']['connected']);
+                    $feedError = $feedResponse['data']['feedError'] ?? '';
                 }
             } catch (Exception $e) {
                 error_log('ClubFeedController: ' . $e->getMessage());
