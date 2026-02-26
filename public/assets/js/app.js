@@ -1,6 +1,22 @@
 // JavaScript personnalis� pour le portail Archers de G�menos
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Menu principal : ouvrir la modale au clic sur le bouton Menu
+    const openNavModalBtn = document.getElementById('openNavModalBtn');
+    const navModalEl = document.getElementById('navModal');
+    if (openNavModalBtn && navModalEl) {
+        openNavModalBtn.addEventListener('click', function() {
+            const modal = bootstrap.Modal.getOrCreateInstance(navModalEl);
+            modal.show();
+        });
+        // Fermer la modale après un clic sur un lien (navigation)
+        navModalEl.querySelectorAll('.nav-menu-links a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                bootstrap.Modal.getInstance(navModalEl).hide();
+            });
+        });
+    }
+
     // Initialisation des tooltips Bootstrap
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {

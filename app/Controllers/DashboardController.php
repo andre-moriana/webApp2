@@ -22,6 +22,9 @@ class DashboardController {
         
         $title = 'Tableau de bord - Portail Arc Training';
         
+        // Dashboard en pleine page pour les administrateurs (menu dans une modale)
+        $dashboardFullPage = (bool)($_SESSION['user']['is_admin'] ?? false);
+        
         // Récupérer les statistiques
         $stats = $this->getStats();
         
