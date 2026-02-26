@@ -55,17 +55,42 @@ $clubName = $clubName ?? 'votre club';
                                 'locale' => 'fr_FR',
                             ]);
                             ?>
-                            <iframe src="<?php echo htmlspecialchars($iframeSrc); ?>"
-                                    width="500"
-                                    height="700"
-                                    style="border:none;overflow:hidden;max-width:100%;"
-                                    scrolling="no"
-                                    frameborder="0"
-                                    allowfullscreen="true"
-                                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                                    title="Page Facebook <?php echo htmlspecialchars($clubName); ?>">
-                            </iframe>
+                            <div id="fb-root"></div>
+                            <div class="fb-page"
+                                 data-href="<?php echo htmlspecialchars($fbHref); ?>"
+                                 data-tabs="timeline"
+                                 data-width="500"
+                                 data-height="700"
+                                 data-small-header="false"
+                                 data-adapt-container-width="true"
+                                 data-hide-cover="false"
+                                 data-show-facepile="true">
+                                <blockquote cite="<?php echo htmlspecialchars($fbHref); ?>" class="fb-xfbml-parse-ignore">
+                                    <a href="<?php echo htmlspecialchars($fbHref); ?>"><?php echo htmlspecialchars($clubName); ?> sur Facebook</a>
+                                </blockquote>
+                            </div>
+                            <noscript>
+                                <iframe src="<?php echo htmlspecialchars($iframeSrc); ?>"
+                                        width="500" height="700"
+                                        style="border:none;overflow:hidden;max-width:100%;" scrolling="no" frameborder="0"
+                                        allowfullscreen="true"
+                                        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                                        title="Page Facebook <?php echo htmlspecialchars($clubName); ?>"></iframe>
+                            </noscript>
                         </div>
+                        <script>
+                            window.fbAsyncInit = function() {
+                                FB.init({ xfbml: true, version: 'v18.0' });
+                            };
+                            (function(d, s, id) {
+                                var js, fjs = d.getElementsByTagName(s)[0];
+                                if (d.getElementById(id)) return;
+                                js = d.createElement(s); js.id = id;
+                                js.src = "https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0";
+                                js.async = true; js.defer = true;
+                                fjs.parentNode.insertBefore(js, fjs);
+                            }(document, 'script', 'facebook-jssdk'));
+                        </script>
                     </div>
                 </div>
             <?php endif; ?>
