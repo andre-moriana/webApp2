@@ -569,7 +569,7 @@ switch ($doc) {
         echo '<p>Document inconnu.</p>';
 }
 ?>
-                    <?php if ($doc !== 'liste-participants' && $doc !== 'feuilles-marques' && $doc !== 'avis') include __DIR__ . '/editions/_edition-doc-fin.php'; ?>
+                    <?php if ($doc !== 'liste-participants' && $doc !== 'feuilles-marques') include __DIR__ . '/editions/_edition-doc-fin.php'; ?>
                 </td>
             </tr>
         </tbody>
