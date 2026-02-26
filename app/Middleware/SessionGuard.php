@@ -29,12 +29,12 @@ class SessionGuard {
         
         // Vérifier si l'utilisateur est connecté
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            // Détruire la session invalide
+            $returnPath = self::getLoginReturnUrl();
             session_unset();
             session_destroy();
-            
-            $returnUrl = urlencode(self::getLoginReturnUrl());
-            header('Location: /login?expired=1&return=' . $returnUrl);
+            session_start();
+            $_SESSION['login_return_url'] = $returnPath;
+            header('Location: /login?expired=1&return=' . urlencode($returnPath));
             exit;
         }
         

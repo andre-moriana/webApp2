@@ -609,6 +609,11 @@ class Router {
                 $uri = $_SERVER['REQUEST_URI'] ?? '';
                 $returnPath = (strpos($uri, '/club-feed/facebook-callback') !== false) ? '/club-feed' : (parse_url($uri, PHP_URL_PATH) ?: '/');
                 $returnPath = (strlen($returnPath) > 0 && $returnPath[0] === '/') ? $returnPath : '/';
+                // Sauvegarder en session au cas où le param return serait perdu (formulaire, autre onglet)
+                if (session_status() === PHP_SESSION_NONE) {
+                    session_start();
+                }
+                $_SESSION['login_return_url'] = $returnPath;
                 header("Location: /login?return=" . urlencode($returnPath));
                 exit;
             }
