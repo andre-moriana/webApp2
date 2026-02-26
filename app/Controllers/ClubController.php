@@ -180,6 +180,12 @@ class ClubController {
             $error = 'Erreur lors de la récupération du club: ' . $e->getMessage();
         }
 
+        if (!$club) {
+            $_SESSION['error'] = $error ?? 'Club non trouvé';
+            header('Location: /clubs');
+            exit;
+        }
+
         $title = 'Détails du club - ' . htmlspecialchars($club['name'] ?? 'Club');
         
         include 'app/Views/layouts/header.php';
