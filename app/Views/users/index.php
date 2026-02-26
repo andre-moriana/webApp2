@@ -41,22 +41,34 @@ $title = "Gestion des utilisateurs - Portail Arc Training";
                         <h5 class="card-title mb-0">
                             <i class="fas fa-users me-2"></i>Liste des utilisateurs
                         </h5>
-                        <div class="search-box">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white">
-                                    <i class="fas fa-search text-muted"></i>
-                                </span>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="userSearchInput" 
-                                       placeholder="Rechercher un utilisateur..." 
-                                       autocomplete="off">
-                                <button class="btn btn-outline-secondary" 
-                                        type="button" 
-                                        id="clearSearchBtn" 
-                                        style="display: none;">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <div class="search-box">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="userSearchInput" 
+                                           placeholder="Rechercher un utilisateur..." 
+                                           autocomplete="off">
+                                    <button class="btn btn-outline-secondary" 
+                                            type="button" 
+                                            id="clearSearchBtn" 
+                                            style="display: none;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <label for="validationFilter" class="form-label mb-0 me-2 small text-muted">Validation&nbsp;:</label>
+                                <select class="form-select form-select-sm" id="validationFilter" style="min-width: 180px;">
+                                    <option value="">Tous</option>
+                                    <option value="active">Validé</option>
+                                    <option value="pending">En attente</option>
+                                    <option value="rejected">Rejeté</option>
+                                    <option value="pending_deletion">En attente de suppression</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -103,7 +115,7 @@ $title = "Gestion des utilisateurs - Portail Arc Training";
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($users as $user): ?>
-                                        <tr class="user-row" data-searchable="<?php 
+                                        <tr class="user-row" data-status="<?php echo htmlspecialchars($user['status'] ?? 'active'); ?>" data-searchable="<?php 
                                             // Construire une chaîne de recherche avec toutes les données pertinentes
                                             $searchableText = '';
                                             if (!empty($user['firstName'])) $searchableText .= strtolower($user['firstName']) . ' ';

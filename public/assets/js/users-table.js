@@ -114,8 +114,13 @@ function handleAvatarDisplay() {
     });
 }
 
-// Fonction de recherche rapide
+// Fonction de recherche rapide (combine recherche texte + filtre validation)
 function filterUsersTable(searchTerm) {
+    applyFilters();
+}
+
+// Applique le filtre validation et la recherche texte
+function applyFilters() {
     const table = document.getElementById('usersTable');
     if (!table) {
         return;
@@ -128,77 +133,58 @@ function filterUsersTable(searchTerm) {
     
     const userRows = tbody.querySelectorAll('tr.user-row');
     const noResultsRow = tbody.querySelector('tr.no-results-row');
+    const searchInput = document.getElementById('userSearchInput');
+    const validationFilter = document.getElementById('validationFilter');
+    
+    const searchTermTrimmed = (searchInput && searchInput.value) ? searchInput.value.trim().toLowerCase() : '';
+    const validationValue = (validationFilter && validationFilter.value) ? validationFilter.value : '';
     
     let visibleCount = 0;
-    const searchTermTrimmed = searchTerm ? searchTerm.trim().toLowerCase() : '';
     
-    if (!searchTermTrimmed) {
-        // Afficher toutes les lignes utilisateur si la recherche est vide
-        userRows.forEach(row => {
-            row.style.display = '';
-            visibleCount++;
-        });
-        // Masquer le message "Aucun résultat" initial et celui de recherche
-        if (noResultsRow) {
-            noResultsRow.style.display = 'none';
-        }
-        const searchNoResultsRow = tbody.querySelector('tr.search-no-results');
-        if (searchNoResultsRow) {
-            searchNoResultsRow.remove();
-        }
-    } else {
-        // Rechercher dans le contenu visible des cellules
-        userRows.forEach(row => {
-            // Récupérer le texte de toutes les cellules (sauf Actions)
+    userRows.forEach(row => {
+        const rowStatus = row.getAttribute('data-status') || '';
+        const matchValidation = !validationValue || rowStatus === validationValue;
+        
+        let matchSearch = true;
+        if (searchTermTrimmed) {
             const cells = row.querySelectorAll('td');
             let rowText = '';
-            
-            // Parcourir toutes les cellules sauf la dernière (Actions)
             for (let i = 0; i < cells.length - 1; i++) {
                 const cellText = cells[i].textContent || cells[i].innerText || '';
                 rowText += cellText.toLowerCase() + ' ';
             }
-            
-            // Vérifier aussi l'attribut data-searchable si disponible
             const dataSearchable = (row.getAttribute('data-searchable') || '').toLowerCase();
             rowText += dataSearchable;
-            
-            // Vérifier si le terme de recherche est présent
-            if (rowText.includes(searchTermTrimmed)) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
-        });
-        
-        // Gérer le message "Aucun résultat"
-        if (visibleCount === 0 && userRows.length > 0) {
-            // Créer ou afficher une ligne "Aucun résultat" pour la recherche
-            let searchNoResultsRow = tbody.querySelector('tr.search-no-results');
-            if (!searchNoResultsRow) {
-                searchNoResultsRow = document.createElement('tr');
-                searchNoResultsRow.className = 'search-no-results';
-                const colCount = table.querySelectorAll('thead th').length;
-                searchNoResultsRow.innerHTML = `<td colspan="${colCount}" class="text-center py-4"><i class="fas fa-search fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Aucun utilisateur ne correspond à votre recherche</p></td>`;
-                tbody.appendChild(searchNoResultsRow);
-            }
-            searchNoResultsRow.style.display = '';
-        } else {
-            // Masquer la ligne "Aucun résultat" de recherche
-            const searchNoResultsRow = tbody.querySelector('tr.search-no-results');
-            if (searchNoResultsRow) {
-                searchNoResultsRow.style.display = 'none';
-            }
+            matchSearch = rowText.includes(searchTermTrimmed);
         }
         
-        // Masquer la ligne "Aucun résultat" initiale
-        if (noResultsRow) {
-            noResultsRow.style.display = 'none';
+        const show = matchValidation && matchSearch;
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    // Message "Aucun résultat"
+    if (visibleCount === 0 && userRows.length > 0) {
+        let searchNoResultsRow = tbody.querySelector('tr.search-no-results');
+        if (!searchNoResultsRow) {
+            searchNoResultsRow = document.createElement('tr');
+            searchNoResultsRow.className = 'search-no-results';
+            const colCount = table.querySelectorAll('thead th').length;
+            searchNoResultsRow.innerHTML = `<td colspan="${colCount}" class="text-center py-4"><i class="fas fa-search fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Aucun utilisateur ne correspond aux filtres</p></td>`;
+            tbody.appendChild(searchNoResultsRow);
+        }
+        searchNoResultsRow.style.display = '';
+    } else {
+        const searchNoResultsRow = tbody.querySelector('tr.search-no-results');
+        if (searchNoResultsRow) {
+            searchNoResultsRow.style.display = 'none';
         }
     }
     
-    // Mettre à jour le compteur de résultats
+    if (noResultsRow) {
+        noResultsRow.style.display = 'none';
+    }
+    
     updateResultsCount(visibleCount, userRows.length);
 }
 
@@ -276,7 +262,7 @@ function initUsersTable() {
     searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             this.value = '';
-            filterUsersTable('');
+            applyFilters();
             if (clearSearchBtn) {
                 clearSearchBtn.style.display = 'none';
             }
@@ -289,11 +275,17 @@ function initUsersTable() {
         clearSearchBtn.addEventListener('click', function() {
             if (searchInput) {
                 searchInput.value = '';
-                filterUsersTable('');
+                applyFilters();
                 this.style.display = 'none';
                 searchInput.focus();
             }
         });
+    }
+    
+    // Filtre par validation
+    const validationFilter = document.getElementById('validationFilter');
+    if (validationFilter) {
+        validationFilter.addEventListener('change', applyFilters);
     }
     
     // Test initial pour vérifier que tout fonctionne
