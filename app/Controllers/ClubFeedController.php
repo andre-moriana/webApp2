@@ -29,11 +29,11 @@ class ClubFeedController
             try {
                 $response = $this->apiService->makeRequest("clubs/{$clubId}", 'GET');
                 $payload = $this->apiService->unwrapData($response);
-                if ($response['success'] && $payload) {
+                if ($response['success'] && $payload && is_array($payload)) {
                     $club = $payload;
                     $clubName = $club['name'] ?? 'Club';
                     $facebookUrl = $club['facebookUrl'] ?? $club['facebook_url'] ?? '';
-                    $facebookUrl = trim($facebookUrl);
+                    $facebookUrl = is_string($facebookUrl) ? trim($facebookUrl) : '';
                 }
             } catch (Exception $e) {
                 error_log('ClubFeedController: ' . $e->getMessage());
