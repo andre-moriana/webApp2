@@ -131,15 +131,21 @@ class ClubFeedController
         }
         if ($clubId) {
             try {
-                $this->apiService->makeRequest("clubs/{$clubId}", 'PUT', [
-                    'facebookPageId' => null,
-                    'facebookPageToken' => null,
-                ]);
+                $response = $this->apiService->makeRequest("clubs/{$clubId}/facebook-disconnect", 'POST');
+                $ok = !empty($response['success']) || (isset($response['data']['success']) && !empty($response['data']['success']));
+                if (!$ok) {
+                    $data = $response['data'] ?? [];
+                    $msg = is_array($data) ? ($data['error'] ?? $response['message'] ?? '') : ($response['message'] ?? '');
+                    $_SESSION['club_feed_error'] = $msg ?: 'Impossible de déconnecter la page.';
+                }
             } catch (Exception $e) {
                 error_log('ClubFeedController disconnect: ' . $e->getMessage());
+                $_SESSION['club_feed_error'] = 'Erreur lors de la déconnexion.';
             }
         }
-        $_SESSION['club_feed_success'] = 'Page Facebook déconnectée. Vérifiez les paramètres de l\'app Facebook puis recliquez sur « Connecter la page Facebook ».';
+        if (!isset($_SESSION['club_feed_error'])) {
+            $_SESSION['club_feed_success'] = 'Page Facebook déconnectée. Vérifiez les paramètres de l\'app Facebook puis recliquez sur « Connecter la page Facebook ».';
+        }
         header('Location: /club-feed');
         exit;
     }
