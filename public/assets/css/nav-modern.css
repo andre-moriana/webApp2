@@ -45,7 +45,7 @@
     width: auto;
     max-width: 140px;
     object-fit: contain;
-    filter: brightness(1) invert(0);
+    filter: brightness(2) invert(0);
 }
 
 .app-topbar-actions {
