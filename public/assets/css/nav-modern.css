@@ -2,7 +2,7 @@
 
 :root {
     --topbar-height: 56px;
-    --topbar-bg: linear-gradient(135deg, #0d5c2e 0%, #198754 50%, #20c997 100%);
+    --topbar-bg: linear-gradient(135deg, #002915 0%, #198754 50%, #20c997 100%);
     --topbar-text: rgba(255,255,255,0.95);
     --topbar-text-hover: #fff;
     --nav-modal-bg: #1a1d21;
@@ -45,7 +45,7 @@
     width: auto;
     max-width: 140px;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    filter: brightness(1) invert(0);
 }
 
 .app-topbar-actions {
