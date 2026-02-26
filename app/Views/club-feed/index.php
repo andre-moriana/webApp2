@@ -61,7 +61,17 @@ if ($flashSuccess !== '') unset($_SESSION['club_feed_success']);
                         <?php if ($feedError !== ''): ?>
                             <p class="text-warning mb-2">Le fil n'a pas pu être chargé.</p>
                             <p class="small text-muted mb-3"><?php echo htmlspecialchars($feedError); ?></p>
-                            <p class="small text-muted mb-3">Vérifiez que l'app Facebook a bien la permission &laquo;&nbsp;pages_read_engagement&nbsp;&raquo; et que la page est en mode publication publique.</p>
+                            <div class="small text-muted mb-3 text-start" style="max-width: 520px; margin-left: auto; margin-right: auto;">
+                                <p class="mb-2"><strong>À vérifier côté application Facebook :</strong></p>
+                                <ul class="mb-2">
+                                    <li>Dans <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a>, ouvrez votre app puis <strong>Utilisation de l’app &gt; Autorisations et fonctionnalités</strong>.</li>
+                                    <li>Ajoutez la permission <strong>pages_read_engagement</strong> si elle n’est pas listée.</li>
+                                    <li><strong>App en mode Développement :</strong> le compte qui connecte la page doit être <strong>Administrateur, Développeur ou Testeur</strong> de l’app.</li>
+                                    <li><strong>App en mode Live :</strong> soumettez une demande d’<strong>App Review</strong> pour «&nbsp;Pages Read Engagement&nbsp;» (ou «&nbsp;Page Public Content Access&nbsp;» selon les cas).</li>
+                                </ul>
+                                <p class="mb-0">Puis recliquez sur «&nbsp;Connecter la page Facebook&nbsp;» pour réautoriser avec les bons accès.</p>
+                            </div>
+                            <a href="/club-feed/connect" class="btn btn-primary me-2">Reconnecter la page Facebook</a>
                         <?php else: ?>
                             <p class="text-muted mb-3">Page connectée. Aucune publication récente pour le moment.</p>
                         <?php endif; ?>

@@ -150,6 +150,16 @@ class ClubFeedController
             header('Location: /club-feed');
             exit;
         }
+        // Échanger le token court contre un token long (60 j) pour que les permissions soient bien prises en compte
+        $exchangeUrl = 'https://graph.facebook.com/v18.0/oauth/access_token?grant_type=fb_exchange_token'
+            . '&client_id=' . urlencode($appId)
+            . '&client_secret=' . urlencode($appSecret)
+            . '&fb_exchange_token=' . urlencode($userToken);
+        $exchangeJson = @file_get_contents($exchangeUrl);
+        $exchangeData = $exchangeJson ? json_decode($exchangeJson, true) : null;
+        if (!empty($exchangeData['access_token'])) {
+            $userToken = $exchangeData['access_token'];
+        }
         $accountsUrl = 'https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token&access_token=' . urlencode($userToken);
         $accountsJson = @file_get_contents($accountsUrl);
         $accountsData = $accountsJson ? json_decode($accountsJson, true) : null;
