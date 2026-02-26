@@ -27,6 +27,8 @@ class PermissionService
     const RESOURCE_USERS = 'users';
     const RESOURCE_USERS_SELF = 'users_self';
     const RESOURCE_USERS_ALL = 'users_all';
+    /** Accès à la page « Liste des utilisateurs » (liste complète) */
+    const RESOURCE_USERS_LIST = 'users_list';
     const RESOURCE_EXERCISES = 'exercises';
     const RESOURCE_TRAINING_PROGRESS = 'training_progress';
     const RESOURCE_STATS_OTHER = 'stats_other';
@@ -165,7 +167,8 @@ class PermissionService
             
             // Utilisateurs - Vue
             'users_view' => 'Coach',
-            'users_self_edit' => 'Archer',  // Modifier ses propres infos
+            'users_list_view' => 'Coach',    // Accès à la liste des utilisateurs
+            'users_self_edit' => 'Archer',   // Modifier ses propres infos
             'users_edit' => 'Dirigeant',     // Modifier tous les utilisateurs
             'users_create' => 'Dirigeant',
             'users_delete' => 'Dirigeant',
@@ -337,11 +340,17 @@ class PermissionService
             'users' => [
                 'label' => 'Utilisateurs',
                 'actions' => [
-                    'view' => 'Consulter',
+                    'view' => 'Consulter un profil',
                     'self_edit' => 'Modifier ses propres informations',
                     'edit' => 'Modifier tous les utilisateurs',
                     'create' => 'Créer',
                     'delete' => 'Supprimer'
+                ]
+            ],
+            'users_list' => [
+                'label' => 'Liste des utilisateurs',
+                'actions' => [
+                    'view' => 'Consulter la liste'
                 ]
             ],
             'exercises' => [

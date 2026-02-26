@@ -16,10 +16,10 @@ class UserController {
             exit;
         }
         
-        // Vérifier la permission de voir les utilisateurs
+        // Vérifier la permission d'accès à la liste des utilisateurs
         $clubId = $_SESSION['user']['clubId'] ?? null;
         PermissionHelper::requirePermission(
-            PermissionService::RESOURCE_USERS_ALL,
+            PermissionService::RESOURCE_USERS_LIST,
             PermissionService::ACTION_VIEW,
             $clubId
         );

@@ -1,5 +1,10 @@
 <?php
 $isAdmin = (bool)($_SESSION['user']['is_admin'] ?? false);
+$clubId = $_SESSION['user']['clubId'] ?? null;
+if (!class_exists('PermissionHelper')) {
+    require_once __DIR__ . '/../../Config/PermissionHelper.php';
+}
+$canAccessUsersList = $isAdmin || PermissionHelper::can('users_list', 'view', $clubId);
 ?>
 <div class="nav-menu-sections">
     <!-- Rubrique Club -->
@@ -12,7 +17,9 @@ $isAdmin = (bool)($_SESSION['user']['is_admin'] ?? false);
         <div class="collapse show" id="nav-section-club">
             <ul class="nav-menu-links">
                 <li><a href="/clubs"><i class="fas fa-info-circle me-2"></i>Infos du club</a></li>
+                <?php if ($canAccessUsersList): ?>
                 <li><a href="/users"><i class="fas fa-users me-2"></i>Liste des membres</a></li>
+                <?php endif; ?>
                 <li><a href="/groups"><i class="fas fa-layer-group me-2"></i>Forum Groupe</a></li>
                 <li><a href="/events"><i class="fas fa-calendar-alt me-2"></i>Événements</a></li>
             </ul>
@@ -32,7 +39,9 @@ $isAdmin = (bool)($_SESSION['user']['is_admin'] ?? false);
                 <li><a href="/exercises"><i class="fas fa-clipboard-list me-2"></i>Exercices</a></li>
                 <li><a href="/scored-trainings"><i class="fas fa-bullseye me-2"></i>Tir comptés</a></li>
                 <li><a href="/private-messages"><i class="fas fa-envelope me-2"></i>Messages</a></li>
+                <?php if ($canAccessUsersList): ?>
                 <li><a href="/users"><i class="fas fa-users-cog me-2"></i>Liste des utilisateurs</a></li>
+                <?php endif; ?>
             </ul>
         </div>
     </div>
