@@ -17,48 +17,67 @@ class ClubFeedController
     }
 
     /**
-     * Page « Actualités du club ». Fil Facebook désactivé : affiche un message et un lien vers la page Facebook du club si configurée.
+     * Page « Actualités du club » : affiche le fil Facebook (ou le bouton pour connecter la page, ou un message d'erreur).
      */
     public function index()
     {
         SessionGuard::check();
 
-        $clubName = 'votre club';
-        $fbHref = '';
+        $user = $_SESSION['user'] ?? [];
+        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
+        $club = null;
         $facebookUrl = '';
+        $clubName = 'votre club';
+        $posts = [];
+        $facebookConnected = false;
+        $feedError = '';
+        $fbHref = '';
+        $facebookDisabled = false;
 
-        try {
-            $user = $_SESSION['user'] ?? [];
-            $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
-            if (!$clubId) {
+        if (!$clubId) {
+            try {
                 $listResponse = $this->apiService->makeRequest('clubs/list', 'GET');
                 $list = $this->apiService->unwrapData($listResponse);
                 if (!empty($listResponse['success']) && is_array($list) && count($list) > 0) {
                     $first = $list[0];
                     $clubId = $first['id'] ?? $first['_id'] ?? $first['nameShort'] ?? $first['name_short'] ?? null;
                 }
+            } catch (Exception $e) {
+                error_log('ClubFeedController list: ' . $e->getMessage());
             }
-            if ($clubId) {
+        }
+
+        if ($clubId) {
+            try {
                 $response = $this->apiService->makeRequest("clubs/{$clubId}", 'GET');
                 $payload = $this->apiService->unwrapData($response);
-                if (!empty($response['success']) && is_array($payload)) {
-                    $clubName = $payload['name'] ?? 'Club';
-                    $facebookUrl = trim((string)($payload['facebookUrl'] ?? $payload['facebook_url'] ?? ''));
-                    if ($facebookUrl !== '') {
-                        $fbHref = (strpos($facebookUrl, 'http') === 0)
-                            ? $facebookUrl
-                            : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
-                    }
+                if ($response['success'] && $payload && is_array($payload)) {
+                    $club = $payload;
+                    $clubName = $club['name'] ?? 'Club';
+                    $facebookUrl = $club['facebookUrl'] ?? $club['facebook_url'] ?? '';
+                    $facebookUrl = is_string($facebookUrl) ? trim($facebookUrl) : '';
+                    $facebookConnected = !empty($club['facebookConnected']);
                 }
+                $feedResponse = $this->apiService->makeRequest("clubs/{$clubId}/facebook-feed", 'GET');
+                if (!empty($feedResponse['success']) && isset($feedResponse['data'])) {
+                    $posts = $feedResponse['data']['posts'] ?? [];
+                    $facebookConnected = !empty($feedResponse['data']['connected']);
+                    $feedError = $feedResponse['data']['feedError'] ?? '';
+                }
+            } catch (Exception $e) {
+                error_log('ClubFeedController: ' . $e->getMessage());
             }
-        } catch (Exception $e) {
-            // ignore
+        }
+
+        if ($facebookUrl !== '') {
+            $fbHref = (strpos($facebookUrl, 'http') === 0)
+                ? $facebookUrl
+                : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
         }
 
         $title = 'Actualités du club - Portail Arc Training';
         $pageTitle = $title;
         $dashboardFullPage = false;
-        $facebookDisabled = true; // Fil Facebook désactivé (plus d'intégration API)
 
         include 'app/Views/layouts/header.php';
         include 'app/Views/club-feed/index.php';

@@ -22,9 +22,16 @@ $fbHref = $fbHref ?? '';
                                 <i class="fab fa-facebook me-1"></i> Page Facebook du club
                             </a>
                         <?php endif; ?>
-                        <a href="/dashboard" class="btn btn-primary">
-                            <i class="fas fa-tachometer-alt me-1"></i> Tableau de bord
-                        </a>
+                        <?php
+                        $user = $_SESSION['user'] ?? [];
+                        $isAdmin = !empty($user['is_admin']);
+                        $role = $user['role'] ?? '';
+                        $isArcher = (stripos($role, 'archer') !== false || strtolower($role) === 'user');
+                        if ($isAdmin || !$isArcher): ?>
+                            <a href="/dashboard" class="btn btn-primary">
+                                <i class="fas fa-tachometer-alt me-1"></i> Tableau de bord
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php else:
