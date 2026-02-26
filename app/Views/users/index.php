@@ -1,5 +1,6 @@
 <?php
 $title = "Gestion des utilisateurs - Portail Arc Training";
+$clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ?? null;
 ?>
 <div class="container-fluid">
     <?php if (isset($_SESSION['error'])): ?>
@@ -284,11 +285,12 @@ $title = "Gestion des utilisateurs - Portail Arc Training";
                                             </td>
                                             <td class="text-nowrap">
                                                 <div class="btn-group" role="group">
+                                                    <?php if (PermissionHelper::canViewUser($user['id'], $clubIdForPerms)): ?>
                                                     <a href="/users/<?php echo $user['id']; ?>" class="btn btn-sm btn-outline-primary" title="Voir">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
+                                                    <?php endif; ?>
                                                     <?php 
-                                                    // Ne pas afficher le bouton message pour soi-même
                                                     $currentUserId = $_SESSION['user']['id'] ?? null;
                                                     if ($user['id'] != $currentUserId): 
                                                     ?>
@@ -298,14 +300,12 @@ $title = "Gestion des utilisateurs - Portail Arc Training";
                                                         <i class="fas fa-envelope"></i>
                                                     </a>
                                                     <?php endif; ?>
+                                                    <?php if (PermissionHelper::canEditUser($user['id'], $clubIdForPerms)): ?>
                                                     <a href="/users/<?php echo $user['id']; ?>/edit" class="btn btn-sm btn-outline-secondary" title="Modifier">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <?php 
-                                                    // Afficher le bouton de suppression seulement pour les administrateurs
-                                                    $isCurrentUserAdmin = $_SESSION['user']['is_admin'] ?? $_SESSION['user']['isAdmin'] ?? false;
-                                                    if ($isCurrentUserAdmin): 
-                                                    ?>
+                                                    <?php endif; ?>
+                                                    <?php if (PermissionHelper::can(PermissionService::RESOURCE_USERS_ALL, PermissionService::ACTION_DELETE, $clubIdForPerms)): ?>
                                                     <button type="button" class="btn btn-sm btn-outline-danger" 
                                                             onclick="confirmDelete(<?php echo $user['id']; ?>)" title="Supprimer">
                                                         <i class="fas fa-trash"></i>
