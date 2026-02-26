@@ -38,10 +38,16 @@ $clubName = $clubName ?? 'votre club';
                         <p class="text-muted small mb-3">
                             Les dernières publications de <strong><?php echo htmlspecialchars($clubName); ?></strong> sur Facebook.
                         </p>
-                        <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm mb-3">
-                            <i class="fab fa-facebook me-1"></i> Voir la page Facebook dans un nouvel onglet
-                        </a>
-                        <div class="fb-feed-wrapper" style="min-height: 400px;">
+                        <p class="mb-3">
+                            <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                                <i class="fab fa-facebook me-1"></i> Ouvrir la page Facebook de <?php echo htmlspecialchars($clubName); ?>
+                            </a>
+                            <span class="text-muted small ms-2">(ouvre dans un nouvel onglet)</span>
+                        </p>
+                        <p class="text-muted small mb-2">
+                            Vous pouvez aussi consulter le fil d’actualités ci‑dessous si l’intégration est autorisée par votre navigateur.
+                        </p>
+                        <div class="fb-feed-wrapper" style="min-height: 500px;">
                             <?php
                             $iframeSrc = 'https://www.facebook.com/plugins/page.php?' . http_build_query([
                                 'href' => $fbHref,
@@ -53,44 +59,19 @@ $clubName = $clubName ?? 'votre club';
                                 'hide_cover' => 'false',
                                 'show_facepile' => 'true',
                                 'locale' => 'fr_FR',
-                            ]);
+                            ], '', '&', PHP_QUERY_RFC3986);
                             ?>
-                            <div id="fb-root"></div>
-                            <div class="fb-page"
-                                 data-href="<?php echo htmlspecialchars($fbHref); ?>"
-                                 data-tabs="timeline"
-                                 data-width="500"
-                                 data-height="700"
-                                 data-small-header="false"
-                                 data-adapt-container-width="true"
-                                 data-hide-cover="false"
-                                 data-show-facepile="true">
-                                <blockquote cite="<?php echo htmlspecialchars($fbHref); ?>" class="fb-xfbml-parse-ignore">
-                                    <a href="<?php echo htmlspecialchars($fbHref); ?>"><?php echo htmlspecialchars($clubName); ?> sur Facebook</a>
-                                </blockquote>
-                            </div>
-                            <noscript>
-                                <iframe src="<?php echo htmlspecialchars($iframeSrc); ?>"
-                                        width="500" height="700"
-                                        style="border:none;overflow:hidden;max-width:100%;" scrolling="no" frameborder="0"
-                                        allowfullscreen="true"
-                                        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                                        title="Page Facebook <?php echo htmlspecialchars($clubName); ?>"></iframe>
-                            </noscript>
+                            <iframe src="<?php echo htmlspecialchars($iframeSrc); ?>"
+                                    width="500"
+                                    height="700"
+                                    style="border:none;overflow:hidden;max-width:100%;min-height:600px;"
+                                    scrolling="yes"
+                                    frameborder="0"
+                                    allowfullscreen="true"
+                                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                                    title="Page Facebook <?php echo htmlspecialchars($clubName); ?>">
+                            </iframe>
                         </div>
-                        <script>
-                            window.fbAsyncInit = function() {
-                                FB.init({ xfbml: true, version: 'v18.0' });
-                            };
-                            (function(d, s, id) {
-                                var js, fjs = d.getElementsByTagName(s)[0];
-                                if (d.getElementById(id)) return;
-                                js = d.createElement(s); js.id = id;
-                                js.src = "https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0";
-                                js.async = true; js.defer = true;
-                                fjs.parentNode.insertBefore(js, fjs);
-                            }(document, 'script', 'facebook-jssdk'));
-                        </script>
                     </div>
                 </div>
             <?php endif; ?>
