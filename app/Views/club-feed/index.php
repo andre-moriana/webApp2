@@ -61,17 +61,19 @@ if ($flashSuccess !== '') unset($_SESSION['club_feed_success']);
                         <?php if ($feedError !== ''): ?>
                             <p class="text-warning mb-2">Le fil n'a pas pu être chargé.</p>
                             <p class="small text-muted mb-3"><?php echo htmlspecialchars($feedError); ?></p>
-                            <div class="small text-muted mb-3 text-start" style="max-width: 520px; margin-left: auto; margin-right: auto;">
-                                <p class="mb-2"><strong>À vérifier côté application Facebook :</strong></p>
-                                <ul class="mb-2">
-                                    <li>Dans <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a>, ouvrez votre app puis <strong>Utilisation de l’app &gt; Autorisations et fonctionnalités</strong>.</li>
-                                    <li>Ajoutez la permission <strong>pages_read_engagement</strong> si elle n’est pas listée.</li>
-                                    <li><strong>App en mode Développement :</strong> le compte qui connecte la page doit être <strong>Administrateur, Développeur ou Testeur</strong> de l’app.</li>
-                                    <li><strong>App en mode Live :</strong> soumettez une demande d’<strong>App Review</strong> pour «&nbsp;Pages Read Engagement&nbsp;» (ou «&nbsp;Page Public Content Access&nbsp;» selon les cas).</li>
-                                </ul>
-                                <p class="mb-0">Puis recliquez sur «&nbsp;Connecter la page Facebook&nbsp;» pour réautoriser avec les bons accès.</p>
+                            <div class="small text-muted mb-3 text-start" style="max-width: 560px; margin-left: auto; margin-right: auto;">
+                                <p class="mb-2"><strong>Procédure recommandée :</strong></p>
+                                <ol class="mb-2 ps-3">
+                                    <li class="mb-1">Cliquez sur <strong>«&nbsp;Déconnecter la page Facebook&nbsp;»</strong> ci‑dessous.</li>
+                                    <li class="mb-1">Sur <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a>, ouvrez votre app.</li>
+                                    <li class="mb-1">Allez dans <strong>Paramètres &gt; Utilisation de l’app &gt; Autorisations et fonctionnalités</strong> et ajoutez <strong>pages_read_engagement</strong> (et <strong>pages_show_list</strong> si besoin).</li>
+                                    <li class="mb-1"><strong>En mode Développement :</strong> le compte qui connecte la page doit être <strong>Administrateur, Développeur ou Testeur</strong> de l’app (<strong>Rôles &gt; Rôles de l’application</strong>).</li>
+                                    <li class="mb-1"><strong>En mode Live :</strong> soumettre une demande d’<strong>App Review</strong> pour «&nbsp;Pages Read Engagement&nbsp;».</li>
+                                    <li class="mb-1">Revenez ici et cliquez sur <strong>«&nbsp;Connecter la page Facebook&nbsp;»</strong> pour réautoriser avec les bons accès.</li>
+                                </ol>
                             </div>
-                            <a href="/club-feed/connect" class="btn btn-primary me-2">Reconnecter la page Facebook</a>
+                            <a href="/club-feed/disconnect" class="btn btn-outline-secondary me-2">Déconnecter la page Facebook</a>
+                            <a href="/club-feed/connect" class="btn btn-primary">Connecter la page Facebook</a>
                         <?php else: ?>
                             <p class="text-muted mb-3">Page connectée. Aucune publication récente pour le moment.</p>
                         <?php endif; ?>

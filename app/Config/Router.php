@@ -61,6 +61,7 @@ class Router {
         // Page d'accueil Archers : actualités Facebook du club (fil intégré)
         $this->addRoute("GET", "/club-feed", "ClubFeedController@index");
         $this->addRoute("GET", "/club-feed/connect", "ClubFeedController@connect");
+        $this->addRoute("GET", "/club-feed/disconnect", "ClubFeedController@disconnect");
         $this->addRoute("GET", "/club-feed/facebook-callback", "ClubFeedController@facebookCallback");
         
         // Routes des exercices (protégées)

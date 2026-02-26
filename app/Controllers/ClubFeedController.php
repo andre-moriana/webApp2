@@ -110,6 +110,41 @@ class ClubFeedController
     }
 
     /**
+     * Déconnecte la page Facebook du club (efface le token) pour permettre une reconnexion propre.
+     */
+    public function disconnect()
+    {
+        SessionGuard::check();
+        $user = $_SESSION['user'] ?? [];
+        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
+        if (!$clubId) {
+            try {
+                $listResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+                $list = $this->apiService->unwrapData($listResponse);
+                if (!empty($listResponse['success']) && is_array($list) && count($list) > 0) {
+                    $first = $list[0];
+                    $clubId = $first['id'] ?? $first['_id'] ?? $first['nameShort'] ?? $first['name_short'] ?? null;
+                }
+            } catch (Exception $e) {
+                // ignore
+            }
+        }
+        if ($clubId) {
+            try {
+                $this->apiService->makeRequest("clubs/{$clubId}", 'PUT', [
+                    'facebookPageId' => null,
+                    'facebookPageToken' => null,
+                ]);
+            } catch (Exception $e) {
+                error_log('ClubFeedController disconnect: ' . $e->getMessage());
+            }
+        }
+        $_SESSION['club_feed_success'] = 'Page Facebook déconnectée. Vérifiez les paramètres de l\'app Facebook puis recliquez sur « Connecter la page Facebook ».';
+        header('Location: /club-feed');
+        exit;
+    }
+
+    /**
      * Callback Facebook OAuth : récupère le token de page et l'enregistre pour le club.
      */
     public function facebookCallback()
