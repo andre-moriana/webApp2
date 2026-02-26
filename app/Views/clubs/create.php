@@ -98,6 +98,13 @@ $additionalJS[] = '/public/assets/js/clubs-form.js';
                         </div>
 
                         <div class="mb-3">
+                            <label for="facebookUrl" class="form-label">Page Facebook du club</label>
+                            <input type="url" class="form-control" id="facebookUrl" name="facebookUrl" placeholder="https://www.facebook.com/VotreClub"
+                                   value="<?php echo htmlspecialchars($_POST['facebookUrl'] ?? ''); ?>">
+                            <small class="form-text text-muted">URL de la page Facebook du club (affichée en page d'accueil pour les Archers).</small>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="theme" class="form-label">Thème</label>
                             <select class="form-select" id="theme" name="theme">
                                 <option value="">Sélectionner un thème...</option>

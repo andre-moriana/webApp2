@@ -109,6 +109,7 @@ class ClubController {
         $phone = $_POST['phone'] ?? '';
         $email = $_POST['email'] ?? '';
         $website = $_POST['website'] ?? '';
+        $facebookUrl = trim($_POST['facebookUrl'] ?? '');
         $theme = $_POST['theme'] ?? '';
         $presidentId = !empty($_POST['presidentId']) ? (int)$_POST['presidentId'] : null;
 
@@ -118,20 +119,24 @@ class ClubController {
             exit;
         }
 
+        $createPayload = [
+            'name' => $name,
+            'nameShort' => $nameShort,
+            'description' => $description,
+            'address' => $address,
+            'city' => $city,
+            'postalCode' => $postalCode,
+            'phone' => $phone,
+            'email' => $email,
+            'website' => $website,
+            'theme' => $theme,
+            'presidentId' => $presidentId
+        ];
+        if ($facebookUrl !== '') {
+            $createPayload['facebookUrl'] = $facebookUrl;
+        }
         try {
-            $response = $this->apiService->makeRequest('clubs/create', 'POST', [
-                'name' => $name,
-                'nameShort' => $nameShort,
-                'description' => $description,
-                'address' => $address,
-                'city' => $city,
-                'postalCode' => $postalCode,
-                'phone' => $phone,
-                'email' => $email,
-                'website' => $website,
-                'theme' => $theme,
-                'presidentId' => $presidentId
-            ]);
+            $response = $this->apiService->makeRequest('clubs/create', 'POST', $createPayload);
             
             if ($response['success']) {
                 $_SESSION['success'] = 'Club créé avec succès';
@@ -254,6 +259,7 @@ class ClubController {
         $phone = $_POST['phone'] ?? '';
         $email = $_POST['email'] ?? '';
         $website = $_POST['website'] ?? '';
+        $facebookUrl = trim($_POST['facebookUrl'] ?? '');
         $theme = $_POST['theme'] ?? '';
         $presidentId = !empty($_POST['presidentId']) ? (int)$_POST['presidentId'] : null;
 
@@ -275,7 +281,7 @@ class ClubController {
             }
 
             // Mettre à jour les autres informations du club
-            $response = $this->apiService->makeRequest("clubs/{$id}", 'PUT', [
+            $payload = [
                 'name' => $name,
                 'nameShort' => $nameShort,
                 'description' => $description,
@@ -287,7 +293,11 @@ class ClubController {
                 'website' => $website,
                 'theme' => $theme,
                 'presidentId' => $presidentId
-            ]);
+            ];
+            if ($facebookUrl !== '') {
+                $payload['facebookUrl'] = $facebookUrl;
+            }
+            $response = $this->apiService->makeRequest("clubs/{$id}", 'PUT', $payload);
             
             if ($response['success']) {
                 $_SESSION['success'] = 'Club modifié avec succès';
