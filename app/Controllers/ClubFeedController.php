@@ -1,10 +1,11 @@
 <?php
 
 require_once 'app/Services/ApiService.php';
+require_once 'app/Services/FacebookFeedService.php';
 require_once 'app/Middleware/SessionGuard.php';
 
 /**
- * Page d'accueil des Archers : actualités Facebook du club.
+ * Page d'accueil des Archers : actualités Facebook du club (posts affichés sur la page).
  */
 class ClubFeedController
 {
@@ -24,6 +25,8 @@ class ClubFeedController
         $club = null;
         $facebookUrl = '';
         $clubName = 'votre club';
+        $posts = [];
+        $fbHref = '';
 
         if ($clubId) {
             try {
@@ -37,6 +40,20 @@ class ClubFeedController
                 }
             } catch (Exception $e) {
                 error_log('ClubFeedController: ' . $e->getMessage());
+            }
+        }
+
+        if ($facebookUrl !== '') {
+            $fbHref = (strpos($facebookUrl, 'http') === 0)
+                ? $facebookUrl
+                : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
+            try {
+                $fbService = new FacebookFeedService();
+                if ($fbService->isConfigured()) {
+                    $posts = $fbService->getPagePosts($facebookUrl, 15);
+                }
+            } catch (Exception $e) {
+                error_log('ClubFeedController Facebook: ' . $e->getMessage());
             }
         }
 

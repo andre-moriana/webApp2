@@ -1,6 +1,11 @@
 <?php
 $facebookUrl = isset($facebookUrl) ? trim((string)$facebookUrl) : '';
 $clubName = $clubName ?? 'votre club';
+$posts = $posts ?? [];
+$fbHref = $fbHref ?? '';
+if ($facebookUrl !== '' && $fbHref === '') {
+    $fbHref = (strpos($facebookUrl, 'http') === 0) ? $facebookUrl : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
+}
 ?>
 <div class="container-fluid py-4">
     <div class="row">
@@ -25,53 +30,58 @@ $clubName = $clubName ?? 'votre club';
                         </a>
                     </div>
                 </div>
-            <?php else: ?>
-                <?php
-                // S'assurer que l'URL Facebook est complète
-                $fbHref = $facebookUrl;
-                if (strpos($fbHref, 'http') !== 0) {
-                    $fbHref = 'https://www.facebook.com/' . ltrim($fbHref, '/');
-                }
-                ?>
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <p class="text-muted small mb-3">
-                            Les dernières publications de <strong><?php echo htmlspecialchars($clubName); ?></strong> sur Facebook.
-                        </p>
-                        <p class="mb-3">
-                            <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                                <i class="fab fa-facebook me-1"></i> Ouvrir la page Facebook de <?php echo htmlspecialchars($clubName); ?>
-                            </a>
-                            <span class="text-muted small ms-2">(ouvre dans un nouvel onglet)</span>
-                        </p>
-                        <p class="text-muted small mb-2">
-                            Vous pouvez aussi consulter le fil d’actualités ci‑dessous si l’intégration est autorisée par votre navigateur.
-                        </p>
-                        <div class="fb-feed-wrapper" style="min-height: 500px;">
-                            <?php
-                            $iframeSrc = 'https://www.facebook.com/plugins/page.php?' . http_build_query([
-                                'href' => $fbHref,
-                                'tabs' => 'timeline',
-                                'width' => '500',
-                                'height' => '700',
-                                'small_header' => 'false',
-                                'adapt_container_width' => 'true',
-                                'hide_cover' => 'false',
-                                'show_facepile' => 'true',
-                                'locale' => 'fr_FR',
-                            ], '', '&', PHP_QUERY_RFC3986);
-                            ?>
-                            <iframe src="<?php echo htmlspecialchars($iframeSrc); ?>"
-                                    width="500"
-                                    height="700"
-                                    style="border:none;overflow:hidden;max-width:100%;min-height:600px;"
-                                    scrolling="yes"
-                                    frameborder="0"
-                                    allowfullscreen="true"
-                                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                                    title="Page Facebook <?php echo htmlspecialchars($clubName); ?>">
-                            </iframe>
+            <?php elseif (!empty($posts)): ?>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <p class="text-muted mb-0 small">
+                        Dernières publications de <strong><?php echo htmlspecialchars($clubName); ?></strong> sur Facebook.
+                    </p>
+                    <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                        <i class="fab fa-facebook me-1"></i>Voir la page Facebook
+                    </a>
+                </div>
+                <div class="row g-3">
+                    <?php foreach ($posts as $post): ?>
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <?php if (!empty($post['full_picture'])): ?>
+                                    <a href="<?php echo htmlspecialchars($post['permalink_url'] ?? $fbHref); ?>" target="_blank" rel="noopener noreferrer" class="d-block">
+                                        <img src="<?php echo htmlspecialchars($post['full_picture']); ?>" class="card-img-top" alt="" style="object-fit: cover; height: 200px;">
+                                    </a>
+                                <?php endif; ?>
+                                <div class="card-body d-flex flex-column">
+                                    <?php if (!empty($post['message'])): ?>
+                                        <p class="card-text flex-grow-1"><?php echo nl2br(htmlspecialchars(mb_substr($post['message'], 0, 300) . (mb_strlen($post['message']) > 300 ? '…' : ''))); ?></p>
+                                    <?php endif; ?>
+                                    <div class="mt-auto pt-2 d-flex align-items-center justify-content-between">
+                                        <span class="text-muted small">
+                                            <?php
+                                            if (!empty($post['created_time'])) {
+                                                $dt = new DateTime($post['created_time']);
+                                                echo $dt->format('d/m/Y à H:i');
+                                            }
+                                            ?>
+                                        </span>
+                                        <a href="<?php echo htmlspecialchars($post['permalink_url'] ?? $fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+                                            Voir sur Facebook
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-4">
+                        <i class="fab fa-facebook fa-3x text-primary mb-3"></i>
+                        <h2 class="h5 mb-3">Actualités de <?php echo htmlspecialchars($clubName); ?></h2>
+                        <p class="text-muted mb-4">
+                            Les publications du club sont sur la page Facebook. Pour les afficher ici, l'application doit être configurée avec un accès API Facebook (voir documentation).
+                        </p>
+                        <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
+                            <i class="fab fa-facebook me-2"></i>Ouvrir la page Facebook
+                        </a>
+                        <p class="text-muted small mt-3 mb-0">(s'ouvre dans un nouvel onglet)</p>
                     </div>
                 </div>
             <?php endif; ?>
