@@ -45,8 +45,11 @@
                         <?php endif; ?>
                         
                         <form method="POST" action="/auth/authenticate">
-                            <?php if (!empty($_GET['return'])): ?>
-                            <input type="hidden" name="return" value="<?= htmlspecialchars($_GET['return']) ?>">
+                            <?php
+                            $returnUrl = $_GET['return'] ?? $_SESSION['login_return_url'] ?? '';
+                            if ($returnUrl !== ''):
+                            ?>
+                            <input type="hidden" name="return" value="<?= htmlspecialchars($returnUrl) ?>">
                             <?php endif; ?>
                             <div class="mb-3">
                                 <label for="email" class="form-label">

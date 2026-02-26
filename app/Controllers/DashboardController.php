@@ -17,9 +17,20 @@ class DashboardController {
         // Vérifier la session avec le middleware
         error_log("DashboardController::index() - Appel de SessionGuard::check()");
         SessionGuard::check();
-        
+
+        // Les Archers (non admin) n'ont pas accès au tableau de bord : redirection vers Actualités du club
+        $user = $_SESSION['user'] ?? [];
+        $isAdmin = !empty($user['is_admin']);
+        $role = $user['role'] ?? '';
+        $roleNormalized = $role !== '' ? ucfirst(strtolower($role)) : '';
+        $isArcher = ($roleNormalized === 'Archer' || strtolower($role) === 'user');
+        if (!$isAdmin && $isArcher) {
+            header('Location: /club-feed');
+            exit;
+        }
+
         error_log("DashboardController::index() - Session valide, chargement des stats");
-        
+
         $title = 'Tableau de bord - Portail Arc Training';
         
         // Dashboard en pleine page pour les administrateurs (menu dans une modale)

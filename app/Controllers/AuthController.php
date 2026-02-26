@@ -152,8 +152,11 @@ class AuthController {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                 
-                $returnUrl = $_POST['return'] ?? $_GET['return'] ?? '';
-                if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/_-]+$#', $returnUrl)) {
+                $returnUrl = $_SESSION['login_return_url'] ?? $_POST['return'] ?? $_GET['return'] ?? '';
+                if (!empty($returnUrl)) {
+                    unset($_SESSION['login_return_url']);
+                }
+                if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/\-_]+$#', $returnUrl)) {
                     header('Location: ' . $returnUrl);
                 } else {
                     header('Location: /dashboard');
@@ -175,8 +178,11 @@ class AuthController {
                     $_SESSION['logged_in'] = true;
                     $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                     
-                    $returnUrl = $_POST['return'] ?? $_GET['return'] ?? '';
-                    if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/_-]+$#', $returnUrl)) {
+                    $returnUrl = $_SESSION['login_return_url'] ?? $_POST['return'] ?? $_GET['return'] ?? '';
+                    if (!empty($returnUrl)) {
+                        unset($_SESSION['login_return_url']);
+                    }
+                    if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/\-_]+$#', $returnUrl)) {
                         header('Location: ' . $returnUrl);
                     } else {
                         header('Location: /dashboard');
@@ -204,8 +210,11 @@ class AuthController {
                 $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                 $_SESSION['logged_in'] = true;
                 
-                $returnUrl = $_POST['return'] ?? $_GET['return'] ?? '';
-                if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/_-]+$#', $returnUrl)) {
+                $returnUrl = $_SESSION['login_return_url'] ?? $_POST['return'] ?? $_GET['return'] ?? '';
+                if (!empty($returnUrl)) {
+                    unset($_SESSION['login_return_url']);
+                }
+                if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/\-_]+$#', $returnUrl)) {
                     header('Location: ' . $returnUrl);
                 } else {
                     header('Location: /dashboard');
