@@ -6,6 +6,18 @@
 
 class SessionGuard {
     /**
+     * Retourne l'URL de retour sûre pour après login (évite dashboard quand on venait du fil club / callback Facebook).
+     */
+    private static function getLoginReturnUrl(): string {
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($uri, '/club-feed/facebook-callback') !== false) {
+            return '/club-feed';
+        }
+        $path = parse_url($uri, PHP_URL_PATH);
+        return ($path !== '' && $path !== false && $path[0] === '/') ? $path : '/dashboard';
+    }
+
+    /**
      * Vérifie si la session est valide et redirige vers login si nécessaire
      * @return bool True si la session est valide, False sinon
      */
@@ -21,8 +33,8 @@ class SessionGuard {
             session_unset();
             session_destroy();
             
-            // Rediriger vers la page de login
-            header('Location: /login?expired=1');
+            $returnUrl = urlencode(self::getLoginReturnUrl());
+            header('Location: /login?expired=1&return=' . $returnUrl);
             exit;
         }
         
@@ -35,8 +47,8 @@ class SessionGuard {
                 // Session expirée par inactivité
                 session_unset();
                 session_destroy();
-                
-                header('Location: /login?expired=1');
+                $returnUrl = urlencode(self::getLoginReturnUrl());
+                header('Location: /login?expired=1&return=' . $returnUrl);
                 exit;
             }
         }
@@ -48,8 +60,8 @@ class SessionGuard {
         if (!isset($_SESSION['user']) || empty($_SESSION['user'])) {
             session_unset();
             session_destroy();
-            
-            header('Location: /login?expired=1');
+            $returnUrl = urlencode(self::getLoginReturnUrl());
+            header('Location: /login?expired=1&return=' . $returnUrl);
             exit;
         }
         
@@ -58,8 +70,8 @@ class SessionGuard {
             error_log("SessionGuard: Token manquant, redirection vers login");
             session_unset();
             session_destroy();
-            
-            header('Location: /login?expired=1');
+            $returnUrl = urlencode(self::getLoginReturnUrl());
+            header('Location: /login?expired=1&return=' . $returnUrl);
             exit;
         }
         
@@ -76,32 +88,32 @@ class SessionGuard {
                         error_log("SessionGuard: Token JWT expiré (exp: " . $payload['exp'] . ", now: " . time() . "), redirection vers login");
                         session_unset();
                         session_destroy();
-                        
-                        header('Location: /login?expired=1');
+                        $returnUrl = urlencode(self::getLoginReturnUrl());
+                        header('Location: /login?expired=1&return=' . $returnUrl);
                         exit;
                     }
                 } else {
                     error_log("SessionGuard: Token JWT invalide (pas de payload exp), redirection vers login");
                     session_unset();
                     session_destroy();
-                    
-                    header('Location: /login?expired=1');
+                    $returnUrl = urlencode(self::getLoginReturnUrl());
+                    header('Location: /login?expired=1&return=' . $returnUrl);
                     exit;
                 }
             } else {
                 error_log("SessionGuard: Token JWT mal formé, redirection vers login");
                 session_unset();
                 session_destroy();
-                
-                header('Location: /login?expired=1');
+                $returnUrl = urlencode(self::getLoginReturnUrl());
+                header('Location: /login?expired=1&return=' . $returnUrl);
                 exit;
             }
         } catch (Exception $e) {
             error_log("SessionGuard: Erreur lors de la vérification du token: " . $e->getMessage());
             session_unset();
             session_destroy();
-            
-            header('Location: /login?expired=1');
+            $returnUrl = urlencode(self::getLoginReturnUrl());
+            header('Location: /login?expired=1&return=' . $returnUrl);
             exit;
         }
         

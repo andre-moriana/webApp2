@@ -605,8 +605,11 @@ class Router {
                     ]);
                     exit;
                 }
-                
-                header("Location: /login");
+                // Retour après login : page club-feed si on venait du callback Facebook, sinon la page demandée
+                $uri = $_SERVER['REQUEST_URI'] ?? '';
+                $returnPath = (strpos($uri, '/club-feed/facebook-callback') !== false) ? '/club-feed' : (parse_url($uri, PHP_URL_PATH) ?: '/');
+                $returnPath = (strlen($returnPath) > 0 && $returnPath[0] === '/') ? $returnPath : '/';
+                header("Location: /login?return=" . urlencode($returnPath));
                 exit;
             }
         }
