@@ -181,11 +181,13 @@ class ClubFeedController
             if (!empty($putResponse['success'])) {
                 $_SESSION['club_feed_success'] = 'Page Facebook connectée. Le fil s\'affichera ci-dessous.';
             } else {
-                $_SESSION['club_feed_error'] = 'Erreur lors de l\'enregistrement.';
+                $data = $putResponse['data'] ?? [];
+                $msg = is_array($data) ? ($data['error'] ?? $putResponse['message'] ?? 'Erreur lors de l\'enregistrement.') : 'Erreur lors de l\'enregistrement.';
+                $_SESSION['club_feed_error'] = $msg;
             }
         } catch (Exception $e) {
             error_log('ClubFeedController facebookCallback: ' . $e->getMessage());
-            $_SESSION['club_feed_error'] = 'Erreur serveur.';
+            $_SESSION['club_feed_error'] = 'Erreur serveur : ' . $e->getMessage();
         }
         header('Location: /club-feed');
         exit;
