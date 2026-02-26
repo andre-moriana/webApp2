@@ -1,11 +1,11 @@
 <?php
 
 require_once 'app/Services/ApiService.php';
-require_once 'app/Services/FacebookFeedService.php';
 require_once 'app/Middleware/SessionGuard.php';
 
 /**
- * Page d'accueil des Archers : actualités Facebook du club (posts affichés sur la page).
+ * Fil Facebook du club : récupération des posts via API Graph.
+ * Une fois la page connectée (bouton "Connecter la page Facebook"), les posts s'affichent sur le site.
  */
 class ClubFeedController
 {
@@ -26,6 +26,7 @@ class ClubFeedController
         $facebookUrl = '';
         $clubName = 'votre club';
         $posts = [];
+        $facebookConnected = false;
         $fbHref = '';
 
         if ($clubId) {
@@ -37,6 +38,12 @@ class ClubFeedController
                     $clubName = $club['name'] ?? 'Club';
                     $facebookUrl = $club['facebookUrl'] ?? $club['facebook_url'] ?? '';
                     $facebookUrl = is_string($facebookUrl) ? trim($facebookUrl) : '';
+                    $facebookConnected = !empty($club['facebookConnected']);
+                }
+                $feedResponse = $this->apiService->makeRequest("clubs/{$clubId}/facebook-feed", 'GET');
+                if (!empty($feedResponse['success']) && !empty($feedResponse['data'])) {
+                    $posts = $feedResponse['data']['posts'] ?? [];
+                    $facebookConnected = !empty($feedResponse['data']['connected']);
                 }
             } catch (Exception $e) {
                 error_log('ClubFeedController: ' . $e->getMessage());
@@ -47,14 +54,6 @@ class ClubFeedController
             $fbHref = (strpos($facebookUrl, 'http') === 0)
                 ? $facebookUrl
                 : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
-            try {
-                $fbService = new FacebookFeedService();
-                if ($fbService->isConfigured()) {
-                    $posts = $fbService->getPagePosts($facebookUrl, 15);
-                }
-            } catch (Exception $e) {
-                error_log('ClubFeedController Facebook: ' . $e->getMessage());
-            }
         }
 
         $title = 'Actualités du club - Portail Arc Training';
@@ -64,5 +63,152 @@ class ClubFeedController
         include 'app/Views/layouts/header.php';
         include 'app/Views/club-feed/index.php';
         include 'app/Views/layouts/footer.php';
+    }
+
+    /**
+     * Redirige vers Facebook OAuth pour connecter la page du club.
+     */
+    public function connect()
+    {
+        SessionGuard::check();
+        $user = $_SESSION['user'] ?? [];
+        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
+        if (!$clubId) {
+            header('Location: /club-feed');
+            exit;
+        }
+        $this->loadEnv();
+        $appId = $_ENV['FACEBOOK_APP_ID'] ?? '';
+        if ($appId === '') {
+            $_SESSION['club_feed_error'] = 'Application Facebook non configurée (FACEBOOK_APP_ID manquant).';
+            header('Location: /club-feed');
+            exit;
+        }
+        $redirectUri = $this->getBaseUrl() . '/club-feed/facebook-callback';
+        $state = base64_encode(json_encode(['clubId' => $clubId]));
+        $url = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=' . urlencode($appId)
+            . '&redirect_uri=' . urlencode($redirectUri)
+            . '&scope=' . urlencode('pages_show_list,pages_read_engagement')
+            . '&state=' . urlencode($state);
+        header('Location: ' . $url);
+        exit;
+    }
+
+    /**
+     * Callback Facebook OAuth : récupère le token de page et l'enregistre pour le club.
+     */
+    public function facebookCallback()
+    {
+        SessionGuard::check();
+        $this->loadEnv();
+        $appId = $_ENV['FACEBOOK_APP_ID'] ?? '';
+        $appSecret = $_ENV['FACEBOOK_APP_SECRET'] ?? '';
+        if ($appId === '' || $appSecret === '') {
+            $_SESSION['club_feed_error'] = 'Application Facebook non configurée.';
+            header('Location: /club-feed');
+            exit;
+        }
+        $code = $_GET['code'] ?? '';
+        $state = $_GET['state'] ?? '';
+        if ($code === '' || $state === '') {
+            $_SESSION['club_feed_error'] = 'Connexion Facebook annulée ou invalide.';
+            header('Location: /club-feed');
+            exit;
+        }
+        $decoded = @json_decode(base64_decode($state), true);
+        $clubId = $decoded['clubId'] ?? null;
+        if (!$clubId) {
+            $_SESSION['club_feed_error'] = 'Session invalide.';
+            header('Location: /club-feed');
+            exit;
+        }
+        $redirectUri = $this->getBaseUrl() . '/club-feed/facebook-callback';
+        $tokenUrl = 'https://graph.facebook.com/v18.0/oauth/access_token?client_id=' . urlencode($appId)
+            . '&redirect_uri=' . urlencode($redirectUri)
+            . '&client_secret=' . urlencode($appSecret)
+            . '&code=' . urlencode($code);
+        $tokenJson = @file_get_contents($tokenUrl);
+        $tokenData = $tokenJson ? json_decode($tokenJson, true) : null;
+        $userToken = $tokenData['access_token'] ?? null;
+        if (!$userToken) {
+            $_SESSION['club_feed_error'] = 'Impossible d\'obtenir l\'accès Facebook.';
+            header('Location: /club-feed');
+            exit;
+        }
+        $accountsUrl = 'https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token&access_token=' . urlencode($userToken);
+        $accountsJson = @file_get_contents($accountsUrl);
+        $accountsData = $accountsJson ? json_decode($accountsJson, true) : null;
+        $pages = $accountsData['data'] ?? [];
+        if (empty($pages)) {
+            $_SESSION['club_feed_error'] = 'Aucune page Facebook gérée par ce compte.';
+            header('Location: /club-feed');
+            exit;
+        }
+        $clubResponse = $this->apiService->makeRequest("clubs/{$clubId}", 'GET');
+        $club = $this->apiService->unwrapData($clubResponse);
+        $facebookUrl = $club['facebookUrl'] ?? $club['facebook_url'] ?? '';
+        $facebookUrl = is_string($facebookUrl) ? trim($facebookUrl) : '';
+        $normalize = function ($u) {
+            $u = trim($u);
+            if ($u === '') return '';
+            if (strpos($u, 'http') !== 0) $u = 'https://www.facebook.com/' . ltrim($u, '/');
+            return rtrim(strtolower($u), '/');
+        };
+        $targetNorm = $normalize($facebookUrl);
+        $selected = null;
+        foreach ($pages as $p) {
+            $pageUrl = 'https://www.facebook.com/' . ($p['id'] ?? '');
+            if ($targetNorm !== '' && $normalize($pageUrl) === $targetNorm) {
+                $selected = $p;
+                break;
+            }
+        }
+        if (!$selected) {
+            $selected = $pages[0];
+        }
+        $pageId = $selected['id'] ?? '';
+        $pageToken = $selected['access_token'] ?? '';
+        if ($pageId === '' || $pageToken === '') {
+            $_SESSION['club_feed_error'] = 'Token de page invalide.';
+            header('Location: /club-feed');
+            exit;
+        }
+        try {
+            $putResponse = $this->apiService->makeRequest("clubs/{$clubId}", 'PUT', [
+                'facebookPageId' => $pageId,
+                'facebookPageToken' => $pageToken,
+            ]);
+            if (!empty($putResponse['success'])) {
+                $_SESSION['club_feed_success'] = 'Page Facebook connectée. Le fil s\'affichera ci-dessous.';
+            } else {
+                $_SESSION['club_feed_error'] = 'Erreur lors de l\'enregistrement.';
+            }
+        } catch (Exception $e) {
+            error_log('ClubFeedController facebookCallback: ' . $e->getMessage());
+            $_SESSION['club_feed_error'] = 'Erreur serveur.';
+        }
+        header('Location: /club-feed');
+        exit;
+    }
+
+    private function loadEnv(): void
+    {
+        if (!empty($_ENV['FACEBOOK_APP_ID'])) return;
+        $envPath = __DIR__ . '/../../.env';
+        if (!is_file($envPath)) return;
+        $lines = @file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+        foreach ($lines as $line) {
+            if (strpos($line, '=') !== false && strpos(trim($line), '#') !== 0) {
+                list($key, $value) = explode('=', $line, 2);
+                $_ENV[trim($key)] = trim($value);
+            }
+        }
+    }
+
+    private function getBaseUrl(): string
+    {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return $scheme . '://' . $host;
     }
 }

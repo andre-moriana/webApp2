@@ -58,8 +58,10 @@ class Router {
         // Routes principales (protégées)
         $this->addRoute("GET", "/", "DashboardController@index");
         $this->addRoute("GET", "/dashboard", "DashboardController@index");
-        // Page d'accueil Archers : actualités Facebook du club
+        // Page d'accueil Archers : actualités Facebook du club (fil intégré)
         $this->addRoute("GET", "/club-feed", "ClubFeedController@index");
+        $this->addRoute("GET", "/club-feed/connect", "ClubFeedController@connect");
+        $this->addRoute("GET", "/club-feed/facebook-callback", "ClubFeedController@facebookCallback");
         
         // Routes des exercices (protégées)
         $this->addRoute("GET", "/exercises", "ExerciseController@index");
