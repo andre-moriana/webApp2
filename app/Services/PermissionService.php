@@ -56,6 +56,12 @@ class PermissionService
             return false;
         }
 
+        // Liste des utilisateurs : toujours évaluer en local (le backend peut ne pas connaître cette ressource)
+        if ($resource === self::RESOURCE_USERS_LIST) {
+            $clubPermissions = $this->getClubPermissions($clubId ?? ($user['clubId'] ?? $user['club_id'] ?? null));
+            return $this->checkPermission($user, $resource, $action, $clubPermissions);
+        }
+
         // Essayer de déléguer au backend Permissions API
         $apiDecision = $this->checkPermissionViaApi($user, $resource, $action, $clubId);
         if ($apiDecision !== null) {
@@ -63,7 +69,7 @@ class PermissionService
         }
         
         // Fallback local : récupérer les permissions du club et évaluer localement
-        $clubPermissions = $this->getClubPermissions($clubId ?? ($user['clubId'] ?? null));
+        $clubPermissions = $this->getClubPermissions($clubId ?? ($user['clubId'] ?? $user['club_id'] ?? null));
         
         return $this->checkPermission($user, $resource, $action, $clubPermissions);
     }
@@ -88,9 +94,19 @@ class PermissionService
     
     /**
      * Récupère le niveau hiérarchique du rôle
+     * Accepte les variantes (casse, 'user' = Archer)
      */
     public function getRoleLevel($role)
     {
+        if ($role === null || $role === '') {
+            return 0;
+        }
+        $role = (string) $role;
+        if (strtolower($role) === 'user') {
+            $role = 'Archer';
+        } else {
+            $role = ucfirst(strtolower($role));
+        }
         return self::ROLE_HIERARCHY[$role] ?? 0;
     }
     
@@ -127,11 +143,15 @@ class PermissionService
             if (!empty($response['success']) && isset($response['data'])) {
                 // Décodage de la réponse du backend: peut être { success: true, data: {...} }
                 $payload = $response['data'];
+                $perms = null;
                 if (isset($payload['data']) && is_array($payload['data'])) {
-                    return $payload['data'];
+                    $perms = $payload['data'];
+                } elseif (is_array($payload)) {
+                    $perms = $payload;
                 }
-                if (is_array($payload)) {
-                    return $payload;
+                if ($perms !== null) {
+                    // Fusionner avec les défauts pour que les nouvelles clés (ex: users_list_view) existent toujours
+                    return array_merge($this->getDefaultPermissions(), $perms);
                 }
             }
         } catch (\Exception $e) {
@@ -167,7 +187,7 @@ class PermissionService
             
             // Utilisateurs - Vue
             'users_view' => 'Coach',
-            'users_list_view' => 'Coach',    // Accès à la liste des utilisateurs
+            'users_list_view' => 'Archer',    // Accès à la liste des utilisateurs
             'users_self_edit' => 'Archer',   // Modifier ses propres infos
             'users_edit' => 'Dirigeant',     // Modifier tous les utilisateurs
             'users_create' => 'Dirigeant',

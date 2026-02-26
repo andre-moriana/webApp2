@@ -1,6 +1,6 @@
 <?php
 $isAdmin = (bool)($_SESSION['user']['is_admin'] ?? false);
-$clubId = $_SESSION['user']['clubId'] ?? null;
+$clubId = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ?? null;
 if (!class_exists('PermissionHelper')) {
     require_once __DIR__ . '/../../Config/PermissionHelper.php';
 }
@@ -39,9 +39,6 @@ $canAccessUsersList = $isAdmin || PermissionHelper::can('users_list', 'view', $c
                 <li><a href="/exercises"><i class="fas fa-clipboard-list me-2"></i>Exercices</a></li>
                 <li><a href="/scored-trainings"><i class="fas fa-bullseye me-2"></i>Tir comptés</a></li>
                 <li><a href="/private-messages"><i class="fas fa-envelope me-2"></i>Messages</a></li>
-                <?php if ($canAccessUsersList): ?>
-                <li><a href="/users"><i class="fas fa-users-cog me-2"></i>Liste des utilisateurs</a></li>
-                <?php endif; ?>
             </ul>
         </div>
     </div>
