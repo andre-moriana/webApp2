@@ -67,8 +67,23 @@ $fbHref = $fbHref ?? '';
                     <div class="card-body">
                         <p class="text-muted small mb-3">Fil de la page Facebook de <strong><?php echo htmlspecialchars($clubName); ?></strong> (widget officiel Facebook).</p>
                         <div id="fb-root"></div>
-                        <script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0&appId=<?php echo htmlspecialchars($facebookAppId); ?>"></script>
-                        <div style="min-height: 400px; width: 100%; max-width: 500px;">
+                        <script>
+                        window.fbAsyncInit = function() {
+                            FB.init({
+                                appId: '<?php echo htmlspecialchars($facebookAppId); ?>',
+                                xfbml: true,
+                                version: 'v18.0'
+                            });
+                            FB.Event.subscribe('xfbml.render', function() {
+                                var el = document.getElementById('fb-page-wrap');
+                                if (el) el.style.minHeight = '0';
+                            });
+                            var wrap = document.getElementById('fb-page-wrap');
+                            if (wrap) FB.XFBML.parse(wrap);
+                        };
+                        </script>
+                        <script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js"></script>
+                        <div id="fb-page-wrap" style="min-height: 400px; width: 100%; max-width: 500px;">
                             <div class="fb-page" data-href="<?php echo htmlspecialchars($fbHref); ?>" data-tabs="timeline" data-width="500" data-height="500" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"></div>
                         </div>
                         <p class="text-muted small mt-2 mb-2">Si le fil ne s'affiche pas ci-dessus, ajoutez l'URL de ce site (ex. <code><?php echo htmlspecialchars($_SERVER['HTTP_HOST'] ?? 'votresite.fr'); ?></code>) dans <strong>developers.facebook.com</strong> → votre app → <strong>Paramètres</strong> → <strong>Basique</strong> → <strong>Domaines de l'app</strong>.</p>
@@ -76,6 +91,10 @@ $fbHref = $fbHref ?? '';
                             <i class="fab fa-facebook me-1"></i> Voir la page sur Facebook
                         </a>
                     </div>
+                </div>
+            <?php elseif (!empty($showFacebookPagePlugin) && $fbHref !== '' && $facebookAppId === ''): ?>
+                <div class="alert alert-info mb-4">
+                    <strong>Widget Facebook non configuré.</strong> Pour afficher le fil de la page ici, ajoutez <code>FACEBOOK_APP_ID=1640559626974623</code> (ou l’ID de votre app) dans le fichier <code>.env</code> à la racine de WebApp2. Voir <strong>FACEBOOK-FIL-CLUB-CONFIG.md</strong>.
                 </div>
             <?php endif; ?>
 

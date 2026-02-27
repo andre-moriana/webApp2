@@ -14,6 +14,20 @@ L’erreur **#10** sur le fil signifie que Meta n’accorde pas encore la permis
 
 ---
 
+## Page Plugin (fil sans API) : domaines obligatoires
+
+Quand le fil ne peut pas être chargé via l’API (erreur #10), le site affiche le **Page Plugin** officiel Facebook. Pour que ce widget s’affiche, le **domaine** depuis lequel vous consultez la page doit être autorisé dans l’app :
+
+- **Paramètres** (Settings) → **Basique** (Basic) → champ **Domaines de l’app** (App domains).
+- En production : indiquez le domaine du site, par ex. `arctraining.fr` (sans `https://` ni `/`).
+- Si vous testez en local : vous pouvez ajouter `localhost` ; le plugin peut ne pas s’afficher selon les restrictions Facebook.
+
+**Identifiant de l’application** : dans la même page Basique, l’**Identifiant de l’application** (ex. `1640559626974623`) doit correspondre à la variable `FACEBOOK_APP_ID` dans le `.env` de WebApp2.
+
+Si le fil du Page Plugin reste vide alors que le reste de la page s’affiche, vérifiez que vous consultez le site depuis un domaine listé dans **Domaines de l’app**.
+
+---
+
 ## Où configurer l’app Meta (developers.facebook.com)
 
 **Ouvrez d’abord le tableau de bord de votre app :**
