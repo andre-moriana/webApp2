@@ -74,8 +74,7 @@ if ($doc === 'classement') {
     <table class="table table-borderless">
         <tr>
             <td colspan="2">
-                <strong>Nombre total d'archers</strong>
-                <p class="mb-0 mt-1"><?= htmlspecialchars($nbArchers) ?></p>
+                <strong>Nombre total d'archers : </strong><p class="mb-0 mt-1"><?= htmlspecialchars($nbArchers) ?></p>
             </td>
         </tr>
         <tr>
