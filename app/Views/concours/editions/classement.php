@@ -154,7 +154,7 @@ if ($top3ParCategorie) {
     <p class="text-center text-muted small"><strong>Top 3</strong> — uniquement les 3 premiers de chaque catégorie</p>
     <?php endif; ?>
     <p class="text-center"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong></p>
-    <p class="text-center"><?= htmlspecialchars($concours->date_debut ?? '') ?> — <?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? '') ?></p>
+    <p class="text-center"><?= htmlspecialchars($concours->discipline ?? '') ?> (<?= htmlspecialchars($concours->type_competition ?? '') ?>) — <?= htmlspecialchars($concours->club_organisateur ?? '') ?> — <?= htmlspecialchars($concours->date_debut ?? '') ?> — <?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? '') ?></p>
 
     <?php foreach ($byCategorie as $catAbv => $items): ?>
         <?php if (empty($items)) continue; ?>
