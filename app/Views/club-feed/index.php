@@ -63,13 +63,39 @@ $fbHref = $fbHref ?? '';
             <?php endif; ?>
 
             <?php if (!empty($showFacebookPagePlugin) && $fbHref !== ''): ?>
+                <?php if (!empty($facebookAppId)): ?>
+                    <div id="fb-root"></div>
+                    <script async defer crossorigin="anonymous"
+                            src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0&appId=<?php echo htmlspecialchars($facebookAppId); ?>&autoLogAppEvents=1">
+                    </script>
+                <?php endif; ?>
                 <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body text-center py-5">
+                    <div class="card-body text-center py-4">
                         <h2 class="h5 mb-3">Actualités de <strong><?php echo htmlspecialchars($clubName); ?></strong> sur Facebook</h2>
-                        <p class="text-muted mb-4">Les publications du club sont sur la page Facebook. Cliquez ci-dessous pour les consulter.</p>
-                        <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
-                            <i class="fab fa-facebook me-2"></i> Voir la page Facebook du club
-                        </a>
+                        <p class="text-muted mb-3">
+                            Le fil ci‑dessous est chargé directement depuis Facebook via le plugin officiel.
+                        </p>
+                        <div class="d-flex justify-content-center mb-3">
+                            <div class="fb-page"
+                                 data-href="<?php echo htmlspecialchars($fbHref); ?>"
+                                 data-tabs="timeline"
+                                 data-width="500"
+                                 data-height="650"
+                                 data-small-header="false"
+                                 data-adapt-container-width="true"
+                                 data-hide-cover="false"
+                                 data-show-facepile="true">
+                                <blockquote cite="<?php echo htmlspecialchars($fbHref); ?>" class="fb-xfbml-parse-ignore">
+                                    <a href="<?php echo htmlspecialchars($fbHref); ?>">Facebook</a>
+                                </blockquote>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-0">
+                            Si le fil ne s'affiche pas, vous pouvez ouvrir directement la page :
+                            <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer">
+                                <?php echo htmlspecialchars($fbHref); ?>
+                            </a>
+                        </p>
                     </div>
                 </div>
             <?php endif; ?>
