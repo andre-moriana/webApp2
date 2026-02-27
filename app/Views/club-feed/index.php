@@ -105,7 +105,7 @@ $fbHref = $fbHref ?? '';
                                     <li class="mb-1">Revenez ici, cliquez sur <strong>«&nbsp;Déconnecter&nbsp;»</strong> puis sur <strong>«&nbsp;Connecter la page Facebook&nbsp;»</strong> pour réautoriser.</li>
                                 </ol>
                                 <p class="mb-0 small"><strong>Important :</strong> En mode Développement, seul un compte <strong>Administrateur, Développeur ou Testeur</strong> de l’app peut connecter une page.</p>
-                                <p class="mt-2 mb-0 small text-muted"><strong>Alternative :</strong> Demander <strong>« Page Public Content Access »</strong> en Contrôle d’application. Une fois approuvé, le fil peut s’afficher à partir de l’URL Facebook du club (sans « Connecter la page »). Il faut alors ajouter <code>FACEBOOK_APP_ID</code> et <code>FACEBOOK_APP_SECRET</code> dans le fichier .env du <strong>backend</strong> (BackendPHP).</p>
+                                <p class="mt-2 mb-0 small text-muted"><strong>Rappel :</strong> Les identifiants Facebook se configurent uniquement dans le .env de WebApp2 (pas dans l'API).</p>
                                 <p class="mt-2 mb-0 small">Un guide pas à pas (avec les noms de menus que vous voyez) est dans le fichier <strong>FACEBOOK-FIL-CLUB-CONFIG.md</strong> à la racine du projet WebApp2.</p>
                             </div>
                             <a href="/club-feed/disconnect" class="btn btn-outline-danger me-2"><i class="fas fa-unlink me-1"></i>Déconnecter la page Facebook</a>

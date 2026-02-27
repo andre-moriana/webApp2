@@ -4,9 +4,55 @@
 
 ---
 
+## Checklist pour que le fil fonctionne vraiment
+
+Tout se fait côté **WebApp2** et **app Facebook**. L’API (BackendPHP) n’a pas de configuration Facebook : elle utilise uniquement le token que WebApp2 enregistre après « Connecter la page Facebook ».
+
+1. **WebApp2 .env** : `FACEBOOK_APP_ID` et `FACEBOOK_APP_SECRET` doivent être renseignés (pour le flux OAuth « Connecter la page Facebook »).
+2. **Fiche club** (tableau de bord) : URL de la page Facebook du club renseignée (ex. https://www.facebook.com/ArchersDeGemenos).
+3. **App Facebook** (developers.facebook.com) : permission **pages_read_engagement** ajoutée à l’app (Cas d’usage / Contrôle app).
+4. **Compte qui clique sur « Connecter la page Facebook »** : Admin ou Testeur de l’app (Paramètres → Rôles) et administrateur de la page Facebook du club.
+
+---
+
 ## Objectif
 
 Obtenir l’accord de Meta pour la permission **pages_read_engagement** (lire les publications d’une page Facebook), sans quoi vous avez l’erreur #10 sur le fil du club.
+
+---
+
+## Tester l’app pour enregistrer la vidéo de démo (mode Développement)
+
+Meta exige une **vidéo** montrant le fonctionnement. En **mode Développement**, la permission `pages_read_engagement` fonctionne **sans révision** pour les comptes qui ont un **rôle** sur l’app (Administrateur, Développeur ou Testeur) et qui connectent une **page dont ils sont administrateur**. Vous pouvez donc faire fonctionner le fil pour enregistrer la vidéo.
+
+### Étapes à suivre
+
+1. **Rôle sur l’app**
+   - Allez sur **https://developers.facebook.com/apps** → votre app.
+   - Menu **Paramètres** (ou **Settings**) → **Rôles** (ou **Roles**).
+   - Vérifiez que le **compte Facebook** que vous utiliserez sur le site est bien **Administrateur**, **Développeur** ou **Testeur**. Ajoutez-le si besoin (adresse e-mail ou compte Facebook).
+
+2. **Permission ajoutée à l’app**
+   - Dans le menu, ouvrez **Vérifier** → **Contrôle app** (ou l’équivalent **App Review** / **Permissions and features**).
+   - Vérifiez que **pages_read_engagement** (et si besoin **pages_show_list**) apparaît dans les permissions de l’app, même en « Non soumis ». Si la permission n’apparaît pas, ajoutez-la via « Demander » / « Request » pour qu’elle soit au moins en mode développement.
+
+3. **Page Facebook**
+   - La **page Facebook du club** que vous allez connecter doit avoir ce **même compte** comme **administrateur** (ou au moins éditeur). Vérifiez dans **Paramètres de la page** → **Rôles** sur facebook.com.
+
+4. **Test sur le site**
+   - Sur votre site : page **Actualités du club**.
+   - Si une page est déjà connectée avec un autre compte : **Déconnecter la page Facebook**.
+   - Cliquez sur **Connecter la page Facebook**.
+   - Lors de la redirection vers Facebook, connectez-vous avec le **même compte** que celui qui a un rôle sur l’app (et qui est admin de la page).
+   - Autorisez les permissions demandées.
+   - Après le retour sur le site, le fil devrait se charger **sans erreur #10** (en mode Développement, pour ce compte).
+
+5. **Enregistrement de la vidéo**
+   - Une fois le fil affiché : lancez l’enregistrement (1080p si possible).
+   - Montrez : visite de la page Actualités du club → **Connecter la page Facebook** → autorisation sur Facebook → retour sur le site → **affichage des posts** du fil.
+   - Pas d’audio nécessaire. Vidéo courte (1–2 minutes).
+
+Si après ces étapes vous avez **toujours l’erreur #10** : vérifiez que l’app est bien en **mode Développement** (pas en mode Live) et que le compte utilisé est bien dans **Rôles**. Vous pouvez aussi faire un appel de test dans le **Graph API Explorer** (developers.facebook.com) avec la même permission pour ce compte, afin que Meta enregistre un usage.
 
 ---
 
