@@ -163,7 +163,8 @@ if ($top3ParCategorie) {
     }
     $dateDebut = $concours->date_debut ?? '';
     $dateFin = $concours->date_fin ?? '';
-    $sousTitreParts = array_filter([$disciplineLibelle, $concours->type_competition_name, $clubLibelle]);
+    $libelleTypeCompetition = '('. $concours->type_competition_name .')' ?? '';
+    $sousTitreParts = array_filter([$disciplineLibelle,  $libelleTypeCompetition, $clubLibelle]);
     if ($dateDebut !== '' || $dateFin !== '') {
         $sousTitreParts[] = trim($dateDebut . ($dateDebut && $dateFin ? ' — ' : '') . $dateFin);
     }
