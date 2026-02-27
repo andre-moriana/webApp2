@@ -57,13 +57,15 @@ if ($isCible && !empty($plansCible)) {
             $lic = trim($p['numero_licence'] ?? '');
             if ($nom !== '' || $lic !== '') {
                 $abvCat = $categorieParLicence[$lic] ?? trim($p['abv_categorie_classement'] ?? $p['categorie_classement'] ?? '');
+                $nt = isset($p['numero_tir']) && $p['numero_tir'] !== '' && $p['numero_tir'] !== null ? (int)$p['numero_tir'] : null;
                 $flat[] = [
                     'numero_depart' => (int)($p['numero_depart'] ?? $departNum),
                     'numero_cible' => (int)($p['numero_cible'] ?? 0),
                     'position_archer' => $p['position_archer'] ?? '',
                     'user_nom' => $nom,
                     'numero_licence' => $lic,
-                    'abv_categorie_classement' => $abvCat
+                    'abv_categorie_classement' => $abvCat,
+                    'numero_tir' => $nt
                 ];
             }
         }
@@ -123,7 +125,7 @@ if ($isSalle) {
         $first = is_array($departsList[0] ?? null) ? ($departsList[0]['numero_depart'] ?? 1) : ($departsList[0]->numero_depart ?? 1);
         $departDefaut = (int)$first ?: 1;
     }
-    $archerVide = ['user_nom' => '', 'numero_licence' => '', 'categorie_classement' => '', 'position_archer' => '', 'numero_cible' => 0, 'depart' => $departDefaut];
+    $archerVide = ['user_nom' => '', 'numero_licence' => '', 'categorie_classement' => '', 'position_archer' => '', 'numero_cible' => 0, 'depart' => $departDefaut, 'numero_tir' => null];
     $nbSlotsParPage = 4;
 
     if (empty($archersParCible)) {
@@ -250,7 +252,7 @@ if ($isNature) {
                                 <div class="d-flex justify-content-between align-items-center"><span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong></span><span class="feuille-marque-blason text-nowrap" style="font-size: 1.15em;"><strong>Cible n° <?= sprintf('%02d', (int)($f['cible'] ?? 0)) ?><?= htmlspecialchars(trim($archer['position_archer'] ?? '') ?: '') ?></strong></span></div>
                                 <div class="d-flex justify-content-between align-items-center"><span><?= htmlspecialchars($archer['club_nom'] ?? $archer['club_name'] ?? '—') ?></span><span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></div>
                                 <div class="mb-1"></div>
-                                <div class="d-flex justify-content-between align-items-center"><span>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?></span><span>N° départ <?= (int)($f['depart'] ?? $archer['depart'] ?? 0) ?> — N° tir <?= (int)($numSerie ?? 1) ?></span></div>
+                                <div class="d-flex justify-content-between align-items-center"><span>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?></span><span>N° départ <?= (int)($f['depart'] ?? $archer['depart'] ?? 0) ?> — N° tir <?= isset($archer['numero_tir']) && $archer['numero_tir'] !== '' && $archer['numero_tir'] !== null ? (int)$archer['numero_tir'] : '—' ?></span></div>
                             </div>
                             <table class="table table-bordered table-sm feuille-marque-table-volees">
                                 <thead>
