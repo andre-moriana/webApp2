@@ -63,12 +63,10 @@ $fbHref = $fbHref ?? '';
             <?php endif; ?>
 
             <?php if (!empty($showFacebookPagePlugin) && $fbHref !== ''): ?>
-                <?php if (!empty($facebookAppId)): ?>
-                    <div id="fb-root"></div>
-                    <script async defer crossorigin="anonymous"
-                            src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0&appId=<?php echo htmlspecialchars($facebookAppId); ?>&autoLogAppEvents=1">
-                    </script>
-                <?php endif; ?>
+                <div id="fb-root"></div>
+                <script async defer crossorigin="anonymous"
+                        src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0">
+                </script>
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body text-center py-4">
                         <h2 class="h5 mb-3">Actualités de <strong><?php echo htmlspecialchars($clubName); ?></strong> sur Facebook</h2>
