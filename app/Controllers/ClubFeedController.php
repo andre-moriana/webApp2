@@ -89,6 +89,109 @@ class ClubFeedController
     }
 
     /**
+     * Page de test détaillée pour la configuration Facebook (réservée aux administrateurs).
+     */
+    public function debug()
+    {
+        SessionGuard::check();
+        $this->loadEnv();
+
+        $user = $_SESSION['user'] ?? [];
+        $isAdmin = !empty($user['is_admin']);
+        if (!$isAdmin) {
+            http_response_code(403);
+            echo 'Accès refusé';
+            return;
+        }
+
+        $logs = [];
+
+        $pushLog = function (string $label, $value) use (&$logs) {
+            $logs[] = [
+                'label' => $label,
+                'value' => $value,
+            ];
+        };
+
+        // 1) Variables d'environnement
+        $pushLog('FACEBOOK_APP_ID', $_ENV['FACEBOOK_APP_ID'] ?? '(non défini)');
+        $pushLog('FACEBOOK_APP_SECRET défini', isset($_ENV['FACEBOOK_APP_SECRET']) && $_ENV['FACEBOOK_APP_SECRET'] !== '' ? 'oui' : 'non');
+
+        // 2) Club et URL Facebook
+        $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
+        $club = null;
+        $clubName = 'votre club';
+        $facebookUrl = '';
+        $facebookConnected = false;
+
+        if ($clubId) {
+            try {
+                $response = $this->apiService->makeRequest("clubs/{$clubId}", 'GET');
+                $payload = $this->apiService->unwrapData($response);
+                $pushLog('Réponse API club brut', $response);
+                if (!empty($response['success']) && $payload && is_array($payload)) {
+                    $club = $payload;
+                    $clubName = $club['name'] ?? 'Club';
+                    $facebookUrl = $club['facebookUrl'] ?? $club['facebook_url'] ?? '';
+                    $facebookUrl = is_string($facebookUrl) ? trim($facebookUrl) : '';
+                    $facebookConnected = !empty($club['facebookConnected']);
+                }
+            } catch (Exception $e) {
+                $pushLog('Erreur chargement club', $e->getMessage());
+            }
+        } else {
+            $pushLog('ClubId', 'Aucun clubId en session');
+        }
+
+        $pushLog('Club courant', $club);
+        $pushLog('URL Facebook du club', $facebookUrl);
+        $pushLog('facebookConnected (API)', $facebookConnected ? 'oui' : 'non');
+
+        // 3) Test simple de l’API Graph si possible
+        $graphTestResult = null;
+        if (!empty($_ENV['FACEBOOK_APP_ID']) && !empty($_ENV['FACEBOOK_APP_SECRET'])) {
+            try {
+                $service = new FacebookFeedService();
+                $pushLog('FacebookFeedService configuré', $service->isConfigured() ? 'oui' : 'non');
+
+                if ($facebookUrl !== '') {
+                    $posts = $service->getPagePosts($facebookUrl, 1);
+                    $graphTestResult = [
+                        'success' => !empty($posts),
+                        'posts_count' => is_array($posts) ? count($posts) : 0,
+                        'sample' => $posts,
+                    ];
+                } else {
+                    $graphTestResult = [
+                        'success' => false,
+                        'error' => 'Aucune URL Facebook configurée pour le club.',
+                    ];
+                }
+            } catch (Exception $e) {
+                $graphTestResult = [
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        } else {
+            $graphTestResult = [
+                'success' => false,
+                'error' => 'FACEBOOK_APP_ID ou FACEBOOK_APP_SECRET manquant dans .env',
+            ];
+        }
+
+        $pushLog('Test API Graph (getPagePosts)', $graphTestResult);
+
+        $title = 'Debug Facebook - Portail Arc Training';
+        $pageTitle = $title;
+        $dashboardFullPage = false;
+
+        include 'app/Views/layouts/header.php';
+        include 'app/Views/club-feed/debug.php';
+        include 'app/Views/layouts/footer.php';
+    }
+
+    /**
      * Redirige vers Facebook OAuth pour connecter la page du club.
      */
     public function connect()

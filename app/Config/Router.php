@@ -63,6 +63,8 @@ class Router {
         $this->addRoute("GET", "/club-feed/connect", "ClubFeedController@connect");
         $this->addRoute("GET", "/club-feed/disconnect", "ClubFeedController@disconnect");
         $this->addRoute("GET", "/club-feed/facebook-callback", "ClubFeedController@facebookCallback");
+        // Page de debug Facebook (admin uniquement)
+        $this->addRoute("GET", "/facebook-debug", "ClubFeedController@debug");
         
         // Routes des exercices (protégées)
         $this->addRoute("GET", "/exercises", "ExerciseController@index");
