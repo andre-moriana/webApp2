@@ -20,9 +20,21 @@ $isNature = ($disciplineAbv === 'N');
 $isCible = in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
 $isPeloton = in_array($disciplineAbv, ['3', 'N', 'C'], true);
 
-// Filtres d'édition (série et cible)
+// Filtres d'édition (départ, série et cible)
+$filterDepartFeuilles = isset($departFeuilles) ? (string)$departFeuilles : 'tout';
 $filterSerieFeuilles = isset($serieFeuilles) ? (string)$serieFeuilles : 'toutes';
 $filterCibleFeuilles = isset($cibleFeuilles) ? (string)$cibleFeuilles : 'toutes';
+
+// Appliquer le filtre par départ sur les plans
+if ($filterDepartFeuilles !== '' && $filterDepartFeuilles !== 'tout') {
+    $depNumFilter = (int)$filterDepartFeuilles;
+    if ($isCible && !empty($plansCible) && isset($plansCible[$depNumFilter])) {
+        $plansCible = [$depNumFilter => $plansCible[$depNumFilter]];
+    }
+    if ($isPeloton && !empty($plansPeloton) && isset($plansPeloton[$depNumFilter])) {
+        $plansPeloton = [$depNumFilter => $plansPeloton[$depNumFilter]];
+    }
+}
 
 // Index licence -> abv catégorie de classement (depuis les inscriptions du concours)
 $categorieParLicence = [];

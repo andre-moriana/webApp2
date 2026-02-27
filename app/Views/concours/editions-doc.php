@@ -492,21 +492,31 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
         <?php if ($doc === 'feuilles-marques'): ?>
         <?php
         $baseFeuillesUrl = '/concours/' . (int)$concoursId . '/editions?doc=feuilles-marques';
+        $currentDepartFeuilles = $departFeuilles ?? 'tout';
         $currentSerieFeuilles = $serieFeuilles ?? 'toutes';
         $currentCibleFeuilles = $cibleFeuilles ?? 'toutes';
         $ciblesListFeuilles = $ciblesListFeuilles ?? [];
+        $departsListFeuilles = $departsListFeuilles ?? [];
+        $feuillesParams = '&depart=' . rawurlencode($currentDepartFeuilles) . '&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles);
         ?>
+        <label class="me-2">Départ :</label>
+        <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=tout&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles)) ?>"<?= $currentDepartFeuilles === 'tout' ? ' selected' : '' ?>>Tous</option>
+            <?php foreach ($departsListFeuilles as $numDepart): ?>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . (int)$numDepart . '&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles)) ?>"<?= $currentDepartFeuilles === (string)$numDepart ? ' selected' : '' ?>><?= (int)$numDepart ?></option>
+            <?php endforeach; ?>
+        </select>
         <label class="me-2">Série :</label>
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&cible=' . rawurlencode($currentCibleFeuilles) . '&serie=toutes') ?>"<?= $currentSerieFeuilles === 'toutes' ? ' selected' : '' ?>>TOUTES</option>
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&cible=' . rawurlencode($currentCibleFeuilles) . '&serie=1') ?>"<?= $currentSerieFeuilles === '1' ? ' selected' : '' ?>>1</option>
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&cible=' . rawurlencode($currentCibleFeuilles) . '&serie=2') ?>"<?= $currentSerieFeuilles === '2' ? ' selected' : '' ?>>2</option>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles) . '&serie=toutes') ?>"<?= $currentSerieFeuilles === 'toutes' ? ' selected' : '' ?>>TOUTES</option>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles) . '&serie=1') ?>"<?= $currentSerieFeuilles === '1' ? ' selected' : '' ?>>1</option>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles) . '&serie=2') ?>"<?= $currentSerieFeuilles === '2' ? ' selected' : '' ?>>2</option>
         </select>
         <label class="me-2">Cible :</label>
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=toutes') ?>"<?= $currentCibleFeuilles === 'toutes' ? ' selected' : '' ?>>TOUTES</option>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=toutes') ?>"<?= $currentCibleFeuilles === 'toutes' ? ' selected' : '' ?>>TOUTES</option>
             <?php foreach ($ciblesListFeuilles as $numCible): ?>
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=' . $numCible) ?>"<?= $currentCibleFeuilles === (string)$numCible ? ' selected' : '' ?>><?= (int)$numCible ?></option>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=' . $numCible) ?>"<?= $currentCibleFeuilles === (string)$numCible ? ' selected' : '' ?>><?= (int)$numCible ?></option>
             <?php endforeach; ?>
         </select>
         <?php endif; ?>

@@ -2030,12 +2030,15 @@ class ConcoursController {
                     $plansPelotonFeuilles = [];
                 }
             }
-            // Filtres d'édition : série (1, 2 ou tout) et cible (numéro ou tout)
+            // Filtres d'édition : départ (tout ou numéro), série (1, 2 ou tout) et cible (numéro ou tout)
+            $departFeuilles = isset($_GET['depart']) ? (string)$_GET['depart'] : 'tout';
             $serieFeuilles = isset($_GET['serie']) ? (string)$_GET['serie'] : 'tout';
             $cibleFeuilles = isset($_GET['cible']) ? (string)$_GET['cible'] : 'tout';
             $ciblesListFeuilles = [];
+            $departsListFeuilles = [];
             if (in_array($abv, ['S', 'T', 'I', 'H'], true) && !empty($plansCibleFeuilles)) {
                 foreach ($plansCibleFeuilles as $departNum => $plans) {
+                    $departsListFeuilles[(int)$departNum] = true;
                     if (!is_array($plans)) continue;
                     foreach ($plans as $p) {
                         $nc = (int)($p['numero_cible'] ?? 0);
@@ -2044,6 +2047,14 @@ class ConcoursController {
                 }
                 $ciblesListFeuilles = array_keys($ciblesListFeuilles);
                 sort($ciblesListFeuilles);
+                $departsListFeuilles = array_keys($departsListFeuilles);
+                sort($departsListFeuilles);
+            } elseif (in_array($abv, ['3', 'N', 'C'], true) && !empty($plansPelotonFeuilles)) {
+                foreach ($plansPelotonFeuilles as $departNum => $plans) {
+                    $departsListFeuilles[(int)$departNum] = true;
+                }
+                $departsListFeuilles = array_keys($departsListFeuilles);
+                sort($departsListFeuilles);
             }
         }
 
