@@ -154,7 +154,23 @@ if ($top3ParCategorie) {
     <p class="text-center text-muted small"><strong>Top 3</strong> — uniquement les 3 premiers de chaque catégorie</p>
     <?php endif; ?>
     <p class="text-center"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong></p>
-    <p class="text-center"><?= htmlspecialchars($concours->label_discipline ?? '') ?> (<?= htmlspecialchars($concours->format_competition ?? '') ?>) — <?= htmlspecialchars($concours->date_debut ?? '') ?> — <?= htmlspecialchars($concours->lieu_competition ?? $concours->lieu ?? '') ?></p>
+    <?php
+    $disciplineLibelle = $disciplineName ?? $concours->discipline_name ?? '';
+    $formatLibelle = $typeCompetitionName ?? $concours->type_competition_name ?? '';
+    $clubLibelle = $clubName ?? '';
+    if ($clubLibelle === '' && !empty($concours->club_organisateur) && !empty($clubsMap)) {
+        $clubData = $clubsMap[$concours->club_organisateur] ?? $clubsMap[(string)$concours->club_organisateur] ?? null;
+        $clubLibelle = $clubData ? ($clubData['name'] ?? $clubData['nom'] ?? '') : '';
+    }
+    $dateDebut = $concours->date_debut ?? '';
+    $dateFin = $concours->date_fin ?? '';
+    $sousTitreParts = array_filter([$disciplineLibelle, $formatLibelle, $clubLibelle]);
+    if ($dateDebut !== '' || $dateFin !== '') {
+        $sousTitreParts[] = trim($dateDebut . ($dateDebut && $dateFin ? ' — ' : '') . $dateFin);
+    }
+    $sousTitre = implode(' — ', $sousTitreParts);
+    ?>
+    <p class="text-center"><?= $sousTitre !== '' ? htmlspecialchars($sousTitre) : '&nbsp;' ?></p>
 
     <?php foreach ($byCategorie as $catAbv => $items): ?>
         <?php if (empty($items)) continue; ?>
