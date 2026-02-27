@@ -63,26 +63,34 @@ $fbHref = $fbHref ?? '';
             <?php endif; ?>
 
             <?php if (!empty($showFacebookPagePlugin) && $fbHref !== ''): ?>
+                <?php if (!empty($facebookAppId)): ?>
+                    <div id="fb-root"></div>
+                    <script async defer crossorigin="anonymous"
+                            src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v25.0&appId=<?php echo htmlspecialchars($facebookAppId); ?>"></script>
+                <?php endif; ?>
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body text-center py-4">
                         <h2 class="h5 mb-3">Actualités de <strong><?php echo htmlspecialchars($clubName); ?></strong> sur Facebook</h2>
                         <p class="text-muted mb-3">
-                            Le fil ci‑dessous est chargé directement depuis Facebook via l'iframe du plugin Page.
+                            Le fil ci‑dessous est chargé depuis Facebook via le plugin officiel (SDK JavaScript).
                         </p>
                         <div class="d-flex justify-content-center mb-3">
-                            <iframe
-                                src="https://www.facebook.com/plugins/page.php?href=<?php echo urlencode($fbHref); ?>&tabs=timeline&width=500&height=650&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
-                                width="500"
-                                height="650"
-                                style="border:none;overflow:hidden"
-                                scrolling="no"
-                                frameborder="0"
-                                allowfullscreen="true"
-                                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
-                            </iframe>
+                            <div class="fb-page"
+                                 data-href="<?php echo htmlspecialchars($fbHref); ?>"
+                                 data-tabs="timeline"
+                                 data-width=""
+                                 data-height=""
+                                 data-small-header="false"
+                                 data-adapt-container-width="true"
+                                 data-hide-cover="false"
+                                 data-show-facepile="true">
+                                <blockquote cite="<?php echo htmlspecialchars($fbHref); ?>" class="fb-xfbml-parse-ignore">
+                                    <a href="<?php echo htmlspecialchars($fbHref); ?>"><?php echo htmlspecialchars($clubName); ?></a>
+                                </blockquote>
+                            </div>
                         </div>
                         <p class="text-muted small mb-0">
-                            Si le fil ne s'affiche pas, vous pouvez ouvrir directement la page :
+                            Si le fil ne s'affiche pas, ouvrez la page :
                             <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer">
                                 <?php echo htmlspecialchars($fbHref); ?>
                             </a>
