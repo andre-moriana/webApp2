@@ -6,14 +6,10 @@
 
 class SessionGuard {
     /**
-     * Retourne l'URL de retour sûre pour après login (évite dashboard quand on venait du fil club / callback Facebook).
+     * Retourne l'URL de retour sûre pour après login.
      */
     private static function getLoginReturnUrl(): string {
-        $uri = $_SERVER['REQUEST_URI'] ?? '';
-        if (strpos($uri, '/club-feed/facebook-callback') !== false) {
-            return '/club-feed';
-        }
-        $path = parse_url($uri, PHP_URL_PATH);
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
         return ($path !== '' && $path !== false && $path[0] === '/') ? $path : '/dashboard';
     }
 

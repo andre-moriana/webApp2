@@ -58,13 +58,8 @@ class Router {
         // Routes principales (protégées)
         $this->addRoute("GET", "/", "DashboardController@index");
         $this->addRoute("GET", "/dashboard", "DashboardController@index");
-        // Page d'accueil Archers : actualités Facebook du club (fil intégré)
+        // Page Actualités du club (lien vers Facebook si configuré, sans plugin)
         $this->addRoute("GET", "/club-feed", "ClubFeedController@index");
-        $this->addRoute("GET", "/club-feed/connect", "ClubFeedController@connect");
-        $this->addRoute("GET", "/club-feed/disconnect", "ClubFeedController@disconnect");
-        $this->addRoute("GET", "/club-feed/facebook-callback", "ClubFeedController@facebookCallback");
-        // Page de debug Facebook (admin uniquement)
-        $this->addRoute("GET", "/facebook-debug", "ClubFeedController@debug");
         
         // Routes des exercices (protégées)
         $this->addRoute("GET", "/exercises", "ExerciseController@index");
@@ -607,9 +602,9 @@ class Router {
                     ]);
                     exit;
                 }
-                // Retour après login : page club-feed si on venait du callback Facebook, sinon la page demandée
+                // Retour après login : page demandée
                 $uri = $_SERVER['REQUEST_URI'] ?? '';
-                $returnPath = (strpos($uri, '/club-feed/facebook-callback') !== false) ? '/club-feed' : (parse_url($uri, PHP_URL_PATH) ?: '/');
+                $returnPath = parse_url($uri, PHP_URL_PATH) ?: '/';
                 $returnPath = (strlen($returnPath) > 0 && $returnPath[0] === '/') ? $returnPath : '/';
                 // Sauvegarder en session au cas où le param return serait perdu (formulaire, autre onglet)
                 if (session_status() === PHP_SESSION_NONE) {
