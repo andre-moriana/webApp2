@@ -68,8 +68,11 @@ $fbHref = $fbHref ?? '';
                         <p class="text-muted small mb-3">Fil de la page Facebook de <strong><?php echo htmlspecialchars($clubName); ?></strong> (widget officiel Facebook).</p>
                         <div id="fb-root"></div>
                         <script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0&appId=<?php echo htmlspecialchars($facebookAppId); ?>"></script>
-                        <div class="fb-page" data-href="<?php echo htmlspecialchars($fbHref); ?>" data-tabs="timeline" data-width="500" data-height="600" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"></div>
-                        <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm mt-3">
+                        <div style="min-height: 400px; width: 100%; max-width: 500px;">
+                            <div class="fb-page" data-href="<?php echo htmlspecialchars($fbHref); ?>" data-tabs="timeline" data-width="500" data-height="500" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"></div>
+                        </div>
+                        <p class="text-muted small mt-2 mb-2">Si le fil ne s'affiche pas ci-dessus, ajoutez l'URL de ce site (ex. <code><?php echo htmlspecialchars($_SERVER['HTTP_HOST'] ?? 'votresite.fr'); ?></code>) dans <strong>developers.facebook.com</strong> → votre app → <strong>Paramètres</strong> → <strong>Basique</strong> → <strong>Domaines de l'app</strong>.</p>
+                        <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
                             <i class="fab fa-facebook me-1"></i> Voir la page sur Facebook
                         </a>
                     </div>
