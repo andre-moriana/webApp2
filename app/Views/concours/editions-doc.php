@@ -214,7 +214,7 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-table-volees th,
         .edition-feuilles-marques .feuille-marque-table-volees td {
             border: 1px solid #333;
-            padding: 8px 1px;
+            padding: 7px 1px;
             min-height: 1.3em;
             box-sizing: border-box;
             text-align: center;
