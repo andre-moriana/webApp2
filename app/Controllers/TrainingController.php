@@ -830,9 +830,10 @@ class TrainingController {
     private function getExercisesByCategory($category) {
         try {
             // Récupérer l'utilisateur connecté depuis la session
-            $loggedInUser = $_SESSION['user'];
+            $loggedInUser = $_SESSION['user'] ?? [];
             $isAdmin = $loggedInUser['is_admin'] ?? false;
             $isCoach = ($loggedInUser['role'] ?? '') === 'Coach';
+            $isDirigeant = ($loggedInUser['role'] ?? '') === 'Dirigeant';
             
             // Récupérer tous les exercices (pas de filtrage car admin/coach)
             $response = $this->apiService->getExercises();
@@ -870,9 +871,10 @@ class TrainingController {
     private function getVisibleExercisesByCategory($category, $userId) {
         try {
             // Récupérer l'utilisateur connecté depuis la session
-            $loggedInUser = $_SESSION['user'];
+            $loggedInUser = $_SESSION['user'] ?? [];
             $isAdmin = $loggedInUser['is_admin'] ?? false;
             $isCoach = ($loggedInUser['role'] ?? '') === 'Coach';
+            $isDirigeant = ($loggedInUser['role'] ?? '') === 'Dirigeant';
             // Récupérer tous les exercices (pas de filtrage car admin/coach)
             $response = $this->apiService->getExercises();
             
