@@ -73,6 +73,12 @@ if ($doc === 'classement') {
 <div class="edition-doc-fin mt-4 pt-4">
     <table class="table table-borderless">
         <tr>
+            <td colspan="2">
+                <strong>Nombre total d'archers</strong>
+                <p class="mb-0 mt-1"><?= htmlspecialchars($nbArchers) ?></p>
+            </td>
+        </tr>
+        <tr>
             <th class="align-top">Club Organisateur</th>
             <th class="align-top">Arbitre Responsable</th>
         </tr>
