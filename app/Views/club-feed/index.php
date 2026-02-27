@@ -65,13 +65,16 @@ $fbHref = $fbHref ?? '';
             <?php if (!empty($showFacebookPagePlugin) && $facebookAppId !== '' && $fbHref !== ''): ?>
                 <?php
                 $currentDomain = $_SERVER['HTTP_HOST'] ?? '';
-                $currentDomain = preg_replace('/:\d+$/', '', $currentDomain); // enlever le port pour la config Facebook
+                $currentDomain = preg_replace('/:\d+$/', '', $currentDomain);
+                $domainOk = (strtolower($currentDomain) === 'arctraining.fr');
                 ?>
+                <?php if (!$domainOk): ?>
                 <div class="alert alert-warning mb-3" role="alert">
-                    <strong>Le fil ne s'affiche pas ?</strong> Facebook n'affiche le widget que si le <strong>domaine</strong> de cette page est autorisé dans votre app.<br>
-                    <strong>Domaine actuel :</strong> <code><?php echo htmlspecialchars($currentDomain ?: 'inconnu'); ?></code><br>
-                    Ajoutez exactement ce domaine dans <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a> → votre app « Feed page club » → <strong>Paramètres</strong> → <strong>Basique</strong> → <strong>Domaines de l'app</strong> (sans <code>https://</code> ni port). En local (<code>localhost</code>), le widget est souvent bloqué par Facebook.
+                    <strong>Domaine actuel :</strong> <code><?php echo htmlspecialchars($currentDomain ?: 'inconnu'); ?></code>. Ajoutez-le dans <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a> → app « Feed page club » → Paramètres → Basique → <strong>Domaines de l'app</strong>. En local (<code>localhost</code>), le widget est souvent bloqué.
                 </div>
+                <?php else: ?>
+                <p class="text-muted small mb-2">Si le fil ne s'affiche pas ci-dessous, testez en <strong>navigation privée</strong> ou désactivez temporairement les bloqueurs de publicité (Facebook charge un iframe).</p>
+                <?php endif; ?>
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body">
                         <p class="text-muted small mb-3">Fil de la page Facebook de <strong><?php echo htmlspecialchars($clubName); ?></strong> (widget officiel Facebook).</p>
@@ -91,7 +94,7 @@ $fbHref = $fbHref ?? '';
                             if (wrap) FB.XFBML.parse(wrap);
                         };
                         </script>
-                        <script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js"></script>
+                        <script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0&appId=<?php echo htmlspecialchars($facebookAppId); ?>"></script>
                         <div id="fb-page-wrap" style="min-height: 400px; width: 100%; max-width: 500px;">
                             <div class="fb-page" data-href="<?php echo htmlspecialchars($fbHref); ?>" data-tabs="timeline" data-width="500" data-height="500" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"></div>
                         </div>
