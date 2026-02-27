@@ -108,7 +108,8 @@ class ClubFeedController
         $url = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=' . urlencode($appId)
             . '&redirect_uri=' . urlencode($redirectUri)
             . '&scope=' . urlencode('pages_show_list,pages_read_engagement')
-            . '&state=' . urlencode($state);
+            . '&state=' . urlencode($state)
+            . '&auth_type=rerequest';
         header('Location: ' . $url);
         exit;
     }
