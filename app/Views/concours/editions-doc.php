@@ -214,7 +214,9 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-table-volees th,
         .edition-feuilles-marques .feuille-marque-table-volees td {
             border: 1px solid #333;
-            padding: 1px 3px;
+            padding: 2px 3px;
+            min-height: 1.3em;
+            box-sizing: border-box;
         }
         .edition-feuilles-marques .feuille-marque-archer-header {
             font-size: 0.65rem;
@@ -224,7 +226,7 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-blason { margin-left: 0.35rem; font-weight: 600; font-size: 0.65rem; }
         .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.25rem; font-size: 0.6rem; }
         .edition-feuilles-marques .feuille-marque-ligne-resume td { text-align: center; font-size: 0.65rem; }
-        .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 5.6em; padding: 8px 12px; }
+        .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 7.3em; padding: 10px 12px; }
         /* Nature : 2 archers par page, grille 2 colonnes */
         .edition-feuilles-marques .feuille-marque-nature-grid {
             display: grid;
@@ -247,7 +249,7 @@ $dateFooter = date('d/m/Y H:i');
         /* Nature : 21 volées, police réduite pour tenir sur la page */
         .edition-feuilles-marques .feuille-marque-table-nature { font-size: 0.65rem; }
         .edition-feuilles-marques .feuille-marque-table-nature th,
-        .edition-feuilles-marques .feuille-marque-table-nature td { padding: 1px 3px; }
+        .edition-feuilles-marques .feuille-marque-table-nature td { padding: 2px 3px; min-height: 1.3em; box-sizing: border-box; }
         /* Nature : logo en fond de tableau, transparence 20 % (overlay blanc 80 %) */
         .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap {
             position: relative;
@@ -497,7 +499,6 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
         $currentCibleFeuilles = $cibleFeuilles ?? 'toutes';
         $ciblesListFeuilles = $ciblesListFeuilles ?? [];
         $departsListFeuilles = $departsListFeuilles ?? [];
-        $feuillesParams = '&depart=' . rawurlencode($currentDepartFeuilles) . '&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles);
         ?>
         <label class="me-2">Départ :</label>
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
