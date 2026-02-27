@@ -39,6 +39,8 @@ $fbHref = $fbHref ?? '';
                 $posts = $posts ?? [];
                 $facebookConnected = $facebookConnected ?? false;
                 $feedError = $feedError ?? '';
+                $showFacebookPagePlugin = $showFacebookPagePlugin ?? false;
+                $facebookAppId = $facebookAppId ?? '';
                 if ($facebookUrl !== '' && $fbHref === '') {
                     $fbHref = (strpos($facebookUrl, 'http') === 0) ? $facebookUrl : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
                 }
@@ -57,6 +59,20 @@ $fbHref = $fbHref ?? '';
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <?php echo htmlspecialchars($flashSuccess); ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($showFacebookPagePlugin) && $facebookAppId !== '' && $fbHref !== ''): ?>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Fil de la page Facebook de <strong><?php echo htmlspecialchars($clubName); ?></strong> (widget officiel Facebook).</p>
+                        <div id="fb-root"></div>
+                        <script async defer crossorigin="anonymous" src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0&appId=<?php echo htmlspecialchars($facebookAppId); ?>"></script>
+                        <div class="fb-page" data-href="<?php echo htmlspecialchars($fbHref); ?>" data-tabs="timeline" data-width="500" data-height="600" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"></div>
+                        <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm mt-3">
+                            <i class="fab fa-facebook me-1"></i> Voir la page sur Facebook
+                        </a>
+                    </div>
                 </div>
             <?php endif; ?>
 

@@ -22,6 +22,7 @@ class ClubFeedController
     public function index()
     {
         SessionGuard::check();
+        $this->loadEnv();
 
         $user = $_SESSION['user'] ?? [];
         $clubId = $user['clubId'] ?? $user['club_id'] ?? null;
@@ -74,6 +75,9 @@ class ClubFeedController
                 ? $facebookUrl
                 : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
         }
+
+        $showFacebookPagePlugin = (!empty($fbHref) && empty($posts));
+        $facebookAppId = $_ENV['FACEBOOK_APP_ID'] ?? '';
 
         $title = 'Actualités du club - Portail Arc Training';
         $pageTitle = $title;
