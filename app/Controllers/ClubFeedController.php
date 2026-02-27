@@ -97,13 +97,6 @@ class ClubFeedController
         $this->loadEnv();
 
         $user = $_SESSION['user'] ?? [];
-        $isAdmin = !empty($user['is_admin']);
-        if (!$isAdmin) {
-            http_response_code(403);
-            echo 'Accès refusé';
-            return;
-        }
-
         $logs = [];
 
         $pushLog = function (string $label, $value) use (&$logs) {
