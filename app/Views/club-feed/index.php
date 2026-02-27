@@ -63,6 +63,15 @@ $fbHref = $fbHref ?? '';
             <?php endif; ?>
 
             <?php if (!empty($showFacebookPagePlugin) && $facebookAppId !== '' && $fbHref !== ''): ?>
+                <?php
+                $currentDomain = $_SERVER['HTTP_HOST'] ?? '';
+                $currentDomain = preg_replace('/:\d+$/', '', $currentDomain); // enlever le port pour la config Facebook
+                ?>
+                <div class="alert alert-warning mb-3" role="alert">
+                    <strong>Le fil ne s'affiche pas ?</strong> Facebook n'affiche le widget que si le <strong>domaine</strong> de cette page est autorisé dans votre app.<br>
+                    <strong>Domaine actuel :</strong> <code><?php echo htmlspecialchars($currentDomain ?: 'inconnu'); ?></code><br>
+                    Ajoutez exactement ce domaine dans <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com</a> → votre app « Feed page club » → <strong>Paramètres</strong> → <strong>Basique</strong> → <strong>Domaines de l'app</strong> (sans <code>https://</code> ni port). En local (<code>localhost</code>), le widget est souvent bloqué par Facebook.
+                </div>
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body">
                         <p class="text-muted small mb-3">Fil de la page Facebook de <strong><?php echo htmlspecialchars($clubName); ?></strong> (widget officiel Facebook).</p>
@@ -86,8 +95,7 @@ $fbHref = $fbHref ?? '';
                         <div id="fb-page-wrap" style="min-height: 400px; width: 100%; max-width: 500px;">
                             <div class="fb-page" data-href="<?php echo htmlspecialchars($fbHref); ?>" data-tabs="timeline" data-width="500" data-height="500" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"></div>
                         </div>
-                        <p class="text-muted small mt-2 mb-2">Si le fil ne s'affiche pas ci-dessus, ajoutez l'URL de ce site (ex. <code><?php echo htmlspecialchars($_SERVER['HTTP_HOST'] ?? 'votresite.fr'); ?></code>) dans <strong>developers.facebook.com</strong> → votre app → <strong>Paramètres</strong> → <strong>Basique</strong> → <strong>Domaines de l'app</strong>.</p>
-                        <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                        <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm mt-2">
                             <i class="fab fa-facebook me-1"></i> Voir la page sur Facebook
                         </a>
                     </div>
