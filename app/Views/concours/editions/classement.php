@@ -156,8 +156,6 @@ if ($top3ParCategorie) {
     <p class="text-center"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong></p>
     <?php
     $disciplineLibelle = $disciplineName ?? $concours->discipline_name ?? '';
-    $formatLibelle = $typeCompetitionName ?? $concours->type_competition_name ?? '';
-    echo $formatLibelle . ' - '.$concours->type_competition_name;
     $clubLibelle = $clubName ?? '';
     if ($clubLibelle === '' && !empty($concours->club_organisateur) && !empty($clubsMap)) {
         $clubData = $clubsMap[$concours->club_organisateur] ?? $clubsMap[(string)$concours->club_organisateur] ?? null;
@@ -165,7 +163,7 @@ if ($top3ParCategorie) {
     }
     $dateDebut = $concours->date_debut ?? '';
     $dateFin = $concours->date_fin ?? '';
-    $sousTitreParts = array_filter([$disciplineLibelle, $formatLibelle, $clubLibelle]);
+    $sousTitreParts = array_filter([$disciplineLibelle, $concours->type_competition_name, $clubLibelle]);
     if ($dateDebut !== '' || $dateFin !== '') {
         $sousTitreParts[] = trim($dateDebut . ($dateDebut && $dateFin ? ' — ' : '') . $dateFin);
     }
