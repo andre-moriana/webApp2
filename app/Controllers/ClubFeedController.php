@@ -1,6 +1,7 @@
 <?php
 
 require_once 'app/Services/ApiService.php';
+require_once 'app/Services/FacebookFeedService.php';
 require_once 'app/Middleware/SessionGuard.php';
 
 /**
@@ -140,7 +141,27 @@ class ClubFeedController
         $pushLog('URL Facebook du club', $facebookUrl);
         $pushLog('facebookConnected (API)', $facebookConnected ? 'oui' : 'non');
 
-        // 3) Test simple de l’API Graph si possible
+        // 3) Appel du backend sur /clubs/{id}/facebook-feed (même flux que la page réelle)
+        $feedDebug = null;
+        if ($clubId) {
+            try {
+                $feedResponse = $this->apiService->makeRequest("clubs/{$clubId}/facebook-feed", 'GET');
+                $feedDebug = $feedResponse;
+            } catch (Exception $e) {
+                $feedDebug = [
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        } else {
+            $feedDebug = [
+                'success' => false,
+                'error' => 'Aucun clubId pour tester /clubs/{id}/facebook-feed',
+            ];
+        }
+        $pushLog('Réponse backend clubs/{clubId}/facebook-feed', $feedDebug);
+
+        // 4) Test simple de l’API Graph si possible (via token d’app)
         $graphTestResult = null;
         if (!empty($_ENV['FACEBOOK_APP_ID']) && !empty($_ENV['FACEBOOK_APP_SECRET'])) {
             try {
