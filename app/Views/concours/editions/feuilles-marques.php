@@ -248,11 +248,11 @@ if ($isNature) {
                     <div class="feuille-marque-salle-grid">
                     <?php foreach ($f['archers'] as $archer): ?>
                         <div class="feuille-marque-archer-block">
-                            <div class="feuille-marque-archer-header border-bottom pb-1 mb-2 d-flex justify-content-between align-items-start">
-                                <span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br></span>
-                                <span class="feuille-marque-blason text-nowrap">Cible: <strong><?= (int)($f['cible'] ?? 0) ?><?= htmlspecialchars(trim($archer['position_archer'] ?? '') ?: '—') ?></strong></span>
-                                <span><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?></span>
-                                <span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span>
+                            <div class="feuille-marque-archer-header border-bottom pb-1 mb-2">
+                                <div class="d-flex justify-content-between align-items-center"><span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong></span><span class="feuille-marque-blason text-nowrap">Cible <strong><?= (int)($f['cible'] ?? 0) ?><?= htmlspecialchars(trim($archer['position_archer'] ?? '') ?: '') ?></strong></span></div>
+                                <div class="d-flex justify-content-between align-items-center"><span><?= htmlspecialchars($archer['club_nom'] ?? $archer['club_name'] ?? '—') ?></span><span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></div>
+                                <div class="mb-1"></div>
+                                <div class="d-flex justify-content-between align-items-center"><span>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?></span><span>N° départ <?= (int)($f['depart'] ?? $archer['depart'] ?? 0) ?> — N° tir <?= (int)($numSerie ?? 1) ?></span></div>
                             </div>
                             <table class="table table-bordered table-sm feuille-marque-table-volees">
                                 <thead>
