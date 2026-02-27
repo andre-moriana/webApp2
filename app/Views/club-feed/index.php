@@ -102,7 +102,9 @@ $fbHref = $fbHref ?? '';
                                     </li>
                                     <li class="mb-1"><strong>En mode Développement :</strong> le compte qui connecte la page doit être dans <strong>Rôles &gt; Rôles de l’application</strong> (vous l’avez déjà).</li>
                                     <li class="mb-1"><strong>En mode Live :</strong> soumettre une demande d’<strong>App Review</strong> pour «&nbsp;Pages Read Engagement&nbsp;» ou «&nbsp;Page Public Content Access&nbsp;».</li>
-                                    <li class="mb-1">Revenez ici, cliquez sur <strong>«&nbsp;Déconnecter&nbsp;»</strong> puis sur <strong>«&nbsp;Connecter la page Facebook&nbsp;»</strong> pour réautoriser.</li>
+                                    <li class="mb-1"><strong>Révoquez l'app</strong> dans Facebook pour forcer la redemande des autorisations : <a href="https://www.facebook.com/settings?tab=applications" target="_blank" rel="noopener">Paramètres → Applications, sites web et intégrations</a>, retirez l'app de la liste.
+                                    </li>
+                                    <li class="mb-1">Revenez ici : <strong>«&nbsp;Déconnecter&nbsp;»</strong> puis <strong>«&nbsp;Connecter la page Facebook&nbsp;»</strong>.</li>
                                 </ol>
                                 <p class="mb-0 small"><strong>Important :</strong> En mode Développement, seul un compte <strong>Administrateur, Développeur ou Testeur</strong> de l’app peut connecter une page.</p>
                                 <p class="mt-2 mb-0 small text-muted"><strong>Rappel :</strong> Les identifiants Facebook se configurent uniquement dans le .env de WebApp2 (pas dans l'API).</p>

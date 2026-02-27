@@ -243,6 +243,19 @@ class ClubFeedController
             header('Location: /club-feed');
             exit;
         }
+        // Vérifier si le token a la permission pages_read_engagement (évite le #10 sur le fil)
+        $appToken = $appId . '|' . $appSecret;
+        $debugUrl = 'https://graph.facebook.com/v18.0/debug_token?input_token=' . urlencode($pageToken) . '&access_token=' . urlencode($appToken);
+        $debugJson = @file_get_contents($debugUrl);
+        $debug = $debugJson ? json_decode($debugJson, true) : null;
+        $grantedScopes = $debug['data']['scopes'] ?? $debug['data']['granted_scopes'] ?? [];
+        if (is_array($grantedScopes) && count($grantedScopes) > 0 && !in_array('pages_read_engagement', $grantedScopes, true)) {
+            $_SESSION['club_feed_error'] = 'Facebook n\'a pas accordé la permission « pages_read_engagement » (reçu : ' . implode(', ', $grantedScopes) . '). '
+                . 'Sur developers.facebook.com → votre app → Cas d\'usage → ajoutez « Gérer tout sur votre Page » puis la permission optionnelle pages_read_engagement. '
+                . 'Puis révoquez l\'app (Paramètres Facebook → Applications) et recliquez sur « Connecter la page Facebook ».';
+            header('Location: /club-feed');
+            exit;
+        }
         try {
             $putResponse = $this->apiService->makeRequest("clubs/{$clubId}", 'PUT', [
                 'facebookPageId' => $pageId,
