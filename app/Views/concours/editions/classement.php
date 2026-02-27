@@ -157,7 +157,7 @@ if ($top3ParCategorie) {
     <?php
     $disciplineLibelle = $disciplineName ?? $concours->discipline_name ?? '';
     $formatLibelle = $typeCompetitionName ?? $concours->type_competition_name ?? '';
-    echo "ttt" . $concours->type_competition_name;
+    echo $formatLibelle;
     $clubLibelle = $clubName ?? '';
     if ($clubLibelle === '' && !empty($concours->club_organisateur) && !empty($clubsMap)) {
         $clubData = $clubsMap[$concours->club_organisateur] ?? $clubsMap[(string)$concours->club_organisateur] ?? null;
