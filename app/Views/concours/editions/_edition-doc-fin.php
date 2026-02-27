@@ -72,11 +72,13 @@ if ($doc === 'classement') {
 ?>
 <div class="edition-doc-fin mt-4 pt-4">
     <table class="table table-borderless">
-        <tr>
-            <td colspan="2">
-                <strong>Nombre total d'archers : </strong><span class="mb-0 mt-1"><?= htmlspecialchars($nbArchers) ?></span>
-            </td>
-        </tr>
+        <?php if ($doc === 'classement'): ?>
+            <tr>
+                <td colspan="2">
+                    <strong>Nombre total d'archers : </strong><span class="mb-0 mt-1"><?= htmlspecialchars($nbArchers) ?></span>
+                </td>
+            </tr>
+        <?php endif; ?>
     </table>
 
     <div class="mt-3">
