@@ -2269,27 +2269,53 @@ async function exportToConcours() {
             const data = { score, license_number: lic };
             if (sheet.inscriptionId) data.inscription_id = sheet.inscriptionId;
             if (isNature) {
-                let nb_20_15 = 0, nb_20_10 = 0, nb_15_15 = 0, nb_15_10 = 0;
+                let nb_20_15 = 0, nb_20_10 = 0, nb_15_15 = 0, nb_15_10 = 0, nb_15 = 0, nb_10 = 0, nb_0 = 0;
                 sheet.scoreRows.forEach(row => {
-                    const cross = getNatureCrossColumn(row.arrows[0]?.value, row.arrows[1]?.value);
+                    const s1 = parseInt(row.arrows[0]?.value, 10) || 0;
+                    const s2 = parseInt(row.arrows[1]?.value, 10) || 0;
+                    const cross = getNatureCrossColumn(s1, s2);
                     if (cross === '20-15') nb_20_15++;
                     else if (cross === '20-10') nb_20_10++;
                     else if (cross === '15-15') nb_15_15++;
                     else if (cross === '15-10') nb_15_10++;
+                    else if ((s1 === 15 && s2 === 0) || (s1 === 0 && s2 === 15)) nb_15++;
+                    else if (s1 === 10 || s2 === 10) nb_10 += (s1 === 10 ? 1 : 0) + (s2 === 10 ? 1 : 0);
+                    else if (s1 === 0 && s2 === 0) nb_0++;
                 });
                 data.nb_20_15 = nb_20_15;
                 data.nb_20_10 = nb_20_10;
                 data.nb_15_15 = nb_15_15;
                 data.nb_15_10 = nb_15_10;
+                data.nb_15 = nb_15;
+                data.nb_10 = nb_10;
+                data.nb_0 = nb_0;
             } else if (hasSeries) {
-                let s1 = 0, s2 = 0;
+                let s1 = 0, s2 = 0, s1_10 = 0, s1_9 = 0, s2_10 = 0, s2_9 = 0;
                 sheet.scoreRows.forEach((row, idx) => {
                     const tot = row.endTotal || 0;
-                    if (idx < endsPerSeries) s1 += tot;
-                    else s2 += tot;
+                    const arrows = row.arrows || [];
+                    if (idx < endsPerSeries) {
+                        s1 += tot;
+                        arrows.forEach(a => {
+                            const v = parseInt(a?.value, 10) || 0;
+                            if (v === 10) s1_10++;
+                            else if (v === 9) s1_9++;
+                        });
+                    } else {
+                        s2 += tot;
+                        arrows.forEach(a => {
+                            const v = parseInt(a?.value, 10) || 0;
+                            if (v === 10) s2_10++;
+                            else if (v === 9) s2_9++;
+                        });
+                    }
                 });
                 data.serie1_score = s1;
                 data.serie2_score = s2;
+                data.serie1_nb_10 = s1_10;
+                data.serie1_nb_9 = s1_9;
+                data.serie2_nb_10 = s2_10;
+                data.serie2_nb_9 = s2_9;
             }
             return data;
         })

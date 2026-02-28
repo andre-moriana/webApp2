@@ -420,10 +420,13 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                 </script>
                 <?php endif; ?>
 
-                <div class="d-flex gap-2 mt-3">
+                <div class="d-flex gap-2 mt-3 flex-wrap align-items-center">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-1"></i>Enregistrer les scores
                     </button>
+                    <a href="/score-sheet" class="btn btn-outline-success" title="Saisir les scores sur une feuille de marque puis les exporter automatiquement vers ce concours">
+                        <i class="fas fa-file-export me-1"></i>Exporter depuis feuille de marque
+                    </a>
                     <a href="/concours/show/<?= (int)$concoursId ?>" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i>Retour au concours
                     </a>

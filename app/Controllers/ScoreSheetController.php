@@ -632,8 +632,15 @@ class ScoreSheetController {
             if (isset($sheet['nb_20_10'])) $payload['nb_20_10'] = (int)$sheet['nb_20_10'];
             if (isset($sheet['nb_15_15'])) $payload['nb_15_15'] = (int)$sheet['nb_15_15'];
             if (isset($sheet['nb_15_10'])) $payload['nb_15_10'] = (int)$sheet['nb_15_10'];
+            if (isset($sheet['nb_15'])) $payload['nb_15'] = (int)$sheet['nb_15'];
+            if (isset($sheet['nb_10'])) $payload['nb_10'] = (int)$sheet['nb_10'];
+            if (isset($sheet['nb_0'])) $payload['nb_0'] = (int)$sheet['nb_0'];
             if (isset($sheet['serie1_score'])) $payload['serie1_score'] = (int)$sheet['serie1_score'];
             if (isset($sheet['serie2_score'])) $payload['serie2_score'] = (int)$sheet['serie2_score'];
+            if (isset($sheet['serie1_nb_10'])) $payload['serie1_nb_10'] = (int)$sheet['serie1_nb_10'];
+            if (isset($sheet['serie1_nb_9'])) $payload['serie1_nb_9'] = (int)$sheet['serie1_nb_9'];
+            if (isset($sheet['serie2_nb_10'])) $payload['serie2_nb_10'] = (int)$sheet['serie2_nb_10'];
+            if (isset($sheet['serie2_nb_9'])) $payload['serie2_nb_9'] = (int)$sheet['serie2_nb_9'];
             try {
                 $resp = $this->apiService->saveConcoursResultat($concoursId, $payload);
                 if (!empty($resp['success'])) {
