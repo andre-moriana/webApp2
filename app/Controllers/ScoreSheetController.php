@@ -224,7 +224,7 @@ class ScoreSheetController {
                     ? $existingTraining['ends']
                     : null;
                 $existingEndsByIndex[] = $endsForSheet;
-                $notesExisting = (string)($existingTraining['notes'] ?? '');
+                $notesExisting = (string)($existingTraining['notes'] ?? $existingTraining['data']['notes'] ?? '');
                 if (strpos($notesExisting, '__EXPORTED_TO_CONCOURS__:1') !== false) {
                     $exportedToConcours = true;
                 }
@@ -353,7 +353,13 @@ class ScoreSheetController {
         try {
             $response = $this->apiService->getScoredTrainingByIdWithUser($trainingId, $userId ?? $_SESSION['user']['id']);
             if (!empty($response['success']) && !empty($response['data'])) {
-                $this->sendJsonResponse(['success' => true, 'data' => $response['data']]);
+                $data = $response['data'];
+                if (isset($data['data']) && is_array($data['data'])) {
+                    $data = $data['data'];
+                }
+                $notes = (string)($data['notes'] ?? '');
+                $data['exported_to_concours'] = (strpos($notes, '__EXPORTED_TO_CONCOURS__:1') !== false);
+                $this->sendJsonResponse(['success' => true, 'data' => $data]);
             } else {
                 $this->sendJsonResponse(['success' => false, 'message' => $response['message'] ?? 'Session non trouvée'], 404);
             }
