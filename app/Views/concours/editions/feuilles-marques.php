@@ -208,7 +208,8 @@ if ($isNature) {
         $first = is_array($departsList[0] ?? null) ? ($departsList[0]['numero_depart'] ?? 1) : ($departsList[0]->numero_depart ?? 1);
         $departDefaut = (int)$first ?: 1;
     }
-    $archerVideNature = ['user_nom' => '', 'numero_licence' => '', 'abv_categorie_classement' => '', 'position_archer' => '', 'numero_peloton' => 0, 'depart' => $departDefaut];
+//    $archerVide = ['user_nom' => '', 'numero_licence' => '', 'categorie_classement' => '', 'position_archer' => '', 'numero_cible' => 0, 'depart' => $departDefaut, 'numero_tir' => null];
+    $archerVideNature = ['user_nom' => '', 'numero_licence' => '', 'abv_categorie_classement' => '', 'position_archer' => '', 'numero_peloton' => 0, 'depart' => $departDefaut, 'numero_tir' => null];
     $nbSlotsParPageNature = 2;
 
     if (empty($archersParPeloton)) {
