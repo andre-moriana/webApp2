@@ -594,11 +594,9 @@ async function prefillArchersFromConcours() {
                         applyTrainingToSheet(userSheets[sheetIndex], { ends: ends });
                     }
                 });
-                const hasExistingEnds = Array.isArray(result.data.existing_ends_by_index) &&
-                    result.data.existing_ends_by_index.some(e => Array.isArray(e) && e.length > 0);
-                if (!hasExistingEnds) {
-                    await loadExistingTrainingData(indicesWithLicence);
-                }
+                // Toujours charger les données complètes (notes, __SIGNED__) pour chaque session existante,
+                // afin de verrouiller les scores si la feuille est signée.
+                await loadExistingTrainingData(indicesWithLicence);
             }
         }
     } catch (e) {
@@ -1525,6 +1523,11 @@ function saveScoreSheet(options = {}) {
     .then(data => {
         if (data.success) {
             if (!silent) showStatus(data.message || 'Feuilles de marque sauvegardées avec succès !', 'success');
+            // Marquer comme signées les feuilles pour lesquelles on a envoyé archer + marqueur
+            userSheets.forEach((sheet, userIndex) => {
+                if (archerSignatures[userIndex] && scorerSignature) sheet.signed = true;
+            });
+            displayCurrentArcher(); // Refaire le tableau pour afficher les scores verrouillés
             const departSelect = document.getElementById('departSelect');
             const pelotonSelect = document.getElementById('pelotonSelect');
             const dep = departSelect?.value ?? '';
