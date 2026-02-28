@@ -7,6 +7,7 @@ const SHOOTING_CONFIGS = {
     'Salle': { total_ends: 20, arrows_per_end: 3, total_arrows: 60, series: 2 },
     'TAE': { total_ends: 12, arrows_per_end: 6, total_arrows: 72, series: 2 },
     'Nature': { total_ends: 21, arrows_per_end: 2, total_arrows: 42 },
+    'Nature2x21': { total_ends: 42, arrows_per_end: 2, total_arrows: 84, series: 2 },
     '3D': { total_ends: 24, arrows_per_end: 2, total_arrows: 48 },
     'Campagne': { total_ends: 24, arrows_per_end: 3, total_arrows: 72 },
 };
@@ -843,7 +844,7 @@ function getNatureCrossColumn(score1, score2) {
 
 function updateScoreTable(sheet) {
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
-    const isNature = getShootingConfigKey(selectedShootingType) === 'Nature';
+    const isNature = (getShootingConfigKey(selectedShootingType) === 'Nature' || getShootingConfigKey(selectedShootingType) === 'Nature2x21');
     const tableBody = document.getElementById('scoreTableBody');
     
     // Nettoyer le tableau
@@ -920,15 +921,20 @@ function updateScoreTable(sheet) {
     let series1Total = 0;
     let series2Total = 0;
     let currentSeries = 1;
-    const hasSeries = !isNature && config.series === 2;
+    const hasSeries = config.series === 2;
+    const endsPerSeriesDisplay = hasSeries ? config.total_ends / config.series : 0;
     
     sheet.scoreRows.forEach((row, index) => {
         // Recalculer les totaux
         row.endTotal = row.arrows.reduce((sum, arrow) => sum + (arrow.value || 0), 0);
-        
+        if (hasSeries && endsPerSeriesDisplay > 0) {
+            row.seriesNumber = Math.floor(index / endsPerSeriesDisplay) + 1;
+        }
         if (isNature) {
             cumulative += row.endTotal;
             row.cumulativeTotal = cumulative;
+            if (row.seriesNumber === 1) series1Total += row.endTotal;
+            else if (row.seriesNumber === 2) series2Total += row.endTotal;
         } else {
             // Déterminer la série
             if (hasSeries) {
@@ -997,6 +1003,16 @@ function updateScoreTable(sheet) {
     });
     
     if (isNature) {
+        if (hasSeries && (series1Total > 0 || series2Total > 0)) {
+            const series1Row = document.createElement('tr');
+            series1Row.className = 'series-total table-secondary';
+            series1Row.innerHTML = `<td colspan="7"><strong>Passage 1 (Série 1)</strong></td><td class="total-col"><strong>${series1Total}</strong></td><td class="cumulative-col"></td><td colspan="4"></td>`;
+            tableBody.appendChild(series1Row);
+            const series2Row = document.createElement('tr');
+            series2Row.className = 'series-total table-secondary';
+            series2Row.innerHTML = `<td colspan="7"><strong>Passage 2 (Série 2)</strong></td><td class="total-col"><strong>${series2Total}</strong></td><td class="cumulative-col"></td><td colspan="4"></td>`;
+            tableBody.appendChild(series2Row);
+        }
         // Totaux 20-15, 20-10, 15-15, 15-10
         let count20_15 = 0, count20_10 = 0, count15_15 = 0, count15_10 = 0;
         sheet.scoreRows.forEach(row => {
@@ -1087,7 +1103,7 @@ function openScoreModal(rowIndex) {
     const sheet = userSheets[currentUserIndex];
     const row = sheet.scoreRows[rowIndex];
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
-    const isNature = getShootingConfigKey(selectedShootingType) === 'Nature';
+    const isNature = (getShootingConfigKey(selectedShootingType) === 'Nature' || getShootingConfigKey(selectedShootingType) === 'Nature2x21');
     
     document.getElementById('modalVolleyNumber').textContent = row.endNumber;
     
@@ -1242,7 +1258,7 @@ async function saveVolleyScores() {
     const sheet = userSheets[currentModalUserIndex];
     const row = sheet.scoreRows[currentModalRow];
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
-    const isNature = getShootingConfigKey(selectedShootingType) === 'Nature';
+    const isNature = (getShootingConfigKey(selectedShootingType) === 'Nature' || getShootingConfigKey(selectedShootingType) === 'Nature2x21');
     
     if (isNature) {
         // Lire les boutons d'option Nature
@@ -2263,8 +2279,9 @@ async function exportToConcours() {
         showStatus('Aucune feuille avec licence et scores à exporter.', 'warning');
         return;
     }
-    const isNature = getShootingConfigKey(selectedShootingType) === 'Nature';
-    const hasSeries = !isNature && config.series === 2;
+    const configKey = getShootingConfigKey(selectedShootingType);
+    const isNature = configKey === 'Nature' || configKey === 'Nature2x21';
+    const hasSeries = config.series === 2;
     const endsPerSeries = hasSeries ? config.total_ends / config.series : 0;
 
     const departSelect = document.getElementById('departSelect');
@@ -2310,6 +2327,14 @@ async function exportToConcours() {
                 data.nb_15 = nb_15;
                 data.nb_10 = nb_10;
                 data.nb_0 = nb_0;
+                if (hasSeries && endsPerSeries > 0) {
+                    const s1 = sheet.scoreRows.slice(0, endsPerSeries).reduce((sum, row) => sum + (row.endTotal || 0), 0);
+                    const s2 = sheet.scoreRows.slice(endsPerSeries, 2 * endsPerSeries).reduce((sum, row) => sum + (row.endTotal || 0), 0);
+                    data.serie1_score = s1;
+                    data.serie2_score = s2;
+                } else {
+                    data.serie1_score = score;
+                }
             } else if (hasSeries) {
                 let s1 = 0, s2 = 0, s1_10 = 0, s1_9 = 0, s2_10 = 0, s2_9 = 0;
                 sheet.scoreRows.forEach((row, idx) => {

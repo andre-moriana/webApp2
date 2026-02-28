@@ -81,6 +81,7 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                                     if ($abv !== ''): ?>
                                 <option value="<?= htmlspecialchars($abv) ?>"><?= htmlspecialchars($lb) ?></option>
                                 <?php endif; endforeach; ?>
+                                <option value="Nature2x21">Nature 21 cibles x 2 (2 passages)</option>
                             </select>
                         </div>
                         <div class="col-md-6">

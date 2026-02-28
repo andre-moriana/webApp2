@@ -123,6 +123,7 @@ class ScoreSheetController {
             'Salle' => ['total_ends' => 20, 'arrows_per_end' => 3, 'total_arrows' => 60],
             'TAE' => ['total_ends' => 12, 'arrows_per_end' => 6, 'total_arrows' => 72],
             'Nature' => ['total_ends' => 21, 'arrows_per_end' => 2, 'total_arrows' => 42],
+            'Nature2x21' => ['total_ends' => 42, 'arrows_per_end' => 2, 'total_arrows' => 84],
             '3D' => ['total_ends' => 24, 'arrows_per_end' => 2, 'total_arrows' => 48],
             'Campagne' => ['total_ends' => 24, 'arrows_per_end' => 3, 'total_arrows' => 72],
         ];
@@ -373,6 +374,7 @@ class ScoreSheetController {
                 'Salle' => ['total_ends' => 20, 'arrows_per_end' => 3, 'total_arrows' => 60],
                 'TAE' => ['total_ends' => 12, 'arrows_per_end' => 6, 'total_arrows' => 72],
                 'Nature' => ['total_ends' => 21, 'arrows_per_end' => 2, 'total_arrows' => 42],
+                'Nature2x21' => ['total_ends' => 42, 'arrows_per_end' => 2, 'total_arrows' => 84],
                 '3D' => ['total_ends' => 24, 'arrows_per_end' => 2, 'total_arrows' => 48],
                 'Campagne' => ['total_ends' => 24, 'arrows_per_end' => 3, 'total_arrows' => 72],
             ];
