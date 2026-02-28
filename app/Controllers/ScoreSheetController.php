@@ -351,12 +351,12 @@ class ScoreSheetController {
             $this->sendJsonResponse(['success' => false, 'message' => 'training_id requis']);
         }
         try {
-            $userIdParam = $userId !== null ? $userId : ($_SESSION['user']['id'] ?? null);
-            $response = $userIdParam !== null
-                ? $this->apiService->getScoredTrainingByIdWithUser($trainingId, $userIdParam)
-                : $this->apiService->getScoredTrainingById($trainingId);
+            $response = $this->apiService->getScoredTrainingById($trainingId);
             if (empty($response['success']) || empty($response['data'])) {
-                $response = $this->apiService->getScoredTrainingById($trainingId);
+                $userIdParam = $userId !== null ? $userId : ($_SESSION['user']['id'] ?? null);
+                if ($userIdParam !== null) {
+                    $response = $this->apiService->getScoredTrainingByIdWithUser($trainingId, $userIdParam);
+                }
             }
             if (!empty($response['success']) && !empty($response['data'])) {
                 $data = $response['data'];

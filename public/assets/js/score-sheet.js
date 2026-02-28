@@ -371,15 +371,21 @@ function parseSignaturesFromNotes(notes) {
  */
 async function loadExistingTrainingData(indicesWithLicence) {
     if (!indicesWithLicence || indicesWithLicence.length === 0) return;
-    const promises = indicesWithLicence.map(async (sheetIndex) => {
+    const loadOne = async (sheetIndex) => {
         const sheet = userSheets[sheetIndex];
         if (!sheet?.scoredTrainingId) return;
         const userId = sheet.userId != null && sheet.userId !== '' ? sheet.userId : null;
-        let url = `/score-sheet/load-training?training_id=${encodeURIComponent(sheet.scoredTrainingId)}`;
-        if (userId) url += '&user_id=' + encodeURIComponent(userId);
+        const tid = sheet.scoredTrainingId;
+        let url = `/score-sheet/load-training?training_id=${encodeURIComponent(tid)}`;
         try {
-            const resp = await fetch(url);
-            const result = await resp.json().catch(() => ({}));
+            let resp = await fetch(url);
+            let result = await resp.json().catch(() => ({}));
+            if (!result.success || !result.data) {
+                if (userId && (resp.status === 404 || !result.success)) {
+                    resp = await fetch(url + (url.includes('?') ? '&' : '?') + 'user_id=' + encodeURIComponent(userId));
+                    result = await resp.json().catch(() => ({}));
+                }
+            }
             if (result.success && result.data) {
                 applyTrainingToSheet(sheet, result.data);
                 const notes = result.data.notes || (result.data.data && result.data.data.notes) || '';
@@ -393,30 +399,12 @@ async function loadExistingTrainingData(indicesWithLicence) {
                     if (notes.indexOf('__EXPORTED_TO_CONCOURS__:1') !== -1) exportedToConcours = true;
                 }
                 if (result.data.exported_to_concours === true) exportedToConcours = true;
-            } else if (userId && (resp.status === 404 || !result.success)) {
-                // Réessayer sans user_id (session créée pour l'utilisateur connecté)
-                const fallbackResp = await fetch(`/score-sheet/load-training?training_id=${encodeURIComponent(sheet.scoredTrainingId)}`);
-                const fallbackResult = await fallbackResp.json().catch(() => ({}));
-                if (fallbackResult.success && fallbackResult.data) {
-                    applyTrainingToSheet(sheet, fallbackResult.data);
-                    const notes = fallbackResult.data.notes || (fallbackResult.data.data && fallbackResult.data.data.notes) || '';
-                    if (notes) {
-                        const { signatures, signed } = parseSignaturesFromNotes(notes);
-                        if (signed) sheet.signed = true;
-                        if (signatures && typeof signatures === 'object') {
-                            if (signatures.archer) archerSignatures[sheetIndex] = signatures.archer;
-                            if (signatures.scorer) scorerSignature = signatures.scorer;
-                        }
-                        if (notes.indexOf('__EXPORTED_TO_CONCOURS__:1') !== -1) exportedToConcours = true;
-                    }
-                    if (fallbackResult.data.exported_to_concours === true) exportedToConcours = true;
-                }
             }
         } catch (e) {
             console.warn('Chargement session existante pour feuille', sheetIndex, e);
         }
-    });
-    await Promise.all(promises);
+    };
+    await Promise.all(indicesWithLicence.map(loadOne));
 }
 
 // Préremplir les archers depuis le concours (plan cible, peloton ou inscriptions)
