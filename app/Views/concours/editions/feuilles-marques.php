@@ -38,6 +38,7 @@ if ($filterDepartFeuilles !== '' && $filterDepartFeuilles !== 'tout') {
 
 // Index licence -> abv catégorie de classement (depuis les inscriptions du concours)
 $categorieParLicence = [];
+$clubNomParLicence = []; // licence -> nom du club (depuis fiche inscription id_club, résolu via base club dans le contrôleur)
 if (!empty($inscriptions) && is_array($inscriptions)) {
     foreach ($inscriptions as $insc) {
         $lic = trim((string)($insc['numero_licence'] ?? ''));
@@ -45,6 +46,10 @@ if (!empty($inscriptions) && is_array($inscriptions)) {
             $cat = trim((string)($insc['categorie_classement'] ?? $insc['abv_categorie_classement'] ?? ''));
             if ($cat !== '') {
                 $categorieParLicence[$lic] = $cat;
+            }
+            $clubNom = trim((string)($insc['club_nom'] ?? $insc['club_name'] ?? ''));
+            if ($clubNom !== '') {
+                $clubNomParLicence[$lic] = $clubNom;
             }
         }
     }
@@ -70,6 +75,7 @@ if ($isCible && !empty($plansCible)) {
             if ($nom !== '' || $lic !== '') {
                 $abvCat = $categorieParLicence[$lic] ?? trim($p['abv_categorie_classement'] ?? $p['categorie_classement'] ?? '');
                 $nt = isset($p['numero_tir']) && $p['numero_tir'] !== '' && $p['numero_tir'] !== null ? (int)$p['numero_tir'] : null;
+                $clubNom = $clubNomParLicence[$lic] ?? trim($p['club_nom'] ?? $p['club_name'] ?? '');
                 $flat[] = [
                     'numero_depart' => (int)($p['numero_depart'] ?? $departNum),
                     'numero_cible' => (int)($p['numero_cible'] ?? 0),
@@ -77,7 +83,8 @@ if ($isCible && !empty($plansCible)) {
                     'user_nom' => $nom,
                     'numero_licence' => $lic,
                     'abv_categorie_classement' => $abvCat,
-                    'numero_tir' => $nt
+                    'numero_tir' => $nt,
+                    'club_nom' => $clubNom
                 ];
             }
         }
