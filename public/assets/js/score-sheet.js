@@ -394,14 +394,17 @@ async function prefillArchersFromConcours() {
         const plans = (concoursPlansCible[dep] || []).filter(p => (p.numero_cible || 0) == cible);
         const inscriptionsMap = {};
         (concoursInscriptions || []).forEach(i => {
-            const lic = i.numero_licence || i.numeroLicence;
-            if (lic) inscriptionsMap[lic] = i;
+            const lic = (i.numero_licence || i.numeroLicence || '').toString().trim();
+            if (!lic) return;
+            inscriptionsMap[lic] = i;
+            if (lic.length === 7 && /^\d+$/.test(lic)) inscriptionsMap['0' + lic] = i;
+            if (lic.length === 8 && lic[0] === '0' && /^\d+$/.test(lic)) inscriptionsMap[lic.slice(1)] = i;
         });
         
         plans.sort((a, b) => (a.position_archer || '').localeCompare(b.position_archer || ''));
         archers = plans.map(p => {
-            const lic = p.numero_licence || '';
-            const insc = inscriptionsMap[lic] || {};
+            const lic = (p.numero_licence || '').toString().trim();
+            const insc = inscriptionsMap[lic] || inscriptionsMap['0' + lic] || inscriptionsMap[lic.replace(/^0/, '')] || {};
             const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
             const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
             return {
@@ -420,14 +423,17 @@ async function prefillArchersFromConcours() {
         const plans = (concoursPlansPeloton[dep] || []).filter(p => (p.numero_peloton || 0) == pel);
         const inscriptionsMap = {};
         (concoursInscriptions || []).forEach(i => {
-            const lic = i.numero_licence || i.numeroLicence;
-            if (lic) inscriptionsMap[lic] = i;
+            const lic = (i.numero_licence || i.numeroLicence || '').toString().trim();
+            if (!lic) return;
+            inscriptionsMap[lic] = i;
+            if (lic.length === 7 && /^\d+$/.test(lic)) inscriptionsMap['0' + lic] = i;
+            if (lic.length === 8 && lic[0] === '0' && /^\d+$/.test(lic)) inscriptionsMap[lic.slice(1)] = i;
         });
         
         plans.sort((a, b) => (a.position_archer || '').localeCompare(b.position_archer || ''));
         archers = plans.map(p => {
-            const lic = p.numero_licence || '';
-            const insc = inscriptionsMap[lic] || {};
+            const lic = (p.numero_licence || '').toString().trim();
+            const insc = inscriptionsMap[lic] || inscriptionsMap['0' + lic] || inscriptionsMap[lic.replace(/^0/, '')] || {};
             const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
             const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
             return {
