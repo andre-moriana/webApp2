@@ -44,6 +44,9 @@ let concoursDetails = null;
 /** True si la feuille a déjà été exportée vers concours_resultats (lu depuis les notes au chargement). */
 let exportedToConcours = false;
 
+/** True si les feuilles ont déjà été sauvegardées pour ce batch (concours/départ/cible). */
+let sheetsSavedForBatch = false;
+
 /** Retourne l'iddiscipline (de data-disciplines) pour un abv_discipline donné, ou null. */
 function getDisciplineIdForAbv(abv) {
     if (!abv) return null;
@@ -175,6 +178,7 @@ function setupConcoursSelector() {
             selectedShootingType = '';
             userSheets.forEach(s => { delete s.inscriptionId; });
             exportedToConcours = false;
+            sheetsSavedForBatch = false;
             updateConcoursImportLock();
             loadCategoriesForDiscipline(null);
             document.getElementById('archerNavigation')?.style?.setProperty('display', 'none');
@@ -417,6 +421,10 @@ async function prefillArchersFromConcours() {
     const storageKey = 'scoreSheet_exported_' + (selectedConcoursId || '') + '_' + dep + '_' + pel;
     if (selectedConcoursId && (dep || pel) && localStorage.getItem(storageKey)) {
         exportedToConcours = true;
+    }
+    const savedKey = 'scoreSheet_saved_' + (selectedConcoursId || '') + '_' + dep + '_' + pel;
+    if (selectedConcoursId && (dep || pel) && localStorage.getItem(savedKey)) {
+        sheetsSavedForBatch = true;
     }
 
     let archers = [];
@@ -1511,6 +1519,14 @@ function saveScoreSheet(options = {}) {
     .then(data => {
         if (data.success) {
             if (!silent) showStatus(data.message || 'Feuilles de marque sauvegardées avec succès !', 'success');
+            const departSelect = document.getElementById('departSelect');
+            const pelotonSelect = document.getElementById('pelotonSelect');
+            const dep = departSelect?.value ?? '';
+            const pel = pelotonSelect?.value ?? '';
+            const savedKey = 'scoreSheet_saved_' + (selectedConcoursId || '') + '_' + dep + '_' + pel;
+            try { localStorage.setItem(savedKey, '1'); } catch (e) {}
+            sheetsSavedForBatch = true;
+            updateExportButtonVisibility();
             if (redirect) {
                 setTimeout(() => { window.location.href = '/scored-trainings'; }, 2000);
             }
@@ -1804,10 +1820,11 @@ function areAllSheetsSigned() {
     return true;
 }
 
-/** Affiche les boutons Signatures et Export uniquement si les feuilles sont signées (Export) et si la feuille n'a pas été exportée vers le concours. */
+/** Affiche les boutons Signatures, Export et Sauvegarder selon l'état (exporté, sauvegardé, signé). */
 function updateExportButtonVisibility() {
     const exportBtn = document.getElementById('exportPdfBtn');
     const sigBtn = document.getElementById('signaturesBtn');
+    const saveBtn = document.getElementById('saveScoreSheetBtn');
     if (exportedToConcours) {
         if (exportBtn) exportBtn.style.display = 'none';
         if (sigBtn) sigBtn.style.display = 'none';
@@ -1815,6 +1832,7 @@ function updateExportButtonVisibility() {
         if (exportBtn) exportBtn.style.display = areAllSheetsSigned() ? 'inline-block' : 'none';
         if (sigBtn) sigBtn.style.display = 'inline-block';
     }
+    if (saveBtn) saveBtn.style.display = (exportedToConcours || sheetsSavedForBatch) ? 'none' : 'inline-block';
 }
 
 // ==================== CIBLE INTERACTIVE (MÊME CODE QUE TIR COMPTÉ) ====================
