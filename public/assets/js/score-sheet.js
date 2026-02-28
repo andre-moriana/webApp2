@@ -1412,14 +1412,16 @@ function saveScoreSheet() {
 
 function showStatus(message, type) {
     const statusDiv = document.getElementById('statusMessage');
+    if (!statusDiv) return;
     statusDiv.className = `alert alert-${type}`;
     statusDiv.textContent = message;
     statusDiv.style.display = 'block';
+    statusDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     
-    // Masquer après 5 secondes
+    // Masquer après 10 secondes
     setTimeout(() => {
         statusDiv.style.display = 'none';
-    }, 5000);
+    }, 10000);
 }
 
 // ==================== GESTION DES SIGNATURES ====================
@@ -2238,6 +2240,7 @@ function clearTarget() {
 
 /** Saisit les scores dans concours_resultats puis propose l'export PDF */
 async function exportToConcours() {
+    console.log('exportToConcours appelé');
     if (!selectedConcoursId) {
         showStatus('Veuillez sélectionner un concours pour exporter les scores.', 'warning');
         return;
@@ -2326,13 +2329,21 @@ async function exportToConcours() {
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Export...'; }
 
     try {
+        console.log('Export: envoi requête...', { concours_id: selectedConcoursId, nb_sheets: payload.user_sheets.length });
         const resp = await fetch('/score-sheet/export-to-concours', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',
             body: JSON.stringify(payload)
         });
-        const result = await resp.json().catch(() => ({}));
+        if (resp.status === 401) {
+            showStatus('Session expirée. Veuillez vous reconnecter.', 'danger');
+            return;
+        }
+        const result = await resp.json().catch((parseErr) => {
+            console.error('Export: réponse non-JSON (status=' + resp.status + ')', parseErr);
+            return { success: false, message: 'Réponse serveur invalide (status ' + resp.status + '). Vérifiez la console F12.' };
+        });
         if (result.success) {
             showStatus(result.message || 'Scores exportés vers le concours avec succès.', 'success');
         } else {
@@ -2342,7 +2353,7 @@ async function exportToConcours() {
         }
     } catch (e) {
         console.error('Export concours exception:', e);
-        showStatus('Erreur réseau lors de l\'export: ' + (e.message || ''), 'danger');
+        showStatus('Erreur lors de l\'export: ' + (e.message || 'voir la console F12'), 'danger');
     } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = origHtml || '<i class="fas fa-upload"></i> Exporter vers concours'; }
     }
