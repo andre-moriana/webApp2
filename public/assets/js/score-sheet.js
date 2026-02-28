@@ -409,32 +409,47 @@ async function prefillArchersFromConcours() {
         }
     });
     
-    // Créer les sessions (scored_trainings) en base pour chaque archer importé
+    // Créer les sessions (scored_trainings) uniquement pour les emplacements utilisés (licence non vide)
     try {
-        const shootingTypeKey = getShootingConfigKey(selectedShootingType);
-        const payload = {
-            shooting_type: shootingTypeKey,
-            training_title: document.getElementById('trainingTitle')?.value || '',
-            user_sheets: userSheets.slice(0, archers.length).map(s => ({
-                archer_info: {
-                    name: s.archerInfo?.name ?? '',
-                    licenseNumber: s.archerInfo?.licenseNumber ?? '',
-                    category: s.archerInfo?.category ?? '',
-                    gender: s.archerInfo?.gender ?? ''
-                },
-                user_id: s.userId || null
-            }))
-        };
-        const resp = await fetch('/score-sheet/create-sessions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+        const sheetsInUse = userSheets.slice(0, archers.length);
+        const indicesWithLicence = [];
+        const sheetsWithLicence = sheetsInUse.filter((s, idx) => {
+            const lic = (s.archerInfo?.licenseNumber ?? '').toString().trim();
+            if (lic !== '') {
+                indicesWithLicence.push(idx);
+                return true;
+            }
+            return false;
         });
-        const result = await resp.json().catch(() => ({}));
-        if (result.success && Array.isArray(result.data?.training_ids)) {
-            result.data.training_ids.forEach((tid, i) => {
-                if (userSheets[i] && tid != null) userSheets[i].scoredTrainingId = tid;
+        if (sheetsWithLicence.length > 0) {
+            const shootingTypeKey = getShootingConfigKey(selectedShootingType);
+            const payload = {
+                shooting_type: shootingTypeKey,
+                training_title: document.getElementById('trainingTitle')?.value || '',
+                user_sheets: sheetsWithLicence.map(s => ({
+                    archer_info: {
+                        name: s.archerInfo?.name ?? '',
+                        licenseNumber: s.archerInfo?.licenseNumber ?? '',
+                        category: s.archerInfo?.category ?? '',
+                        gender: s.archerInfo?.gender ?? ''
+                    },
+                    user_id: s.userId || null
+                }))
+            };
+            const resp = await fetch('/score-sheet/create-sessions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
+            const result = await resp.json().catch(() => ({}));
+            if (result.success && Array.isArray(result.data?.training_ids)) {
+                result.data.training_ids.forEach((tid, i) => {
+                    const sheetIndex = indicesWithLicence[i];
+                    if (sheetIndex != null && userSheets[sheetIndex] && tid != null) {
+                        userSheets[sheetIndex].scoredTrainingId = tid;
+                    }
+                });
+            }
         }
     } catch (e) {
         console.warn('Création des sessions à l\'import:', e);

@@ -134,11 +134,17 @@ class ScoreSheetController {
         $trainingIds = [];
         foreach ($data['user_sheets'] as $userSheet) {
             $archerInfo = $userSheet['archer_info'] ?? [];
+            $licence = trim((string)($archerInfo['licenseNumber'] ?? ''));
+            // Ne créer une session que pour les emplacements avec licence non vide
+            if ($licence === '') {
+                $trainingIds[] = null;
+                continue;
+            }
             $targetUserId = $userSheet['user_id'] ?? null;
-            if (!$targetUserId && !empty($archerInfo['licenseNumber'])) {
+            if (!$targetUserId) {
                 try {
                     $baseUrl = $_ENV["API_BASE_URL"] ?? "https://api.arctraining.fr/api";
-                    $url = $baseUrl . "/users?licence_number=" . urlencode($archerInfo['licenseNumber']);
+                    $url = $baseUrl . "/users?licence_number=" . urlencode($licence);
                     $ch = curl_init();
                     curl_setopt($ch, CURLOPT_URL, $url);
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
