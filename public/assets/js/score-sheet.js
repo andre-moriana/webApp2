@@ -302,27 +302,30 @@ function setupConcoursSelector() {
  * @param {Object} trainingData - { ends: [ { end_number, total_score, shots: [ { arrow_number, score, hit_x?, hit_y? } ] } ] }
  */
 function applyTrainingToSheet(sheet, trainingData) {
-    if (!sheet?.scoreRows || !Array.isArray(trainingData?.ends) || trainingData.ends.length === 0) return;
+    const ends = Array.isArray(trainingData?.ends) ? trainingData.ends : (trainingData?.data?.ends);
+    if (!sheet?.scoreRows || !Array.isArray(ends) || ends.length === 0) return;
     const rows = sheet.scoreRows;
-    trainingData.ends.forEach(end => {
-        const rowIndex = (end.end_number || 0) - 1;
+    ends.forEach(end => {
+        const rowIndex = (parseInt(end.end_number, 10) || 0) - 1;
         if (rowIndex < 0 || rowIndex >= rows.length) return;
         const row = rows[rowIndex];
-        row.endTotal = end.total_score ?? 0;
+        const total = parseInt(end.total_score, 10);
+        row.endTotal = isNaN(total) ? 0 : total;
         row.savedToServer = true;
         (end.shots || []).forEach(shot => {
-            const arrowIndex = (shot.arrow_number || 0) - 1;
+            const arrowIndex = (parseInt(shot.arrow_number, 10) || 0) - 1;
             if (arrowIndex >= 0 && row.arrows && row.arrows[arrowIndex]) {
-                row.arrows[arrowIndex].value = shot.score ?? 0;
-                if (shot.hit_x != null) row.arrows[arrowIndex].hit_x = shot.hit_x;
-                if (shot.hit_y != null) row.arrows[arrowIndex].hit_y = shot.hit_y;
+                const score = parseInt(shot.score, 10);
+                row.arrows[arrowIndex].value = isNaN(score) ? 0 : score;
+                if (shot.hit_x != null) row.arrows[arrowIndex].hit_x = Number(shot.hit_x);
+                if (shot.hit_y != null) row.arrows[arrowIndex].hit_y = Number(shot.hit_y);
             }
         });
     });
     // Recalcul du cumul
     let cumul = 0;
     rows.forEach(r => {
-        cumul += r.endTotal || 0;
+        cumul += Number(r.endTotal) || 0;
         r.cumulativeTotal = cumul;
     });
 }
@@ -336,13 +339,21 @@ async function loadExistingTrainingData(indicesWithLicence) {
     const promises = indicesWithLicence.map(async (sheetIndex) => {
         const sheet = userSheets[sheetIndex];
         if (!sheet?.scoredTrainingId) return;
-        const userId = sheet.userId || null;
-        const url = `/score-sheet/load-training?training_id=${encodeURIComponent(sheet.scoredTrainingId)}${userId ? '&user_id=' + encodeURIComponent(userId) : ''}`;
+        const userId = sheet.userId != null && sheet.userId !== '' ? sheet.userId : null;
+        let url = `/score-sheet/load-training?training_id=${encodeURIComponent(sheet.scoredTrainingId)}`;
+        if (userId) url += '&user_id=' + encodeURIComponent(userId);
         try {
             const resp = await fetch(url);
             const result = await resp.json().catch(() => ({}));
             if (result.success && result.data) {
                 applyTrainingToSheet(sheet, result.data);
+            } else if (userId && (resp.status === 404 || !result.success)) {
+                // Réessayer sans user_id (session créée pour l'utilisateur connecté)
+                const fallbackResp = await fetch(`/score-sheet/load-training?training_id=${encodeURIComponent(sheet.scoredTrainingId)}`);
+                const fallbackResult = await fallbackResp.json().catch(() => ({}));
+                if (fallbackResult.success && fallbackResult.data) {
+                    applyTrainingToSheet(sheet, fallbackResult.data);
+                }
             }
         } catch (e) {
             console.warn('Chargement session existante pour feuille', sheetIndex, e);

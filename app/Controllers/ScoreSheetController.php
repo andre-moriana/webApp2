@@ -312,6 +312,9 @@ class ScoreSheetController {
         }
         $trainingId = isset($_GET['training_id']) ? (int)$_GET['training_id'] : 0;
         $userId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : null;
+        if ($userId === 0) {
+            $userId = null;
+        }
         if ($trainingId <= 0) {
             $this->sendJsonResponse(['success' => false, 'message' => 'training_id requis']);
         }
