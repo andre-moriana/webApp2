@@ -351,7 +351,13 @@ class ScoreSheetController {
             $this->sendJsonResponse(['success' => false, 'message' => 'training_id requis']);
         }
         try {
-            $response = $this->apiService->getScoredTrainingByIdWithUser($trainingId, $userId ?? $_SESSION['user']['id']);
+            $userIdParam = $userId !== null ? $userId : ($_SESSION['user']['id'] ?? null);
+            $response = $userIdParam !== null
+                ? $this->apiService->getScoredTrainingByIdWithUser($trainingId, $userIdParam)
+                : $this->apiService->getScoredTrainingById($trainingId);
+            if (empty($response['success']) || empty($response['data'])) {
+                $response = $this->apiService->getScoredTrainingById($trainingId);
+            }
             if (!empty($response['success']) && !empty($response['data'])) {
                 $data = $response['data'];
                 if (isset($data['data']) && is_array($data['data'])) {
@@ -486,6 +492,30 @@ class ScoreSheetController {
                 
                 // Si session déjà créée à l'import : mettre à jour les notes/signatures uniquement (les volées sont déjà enregistrées à la saisie)
                 if ($trainingId) {
+                    try {
+                        $existingResp = $this->apiService->getScoredTrainingById($trainingId);
+                        if (!empty($existingResp['success']) && !empty($existingResp['data']['notes'])) {
+                            $existingNotes = (string)$existingResp['data']['notes'];
+                            if (strpos($existingNotes, '__FEUILLE_MARQUE__:') !== false) {
+                                $start = strpos($existingNotes, '__FEUILLE_MARQUE__:');
+                                $end = $start + strlen('__FEUILLE_MARQUE__:');
+                                $rest = substr($existingNotes, $end);
+                                if (strpos($rest, '{') === 0) {
+                                    $depth = 0;
+                                    $len = strlen($rest);
+                                    for ($i = 0; $i < $len; $i++) {
+                                        if ($rest[$i] === '{') $depth++;
+                                        elseif ($rest[$i] === '}') { $depth--; if ($depth === 0) { $finalNotes .= ', __FEUILLE_MARQUE__:' . substr($rest, 0, $i + 1); break; } }
+                                    }
+                                }
+                            }
+                            if (strpos($existingNotes, '__EXPORTED_TO_CONCOURS__:1') !== false) {
+                                $finalNotes .= ', __EXPORTED_TO_CONCOURS__:1';
+                            }
+                        }
+                    } catch (Exception $e) {
+                        // ignorer, garder finalNotes tel quel
+                    }
                     $this->apiService->updateScoredTrainingNote($trainingId, $finalNotes);
                     $savedTrainings[] = ['training_id' => $trainingId, 'archer_name' => $archerName];
                     continue;
