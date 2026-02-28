@@ -190,7 +190,7 @@ class ScoreSheetController {
                         $status = $t['status'] ?? '';
                         $isSheet = !empty($t['is_score_sheet']);
                         $notes = (string)($t['notes'] ?? '');
-                        if ($status === 'en_cours' && $isSheet && $notes !== '' && strpos($notes, '__FEUILLE_MARQUE__:') !== false) {
+                        if (($status === 'en_cours' || $status === 'terminé') && $isSheet && $notes !== '' && strpos($notes, '__FEUILLE_MARQUE__:') !== false) {
                             $start = strpos($notes, '__FEUILLE_MARQUE__:');
                             $end = $start + strlen('__FEUILLE_MARQUE__:');
                             $rest = substr($notes, $end);
