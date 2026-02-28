@@ -627,32 +627,56 @@ class ScoreSheetController {
                 error_log('exportToConcours: ' . $err . ' (inscription_id=' . $inscriptionId . ')');
                 continue;
             }
+            // Même logique que ConcoursController::storeScores (saisie-scores)
+            $score = isset($sheet['score']) ? (int)$sheet['score'] : null;
+            $nb_20_15 = (isset($sheet['nb_20_15']) && $sheet['nb_20_15'] !== '') ? (int)$sheet['nb_20_15'] : null;
+            $nb_20_10 = (isset($sheet['nb_20_10']) && $sheet['nb_20_10'] !== '') ? (int)$sheet['nb_20_10'] : null;
+            $nb_15_15 = (isset($sheet['nb_15_15']) && $sheet['nb_15_15'] !== '') ? (int)$sheet['nb_15_15'] : null;
+            $nb_15_10 = (isset($sheet['nb_15_10']) && $sheet['nb_15_10'] !== '') ? (int)$sheet['nb_15_10'] : null;
+            $nb_15 = (isset($sheet['nb_15']) && $sheet['nb_15'] !== '') ? (int)$sheet['nb_15'] : null;
+            $nb_10 = (isset($sheet['nb_10']) && $sheet['nb_10'] !== '') ? (int)$sheet['nb_10'] : null;
+            $nb_0 = (isset($sheet['nb_0']) && $sheet['nb_0'] !== '') ? (int)$sheet['nb_0'] : null;
+            $serie1_score = (isset($sheet['serie1_score']) && $sheet['serie1_score'] !== '') ? (int)$sheet['serie1_score'] : null;
+            $serie1_nb_10 = (isset($sheet['serie1_nb_10']) && $sheet['serie1_nb_10'] !== '') ? (int)$sheet['serie1_nb_10'] : null;
+            $serie1_nb_9 = (isset($sheet['serie1_nb_9']) && $sheet['serie1_nb_9'] !== '') ? (int)$sheet['serie1_nb_9'] : null;
+            $serie2_score = (isset($sheet['serie2_score']) && $sheet['serie2_score'] !== '') ? (int)$sheet['serie2_score'] : null;
+            $serie2_nb_10 = (isset($sheet['serie2_nb_10']) && $sheet['serie2_nb_10'] !== '') ? (int)$sheet['serie2_nb_10'] : null;
+            $serie2_nb_9 = (isset($sheet['serie2_nb_9']) && $sheet['serie2_nb_9'] !== '') ? (int)$sheet['serie2_nb_9'] : null;
+
+            $scoreToSend = $score;
+            if ($scoreToSend === null && ($serie1_score !== null || $serie2_score !== null)) {
+                $scoreToSend = ($serie1_score ?? 0) + ($serie2_score ?? 0);
+            }
+            if ($scoreToSend === null) {
+                $scoreToSend = 0;
+            }
+
             $payload = [
                 'inscription_id' => $inscriptionId,
-                'score' => (int)($sheet['score'] ?? 0),
+                'score' => $scoreToSend,
+                'nb_20_15' => $nb_20_15,
+                'nb_20_10' => $nb_20_10,
+                'nb_15_15' => $nb_15_15,
+                'nb_15_10' => $nb_15_10,
+                'nb_15' => $nb_15,
+                'nb_10' => $nb_10,
+                'nb_0' => $nb_0,
+                'serie1_score' => $serie1_score,
+                'serie1_nb_10' => $serie1_nb_10,
+                'serie1_nb_9' => $serie1_nb_9,
+                'serie2_score' => $serie2_score,
+                'serie2_nb_10' => $serie2_nb_10,
+                'serie2_nb_9' => $serie2_nb_9,
             ];
-            if (isset($sheet['nb_20_15'])) $payload['nb_20_15'] = (int)$sheet['nb_20_15'];
-            if (isset($sheet['nb_20_10'])) $payload['nb_20_10'] = (int)$sheet['nb_20_10'];
-            if (isset($sheet['nb_15_15'])) $payload['nb_15_15'] = (int)$sheet['nb_15_15'];
-            if (isset($sheet['nb_15_10'])) $payload['nb_15_10'] = (int)$sheet['nb_15_10'];
-            if (isset($sheet['nb_15'])) $payload['nb_15'] = (int)$sheet['nb_15'];
-            if (isset($sheet['nb_10'])) $payload['nb_10'] = (int)$sheet['nb_10'];
-            if (isset($sheet['nb_0'])) $payload['nb_0'] = (int)$sheet['nb_0'];
-            if (isset($sheet['serie1_score'])) $payload['serie1_score'] = (int)$sheet['serie1_score'];
-            if (isset($sheet['serie2_score'])) $payload['serie2_score'] = (int)$sheet['serie2_score'];
-            if (isset($sheet['serie1_nb_10'])) $payload['serie1_nb_10'] = (int)$sheet['serie1_nb_10'];
-            if (isset($sheet['serie1_nb_9'])) $payload['serie1_nb_9'] = (int)$sheet['serie1_nb_9'];
-            if (isset($sheet['serie2_nb_10'])) $payload['serie2_nb_10'] = (int)$sheet['serie2_nb_10'];
-            if (isset($sheet['serie2_nb_9'])) $payload['serie2_nb_9'] = (int)$sheet['serie2_nb_9'];
+
             try {
-                $resp = $this->apiService->saveConcoursResultat($concoursId, $payload);
-                if (!empty($resp['success'])) {
+                $response = $this->apiService->makeRequest("concours/{$concoursId}/resultat", 'POST', $payload);
+                if ($response['success'] ?? false) {
                     $exported++;
                 } else {
-                    $apiData = is_array($resp['data'] ?? null) ? $resp['data'] : [];
-                    $err = $resp['error'] ?? $apiData['error'] ?? $apiData['message'] ?? $resp['message'] ?? 'Erreur inconnue';
-                    $errors[] = $err;
-                    error_log('exportToConcours: API saveConcoursResultat échec inscription_id=' . $inscriptionId . ': ' . $err . ' | resp=' . json_encode($resp));
+                    $apiError = $response['data']['error'] ?? $response['error'] ?? $response['message'] ?? 'Erreur';
+                    $errors[] = 'Inscription ' . $inscriptionId . ': ' . $apiError;
+                    error_log('exportToConcours: API échec inscription_id=' . $inscriptionId . ': ' . $apiError . ' | resp=' . json_encode($response));
                 }
             } catch (Exception $e) {
                 $errors[] = $e->getMessage();
