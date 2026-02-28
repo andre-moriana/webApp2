@@ -176,7 +176,7 @@ class ScoreSheetController {
                     // continuer sans user_id
                 }
             }
-            $existingTrainingId = null;
+            $existingTraining = null;
             if ($targetUserId && $feuilleMarqueJson !== '[]') {
                 $listResp = $this->apiService->getScoredTrainings($targetUserId);
                 $list = null;
@@ -207,7 +207,7 @@ class ScoreSheetController {
                                     && (string)($dec['concours_id'] ?? '') === (string)$concoursId
                                     && (string)($dec['depart'] ?? '') === (string)$depart
                                 ) {
-                                    $existingTrainingId = (int)($t['id'] ?? 0);
+                                    $existingTraining = $t;
                                     break;
                                 }
                             }
@@ -215,17 +215,12 @@ class ScoreSheetController {
                     }
                 }
             }
-            if ($existingTrainingId) {
+            if ($existingTraining !== null) {
+                $existingTrainingId = (int)($existingTraining['id'] ?? 0);
                 $trainingIds[] = $existingTrainingId;
-                $endsForSheet = null;
-                try {
-                    $trainResp = $this->apiService->getScoredTrainingByIdWithUser($existingTrainingId, $targetUserId);
-                    if (!empty($trainResp['success']) && !empty($trainResp['data']['ends'])) {
-                        $endsForSheet = $trainResp['data']['ends'];
-                    }
-                } catch (Exception $e) {
-                    // ignorer
-                }
+                $endsForSheet = isset($existingTraining['ends']) && is_array($existingTraining['ends'])
+                    ? $existingTraining['ends']
+                    : null;
                 $existingEndsByIndex[] = $endsForSheet;
                 continue;
             }
