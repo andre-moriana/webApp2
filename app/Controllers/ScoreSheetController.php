@@ -545,6 +545,58 @@ class ScoreSheetController {
             ]);
         }
     }
+
+    /**
+     * Exporte les scores vers concours_resultats (saisie automatique).
+     * POST body: { concours_id, shooting_type, user_sheets: [ { inscription_id, score, nb_20_15?, ... } ] }
+     */
+    public function exportToConcours() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Non connecté'], 401);
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Méthode non autorisée']);
+        }
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+        if (empty($data) || !isset($data['concours_id']) || !isset($data['user_sheets']) || !is_array($data['user_sheets'])) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Données manquantes: concours_id et user_sheets requis']);
+        }
+        $concoursId = (int)$data['concours_id'];
+        $exported = 0;
+        $errors = [];
+        foreach ($data['user_sheets'] as $sheet) {
+            $inscriptionId = isset($sheet['inscription_id']) ? (int)$sheet['inscription_id'] : 0;
+            if ($inscriptionId <= 0) continue;
+            $payload = [
+                'inscription_id' => $inscriptionId,
+                'score' => (int)($sheet['score'] ?? 0),
+            ];
+            if (isset($sheet['nb_20_15'])) $payload['nb_20_15'] = (int)$sheet['nb_20_15'];
+            if (isset($sheet['nb_20_10'])) $payload['nb_20_10'] = (int)$sheet['nb_20_10'];
+            if (isset($sheet['nb_15_15'])) $payload['nb_15_15'] = (int)$sheet['nb_15_15'];
+            if (isset($sheet['nb_15_10'])) $payload['nb_15_10'] = (int)$sheet['nb_15_10'];
+            if (isset($sheet['serie1_score'])) $payload['serie1_score'] = (int)$sheet['serie1_score'];
+            if (isset($sheet['serie2_score'])) $payload['serie2_score'] = (int)$sheet['serie2_score'];
+            try {
+                $resp = $this->apiService->saveConcoursResultat($concoursId, $payload);
+                if (!empty($resp['success'])) {
+                    $exported++;
+                } else {
+                    $errors[] = $resp['error'] ?? $resp['message'] ?? 'Erreur inconnue';
+                }
+            } catch (Exception $e) {
+                $errors[] = $e->getMessage();
+            }
+        }
+        if ($exported > 0 && empty($errors)) {
+            $this->sendJsonResponse(['success' => true, 'message' => $exported . ' score(s) exporté(s) vers le concours']);
+        } elseif ($exported > 0) {
+            $this->sendJsonResponse(['success' => true, 'message' => $exported . ' score(s) exporté(s). ' . implode(' ', $errors)]);
+        } else {
+            $this->sendJsonResponse(['success' => false, 'message' => implode(' ', $errors) ?: 'Aucun score exporté'], 400);
+        }
+    }
     
     private function sendJsonResponse($data, $httpCode = 200) {
         while (ob_get_level()) {

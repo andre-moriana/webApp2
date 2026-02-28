@@ -109,8 +109,8 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                         <button class="btn btn-info me-2" id="signaturesBtn" onclick="openSignatureModal()" style="display: none;">
                             <i class="fas fa-signature"></i> Signatures
                         </button>
-                        <button class="btn btn-primary me-2" id="exportPdfBtn" onclick="exportToPDF()" style="display: none;">
-                            <i class="fas fa-file-pdf"></i> Exporter PDF
+                        <button class="btn btn-primary me-2" id="exportPdfBtn" onclick="exportToConcours()" style="display: none;" title="Saisir les scores dans le concours (visible une fois les feuilles signées)">
+                            <i class="fas fa-upload"></i> Exporter vers concours
                         </button>
                         <button class="btn btn-success" id="saveScoreSheetBtn" onclick="saveScoreSheet()" style="display: none;">
                             <i class="fas fa-save"></i> Sauvegarder les feuilles de marque

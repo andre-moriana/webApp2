@@ -97,6 +97,7 @@ class Router {
         $this->addRoute("POST", "/score-sheet/create-sessions", "ScoreSheetController@createSessions");
         $this->addRoute("POST", "/score-sheet/add-end", "ScoreSheetController@addEnd");
         $this->addRoute("GET", "/score-sheet/load-training", "ScoreSheetController@loadTraining");
+        $this->addRoute("POST", "/score-sheet/export-to-concours", "ScoreSheetController@exportToConcours");
         
         // Routes des utilisateurs (protégées)
         $this->addRoute("GET", "/users", "UserController@index");

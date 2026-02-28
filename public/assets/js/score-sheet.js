@@ -409,7 +409,8 @@ async function prefillArchersFromConcours() {
                 licenseNumber: lic,
                 category: cat,
                 gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
-                userId: insc.user_id || insc.userId || insc.id_user || p.user_id
+                userId: insc.user_id || insc.userId || insc.id_user || p.user_id,
+                inscriptionId: insc.id || insc.id_inscription
             };
         });
     } else if (concoursPlansPeloton && departSelect?.value && pelotonSelect?.value ) {
@@ -434,7 +435,8 @@ async function prefillArchersFromConcours() {
                 licenseNumber: lic,
                 category: cat,
                 gender: (insc.genre || insc.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
-                userId: insc.user_id || insc.userId || insc.id_user || p.user_id
+                userId: insc.user_id || insc.userId || insc.id_user || p.user_id,
+                inscriptionId: insc.id || insc.id_inscription
             };
         });
     } else if (concoursInscriptions && concoursInscriptions.length > 0) {
@@ -444,7 +446,8 @@ async function prefillArchersFromConcours() {
             licenseNumber: i.numero_licence || i.numeroLicence || '',
             category: i.categorie_classement || i.categorieClassement || i.abv_categorie_classement || '',
             gender: (i.genre || i.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
-            userId: i.user_id || i.userId || i.id_user
+            userId: i.user_id || i.userId || i.id_user,
+            inscriptionId: i.id || i.id_inscription
         }));
     }
     
@@ -472,6 +475,7 @@ async function prefillArchersFromConcours() {
                 gender: archer.gender
             };
             if (archer.userId) userSheets[idx].userId = archer.userId;
+            if (archer.inscriptionId) userSheets[idx].inscriptionId = archer.inscriptionId;
         }
     });
     
@@ -546,7 +550,7 @@ async function prefillArchersFromConcours() {
     const exportBtn = document.getElementById('exportPdfBtn');
     if (saveBtn) saveBtn.style.display = 'inline-block';
     if (sigBtn) sigBtn.style.display = 'inline-block';
-    if (exportBtn) exportBtn.style.display = 'inline-block';
+    updateExportButtonVisibility();
     
     currentUserIndex = 0;
     displayCurrentArcher();
@@ -777,7 +781,7 @@ function initializeSheets() {
     document.getElementById('scoreTableSection').style.display = 'block';
     document.getElementById('saveScoreSheetBtn').style.display = 'block';
     document.getElementById('signaturesBtn').style.display = 'block';
-    document.getElementById('exportPdfBtn').style.display = 'block';
+    updateExportButtonVisibility();
     
     // Réinitialiser la recherche par licence maintenant que la section est visible
     setupLicenseSearch();
@@ -1640,6 +1644,27 @@ function saveSignatures() {
     
     showStatus('Signatures enregistrées', 'success');
     bootstrap.Modal.getInstance(document.getElementById('signatureModal')).hide();
+    updateExportButtonVisibility();
+}
+
+/** Vérifie si toutes les feuilles avec licence ont archer + marqueur signé */
+function areAllSheetsSigned() {
+    if (!scorerSignature) return false;
+    const sheetsWithLicence = userSheets.filter(s => (s.archerInfo?.licenseNumber ?? '').toString().trim() !== '');
+    if (sheetsWithLicence.length === 0) return false;
+    for (let i = 0; i < userSheets.length; i++) {
+        const lic = (userSheets[i].archerInfo?.licenseNumber ?? '').toString().trim();
+        if (lic !== '' && !archerSignatures[i]) return false;
+    }
+    return true;
+}
+
+/** Affiche le bouton Export uniquement quand les feuilles sont signées */
+function updateExportButtonVisibility() {
+    const exportBtn = document.getElementById('exportPdfBtn');
+    if (exportBtn) {
+        exportBtn.style.display = areAllSheetsSigned() ? 'inline-block' : 'none';
+    }
 }
 
 // ==================== CIBLE INTERACTIVE (MÊME CODE QUE TIR COMPTÉ) ====================
@@ -2201,6 +2226,89 @@ function resetTarget() {
 // Alias pour compatibilité
 function clearTarget() {
     resetTarget();
+}
+
+// ==================== EXPORT VERS CONCOURS ====================
+
+/** Saisit les scores dans concours_resultats puis propose l'export PDF */
+async function exportToConcours() {
+    if (!selectedConcoursId) {
+        showStatus('Veuillez sélectionner un concours pour exporter les scores.', 'warning');
+        return;
+    }
+    const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
+    if (!config) {
+        showStatus('Type de tir invalide.', 'danger');
+        return;
+    }
+    const sheetsToExport = userSheets.filter(s => {
+        const lic = (s.archerInfo?.licenseNumber ?? '').toString().trim();
+        const hasScores = s.scoreRows?.some(row => (row.endTotal || 0) > 0);
+        return lic !== '' && s.inscriptionId && hasScores;
+    });
+    if (sheetsToExport.length === 0) {
+        showStatus('Aucune feuille avec inscription et scores à exporter.', 'warning');
+        return;
+    }
+    const isNature = getShootingConfigKey(selectedShootingType) === 'Nature';
+    const hasSeries = !isNature && config.series === 2;
+    const endsPerSeries = hasSeries ? config.total_ends / config.series : 0;
+
+    const payload = {
+        concours_id: selectedConcoursId,
+        shooting_type: getShootingConfigKey(selectedShootingType),
+        user_sheets: sheetsToExport.map(sheet => {
+            const score = sheet.scoreRows.reduce((sum, row) => sum + (row.endTotal || 0), 0);
+            const data = { inscription_id: sheet.inscriptionId, score };
+            if (isNature) {
+                let nb_20_15 = 0, nb_20_10 = 0, nb_15_15 = 0, nb_15_10 = 0;
+                sheet.scoreRows.forEach(row => {
+                    const cross = getNatureCrossColumn(row.arrows[0]?.value, row.arrows[1]?.value);
+                    if (cross === '20-15') nb_20_15++;
+                    else if (cross === '20-10') nb_20_10++;
+                    else if (cross === '15-15') nb_15_15++;
+                    else if (cross === '15-10') nb_15_10++;
+                });
+                data.nb_20_15 = nb_20_15;
+                data.nb_20_10 = nb_20_10;
+                data.nb_15_15 = nb_15_15;
+                data.nb_15_10 = nb_15_10;
+            } else if (hasSeries) {
+                let s1 = 0, s2 = 0;
+                sheet.scoreRows.forEach((row, idx) => {
+                    const tot = row.endTotal || 0;
+                    if (idx < endsPerSeries) s1 += tot;
+                    else s2 += tot;
+                });
+                data.serie1_score = s1;
+                data.serie2_score = s2;
+            }
+            return data;
+        })
+    };
+
+    const btn = document.getElementById('exportPdfBtn');
+    const origHtml = btn?.innerHTML;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Export...'; }
+
+    try {
+        const resp = await fetch('/score-sheet/export-to-concours', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await resp.json().catch(() => ({}));
+        if (result.success) {
+            showStatus(result.message || 'Scores exportés vers le concours avec succès.', 'success');
+            exportToPDF();
+        } else {
+            showStatus(result.message || 'Erreur lors de l\'export vers le concours.', 'danger');
+        }
+    } catch (e) {
+        showStatus('Erreur réseau lors de l\'export.', 'danger');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = origHtml || '<i class="fas fa-upload"></i> Exporter vers concours'; }
+    }
 }
 
 // ==================== EXPORT PDF ====================
