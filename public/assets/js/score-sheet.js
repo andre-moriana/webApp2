@@ -336,6 +336,32 @@ function applyTrainingToSheet(sheet, trainingData) {
 }
 
 /**
+ * Extrait les signatures et le flag signé depuis la chaîne notes (backend).
+ * @param {string} notes
+ * @returns {{ signatures: object|null, signed: boolean }}
+ */
+function parseSignaturesFromNotes(notes) {
+    if (!notes || typeof notes !== 'string') return { signatures: null, signed: false };
+    const signed = notes.indexOf('__SIGNED__:1') !== -1;
+    const idx = notes.indexOf('__SIGNATURES__:');
+    let signatures = null;
+    if (idx !== -1) {
+        const start = idx + '__SIGNATURES__:'.length;
+        let depth = 0;
+        let end = start;
+        for (let i = start; i < notes.length; i++) {
+            if (notes[i] === '{') depth++;
+            else if (notes[i] === '}') { depth--; if (depth === 0) { end = i + 1; break; } }
+        }
+        try {
+            const json = notes.substring(start, end);
+            signatures = JSON.parse(json);
+        } catch (e) { /* ignore */ }
+    }
+    return { signatures, signed };
+}
+
+/**
  * Pour chaque feuille ayant un scoredTrainingId, charge la session (volées + flèches) et met à jour la feuille.
  * @param {number[]} indicesWithLicence - indices des userSheets avec licence (ceux qui ont reçu un training_id)
  */
@@ -352,12 +378,30 @@ async function loadExistingTrainingData(indicesWithLicence) {
             const result = await resp.json().catch(() => ({}));
             if (result.success && result.data) {
                 applyTrainingToSheet(sheet, result.data);
+                const notes = result.data.notes;
+                if (notes) {
+                    const { signatures, signed } = parseSignaturesFromNotes(notes);
+                    if (signed) sheet.signed = true;
+                    if (signatures && typeof signatures === 'object') {
+                        if (signatures.archer) archerSignatures[sheetIndex] = signatures.archer;
+                        if (signatures.scorer) scorerSignature = signatures.scorer;
+                    }
+                }
             } else if (userId && (resp.status === 404 || !result.success)) {
                 // Réessayer sans user_id (session créée pour l'utilisateur connecté)
                 const fallbackResp = await fetch(`/score-sheet/load-training?training_id=${encodeURIComponent(sheet.scoredTrainingId)}`);
                 const fallbackResult = await fallbackResp.json().catch(() => ({}));
                 if (fallbackResult.success && fallbackResult.data) {
                     applyTrainingToSheet(sheet, fallbackResult.data);
+                    const notes = fallbackResult.data.notes;
+                    if (notes) {
+                        const { signatures, signed } = parseSignaturesFromNotes(notes);
+                        if (signed) sheet.signed = true;
+                        if (signatures && typeof signatures === 'object') {
+                            if (signatures.archer) archerSignatures[sheetIndex] = signatures.archer;
+                            if (signatures.scorer) scorerSignature = signatures.scorer;
+                        }
+                    }
                 }
             }
         } catch (e) {
@@ -885,7 +929,7 @@ function getNatureCrossColumn(score1, score2) {
 function updateScoreTable(sheet) {
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     const isNature = (getShootingConfigKey(selectedShootingType) === 'Nature' || getShootingConfigKey(selectedShootingType) === 'Nature2x21');
-    const scoresLocked = !!scorerSignature && !!archerSignatures[currentUserIndex];
+    const scoresLocked = !!sheet.signed || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
     const tableBody = document.getElementById('scoreTableBody');
     
     // Nettoyer le tableau
@@ -1142,7 +1186,7 @@ function openScoreModal(rowIndex) {
     if (userSheets.length === 0) return;
     
     const sheet = userSheets[currentUserIndex];
-    if (!!scorerSignature && !!archerSignatures[currentUserIndex]) {
+    if (!!sheet.signed || (!!scorerSignature && !!archerSignatures[currentUserIndex])) {
         showStatus('Feuille signée : les scores ne sont plus modifiables.', 'info');
         return;
     }
@@ -1696,7 +1740,7 @@ function clearSignature(type, userIndex) {
 }
 
 function saveSignatures() {
-    // Sauvegarder la signature actuelle
+    // Sauvegarder la signature actuelle (canvas courant)
     if (signatureCanvas && signatureCtx) {
         const signatureData = signatureCanvas.toDataURL('image/png');
         
@@ -1707,7 +1751,7 @@ function saveSignatures() {
         }
     }
     
-    // Sauvegarder toutes les signatures visibles
+    // Sauvegarder toutes les signatures visibles depuis les canvas
     document.querySelectorAll('[id^="signatureCanvas-"]').forEach(canvas => {
         if (canvas.id.includes('archer')) {
             const userIndex = parseInt(canvas.id.split('-')[2]);
@@ -1719,19 +1763,39 @@ function saveSignatures() {
         }
     });
     
+    const activeArchers = userSheets
+        .map((sheet, index) => ({ sheet, index }))
+        .filter(({ sheet }) => sheet.scoreRows.some(row => row.endTotal > 0));
+    
+    if (!scorerSignature) {
+        showStatus('Le marqueur doit signer avant d\'enregistrer.', 'warning');
+        return;
+    }
+    const missing = activeArchers.filter(({ index }) => !archerSignatures[index]);
+    if (missing.length > 0) {
+        const names = missing.map(({ sheet }) => sheet.archerInfo?.name || 'Archer').join(', ');
+        showStatus(`Tous les archers doivent signer : ${names} n'ont pas encore signé.`, 'warning');
+        return;
+    }
+    
     showStatus('Signatures enregistrées', 'success');
     bootstrap.Modal.getInstance(document.getElementById('signatureModal')).hide();
     updateExportButtonVisibility();
+    displayCurrentArcher();
+    saveScoreSheet({ redirect: false, silent: true }).then((data) => {
+        if (data && data.success) showStatus('Signatures enregistrées et sauvegardées.', 'success');
+    }).catch(() => {});
 }
 
-/** Vérifie si toutes les feuilles avec licence ont archer + marqueur signé */
+/** Vérifie si toutes les feuilles avec scores ont archer + marqueur signé */
 function areAllSheetsSigned() {
     if (!scorerSignature) return false;
-    const sheetsWithLicence = userSheets.filter(s => (s.archerInfo?.licenseNumber ?? '').toString().trim() !== '');
-    if (sheetsWithLicence.length === 0) return false;
-    for (let i = 0; i < userSheets.length; i++) {
-        const lic = (userSheets[i].archerInfo?.licenseNumber ?? '').toString().trim();
-        if (lic !== '' && !archerSignatures[i]) return false;
+    const sheetsWithScores = userSheets
+        .map((s, i) => ({ sheet: s, index: i }))
+        .filter(({ sheet }) => sheet.scoreRows.some(row => row.endTotal > 0));
+    if (sheetsWithScores.length === 0) return false;
+    for (const { index } of sheetsWithScores) {
+        if (!archerSignatures[index]) return false;
     }
     return true;
 }

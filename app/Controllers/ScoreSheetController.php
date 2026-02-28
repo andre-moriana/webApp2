@@ -299,6 +299,17 @@ class ScoreSheetController {
             'shots' => $shots,
             'comment' => $data['comment'] ?? '',
         ];
+        $trainingResp = $this->apiService->getScoredTrainingById($trainingId);
+        if (!empty($trainingResp['success']) && !empty($trainingResp['data']['notes'])) {
+            $notes = (string) $trainingResp['data']['notes'];
+            if (strpos($notes, '__SIGNED__:1') !== false) {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'message' => 'Feuille signée : modification des scores non autorisée.',
+                ], 403);
+                return;
+            }
+        }
         $response = $this->apiService->addScoredEnd($trainingId, $endData);
         if (!empty($response['success'])) {
             $this->sendJsonResponse([
@@ -450,6 +461,11 @@ class ScoreSheetController {
                 if (!empty($userSheet['signatures'])) {
                     $signaturesJson = json_encode($userSheet['signatures']);
                     $notesParts[] = '__SIGNATURES__:' . $signaturesJson;
+                    $hasArcher = !empty($userSheet['signatures']['archer']);
+                    $hasScorer = !empty($userSheet['signatures']['scorer']);
+                    if ($hasArcher && $hasScorer) {
+                        $notesParts[] = '__SIGNED__:1';
+                    }
                 }
                 
                 $finalNotes = implode(', ', array_filter($notesParts));
