@@ -40,6 +40,7 @@ if ($filterDepartFeuilles !== '' && $filterDepartFeuilles !== 'tout') {
 $categorieParLicence = [];
 $clubNomParLicence = []; // licence -> nom du club (depuis fiche inscription id_club, résolu via base club dans le contrôleur)
 $numeroTirParLicence = []; // licence -> numero_tir (depuis fiche inscription, pour plan peloton et fallback plan cible)
+$piquetParLicence = []; // licence -> couleur piquet (Nature, 3D, Campagne)
 if (!empty($inscriptions) && is_array($inscriptions)) {
     foreach ($inscriptions as $insc) {
         $lic = trim((string)($insc['numero_licence'] ?? ''));
@@ -54,6 +55,9 @@ if (!empty($inscriptions) && is_array($inscriptions)) {
             }
             if (isset($insc['numero_tir']) && $insc['numero_tir'] !== '' && $insc['numero_tir'] !== null) {
                 $numeroTirParLicence[$lic] = (int)$insc['numero_tir'];
+            }
+            if (isset($insc['piquet']) && $insc['piquet'] !== '' && $insc['piquet'] !== null) {
+                $piquetParLicence[$lic] = trim((string)$insc['piquet']);
             }
         }
     }
@@ -119,6 +123,7 @@ if ($isPeloton && !empty($plansPeloton)) {
             $lic = trim($p['numero_licence'] ?? '');
             $nt = isset($p['numero_tir']) && $p['numero_tir'] !== '' && $p['numero_tir'] !== null ? (int)$p['numero_tir'] : ($numeroTirParLicence[$lic] ?? null);
             $clubNom = $clubNomParLicence[$lic] ?? trim($p['club_nom'] ?? $p['club_name'] ?? '');
+            $piquet = $piquetParLicence[$lic] ?? trim($p['piquet'] ?? '');
             if ($nom !== '' || $lic !== '') {
                 $flat[] = [
                     'numero_depart' => (int)($p['numero_depart'] ?? $departNum),
@@ -128,7 +133,8 @@ if ($isPeloton && !empty($plansPeloton)) {
                     'numero_licence' => $lic,
                     'abv_categorie_classement' => $categorieParLicence[$lic] ?? trim($p['abv_categorie_classement'] ?? $p['categorie_classement'] ?? ''),
                     'numero_tir' => $nt,
-                    'club_nom' => $clubNom
+                    'club_nom' => $clubNom,
+                    'piquet' => $piquet
                 ];
             }
         }
