@@ -113,6 +113,7 @@ function initializeScoreSheet() {
     
     if (shootingTypeSelect) {
         shootingTypeSelect.addEventListener('change', function() {
+            if (this.disabled) return;
             selectedShootingType = this.value;
             if (selectedShootingType) {
                 initializeSheets();
@@ -123,6 +124,7 @@ function initializeScoreSheet() {
     
     if (trainingTitleInput) {
         trainingTitleInput.addEventListener('input', function() {
+            if (this.readOnly) return;
             trainingTitle = this.value;
         });
     }
@@ -168,6 +170,8 @@ function setupConcoursSelector() {
             if (shootingTypeSelect) shootingTypeSelect.value = '';
             if (trainingTitleInput) trainingTitleInput.value = '';
             selectedShootingType = '';
+            userSheets.forEach(s => { delete s.inscriptionId; });
+            updateConcoursImportLock();
             loadCategoriesForDiscipline(null);
             document.getElementById('archerNavigation')?.style?.setProperty('display', 'none');
             document.getElementById('archerInfoSection')?.style?.setProperty('display', 'none');
@@ -837,6 +841,8 @@ function displayCurrentArcher() {
         categorySelect.title = fromConcoursImport ? 'Champ verrouillé (import concours)' : '';
     }
     
+    updateConcoursImportLock();
+    
     // Mettre à jour le tableau des scores (uniquement si type de tir et config valides)
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     if (config) {
@@ -848,6 +854,23 @@ function displayCurrentArcher() {
     const nextBtn = document.getElementById('nextArcherBtn');
     if (prevBtn) prevBtn.disabled = currentUserIndex === 0;
     if (nextBtn) nextBtn.disabled = currentUserIndex === NUM_USERS - 1;
+}
+
+/** Verrouille / déverrouille le type de tir et le titre de la feuille lorsque des archers ont été importés depuis un concours. */
+function updateConcoursImportLock() {
+    const fromConcoursImport = userSheets.length > 0 && userSheets.some(s => s.inscriptionId);
+    const shootingTypeSelect = document.getElementById('shootingType');
+    const trainingTitleInput = document.getElementById('trainingTitle');
+    if (shootingTypeSelect) {
+        shootingTypeSelect.disabled = fromConcoursImport;
+        shootingTypeSelect.classList.toggle('bg-light', fromConcoursImport);
+        shootingTypeSelect.title = fromConcoursImport ? 'Champ verrouillé (import concours)' : '';
+    }
+    if (trainingTitleInput) {
+        trainingTitleInput.readOnly = fromConcoursImport;
+        trainingTitleInput.classList.toggle('bg-light', fromConcoursImport);
+        trainingTitleInput.title = fromConcoursImport ? 'Champ verrouillé (import concours)' : '';
+    }
 }
 
 /** Pour le tir Nature : retourne la colonne croix (20-15, 20-10, 15-15, 15-10) selon les scores des 2 flèches, ou '' si aucune. */
