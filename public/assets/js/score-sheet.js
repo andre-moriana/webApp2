@@ -2297,6 +2297,7 @@ async function exportToConcours() {
         const resp = await fetch('/score-sheet/export-to-concours', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
             body: JSON.stringify(payload)
         });
         const result = await resp.json().catch(() => ({}));

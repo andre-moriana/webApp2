@@ -133,6 +133,7 @@ class ApiService {
 
         /**
          * Saisit un résultat dans concours_resultats (POST concours/{id}/resultat)
+         * Retourne { success, error?, message? } pour le contrôleur.
          * @param int $concoursId
          * @param array $data { inscription_id, score, nb_20_15?, nb_20_10?, nb_15_15?, nb_15_10?, serie1_score?, serie2_score? }
          */
@@ -140,7 +141,16 @@ class ApiService {
             if (!$this->token) {
                 return ["success" => false, "message" => "Token d'authentification requis"];
             }
-            return $this->makeRequest("concours/{$concoursId}/resultat", "POST", $data);
+            $resp = $this->makeRequest("concours/{$concoursId}/resultat", "POST", $data);
+            $apiData = is_array($resp['data'] ?? null) ? $resp['data'] : [];
+            $httpOk = !empty($resp['success']);
+            $apiOk = !isset($apiData['success']) || !empty($apiData['success']);
+            $ok = $httpOk && $apiOk;
+            return [
+                'success' => $ok,
+                'error' => $ok ? null : ($apiData['error'] ?? $resp['message'] ?? 'Erreur API'),
+                'message' => $resp['message'] ?? null
+            ];
         }
     
     /**

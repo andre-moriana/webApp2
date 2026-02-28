@@ -547,7 +547,7 @@ class ScoreSheetController {
     }
 
     /**
-     * Exporte les scores vers concours_resultats (saisie automatique).
+     * Exporte les scores vers concours_resultats via l'API BackendPHP (api.arctraining.fr).
      * POST body: { concours_id, shooting_type, user_sheets: [ { inscription_id?, license_number?, score, nb_20_15?, ... } ] }
      */
     public function exportToConcours() {
@@ -565,13 +565,17 @@ class ScoreSheetController {
         $concoursId = (int)$data['concours_id'];
         $exported = 0;
         $errors = [];
-        $licenceToInscription = null;
+        if (empty($_SESSION['token'])) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Session expirée. Veuillez vous reconnecter pour exporter vers le concours.'], 401);
+        }
         $normalizeLicence = function ($lic) {
             $lic = trim((string)$lic);
             if ($lic === '') return '';
             if (strlen($lic) === 7 && ctype_digit($lic)) return '0' . $lic;
             return $lic;
         };
+
+        $licenceToInscription = null;
         foreach ($data['user_sheets'] as $sheet) {
             $inscriptionId = isset($sheet['inscription_id']) ? (int)$sheet['inscription_id'] : 0;
             if ($inscriptionId <= 0 && !empty($sheet['license_number'])) {
@@ -583,10 +587,13 @@ class ScoreSheetController {
                             $errors[] = 'API inscriptions: ' . $inscResp['message'];
                         } else {
                             $inscriptions = [];
-                            if (isset($inscResp['data']) && is_array($inscResp['data'])) {
-                                $inscriptions = $inscResp['data'];
-                            } elseif (is_array($inscResp) && isset($inscResp[0])) {
-                                $inscriptions = $inscResp;
+                            $raw = $inscResp['data'] ?? $inscResp;
+                            if (is_array($raw)) {
+                                if (isset($raw[0]) && is_array($raw[0])) {
+                                    $inscriptions = $raw;
+                                } elseif (isset($raw['data']) && is_array($raw['data'])) {
+                                    $inscriptions = $raw['data'];
+                                }
                             }
                             foreach ($inscriptions as $i) {
                                 $lic = $normalizeLicence($i['numero_licence'] ?? $i['numeroLicence'] ?? '');
@@ -604,11 +611,13 @@ class ScoreSheetController {
                         $errors[] = 'Impossible de récupérer les inscriptions: ' . $e->getMessage();
                     }
                 }
-                $lic = $normalizeLicence($sheet['license_number']);
-                $inscriptionId = $licenceToInscription[$lic] ?? 0;
-                if ($inscriptionId <= 0 && $lic !== '') {
-                    $licAlt = (strlen($lic) === 8 && $lic[0] === '0') ? substr($lic, 1) : (strlen($lic) === 7 ? '0' . $lic : '');
-                    if ($licAlt !== '') $inscriptionId = $licenceToInscription[$licAlt] ?? 0;
+                if (is_array($licenceToInscription)) {
+                    $lic = $normalizeLicence($sheet['license_number']);
+                    $inscriptionId = $licenceToInscription[$lic] ?? 0;
+                    if ($inscriptionId <= 0 && $lic !== '') {
+                        $licAlt = (strlen($lic) === 8 && $lic[0] === '0') ? substr($lic, 1) : (strlen($lic) === 7 ? '0' . $lic : '');
+                        if ($licAlt !== '') $inscriptionId = $licenceToInscription[$licAlt] ?? 0;
+                    }
                 }
             }
             if ($inscriptionId <= 0) {
@@ -630,7 +639,8 @@ class ScoreSheetController {
                 if (!empty($resp['success'])) {
                     $exported++;
                 } else {
-                    $errors[] = $resp['error'] ?? $resp['message'] ?? 'Erreur inconnue';
+                    $err = $resp['error'] ?? $resp['message'] ?? 'Erreur inconnue';
+                    $errors[] = $err;
                 }
             } catch (Exception $e) {
                 $errors[] = $e->getMessage();
