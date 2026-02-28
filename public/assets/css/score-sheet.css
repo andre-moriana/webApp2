@@ -57,6 +57,25 @@
     font-size: 1.1rem;
 }
 
+/* Tir Nature : tableau type feuille de marque édition concours */
+.score-table .nature-score,
+.score-table .nature-cross {
+    min-width: 2rem;
+    text-align: center;
+}
+.score-table .nature-cross {
+    font-weight: bold;
+}
+.feuille-marque-row-even td {
+    background-color: #e9ecef;
+}
+.nature-score-options .btn {
+    flex: 1;
+}
+.nature-score-options .btn-check:checked + .btn {
+    font-weight: bold;
+}
+
 .score-table .btn-sm {
     padding: 4px 8px;
     font-size: 0.85rem;

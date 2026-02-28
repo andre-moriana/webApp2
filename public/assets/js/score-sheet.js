@@ -697,31 +697,84 @@ function displayCurrentArcher() {
     if (nextBtn) nextBtn.disabled = currentUserIndex === NUM_USERS - 1;
 }
 
+/** Pour le tir Nature : retourne la colonne croix (20-15, 20-10, 15-15, 15-10) selon les scores des 2 flèches, ou '' si aucune. */
+function getNatureCrossColumn(score1, score2) {
+    if (score1 === 20 && score2 === 15) return '20-15';
+    if (score1 === 20 && score2 === 10) return '20-10';
+    if (score1 === 15 && score2 === 15) return '15-15';
+    if (score1 === 15 && score2 === 10) return '15-10';
+    return '';
+}
+
 function updateScoreTable(sheet) {
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
+    const isNature = getShootingConfigKey(selectedShootingType) === 'Nature';
     const tableBody = document.getElementById('scoreTableBody');
-    const arrowHeaders = document.getElementById('arrowHeaders');
-    const cumulativeHeader = document.getElementById('cumulativeHeader');
     
     // Nettoyer le tableau
     tableBody.innerHTML = '';
     
-    // Générer les en-têtes de flèches
-    let arrowHeadersHtml = '';
-    for (let i = 1; i <= config.arrows_per_end; i++) {
-        arrowHeadersHtml += `<th class="arrow-col">F${i}</th>`;
-    }
-    arrowHeaders.innerHTML = arrowHeadersHtml;
-    arrowHeaders.setAttribute('colspan', config.arrows_per_end);
-    
-    // Afficher/masquer la colonne cumul selon le type de tir
-    const hasSeries = config.series === 2;
-    if (hasSeries) {
-        cumulativeHeader.style.display = 'table-cell';
-        document.getElementById('footerCumulative').style.display = 'table-cell';
+    if (isNature) {
+        // En-têtes tableau Nature (modèle feuilles-marques édition concours) — 2 lignes
+        const thead = document.querySelector('#scoreTable thead');
+        if (thead) {
+            thead.innerHTML = `
+                <tr>
+                    <th class="volley-col">N° cible</th>
+                    <th colspan="3">Flèche 1</th>
+                    <th colspan="3">Flèche 2</th>
+                    <th class="total-col">Total 2 flèches</th>
+                    <th id="cumulativeHeader" class="cumulative-col">Cumul</th>
+                    <th>20-15</th>
+                    <th>20-10</th>
+                    <th>15-15</th>
+                    <th>15-10</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th>20</th><th>15</th><th>0</th>
+                    <th>15</th><th>10</th><th>0</th>
+                    <th></th><th></th>
+                    <th></th><th></th><th></th><th></th>
+                </tr>
+            `;
+        }
+        const cumHead = document.getElementById('cumulativeHeader');
+        if (cumHead) cumHead.style.display = 'table-cell';
+        const footerCum = document.getElementById('footerCumulative');
+        if (footerCum) footerCum.style.display = 'table-cell';
     } else {
-        cumulativeHeader.style.display = 'none';
-        document.getElementById('footerCumulative').style.display = 'none';
+        // Remettre un thead à une seule ligne pour les autres types
+        const thead = document.querySelector('#scoreTable thead');
+        if (thead) {
+            thead.innerHTML = `
+                <tr>
+                    <th class="volley-col">Volée</th>
+                    <th id="arrowHeaders" colspan="3"></th>
+                    <th class="total-col">Total</th>
+                    <th id="cumulativeHeader" class="cumulative-col" style="display: none;">Cumul</th>
+                </tr>
+            `;
+        }
+        const arrowHeadersEl = document.getElementById('arrowHeaders');
+        let arrowHeadersHtml = '';
+        for (let i = 1; i <= config.arrows_per_end; i++) {
+            arrowHeadersHtml += `<th class="arrow-col">F${i}</th>`;
+        }
+        if (arrowHeadersEl) {
+            arrowHeadersEl.innerHTML = arrowHeadersHtml;
+            arrowHeadersEl.setAttribute('colspan', config.arrows_per_end);
+        }
+        const hasSeries = config.series === 2;
+        const cumHeadEl = document.getElementById('cumulativeHeader');
+        const footerCumEl = document.getElementById('footerCumulative');
+        if (hasSeries) {
+            if (cumHeadEl) cumHeadEl.style.display = 'table-cell';
+            if (footerCumEl) footerCumEl.style.display = 'table-cell';
+        } else {
+            if (cumHeadEl) cumHeadEl.style.display = 'none';
+            if (footerCumEl) footerCumEl.style.display = 'none';
+        }
     }
     
     // Générer les lignes
@@ -729,79 +782,130 @@ function updateScoreTable(sheet) {
     let series1Total = 0;
     let series2Total = 0;
     let currentSeries = 1;
+    const hasSeries = !isNature && config.series === 2;
     
     sheet.scoreRows.forEach((row, index) => {
         // Recalculer les totaux
         row.endTotal = row.arrows.reduce((sum, arrow) => sum + (arrow.value || 0), 0);
         
-        // Déterminer la série
-        if (hasSeries) {
-            const endsPerSeries = config.total_ends / config.series;
-            row.seriesNumber = Math.floor(index / endsPerSeries) + 1;
-            
-            // Réinitialiser le cumul à chaque nouvelle série
-            if (row.seriesNumber !== currentSeries) {
-                cumulative = 0;
-                currentSeries = row.seriesNumber;
+        if (isNature) {
+            cumulative += row.endTotal;
+            row.cumulativeTotal = cumulative;
+        } else {
+            // Déterminer la série
+            if (hasSeries) {
+                const endsPerSeries = config.total_ends / config.series;
+                row.seriesNumber = Math.floor(index / endsPerSeries) + 1;
+                if (row.seriesNumber !== currentSeries) {
+                    cumulative = 0;
+                    currentSeries = row.seriesNumber;
+                }
             }
+            cumulative += row.endTotal;
+            row.cumulativeTotal = cumulative;
+            if (row.seriesNumber === 1) series1Total += row.endTotal;
+            else if (row.seriesNumber === 2) series2Total += row.endTotal;
         }
         
-        cumulative += row.endTotal;
-        row.cumulativeTotal = cumulative;
-        
-        // Ajouter au total de la série
-        if (row.seriesNumber === 1) {
-            series1Total += row.endTotal;
-        } else if (row.seriesNumber === 2) {
-            series2Total += row.endTotal;
+        if (isNature) {
+            const s1 = row.arrows[0]?.value;
+            const s2 = row.arrows[1]?.value;
+            const cross = getNatureCrossColumn(s1, s2);
+            const f1_20 = (s1 === 20) ? '✗' : '';
+            const f1_15 = (s1 === 15) ? '✗' : '';
+            const f1_0 = (s1 === 0) ? '✗' : '';
+            const f2_15 = (s2 === 15) ? '✗' : '';
+            const f2_10 = (s2 === 10) ? '✗' : '';
+            const f2_0 = (s2 === 0) ? '✗' : '';
+            const rowHtml = document.createElement('tr');
+            rowHtml.className = (index % 2 === 1) ? 'feuille-marque-row-even' : '';
+            rowHtml.innerHTML = `
+                <td class="volley-col">
+                    <button class="btn btn-sm btn-outline-primary" onclick="openScoreModal(${index})">
+                        ${row.endNumber}
+                    </button>
+                </td>
+                <td class="arrow-col nature-score">${f1_20}</td>
+                <td class="arrow-col nature-score">${f1_15}</td>
+                <td class="arrow-col nature-score">${f1_0}</td>
+                <td class="arrow-col nature-score">${f2_15}</td>
+                <td class="arrow-col nature-score">${f2_10}</td>
+                <td class="arrow-col nature-score">${f2_0}</td>
+                <td class="total-col">${row.endTotal > 0 ? row.endTotal : ''}</td>
+                <td class="cumulative-col">${row.cumulativeTotal > 0 ? row.cumulativeTotal : ''}</td>
+                <td class="nature-cross">${cross === '20-15' ? '✗' : ''}</td>
+                <td class="nature-cross">${cross === '20-10' ? '✗' : ''}</td>
+                <td class="nature-cross">${cross === '15-15' ? '✗' : ''}</td>
+                <td class="nature-cross">${cross === '15-10' ? '✗' : ''}</td>
+            `;
+            tableBody.appendChild(rowHtml);
+        } else {
+            const rowHtml = document.createElement('tr');
+            rowHtml.className = hasSeries && row.seriesNumber === 2 ? 'second-series' : '';
+            rowHtml.innerHTML = `
+                <td class="volley-col">
+                    <button class="btn btn-sm btn-outline-primary" onclick="openScoreModal(${index})">
+                        ${row.endNumber}
+                    </button>
+                </td>
+                ${row.arrows.map((arrow, arrowIndex) => `
+                    <td class="arrow-col">${arrow.value > 0 ? arrow.value : ''}</td>
+                `).join('')}
+                <td class="total-col">${row.endTotal}</td>
+                ${hasSeries ? `<td class="cumulative-col">${row.cumulativeTotal}</td>` : ''}
+            `;
+            tableBody.appendChild(rowHtml);
         }
-        
-        const rowHtml = document.createElement('tr');
-        rowHtml.className = hasSeries && row.seriesNumber === 2 ? 'second-series' : '';
-        rowHtml.innerHTML = `
-            <td class="volley-col">
-                <button class="btn btn-sm btn-outline-primary" onclick="openScoreModal(${index})">
-                    ${row.endNumber}
-                </button>
-            </td>
-            ${row.arrows.map((arrow, arrowIndex) => `
-                <td class="arrow-col">${arrow.value > 0 ? arrow.value : ''}</td>
-            `).join('')}
-            <td class="total-col">${row.endTotal}</td>
-            ${hasSeries ? `<td class="cumulative-col">${row.cumulativeTotal}</td>` : ''}
-        `;
-        tableBody.appendChild(rowHtml);
     });
     
-    // Ajouter les lignes de sous-totaux par série si nécessaire
-    if (hasSeries) {
-        const series1Row = document.createElement('tr');
-        series1Row.className = 'series-total';
-        series1Row.innerHTML = `
-            <td class="volley-col"><strong>Série 1</strong></td>
-            ${Array(config.arrows_per_end).fill('<td></td>').join('')}
-            <td class="total-col"><strong>${series1Total}</strong></td>
+    if (isNature) {
+        // Ligne "Total des cibles" en pied du tableau Nature
+        const totalRow = document.createElement('tr');
+        totalRow.className = 'table-secondary feuille-marque-ligne-resume';
+        const grandTotal = sheet.scoreRows.reduce((sum, row) => sum + row.endTotal, 0);
+        totalRow.innerHTML = `
+            <td colspan="7"><strong>Total des cibles</strong></td>
+            <td class="total-col"><strong>${grandTotal}</strong></td>
             <td class="cumulative-col"></td>
+            <td></td><td></td><td></td><td></td>
         `;
-        tableBody.appendChild(series1Row);
-        
-        const series2Row = document.createElement('tr');
-        series2Row.className = 'series-total';
-        series2Row.innerHTML = `
-            <td class="volley-col"><strong>Série 2</strong></td>
-            ${Array(config.arrows_per_end).fill('<td></td>').join('')}
-            <td class="total-col"><strong>${series2Total}</strong></td>
-            <td class="cumulative-col"></td>
-        `;
-        tableBody.appendChild(series2Row);
+        tableBody.appendChild(totalRow);
+        document.getElementById('grandTotal').textContent = grandTotal;
+        const tfoot = document.querySelector('#scoreTable tfoot tr');
+        if (tfoot) {
+            tfoot.innerHTML = `<th>TOTAL</th><td colspan="7"></td><th id="grandTotal">${grandTotal}</th><th id="footerCumulative"></th><td colspan="4"></td>`;
+        }
+    } else {
+        // Ajouter les lignes de sous-totaux par série si nécessaire
+        if (hasSeries) {
+            const series1Row = document.createElement('tr');
+            series1Row.className = 'series-total';
+            series1Row.innerHTML = `
+                <td class="volley-col"><strong>Série 1</strong></td>
+                ${Array(config.arrows_per_end).fill('<td></td>').join('')}
+                <td class="total-col"><strong>${series1Total}</strong></td>
+                <td class="cumulative-col"></td>
+            `;
+            tableBody.appendChild(series1Row);
+            const series2Row = document.createElement('tr');
+            series2Row.className = 'series-total';
+            series2Row.innerHTML = `
+                <td class="volley-col"><strong>Série 2</strong></td>
+                ${Array(config.arrows_per_end).fill('<td></td>').join('')}
+                <td class="total-col"><strong>${series2Total}</strong></td>
+                <td class="cumulative-col"></td>
+            `;
+            tableBody.appendChild(series2Row);
+        }
+        const grandTotal = hasSeries ? (series1Total + series2Total) : sheet.scoreRows.reduce((sum, row) => sum + row.endTotal, 0);
+        const tfootTr = document.querySelector('#scoreTable tfoot tr');
+        if (tfootTr && tfootTr.querySelector('td[colspan="7"]')) {
+            tfootTr.innerHTML = '<th>TOTAL</th><td id="footerArrows" colspan="3"></td><th id="grandTotal">0</th><th id="footerCumulative" style="display: none;"></th>';
+        }
+        document.getElementById('grandTotal').textContent = grandTotal;
+        const footerArrows = document.getElementById('footerArrows');
+        if (footerArrows) footerArrows.setAttribute('colspan', config.arrows_per_end);
     }
-    
-    // Mettre à jour le footer
-    const grandTotal = hasSeries ? (series1Total + series2Total) : sheet.scoreRows.reduce((sum, row) => sum + row.endTotal, 0);
-    document.getElementById('grandTotal').textContent = grandTotal;
-    
-    const footerArrows = document.getElementById('footerArrows');
-    footerArrows.setAttribute('colspan', config.arrows_per_end);
 }
 
 function navigateArcher(direction) {
@@ -833,24 +937,60 @@ function openScoreModal(rowIndex) {
     const sheet = userSheets[currentUserIndex];
     const row = sheet.scoreRows[rowIndex];
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
+    const isNature = getShootingConfigKey(selectedShootingType) === 'Nature';
     
     document.getElementById('modalVolleyNumber').textContent = row.endNumber;
     
     const scoreInputs = document.getElementById('scoreInputs');
     scoreInputs.innerHTML = '';
     
-    // Créer les inputs pour chaque flèche
-    row.arrows.forEach((arrow, arrowIndex) => {
-        const inputGroup = document.createElement('div');
-        inputGroup.className = 'mb-3';
-        inputGroup.innerHTML = `
-            <label for="arrow${arrowIndex}" class="form-label">Flèche ${arrowIndex + 1}</label>
-            <input type="number" class="form-control" id="arrow${arrowIndex}" 
-                   min="0" max="10" value="${arrow.value || 0}" 
-                   onchange="updateArrowValue(${arrowIndex}, this.value)">
+    const tableTab = document.getElementById('table-tab');
+    const targetTab = document.getElementById('target-tab');
+    if (isNature) {
+        if (targetTab) targetTab.style.display = 'none';
+        if (tableTab) tableTab.click();
+        // Tir Nature : boutons d'option 20-15-0 et 15-10-0
+        const v1 = row.arrows[0]?.value;
+        const v2 = row.arrows[1]?.value;
+        scoreInputs.innerHTML = `
+            <div class="mb-4">
+                <label class="form-label fw-bold">Flèche 1 (20 - 15 - 0)</label>
+                <div class="btn-group nature-score-options d-flex" role="group">
+                    <input type="radio" class="btn-check" name="nature_f1" id="f1_20" value="20" ${v1 === 20 ? 'checked' : ''}>
+                    <label class="btn btn-outline-primary" for="f1_20">20</label>
+                    <input type="radio" class="btn-check" name="nature_f1" id="f1_15" value="15" ${v1 === 15 ? 'checked' : ''}>
+                    <label class="btn btn-outline-primary" for="f1_15">15</label>
+                    <input type="radio" class="btn-check" name="nature_f1" id="f1_0" value="0" ${v1 === 0 ? 'checked' : ''}>
+                    <label class="btn btn-outline-primary" for="f1_0">0</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Flèche 2 (15 - 10 - 0)</label>
+                <div class="btn-group nature-score-options d-flex" role="group">
+                    <input type="radio" class="btn-check" name="nature_f2" id="f2_15" value="15" ${v2 === 15 ? 'checked' : ''}>
+                    <label class="btn btn-outline-primary" for="f2_15">15</label>
+                    <input type="radio" class="btn-check" name="nature_f2" id="f2_10" value="10" ${v2 === 10 ? 'checked' : ''}>
+                    <label class="btn btn-outline-primary" for="f2_10">10</label>
+                    <input type="radio" class="btn-check" name="nature_f2" id="f2_0" value="0" ${v2 === 0 ? 'checked' : ''}>
+                    <label class="btn btn-outline-primary" for="f2_0">0</label>
+                </div>
+            </div>
         `;
-        scoreInputs.appendChild(inputGroup);
-    });
+    } else {
+        // Créer les inputs pour chaque flèche (autres types)
+        row.arrows.forEach((arrow, arrowIndex) => {
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'mb-3';
+            inputGroup.innerHTML = `
+                <label for="arrow${arrowIndex}" class="form-label">Flèche ${arrowIndex + 1}</label>
+                <input type="number" class="form-control" id="arrow${arrowIndex}" 
+                       min="0" max="10" value="${arrow.value || 0}" 
+                       onchange="updateArrowValue(${arrowIndex}, this.value)">
+            `;
+            scoreInputs.appendChild(inputGroup);
+        });
+        if (targetTab) targetTab.style.display = '';
+    }
     
     // Sauvegarder la config pour la cible
     targetConfig = config;
@@ -875,7 +1015,6 @@ function openScoreModal(rowIndex) {
     targetHits = existingHits;
     
     // Initialiser la cible interactive quand on passe à l'onglet cible
-    const targetTab = document.getElementById('target-tab');
     const targetPane = document.getElementById('targetMode');
     
     if (targetTab && targetPane) {
@@ -953,26 +1092,31 @@ function saveVolleyScores() {
     const sheet = userSheets[currentModalUserIndex];
     const row = sheet.scoreRows[currentModalRow];
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
+    const isNature = getShootingConfigKey(selectedShootingType) === 'Nature';
     
-    // Vérifier si on est en mode cible interactive
-    const targetTab = document.getElementById('target-tab');
-    const targetPane = document.getElementById('targetMode');
-    const isTargetMode = targetPane && targetPane.classList.contains('active');
-    
-    if (isTargetMode && targetScores.length > 0) {
-        // Utiliser les scores de la cible interactive (exactement comme dans scored-training-show.js)
-        targetScores.forEach((score, index) => {
-            if (row.arrows[index] && score !== null && score !== undefined) {
-                row.arrows[index].value = score;
-                // Les coordonnées sont déjà dans targetCoordinates
-                if (targetCoordinates[index]) {
-                    row.arrows[index].hit_x = targetCoordinates[index].x;
-                    row.arrows[index].hit_y = targetCoordinates[index].y;
-                }
-            }
-        });
+    if (isNature) {
+        // Lire les boutons d'option Nature
+        const f1 = document.querySelector('input[name="nature_f1"]:checked');
+        const f2 = document.querySelector('input[name="nature_f2"]:checked');
+        if (row.arrows[0]) row.arrows[0].value = f1 ? parseInt(f1.value, 10) : null;
+        if (row.arrows[1]) row.arrows[1].value = f2 ? parseInt(f2.value, 10) : null;
     } else {
-        // Les valeurs sont déjà mises à jour via updateArrowValue
+        // Vérifier si on est en mode cible interactive
+        const targetPane = document.getElementById('targetMode');
+        const isTargetMode = targetPane && targetPane.classList.contains('active');
+        
+        if (isTargetMode && targetScores.length > 0) {
+            targetScores.forEach((score, index) => {
+                if (row.arrows[index] && score !== null && score !== undefined) {
+                    row.arrows[index].value = score;
+                    if (targetCoordinates[index]) {
+                        row.arrows[index].hit_x = targetCoordinates[index].x;
+                        row.arrows[index].hit_y = targetCoordinates[index].y;
+                    }
+                }
+            });
+        }
+        // Sinon les valeurs sont déjà mises à jour via updateArrowValue
     }
     
     // Réinitialiser les variables de cible
