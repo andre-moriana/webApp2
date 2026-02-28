@@ -942,7 +942,7 @@ function getNatureCrossColumn(score1, score2) {
 function updateScoreTable(sheet) {
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     const isNature = (getShootingConfigKey(selectedShootingType) === 'Nature' || getShootingConfigKey(selectedShootingType) === 'Nature2x21');
-    const scoresLocked = !!sheet.signed || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
+    const scoresLocked = !!exportedToConcours || !!sheet.signed || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
     const tableBody = document.getElementById('scoreTableBody');
     
     // Nettoyer le tableau
@@ -1199,7 +1199,7 @@ function openScoreModal(rowIndex) {
     if (userSheets.length === 0) return;
     
     const sheet = userSheets[currentUserIndex];
-    if (!!sheet.signed || (!!scorerSignature && !!archerSignatures[currentUserIndex])) {
+    if (!!exportedToConcours || !!sheet.signed || (!!scorerSignature && !!archerSignatures[currentUserIndex])) {
         showStatus('Feuille signée : les scores ne sont plus modifiables.', 'info');
         return;
     }
