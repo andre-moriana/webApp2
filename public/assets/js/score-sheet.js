@@ -145,6 +145,26 @@ function initializeScoreSheet() {
         scoreModal = new bootstrap.Modal(modalElement);
     }
     
+    // Délégation : clic sur N° cible / Volée — vérifier feuille signée avant d'ouvrir le modal
+    const scoreTableSection = document.getElementById('scoreTableSection');
+    if (scoreTableSection) {
+        scoreTableSection.addEventListener('click', function(e) {
+            const btn = e.target.closest('.volley-open-btn');
+            if (!btn || btn.classList.contains('volley-disabled')) return;
+            e.preventDefault();
+            const idx = parseInt(btn.getAttribute('data-row-index'), 10);
+            if (isNaN(idx)) return;
+            const sheet = userSheets[currentUserIndex];
+            if (!sheet) return;
+            const locked = !!sheet.signed || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
+            if (locked) {
+                showStatus('Feuille signée : les scores ne sont plus modifiables.', 'info');
+                return;
+            }
+            openScoreModal(idx);
+        });
+    }
+    
     // Initialiser le select catégories (placeholder) pour que loadCategoriesForDiscipline soit bien relié
     loadCategoriesForDiscipline(null);
 }
@@ -1059,8 +1079,8 @@ function updateScoreTable(sheet) {
             const rowHtml = document.createElement('tr');
             rowHtml.className = (index % 2 === 1) ? 'feuille-marque-row-even' : '';
             const volleyBtnNature = scoresLocked
-                ? `<span class="btn btn-sm btn-outline-secondary disabled" title="Feuille signée, scores non modifiables">${row.endNumber}</span>`
-                : `<button class="btn btn-sm btn-outline-primary" onclick="openScoreModal(${index})">${row.endNumber}</button>`;
+                ? `<span class="btn btn-sm btn-outline-secondary volley-disabled" title="Feuille signée, scores non modifiables" style="pointer-events:none;cursor:not-allowed">${row.endNumber}</span>`
+                : `<button type="button" class="btn btn-sm btn-outline-primary volley-open-btn" data-row-index="${index}" title="Modifier la volée">${row.endNumber}</button>`;
             rowHtml.innerHTML = `
                 <td class="volley-col">
                     ${volleyBtnNature}
@@ -1083,8 +1103,8 @@ function updateScoreTable(sheet) {
             const rowHtml = document.createElement('tr');
             rowHtml.className = hasSeries && row.seriesNumber === 2 ? 'second-series' : '';
             const volleyBtn = scoresLocked
-                ? `<span class="btn btn-sm btn-outline-secondary disabled" title="Feuille signée, scores non modifiables">${row.endNumber}</span>`
-                : `<button class="btn btn-sm btn-outline-primary" onclick="openScoreModal(${index})">${row.endNumber}</button>`;
+                ? `<span class="btn btn-sm btn-outline-secondary volley-disabled" title="Feuille signée, scores non modifiables" style="pointer-events:none;cursor:not-allowed">${row.endNumber}</span>`
+                : `<button type="button" class="btn btn-sm btn-outline-primary volley-open-btn" data-row-index="${index}" title="Modifier la volée">${row.endNumber}</button>`;
             rowHtml.innerHTML = `
                 <td class="volley-col">
                     ${volleyBtn}
