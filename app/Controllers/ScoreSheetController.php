@@ -566,6 +566,12 @@ class ScoreSheetController {
         $exported = 0;
         $errors = [];
         $licenceToInscription = null;
+        $normalizeLicence = function ($lic) {
+            $lic = trim((string)$lic);
+            if ($lic === '') return '';
+            if (strlen($lic) === 7 && ctype_digit($lic)) return '0' . $lic;
+            return $lic;
+        };
         foreach ($data['user_sheets'] as $sheet) {
             $inscriptionId = isset($sheet['inscription_id']) ? (int)$sheet['inscription_id'] : 0;
             if ($inscriptionId <= 0 && !empty($sheet['license_number'])) {
@@ -573,22 +579,37 @@ class ScoreSheetController {
                     $licenceToInscription = [];
                     try {
                         $inscResp = $this->apiService->getConcoursInscriptions($concoursId);
-                        $inscriptions = [];
-                        if (!empty($inscResp['success']) && isset($inscResp['data'])) {
-                            $inscriptions = is_array($inscResp['data']) ? $inscResp['data'] : [];
-                        }
-                        foreach ($inscriptions as $i) {
-                            $lic = trim((string)($i['numero_licence'] ?? $i['numeroLicence'] ?? ''));
-                            if ($lic !== '') {
-                                $licenceToInscription[$lic] = (int)($i['id'] ?? $i['id_inscription'] ?? 0);
+                        if (is_array($inscResp) && isset($inscResp['success']) && !$inscResp['success'] && isset($inscResp['message'])) {
+                            $errors[] = 'API inscriptions: ' . $inscResp['message'];
+                        } else {
+                            $inscriptions = [];
+                            if (isset($inscResp['data']) && is_array($inscResp['data'])) {
+                                $inscriptions = $inscResp['data'];
+                            } elseif (is_array($inscResp) && isset($inscResp[0])) {
+                                $inscriptions = $inscResp;
+                            }
+                            foreach ($inscriptions as $i) {
+                                $lic = $normalizeLicence($i['numero_licence'] ?? $i['numeroLicence'] ?? '');
+                                if ($lic !== '') {
+                                    $idInsc = (int)($i['id'] ?? $i['id_inscription'] ?? 0);
+                                    if ($idInsc > 0) {
+                                        $licenceToInscription[$lic] = $idInsc;
+                                        $lic2 = (strlen($lic) === 8 && $lic[0] === '0') ? substr($lic, 1) : (strlen($lic) === 7 ? '0' . $lic : '');
+                                        if ($lic2 !== '' && $lic2 !== $lic) $licenceToInscription[$lic2] = $idInsc;
+                                    }
+                                }
                             }
                         }
                     } catch (Exception $e) {
                         $errors[] = 'Impossible de récupérer les inscriptions: ' . $e->getMessage();
                     }
                 }
-                $lic = trim((string)$sheet['license_number']);
+                $lic = $normalizeLicence($sheet['license_number']);
                 $inscriptionId = $licenceToInscription[$lic] ?? 0;
+                if ($inscriptionId <= 0 && $lic !== '') {
+                    $licAlt = (strlen($lic) === 8 && $lic[0] === '0') ? substr($lic, 1) : (strlen($lic) === 7 ? '0' . $lic : '');
+                    if ($licAlt !== '') $inscriptionId = $licenceToInscription[$licAlt] ?? 0;
+                }
             }
             if ($inscriptionId <= 0) {
                 $errors[] = 'Inscription introuvable pour licence ' . ($sheet['license_number'] ?? '?');
