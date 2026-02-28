@@ -2336,14 +2336,21 @@ async function exportToConcours() {
             credentials: 'same-origin',
             body: JSON.stringify(payload)
         });
+        console.log('Export: réponse reçue', { status: resp.status, ok: resp.ok, contentType: resp.headers.get('Content-Type') });
         if (resp.status === 401) {
             showStatus('Session expirée. Veuillez vous reconnecter.', 'danger');
             return;
         }
-        const result = await resp.json().catch((parseErr) => {
-            console.error('Export: réponse non-JSON (status=' + resp.status + ')', parseErr);
-            return { success: false, message: 'Réponse serveur invalide (status ' + resp.status + '). Vérifiez la console F12.' };
-        });
+        const rawText = await resp.text();
+        const result = (() => {
+            try {
+                return JSON.parse(rawText);
+            } catch (e) {
+                console.error('Export: réponse non-JSON', { status: resp.status, preview: rawText?.slice(0, 200) });
+                return { success: false, message: 'Réponse serveur invalide (status ' + resp.status + '). Vérifiez la console.' };
+            }
+        })();
+        console.log('Export: result=', result);
         if (result.success) {
             showStatus(result.message || 'Scores exportés vers le concours avec succès.', 'success');
         } else {
