@@ -354,7 +354,15 @@ if ($isNature) {
                         <div class="feuille-marque-archer-block">
                             <div class="feuille-marque-archer-header border-bottom pb-1 mb-2">
                                 <div class="d-flex justify-content-between align-items-center"><span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong></span><span class="feuille-marque-blason text-nowrap" style="font-size: 1.15em;"><strong>N° peloton : <?= (int)($f['peloton'] ?? 0) ?></strong></span></div>
-                                <div class="d-flex justify-content-between align-items-center"><span><?= htmlspecialchars($archer['club_nom'] ?? $archer['club_name'] ?? '—') ?></span><span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></div>
+                                <div class="d-flex justify-content-between align-items-center"><span><?= htmlspecialchars($archer['club_nom'] ?? $archer['club_name'] ?? '—') ?></span><span class="feuille-marque-categorie"><?php
+                                    $piquetLibelle = isset($archer['piquet']) && $archer['piquet'] !== '' ? ucfirst(mb_strtolower(trim($archer['piquet']))) : '';
+                                    $catLibelle = htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—';
+                                    if ($piquetLibelle !== '') {
+                                        echo 'Piquet : ' . htmlspecialchars($piquetLibelle);
+                                        if ($catLibelle !== '—') echo ' — ';
+                                    }
+                                    echo $catLibelle !== '—' ? 'Cat. : ' . $catLibelle : ($piquetLibelle === '' ? $catLibelle : '');
+                                ?></span></div>
                                 <div class="mb-1"></div>
                                 <div class="d-flex justify-content-between align-items-center"><span>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?></span><span>N° départ <?= (int)($f['depart'] ?? $archer['depart'] ?? 0) ?> — N° tir <?= isset($archer['numero_tir']) && $archer['numero_tir'] !== '' && $archer['numero_tir'] !== null ? (int)$archer['numero_tir'] : '—' ?></span></div>
                             </div>
