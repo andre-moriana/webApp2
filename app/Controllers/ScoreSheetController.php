@@ -649,6 +649,8 @@ class ScoreSheetController {
         $_POST['depart'] = $data['depart'] ?? '';
         $_POST['format'] = $data['format'] ?? '';
 
+        error_log('exportToConcours: nb_scores=' . count($scores) . ', inscription_ids=' . implode(',', array_keys($scores)));
+
         $concoursController = new ConcoursController();
         $concoursController->storeScores($concoursId, $scores, true);
     }

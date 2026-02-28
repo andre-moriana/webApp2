@@ -2255,6 +2255,7 @@ class ConcoursController {
 
         $saved = 0;
         $errors = [];
+        $lastApiResponse = null;
 
         foreach ($scores as $inscriptionId => $data) {
             if (empty($inscriptionId) || !is_array($data)) continue;
@@ -2318,11 +2319,19 @@ class ConcoursController {
                     $payload['serie2_nb_9'] = $serie2_nb_9;
                 }
                 $response = $this->apiService->makeRequest("concours/{$concoursId}/resultat", 'POST', $payload);
-                if ($response['success'] ?? false) {
+                $apiSuccess = $response['success'] ?? false;
+                error_log('storeScores: inscription_id=' . $inscriptionId . ' api_success=' . ($apiSuccess ? '1' : '0') . ' http=' . ($response['status_code'] ?? '?') . ' resp=' . json_encode($response['data'] ?? []));
+                if ($apiSuccess) {
                     $saved++;
                 } else {
-                    $apiError = $response['data']['error'] ?? $response['error'] ?? $response['message'] ?? 'Erreur';
-                    $errors[] = 'Inscription ' . $inscriptionId . ': ' . $apiError;
+                    $lastApiResponse = $response;
+                    $apiData = $response['data'] ?? [];
+                    $apiError = $apiData['error'] ?? $response['error'] ?? $response['message'] ?? 'Erreur';
+                    $errDetail = 'Inscription ' . $inscriptionId . ': ' . $apiError;
+                    if (!empty($response['status_code']) && $response['status_code'] >= 400) {
+                        $errDetail .= ' (HTTP ' . $response['status_code'] . ')';
+                    }
+                    $errors[] = $errDetail;
                 }
             } catch (Exception $e) {
                 $errors[] = 'Inscription ' . $inscriptionId . ': ' . $e->getMessage();
@@ -2352,12 +2361,17 @@ class ConcoursController {
         }
         if ($returnJson) {
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode([
+            $msg = $saved > 0 ? $saved . ' score(s) enregistré(s) avec succès.' : (implode(' ; ', $errors) ?: 'Aucun score enregistré.');
+            $json = [
                 'success' => $saved > 0,
-                'message' => $saved > 0 ? $saved . ' score(s) enregistré(s) avec succès.' : (implode(' ; ', $errors) ?: 'Aucun score enregistré.'),
+                'message' => $msg,
                 'saved' => $saved,
                 'errors' => $errors
-            ], JSON_UNESCAPED_UNICODE);
+            ];
+            if (!empty($errors) && $lastApiResponse !== null) {
+                $json['debug_api_response'] = $lastApiResponse;
+            }
+            echo json_encode($json, JSON_UNESCAPED_UNICODE);
             exit;
         }
         header('Location: ' . $redirectUrl);
