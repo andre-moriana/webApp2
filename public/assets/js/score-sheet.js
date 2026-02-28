@@ -1402,6 +1402,12 @@ async function saveVolleyScores() {
     // Enregistrer en base : scored_ends (valeur calculée de la volée) et scored_shots (valeur de chaque flèche),
     // associés à la session (scored_trainings) de l'archer créée précédemment à l'import.
     const trainingId = sheet.scoredTrainingId;
+    if (sheet.signed) {
+        showStatus('Feuille signée : les scores ne sont plus modifiables.', 'info');
+        scoreModal.hide();
+        displayCurrentArcher();
+        return;
+    }
     if (trainingId && !row.savedToServer) {
         try {
             const addEndPayload = {
