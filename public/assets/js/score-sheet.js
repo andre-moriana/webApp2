@@ -600,8 +600,8 @@ function setupLicenseSearch() {
     
     // Utiliser la délégation d'événements
     archerInfoSection.addEventListener('input', function(e) {
-        // Vérifier si c'est le champ de licence
         if (e.target.id === 'archerLicense') {
+            if (e.target.readOnly) return;
             const licenseNumber = e.target.value.trim();
             
             // Retirer l'indicateur de recherche précédent
@@ -820,6 +820,23 @@ function displayCurrentArcher() {
     if (licenseInput) licenseInput.value = sheet.archerInfo.licenseNumber || '';
     if (categorySelect) categorySelect.value = sheet.archerInfo.category || '';
     
+    const fromConcoursImport = !!(sheet.inscriptionId);
+    if (nameInput) {
+        nameInput.readOnly = fromConcoursImport;
+        nameInput.classList.toggle('bg-light', fromConcoursImport);
+        nameInput.title = fromConcoursImport ? 'Champ verrouillé (import concours)' : '';
+    }
+    if (licenseInput) {
+        licenseInput.readOnly = fromConcoursImport;
+        licenseInput.classList.toggle('bg-light', fromConcoursImport);
+        licenseInput.title = fromConcoursImport ? 'Champ verrouillé (import concours)' : '';
+    }
+    if (categorySelect) {
+        categorySelect.disabled = fromConcoursImport;
+        categorySelect.classList.toggle('bg-light', fromConcoursImport);
+        categorySelect.title = fromConcoursImport ? 'Champ verrouillé (import concours)' : '';
+    }
+    
     // Mettre à jour le tableau des scores (uniquement si type de tir et config valides)
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     if (config) {
@@ -845,6 +862,7 @@ function getNatureCrossColumn(score1, score2) {
 function updateScoreTable(sheet) {
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     const isNature = (getShootingConfigKey(selectedShootingType) === 'Nature' || getShootingConfigKey(selectedShootingType) === 'Nature2x21');
+    const scoresLocked = !!scorerSignature && !!archerSignatures[currentUserIndex];
     const tableBody = document.getElementById('scoreTableBody');
     
     // Nettoyer le tableau
@@ -963,11 +981,12 @@ function updateScoreTable(sheet) {
             const f2_0 = (s2 === 0) ? '✗' : '';
             const rowHtml = document.createElement('tr');
             rowHtml.className = (index % 2 === 1) ? 'feuille-marque-row-even' : '';
+            const volleyBtnNature = scoresLocked
+                ? `<span class="btn btn-sm btn-outline-secondary disabled" title="Feuille signée, scores non modifiables">${row.endNumber}</span>`
+                : `<button class="btn btn-sm btn-outline-primary" onclick="openScoreModal(${index})">${row.endNumber}</button>`;
             rowHtml.innerHTML = `
                 <td class="volley-col">
-                    <button class="btn btn-sm btn-outline-primary" onclick="openScoreModal(${index})">
-                        ${row.endNumber}
-                    </button>
+                    ${volleyBtnNature}
                 </td>
                 <td class="arrow-col nature-score">${f1_20}</td>
                 <td class="arrow-col nature-score">${f1_15}</td>
@@ -986,11 +1005,12 @@ function updateScoreTable(sheet) {
         } else {
             const rowHtml = document.createElement('tr');
             rowHtml.className = hasSeries && row.seriesNumber === 2 ? 'second-series' : '';
+            const volleyBtn = scoresLocked
+                ? `<span class="btn btn-sm btn-outline-secondary disabled" title="Feuille signée, scores non modifiables">${row.endNumber}</span>`
+                : `<button class="btn btn-sm btn-outline-primary" onclick="openScoreModal(${index})">${row.endNumber}</button>`;
             rowHtml.innerHTML = `
                 <td class="volley-col">
-                    <button class="btn btn-sm btn-outline-primary" onclick="openScoreModal(${index})">
-                        ${row.endNumber}
-                    </button>
+                    ${volleyBtn}
                 </td>
                 ${row.arrows.map((arrow, arrowIndex) => `
                     <td class="arrow-col">${arrow.value > 0 ? arrow.value : ''}</td>
@@ -1089,6 +1109,7 @@ function saveCurrentArcherInfo() {
     if (userSheets.length === 0) return;
     
     const sheet = userSheets[currentUserIndex];
+    if (sheet.inscriptionId) return;
     sheet.archerInfo.name = document.getElementById('archerName').value;
     sheet.archerInfo.licenseNumber = document.getElementById('archerLicense').value;
     sheet.archerInfo.category = document.getElementById('archerCategory').value;
@@ -1097,10 +1118,15 @@ function saveCurrentArcherInfo() {
 function openScoreModal(rowIndex) {
     if (userSheets.length === 0) return;
     
+    const sheet = userSheets[currentUserIndex];
+    if (!!scorerSignature && !!archerSignatures[currentUserIndex]) {
+        showStatus('Feuille signée : les scores ne sont plus modifiables.', 'info');
+        return;
+    }
+    
     currentModalRow = rowIndex;
     currentModalUserIndex = currentUserIndex;
     
-    const sheet = userSheets[currentUserIndex];
     const row = sheet.scoreRows[rowIndex];
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     const isNature = (getShootingConfigKey(selectedShootingType) === 'Nature' || getShootingConfigKey(selectedShootingType) === 'Nature2x21');
