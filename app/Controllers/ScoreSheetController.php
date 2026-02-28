@@ -352,6 +352,9 @@ class ScoreSheetController {
         }
         try {
             $response = $this->apiService->getScoredTrainingByIdWithUser($trainingId, $userId ?? $_SESSION['user']['id']);
+            if (empty($response['success']) || empty($response['data'])) {
+                $response = $this->apiService->getScoredTrainingById($trainingId);
+            }
             if (!empty($response['success']) && !empty($response['data'])) {
                 $data = $response['data'];
                 if (isset($data['data']) && is_array($data['data'])) {
