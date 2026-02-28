@@ -725,17 +725,20 @@ function updateScoreTable(sheet) {
                     <th colspan="3">Flèche 2</th>
                     <th class="total-col">Total 2 flèches</th>
                     <th id="cumulativeHeader" class="cumulative-col">Cumul</th>
-                    <th>20-15</th>
-                    <th>20-10</th>
-                    <th>15-15</th>
-                    <th>15-10</th>
+                    <th class="nature-cross-header">20-15</th>
+                    <th class="nature-cross-header">20-10</th>
+                    <th class="nature-cross-header">15-15</th>
+                    <th class="nature-cross-header">15-10</th>
                 </tr>
                 <tr>
                     <th></th>
                     <th>20</th><th>15</th><th>0</th>
                     <th>15</th><th>10</th><th>0</th>
                     <th></th><th></th>
-                    <th></th><th></th><th></th><th></th>
+                    <th class="nature-cross-header"></th>
+                    <th class="nature-cross-header"></th>
+                    <th class="nature-cross-header"></th>
+                    <th class="nature-cross-header"></th>
                 </tr>
             `;
         }
@@ -859,6 +862,15 @@ function updateScoreTable(sheet) {
     });
     
     if (isNature) {
+        // Totaux 20-15, 20-10, 15-15, 15-10
+        let count20_15 = 0, count20_10 = 0, count15_15 = 0, count15_10 = 0;
+        sheet.scoreRows.forEach(row => {
+            const cross = getNatureCrossColumn(row.arrows[0]?.value, row.arrows[1]?.value);
+            if (cross === '20-15') count20_15++;
+            else if (cross === '20-10') count20_10++;
+            else if (cross === '15-15') count15_15++;
+            else if (cross === '15-10') count15_10++;
+        });
         // Ligne "Total des cibles" en pied du tableau Nature
         const totalRow = document.createElement('tr');
         totalRow.className = 'table-secondary feuille-marque-ligne-resume';
@@ -867,7 +879,10 @@ function updateScoreTable(sheet) {
             <td colspan="7"><strong>Total des cibles</strong></td>
             <td class="total-col"><strong>${grandTotal}</strong></td>
             <td class="cumulative-col"></td>
-            <td></td><td></td><td></td><td></td>
+            <td class="nature-cross"><strong>${count20_15}</strong></td>
+            <td class="nature-cross"><strong>${count20_10}</strong></td>
+            <td class="nature-cross"><strong>${count15_15}</strong></td>
+            <td class="nature-cross"><strong>${count15_10}</strong></td>
         `;
         tableBody.appendChild(totalRow);
         document.getElementById('grandTotal').textContent = grandTotal;
