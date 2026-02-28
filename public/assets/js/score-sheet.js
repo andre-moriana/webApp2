@@ -577,6 +577,7 @@ async function prefillArchersFromConcours() {
             });
             const result = await resp.json().catch(() => ({}));
             if (result.success && Array.isArray(result.data?.training_ids)) {
+                if (result.data.exported_to_concours === true) exportedToConcours = true;
                 result.data.training_ids.forEach((tid, i) => {
                     const sheetIndex = indicesWithLicence[i];
                     if (sheetIndex != null && userSheets[sheetIndex] && tid != null) {

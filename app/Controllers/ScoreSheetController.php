@@ -144,6 +144,7 @@ class ScoreSheetController {
         $notesSuffix = $feuilleMarqueJson !== '[]' ? ', __FEUILLE_MARQUE__:' . $feuilleMarqueJson : '';
         $trainingIds = [];
         $existingEndsByIndex = [];
+        $exportedToConcours = false;
         foreach ($data['user_sheets'] as $userSheet) {
             $archerInfo = $userSheet['archer_info'] ?? [];
             $licence = trim((string)($archerInfo['licenseNumber'] ?? ''));
@@ -223,6 +224,10 @@ class ScoreSheetController {
                     ? $existingTraining['ends']
                     : null;
                 $existingEndsByIndex[] = $endsForSheet;
+                $notesExisting = (string)($existingTraining['notes'] ?? '');
+                if (strpos($notesExisting, '__EXPORTED_TO_CONCOURS__:1') !== false) {
+                    $exportedToConcours = true;
+                }
                 continue;
             }
             $archerName = $archerInfo['name'] ?? 'Archer';
@@ -257,6 +262,7 @@ class ScoreSheetController {
             'data' => [
                 'training_ids' => $trainingIds,
                 'existing_ends_by_index' => $existingEndsByIndex,
+                'exported_to_concours' => $exportedToConcours,
             ],
         ]);
     }
