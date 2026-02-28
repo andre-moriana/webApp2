@@ -1457,7 +1457,7 @@ function saveScoreSheet(options = {}) {
     
     // Préparer les données à envoyer
     const dataToSend = {
-        shooting_type: getShootingConfigKey(selectedShootingType) || selectedShootingType,
+        shooting_type: selectedShootingType,
         training_title: trainingTitle || '',
         user_sheets: userSheets.map((sheet, userIndex) => {
             // Vérifier si l'archer a des scores
