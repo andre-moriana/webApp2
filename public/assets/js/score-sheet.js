@@ -409,6 +409,37 @@ async function prefillArchersFromConcours() {
         }
     });
     
+    // Créer les sessions (scored_trainings) en base pour chaque archer importé
+    try {
+        const shootingTypeKey = getShootingConfigKey(selectedShootingType);
+        const payload = {
+            shooting_type: shootingTypeKey,
+            training_title: document.getElementById('trainingTitle')?.value || '',
+            user_sheets: userSheets.slice(0, archers.length).map(s => ({
+                archer_info: {
+                    name: s.archerInfo?.name ?? '',
+                    licenseNumber: s.archerInfo?.licenseNumber ?? '',
+                    category: s.archerInfo?.category ?? '',
+                    gender: s.archerInfo?.gender ?? ''
+                },
+                user_id: s.userId || null
+            }))
+        };
+        const resp = await fetch('/score-sheet/create-sessions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await resp.json().catch(() => ({}));
+        if (result.success && Array.isArray(result.data?.training_ids)) {
+            result.data.training_ids.forEach((tid, i) => {
+                if (userSheets[i] && tid != null) userSheets[i].scoredTrainingId = tid;
+            });
+        }
+    } catch (e) {
+        console.warn('Création des sessions à l\'import:', e);
+    }
+    
     // Afficher les blocs navigation + infos archer + tableau des scores pour que le préremplissage soit visible
     const navEl = document.getElementById('archerNavigation');
     const archerSectionEl = document.getElementById('archerInfoSection');
@@ -1101,7 +1132,7 @@ function updateArrowValue(arrowIndex, value) {
     }
 }
 
-function saveVolleyScores() {
+async function saveVolleyScores() {
     if (currentModalUserIndex === null || currentModalRow === null) return;
     
     const sheet = userSheets[currentModalUserIndex];
@@ -1132,6 +1163,42 @@ function saveVolleyScores() {
             });
         }
         // Sinon les valeurs sont déjà mises à jour via updateArrowValue
+    }
+    
+    // Recalculer total volée et cumul
+    row.endTotal = row.arrows.reduce((sum, arrow) => sum + (arrow.value || 0), 0);
+    let cumul = 0;
+    const sheetRows = sheet.scoreRows;
+    for (let i = 0; i < sheetRows.length; i++) {
+        cumul += sheetRows[i].arrows.reduce((s, a) => s + (a.value || 0), 0);
+        sheetRows[i].cumulativeTotal = cumul;
+    }
+    
+    // Enregistrer en base (scored_ends + scored_shots) si session créée à l'import
+    const trainingId = sheet.scoredTrainingId;
+    if (trainingId && !row.savedToServer) {
+        try {
+            const addEndPayload = {
+                training_id: trainingId,
+                end_number: row.endNumber,
+                end_total: row.endTotal,
+                arrows: row.arrows.map(a => ({
+                    value: a.value ?? 0,
+                    hit_x: a.hit_x,
+                    hit_y: a.hit_y
+                })),
+                comment: row.comment || ''
+            };
+            const addResp = await fetch('/score-sheet/add-end', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(addEndPayload)
+            });
+            const addResult = await addResp.json().catch(() => ({}));
+            if (addResult.success) row.savedToServer = true;
+        } catch (err) {
+            console.warn('Enregistrement volée:', err);
+        }
     }
     
     // Réinitialiser les variables de cible
@@ -1179,7 +1246,7 @@ function saveScoreSheet() {
                 signatures.scorer = scorerSignature;
             }
             
-            return {
+            const out = {
                 archer_info: sheet.archerInfo,
                 user_id: sheet.userId || null,
                 signature_info: signatureInfo,
@@ -1197,6 +1264,8 @@ function saveScoreSheet() {
                     comment: row.comment || ''
                 }))
             };
+            if (sheet.scoredTrainingId) out.scored_training_id = sheet.scoredTrainingId;
+            return out;
         }).filter(sheet => sheet !== null)
     };
     

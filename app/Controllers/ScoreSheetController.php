@@ -101,6 +101,146 @@ class ScoreSheetController {
         }
     }
     
+    /**
+     * Créer les sessions (scored_trainings) pour chaque archer lors de l'import automatique.
+     * POST body: { shooting_type, training_title, user_sheets: [ { archer_info, user_id }, ... ] }
+     * Retourne: { success, data: { training_ids: [ id0, id1, ... ] } }
+     */
+    public function createSessions() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Non connecté'], 401);
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Méthode non autorisée']);
+        }
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+        if (empty($data) || !isset($data['user_sheets']) || !isset($data['shooting_type'])) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Données manquantes']);
+        }
+        $shootingConfigs = [
+            'Salle' => ['total_ends' => 20, 'arrows_per_end' => 3, 'total_arrows' => 60],
+            'TAE' => ['total_ends' => 12, 'arrows_per_end' => 6, 'total_arrows' => 72],
+            'Nature' => ['total_ends' => 21, 'arrows_per_end' => 2, 'total_arrows' => 42],
+            '3D' => ['total_ends' => 24, 'arrows_per_end' => 2, 'total_arrows' => 48],
+            'Campagne' => ['total_ends' => 24, 'arrows_per_end' => 3, 'total_arrows' => 72],
+        ];
+        $shootingType = $data['shooting_type'];
+        $trainingTitle = $data['training_title'] ?? '';
+        $config = $shootingConfigs[$shootingType] ?? null;
+        if (!$config) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Type de tir invalide']);
+        }
+        $trainingIds = [];
+        foreach ($data['user_sheets'] as $userSheet) {
+            $archerInfo = $userSheet['archer_info'] ?? [];
+            $targetUserId = $userSheet['user_id'] ?? null;
+            if (!$targetUserId && !empty($archerInfo['licenseNumber'])) {
+                try {
+                    $baseUrl = $_ENV["API_BASE_URL"] ?? "https://api.arctraining.fr/api";
+                    $url = $baseUrl . "/users?licence_number=" . urlencode($archerInfo['licenseNumber']);
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                        'Authorization: Bearer ' . ($_SESSION['token'] ?? ''),
+                        'Content-Type: application/json'
+                    ]);
+                    $response = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+                    if ($httpCode === 200) {
+                        $userData = json_decode($response, true);
+                        if (!empty($userData['success']) && !empty($userData['data']['id'])) {
+                            $targetUserId = $userData['data']['id'];
+                        }
+                    }
+                } catch (Exception $e) {
+                    // continuer sans user_id
+                }
+            }
+            $archerName = $archerInfo['name'] ?? 'Archer';
+            $notesParts = [
+                'Licence: ' . ($archerInfo['licenseNumber'] ?? 'N/A'),
+                'Catégorie: ' . ($archerInfo['category'] ?? 'N/A'),
+            ];
+            $finalNotes = implode(', ', array_filter($notesParts));
+            $finalTitle = $trainingTitle ? $trainingTitle . ' - ' . $archerName : $shootingType . ' - ' . $archerName . ' - ' . date('d/m/Y');
+            $createData = [
+                'title' => $finalTitle,
+                'total_ends' => $config['total_ends'],
+                'arrows_per_end' => $config['arrows_per_end'],
+                'total_arrows' => $config['total_arrows'],
+                'shooting_type' => $shootingType,
+                'notes' => $finalNotes,
+                'is_score_sheet' => true,
+            ];
+            if ($targetUserId) {
+                $createData['user_id'] = $targetUserId;
+            }
+            $response = $this->apiService->createScoredTraining($createData);
+            if (!empty($response['success']) && !empty($response['data']['id'])) {
+                $trainingIds[] = (int)$response['data']['id'];
+            } else {
+                $trainingIds[] = null;
+            }
+        }
+        $this->sendJsonResponse(['success' => true, 'data' => ['training_ids' => $trainingIds]]);
+    }
+
+    /**
+     * Enregistrer une volée (scored_end) et ses flèches (scored_shots) en base.
+     * POST body: { training_id, end_number, end_total, arrows: [ { value, hit_x?, hit_y? } ], comment? }
+     */
+    public function addEnd() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Non connecté'], 401);
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Méthode non autorisée']);
+        }
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+        if (empty($data) || !isset($data['training_id']) || !isset($data['end_number'])) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Données manquantes: training_id et end_number requis']);
+        }
+        $trainingId = (int)$data['training_id'];
+        $endNumber = (int)$data['end_number'];
+        $endTotal = isset($data['end_total']) ? (int)$data['end_total'] : 0;
+        $arrows = $data['arrows'] ?? [];
+        $shots = [];
+        foreach ($arrows as $i => $arr) {
+            $shots[] = [
+                'arrow_number' => $i + 1,
+                'score' => (int)($arr['value'] ?? 0),
+                'hit_x' => isset($arr['hit_x']) ? (float)$arr['hit_x'] : null,
+                'hit_y' => isset($arr['hit_y']) ? (float)$arr['hit_y'] : null,
+            ];
+        }
+        if ($endTotal === 0 && !empty($shots)) {
+            $endTotal = array_sum(array_column($shots, 'score'));
+        }
+        $endData = [
+            'end_number' => $endNumber,
+            'total_score' => $endTotal,
+            'shots' => $shots,
+            'comment' => $data['comment'] ?? '',
+        ];
+        $response = $this->apiService->addScoredEnd($trainingId, $endData);
+        if (!empty($response['success'])) {
+            $this->sendJsonResponse([
+                'success' => true,
+                'message' => 'Volée enregistrée',
+                'data' => ['end_id' => $response['end_id'] ?? null]
+            ]);
+        } else {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => $response['message'] ?? 'Erreur lors de l\'enregistrement de la volée'
+            ], 400);
+        }
+    }
+
     public function save() {
         // Vérifier si l'utilisateur est connecté
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
@@ -208,12 +348,20 @@ class ScoreSheetController {
                 
                 $finalNotes = implode(', ', array_filter($notesParts));
                 
-                // Créer le titre
+                $trainingId = isset($userSheet['scored_training_id']) && $userSheet['scored_training_id'] ? (int)$userSheet['scored_training_id'] : null;
+                
+                // Si session déjà créée à l'import : mettre à jour les notes/signatures uniquement (les volées sont déjà enregistrées à la saisie)
+                if ($trainingId) {
+                    $this->apiService->updateScoredTrainingNote($trainingId, $finalNotes);
+                    $savedTrainings[] = ['training_id' => $trainingId, 'archer_name' => $archerName];
+                    continue;
+                }
+                
+                // Créer le tir compté (saisie manuelle sans import)
                 $finalTitle = $trainingTitle 
                     ? $trainingTitle . ' - ' . $archerName
                     : $shootingType . ' - ' . $archerName . ' - ' . date('d/m/Y');
                 
-                // Créer le tir compté
                 $createData = [
                     'title' => $finalTitle,
                     'total_ends' => $config['total_ends'],
@@ -223,7 +371,6 @@ class ScoreSheetController {
                     'notes' => $finalNotes,
                     'is_score_sheet' => true,
                 ];
-                
                 if ($targetUserId) {
                     $createData['user_id'] = $targetUserId;
                 }
@@ -233,7 +380,7 @@ class ScoreSheetController {
                 if ($response['success'] && isset($response['data']['id'])) {
                     $trainingId = $response['data']['id'];
                     
-                    // Ajouter les volées
+                    // Ajouter les volées (scored_ends + scored_shots)
                     foreach ($userSheet['score_rows'] as $row) {
                         $shots = [];
                         foreach ($row['arrows'] as $arrowIndex => $arrow) {
@@ -250,8 +397,13 @@ class ScoreSheetController {
                             $shots[] = $shot;
                         }
                         
+                        $endTotal = (int)($row['end_total'] ?? 0);
+                        if ($endTotal === 0 && !empty($shots)) {
+                            $endTotal = array_sum(array_column($shots, 'score'));
+                        }
                         $endData = [
                             'end_number' => $row['end_number'],
+                            'total_score' => $endTotal,
                             'shots' => $shots,
                             'comment' => $row['comment'] ?? '',
                         ];

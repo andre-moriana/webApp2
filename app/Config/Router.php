@@ -94,6 +94,8 @@ class Router {
         // Routes des feuilles de marque (protégées)
         $this->addRoute("GET", "/score-sheet", "ScoreSheetController@index");
         $this->addRoute("POST", "/score-sheet/save", "ScoreSheetController@save");
+        $this->addRoute("POST", "/score-sheet/create-sessions", "ScoreSheetController@createSessions");
+        $this->addRoute("POST", "/score-sheet/add-end", "ScoreSheetController@addEnd");
         
         // Routes des utilisateurs (protégées)
         $this->addRoute("GET", "/users", "UserController@index");
