@@ -113,6 +113,8 @@ if ($isPeloton && !empty($plansPeloton)) {
         foreach ($plans as $p) {
             $nom = trim($p['user_nom'] ?? '');
             $lic = trim($p['numero_licence'] ?? '');
+            $nt = isset($p['numero_tir']) && $p['numero_tir'] !== '' && $p['numero_tir'] !== null ? (int)$p['numero_tir'] : null;
+            $clubNom = $clubNomParLicence[$lic] ?? trim($p['club_nom'] ?? $p['club_name'] ?? '');
             if ($nom !== '' || $lic !== '') {
                 $flat[] = [
                     'numero_depart' => (int)($p['numero_depart'] ?? $departNum),
@@ -120,7 +122,9 @@ if ($isPeloton && !empty($plansPeloton)) {
                     'position_archer' => $p['position_archer'] ?? '',
                     'user_nom' => $nom,
                     'numero_licence' => $lic,
-                    'abv_categorie_classement' => $categorieParLicence[$lic] ?? trim($p['abv_categorie_classement'] ?? $p['categorie_classement'] ?? '')
+                    'abv_categorie_classement' => $categorieParLicence[$lic] ?? trim($p['abv_categorie_classement'] ?? $p['categorie_classement'] ?? ''),
+                    'numero_tir' => $nt,
+                    'club_nom' => $clubNom
                 ];
             }
         }
@@ -338,8 +342,10 @@ if ($isNature) {
                     <?php foreach ($f['archers'] as $archer): ?>
                         <div class="feuille-marque-archer-block">
                             <div class="feuille-marque-archer-header border-bottom pb-1 mb-2 d-flex justify-content-between align-items-start">
-                                <span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong><br>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?><br><span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></span>
-                                <span class="feuille-marque-blason text-nowrap">N° peloton : <?= (int)($f['peloton'] ?? 0) ?></span>
+                                <div class="d-flex justify-content-between align-items-center"><span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong></span><span class="feuille-marque-blason text-nowrap" style="font-size: 1.15em;"><strong>N° peloton : <?= (int)($f['peloton'] ?? 0) ?></strong></span></div>
+                                <div class="d-flex justify-content-between align-items-center"><span><?= htmlspecialchars($archer['club_nom'] ?? $archer['club_name'] ?? '—') ?></span><span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></div>
+                                <div class="mb-1"></div>
+                                <div class="d-flex justify-content-between align-items-center"><span>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?></span><span>N° départ <?= (int)($f['depart'] ?? $archer['depart'] ?? 0) ?> — N° tir <?= isset($archer['numero_tir']) && $archer['numero_tir'] !== '' && $archer['numero_tir'] !== null ? (int)$archer['numero_tir'] : '—' ?></span></div>
                             </div>
                             <?php if ($logoBgStyleNature !== ''): ?><div class="feuille-marque-table-nature-logo-wrap" style="<?= $logoBgStyleNature ?>"><?php endif; ?>
                             <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-nature<?= $logoBgStyleNature !== '' ? ' has-logo-bg' : '' ?>">
