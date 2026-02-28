@@ -1298,6 +1298,13 @@ function openScoreModal(rowIndex) {
         setTimeout(initializeTargetForModal, 100);
     }
     
+    // Ne pas ouvrir le modal si la feuille est signée (vérification juste avant affichage)
+    const scoresLocked = !!sheet.signed || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
+    if (scoresLocked) {
+        showStatus('Feuille signée : les scores ne sont plus modifiables.', 'info');
+        return;
+    }
+    
     scoreModal.show();
 }
 

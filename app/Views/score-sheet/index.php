@@ -266,7 +266,7 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-primary" onclick="saveVolleyScores()">Enregistrer</button>
+                <button type="button" class="btn btn-primary" id="scoreModalSaveBtn" onclick="saveVolleyScores()">Enregistrer</button>
             </div>
         </div>
     </div>
