@@ -296,6 +296,61 @@ function setupConcoursSelector() {
     });
 }
 
+/**
+ * Applique les volées et flèches d'une session existante sur la feuille de marque (scoreRows).
+ * @param {Object} sheet - userSheets[i]
+ * @param {Object} trainingData - { ends: [ { end_number, total_score, shots: [ { arrow_number, score, hit_x?, hit_y? } ] } ] }
+ */
+function applyTrainingToSheet(sheet, trainingData) {
+    if (!sheet?.scoreRows || !Array.isArray(trainingData?.ends) || trainingData.ends.length === 0) return;
+    const rows = sheet.scoreRows;
+    trainingData.ends.forEach(end => {
+        const rowIndex = (end.end_number || 0) - 1;
+        if (rowIndex < 0 || rowIndex >= rows.length) return;
+        const row = rows[rowIndex];
+        row.endTotal = end.total_score ?? 0;
+        row.savedToServer = true;
+        (end.shots || []).forEach(shot => {
+            const arrowIndex = (shot.arrow_number || 0) - 1;
+            if (arrowIndex >= 0 && row.arrows && row.arrows[arrowIndex]) {
+                row.arrows[arrowIndex].value = shot.score ?? 0;
+                if (shot.hit_x != null) row.arrows[arrowIndex].hit_x = shot.hit_x;
+                if (shot.hit_y != null) row.arrows[arrowIndex].hit_y = shot.hit_y;
+            }
+        });
+    });
+    // Recalcul du cumul
+    let cumul = 0;
+    rows.forEach(r => {
+        cumul += r.endTotal || 0;
+        r.cumulativeTotal = cumul;
+    });
+}
+
+/**
+ * Pour chaque feuille ayant un scoredTrainingId, charge la session (volées + flèches) et met à jour la feuille.
+ * @param {number[]} indicesWithLicence - indices des userSheets avec licence (ceux qui ont reçu un training_id)
+ */
+async function loadExistingTrainingData(indicesWithLicence) {
+    if (!indicesWithLicence || indicesWithLicence.length === 0) return;
+    const promises = indicesWithLicence.map(async (sheetIndex) => {
+        const sheet = userSheets[sheetIndex];
+        if (!sheet?.scoredTrainingId) return;
+        const userId = sheet.userId || null;
+        const url = `/score-sheet/load-training?training_id=${encodeURIComponent(sheet.scoredTrainingId)}${userId ? '&user_id=' + encodeURIComponent(userId) : ''}`;
+        try {
+            const resp = await fetch(url);
+            const result = await resp.json().catch(() => ({}));
+            if (result.success && result.data) {
+                applyTrainingToSheet(sheet, result.data);
+            }
+        } catch (e) {
+            console.warn('Chargement session existante pour feuille', sheetIndex, e);
+        }
+    });
+    await Promise.all(promises);
+}
+
 // Préremplir les archers depuis le concours (plan cible, peloton ou inscriptions)
 async function prefillArchersFromConcours() {
     const departSelect = document.getElementById('departSelect');
@@ -452,6 +507,8 @@ async function prefillArchersFromConcours() {
                         userSheets[sheetIndex].scoredTrainingId = tid;
                     }
                 });
+                // Si une session existante a été réutilisée, charger ses volées et flèches pour mettre à jour la feuille
+                await loadExistingTrainingData(indicesWithLicence);
             }
         }
     } catch (e) {

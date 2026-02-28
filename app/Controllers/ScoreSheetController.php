@@ -299,6 +299,35 @@ class ScoreSheetController {
         }
     }
 
+    /**
+     * Charge une session (scored_training) avec ses volées et flèches pour mettre à jour la feuille de marque.
+     * GET params: training_id, user_id (optionnel, pour coach/admin)
+     */
+    public function loadTraining() {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Non connecté'], 401);
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Méthode non autorisée']);
+        }
+        $trainingId = isset($_GET['training_id']) ? (int)$_GET['training_id'] : 0;
+        $userId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : null;
+        if ($trainingId <= 0) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'training_id requis']);
+        }
+        try {
+            $response = $this->apiService->getScoredTrainingByIdWithUser($trainingId, $userId ?? $_SESSION['user']['id']);
+            if (!empty($response['success']) && !empty($response['data'])) {
+                $this->sendJsonResponse(['success' => true, 'data' => $response['data']]);
+            } else {
+                $this->sendJsonResponse(['success' => false, 'message' => $response['message'] ?? 'Session non trouvée'], 404);
+            }
+        } catch (Exception $e) {
+            error_log('loadTraining: ' . $e->getMessage());
+            $this->sendJsonResponse(['success' => false, 'message' => 'Erreur lors du chargement de la session'], 500);
+        }
+    }
+
     public function save() {
         // Vérifier si l'utilisateur est connecté
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
