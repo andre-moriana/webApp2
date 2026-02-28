@@ -341,7 +341,7 @@ if ($isNature) {
                     <div class="feuille-marque-nature-grid">
                     <?php foreach ($f['archers'] as $archer): ?>
                         <div class="feuille-marque-archer-block">
-                            <div class="feuille-marque-archer-header border-bottom pb-1 mb-2 d-flex justify-content-between align-items-start">
+                            <div class="feuille-marque-archer-header border-bottom pb-1 mb-2">
                                 <div class="d-flex justify-content-between align-items-center"><span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong></span><span class="feuille-marque-blason text-nowrap" style="font-size: 1.15em;"><strong>N° peloton : <?= (int)($f['peloton'] ?? 0) ?></strong></span></div>
                                 <div class="d-flex justify-content-between align-items-center"><span><?= htmlspecialchars($archer['club_nom'] ?? $archer['club_name'] ?? '—') ?></span><span class="feuille-marque-categorie"><?= htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—' ?></span></div>
                                 <div class="mb-1"></div>
