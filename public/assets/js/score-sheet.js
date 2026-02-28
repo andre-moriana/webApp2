@@ -1316,10 +1316,18 @@ async function saveVolleyScores() {
     displayCurrentArcher();
 }
 
-function saveScoreSheet() {
+/**
+ * Sauvegarde les feuilles de marque (scored_trainings).
+ * @param {Object} options - Options de sauvegarde
+ * @param {boolean} [options.redirect=true] - Rediriger vers /scored-trainings après succès
+ * @param {boolean} [options.silent=false] - Ne pas afficher de message de statut
+ * @returns {Promise<{success: boolean, message?: string}>}
+ */
+function saveScoreSheet(options = {}) {
+    const { redirect = true, silent = false } = options;
     if (!selectedShootingType || userSheets.length === 0) {
-        showStatus('Veuillez sélectionner un type de tir', 'danger');
-        return;
+        if (!silent) showStatus('Veuillez sélectionner un type de tir', 'danger');
+        return Promise.resolve({ success: false, message: 'Données manquantes' });
     }
     
     // Sauvegarder les informations de l'archer actuel
@@ -1374,39 +1382,35 @@ function saveScoreSheet() {
         }).filter(sheet => sheet !== null)
     };
     
-    // Afficher un indicateur de chargement
     const saveBtn = document.getElementById('saveScoreSheetBtn');
-    const originalText = saveBtn.innerHTML;
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde en cours...';
+    const originalText = saveBtn?.innerHTML;
+    if (saveBtn && redirect) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde en cours...';
+    }
     
-    // Envoyer les données
-    fetch('/score-sheet/save', {
+    return fetch('/score-sheet/save', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dataToSend)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showStatus(data.message || 'Feuilles de marque sauvegardées avec succès !', 'success');
-            
-            // Rediriger vers les tirs comptés après 2 secondes
-            setTimeout(() => {
-                window.location.href = '/scored-trainings';
-            }, 2000);
+            if (!silent) showStatus(data.message || 'Feuilles de marque sauvegardées avec succès !', 'success');
+            if (redirect) {
+                setTimeout(() => { window.location.href = '/scored-trainings'; }, 2000);
+            }
         } else {
-            showStatus(data.message || 'Erreur lors de la sauvegarde', 'danger');
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = originalText;
+            if (!silent) showStatus(data.message || 'Erreur lors de la sauvegarde', 'danger');
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = originalText; }
         }
+        return data;
     })
     .catch(error => {
-        showStatus('Erreur de connexion au serveur', 'danger');
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = originalText;
+        if (!silent) showStatus('Erreur de connexion au serveur', 'danger');
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = originalText; }
+        return { success: false, message: error?.message || 'Erreur réseau' };
     });
 }
 
@@ -2332,6 +2336,14 @@ async function exportToConcours() {
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Export...'; }
 
     try {
+        // 1. Sauvegarder d'abord les scores dans les tirs comptés (scored_trainings)
+        const saveResult = await saveScoreSheet({ redirect: false, silent: true });
+        if (!saveResult.success && saveResult.message && saveResult.message !== 'Données manquantes') {
+            showStatus('Sauvegarde des scores échouée: ' + (saveResult.message || ''), 'warning');
+            // On continue quand même l'export vers le concours (les scores sont dans le payload)
+        }
+
+        // 2. Exporter vers concours_resultats
         console.log('Export: envoi requête...', { concours_id: selectedConcoursId, nb_sheets: payload.user_sheets.length });
         const resp = await fetch('/score-sheet/export-to-concours', {
             method: 'POST',
