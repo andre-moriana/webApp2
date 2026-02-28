@@ -2263,9 +2263,12 @@ async function exportToConcours() {
     const hasSeries = !isNature && config.series === 2;
     const endsPerSeries = hasSeries ? config.total_ends / config.series : 0;
 
+    const departSelect = document.getElementById('departSelect');
     const payload = {
         concours_id: selectedConcoursId,
         shooting_type: getShootingConfigKey(selectedShootingType),
+        depart: departSelect?.value || '',
+        serie_mode: 'both',
         user_sheets: sheetsToExport.map(sheet => {
             const score = sheet.scoreRows.reduce((sum, row) => sum + (row.endTotal || 0), 0);
             const lic = (sheet.archerInfo?.licenseNumber ?? '').toString().trim();

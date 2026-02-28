@@ -2223,10 +2223,13 @@ class ConcoursController {
 
     /**
      * Enregistrement des scores (POST)
+     * @param int $concoursId
+     * @param array|null $scoresOverride Si fourni (ex: depuis export feuille de marque), utilise ce tableau au lieu de $_POST['scores']
+     * @param bool $returnJson Si true, retourne JSON au lieu de rediriger (pour requêtes AJAX)
      */
-    public function storeScores($concoursId)
+    public function storeScores($concoursId, $scoresOverride = null, $returnJson = false)
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        if (!$returnJson && $_SERVER['REQUEST_METHOD'] !== 'POST') {
             $_SESSION['error'] = 'Méthode non autorisée';
             header('Location: /concours/' . $concoursId . '/saisie-scores');
             exit;
@@ -2235,12 +2238,17 @@ class ConcoursController {
         $isAdmin = $_SESSION['user']['is_admin'] ?? false;
         $isDirigeant = ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
         if (!$isAdmin && !$isDirigeant) {
+            if ($returnJson) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Accès refusé. La saisie des scores est réservée aux administrateurs et dirigeants.']);
+                exit;
+            }
             $_SESSION['error'] = 'Accès refusé. La saisie des scores est réservée aux administrateurs et dirigeants.';
             header('Location: /concours/show/' . $concoursId);
             exit;
         }
 
-        $scores = $_POST['scores'] ?? [];
+        $scores = $scoresOverride !== null ? $scoresOverride : ($_POST['scores'] ?? []);
         if (!is_array($scores)) {
             $scores = [];
         }
@@ -2341,6 +2349,16 @@ class ConcoursController {
         }
         if (!empty($params)) {
             $redirectUrl .= '?' . http_build_query($params);
+        }
+        if ($returnJson) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success' => $saved > 0,
+                'message' => $saved > 0 ? $saved . ' score(s) enregistré(s) avec succès.' : (implode(' ; ', $errors) ?: 'Aucun score enregistré.'),
+                'saved' => $saved,
+                'errors' => $errors
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
         }
         header('Location: ' . $redirectUrl);
         exit;

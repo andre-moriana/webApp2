@@ -547,8 +547,8 @@ class ScoreSheetController {
     }
 
     /**
-     * Exporte les scores vers concours_resultats via l'API BackendPHP (api.arctraining.fr).
-     * POST body: { concours_id, shooting_type, user_sheets: [ { inscription_id?, license_number?, score, nb_20_15?, ... } ] }
+     * Exporte les scores vers concours_resultats en passant par le même code que saisie-scores (storeScores).
+     * POST body: { concours_id, shooting_type, depart?, serie_mode?, user_sheets: [ { inscription_id?, license_number?, score, nb_20_15?, ... } ] }
      */
     public function exportToConcours() {
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
@@ -563,11 +563,10 @@ class ScoreSheetController {
             $this->sendJsonResponse(['success' => false, 'message' => 'Données manquantes: concours_id et user_sheets requis']);
         }
         $concoursId = (int)$data['concours_id'];
-        $exported = 0;
-        $errors = [];
         if (empty($_SESSION['token'])) {
             $this->sendJsonResponse(['success' => false, 'message' => 'Session expirée. Veuillez vous reconnecter pour exporter vers le concours.'], 401);
         }
+
         $normalizeLicence = function ($lic) {
             $lic = trim((string)$lic);
             if ($lic === '') return '';
@@ -576,7 +575,7 @@ class ScoreSheetController {
         };
 
         $licenceToInscription = null;
-        error_log('exportToConcours: concours_id=' . $concoursId . ', nb_sheets=' . count($data['user_sheets']));
+        $scores = [];
         foreach ($data['user_sheets'] as $sheet) {
             $inscriptionId = isset($sheet['inscription_id']) ? (int)$sheet['inscription_id'] : 0;
             if ($inscriptionId <= 0 && !empty($sheet['license_number'])) {
@@ -585,31 +584,30 @@ class ScoreSheetController {
                     try {
                         $inscResp = $this->apiService->getConcoursInscriptions($concoursId);
                         if (is_array($inscResp) && isset($inscResp['success']) && !$inscResp['success'] && isset($inscResp['message'])) {
-                            $errors[] = 'API inscriptions: ' . $inscResp['message'];
-                        } else {
-                            $inscriptions = [];
-                            $raw = $inscResp['data'] ?? $inscResp;
-                            if (is_array($raw)) {
-                                if (isset($raw[0]) && is_array($raw[0])) {
-                                    $inscriptions = $raw;
-                                } elseif (isset($raw['data']) && is_array($raw['data'])) {
-                                    $inscriptions = $raw['data'];
-                                }
+                            $this->sendJsonResponse(['success' => false, 'message' => 'API inscriptions: ' . $inscResp['message']]);
+                        }
+                        $inscriptions = [];
+                        $raw = $inscResp['data'] ?? $inscResp ?? [];
+                        if (is_array($raw)) {
+                            if (isset($raw[0]) && is_array($raw[0])) {
+                                $inscriptions = $raw;
+                            } elseif (isset($raw['data']) && is_array($raw['data'])) {
+                                $inscriptions = $raw['data'];
                             }
-                            foreach ($inscriptions as $i) {
-                                $lic = $normalizeLicence($i['numero_licence'] ?? $i['numeroLicence'] ?? '');
-                                if ($lic !== '') {
-                                    $idInsc = (int)($i['id'] ?? $i['id_inscription'] ?? 0);
-                                    if ($idInsc > 0) {
-                                        $licenceToInscription[$lic] = $idInsc;
-                                        $lic2 = (strlen($lic) === 8 && $lic[0] === '0') ? substr($lic, 1) : (strlen($lic) === 7 ? '0' . $lic : '');
-                                        if ($lic2 !== '' && $lic2 !== $lic) $licenceToInscription[$lic2] = $idInsc;
-                                    }
+                        }
+                        foreach ($inscriptions as $i) {
+                            $lic = $normalizeLicence($i['numero_licence'] ?? $i['numeroLicence'] ?? '');
+                            if ($lic !== '') {
+                                $idInsc = (int)($i['id'] ?? $i['id_inscription'] ?? 0);
+                                if ($idInsc > 0) {
+                                    $licenceToInscription[$lic] = $idInsc;
+                                    $lic2 = (strlen($lic) === 8 && $lic[0] === '0') ? substr($lic, 1) : (strlen($lic) === 7 ? '0' . $lic : '');
+                                    if ($lic2 !== '' && $lic2 !== $lic) $licenceToInscription[$lic2] = $idInsc;
                                 }
                             }
                         }
                     } catch (Exception $e) {
-                        $errors[] = 'Impossible de récupérer les inscriptions: ' . $e->getMessage();
+                        $this->sendJsonResponse(['success' => false, 'message' => 'Impossible de récupérer les inscriptions: ' . $e->getMessage()]);
                     }
                 }
                 if (is_array($licenceToInscription)) {
@@ -622,75 +620,37 @@ class ScoreSheetController {
                 }
             }
             if ($inscriptionId <= 0) {
-                $err = 'Inscription introuvable pour licence ' . ($sheet['license_number'] ?? '?');
-                $errors[] = $err;
-                error_log('exportToConcours: ' . $err . ' (inscription_id=' . $inscriptionId . ')');
                 continue;
             }
-            // Même logique que ConcoursController::storeScores (saisie-scores)
-            $score = isset($sheet['score']) ? (int)$sheet['score'] : null;
-            $nb_20_15 = (isset($sheet['nb_20_15']) && $sheet['nb_20_15'] !== '') ? (int)$sheet['nb_20_15'] : null;
-            $nb_20_10 = (isset($sheet['nb_20_10']) && $sheet['nb_20_10'] !== '') ? (int)$sheet['nb_20_10'] : null;
-            $nb_15_15 = (isset($sheet['nb_15_15']) && $sheet['nb_15_15'] !== '') ? (int)$sheet['nb_15_15'] : null;
-            $nb_15_10 = (isset($sheet['nb_15_10']) && $sheet['nb_15_10'] !== '') ? (int)$sheet['nb_15_10'] : null;
-            $nb_15 = (isset($sheet['nb_15']) && $sheet['nb_15'] !== '') ? (int)$sheet['nb_15'] : null;
-            $nb_10 = (isset($sheet['nb_10']) && $sheet['nb_10'] !== '') ? (int)$sheet['nb_10'] : null;
-            $nb_0 = (isset($sheet['nb_0']) && $sheet['nb_0'] !== '') ? (int)$sheet['nb_0'] : null;
-            $serie1_score = (isset($sheet['serie1_score']) && $sheet['serie1_score'] !== '') ? (int)$sheet['serie1_score'] : null;
-            $serie1_nb_10 = (isset($sheet['serie1_nb_10']) && $sheet['serie1_nb_10'] !== '') ? (int)$sheet['serie1_nb_10'] : null;
-            $serie1_nb_9 = (isset($sheet['serie1_nb_9']) && $sheet['serie1_nb_9'] !== '') ? (int)$sheet['serie1_nb_9'] : null;
-            $serie2_score = (isset($sheet['serie2_score']) && $sheet['serie2_score'] !== '') ? (int)$sheet['serie2_score'] : null;
-            $serie2_nb_10 = (isset($sheet['serie2_nb_10']) && $sheet['serie2_nb_10'] !== '') ? (int)$sheet['serie2_nb_10'] : null;
-            $serie2_nb_9 = (isset($sheet['serie2_nb_9']) && $sheet['serie2_nb_9'] !== '') ? (int)$sheet['serie2_nb_9'] : null;
-
-            $scoreToSend = $score;
-            if ($scoreToSend === null && ($serie1_score !== null || $serie2_score !== null)) {
-                $scoreToSend = ($serie1_score ?? 0) + ($serie2_score ?? 0);
-            }
-            if ($scoreToSend === null) {
-                $scoreToSend = 0;
-            }
-
-            $payload = [
-                'inscription_id' => $inscriptionId,
-                'score' => $scoreToSend,
-                'nb_20_15' => $nb_20_15,
-                'nb_20_10' => $nb_20_10,
-                'nb_15_15' => $nb_15_15,
-                'nb_15_10' => $nb_15_10,
-                'nb_15' => $nb_15,
-                'nb_10' => $nb_10,
-                'nb_0' => $nb_0,
-                'serie1_score' => $serie1_score,
-                'serie1_nb_10' => $serie1_nb_10,
-                'serie1_nb_9' => $serie1_nb_9,
-                'serie2_score' => $serie2_score,
-                'serie2_nb_10' => $serie2_nb_10,
-                'serie2_nb_9' => $serie2_nb_9,
+            // Format identique au formulaire saisie-scores (scores[inscription_id][champ])
+            $scores[$inscriptionId] = [
+                'score' => array_key_exists('score', $sheet) ? (string)$sheet['score'] : '',
+                'nb_20_15' => array_key_exists('nb_20_15', $sheet) ? (string)$sheet['nb_20_15'] : '',
+                'nb_20_10' => array_key_exists('nb_20_10', $sheet) ? (string)$sheet['nb_20_10'] : '',
+                'nb_15_15' => array_key_exists('nb_15_15', $sheet) ? (string)$sheet['nb_15_15'] : '',
+                'nb_15_10' => array_key_exists('nb_15_10', $sheet) ? (string)$sheet['nb_15_10'] : '',
+                'nb_15' => array_key_exists('nb_15', $sheet) ? (string)$sheet['nb_15'] : '',
+                'nb_10' => array_key_exists('nb_10', $sheet) ? (string)$sheet['nb_10'] : '',
+                'nb_0' => array_key_exists('nb_0', $sheet) ? (string)$sheet['nb_0'] : '',
+                'serie1_score' => array_key_exists('serie1_score', $sheet) ? (string)$sheet['serie1_score'] : '',
+                'serie1_nb_10' => array_key_exists('serie1_nb_10', $sheet) ? (string)$sheet['serie1_nb_10'] : '',
+                'serie1_nb_9' => array_key_exists('serie1_nb_9', $sheet) ? (string)$sheet['serie1_nb_9'] : '',
+                'serie2_score' => array_key_exists('serie2_score', $sheet) ? (string)$sheet['serie2_score'] : '',
+                'serie2_nb_10' => array_key_exists('serie2_nb_10', $sheet) ? (string)$sheet['serie2_nb_10'] : '',
+                'serie2_nb_9' => array_key_exists('serie2_nb_9', $sheet) ? (string)$sheet['serie2_nb_9'] : '',
             ];
+        }
 
-            try {
-                $response = $this->apiService->makeRequest("concours/{$concoursId}/resultat", 'POST', $payload);
-                if ($response['success'] ?? false) {
-                    $exported++;
-                } else {
-                    $apiError = $response['data']['error'] ?? $response['error'] ?? $response['message'] ?? 'Erreur';
-                    $errors[] = 'Inscription ' . $inscriptionId . ': ' . $apiError;
-                    error_log('exportToConcours: API échec inscription_id=' . $inscriptionId . ': ' . $apiError . ' | resp=' . json_encode($response));
-                }
-            } catch (Exception $e) {
-                $errors[] = $e->getMessage();
-                error_log('exportToConcours: Exception inscription_id=' . $inscriptionId . ': ' . $e->getMessage());
-            }
+        if (empty($scores)) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Aucun score à exporter. Vérifiez que les archers ont été préremplis depuis le concours (départ + cible/peloton) et ont des inscriptions valides.']);
         }
-        if ($exported > 0 && empty($errors)) {
-            $this->sendJsonResponse(['success' => true, 'message' => $exported . ' score(s) exporté(s) vers le concours']);
-        } elseif ($exported > 0) {
-            $this->sendJsonResponse(['success' => true, 'message' => $exported . ' score(s) exporté(s). ' . implode(' ', $errors)]);
-        } else {
-            $msg = !empty($errors) ? implode(' ; ', $errors) : 'Aucun score exporté. Vérifiez que les archers ont été préremplis depuis le concours (départ + cible/peloton).';
-            $this->sendJsonResponse(['success' => false, 'message' => $msg], 400);
-        }
+
+        $_POST['serie_mode'] = $data['serie_mode'] ?? 'both';
+        $_POST['depart'] = $data['depart'] ?? '';
+        $_POST['format'] = $data['format'] ?? '';
+
+        $concoursController = new ConcoursController();
+        $concoursController->storeScores($concoursId, $scores, true);
     }
     
     private function sendJsonResponse($data, $httpCode = 200) {
