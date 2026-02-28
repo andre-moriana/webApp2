@@ -670,7 +670,28 @@ class ScoreSheetController {
         error_log('exportToConcours: nb_scores=' . count($scores) . ', inscription_ids=' . implode(',', array_keys($scores)));
 
         $concoursController = new ConcoursController();
-        $concoursController->storeScores($concoursId, $scores, true);
+        $result = $concoursController->storeScores($concoursId, $scores, true, true);
+        if (!is_array($result)) {
+            $this->sendJsonResponse(['success' => false, 'message' => 'Erreur lors de l\'enregistrement des scores']);
+            return;
+        }
+        if (!empty($result['success'])) {
+            foreach ($data['user_sheets'] as $sheet) {
+                $trainingId = isset($sheet['scored_training_id']) ? (int)$sheet['scored_training_id'] : 0;
+                if ($trainingId <= 0) continue;
+                try {
+                    $tr = $this->apiService->getScoredTrainingById($trainingId);
+                    $notes = isset($tr['data']['notes']) ? (string)$tr['data']['notes'] : '';
+                    if (strpos($notes, '__EXPORTED_TO_CONCOURS__:1') === false) {
+                        $newNotes = $notes === '' ? '__EXPORTED_TO_CONCOURS__:1' : rtrim($notes, ', ') . ', __EXPORTED_TO_CONCOURS__:1';
+                        $this->apiService->updateScoredTrainingNote($trainingId, $newNotes);
+                    }
+                } catch (Exception $e) {
+                    error_log('exportToConcours: update note training ' . $trainingId . ': ' . $e->getMessage());
+                }
+            }
+        }
+        $this->sendJsonResponse($result, !empty($result['success']) ? 200 : 400);
     }
     
     private function sendJsonResponse($data, $httpCode = 200) {

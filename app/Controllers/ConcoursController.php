@@ -2226,8 +2226,9 @@ class ConcoursController {
      * @param int $concoursId
      * @param array|null $scoresOverride Si fourni (ex: depuis export feuille de marque), utilise ce tableau au lieu de $_POST['scores']
      * @param bool $returnJson Si true, retourne JSON au lieu de rediriger (pour requêtes AJAX)
+     * @param bool $returnArray Si true (et $returnJson true), retourne le tableau au lieu d'envoyer la réponse (pour appel interne)
      */
-    public function storeScores($concoursId, $scoresOverride = null, $returnJson = false)
+    public function storeScores($concoursId, $scoresOverride = null, $returnJson = false, $returnArray = false)
     {
         if (!$returnJson && $_SERVER['REQUEST_METHOD'] !== 'POST') {
             $_SESSION['error'] = 'Méthode non autorisée';
@@ -2360,10 +2361,6 @@ class ConcoursController {
             $redirectUrl .= '?' . http_build_query($params);
         }
         if ($returnJson) {
-            while (ob_get_level()) {
-                ob_end_clean();
-            }
-            header('Content-Type: application/json; charset=utf-8');
             $msg = $saved > 0 ? $saved . ' score(s) enregistré(s) avec succès.' : (implode(' ; ', $errors) ?: 'Aucun score enregistré.');
             $json = [
                 'success' => $saved > 0,
@@ -2374,6 +2371,13 @@ class ConcoursController {
             if (!empty($errors) && $lastApiResponse !== null) {
                 $json['debug_api_response'] = $lastApiResponse;
             }
+            if ($returnArray) {
+                return $json;
+            }
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Content-Type: application/json; charset=utf-8');
             echo json_encode($json, JSON_UNESCAPED_UNICODE);
             exit;
         }

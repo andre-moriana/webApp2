@@ -41,6 +41,9 @@ let concoursPlansCible = null;
 let concoursInscriptions = null;
 let concoursDetails = null;
 
+/** True si la feuille a déjà été exportée vers concours_resultats (lu depuis les notes au chargement). */
+let exportedToConcours = false;
+
 /** Retourne l'iddiscipline (de data-disciplines) pour un abv_discipline donné, ou null. */
 function getDisciplineIdForAbv(abv) {
     if (!abv) return null;
@@ -171,6 +174,7 @@ function setupConcoursSelector() {
             if (trainingTitleInput) trainingTitleInput.value = '';
             selectedShootingType = '';
             userSheets.forEach(s => { delete s.inscriptionId; });
+            exportedToConcours = false;
             updateConcoursImportLock();
             loadCategoriesForDiscipline(null);
             document.getElementById('archerNavigation')?.style?.setProperty('display', 'none');
@@ -386,6 +390,7 @@ async function loadExistingTrainingData(indicesWithLicence) {
                         if (signatures.archer) archerSignatures[sheetIndex] = signatures.archer;
                         if (signatures.scorer) scorerSignature = signatures.scorer;
                     }
+                    if (notes.indexOf('__EXPORTED_TO_CONCOURS__:1') !== -1) exportedToConcours = true;
                 }
             } else if (userId && (resp.status === 404 || !result.success)) {
                 // Réessayer sans user_id (session créée pour l'utilisateur connecté)
@@ -401,6 +406,7 @@ async function loadExistingTrainingData(indicesWithLicence) {
                             if (signatures.archer) archerSignatures[sheetIndex] = signatures.archer;
                             if (signatures.scorer) scorerSignature = signatures.scorer;
                         }
+                        if (notes.indexOf('__EXPORTED_TO_CONCOURS__:1') !== -1) exportedToConcours = true;
                     }
                 }
             }
@@ -582,11 +588,8 @@ async function prefillArchersFromConcours() {
                         applyTrainingToSheet(userSheets[sheetIndex], { ends: ends });
                     }
                 });
-                // Fallback: charger les volées via une requête dédiée si le serveur n'a pas renvoyé existing_ends_by_index
-                const hasExistingEnds = Array.isArray(result.data?.existing_ends_by_index) && result.data.existing_ends_by_index.some(e => Array.isArray(e) && e.length > 0);
-                if (!hasExistingEnds) {
-                    await loadExistingTrainingData(indicesWithLicence);
-                }
+                // Charger les volées et les notes (signatures, export concours) pour chaque feuille
+                await loadExistingTrainingData(indicesWithLicence);
             }
         }
     } catch (e) {
@@ -1800,11 +1803,16 @@ function areAllSheetsSigned() {
     return true;
 }
 
-/** Affiche le bouton Export uniquement quand les feuilles sont signées */
+/** Affiche les boutons Signatures et Export uniquement si les feuilles sont signées (Export) et si la feuille n'a pas été exportée vers le concours. */
 function updateExportButtonVisibility() {
     const exportBtn = document.getElementById('exportPdfBtn');
-    if (exportBtn) {
-        exportBtn.style.display = areAllSheetsSigned() ? 'inline-block' : 'none';
+    const sigBtn = document.getElementById('signaturesBtn');
+    if (exportedToConcours) {
+        if (exportBtn) exportBtn.style.display = 'none';
+        if (sigBtn) sigBtn.style.display = 'none';
+    } else {
+        if (exportBtn) exportBtn.style.display = areAllSheetsSigned() ? 'inline-block' : 'none';
+        if (sigBtn) sigBtn.style.display = 'inline-block';
     }
 }
 
@@ -2419,6 +2427,7 @@ async function exportToConcours() {
             const lic = (sheet.archerInfo?.licenseNumber ?? '').toString().trim();
             const data = { score, license_number: lic };
             if (sheet.inscriptionId) data.inscription_id = sheet.inscriptionId;
+            if (sheet.scoredTrainingId) data.scored_training_id = sheet.scoredTrainingId;
             if (isNature) {
                 let nb_20_15 = 0, nb_20_10 = 0, nb_15_15 = 0, nb_15_10 = 0, nb_15 = 0, nb_10 = 0, nb_0 = 0;
                 sheet.scoreRows.forEach(row => {
@@ -2522,6 +2531,8 @@ async function exportToConcours() {
         console.log('Export: result=', JSON.stringify(result));
         if (result.success) {
             showStatus(result.message || 'Scores exportés vers le concours avec succès.', 'success');
+            exportedToConcours = true;
+            updateExportButtonVisibility();
         } else {
             const errMsg = result.message || result.error || 'Erreur lors de l\'export vers le concours.';
             console.error('Export concours échoué:', { status: resp.status, result, payload });
