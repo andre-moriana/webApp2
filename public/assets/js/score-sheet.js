@@ -424,6 +424,13 @@ async function prefillArchersFromConcours() {
     const departSelect = document.getElementById('departSelect');
     const pelotonSelect = document.getElementById('pelotonSelect');
 
+    const dep = departSelect?.value ?? '';
+    const pel = pelotonSelect?.value ?? '';
+    const storageKey = 'scoreSheet_exported_' + (selectedConcoursId || '') + '_' + dep + '_' + pel;
+    if (selectedConcoursId && (dep || pel) && localStorage.getItem(storageKey)) {
+        exportedToConcours = true;
+    }
+
     let archers = [];
     // Si plan cible existe (T/S/I/H), exiger départ + cible
     if (concoursPlansCible && Object.keys(concoursPlansCible).length > 0) {
@@ -2535,6 +2542,12 @@ async function exportToConcours() {
         if (result.success) {
             showStatus(result.message || 'Scores exportés vers le concours avec succès.', 'success');
             exportedToConcours = true;
+            const departSelect = document.getElementById('departSelect');
+            const pelotonSelect = document.getElementById('pelotonSelect');
+            const dep = departSelect?.value ?? '';
+            const pel = pelotonSelect?.value ?? '';
+            const storageKey = 'scoreSheet_exported_' + (selectedConcoursId || '') + '_' + dep + '_' + pel;
+            try { localStorage.setItem(storageKey, '1'); } catch (e) {}
             updateExportButtonVisibility();
         } else {
             const errMsg = result.message || result.error || 'Erreur lors de l\'export vers le concours.';
