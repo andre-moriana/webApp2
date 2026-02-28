@@ -595,10 +595,12 @@ async function prefillArchersFromConcours() {
             const result = await resp.json().catch(() => ({}));
             if (result.success && Array.isArray(result.data?.training_ids)) {
                 if (result.data.exported_to_concours === true) exportedToConcours = true;
+                const userIds = result.data.user_ids;
                 result.data.training_ids.forEach((tid, i) => {
                     const sheetIndex = indicesWithLicence[i];
                     if (sheetIndex != null && userSheets[sheetIndex] && tid != null) {
                         userSheets[sheetIndex].scoredTrainingId = tid;
+                        if (Array.isArray(userIds) && userIds[i] != null) userSheets[sheetIndex].userId = userIds[i];
                     }
                     // Préremplir les scores depuis les volées renvoyées par le serveur (session existante)
                     const ends = result.data.existing_ends_by_index?.[i];
