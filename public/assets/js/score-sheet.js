@@ -586,8 +586,11 @@ async function prefillArchersFromConcours() {
                         applyTrainingToSheet(userSheets[sheetIndex], { ends: ends });
                     }
                 });
-                // Charger les volées et les notes (signatures, export concours) pour chaque feuille
-                await loadExistingTrainingData(indicesWithLicence);
+                const hasExistingEnds = Array.isArray(result.data.existing_ends_by_index) &&
+                    result.data.existing_ends_by_index.some(e => Array.isArray(e) && e.length > 0);
+                if (!hasExistingEnds) {
+                    await loadExistingTrainingData(indicesWithLicence);
+                }
             }
         }
     } catch (e) {
