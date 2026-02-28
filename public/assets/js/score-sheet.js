@@ -426,6 +426,9 @@ async function prefillArchersFromConcours() {
             const payload = {
                 shooting_type: shootingTypeKey,
                 training_title: document.getElementById('trainingTitle')?.value || '',
+                concours_id: selectedConcoursId || null,
+                depart: departSelect?.value || null,
+                peloton: pelotonSelect?.value || null,
                 user_sheets: sheetsWithLicence.map(s => ({
                     archer_info: {
                         name: s.archerInfo?.name ?? '',

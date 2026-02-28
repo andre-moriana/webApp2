@@ -103,7 +103,8 @@ class ScoreSheetController {
     
     /**
      * Créer les sessions (scored_trainings) pour chaque archer lors de l'import automatique.
-     * POST body: { shooting_type, training_title, user_sheets: [ { archer_info, user_id }, ... ] }
+     * Vérifie qu'il n'existe pas déjà une session en cours pour ce concours et ce départ (infos en JSON dans notes).
+     * POST body: { shooting_type, training_title, concours_id?, depart?, peloton?, user_sheets: [ ... ] }
      * Retourne: { success, data: { training_ids: [ id0, id1, ... ] } }
      */
     public function createSessions() {
@@ -127,15 +128,23 @@ class ScoreSheetController {
         ];
         $shootingType = $data['shooting_type'];
         $trainingTitle = $data['training_title'] ?? '';
+        $concoursId = isset($data['concours_id']) && $data['concours_id'] !== '' ? (string)$data['concours_id'] : null;
+        $depart = isset($data['depart']) && $data['depart'] !== '' ? (string)$data['depart'] : null;
+        $peloton = isset($data['peloton']) && $data['peloton'] !== '' ? (string)$data['peloton'] : null;
         $config = $shootingConfigs[$shootingType] ?? null;
         if (!$config) {
             $this->sendJsonResponse(['success' => false, 'message' => 'Type de tir invalide']);
         }
+        $feuilleMarqueJson = json_encode(array_filter([
+            'concours_id' => $concoursId,
+            'depart' => $depart,
+            'peloton' => $peloton,
+        ], function ($v) { return $v !== null && $v !== ''; }));
+        $notesSuffix = $feuilleMarqueJson !== '[]' ? ', __FEUILLE_MARQUE__:' . $feuilleMarqueJson : '';
         $trainingIds = [];
         foreach ($data['user_sheets'] as $userSheet) {
             $archerInfo = $userSheet['archer_info'] ?? [];
             $licence = trim((string)($archerInfo['licenseNumber'] ?? ''));
-            // Ne créer une session que pour les emplacements avec licence non vide
             if ($licence === '') {
                 $trainingIds[] = null;
                 continue;
@@ -165,12 +174,55 @@ class ScoreSheetController {
                     // continuer sans user_id
                 }
             }
+            $existingTrainingId = null;
+            if ($targetUserId && $feuilleMarqueJson !== '[]') {
+                $listResp = $this->apiService->getScoredTrainings($targetUserId);
+                $list = null;
+                if (!empty($listResp['success']) && isset($listResp['data'])) {
+                    $list = is_array($listResp['data']) ? $listResp['data'] : null;
+                }
+                if (is_array($list)) {
+                    foreach ($list as $t) {
+                        $status = $t['status'] ?? '';
+                        $isSheet = !empty($t['is_score_sheet']);
+                        $notes = (string)($t['notes'] ?? '');
+                        if ($status === 'en_cours' && $isSheet && $notes !== '' && strpos($notes, '__FEUILLE_MARQUE__:') !== false) {
+                            $start = strpos($notes, '__FEUILLE_MARQUE__:');
+                            $end = $start + strlen('__FEUILLE_MARQUE__:');
+                            $rest = substr($notes, $end);
+                            $json = null;
+                            if (strpos($rest, '{') === 0) {
+                                $depth = 0;
+                                $len = strlen($rest);
+                                for ($i = 0; $i < $len; $i++) {
+                                    if ($rest[$i] === '{') $depth++;
+                                    elseif ($rest[$i] === '}') { $depth--; if ($depth === 0) { $json = substr($rest, 0, $i + 1); break; } }
+                                }
+                            }
+                            if ($json !== null) {
+                                $dec = json_decode($json, true);
+                                if (is_array($dec) && isset($dec['concours_id'], $dec['depart'])
+                                    && (string)($dec['concours_id'] ?? '') === (string)$concoursId
+                                    && (string)($dec['depart'] ?? '') === (string)$depart
+                                ) {
+                                    $existingTrainingId = (int)($t['id'] ?? 0);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if ($existingTrainingId) {
+                $trainingIds[] = $existingTrainingId;
+                continue;
+            }
             $archerName = $archerInfo['name'] ?? 'Archer';
             $notesParts = [
                 'Licence: ' . ($archerInfo['licenseNumber'] ?? 'N/A'),
                 'Catégorie: ' . ($archerInfo['category'] ?? 'N/A'),
             ];
-            $finalNotes = implode(', ', array_filter($notesParts));
+            $finalNotes = implode(', ', array_filter($notesParts)) . $notesSuffix;
             $finalTitle = $trainingTitle ? $trainingTitle . ' - ' . $archerName : $shootingType . ' - ' . $archerName . ' - ' . date('d/m/Y');
             $createData = [
                 'title' => $finalTitle,
