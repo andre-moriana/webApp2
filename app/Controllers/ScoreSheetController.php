@@ -142,11 +142,13 @@ class ScoreSheetController {
         ], function ($v) { return $v !== null && $v !== ''; }));
         $notesSuffix = $feuilleMarqueJson !== '[]' ? ', __FEUILLE_MARQUE__:' . $feuilleMarqueJson : '';
         $trainingIds = [];
+        $existingEndsByIndex = [];
         foreach ($data['user_sheets'] as $userSheet) {
             $archerInfo = $userSheet['archer_info'] ?? [];
             $licence = trim((string)($archerInfo['licenseNumber'] ?? ''));
             if ($licence === '') {
                 $trainingIds[] = null;
+                $existingEndsByIndex[] = null;
                 continue;
             }
             $targetUserId = $userSheet['user_id'] ?? null;
@@ -215,6 +217,16 @@ class ScoreSheetController {
             }
             if ($existingTrainingId) {
                 $trainingIds[] = $existingTrainingId;
+                $endsForSheet = null;
+                try {
+                    $trainResp = $this->apiService->getScoredTrainingByIdWithUser($existingTrainingId, $targetUserId);
+                    if (!empty($trainResp['success']) && !empty($trainResp['data']['ends'])) {
+                        $endsForSheet = $trainResp['data']['ends'];
+                    }
+                } catch (Exception $e) {
+                    // ignorer
+                }
+                $existingEndsByIndex[] = $endsForSheet;
                 continue;
             }
             $archerName = $archerInfo['name'] ?? 'Archer';
@@ -242,8 +254,15 @@ class ScoreSheetController {
             } else {
                 $trainingIds[] = null;
             }
+            $existingEndsByIndex[] = null;
         }
-        $this->sendJsonResponse(['success' => true, 'data' => ['training_ids' => $trainingIds]]);
+        $this->sendJsonResponse([
+            'success' => true,
+            'data' => [
+                'training_ids' => $trainingIds,
+                'existing_ends_by_index' => $existingEndsByIndex,
+            ],
+        ]);
     }
 
     /**

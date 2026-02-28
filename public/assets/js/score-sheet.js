@@ -517,9 +517,17 @@ async function prefillArchersFromConcours() {
                     if (sheetIndex != null && userSheets[sheetIndex] && tid != null) {
                         userSheets[sheetIndex].scoredTrainingId = tid;
                     }
+                    // Préremplir les scores depuis les volées renvoyées par le serveur (session existante)
+                    const ends = result.data.existing_ends_by_index?.[i];
+                    if (sheetIndex != null && userSheets[sheetIndex] && Array.isArray(ends) && ends.length > 0) {
+                        applyTrainingToSheet(userSheets[sheetIndex], { ends: ends });
+                    }
                 });
-                // Si une session existante a été réutilisée, charger ses volées et flèches pour mettre à jour la feuille
-                await loadExistingTrainingData(indicesWithLicence);
+                // Fallback: charger les volées via une requête dédiée si le serveur n'a pas renvoyé existing_ends_by_index
+                const hasExistingEnds = Array.isArray(result.data?.existing_ends_by_index) && result.data.existing_ends_by_index.some(e => Array.isArray(e) && e.length > 0);
+                if (!hasExistingEnds) {
+                    await loadExistingTrainingData(indicesWithLicence);
+                }
             }
         }
     } catch (e) {
