@@ -2336,10 +2336,13 @@ async function exportToConcours() {
         if (result.success) {
             showStatus(result.message || 'Scores exportés vers le concours avec succès.', 'success');
         } else {
-            showStatus(result.message || 'Erreur lors de l\'export vers le concours.', 'danger');
+            const errMsg = result.message || result.error || 'Erreur lors de l\'export vers le concours.';
+            console.error('Export concours échoué:', { status: resp.status, result, payload });
+            showStatus(errMsg, 'danger');
         }
     } catch (e) {
-        showStatus('Erreur réseau lors de l\'export.', 'danger');
+        console.error('Export concours exception:', e);
+        showStatus('Erreur réseau lors de l\'export: ' + (e.message || ''), 'danger');
     } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = origHtml || '<i class="fas fa-upload"></i> Exporter vers concours'; }
     }

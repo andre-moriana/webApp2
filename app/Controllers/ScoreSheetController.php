@@ -576,6 +576,7 @@ class ScoreSheetController {
         };
 
         $licenceToInscription = null;
+        error_log('exportToConcours: concours_id=' . $concoursId . ', nb_sheets=' . count($data['user_sheets']));
         foreach ($data['user_sheets'] as $sheet) {
             $inscriptionId = isset($sheet['inscription_id']) ? (int)$sheet['inscription_id'] : 0;
             if ($inscriptionId <= 0 && !empty($sheet['license_number'])) {
@@ -621,7 +622,9 @@ class ScoreSheetController {
                 }
             }
             if ($inscriptionId <= 0) {
-                $errors[] = 'Inscription introuvable pour licence ' . ($sheet['license_number'] ?? '?');
+                $err = 'Inscription introuvable pour licence ' . ($sheet['license_number'] ?? '?');
+                $errors[] = $err;
+                error_log('exportToConcours: ' . $err . ' (inscription_id=' . $inscriptionId . ')');
                 continue;
             }
             $payload = [
@@ -646,11 +649,14 @@ class ScoreSheetController {
                 if (!empty($resp['success'])) {
                     $exported++;
                 } else {
-                    $err = $resp['error'] ?? $resp['message'] ?? 'Erreur inconnue';
+                    $apiData = is_array($resp['data'] ?? null) ? $resp['data'] : [];
+                    $err = $resp['error'] ?? $apiData['error'] ?? $apiData['message'] ?? $resp['message'] ?? 'Erreur inconnue';
                     $errors[] = $err;
+                    error_log('exportToConcours: API saveConcoursResultat échec inscription_id=' . $inscriptionId . ': ' . $err . ' | resp=' . json_encode($resp));
                 }
             } catch (Exception $e) {
                 $errors[] = $e->getMessage();
+                error_log('exportToConcours: Exception inscription_id=' . $inscriptionId . ': ' . $e->getMessage());
             }
         }
         if ($exported > 0 && empty($errors)) {
