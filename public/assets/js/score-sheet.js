@@ -413,6 +413,8 @@ async function loadExistingTrainingData(indicesWithLicence) {
             if (result.success && result.data) {
                 applyTrainingToSheet(sheet, result.data);
                 const notes = result.data.notes || (result.data.data && result.data.data.notes) || '';
+                // Priorité au flag signé envoyé par le backend (construction côté serveur)
+                if (result.data.signed === true) sheet.signed = true;
                 if (notes) {
                     const { signatures, signed } = parseSignaturesFromNotes(notes);
                     if (signed) sheet.signed = true;
@@ -959,6 +961,7 @@ function getNatureCrossColumn(score1, score2) {
 function updateScoreTable(sheet) {
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     const isNature = (getShootingConfigKey(selectedShootingType) === 'Nature' || getShootingConfigKey(selectedShootingType) === 'Nature2x21');
+    // Même condition que pour masquer le bouton signature / bloquer le modal : feuille signée = scores non modifiables
     const scoresLocked = !!sheet.signed || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
     const tableBody = document.getElementById('scoreTableBody');
     

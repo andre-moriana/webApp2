@@ -365,6 +365,8 @@ class ScoreSheetController {
                 }
                 $notes = (string)($data['notes'] ?? '');
                 $data['exported_to_concours'] = (strpos($notes, '__EXPORTED_TO_CONCOURS__:1') !== false);
+                // Backend décide si la feuille est signée (colonne signed ou notes)
+                $data['signed'] = isset($data['signed']) ? (bool)$data['signed'] : (strpos($notes, '__SIGNED__:1') !== false);
                 $this->sendJsonResponse(['success' => true, 'data' => $data]);
             } else {
                 $this->sendJsonResponse(['success' => false, 'message' => $response['message'] ?? 'Session non trouvée'], 404);
