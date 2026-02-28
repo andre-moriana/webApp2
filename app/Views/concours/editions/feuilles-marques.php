@@ -39,6 +39,7 @@ if ($filterDepartFeuilles !== '' && $filterDepartFeuilles !== 'tout') {
 // Index licence -> abv catégorie de classement (depuis les inscriptions du concours)
 $categorieParLicence = [];
 $clubNomParLicence = []; // licence -> nom du club (depuis fiche inscription id_club, résolu via base club dans le contrôleur)
+$numeroTirParLicence = []; // licence -> numero_tir (depuis fiche inscription, pour plan peloton et fallback plan cible)
 if (!empty($inscriptions) && is_array($inscriptions)) {
     foreach ($inscriptions as $insc) {
         $lic = trim((string)($insc['numero_licence'] ?? ''));
@@ -50,6 +51,9 @@ if (!empty($inscriptions) && is_array($inscriptions)) {
             $clubNom = trim((string)($insc['club_nom'] ?? $insc['club_name'] ?? ''));
             if ($clubNom !== '') {
                 $clubNomParLicence[$lic] = $clubNom;
+            }
+            if (isset($insc['numero_tir']) && $insc['numero_tir'] !== '' && $insc['numero_tir'] !== null) {
+                $numeroTirParLicence[$lic] = (int)$insc['numero_tir'];
             }
         }
     }
@@ -74,7 +78,7 @@ if ($isCible && !empty($plansCible)) {
             $lic = trim($p['numero_licence'] ?? '');
             if ($nom !== '' || $lic !== '') {
                 $abvCat = $categorieParLicence[$lic] ?? trim($p['abv_categorie_classement'] ?? $p['categorie_classement'] ?? '');
-                $nt = isset($p['numero_tir']) && $p['numero_tir'] !== '' && $p['numero_tir'] !== null ? (int)$p['numero_tir'] : null;
+                $nt = isset($p['numero_tir']) && $p['numero_tir'] !== '' && $p['numero_tir'] !== null ? (int)$p['numero_tir'] : ($numeroTirParLicence[$lic] ?? null);
                 $clubNom = $clubNomParLicence[$lic] ?? trim($p['club_nom'] ?? $p['club_name'] ?? '');
                 $flat[] = [
                     'numero_depart' => (int)($p['numero_depart'] ?? $departNum),
@@ -113,7 +117,7 @@ if ($isPeloton && !empty($plansPeloton)) {
         foreach ($plans as $p) {
             $nom = trim($p['user_nom'] ?? '');
             $lic = trim($p['numero_licence'] ?? '');
-            $nt = isset($p['numero_tir']) && $p['numero_tir'] !== '' && $p['numero_tir'] !== null ? (int)$p['numero_tir'] : null;
+            $nt = isset($p['numero_tir']) && $p['numero_tir'] !== '' && $p['numero_tir'] !== null ? (int)$p['numero_tir'] : ($numeroTirParLicence[$lic] ?? null);
             $clubNom = $clubNomParLicence[$lic] ?? trim($p['club_nom'] ?? $p['club_name'] ?? '');
             if ($nom !== '' || $lic !== '') {
                 $flat[] = [
@@ -416,6 +420,8 @@ if ($isNature) {
                             <th>N°</th>
                             <th>Nom</th>
                             <th>Licence</th>
+                            <th>Club</th>
+                            <th>N° tir</th>
                             <th>Score</th>
                             <th>Signature</th>
                         </tr>
@@ -426,6 +432,8 @@ if ($isNature) {
                             <td><?= $i + 1 ?></td>
                             <td><?= htmlspecialchars($a['user_nom'] ?? '') ?></td>
                             <td><?= htmlspecialchars($a['numero_licence'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($a['club_nom'] ?? $a['club_name'] ?? '') ?></td>
+                            <td><?= isset($a['numero_tir']) && $a['numero_tir'] !== '' && $a['numero_tir'] !== null ? (int)$a['numero_tir'] : '—' ?></td>
                             <td></td>
                             <td></td>
                         </tr>
