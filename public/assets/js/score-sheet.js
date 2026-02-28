@@ -1189,7 +1189,8 @@ async function saveVolleyScores() {
         sheetRows[i].cumulativeTotal = cumul;
     }
     
-    // Enregistrer en base (scored_ends + scored_shots) si session créée à l'import
+    // Enregistrer en base : scored_ends (valeur calculée de la volée) et scored_shots (valeur de chaque flèche),
+    // associés à la session (scored_trainings) de l'archer créée précédemment à l'import.
     const trainingId = sheet.scoredTrainingId;
     if (trainingId && !row.savedToServer) {
         try {
