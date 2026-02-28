@@ -143,7 +143,6 @@ class ScoreSheetController {
         ], function ($v) { return $v !== null && $v !== ''; }));
         $notesSuffix = $feuilleMarqueJson !== '[]' ? ', __FEUILLE_MARQUE__:' . $feuilleMarqueJson : '';
         $trainingIds = [];
-        $userIds = [];
         $existingEndsByIndex = [];
         $exportedToConcours = false;
         foreach ($data['user_sheets'] as $userSheet) {
@@ -151,7 +150,6 @@ class ScoreSheetController {
             $licence = trim((string)($archerInfo['licenseNumber'] ?? ''));
             if ($licence === '') {
                 $trainingIds[] = null;
-                $userIds[] = null;
                 $existingEndsByIndex[] = null;
                 continue;
             }
@@ -222,7 +220,6 @@ class ScoreSheetController {
             if ($existingTraining !== null) {
                 $existingTrainingId = (int)($existingTraining['id'] ?? 0);
                 $trainingIds[] = $existingTrainingId;
-                $userIds[] = $targetUserId;
                 $endsForSheet = isset($existingTraining['ends']) && is_array($existingTraining['ends'])
                     ? $existingTraining['ends']
                     : null;
@@ -255,10 +252,8 @@ class ScoreSheetController {
             $response = $this->apiService->createScoredTraining($createData);
             if (!empty($response['success']) && !empty($response['data']['id'])) {
                 $trainingIds[] = (int)$response['data']['id'];
-                $userIds[] = $targetUserId;
             } else {
                 $trainingIds[] = null;
-                $userIds[] = $targetUserId;
             }
             $existingEndsByIndex[] = null;
         }
@@ -266,7 +261,6 @@ class ScoreSheetController {
             'success' => true,
             'data' => [
                 'training_ids' => $trainingIds,
-                'user_ids' => $userIds,
                 'existing_ends_by_index' => $existingEndsByIndex,
                 'exported_to_concours' => $exportedToConcours,
             ],
@@ -358,9 +352,6 @@ class ScoreSheetController {
         }
         try {
             $response = $this->apiService->getScoredTrainingByIdWithUser($trainingId, $userId ?? $_SESSION['user']['id']);
-            if (empty($response['success']) || empty($response['data'])) {
-                $response = $this->apiService->getScoredTrainingById($trainingId);
-            }
             if (!empty($response['success']) && !empty($response['data'])) {
                 $data = $response['data'];
                 if (isset($data['data']) && is_array($data['data'])) {
