@@ -122,6 +122,16 @@ class ApiService {
         }
 
         /**
+         * Récupère les inscriptions d'un concours
+         */
+        public function getConcoursInscriptions($concoursId) {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
+            }
+            return $this->makeRequest("concours/{$concoursId}/inscriptions", "GET");
+        }
+
+        /**
          * Saisit un résultat dans concours_resultats (POST concours/{id}/resultat)
          * @param int $concoursId
          * @param array $data { inscription_id, score, nb_20_15?, nb_20_10?, nb_15_15?, nb_15_10?, serie1_score?, serie2_score? }

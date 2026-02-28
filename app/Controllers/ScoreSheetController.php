@@ -548,7 +548,7 @@ class ScoreSheetController {
 
     /**
      * Exporte les scores vers concours_resultats (saisie automatique).
-     * POST body: { concours_id, shooting_type, user_sheets: [ { inscription_id, score, nb_20_15?, ... } ] }
+     * POST body: { concours_id, shooting_type, user_sheets: [ { inscription_id?, license_number?, score, nb_20_15?, ... } ] }
      */
     public function exportToConcours() {
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
@@ -565,9 +565,35 @@ class ScoreSheetController {
         $concoursId = (int)$data['concours_id'];
         $exported = 0;
         $errors = [];
+        $licenceToInscription = null;
         foreach ($data['user_sheets'] as $sheet) {
             $inscriptionId = isset($sheet['inscription_id']) ? (int)$sheet['inscription_id'] : 0;
-            if ($inscriptionId <= 0) continue;
+            if ($inscriptionId <= 0 && !empty($sheet['license_number'])) {
+                if ($licenceToInscription === null) {
+                    $licenceToInscription = [];
+                    try {
+                        $inscResp = $this->apiService->getConcoursInscriptions($concoursId);
+                        $inscriptions = [];
+                        if (!empty($inscResp['success']) && isset($inscResp['data'])) {
+                            $inscriptions = is_array($inscResp['data']) ? $inscResp['data'] : [];
+                        }
+                        foreach ($inscriptions as $i) {
+                            $lic = trim((string)($i['numero_licence'] ?? $i['numeroLicence'] ?? ''));
+                            if ($lic !== '') {
+                                $licenceToInscription[$lic] = (int)($i['id'] ?? $i['id_inscription'] ?? 0);
+                            }
+                        }
+                    } catch (Exception $e) {
+                        $errors[] = 'Impossible de récupérer les inscriptions: ' . $e->getMessage();
+                    }
+                }
+                $lic = trim((string)$sheet['license_number']);
+                $inscriptionId = $licenceToInscription[$lic] ?? 0;
+            }
+            if ($inscriptionId <= 0) {
+                $errors[] = 'Inscription introuvable pour licence ' . ($sheet['license_number'] ?? '?');
+                continue;
+            }
             $payload = [
                 'inscription_id' => $inscriptionId,
                 'score' => (int)($sheet['score'] ?? 0),
@@ -594,7 +620,8 @@ class ScoreSheetController {
         } elseif ($exported > 0) {
             $this->sendJsonResponse(['success' => true, 'message' => $exported . ' score(s) exporté(s). ' . implode(' ', $errors)]);
         } else {
-            $this->sendJsonResponse(['success' => false, 'message' => implode(' ', $errors) ?: 'Aucun score exporté'], 400);
+            $msg = !empty($errors) ? implode(' ; ', $errors) : 'Aucun score exporté. Vérifiez que les archers ont été préremplis depuis le concours (départ + cible/peloton).';
+            $this->sendJsonResponse(['success' => false, 'message' => $msg], 400);
         }
     }
     

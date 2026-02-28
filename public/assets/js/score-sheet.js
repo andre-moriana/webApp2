@@ -2244,10 +2244,10 @@ async function exportToConcours() {
     const sheetsToExport = userSheets.filter(s => {
         const lic = (s.archerInfo?.licenseNumber ?? '').toString().trim();
         const hasScores = s.scoreRows?.some(row => (row.endTotal || 0) > 0);
-        return lic !== '' && s.inscriptionId && hasScores;
+        return lic !== '' && hasScores && (s.inscriptionId || lic);
     });
     if (sheetsToExport.length === 0) {
-        showStatus('Aucune feuille avec inscription et scores à exporter.', 'warning');
+        showStatus('Aucune feuille avec licence et scores à exporter.', 'warning');
         return;
     }
     const isNature = getShootingConfigKey(selectedShootingType) === 'Nature';
@@ -2259,7 +2259,9 @@ async function exportToConcours() {
         shooting_type: getShootingConfigKey(selectedShootingType),
         user_sheets: sheetsToExport.map(sheet => {
             const score = sheet.scoreRows.reduce((sum, row) => sum + (row.endTotal || 0), 0);
-            const data = { inscription_id: sheet.inscriptionId, score };
+            const lic = (sheet.archerInfo?.licenseNumber ?? '').toString().trim();
+            const data = { score, license_number: lic };
+            if (sheet.inscriptionId) data.inscription_id = sheet.inscriptionId;
             if (isNature) {
                 let nb_20_15 = 0, nb_20_10 = 0, nb_15_15 = 0, nb_15_10 = 0;
                 sheet.scoreRows.forEach(row => {
@@ -2300,7 +2302,6 @@ async function exportToConcours() {
         const result = await resp.json().catch(() => ({}));
         if (result.success) {
             showStatus(result.message || 'Scores exportés vers le concours avec succès.', 'success');
-            exportToPDF();
         } else {
             showStatus(result.message || 'Erreur lors de l\'export vers le concours.', 'danger');
         }
