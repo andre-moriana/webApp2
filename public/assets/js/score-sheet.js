@@ -44,6 +44,9 @@ let concoursDetails = null;
 /** True si la feuille a déjà été exportée vers concours_resultats (lu depuis les notes au chargement). */
 let exportedToConcours = false;
 
+/** True si les feuilles ont déjà été sauvegardées (mémorisé en localStorage pour réouverture). */
+let sheetsSaved = false;
+
 /** Retourne l'iddiscipline (de data-disciplines) pour un abv_discipline donné, ou null. */
 function getDisciplineIdForAbv(abv) {
     if (!abv) return null;
@@ -175,6 +178,7 @@ function setupConcoursSelector() {
             selectedShootingType = '';
             userSheets.forEach(s => { delete s.inscriptionId; });
             exportedToConcours = false;
+            sheetsSaved = false;
             updateConcoursImportLock();
             loadCategoriesForDiscipline(null);
             document.getElementById('archerNavigation')?.style?.setProperty('display', 'none');
@@ -430,6 +434,10 @@ async function prefillArchersFromConcours() {
     if (selectedConcoursId && (dep || pel) && localStorage.getItem(storageKey)) {
         exportedToConcours = true;
     }
+    const savedKey = 'scoreSheet_saved_' + (selectedConcoursId || '') + '_' + dep + '_' + pel;
+    if (selectedConcoursId && (dep || pel) && localStorage.getItem(savedKey)) {
+        sheetsSaved = true;
+    }
 
     let archers = [];
     // Si plan cible existe (T/S/I/H), exiger départ + cible
@@ -619,6 +627,7 @@ async function prefillArchersFromConcours() {
     if (saveBtn) saveBtn.style.display = 'inline-block';
     if (sigBtn) sigBtn.style.display = 'inline-block';
     updateExportButtonVisibility();
+    updateSaveButtonVisibility();
     
     currentUserIndex = 0;
     displayCurrentArcher();
@@ -1520,6 +1529,14 @@ function saveScoreSheet(options = {}) {
     .then(data => {
         if (data.success) {
             if (!silent) showStatus(data.message || 'Feuilles de marque sauvegardées avec succès !', 'success');
+            sheetsSaved = true;
+            const departSelect = document.getElementById('departSelect');
+            const pelotonSelect = document.getElementById('pelotonSelect');
+            const dep = departSelect?.value ?? '';
+            const pel = pelotonSelect?.value ?? '';
+            const savedKey = 'scoreSheet_saved_' + (selectedConcoursId || '') + '_' + dep + '_' + pel;
+            try { localStorage.setItem(savedKey, '1'); } catch (e) {}
+            updateSaveButtonVisibility();
             if (redirect) {
                 setTimeout(() => { window.location.href = '/scored-trainings'; }, 2000);
             }
@@ -1823,6 +1840,15 @@ function updateExportButtonVisibility() {
     } else {
         if (exportBtn) exportBtn.style.display = areAllSheetsSigned() ? 'inline-block' : 'none';
         if (sigBtn) sigBtn.style.display = 'inline-block';
+    }
+    updateSaveButtonVisibility();
+}
+
+/** Masque le bouton Sauvegarder si les feuilles ont déjà été sauvegardées ou exportées. */
+function updateSaveButtonVisibility() {
+    const saveBtn = document.getElementById('saveScoreSheetBtn');
+    if (saveBtn) {
+        saveBtn.style.display = (exportedToConcours || sheetsSaved) ? 'none' : 'inline-block';
     }
 }
 
