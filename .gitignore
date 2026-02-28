@@ -1,3 +1,4 @@
 .env
 # Fichier XML volumineux (données FFTA) — ne pas versionner (limite GitHub 100 Mo)
 public/data/licences-users.xml
+logs/*.log
