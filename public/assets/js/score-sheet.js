@@ -2345,6 +2345,7 @@ async function exportToConcours() {
             return;
         }
         const rawText = await resp.text();
+        console.log('Export: rawText (premiers 300 car.)=', rawText ? rawText.slice(0, 300) : '(vide)');
         const result = (() => {
             try {
                 return JSON.parse(rawText);
@@ -2353,7 +2354,7 @@ async function exportToConcours() {
                 return { success: false, message: 'Réponse serveur invalide (status ' + resp.status + '). Vérifiez la console.' };
             }
         })();
-        console.log('Export: result=', result);
+        console.log('Export: result=', JSON.stringify(result));
         if (result.success) {
             showStatus(result.message || 'Scores exportés vers le concours avec succès.', 'success');
         } else {

@@ -2360,6 +2360,9 @@ class ConcoursController {
             $redirectUrl .= '?' . http_build_query($params);
         }
         if ($returnJson) {
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
             header('Content-Type: application/json; charset=utf-8');
             $msg = $saved > 0 ? $saved . ' score(s) enregistré(s) avec succès.' : (implode(' ; ', $errors) ?: 'Aucun score enregistré.');
             $json = [
