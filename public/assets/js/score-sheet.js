@@ -2268,13 +2268,24 @@ async function exportToConcours() {
     const endsPerSeries = hasSeries ? config.total_ends / config.series : 0;
 
     const departSelect = document.getElementById('departSelect');
+    // Recalculer endTotal depuis les flèches avant export (évite score vide si désynchronisation)
+    sheetsToExport.forEach(sheet => {
+        (sheet.scoreRows || []).forEach(row => {
+            const fromArrows = (row.arrows || []).reduce((s, a) => s + (parseInt(a?.value, 10) || 0), 0);
+            row.endTotal = fromArrows > 0 ? fromArrows : (row.endTotal || 0);
+        });
+    });
     const payload = {
         concours_id: selectedConcoursId,
         shooting_type: getShootingConfigKey(selectedShootingType),
         depart: departSelect?.value || '',
         serie_mode: 'both',
         user_sheets: sheetsToExport.map(sheet => {
-            const score = sheet.scoreRows.reduce((sum, row) => sum + (row.endTotal || 0), 0);
+            const score = sheet.scoreRows.reduce((sum, row) => {
+                const et = row.endTotal || 0;
+                const fromArrows = (row.arrows || []).reduce((s, a) => s + (parseInt(a?.value, 10) || 0), 0);
+                return sum + (et > 0 ? et : fromArrows);
+            }, 0);
             const lic = (sheet.archerInfo?.licenseNumber ?? '').toString().trim();
             const data = { score, license_number: lic };
             if (sheet.inscriptionId) data.inscription_id = sheet.inscriptionId;
@@ -2336,6 +2347,10 @@ async function exportToConcours() {
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Export...'; }
 
     try {
+        // Synchroniser les données du modal de saisie si ouvert (évite score vide)
+        if (currentModalUserIndex !== null && currentModalRow !== null) {
+            await saveVolleyScores();
+        }
         // 1. Sauvegarder d'abord les scores dans les tirs comptés (scored_trainings)
         const saveResult = await saveScoreSheet({ redirect: false, silent: true });
         if (!saveResult.success && saveResult.message && saveResult.message !== 'Données manquantes') {
@@ -2344,7 +2359,7 @@ async function exportToConcours() {
         }
 
         // 2. Exporter vers concours_resultats
-        console.log('Export: envoi requête...', { concours_id: selectedConcoursId, nb_sheets: payload.user_sheets.length });
+        console.log('Export: envoi requête...', { concours_id: selectedConcoursId, nb_sheets: payload.user_sheets.length, scores: payload.user_sheets.map(s => ({ lic: s.license_number, score: s.score })) });
         const resp = await fetch('/score-sheet/export-to-concours', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
