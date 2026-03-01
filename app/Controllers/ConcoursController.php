@@ -1697,14 +1697,18 @@ class ConcoursController {
             $concours = (object)$concours;
         }
 
-        // Inscriptions confirmées
+        // Inscriptions confirmées (API renvoie { data: [...], current_user_licence: "..." })
         $inscriptions = [];
         try {
             $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
             $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
-            if (!is_array($inscriptions)) {
+            if (is_array($inscriptions) && isset($inscriptions['data']) && is_array($inscriptions['data'])) {
+                $inscriptions = $inscriptions['data'];
+            }
+            if (!is_array($inscriptions) || isset($inscriptions['error'])) {
                 $inscriptions = [];
             }
+            $inscriptions = array_values(array_filter($inscriptions, function ($i) { return is_array($i); }));
             $inscriptions = array_filter($inscriptions, function($i) {
                 return ($i['statut_inscription'] ?? '') === 'confirmee';
             });
@@ -1791,6 +1795,7 @@ class ConcoursController {
         } catch (Exception $e) {}
         $categoriesClassement = [];
         $categoriesMap = [];
+        $categoriesIdToAbv = [];
         try {
             $iddiscipline = $concours->discipline ?? null;
             $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
@@ -1803,6 +1808,11 @@ class ConcoursController {
                     $abv = $cat['abv_categorie_classement'] ?? '';
                     if ($abv) {
                         $categoriesMap[$abv] = $cat['lb_categorie_classement'] ?? $abv;
+                        $id = $cat['id'] ?? $cat['idcategorie_classement'] ?? null;
+                        if ($id !== null && $id !== '') {
+                            $categoriesIdToAbv[(int)$id] = $abv;
+                            $categoriesIdToAbv[(string)$id] = $abv;
+                        }
                     }
                 }
             }
@@ -1860,12 +1870,19 @@ class ConcoursController {
             }, $concours->arbitres);
         }
 
-        // Enrichir inscriptions avec nom club et libellé catégorie
+        // Enrichir inscriptions avec nom club, abv catégorie (pour feuilles de marque) et libellé catégorie
         foreach ($inscriptions as &$insc) {
             $clubId = $insc['id_club'] ?? null;
             $c = $clubId ? ($clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? null) : null;
             $insc['club_nom'] = $c ? ($c['name'] ?? $c['nameShort'] ?? $c['name_short'] ?? '') : '';
-            $abvCat = trim((string)($insc['categorie_classement'] ?? ''));
+            $catRaw = $insc['categorie_classement'] ?? $insc['abv_categorie_classement'] ?? '';
+            $abvCat = trim((string)$catRaw);
+            if ($abvCat !== '' && is_numeric($abvCat) && isset($categoriesIdToAbv[(int)$abvCat])) {
+                $abvCat = $categoriesIdToAbv[(int)$abvCat];
+            } elseif ($abvCat !== '' && is_numeric($abvCat) && isset($categoriesIdToAbv[$abvCat])) {
+                $abvCat = $categoriesIdToAbv[$abvCat];
+            }
+            $insc['abv_categorie_classement'] = $abvCat;
             $insc['categorie_libelle'] = $abvCat !== '' ? ($categoriesMap[$abvCat] ?? $abvCat) : '';
         }
         unset($insc);
