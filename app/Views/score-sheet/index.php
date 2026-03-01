@@ -192,76 +192,8 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <ul class="nav nav-tabs mb-3" id="scoreInputTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="table-tab" data-bs-toggle="tab" data-bs-target="#tableMode" type="button" role="tab">
-                            <i class="fas fa-table"></i> Tableau
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="target-tab" data-bs-toggle="tab" data-bs-target="#targetMode" type="button" role="tab">
-                            <i class="fas fa-bullseye"></i> Cible interactive
-                        </button>
-                    </li>
-                </ul>
-                <div class="tab-content" id="scoreInputContent">
-                    <div class="tab-pane fade show active" id="tableMode" role="tabpanel">
-                        <div id="scoreInputs">
-                            <!-- Les inputs seront générés par JavaScript -->
-                        </div>
-                    </div>
-                    <div class="tab-pane fade" id="targetMode" role="tabpanel">
-                        <div class="target-interactive-container">
-                            <div class="target-wrapper" id="targetWrapper">
-                                <div class="target-zoom-container" id="targetZoomContainer">
-                                    <svg class="target-svg" id="targetSvg" viewBox="0 0 300 300">
-                                        <?php 
-                                        // Générer le blason selon le type de tir
-                                        // Le type de tir sera déterminé par JavaScript
-                                        $centerX = 150;
-                                        $centerY = 150;
-                                        
-                                        // Par défaut, générer un blason standard (10 zones)
-                                        $numRings = 10;
-                                        $targetScale = $numRings / ($numRings + 1); // 10/11
-                                        $outerRadius = 150 * $targetScale; // 136.363636...
-                                        $ringWidth = $outerRadius / $numRings; // 13.636363...
-                                        
-                                        $colors = ['#FFFFFF','#FFFFFF','#212121','#212121','#1976D2','#1976D2','#D32F2F','#D32F2F','#FFD700','#FFD700'];
-                                        
-                                        for ($i = 0; $i < $numRings; $i++) {
-                                            $radius = $outerRadius - $i * $ringWidth;
-                                            $color = $colors[$i];
-                                            $zoneNumber = $numRings - $i; // Zone 10 (centre) à zone 1 (extérieur)
-                                            echo "<circle cx='$centerX' cy='$centerY' r='$radius' fill='$color' stroke='black' stroke-width='1' class='zone-$zoneNumber'></circle>";
-                                        }
-                                        ?>
-                                        <g id="arrowsGroup"></g>
-                                    </svg>
-                                </div>
-                                <div class="target-controls">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="resetTarget">
-                                        <i class="fas fa-undo"></i> Réinitialiser
-                                    </button>
-                                </div>
-                                <div class="target-score-indicator" id="targetScoreIndicator" style="display: none;">
-                                    <div class="score-preview">
-                                        <span class="score-label">Score:</span>
-                                        <span class="score-value" id="currentScore">0</span>
-                                    </div>
-                                    <div class="score-instructions">
-                                        <small>Relâchez pour confirmer</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="target-scores-display" id="targetScoresDisplay">
-                                <h6>Scores sélectionnés :</h6>
-                                <div class="scores-list" id="scoresList">
-                                    <!-- Les scores seront affichés ici -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div id="scoreInputs">
+                    <!-- Les inputs seront générés par JavaScript (mode tableau uniquement) -->
                 </div>
             </div>
             <div class="modal-footer">
@@ -271,11 +203,6 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
         </div>
     </div>
 </div>
-
-<!-- Overlay pour le mode zoom de la cible -->
-<div class="zoom-overlay" id="zoomOverlay"></div>
-<!-- Overlay pour le mode zoom drag -->
-<div class="zoom-drag-overlay" id="zoomDragOverlay"></div>
 
 <!-- Modal pour les signatures -->
 <div class="modal fade" id="signatureModal" tabindex="-1">
