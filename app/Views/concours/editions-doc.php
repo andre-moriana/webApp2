@@ -498,27 +498,38 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
         $currentDepartFeuilles = $departFeuilles ?? 'tout';
         $currentSerieFeuilles = $serieFeuilles ?? 'toutes';
         $currentCibleFeuilles = $cibleFeuilles ?? 'toutes';
+        $currentPelotonFeuilles = $pelotonFeuilles ?? 'tout';
         $ciblesListFeuilles = $ciblesListFeuilles ?? [];
+        $pelotonsListFeuilles = $pelotonsListFeuilles ?? [];
         $departsListFeuilles = $departsListFeuilles ?? [];
+        $isPelotonFeuilles = in_array($disciplineAbv ?? '', ['3', 'N', 'C'], true);
+        $feuillesFilterParam = $isPelotonFeuilles ? 'peloton' : 'cible';
+        $feuillesFilterCurrent = $isPelotonFeuilles ? $currentPelotonFeuilles : $currentCibleFeuilles;
+        $feuillesFilterList = $isPelotonFeuilles ? $pelotonsListFeuilles : $ciblesListFeuilles;
+        $feuillesFilterLabel = $isPelotonFeuilles ? 'Peloton' : 'Cible';
         ?>
         <label class="me-2">Départ :</label>
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=tout&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles)) ?>"<?= $currentDepartFeuilles === 'tout' ? ' selected' : '' ?>>Tous</option>
+            <?php $qDep = 'depart=tout&serie=' . rawurlencode($currentSerieFeuilles) . '&' . $feuillesFilterParam . '=' . rawurlencode($feuillesFilterCurrent); ?>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&' . $qDep) ?>"<?= $currentDepartFeuilles === 'tout' ? ' selected' : '' ?>>Tous</option>
             <?php foreach ($departsListFeuilles as $numDepart): ?>
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . (int)$numDepart . '&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles)) ?>"<?= $currentDepartFeuilles === (string)$numDepart ? ' selected' : '' ?>><?= (int)$numDepart ?></option>
+            <?php $qDep = 'depart=' . (int)$numDepart . '&serie=' . rawurlencode($currentSerieFeuilles) . '&' . $feuillesFilterParam . '=' . rawurlencode($feuillesFilterCurrent); ?>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&' . $qDep) ?>"<?= $currentDepartFeuilles === (string)$numDepart ? ' selected' : '' ?>><?= (int)$numDepart ?></option>
             <?php endforeach; ?>
         </select>
         <label class="me-2">Série :</label>
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles) . '&serie=toutes') ?>"<?= $currentSerieFeuilles === 'toutes' ? ' selected' : '' ?>>TOUTES</option>
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles) . '&serie=1') ?>"<?= $currentSerieFeuilles === '1' ? ' selected' : '' ?>>1</option>
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&cible=' . rawurlencode($currentCibleFeuilles) . '&serie=2') ?>"<?= $currentSerieFeuilles === '2' ? ' selected' : '' ?>>2</option>
+            <?php $qSer = 'depart=' . rawurlencode($currentDepartFeuilles) . '&' . $feuillesFilterParam . '=' . rawurlencode($feuillesFilterCurrent) . '&serie=toutes'; ?>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&' . $qSer) ?>"<?= $currentSerieFeuilles === 'toutes' ? ' selected' : '' ?>>TOUTES</option>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&' . $feuillesFilterParam . '=' . rawurlencode($feuillesFilterCurrent) . '&serie=1') ?>"<?= $currentSerieFeuilles === '1' ? ' selected' : '' ?>>1</option>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&' . $feuillesFilterParam . '=' . rawurlencode($feuillesFilterCurrent) . '&serie=2') ?>"<?= $currentSerieFeuilles === '2' ? ' selected' : '' ?>>2</option>
         </select>
-        <label class="me-2">Cible :</label>
+        <label class="me-2"><?= htmlspecialchars($feuillesFilterLabel) ?> :</label>
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=toutes') ?>"<?= $currentCibleFeuilles === 'toutes' ? ' selected' : '' ?>>TOUTES</option>
-            <?php foreach ($ciblesListFeuilles as $numCible): ?>
-            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&serie=' . rawurlencode($currentSerieFeuilles) . '&cible=' . $numCible) ?>"<?= $currentCibleFeuilles === (string)$numCible ? ' selected' : '' ?>><?= (int)$numCible ?></option>
+            <?php $allVal = $isPelotonFeuilles ? 'tout' : 'toutes'; ?>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&serie=' . rawurlencode($currentSerieFeuilles) . '&' . $feuillesFilterParam . '=' . $allVal) ?>"<?= $feuillesFilterCurrent === $allVal ? ' selected' : '' ?>><?= $isPelotonFeuilles ? 'TOUS' : 'TOUTES' ?></option>
+            <?php foreach ($feuillesFilterList as $numItem): ?>
+            <option value="<?= htmlspecialchars($baseFeuillesUrl . '&depart=' . rawurlencode($currentDepartFeuilles) . '&serie=' . rawurlencode($currentSerieFeuilles) . '&' . $feuillesFilterParam . '=' . $numItem) ?>"<?= $feuillesFilterCurrent === (string)$numItem ? ' selected' : '' ?>><?= (int)$numItem ?></option>
             <?php endforeach; ?>
         </select>
         <?php endif; ?>

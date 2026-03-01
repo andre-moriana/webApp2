@@ -20,10 +20,11 @@ $isNature = ($disciplineAbv === 'N');
 $isCible = in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
 $isPeloton = in_array($disciplineAbv, ['3', 'N', 'C'], true);
 
-// Filtres d'édition (départ, série et cible)
+// Filtres d'édition (départ, série, cible pour S/T/I/H ou peloton pour N/3/C)
 $filterDepartFeuilles = isset($departFeuilles) ? (string)$departFeuilles : 'tout';
 $filterSerieFeuilles = isset($serieFeuilles) ? (string)$serieFeuilles : 'toutes';
 $filterCibleFeuilles = isset($cibleFeuilles) ? (string)$cibleFeuilles : 'toutes';
+$filterPelotonFeuilles = isset($pelotonFeuilles) ? (string)$pelotonFeuilles : 'tout';
 
 // Appliquer le filtre par départ sur les plans
 if ($filterDepartFeuilles !== '' && $filterDepartFeuilles !== 'tout') {
@@ -145,6 +146,13 @@ if ($isPeloton && !empty($plansPeloton)) {
         $archersParPeloton[$k]['archers'][] = $a;
     }
     ksort($archersParPeloton);
+    // Filtre par peloton : ne garder que le peloton sélectionné si différent de TOUS
+    if ($filterPelotonFeuilles !== '' && $filterPelotonFeuilles !== 'tout' && $filterPelotonFeuilles !== 'toutes') {
+        $pelotonNum = (int)$filterPelotonFeuilles;
+        $archersParPeloton = array_filter($archersParPeloton, function ($g) use ($pelotonNum) {
+            return ((int)($g['peloton'] ?? 0)) === $pelotonNum;
+        });
+    }
 }
 
 // Ordre des positions blason : tableau 1 = A, tableau 2 = B, etc.
