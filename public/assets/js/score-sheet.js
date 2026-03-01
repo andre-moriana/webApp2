@@ -923,7 +923,17 @@ function displayCurrentArcher() {
     
     if (nameInput) nameInput.value = sheet.archerInfo.name || '';
     if (licenseInput) licenseInput.value = sheet.archerInfo.licenseNumber || '';
-    if (categorySelect) categorySelect.value = sheet.archerInfo.category || '';
+    if (categorySelect) {
+        const categoryValue = (sheet.archerInfo.category || '').toString().trim();
+        // Si la catégorie vient d'un import mais n'est pas encore dans les options (type de tir pas choisi ou abv absente), l'ajouter pour l'affichage
+        if (categoryValue && !Array.from(categorySelect.options).some(opt => (opt.value || '').toString().trim() === categoryValue)) {
+            const opt = document.createElement('option');
+            opt.value = categoryValue;
+            opt.textContent = categoryValue;
+            categorySelect.appendChild(opt);
+        }
+        categorySelect.value = categoryValue || '';
+    }
     
     const fromConcoursImport = !!(sheet.inscriptionId);
     if (nameInput) {
