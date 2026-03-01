@@ -2097,7 +2097,8 @@ window.editInscription = function(inscriptionId) {
             setVal('edit-creation_renouvellement', crVal || '');
             setVal('edit-depart-select', inscription.numero_depart);
             setVal('edit-categorie_classement', inscription.categorie_classement);
-            setVal('edit-catage', inscription.catage ?? '');
+            setVal('edit-catage', inscription.ageCategory ?? '');
+            //setVal('edit-catage', inscription.catage ?? '');
             setVal('edit-arme', inscription.arme);
             
             // Sélectionner automatiquement la couleur de piquet pour Nature
