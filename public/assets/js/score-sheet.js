@@ -924,22 +924,33 @@ function displayCurrentArcher() {
     if (nameInput) nameInput.value = sheet.archerInfo.name || '';
     if (licenseInput) licenseInput.value = sheet.archerInfo.licenseNumber || '';
     
-    const fromConcoursImport = !!(sheet.inscriptionId);
+    // Import concours : inscriptionId OU (concours sélectionné + données concours chargées + archer avec licence)
+    const hasConcoursData = !!(selectedConcoursId && (concoursInscriptions?.length > 0 || (concoursPlansCible && Object.keys(concoursPlansCible).length > 0) || (concoursPlansPeloton && Object.keys(concoursPlansPeloton).length > 0)));
+    const hasLicense = !!((sheet.archerInfo.licenseNumber || '').toString().trim());
+    const fromConcoursImport = !!(sheet.inscriptionId || (hasConcoursData && hasLicense));
     const categoryValue = (sheet.archerInfo.category || '').toString().trim();
     const categoryDisplay = document.getElementById('archerCategoryDisplay');
     if (fromConcoursImport) {
         // Import concours : afficher la catégorie en lecture seule (pas de select)
-        if (categorySelect) categorySelect.style.display = 'none';
+        if (categorySelect) {
+            categorySelect.style.display = 'none';
+            categorySelect.classList.add('d-none');
+        }
         if (categoryDisplay) {
             categoryDisplay.textContent = categoryValue || '—';
             categoryDisplay.style.display = 'block';
+            categoryDisplay.classList.remove('d-none');
         }
     } else {
         if (categorySelect) {
             categorySelect.style.display = 'block';
+            categorySelect.classList.remove('d-none');
             categorySelect.value = categoryValue || '';
         }
-        if (categoryDisplay) categoryDisplay.style.display = 'none';
+        if (categoryDisplay) {
+            categoryDisplay.style.display = 'none';
+            categoryDisplay.classList.add('d-none');
+        }
     }
     if (nameInput) {
         nameInput.readOnly = fromConcoursImport;
