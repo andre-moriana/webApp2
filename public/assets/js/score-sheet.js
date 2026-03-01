@@ -269,8 +269,11 @@ function setupConcoursSelector() {
                 loadCategoriesForDiscipline(discId);
             }
             
-            // Inscriptions - filtrer confirmées (format API: { data: [...] } ou tableau direct)
-            let inscriptions = Array.isArray(inscRes) ? inscRes : (inscRes?.data || []);
+            // Inscriptions - filtrer confirmées (format API: { data: [...] }, { data: { data: [...] } }, ou tableau direct)
+            let inscriptions = Array.isArray(inscRes) ? inscRes : (inscRes?.data ?? []);
+            if (!Array.isArray(inscriptions) && inscRes?.data?.data) {
+                inscriptions = inscRes.data.data;
+            }
             if (Array.isArray(inscriptions)) {
                 concoursInscriptions = inscriptions.filter(i => (i.statut_inscription || i.statutInscription || '') === 'confirmee');
             } else {
@@ -434,6 +437,12 @@ async function loadExistingTrainingData(indicesWithLicence) {
 }
 
 // Préremplir les archers depuis le concours (plan cible, peloton ou inscriptions)
+/** Retourne la catégorie de classement affichable pour une inscription (abv ou libellé). */
+function getInscriptionCategory(insc) {
+    if (!insc || typeof insc !== 'object') return '';
+    const v = (insc.abv_categorie_classement ?? insc.categorie_classement ?? insc.categorieClassement ?? insc.lb_categorie_classement ?? insc.categorie_libelle ?? '').toString().trim();
+    return v;
+}
 async function prefillArchersFromConcours() {
     const departSelect = document.getElementById('departSelect');
     const pelotonSelect = document.getElementById('pelotonSelect');
@@ -513,7 +522,7 @@ async function prefillArchersFromConcours() {
             const lic = (p.numero_licence || '').toString().trim();
             const insc = inscriptionsMap[lic] || inscriptionsMap['0' + lic] || inscriptionsMap[lic.replace(/^0/, '')] || {};
             const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
-            const cat = insc.abv_categorie_classement || insc.categorie_classement || insc.categorieClassement || '';
+            const cat = getInscriptionCategory(insc);
             return {
                 name: nom,
                 licenseNumber: lic,
@@ -542,7 +551,7 @@ async function prefillArchersFromConcours() {
             const lic = (p.numero_licence || '').toString().trim();
             const insc = inscriptionsMap[lic] || inscriptionsMap['0' + lic] || inscriptionsMap[lic.replace(/^0/, '')] || {};
             const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
-            const cat = insc.abv_categorie_classement || insc.categorie_classement || insc.categorieClassement || '';
+            const cat = getInscriptionCategory(insc);
             return {
                 name: nom,
                 licenseNumber: lic,
@@ -557,7 +566,7 @@ async function prefillArchersFromConcours() {
         archers = concoursInscriptions.slice(0, NUM_USERS).map(i => ({
             name: i.user_nom || i.nom || i.name || '',
             licenseNumber: i.numero_licence || i.numeroLicence || '',
-            category: i.abv_categorie_classement || i.categorie_classement || i.categorieClassement || '',
+            category: getInscriptionCategory(i),
             gender: (i.genre || i.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
             userId: i.user_id || i.userId || i.id_user,
             inscriptionId: i.id || i.id_inscription
