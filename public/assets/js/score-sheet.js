@@ -156,7 +156,7 @@ function initializeScoreSheet() {
             if (isNaN(idx)) return;
             const sheet = userSheets[currentUserIndex];
             if (!sheet) return;
-            const locked = sheet.signed === true || (!!sheet.notes && String(sheet.notes).indexOf('__SIGNED__:1') !== -1) || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
+            const locked = !!sheet.signed || (!!sheet.notes && String(sheet.notes).indexOf('__SIGNED__:1') !== -1) || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
             if (locked) {
                 showStatus('Feuille signée : les scores ne sont plus modifiables.', 'info');
                 return;
@@ -412,9 +412,8 @@ async function loadExistingTrainingData(indicesWithLicence) {
             }
             if (result.success && result.data) {
                 applyTrainingToSheet(sheet, result.data);
-                if (result.data.notes != null) sheet.notes = result.data.notes;
                 const notes = result.data.notes || (result.data.data && result.data.data.notes) || '';
-                // Priorité au flag signé envoyé par le backend (construction côté serveur)
+                if (notes) sheet.notes = notes;
                 if (result.data.signed === true) sheet.signed = true;
                 if (notes) {
                     const { signatures, signed } = parseSignaturesFromNotes(notes);
@@ -964,7 +963,7 @@ function updateScoreTable(sheet) {
     const isNature = (getShootingConfigKey(selectedShootingType) === 'Nature' || getShootingConfigKey(selectedShootingType) === 'Nature2x21');
     // Feuille signée = boutons N° cible désactivés (même if que pour le bouton signature / blocage modal)
     const signedFromNotes = !!(sheet.notes && String(sheet.notes).indexOf('__SIGNED__:1') !== -1);
-    const scoresLocked = sheet.signed === true || signedFromNotes || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
+    const scoresLocked = !!sheet.signed || signedFromNotes || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
     const tableBody = document.getElementById('scoreTableBody');
     
     // Nettoyer le tableau
@@ -1223,11 +1222,11 @@ function openScoreModal(rowIndex) {
     
     const sheet = userSheets[currentUserIndex];
     const signedFromNotes = !!(sheet.notes && String(sheet.notes).indexOf('__SIGNED__:1') !== -1);
-    if (sheet.signed === true || signedFromNotes || (!!scorerSignature && !!archerSignatures[currentUserIndex])) {
+    if (!!sheet.signed || signedFromNotes || (!!scorerSignature && !!archerSignatures[currentUserIndex])) {
         showStatus('Feuille signée : les scores ne sont plus modifiables.', 'info');
         return;
     }
-    
+
     currentModalRow = rowIndex;
     currentModalUserIndex = currentUserIndex;
     
@@ -1552,7 +1551,12 @@ function saveScoreSheet(options = {}) {
             if (!silent) showStatus(data.message || 'Feuilles de marque sauvegardées avec succès !', 'success');
             // Marquer comme signées les feuilles pour lesquelles on a envoyé archer + marqueur
             userSheets.forEach((sheet, userIndex) => {
-                if (archerSignatures[userIndex] && scorerSignature) sheet.signed = true;
+                if (archerSignatures[userIndex] && scorerSignature) {
+                    sheet.signed = true;
+                    if (sheet.notes == null || String(sheet.notes).indexOf('__SIGNED__:1') === -1) {
+                        sheet.notes = (sheet.notes || '') + (sheet.notes ? '\n' : '') + '__SIGNED__:1';
+                    }
+                }
             });
             displayCurrentArcher(); // Refaire le tableau pour afficher les scores verrouillés
             const departSelect = document.getElementById('departSelect');
