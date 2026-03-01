@@ -111,6 +111,21 @@ if ($isCible && !empty($plansCible)) {
             return ((int)($g['cible'] ?? 0)) === $cibleNum;
         });
     }
+    // Tir salle / plan cible : ordre des archers selon la position sur le plan (archer 1 = A, 2 = B, etc.)
+    $ordrePositionCible = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    foreach ($archersParCible as &$g) {
+        if (empty($g['archers'])) continue;
+        usort($g['archers'], function ($a, $b) use ($ordrePositionCible) {
+            $pa = strtoupper(trim($a['position_archer'] ?? ''));
+            $pb = strtoupper(trim($b['position_archer'] ?? ''));
+            $ia = array_search($pa, $ordrePositionCible);
+            $ib = array_search($pb, $ordrePositionCible);
+            if ($ia === false) $ia = 999;
+            if ($ib === false) $ib = 999;
+            return $ia - $ib;
+        });
+    }
+    unset($g);
 }
 
 // Extraire les archers du plan peloton, groupés par (depart, peloton)
