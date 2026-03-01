@@ -2116,12 +2116,16 @@ class ConcoursController {
             $concours = (object)$concours;
         }
 
-        // Récupérer les inscriptions
+        // Récupérer les inscriptions (API renvoie { data: [...], current_user_licence: "..." })
         $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
         $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
-        if (!is_array($inscriptions)) {
+        if (is_array($inscriptions) && isset($inscriptions['data']) && is_array($inscriptions['data'])) {
+            $inscriptions = $inscriptions['data'];
+        }
+        if (!is_array($inscriptions) || isset($inscriptions['error'])) {
             $inscriptions = [];
         }
+        $inscriptions = array_values(array_filter($inscriptions, function ($i) { return is_array($i); }));
 
         // Filtrer les inscriptions confirmées
         $inscriptions = array_filter($inscriptions, function($i) {
@@ -2148,7 +2152,11 @@ class ConcoursController {
         }
         if ($departSelected !== null) {
             $inscriptions = array_filter($inscriptions, function($i) use ($departSelected) {
-                $num = isset($i['numero_depart']) ? (int)$i['numero_depart'] : null;
+                $num = isset($i['numero_depart']) && $i['numero_depart'] !== '' ? (int)$i['numero_depart'] : null;
+                // Inscriptions sans numéro de départ (ex. salle) : les afficher pour le départ sélectionné
+                if ($num === null) {
+                    return true;
+                }
                 return $num === $departSelected;
             });
         }
