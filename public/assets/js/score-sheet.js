@@ -1043,6 +1043,7 @@ function updateScoreTable(sheet) {
     let currentSeries = 1;
     const hasSeries = config.series === 2;
     const endsPerSeriesDisplay = hasSeries ? config.total_ends / config.series : 0;
+    const sigBtn = document.getElementById('signaturesBtn');
     
     sheet.scoreRows.forEach((row, index) => {
         // Recalculer les totaux
