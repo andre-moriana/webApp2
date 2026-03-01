@@ -513,7 +513,7 @@ async function prefillArchersFromConcours() {
             const lic = (p.numero_licence || '').toString().trim();
             const insc = inscriptionsMap[lic] || inscriptionsMap['0' + lic] || inscriptionsMap[lic.replace(/^0/, '')] || {};
             const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
-            const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
+            const cat = insc.abv_categorie_classement || insc.categorie_classement || insc.categorieClassement || '';
             return {
                 name: nom,
                 licenseNumber: lic,
@@ -542,7 +542,7 @@ async function prefillArchersFromConcours() {
             const lic = (p.numero_licence || '').toString().trim();
             const insc = inscriptionsMap[lic] || inscriptionsMap['0' + lic] || inscriptionsMap[lic.replace(/^0/, '')] || {};
             const nom = insc.user_nom || insc.nom || insc.name || p.user_nom || '';
-            const cat = insc.categorie_classement || insc.categorieClassement || insc.abv_categorie_classement || '';
+            const cat = insc.abv_categorie_classement || insc.categorie_classement || insc.categorieClassement || '';
             return {
                 name: nom,
                 licenseNumber: lic,
@@ -557,7 +557,7 @@ async function prefillArchersFromConcours() {
         archers = concoursInscriptions.slice(0, NUM_USERS).map(i => ({
             name: i.user_nom || i.nom || i.name || '',
             licenseNumber: i.numero_licence || i.numeroLicence || '',
-            category: i.categorie_classement || i.categorieClassement || i.abv_categorie_classement || '',
+            category: i.abv_categorie_classement || i.categorie_classement || i.categorieClassement || '',
             gender: (i.genre || i.gender || '').toUpperCase().startsWith('F') ? 'F' : 'H',
             userId: i.user_id || i.userId || i.id_user,
             inscriptionId: i.id || i.id_inscription
