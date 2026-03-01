@@ -437,6 +437,7 @@ $debugLicence = isset($_GET['debug_licence']);
                         <?php 
                         // $usersMap est passé depuis le contrôleur
                         foreach ($inscriptions as $inscription):
+                            if (!is_array($inscription)) { continue; }
                             $inscriptionLicence = trim((string)($inscription['numero_licence'] ?? ''));
                             $inscriptionUserId = $inscription['user_id'] ?? null;
                             // Identification : par numéro de licence (prioritaire) ou par user_id si licence absent
@@ -505,7 +506,7 @@ $debugLicence = isset($_GET['debug_licence']);
                                     <td<?= $rowStyle ?>><?= htmlspecialchars($piquetColor ? ucfirst($piquetColor) : 'N/A') ?></td>
                                 <?php else: ?>
                                     <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?> <?= htmlspecialchars($inscription['trispot'] ? 'T' : '') ?></td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?><?= (isset($inscription['trispot']) && $inscription['trispot']) ? ' T' : '' ?></td>
                                 <?php endif; ?>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
