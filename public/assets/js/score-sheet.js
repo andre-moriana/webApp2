@@ -1083,6 +1083,7 @@ function updateScoreTable(sheet) {
             const f2_0 = (s2 === 0) ? '✗' : '';
             const rowHtml = document.createElement('tr');
             rowHtml.className = (index % 2 === 1) ? 'feuille-marque-row-even' : '';
+            console.log('scoresLocked', scoresLocked);
             const volleyBtnNature = scoresLocked
                 ? `<span class="btn btn-sm btn-outline-secondary volley-disabled" title="Feuille signée, scores non modifiables" style="pointer-events:none;cursor:not-allowed">${row.endNumber}</span>`
                 : `<button type="button" class="btn btn-sm btn-outline-primary volley-open-btn" data-row-index="${index}" title="Modifier la volée">${row.endNumber}</button>`;
