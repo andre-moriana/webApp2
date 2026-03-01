@@ -401,13 +401,12 @@ async function loadExistingTrainingData(indicesWithLicence) {
         const userId = sheet.userId != null && sheet.userId !== '' ? sheet.userId : null;
         const tid = sheet.scoredTrainingId;
         let url = `/score-sheet/load-training?training_id=${encodeURIComponent(tid)}`;
-        if (userId) url += `&user_id=${encodeURIComponent(userId)}`;
         try {
             let resp = await fetch(url);
             let result = await resp.json().catch(() => ({}));
             if (!result.success || !result.data) {
                 if (userId && (resp.status === 404 || !result.success)) {
-                    resp = await fetch(`/score-sheet/load-training?training_id=${encodeURIComponent(tid)}&user_id=${encodeURIComponent(userId)}`);
+                    resp = await fetch(url + (url.includes('?') ? '&' : '?') + 'user_id=' + encodeURIComponent(userId));
                     result = await resp.json().catch(() => ({}));
                 }
             }
@@ -1044,8 +1043,7 @@ function updateScoreTable(sheet) {
     let currentSeries = 1;
     const hasSeries = config.series === 2;
     const endsPerSeriesDisplay = hasSeries ? config.total_ends / config.series : 0;
-    const sigBtn = document.getElementById('signaturesBtn');
-    console.log('sigbtn', sigBtn);
+    
     sheet.scoreRows.forEach((row, index) => {
         // Recalculer les totaux
         row.endTotal = row.arrows.reduce((sum, arrow) => sum + (arrow.value || 0), 0);
@@ -1085,12 +1083,9 @@ function updateScoreTable(sheet) {
             const f2_0 = (s2 === 0) ? '✗' : '';
             const rowHtml = document.createElement('tr');
             rowHtml.className = (index % 2 === 1) ? 'feuille-marque-row-even' : '';
-            let volleyBtnNature = '';
-            if (sigBtn) {
-                volleyBtnNature = `<span class="btn btn-sm btn-outline-secondary volley-disabled" title="Feuille signée, scores non modifiables" style="pointer-events:none;cursor:not-allowed">${row.endNumber}</span>`;
-            } else {
-                volleyBtnNature = `<button type="button" class="btn btn-sm btn-outline-primary volley-open-btn" data-row-index="${index}" title="Modifier la volée">${row.endNumber}</button>`;
-            }
+            const volleyBtnNature = scoresLocked
+                ? `<span class="btn btn-sm btn-outline-secondary volley-disabled" title="Feuille signée, scores non modifiables" style="pointer-events:none;cursor:not-allowed">${row.endNumber}</span>`
+                : `<button type="button" class="btn btn-sm btn-outline-primary volley-open-btn" data-row-index="${index}" title="Modifier la volée">${row.endNumber}</button>`;
             rowHtml.innerHTML = `
                 <td class="volley-col">
                     ${volleyBtnNature}
