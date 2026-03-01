@@ -440,6 +440,11 @@ async function prefillArchersFromConcours() {
 
     const dep = departSelect?.value ?? '';
     const pel = pelotonSelect?.value ?? '';
+    // Réinitialiser l'état pour le nouveau départ/peloton (évite de garder scores et boutons du précédent)
+    exportedToConcours = false;
+    sheetsSavedForBatch = false;
+    archerSignatures = {};
+    scorerSignature = '';
     const storageKey = 'scoreSheet_exported_' + (selectedConcoursId || '') + '_' + dep + '_' + pel;
     if (selectedConcoursId && (dep || pel) && localStorage.getItem(storageKey)) {
         exportedToConcours = true;
@@ -447,6 +452,26 @@ async function prefillArchersFromConcours() {
     const savedKey = 'scoreSheet_saved_' + (selectedConcoursId || '') + '_' + dep + '_' + pel;
     if (selectedConcoursId && (dep || pel) && localStorage.getItem(savedKey)) {
         sheetsSavedForBatch = true;
+    }
+    // Réinitialiser les scores et infos session de chaque feuille pour le nouveau départ/peloton
+    const config = selectedShootingType && SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
+    if (config && userSheets.length > 0) {
+        userSheets.forEach(sheet => {
+            const rows = [];
+            for (let i = 1; i <= config.total_ends; i++) {
+                rows.push({
+                    endNumber: i,
+                    arrows: Array(config.arrows_per_end).fill(null).map(() => ({ value: 0 })),
+                    endTotal: 0,
+                    cumulativeTotal: 0,
+                    seriesNumber: config.series ? (i <= config.total_ends / config.series ? 1 : 2) : undefined
+                });
+            }
+            sheet.scoreRows = rows;
+            delete sheet.scoredTrainingId;
+            sheet.signed = false;
+            sheet.notes = null;
+        });
     }
 
     let archers = [];
