@@ -923,19 +923,24 @@ function displayCurrentArcher() {
     
     if (nameInput) nameInput.value = sheet.archerInfo.name || '';
     if (licenseInput) licenseInput.value = sheet.archerInfo.licenseNumber || '';
-    if (categorySelect) {
-        const categoryValue = (sheet.archerInfo.category || '').toString().trim();
-        // Si la catégorie vient d'un import mais n'est pas encore dans les options (type de tir pas choisi ou abv absente), l'ajouter pour l'affichage
-        if (categoryValue && !Array.from(categorySelect.options).some(opt => (opt.value || '').toString().trim() === categoryValue)) {
-            const opt = document.createElement('option');
-            opt.value = categoryValue;
-            opt.textContent = categoryValue;
-            categorySelect.appendChild(opt);
-        }
-        categorySelect.value = categoryValue || '';
-    }
     
     const fromConcoursImport = !!(sheet.inscriptionId);
+    const categoryValue = (sheet.archerInfo.category || '').toString().trim();
+    const categoryDisplay = document.getElementById('archerCategoryDisplay');
+    if (fromConcoursImport) {
+        // Import concours : afficher la catégorie en lecture seule (pas de select)
+        if (categorySelect) categorySelect.style.display = 'none';
+        if (categoryDisplay) {
+            categoryDisplay.textContent = categoryValue || '—';
+            categoryDisplay.style.display = 'block';
+        }
+    } else {
+        if (categorySelect) {
+            categorySelect.style.display = 'block';
+            categorySelect.value = categoryValue || '';
+        }
+        if (categoryDisplay) categoryDisplay.style.display = 'none';
+    }
     if (nameInput) {
         nameInput.readOnly = fromConcoursImport;
         nameInput.classList.toggle('bg-light', fromConcoursImport);

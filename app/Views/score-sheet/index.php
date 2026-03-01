@@ -140,6 +140,7 @@ $disciplinesJson = htmlspecialchars(json_encode($disciplinesList, JSON_UNESCAPED
                             <select class="form-select" id="archerCategory">
                                 <option value="">-- Choisir un type de tir pour charger les catégories --</option>
                             </select>
+                            <div id="archerCategoryDisplay" class="form-control-plaintext border rounded px-2 py-1 bg-light" style="display: none; min-height: 38px;" aria-label="Catégorie de classement (import)"></div>
                         </div>
                     </div>
                 </div>
