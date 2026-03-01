@@ -156,7 +156,7 @@ function initializeScoreSheet() {
             if (isNaN(idx)) return;
             const sheet = userSheets[currentUserIndex];
             if (!sheet) return;
-            const locked = !!sheet.signed || (!!sheet.notes && String(sheet.notes).indexOf('__SIGNED__:1') !== -1) || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
+            const locked = !!exportedToConcours || !!sheet.signed || (!!sheet.notes && String(sheet.notes).indexOf('__SIGNED__:1') !== -1) || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
             if (locked) {
                 showStatus('Feuille signée : les scores ne sont plus modifiables.', 'info');
                 return;
@@ -961,9 +961,9 @@ function getNatureCrossColumn(score1, score2) {
 function updateScoreTable(sheet) {
     const config = SHOOTING_CONFIGS[getShootingConfigKey(selectedShootingType)];
     const isNature = (getShootingConfigKey(selectedShootingType) === 'Nature' || getShootingConfigKey(selectedShootingType) === 'Nature2x21');
-    // Feuille signée = boutons N° cible désactivés (même if que pour le bouton signature / blocage modal)
+    // Même condition que pour masquer le bouton signature (exportedToConcours) et verrouiller les scores (signé / notes / signatures)
     const signedFromNotes = !!(sheet.notes && String(sheet.notes).indexOf('__SIGNED__:1') !== -1);
-    const scoresLocked = !!sheet.signed || signedFromNotes || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
+    const scoresLocked = !!exportedToConcours || !!sheet.signed || signedFromNotes || (!!scorerSignature && !!archerSignatures[currentUserIndex]);
     const tableBody = document.getElementById('scoreTableBody');
     
     // Nettoyer le tableau
@@ -1222,7 +1222,7 @@ function openScoreModal(rowIndex) {
     
     const sheet = userSheets[currentUserIndex];
     const signedFromNotes = !!(sheet.notes && String(sheet.notes).indexOf('__SIGNED__:1') !== -1);
-    if (!!sheet.signed || signedFromNotes || (!!scorerSignature && !!archerSignatures[currentUserIndex])) {
+    if (!!exportedToConcours || !!sheet.signed || signedFromNotes || (!!scorerSignature && !!archerSignatures[currentUserIndex])) {
         showStatus('Feuille signée : les scores ne sont plus modifiables.', 'info');
         return;
     }
