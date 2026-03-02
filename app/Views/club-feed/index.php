@@ -42,7 +42,11 @@ $fbHref = $fbHref ?? '';
                             Suivez les actualités de <strong><?php echo htmlspecialchars($clubName); ?></strong> sur Facebook.
                         </p>
                         <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
-                            <i class="fab fa-facebook me-2"></i> Voir la page Facebook du club
+                        <div class="fb-page" 
+data-href="<?php echo htmlspecialchars($fbHref); ?>"
+data-width="380" 
+data-hide-cover="false"
+data-show-facepile="false"></div>                            <i class="fab fa-facebook me-2"></i> Voir la page Facebook du club
                         </a>
                     </div>
                 </div>
