@@ -47,7 +47,12 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     
     <!-- Bouton pour créer les plans de cible (uniquement pour les disciplines S, T, I, H) -->
     <?php
-    // Vérifier si la discipline est S, T, I ou H
+    
+    // Récupérer l'ID de la discipline
+    $selectedDisciplineId = $concours->discipline ?? null;
+    $isNature3DOrCampagne = isNature3DOrCampagneShow($selectedDisciplineId, $disciplines ?? []);
+
+// Vérifier si la discipline est S, T, I ou H
     $abv_discipline_show = null;
     if ($selectedDisciplineId && is_array($disciplines)) {
         foreach ($disciplines as $disc) {
@@ -219,10 +224,6 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         }
         return false;
     }
-    
-    // Récupérer l'ID de la discipline
-    $selectedDisciplineId = $concours->discipline ?? null;
-    $isNature3DOrCampagne = isNature3DOrCampagneShow($selectedDisciplineId, $disciplines ?? []);
     
     // Labels conditionnels
     $labelCibles = $isNature3DOrCampagne ? 'Nombre pelotons' : 'Nombre cibles';
