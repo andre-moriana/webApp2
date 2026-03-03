@@ -2349,7 +2349,7 @@ function loadEditBuvetteProduits(concoursId, buvetteReservations, tokenConfirmat
                 const qty = qtyByProduit[pid] || 0;
                 const prix = p.prix != null ? parseFloat(p.prix).toFixed(2) + ' €' : '';
                 const unite = p.unite || 'portion';
-                return '<div class="d-flex align-items-center justify-content-between mb-2"><label class="mb-0 flex-grow-1">' + (p.libelle || '') + (prix ? ' <span class="text-muted">(' + prix + ')</span>' : '') + '</label><input type="number" class="form-control form-control-sm buvette-qty" data-produit-id="' + pid + '" min="0" value="' + qty + '" style="width:70px;"> <span class="ms-1 small text-muted">' + unite + '</span></div>';
+                return '<div class="d-flex align-items-center justify-content-between mb-2"><label class="mb-0 flex-grow-1">' + (p.libelle || '') + (prix ? ' <span class="text-muted">(' + prix + ')</span>' : '') + '</label><input type="number" class="form-control form-control-sm buvette-qty" data-produit-id="' + pid + '" min="" value="' + qty + '" style="width:70px;"> <span class="ms-1 small text-muted">' + unite + '</span></div>';
             }).join('');
             listEl.classList.remove('d-none');
         })
