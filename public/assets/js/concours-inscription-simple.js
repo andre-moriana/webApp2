@@ -2353,7 +2353,7 @@ function loadEditBuvetteProduits(concoursId, buvetteReservations, tokenConfirmat
             }).join('');
             listEl.classList.remove('d-none');
             setTimeout(function() {
-                document.querySelector('.buvette-qty[data-produit-id="' + pid + '"]').select();
+                document.querySelector('.buvette-qty[data-produit-id="' + pid + '"]').focus();
             }, 0);
         })
         .catch(() => {
