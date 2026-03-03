@@ -2271,6 +2271,12 @@ function loadBuvetteProduits() {
                 return '<div class="d-flex align-items-center justify-content-between mb-2"><label class="mb-0 flex-grow-1">' + (p.libelle || '') + (prix ? ' <span class="text-muted">(' + prix + ')</span>' : '') + '</label><input type="number" class="form-control form-control-sm buvette-qty" data-produit-id="' + (p.id || '') + '" min="0" value="0" style="width:70px;"> <span class="ms-1 small text-muted">' + unite + '</span></div>';
             }).join('');
             listEl.classList.remove('d-none');
+            // ✅ Ajout : sélection automatique au focus
+            listEl.querySelectorAll('.buvette-qty').forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.select();
+                });
+            });
         })
         .catch(() => {
             loadingEl.classList.add('d-none');
