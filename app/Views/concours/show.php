@@ -44,6 +44,7 @@ $disciplineName = findLabel($disciplines, $concours->discipline ?? null, 'iddisc
 $typeCompetitionName = findLabel($typeCompetitions, $concours->type_competition ?? null, 'idformat_competition', 'lb_format_competition');
 $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_championnat ?? null, 'idniveau_championnat', 'lb_niveauchampionnat');
 ?>
+    
     <!-- Bouton pour créer les plans de cible (uniquement pour les disciplines S, T, I, H) -->
     <?php
     // Vérifier si la discipline est S, T, I ou H
@@ -68,7 +69,8 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
                                  ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
     $canCreatePlanPeloton = $canShowPlanPelotonSection && !($planPelotonExists ?? false);
     ?>
-<div class="actions-section">
+    
+    <div class="actions-section">
     <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
     <?php if (isset($concours->id) || isset($concours->_id)): ?>
         <?php 
@@ -351,6 +353,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         <p class="text-muted">Aucun arbitre renseigné pour ce concours.</p>
         <?php endif; ?>
     </div>
+
    
     <?php if (!empty($concours->lien_inscription_cible)): ?>
     <div class="form-group" style="margin-top: 20px;">
