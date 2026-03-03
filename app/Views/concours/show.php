@@ -44,6 +44,30 @@ $disciplineName = findLabel($disciplines, $concours->discipline ?? null, 'iddisc
 $typeCompetitionName = findLabel($typeCompetitions, $concours->type_competition ?? null, 'idformat_competition', 'lb_format_competition');
 $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_championnat ?? null, 'idniveau_championnat', 'lb_niveauchampionnat');
 ?>
+    <!-- Bouton pour créer les plans de cible (uniquement pour les disciplines S, T, I, H) -->
+    <?php
+    // Vérifier si la discipline est S, T, I ou H
+    $abv_discipline_show = null;
+    if ($selectedDisciplineId && is_array($disciplines)) {
+        foreach ($disciplines as $disc) {
+            $discId = $disc['iddiscipline'] ?? $disc['id'] ?? null;
+            if ($discId == $selectedDisciplineId || (string)$discId === (string)$selectedDisciplineId) {
+                $abv_discipline_show = $disc['abv_discipline'] ?? null;
+                break;
+            }
+        }
+    }
+    
+    $canShowPlanCibleSection = in_array($abv_discipline_show, ['S', 'T', 'I', 'H']) && 
+                          ($concours->nombre_cibles ?? 0) > 0 && 
+                          ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
+    $canCreatePlanCible = $canShowPlanCibleSection && !($planCibleExists ?? false);
+    // Plan peloton : utiliser isNature3DOrCampagne (détection par nom) car abv_discipline peut varier (3, 3D, N, etc.)
+    $canShowPlanPelotonSection = in_array($abv_discipline_show, ['3', 'N', 'C']) && 
+                                 ($concours->nombre_cibles ?? 0) > 0 && 
+                                 ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
+    $canCreatePlanPeloton = $canShowPlanPelotonSection && !($planPelotonExists ?? false);
+    ?>
 <div class="actions-section">
     <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
     <?php if (isset($concours->id) || isset($concours->_id)): ?>
@@ -327,31 +351,6 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         <p class="text-muted">Aucun arbitre renseigné pour ce concours.</p>
         <?php endif; ?>
     </div>
-    
-    <!-- Bouton pour créer les plans de cible (uniquement pour les disciplines S, T, I, H) -->
-    <?php
-    // Vérifier si la discipline est S, T, I ou H
-    $abv_discipline_show = null;
-    if ($selectedDisciplineId && is_array($disciplines)) {
-        foreach ($disciplines as $disc) {
-            $discId = $disc['iddiscipline'] ?? $disc['id'] ?? null;
-            if ($discId == $selectedDisciplineId || (string)$discId === (string)$selectedDisciplineId) {
-                $abv_discipline_show = $disc['abv_discipline'] ?? null;
-                break;
-            }
-        }
-    }
-    
-    $canShowPlanCibleSection = in_array($abv_discipline_show, ['S', 'T', 'I', 'H']) && 
-                          ($concours->nombre_cibles ?? 0) > 0 && 
-                          ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
-    $canCreatePlanCible = $canShowPlanCibleSection && !($planCibleExists ?? false);
-    // Plan peloton : utiliser isNature3DOrCampagne (détection par nom) car abv_discipline peut varier (3, 3D, N, etc.)
-    $canShowPlanPelotonSection = in_array($abv_discipline_show, ['3', 'N', 'C']) && 
-                                 ($concours->nombre_cibles ?? 0) > 0 && 
-                                 ($concours->nombre_tireurs_par_cibles ?? 0) > 0;
-    $canCreatePlanPeloton = $canShowPlanPelotonSection && !($planPelotonExists ?? false);
-    ?>
    
     <?php if (!empty($concours->lien_inscription_cible)): ?>
     <div class="form-group" style="margin-top: 20px;">
