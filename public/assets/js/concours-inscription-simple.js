@@ -2352,9 +2352,12 @@ function loadEditBuvetteProduits(concoursId, buvetteReservations, tokenConfirmat
                 return '<div class="d-flex align-items-center justify-content-between mb-2"><label class="mb-0 flex-grow-1">' + (p.libelle || '') + (prix ? ' <span class="text-muted">(' + prix + ')</span>' : '') + '</label><input type="number" class="form-control form-control-sm buvette-qty" data-produit-id="' + pid + '" min="0" value="' + qty + '" style="width:70px;"> <span class="ms-1 small text-muted">' + unite + '</span></div>';
             }).join('');
             listEl.classList.remove('d-none');
-            setTimeout(function() {
-                document.querySelector('.buvette-qty[data-produit-id="' + pid + '"]').focus();
-            }, 0);
+            // ✅ Ajout : sélection automatique au focus
+            listEl.querySelectorAll('.buvette-qty').forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.select();
+                });
+            });
         })
         .catch(() => {
             loadingEl.classList.add('d-none');
