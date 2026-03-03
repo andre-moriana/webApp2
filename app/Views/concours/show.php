@@ -87,48 +87,46 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         <a href="/concours/<?= htmlspecialchars($concoursId) ?>/inscription" class="btn btn-success">
             <i class="fas fa-user-plus"></i> Gérer les inscriptions
         </a>
-        <?php if ($canSaisieScores): ?>
-        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
-            <i class="fas fa-calculator"></i> Saisie des scores
-        </a>
-        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/editions" class="btn btn-info">
-            <i class="fas fa-print"></i> Éditions
-        </a>
-        <?php if ($canShowPlanCibleSection): ?>
-    <?php if ($canCreatePlanCible): ?>
-        <button type="button" class="btn btn-primary" id="btn-create-plan-cible" onclick="createPlanCible()">
-            <i class="fas fa-bullseye"></i> Créer le plan de cible
-        </button>
-        <?php endif; ?>
-        <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-cible" class="btn btn-outline-primary ms-2">
-            <i class="fas fa-list"></i> Voir le plan de cible
-        </a>
-        <div id="plan-cible-message" style="margin-top: 10px;"></div>
-    <?php endif; ?>
-    
-    <?php if ($canShowPlanPelotonSection): ?>
-    <div class="form-group" style="margin-top: 20px;">
-        <?php if ($canCreatePlanPeloton): ?>
-        <button type="button" class="btn btn-primary" id="btn-create-plan-peloton" onclick="createPlanPeloton()">
-            <i class="fas fa-users"></i> Créer le plan de peloton
-        </button>
-        <?php endif; ?>
-        <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-peloton" class="btn btn-outline-primary <?= $canCreatePlanPeloton ? 'ms-2' : '' ?>">
-            <i class="fas fa-list"></i> Voir le plan de peloton
-        </a>
-        <div id="plan-peloton-message" style="margin-top: 10px;"></div>
-    </div>
-    <?php endif; ?>
+        <?php 
+        if ($canSaisieScores): ?>
+            <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
+                <i class="fas fa-calculator"></i> Saisie des scores
+            </a>
+            <a href="/concours/<?= htmlspecialchars($concoursId) ?>/editions" class="btn btn-info">
+                <i class="fas fa-print"></i> Éditions
+            </a>
 
-    <?php
-    $isDirigeant = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
-    if ($isDirigeant): ?>
-    <div class="form-group" style="margin-top: 20px;">
-        <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/buvette" class="btn btn-outline-primary">
-            <i class="fas fa-coffee"></i> Gestion de la buvette
-        </a>
-    </div>
-    <?php endif; ?>
+            <?php if ($canShowPlanCibleSection): ?>
+                <?php if ($canCreatePlanCible): ?>
+                    <button type="button" class="btn btn-primary" id="btn-create-plan-cible" onclick="createPlanCible()">
+                        <i class="fas fa-bullseye"></i> Créer le plan de cible
+                    </button>
+                <?php endif; ?>
+                <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-cible" class="btn btn-outline-primary ms-2">
+                    <i class="fas fa-list"></i> Voir le plan de cible
+                </a>
+            <div id="plan-cible-message" style="margin-top: 10px;"></div>
+            <?php endif; ?>
+        
+            <?php if ($canShowPlanPelotonSection): ?>
+                <?php if ($canCreatePlanPeloton): ?>
+                <button type="button" class="btn btn-primary" id="btn-create-plan-peloton" onclick="createPlanPeloton()">
+                    <i class="fas fa-users"></i> Créer le plan de peloton
+                </button>
+                <?php endif; ?>
+                <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-peloton" class="btn btn-outline-primary <?= $canCreatePlanPeloton ? 'ms-2' : '' ?>">
+                    <i class="fas fa-list"></i> Voir le plan de peloton
+                </a>
+                <div id="plan-peloton-message" style="margin-top: 10px;"></div>
+            <?php endif; ?>
+
+            <?php
+            $isDirigeant = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+            if ($isDirigeant): ?>
+                <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/buvette" class="btn btn-outline-primary">
+                    <i class="fas fa-coffee"></i> Gestion de la buvette
+                </a>
+            <?php endif; ?>
 
         <?php endif; ?>
     <?php endif; ?>
