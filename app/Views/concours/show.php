@@ -95,7 +95,6 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
             <i class="fas fa-print"></i> Éditions
         </a>
         <?php if ($canShowPlanCibleSection): ?>
-    <div class="form-group" style="margin-top: 20px;">
     <?php if ($canCreatePlanCible): ?>
         <button type="button" class="btn btn-primary" id="btn-create-plan-cible" onclick="createPlanCible()">
             <i class="fas fa-bullseye"></i> Créer le plan de cible
@@ -105,7 +104,6 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
             <i class="fas fa-list"></i> Voir le plan de cible
         </a>
         <div id="plan-cible-message" style="margin-top: 10px;"></div>
-    </div>
     <?php endif; ?>
     
     <?php if ($canShowPlanPelotonSection): ?>
