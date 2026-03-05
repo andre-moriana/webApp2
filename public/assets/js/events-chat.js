@@ -885,7 +885,7 @@ let currentEventFormResponseCounts = {};
 
 // Fonction pour charger les formulaires d'un événement
 function loadEventForms(eventId) {
-    console.log('Chargement des formulaires pour l\'événement:', eventId);
+    //console.log('Chargement des formulaires pour l\'événement:', eventId);
     
     // Réinitialiser les formulaires et compteurs avant de charger les nouveaux
     currentEventForms = [];
@@ -905,11 +905,11 @@ function loadEventForms(eventId) {
         }
     })
     .then(response => {
-        console.log('Réponse API formulaires, status:', response.status);
+        //console.log('Réponse API formulaires, status:', response.status);
         return response.json();
     })
     .then(data => {
-        console.log('Données formulaires reçues:', data);
+        //console.log('Données formulaires reçues:', data);
         // Gérer différents formats de réponse API
         let forms = [];
         if (data.success && data.data) {
@@ -927,7 +927,7 @@ function loadEventForms(eventId) {
         
         if (forms.length > 0) {
             currentEventForms = forms;
-            console.log('Formulaires trouvés:', currentEventForms.length);
+            //console.log('Formulaires trouvés:', currentEventForms.length);
             // Initialiser les compteurs à 0 pour tous les formulaires
             currentEventForms.forEach(function(form) {
                 currentEventFormResponseCounts[form.id] = 0;
@@ -937,7 +937,7 @@ function loadEventForms(eventId) {
             // Charger les compteurs de réponses pour chaque formulaire (asynchrone)
             loadEventFormResponseCounts(forms);
         } else {
-            console.log('Aucun formulaire trouvé');
+            //console.log('Aucun formulaire trouvé');
             currentEventForms = [];
             // Appeler addEventFormsToMessages même s'il n'y a pas de formulaires pour s'assurer que les anciens sont supprimés
             addEventFormsToMessages();
@@ -985,7 +985,7 @@ function addEventFormsToMessages() {
         return;
     }
     
-    console.log('Ajout des formulaires, nombre:', currentEventForms.length);
+    //console.log('Ajout des formulaires, nombre:', currentEventForms.length);
     
     // Vérifier si des formulaires sont déjà affichés
     const existingForms = messagesContainer.querySelectorAll('.form-message');
@@ -995,7 +995,7 @@ function addEventFormsToMessages() {
     }
     
     if (currentEventForms.length === 0) {
-        console.log('Aucun formulaire à afficher');
+        //console.log('Aucun formulaire à afficher');
         return;
     }
     
@@ -1035,7 +1035,7 @@ function addEventFormsToMessages() {
     // Ajouter les formulaires à la fin du conteneur
     messagesContainer.appendChild(fragment);
     
-    console.log('Formulaires ajoutés avec succès en bas de page');
+    //console.log('Formulaires ajoutés avec succès en bas de page');
 }
 
 // Fonction pour mettre à jour l'affichage des formulaires
@@ -1211,7 +1211,7 @@ window.submitEventFormResponse = function() {
 
 // Fonction pour voir les résultats d'un formulaire (identique à groups-topics.js)
 window.viewEventFormResults = function(formId) {
-    console.log('Chargement des résultats pour le formulaire:', formId);
+    //console.log('Chargement des résultats pour le formulaire:', formId);
     fetch(`/api/forms/${formId}/responses`, {
         method: 'GET',
         headers: {
@@ -1219,11 +1219,11 @@ window.viewEventFormResults = function(formId) {
         }
     })
     .then(response => {
-        console.log('Réponse API résultats, status:', response.status);
+        //console.log('Réponse API résultats, status:', response.status);
         return response.json();
     })
     .then(data => {
-        console.log('Données résultats reçues:', data);
+        //console.log('Données résultats reçues:', data);
         // Gérer différents formats de réponse API
         let responses = [];
         if (data.success && data.data) {
@@ -1236,7 +1236,7 @@ window.viewEventFormResults = function(formId) {
             responses = data;
         }
         
-        console.log('Réponses extraites:', responses.length);
+        //console.log('Réponses extraites:', responses.length);
         
         if (responses.length > 0) {
             const form = currentEventForms.find(f => f.id == formId);
@@ -1258,8 +1258,8 @@ window.viewEventFormResults = function(formId) {
 
 // Fonction pour afficher les résultats dans un modal (identique à groups-topics.js)
 function showEventFormResultsModal(form, responses) {
-    console.log('Affichage des résultats pour le formulaire:', form);
-    console.log('Nombre de réponses:', responses.length);
+    //console.log('Affichage des résultats pour le formulaire:', form);
+    //console.log('Nombre de réponses:', responses.length);
     
     let modal = document.getElementById('event-form-results-modal');
     if (!modal) {
