@@ -36,10 +36,10 @@ let loadedThreeDImages = [];
 // Fonction pour charger les images nature (blasons) par catégorie dans le formulaire "Ajouter une volée"
 // Même logique que fetchNatureImages dans l'application mobile (ligne 756)
 async function loadNatureBlasonsForVolley(category) {
-    console.log('🔵 loadNatureBlasonsForVolley appelée avec catégorie:', category);
+    //console.log('🔵 loadNatureBlasonsForVolley appelée avec catégorie:', category);
     
     if (!category) {
-        console.log('🔵 Aucune catégorie, masquage du select');
+        //console.log('🔵 Aucune catégorie, masquage du select');
         const wrapper = document.getElementById('nature_blason_wrapper');
         const select = document.getElementById('nature_blason');
         if (wrapper) wrapper.style.display = 'none';
@@ -56,7 +56,7 @@ async function loadNatureBlasonsForVolley(category) {
         return;
     }
     
-    console.log('🔵 Éléments trouvés, affichage du wrapper');
+    //console.log('🔵 Éléments trouvés, affichage du wrapper');
     
     // Afficher le wrapper
     wrapper.style.display = 'block';
@@ -68,11 +68,11 @@ async function loadNatureBlasonsForVolley(category) {
         // Convertir la catégorie vers le format de la base de données
         // Utiliser la même fonction que l'application mobile (ligne 731)
         const dbCategory = convertCategoryToDBFormat(category);
-        console.log('🔵 Catégorie convertie:', category, '->', dbCategory);
+        //console.log('🔵 Catégorie convertie:', category, '->', dbCategory);
         
         // Récupérer les images via le backend de l'application web
         // Même logique que dans l'app mobile ligne 770-823
-        console.log('🔵 Appel API pour type:', dbCategory);
+        //console.log('🔵 Appel API pour type:', dbCategory);
         let response = await fetch(`/scored-trainings/images-nature?type=${encodeURIComponent(dbCategory)}`, {
             method: 'GET',
             headers: {
@@ -80,16 +80,16 @@ async function loadNatureBlasonsForVolley(category) {
             }
         });
         
-        console.log('🔵 Réponse API type:', response.status, response.ok);
+        //console.log('🔵 Réponse API type:', response.status, response.ok);
         
         let result = null;
         
         // Si pas de résultats avec le type normalisé, essayer la recherche par label (comme dans l'app mobile ligne 793-811)
         if (response.ok) {
             result = await response.json();
-            console.log('🔵 Résultat API type:', result);
+            //console.log('🔵 Résultat API type:', result);
             if (!result.success || !result.data || (result.count !== undefined && result.count === 0)) {
-                console.log('🔵 Aucun résultat avec type, essai recherche par label');
+                //console.log('🔵 Aucun résultat avec type, essai recherche par label');
                 // Essayer la recherche par label
                 response = await fetch(`/scored-trainings/images-nature?label=${encodeURIComponent(category)}`, {
                     method: 'GET',
@@ -99,11 +99,11 @@ async function loadNatureBlasonsForVolley(category) {
                 });
                 if (response.ok) {
                     result = await response.json();
-                    console.log('🔵 Résultat API label:', result);
+                    //console.log('🔵 Résultat API label:', result);
                 }
             }
         } else {
-            console.log('🔵 Erreur avec type, essai recherche par label');
+            //console.log('🔵 Erreur avec type, essai recherche par label');
             // Si erreur, essayer la recherche par label
             response = await fetch(`/scored-trainings/images-nature?label=${encodeURIComponent(category)}`, {
                 method: 'GET',
@@ -113,20 +113,20 @@ async function loadNatureBlasonsForVolley(category) {
             });
             if (response.ok) {
                 result = await response.json();
-                console.log('🔵 Résultat API label (fallback):', result);
+                //console.log('🔵 Résultat API label (fallback):', result);
             }
         }
         
         if (response.ok) {
-            console.log('🔵 Réponse OK, vérification des données...');
-            console.log('🔵 Structure de result:', {
-                success: result?.success,
-                hasData: !!result?.data,
-                isArray: Array.isArray(result?.data),
-                dataLength: result?.data?.length,
-                count: result?.count,
-                message: result?.message
-            });
+            //console.log('🔵 Réponse OK, vérification des données...');
+            //console.log('🔵 Structure de result:', {
+//success: result?.success,
+//hasData: !!result?.data,
+//isArray: Array.isArray(result?.data),
+//dataLength: result?.data?.length,
+//count: result?.count,
+//message: result?.message
+//});
             
             // Vérifier différents formats de réponse possibles
             let imagesArray = null;
@@ -134,32 +134,32 @@ async function loadNatureBlasonsForVolley(category) {
             // Format 1: result.data est un tableau
             if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
                 imagesArray = result.data;
-                console.log('✅ Format 1 détecté: result.data est un tableau');
+                //console.log('✅ Format 1 détecté: result.data est un tableau');
             }
             // Format 2: result.data contient un tableau dans une propriété
             else if (result && result.data && typeof result.data === 'object' && result.data.images && Array.isArray(result.data.images)) {
                 imagesArray = result.data.images;
-                console.log('✅ Format 2 détecté: result.data.images est un tableau');
+                //console.log('✅ Format 2 détecté: result.data.images est un tableau');
             }
             // Format 3: result est directement un tableau
             else if (Array.isArray(result) && result.length > 0) {
                 imagesArray = result;
-                console.log('✅ Format 3 détecté: result est directement un tableau');
+                //console.log('✅ Format 3 détecté: result est directement un tableau');
             }
             // Format 4: result.success = true mais données dans une autre structure
             else if (result && result.success && result.data) {
-                console.warn('⚠️ Format inattendu, tentative de conversion...');
-                console.warn('⚠️ result.data:', result.data);
+                //console.warn('⚠️ Format inattendu, tentative de conversion...');
+                //console.warn('⚠️ result.data:', result.data);
                 // Essayer de convertir en tableau si c'est un objet unique
                 if (typeof result.data === 'object' && !Array.isArray(result.data)) {
                     imagesArray = [result.data];
-                    console.log('✅ Format 4 détecté: conversion d\'un objet unique en tableau');
+                    //console.log('✅ Format 4 détecté: conversion d\'un objet unique en tableau');
                 }
             }
             
             if (imagesArray && imagesArray.length > 0) {
-                console.log('✅ Images reçues de l\'API:', imagesArray.length);
-                console.log('✅ Première image brute:', imagesArray[0]);
+                //console.log('✅ Images reçues de l\'API:', imagesArray.length);
+                //console.log('✅ Première image brute:', imagesArray[0]);
                 
                 // Trier les images par ordre alphabétique du label (comme dans l'app mobile ligne 784)
                 const sortedImages = [...imagesArray].sort((a, b) => {
@@ -170,7 +170,7 @@ async function loadNatureBlasonsForVolley(category) {
                 
                 // Stocker les images dans la variable globale (comme natureImages dans l'app mobile)
                 loadedNatureImages = sortedImages;
-                console.log('✅ Images triées et stockées:', sortedImages.length);
+                //console.log('✅ Images triées et stockées:', sortedImages.length);
                 
                 // Ajouter les options au select (comme dans l'app mobile ligne 1643-1654)
                 sortedImages.forEach((image, index) => {
@@ -185,25 +185,10 @@ async function loadNatureBlasonsForVolley(category) {
                     const displayLabel = `${refBlason} - ${baseLabel}`;
                     option.textContent = displayLabel;
                     select.appendChild(option);
-                    if (index === 0) {
-                        console.log('✅ Première option ajoutée:', displayLabel, 'value:', image.id);
-                    }
                 });
                 
-                console.log('✅ Blasons chargés:', sortedImages.length);
-                console.log('✅ Nombre d\'options dans le select après ajout:', select.options.length);
-                if (sortedImages.length > 0) {
-                    console.log('✅ Exemple de données image:', {
-                        id: sortedImages[0].id,
-                        label: sortedImages[0].label,
-                        ref_blason: sortedImages[0].ref_blason,
-                        nom_fichier: sortedImages[0].nom_fichier,
-                        type_image: sortedImages[0].type_image,
-                        url_image: sortedImages[0].url_image,
-                        chemin_local: sortedImages[0].chemin_local
-                    });
-                }
-                
+                //console.log('✅ Blasons chargés:', sortedImages.length);
+               
                 // Ajouter un listener sur le select pour afficher l'image sélectionnée
                 select.addEventListener('change', function() {
                     updateNatureBlasonPreview(this.value);
@@ -236,13 +221,13 @@ async function loadNatureBlasonsForVolley(category) {
 // Fonction pour mettre à jour l'aperçu de l'image du blason sélectionné
 // Même logique que dans l'app mobile ligne 1664-1695
 function updateNatureBlasonPreview(selectedImageId) {
-    console.log('🖼️ updateNatureBlasonPreview appelée avec imageId:', selectedImageId);
+    //console.log('🖼️ updateNatureBlasonPreview appelée avec imageId:', selectedImageId);
     
     const previewContainer = document.getElementById('nature_blason_preview');
     const previewImage = document.getElementById('nature_blason_image');
     
     if (!previewContainer || !previewImage) {
-        console.log('🖼️ Conteneur d\'aperçu non trouvé');
+        //console.log('🖼️ Conteneur d\'aperçu non trouvé');
         return;
     }
     
@@ -269,7 +254,7 @@ function updateNatureBlasonPreview(selectedImageId) {
             previewImage.src = imageUrl;
             previewImage.alt = selectedImage.label || selectedImage.nom_fichier || 'Blason sélectionné';
             previewContainer.style.display = 'block';
-            console.log('🖼️ Image affichée:', imageUrl);
+            //console.log('🖼️ Image affichée:', imageUrl);
         } else {
             console.warn('🖼️ Aucune URL d\'image trouvée pour le blason:', selectedImageId);
             previewContainer.style.display = 'none';
@@ -282,7 +267,7 @@ function updateNatureBlasonPreview(selectedImageId) {
 
 // Fonction pour afficher l'image en grand dans une modale (comme dans l'app mobile)
 function showNatureBlasonModal(imageUrl) {
-    console.log('🖼️ showNatureBlasonModal appelée avec URL:', imageUrl);
+    //console.log('🖼️ showNatureBlasonModal appelée avec URL:', imageUrl);
     
     // Créer ou récupérer la modale
     let modal = document.getElementById('natureBlasonModal');
@@ -321,7 +306,7 @@ function showNatureBlasonModal(imageUrl) {
 // Fonction pour afficher l'image du blason depuis son ID (ref_blason)
 // Appelée depuis le bouton dans le tableau des volées
 async function showBlasonImage(refBlasonId) {
-    console.log('🖼️ showBlasonImage appelée avec ref_blason ID:', refBlasonId);
+    //console.log('🖼️ showBlasonImage appelée avec ref_blason ID:', refBlasonId);
     
     if (!refBlasonId) {
         alert('Erreur: ID du blason non trouvé');
@@ -368,7 +353,7 @@ async function showBlasonImage(refBlasonId) {
 
 // Fonction pour afficher l'image du blason dans une modale
 function displayBlasonImage(image) {
-    console.log('🖼️ displayBlasonImage appelée avec image:', image);
+    //console.log('🖼️ displayBlasonImage appelée avec image:', image);
     
     // Construire l'URL de l'image via le backend local (pas d'appel direct à l'API externe)
     let imageUrl = image.url_image || null;
@@ -451,10 +436,10 @@ function displayBlasonImage(image) {
 // Fonction pour charger les images 3D (cibles) par catégorie dans le formulaire "Ajouter une volée"
 // Même logique que fetchThreeDImages dans l'application mobile (ligne 862)
 async function loadThreeDImagesForVolley(category) {
-    console.log('🔵 loadThreeDImagesForVolley appelée avec catégorie:', category);
+    //console.log('🔵 loadThreeDImagesForVolley appelée avec catégorie:', category);
     
     if (!category) {
-        console.log('🔵 Aucune catégorie, masquage du select');
+        //console.log('🔵 Aucune catégorie, masquage du select');
         const wrapper = document.getElementById('threeD_blason_wrapper');
         const select = document.getElementById('threeD_blason');
         if (wrapper) wrapper.style.display = 'none';
@@ -471,7 +456,7 @@ async function loadThreeDImagesForVolley(category) {
         return;
     }
     
-    console.log('🔵 Éléments trouvés, affichage du wrapper');
+    //console.log('🔵 Éléments trouvés, affichage du wrapper');
     
     // Afficher le wrapper
     wrapper.style.display = 'block';
@@ -483,7 +468,7 @@ async function loadThreeDImagesForVolley(category) {
         // Pour les images 3D, le type_image correspond à target_category (1, 2, 3, 4)
         // Utiliser l'API images-nature avec le type_image correspondant à la catégorie
         // (comme dans l'app mobile ligne 874)
-        console.log('🔵 Appel API pour type 3D:', category);
+        //console.log('🔵 Appel API pour type 3D:', category);
         let response = await fetch(`/scored-trainings/images-nature?type=${encodeURIComponent(category)}`, {
             method: 'GET',
             headers: {
@@ -491,43 +476,43 @@ async function loadThreeDImagesForVolley(category) {
             }
         });
         
-        console.log('🔵 Réponse API type 3D:', response.status, response.ok);
+        //console.log('🔵 Réponse API type 3D:', response.status, response.ok);
         
         let result = null;
         
         if (response.ok) {
             result = await response.json();
-            console.log('🔵 Résultat API type 3D:', result);
+            //console.log('🔵 Résultat API type 3D:', result);
         } else {
             console.error('❌ Erreur HTTP lors du chargement des images 3D:', response.status);
         }
         
         if (response.ok) {
-            console.log('🔵 Réponse OK, vérification des données...');
-            console.log('🔵 Structure de result:', {
-                success: result?.success,
-                hasData: !!result?.data,
-                isArray: Array.isArray(result?.data),
-                dataLength: result?.data?.length,
-                count: result?.count
-            });
+            //console.log('🔵 Réponse OK, vérification des données...');
+            //console.log('🔵 Structure de result:', {
+//success: result?.success,
+//hasData: !!result?.data,
+//isArray: Array.isArray(result?.data),
+//dataLength: result?.data?.length,
+//count: result?.count
+//});
             
             // Vérifier différents formats de réponse possibles
             let imagesArray = null;
             
             if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
                 imagesArray = result.data;
-                console.log('✅ Format 1 détecté: result.data est un tableau');
+                //console.log('✅ Format 1 détecté: result.data est un tableau');
             } else if (result && result.data && typeof result.data === 'object' && result.data.images && Array.isArray(result.data.images)) {
                 imagesArray = result.data.images;
-                console.log('✅ Format 2 détecté: result.data.images est un tableau');
+                //console.log('✅ Format 2 détecté: result.data.images est un tableau');
             } else if (Array.isArray(result) && result.length > 0) {
                 imagesArray = result;
-                console.log('✅ Format 3 détecté: result est directement un tableau');
+                //console.log('✅ Format 3 détecté: result est directement un tableau');
             }
             
             if (imagesArray && imagesArray.length > 0) {
-                console.log('✅ Images 3D reçues de l\'API:', imagesArray.length);
+                //console.log('✅ Images 3D reçues de l\'API:', imagesArray.length);
                 
                 // Trier les images par ordre alphabétique du label (comme dans l'app mobile ligne 888)
                 const sortedImages = [...imagesArray].sort((a, b) => {
@@ -538,7 +523,7 @@ async function loadThreeDImagesForVolley(category) {
                 
                 // Stocker les images dans la variable globale (comme threeDImages dans l'app mobile)
                 loadedThreeDImages = sortedImages;
-                console.log('✅ Images 3D triées et stockées:', sortedImages.length);
+                //console.log('✅ Images 3D triées et stockées:', sortedImages.length);
                 
                 // Ajouter les options au select
                 sortedImages.forEach((image, index) => {
@@ -552,9 +537,6 @@ async function loadThreeDImagesForVolley(category) {
                     const displayLabel = `${refBlason} - ${baseLabel}`;
                     option.textContent = displayLabel;
                     select.appendChild(option);
-                    if (index === 0) {
-                        console.log('✅ Première option 3D ajoutée:', displayLabel, 'value:', image.id);
-                    }
                 });
                 
                 // Ajouter un listener sur le select pour afficher l'image sélectionnée
@@ -574,13 +556,13 @@ async function loadThreeDImagesForVolley(category) {
 
 // Fonction pour mettre à jour l'aperçu de l'image de la cible 3D sélectionnée
 function updateThreeDBlasonPreview(selectedImageId) {
-    console.log('🖼️ updateThreeDBlasonPreview appelée avec imageId:', selectedImageId);
+    //console.log('🖼️ updateThreeDBlasonPreview appelée avec imageId:', selectedImageId);
     
     const previewContainer = document.getElementById('threeD_blason_preview');
     const previewImage = document.getElementById('threeD_blason_image');
     
     if (!previewContainer || !previewImage) {
-        console.log('🖼️ Conteneur d\'aperçu 3D non trouvé');
+        //console.log('🖼️ Conteneur d\'aperçu 3D non trouvé');
         return;
     }
     
@@ -606,7 +588,7 @@ function updateThreeDBlasonPreview(selectedImageId) {
             previewImage.src = imageUrl;
             previewImage.alt = selectedImage.label || selectedImage.nom_fichier || 'Cible sélectionnée';
             previewContainer.style.display = 'block';
-            console.log('🖼️ Image 3D affichée:', imageUrl);
+            //console.log('🖼️ Image 3D affichée:', imageUrl);
         } else {
             console.warn('🖼️ Aucune URL d\'image trouvée pour la cible 3D:', selectedImageId);
             previewContainer.style.display = 'none';
@@ -621,7 +603,7 @@ function updateThreeDBlasonPreview(selectedImageId) {
 // Cette fonction est appelée depuis l'aperçu dans le formulaire
 // Pour l'affichage depuis le tableau, utiliser showBlasonImage qui gère aussi les images 3D
 function showThreeDBlasonModal(imageUrl) {
-    console.log('🖼️ showThreeDBlasonModal appelée avec URL:', imageUrl);
+    //console.log('🖼️ showThreeDBlasonModal appelée avec URL:', imageUrl);
     
     // Trouver l'image correspondante dans loadedThreeDImages
     const selectedImage = loadedThreeDImages.find(img => {
@@ -701,7 +683,7 @@ function updateTargetVisualStyle(targetCategory) {
     // Pour le tir campagne, NE RIEN FAIRE - le blason est fixe côté serveur
     const shootingType = window.scoredTrainingData?.shooting_type || '';
     if (shootingType === 'Campagne') {
-        console.log('🚫 Tir campagne : updateTargetVisualStyle BLOQUÉ - aucun redessinage');
+        //console.log('🚫 Tir campagne : updateTargetVisualStyle BLOQUÉ - aucun redessinage');
         return; // NE RIEN FAIRE
     }
     
@@ -730,16 +712,16 @@ function generateBlasonCampagneSVG(svgElement) {
     // Pour le tir campagne, NE RIEN FAIRE - le blason est fixe côté serveur
     const shootingType = window.scoredTrainingData?.shooting_type || '';
     if (shootingType === 'Campagne') {
-        console.log('🚫 Tir campagne : generateBlasonCampagneSVG BLOQUÉ - aucun redessinage');
+        //console.log('🚫 Tir campagne : generateBlasonCampagneSVG BLOQUÉ - aucun redessinage');
         return; // NE RIEN FAIRE
     }
     
-    console.log('🔥 generateBlasonCampagneSVG appelé');
-    console.log('🔥 SVG avant vidage:', svgElement.innerHTML);
+    //console.log('🔥 generateBlasonCampagneSVG appelé');
+    //console.log('🔥 SVG avant vidage:', svgElement.innerHTML);
     
     // Vider complètement le SVG
     svgElement.innerHTML = '';
-    console.log('🔥 SVG après vidage:', svgElement.innerHTML);
+    //console.log('🔥 SVG après vidage:', svgElement.innerHTML);
     
     // Générer les 6 zones du blason campagne
     const centerX = 150;
@@ -749,7 +731,7 @@ function generateBlasonCampagneSVG(svgElement) {
     const outerRadius = 150 * targetScale; // 128.571428...
     const ringWidth = outerRadius / numRings; // 21.428571...
     
-    console.log('🔥 Paramètres:', { centerX, centerY, numRings, outerRadius, ringWidth });
+    //console.log('🔥 Paramètres:', { centerX, centerY, numRings, outerRadius, ringWidth });
     
     // Palette blason campagne : zones 1-4 (noir), zones 5-6 (jaune)
     const colors = ['#212121', '#212121', '#212121', '#212121', '#FFD700', '#FFD700'];
@@ -760,7 +742,7 @@ function generateBlasonCampagneSVG(svgElement) {
         const strokeColor = 'white'; // Tous les traits sont blancs pour le blason campagne
         const zoneNumber = numRings - i; // Zone 6 (centre) à zone 1 (extérieur)
         
-        console.log(`🔥 Création zone ${zoneNumber}: radius=${radius}, color=${color}`);
+        //console.log(`🔥 Création zone ${zoneNumber}: radius=${radius}, color=${color}`);
         
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('cx', centerX);
@@ -779,15 +761,15 @@ function generateBlasonCampagneSVG(svgElement) {
     arrowsGroup.setAttribute('id', 'arrowsGroup');
     svgElement.appendChild(arrowsGroup);
     
-    console.log('🔥 SVG final:', svgElement.innerHTML);
-    console.log('🔥 Nombre d\'éléments créés:', svgElement.children.length);
+    //console.log('🔥 SVG final:', svgElement.innerHTML);
+    //console.log('🔥 Nombre d\'éléments créés:', svgElement.children.length);
 }
 
 function generateStandardSVG(svgElement) {
     // Pour le tir campagne, NE RIEN FAIRE - le blason est fixe côté serveur
     const shootingType = window.scoredTrainingData?.shooting_type || '';
     if (shootingType === 'Campagne') {
-        console.log('🚫 Tir campagne : generateStandardSVG BLOQUÉ - aucun redessinage');
+        //console.log('🚫 Tir campagne : generateStandardSVG BLOQUÉ - aucun redessinage');
         return; // NE RIEN FAIRE
     }
     
@@ -1157,7 +1139,7 @@ function addEnd() {
                 
                 // Pour le tir campagne, NE RIEN FAIRE (le blason est fixe côté serveur)
                 if (shootingType === 'Campagne') {
-                    console.log('🎯 Tir campagne : AUCUNE modification du blason, catégorie sélectionnée:', this.value);
+                    //console.log('🎯 Tir campagne : AUCUNE modification du blason, catégorie sélectionnée:', this.value);
                     return; // NE RIEN FAIRE
                 }
                 
@@ -1169,13 +1151,11 @@ function addEnd() {
             const shootingType = window.scoredTrainingData?.shooting_type || '';
             if (shootingType !== 'Campagne') {
                 updateTargetVisualStyle(targetCategorySelect.value);
-            } else {
-                console.log('🎯 Tir campagne : SVG déjà généré côté serveur, pas de régénération JavaScript');
             }
             
             // Si une catégorie est déjà sélectionnée et que c'est 3D, charger les cibles
             if (shootingType === '3D' && targetCategorySelect.value) {
-                console.log('🔵 Catégorie 3D déjà sélectionnée au chargement, chargement des cibles:', targetCategorySelect.value);
+                //console.log('🔵 Catégorie 3D déjà sélectionnée au chargement, chargement des cibles:', targetCategorySelect.value);
                 // Attendre un peu que le DOM soit prêt
                 setTimeout(() => {
                     loadThreeDImagesForVolley(targetCategorySelect.value).catch(error => {
@@ -2904,8 +2884,8 @@ function showEndTarget(endNumber) {
             targetCategory = 'blason_122';
         }
         
-        console.log('🎯 Modal - Type de tir:', shootingType);
-        console.log('🎯 Modal - Type de cible:', targetCategory);
+        //console.log('🎯 Modal - Type de tir:', shootingType);
+        //console.log('🎯 Modal - Type de cible:', targetCategory);
         
         // Créer la cible SVG
         const target = createSVGTarget('interactiveTarget', endHits, {
