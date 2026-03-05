@@ -846,7 +846,7 @@ async function loadTimeline() {
         
         if (sessionsResponse.ok) {
             const sessionsData = await sessionsResponse.json();
-            console.log('Données sessions reçues:', sessionsData);
+            //console.log('Données sessions reçues:', sessionsData);
             
             // Extraire les sessions de la réponse
             if (sessionsData.success && sessionsData.data) {
@@ -867,7 +867,7 @@ async function loadTimeline() {
         
         if (exercisesResponse.ok) {
             const exercisesData = await exercisesResponse.json();
-            console.log('Données exercices reçues:', exercisesData);
+            //console.log('Données exercices reçues:', exercisesData);
             
             let exercises = [];
             if (exercisesData.success && exercisesData.data) {
@@ -920,7 +920,7 @@ async function loadTimeline() {
             }
         }
         
-        console.log('Map des catégories:', exerciseCategories);
+        //console.log('Map des catégories:', exerciseCategories);
         
         // Filtrer les sessions pour l'utilisateur et ajouter les catégories
         // Pour chaque session, récupérer la catégorie si elle n'est pas déjà dans le map
@@ -956,8 +956,8 @@ async function loadTimeline() {
                 })
         );
         
-        console.log('Sessions avec catégories:', allSessionsWithCategory);
-        console.log('Map des catégories final:', exerciseCategories);
+        //console.log('Sessions avec catégories:', allSessionsWithCategory);
+        //console.log('Map des catégories final:', exerciseCategories);
         
         // Fusionner et trier par date
         const items = [
@@ -1024,7 +1024,7 @@ function displayTimeline(items) {
                 <!-- Point de la frise -->
                 ${isTraining ? (() => {
                     const categoryIcon = getCategoryIcon(item.category);
-                    console.log('Rendu point frise - catégorie:', item.category, 'icône:', categoryIcon.name, 'couleur:', categoryIcon.color);
+                    //console.log('Rendu point frise - catégorie:', item.category, 'icône:', categoryIcon.name, 'couleur:', categoryIcon.color);
                     return `
                         <div class="timeline-dot" 
                              style="background-color: ${categoryIcon.color || '#14532d'}">
