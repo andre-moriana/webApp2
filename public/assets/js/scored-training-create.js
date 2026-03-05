@@ -38,15 +38,15 @@ function convertCategoryToDBFormat(category) {
 // Fonction pour charger les images nature (blasons) par catégorie
 // Définie globalement pour être accessible depuis l'attribut onchange
 window.loadNatureImagesByCategory = async function() {
-    console.log('loadNatureImagesByCategory appelée');
+    //console.log('loadNatureImagesByCategory appelée');
     const category = document.getElementById('nature_category')?.value;
     const wrapper = document.getElementById('nature_blason_wrapper');
     const select = document.getElementById('nature_blason');
     const loading = document.getElementById('nature_blason_loading');
     
-    console.log('Catégorie sélectionnée:', category);
-    console.log('Wrapper trouvé:', !!wrapper);
-    console.log('Select trouvé:', !!select);
+    //console.log('Catégorie sélectionnée:', category);
+    //console.log('Wrapper trouvé:', !!wrapper);
+    //console.log('Select trouvé:', !!select);
     
     if (!wrapper || !select) {
         console.error('Éléments non trouvés: wrapper=' + !!wrapper + ', select=' + !!select);
@@ -61,7 +61,7 @@ window.loadNatureImagesByCategory = async function() {
     }
     
     // Afficher le wrapper
-    console.log('Affichage du wrapper du blason');
+    //console.log('Affichage du wrapper du blason');
     wrapper.style.display = 'block';
     
     try {
@@ -134,11 +134,11 @@ window.loadNatureImagesByCategory = async function() {
                     select.appendChild(option);
                 });
                 
-                console.log('Blasons chargés:', sortedImages.length);
+                //console.log('Blasons chargés:', sortedImages.length);
             } else {
                 // Réponse OK mais pas de données
                 console.warn('Aucune image nature trouvée pour la catégorie:', category);
-                console.log('Réponse complète:', result);
+                //console.log('Réponse complète:', result);
                 if (result && result.message) {
                     console.warn('Message:', result.message);
                 }
@@ -266,8 +266,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded - Initialisation du formulaire de création');
     
     // Vérifier que les fonctions globales sont bien définies
-    console.log('updateShootingConfiguration définie:', typeof window.updateShootingConfiguration);
-    console.log('loadNatureImagesByCategory définie:', typeof window.loadNatureImagesByCategory);
+    //console.log('updateShootingConfiguration définie:', typeof window.updateShootingConfiguration);
+    //console.log('loadNatureImagesByCategory définie:', typeof window.loadNatureImagesByCategory);
     
     // Écouter les changements dans les champs
     const totalEndsField = document.getElementById('total_ends');
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (shootingTypeSelect) {
         // Si l'attribut onchange n'est pas exécuté, ajouter un listener
         shootingTypeSelect.addEventListener('change', function() {
-            console.log('Changement de type de tir détecté:', this.value);
+            //console.log('Changement de type de tir détecté:', this.value);
             if (window.updateShootingConfiguration) {
                 window.updateShootingConfiguration();
             }
@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (natureCategorySelect) {
         // Si l'attribut onchange n'est pas exécuté, ajouter un listener
         natureCategorySelect.addEventListener('change', function() {
-            console.log('Changement de catégorie nature détecté:', this.value);
+            //console.log('Changement de catégorie nature détecté:', this.value);
             if (window.loadNatureImagesByCategory) {
                 window.loadNatureImagesByCategory();
             }
