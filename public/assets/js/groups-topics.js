@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Script de gestion des groupes chargé');
+    //console.log('Script de gestion des groupes chargé');
     
     // Gérer les clics sur les groupes
     document.querySelectorAll('.group-item').forEach(function(groupItem) {
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fonction pour charger les formulaires d'un sujet
     function loadTopicForms(topicId) {
-        console.log('Chargement des formulaires pour le sujet:', topicId);
+        //console.log('Chargement des formulaires pour le sujet:', topicId);
         
         // Réinitialiser les formulaires et compteurs avant de charger les nouveaux
         currentTopicForms = [];
@@ -195,11 +195,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .then(response => {
-            console.log('Réponse API formulaires, status:', response.status);
+            //console.log('Réponse API formulaires, status:', response.status);
             return response.json();
         })
         .then(data => {
-            console.log('Données formulaires reçues:', data);
+            //console.log('Données formulaires reçues:', data);
             // Gérer différents formats de réponse API
             let forms = [];
             if (data.success && data.data) {
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (forms.length > 0) {
                 currentTopicForms = forms;
-                console.log('Formulaires trouvés:', currentTopicForms.length);
+                //console.log('Formulaires trouvés:', currentTopicForms.length);
                 // Initialiser les compteurs à 0 pour tous les formulaires
                 currentTopicForms.forEach(function(form) {
                     currentTopicFormResponseCounts[form.id] = 0;
@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Charger les compteurs de réponses pour chaque formulaire (asynchrone)
                 loadFormResponseCounts(forms);
             } else {
-                console.log('Aucun formulaire trouvé');
+                //console.log('Aucun formulaire trouvé');
                 currentTopicForms = [];
                 // Appeler addFormsToMessages même s'il n'y a pas de formulaires pour s'assurer que les anciens sont supprimés
                 addFormsToMessages();
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        console.log('Ajout des formulaires, nombre:', currentTopicForms.length);
+        //console.log('Ajout des formulaires, nombre:', currentTopicForms.length);
         
         // Vérifier si des formulaires sont déjà affichés
         const existingForms = messagesContainer.querySelectorAll('.form-message');
@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (currentTopicForms.length === 0) {
-            console.log('Aucun formulaire à afficher');
+            //console.log('Aucun formulaire à afficher');
             return;
         }
         
@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Ajouter les formulaires à la fin du conteneur
         messagesContainer.appendChild(fragment);
         
-        console.log('Formulaires ajoutés avec succès en bas de page');
+        //console.log('Formulaires ajoutés avec succès en bas de page');
     }
     
     // Fonction pour mettre à jour l'affichage des formulaires
@@ -372,27 +372,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .then(response => {
-            console.log('Status HTTP:', response.status);
-            console.log('Content-Type:', response.headers.get('content-type'));
+            //console.log('Status HTTP:', response.status);
+            //console.log('Content-Type:', response.headers.get('content-type'));
             if (!response.ok) {
                 return response.text().then(text => {
-                    console.error('Réponse brute (erreur):', text.substring(0, 500));
+                    //console.error('Réponse brute (erreur):', text.substring(0, 500));
                     throw new Error('Erreur HTTP: ' + response.status + ' - ' + text.substring(0, 100));
                 });
             }
             return response.text().then(text => {
-                console.log('Réponse brute (100 premiers caractères):', text.substring(0, 100));
+                //console.log('Réponse brute (100 premiers caractères):', text.substring(0, 100));
                 try {
                     return JSON.parse(text);
                 } catch (e) {
-                    console.error('Erreur de parsing JSON:', e);
-                    console.error('Texte complet:', text);
+                    //console.error('Erreur de parsing JSON:', e);
+                    //console.error('Texte complet:', text);
                     throw new Error('Réponse invalide: ' + text.substring(0, 100));
                 }
             });
         })
         .then(data => {
-            console.log('Données reçues pour le sujet:', topicId, data);
+            //console.log('Données reçues pour le sujet:', topicId, data);
             // L'API peut retourner directement un tableau ou un objet avec data
             let messages = [];
             if (Array.isArray(data)) {
@@ -686,7 +686,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const hasFile = attachmentInput && attachmentInput.files && attachmentInput.files[0];
             
             if (!messageContent && !hasFile) {
-                console.log('[DEBUG] Aucun contenu ni fichier - abandon');
+                //console.log('[DEBUG] Aucun contenu ni fichier - abandon');
                 return;
             }
             
@@ -695,11 +695,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            console.log('[DEBUG] Envoi message topic - topicId:', topicId, 'content:', messageContent);
-            if (hasFile) {
-                console.log('[DEBUG] Fichier:', attachmentInput.files[0].name);
-            }
-            
+           
             // Utiliser FormData pour supporter les fichiers
             const formData = new FormData();
             formData.append('content', messageContent);
@@ -715,12 +711,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData
             })
             .then(response => {
-                console.log('[DEBUG] Réponse reçue - Status:', response.status, 'OK:', response.ok);
-                console.log('[DEBUG] Content-Type:', response.headers.get('content-type'));
+                //console.log('[DEBUG] Réponse reçue - Status:', response.status, 'OK:', response.ok);
+                //console.log('[DEBUG] Content-Type:', response.headers.get('content-type'));
                 
                 // Lire le texte brut d'abord
                 return response.text().then(text => {
-                    console.log('[DEBUG] Réponse brute (100 premiers caractères):', text.substring(0, 100));
+                    //console.log('[DEBUG] Réponse brute (100 premiers caractères):', text.substring(0, 100));
                     
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
@@ -737,7 +733,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             })
             .then(data => {
-                console.log('[DEBUG] Données JSON parsées:', data);
+                //console.log('[DEBUG] Données JSON parsées:', data);
                 if (data.success) {
                     messageInput.value = '';
                     // Vider aussi l'input de fichier
@@ -751,7 +747,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Erreur:', error);
+                //console.error('Erreur:', error);
                 alert('Erreur lors de l\'envoi du message');
             });
         });
@@ -917,7 +913,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fonction pour voir les résultats d'un formulaire
     window.viewFormResults = function(formId) {
-        console.log('Chargement des résultats pour le formulaire:', formId);
+        //console.log('Chargement des résultats pour le formulaire:', formId);
         fetch(`/api/forms/${formId}/responses`, {
             method: 'GET',
             headers: {
@@ -925,11 +921,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .then(response => {
-            console.log('Réponse API résultats, status:', response.status);
+            //console.log('Réponse API résultats, status:', response.status);
             return response.json();
         })
         .then(data => {
-            console.log('Données résultats reçues:', data);
+            //console.log('Données résultats reçues:', data);
             // Gérer différents formats de réponse API
             let responses = [];
             if (data.success && data.data) {
@@ -943,7 +939,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 responses = data;
             }
             
-            console.log('Réponses extraites:', responses.length);
+            //console.log('Réponses extraites:', responses.length);
             
             if (responses.length > 0) {
                 const form = currentTopicForms.find(f => f.id == formId);
@@ -965,8 +961,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fonction pour afficher les résultats dans un modal (format similaire à l'app mobile)
     function showFormResultsModal(form, responses) {
-        console.log('Affichage des résultats pour le formulaire:', form);
-        console.log('Nombre de réponses:', responses.length);
+        //console.log('Affichage des résultats pour le formulaire:', form);
+        //console.log('Nombre de réponses:', responses.length);
         
         let modal = document.getElementById('form-results-modal');
         if (!modal) {
@@ -1497,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const groupId = this.getAttribute('data-group-id');
             const groupName = this.getAttribute('data-group-name');
             
-            console.log('Clic sur suppression du groupe:', groupId, groupName);
+            //console.log('Clic sur suppression du groupe:', groupId, groupName);
             
             // Mettre à jour le modal avec les informations du groupe
             document.getElementById('groupName').textContent = groupName;
@@ -1546,7 +1542,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Fonction globale pour éditer un message de topic
 window.editTopicMessage = async function(messageId) {
-    console.log('[Edit] Édition du message:', messageId);
+    //console.log('[Edit] Édition du message:', messageId);
     
     const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
     if (!messageElement) {
@@ -1601,7 +1597,7 @@ window.editTopicMessage = async function(messageId) {
 
 // Fonction globale pour supprimer un message de topic
 window.deleteTopicMessage = async function(messageId) {
-    console.log('[Delete] Suppression du message:', messageId);
+    //console.log('[Delete] Suppression du message:', messageId);
     
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
         return;
