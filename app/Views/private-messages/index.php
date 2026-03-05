@@ -231,6 +231,7 @@
     .conversation-item.active {
         background-color: #d4edda;
         border-left: 4px solid #198754;
+    
     }
     
     /* Style pour le hover */
@@ -245,6 +246,6 @@
     window.currentUserName = '<?php echo htmlspecialchars($_SESSION['user']['username'] ?? ''); ?>';
     
     // Debug
-    console.log('Current user ID:', window.currentUserId);
-    console.log('Current user name:', window.currentUserName);
+    //console.log('Current user ID:', window.currentUserId);
+    //console.log('Current user name:', window.currentUserName);
 </script>
