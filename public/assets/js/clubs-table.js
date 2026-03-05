@@ -230,7 +230,7 @@ function filterClubsTable() {
 }
 
 // Variable globale pour stocker toutes les options départementales
-let allDepartmentalOptions = [];
+//let allDepartmentalOptions = [];
 
 // Fonction pour filtrer les comités départementaux selon le comité régional sélectionné
 function updateDepartmentalSelect() {
@@ -300,11 +300,11 @@ function updateDepartmentalSelect() {
 
 // Fonction d'initialisation
 function initClubsTable() {
-    console.log('Initialisation de la table des clubs');
+    //console.log('Initialisation de la table des clubs');
     
     const table = document.getElementById('clubsTable');
     if (!table) {
-        console.error('Table clubsTable non trouvée');
+        //console.error('Table clubsTable non trouvée');
         return;
     }
     
@@ -312,19 +312,19 @@ function initClubsTable() {
     const filterDepartmental = document.getElementById('filterDepartmental');
     if (filterDepartmental) {
         allDepartmentalOptions = Array.from(filterDepartmental.options).filter(opt => opt.value !== '');
-        console.log('Options départementales sauvegardées:', allDepartmentalOptions.length);
+        //console.log('Options départementales sauvegardées:', allDepartmentalOptions.length);
     }
     
     // Gérer le tri
     const sortableHeaders = table.querySelectorAll('th.sortable');
-    console.log('En-têtes triables trouvés:', sortableHeaders.length);
+    //console.log('En-têtes triables trouvés:', sortableHeaders.length);
     
     sortableHeaders.forEach(header => {
         header.style.cursor = 'pointer';
         header.addEventListener('click', function(e) {
             e.preventDefault();
             const column = this.getAttribute('data-column');
-            console.log('Tri de la colonne:', column);
+            //console.log('Tri de la colonne:', column);
             if (column) {
                 sortClubsTable(column);
             }
