@@ -294,8 +294,8 @@ function updateDepartmentalSelect() {
         filterDepartmental.value = '';
     }
     
-    console.log(`Comités départementaux filtrés pour la région ${regionalPrefix}:`, 
-                filterDepartmental.options.length - 1);
+    //console.log(`Comités départementaux filtrés pour la région ${regionalPrefix}:`, 
+    //            filterDepartmental.options.length - 1);
 }
 
 // Fonction d'initialisation
