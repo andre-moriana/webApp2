@@ -10,19 +10,19 @@ let selectedAttachment = null;
 
 // Au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initialisation de la page des messages privés');
+    //console.log('Initialisation de la page des messages privés');
     
     // Vérifier si on arrive avec un utilisateur pré-sélectionné (depuis la liste des utilisateurs)
     const urlParams = new URLSearchParams(window.location.search);
     const preSelectedUserId = urlParams.get('user');
     const preSelectedUserName = urlParams.get('name');
     
-    console.log('Paramètres URL:', { userId: preSelectedUserId, userName: preSelectedUserName });
+    //console.log('Paramètres URL:', { userId: preSelectedUserId, userName: preSelectedUserName });
     
     if (preSelectedUserId) {
         // Décoder le nom si présent, sinon utiliser "Utilisateur"
         const userName = preSelectedUserName ? decodeURIComponent(preSelectedUserName) : 'Utilisateur';
-        console.log('Ouverture automatique de la conversation avec:', userName, '(ID:', preSelectedUserId, ')');
+        //console.log('Ouverture automatique de la conversation avec:', userName, '(ID:', preSelectedUserId, ')');
         
         // Vérifier que les éléments DOM nécessaires existent
         const messagesContainer = document.getElementById('messages-container');
@@ -67,11 +67,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const userId = this.dataset.userId;
             const userName = this.dataset.userName;
             
-            console.log('Click sur user-item:', {
-                userId: userId,
-                userName: userName,
-                dataset: this.dataset
-            });
+            //console.log('Click sur user-item:', {
+            //    userId: userId,
+            //    userName: userName,
+            //    dataset: this.dataset
+            //});
             
             // Vérifier que les données sont présentes
             if (!userId || userId === '' || userId === 'undefined') {
@@ -160,9 +160,9 @@ function filterUsers(searchTerm) {
  * Ouvre une conversation avec un utilisateur
  */
 function openConversation(userId, userName) {
-    console.log(`=== OUVERTURE CONVERSATION ===`);
-    console.log('User ID:', userId);
-    console.log('User Name:', userName);
+    //console.log(`=== OUVERTURE CONVERSATION ===`);
+    //console.log('User ID:', userId);
+    //console.log('User Name:', userName);
     
     // Vérifier que l'userId n'est pas vide
     if (!userId || userId === '' || userId === 'undefined') {
@@ -174,13 +174,13 @@ function openConversation(userId, userName) {
     currentConversationUserId = userId;
     currentConversationUserName = userName || 'Utilisateur';
     
-    console.log('Mise à jour de l\'en-tête avec:', currentConversationUserName);
+    //console.log('Mise à jour de l\'en-tête avec:', currentConversationUserName);
     
     // Mettre à jour l'en-tête
     const userNameElement = document.getElementById('current-user-name');
     if (userNameElement) {
         userNameElement.textContent = currentConversationUserName;
-        console.log('En-tête mis à jour');
+        //console.log('En-tête mis à jour');
     } else {
         console.error('Élément current-user-name introuvable');
     }
@@ -189,7 +189,7 @@ function openConversation(userId, userName) {
     const formContainer = document.getElementById('message-form-container');
     if (formContainer) {
         formContainer.style.display = 'block';
-        console.log('Formulaire d\'envoi affiché');
+        //console.log('Formulaire d\'envoi affiché');
     } else {
         console.error('Élément message-form-container introuvable');
     }
@@ -204,7 +204,7 @@ function openConversation(userId, userName) {
     const recipientInput = document.getElementById('recipient-id');
     if (recipientInput) {
         recipientInput.value = userId;
-        console.log('Destinataire défini:', userId);
+        //console.log('Destinataire défini:', userId);
     } else {
         console.error('Élément recipient-id introuvable');
     }
@@ -216,20 +216,18 @@ function openConversation(userId, userName) {
     const activeConv = document.querySelector(`.conversation-item[data-user-id="${userId}"]`);
     if (activeConv) {
         activeConv.classList.add('active');
-        console.log('Conversation marquée comme active dans la liste');
-    } else {
-        console.log('Conversation non trouvée dans la liste (nouvelle conversation)');
+        //console.log('Conversation marquée comme active dans la liste');
     }
     
     // Charger l'historique des messages
-    console.log('Chargement de l\'historique des messages...');
+    //console.log('Chargement de l\'historique des messages...');
     loadMessages(userId);
     
     // Démarrer le polling pour les nouveaux messages
-    console.log('Démarrage du polling...');
+    //console.log('Démarrage du polling...');
     startMessagePolling();
     
-    console.log('=== FIN OUVERTURE CONVERSATION ===');
+    //console.log('=== FIN OUVERTURE CONVERSATION ===');
 }
 
 /**
@@ -243,11 +241,11 @@ async function loadMessages(userId) {
         return;
     }
     
-    console.log('loadMessages: Chargement des messages pour userId:', userId);
+    //console.log('loadMessages: Chargement des messages pour userId:', userId);
     
     try {
         const url = `/api/private-messages/${userId}/history`;
-        console.log('loadMessages: URL de la requête:', url);
+        //console.log('loadMessages: URL de la requête:', url);
         
         const response = await fetch(url, {
             method: 'GET',
@@ -256,7 +254,7 @@ async function loadMessages(userId) {
             }
         });
         
-        console.log('loadMessages: Response status:', response.status);
+        //console.log('loadMessages: Response status:', response.status);
         
         if (!response.ok) {
             const errorText = await response.text();
@@ -265,9 +263,9 @@ async function loadMessages(userId) {
         }
         
         const response_data = await response.json();
-        console.log('Messages chargés (brut):', response_data);
-        console.log('Type de response_data:', typeof response_data);
-        console.log('Est un array?', Array.isArray(response_data));
+        //console.log('Messages chargés (brut):', response_data);
+        //console.log('Type de response_data:', typeof response_data);
+        //console.log('Est un array?', Array.isArray(response_data));
         
         // Gérer différents formats de réponse
         let messages = [];
@@ -287,8 +285,8 @@ async function loadMessages(userId) {
             }
         }
         
-        console.log('Messages après traitement:', messages);
-        console.log('Nombre de messages:', messages.length);
+        //console.log('Messages après traitement:', messages);
+        //console.log('Nombre de messages:', messages.length);
         
         displayMessages(messages);
         
@@ -307,9 +305,9 @@ async function loadMessages(userId) {
 function displayMessages(messages) {
     const container = document.getElementById('messages-container');
     
-    console.log('displayMessages: messages =', messages);
-    console.log('displayMessages: type =', typeof messages);
-    console.log('displayMessages: is array =', Array.isArray(messages));
+    //console.log('displayMessages: messages =', messages);
+    //console.log('displayMessages: type =', typeof messages);
+    //console.log('displayMessages: is array =', Array.isArray(messages));
     
     // Vérifier que messages est bien un tableau
     if (!Array.isArray(messages)) {
@@ -445,7 +443,7 @@ async function sendMessage() {
         }
         
         const result = await response.json();
-        console.log('Message envoyé:', result);
+        //console.log('Message envoyé:', result);
         
         // Réinitialiser le formulaire
         document.getElementById('message-content').value = '';
@@ -607,7 +605,7 @@ async function deleteConversation() {
         }
         
         // Succès - fermer la conversation
-        console.log('Conversation supprimée avec succès');
+        //console.log('Conversation supprimée avec succès');
         
         // Masquer le formulaire et le bouton de suppression
         document.getElementById('message-form-container').style.display = 'none';
