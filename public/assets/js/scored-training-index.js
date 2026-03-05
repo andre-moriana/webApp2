@@ -203,6 +203,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+function handleUserSelectChange(selectElement) {
+    const selectedUserId = selectElement.value;
+    let newUrl = '/scored-trainings';
+    if (selectedUserId && selectedUserId !== '' && selectedUserId !== 'null' && selectedUserId !== 'undefined') {
+        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
+    }
+    window.location.href = newUrl;
+}
+
 // Exposer les fonctions globalement pour les appels depuis HTML
 window.openCreateModal = openCreateModal;
 window.createTraining = createTraining;

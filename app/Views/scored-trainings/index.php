@@ -393,18 +393,6 @@ $additionalJS = [
     </div>
 </div>
 
-<
-<script>
-
-function handleUserSelectChange(selectElement) {
-    const selectedUserId = selectElement.value;
-    let newUrl = '/scored-trainings';
-    if (selectedUserId && selectedUserId !== '' && selectedUserId !== 'null' && selectedUserId !== 'undefined') {
-        newUrl += '?user_id=' + encodeURIComponent(selectedUserId);
-    }
-    window.location.href = newUrl;
-}
-</script>
 <script>
     // Passer les données PHP au JavaScript
     window.scoredTrainingsData = <?= json_encode($scoredTrainings) ?>;
