@@ -739,8 +739,8 @@ function initializeSVGTarget() {
         detectedTargetCategory = 'blason_122';
     }
     
-    console.log('🎯 Type de tir détecté:', shootingType);
-    console.log('🎯 Type de cible déterminé:', detectedTargetCategory);
+    //console.log('🎯 Type de tir détecté:', shootingType);
+    //console.log('🎯 Type de cible déterminé:', detectedTargetCategory);
     
     window.endsData.forEach(end => {
         if (end.shots && end.shots.length > 0) {
@@ -758,7 +758,7 @@ function initializeSVGTarget() {
         }
     });
     
-    console.log('🎯 Nombre d\'impacts collectés:', allHits.length);
+    //console.log('🎯 Nombre d\'impacts collectés:', allHits.length);
     
     // Créer la cible SVG avec le type détecté
     const target = createSVGTarget('svgTargetContainer', allHits, {
