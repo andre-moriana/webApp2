@@ -1,3 +1,9 @@
-Votre demande de suppression de données Facebook a été prise en compte.
-Code de confirmation : <?php echo $_GET['code']; ?>
-Les données seront supprimées sous 48 heures.
+<?php
+
+$code = $_GET['code'] ?? 'inconnu';
+
+echo "<h2>Demande de suppression reçue</h2>";
+echo "<p>Code de confirmation : <strong>$code</strong></p>";
+echo "<p>Vos données seront supprimées sous 48 heures.</p>";
+
+?>
