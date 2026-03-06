@@ -6,9 +6,9 @@ $data = parse_signed_request($signed_request);
 $user_id = $data['user_id'];
 
 // Start data deletion
+$confirmation_code = bin2hex(random_bytes(8)); // unique code for the deletion request
+$status_url = 'https://www.arctraining.fr/deletion-status?code=' . $confirmation_code; // URL to track the deletion
 
-$status_url = 'https://www.arctraining.fr/deletion?id=abc123'; // URL to track the deletion
-$confirmation_code = 'abc123'; // unique code for the deletion request
 
 $data = array(
   'url' => $status_url,
