@@ -290,7 +290,7 @@ function initUsersTable() {
     
     // Test initial pour vérifier que tout fonctionne
     const userRows = document.querySelectorAll('#usersTable tbody tr.user-row');
-    console.log('Initialisation de la recherche - Lignes utilisateur trouvées:', userRows.length);
+    //console.log('Initialisation de la recherche - Lignes utilisateur trouvées:', userRows.length);
 }
 
 // Initialiser quand le DOM est prêt
