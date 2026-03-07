@@ -40,6 +40,8 @@ class Router {
         $this->addRoute("GET", "/concours/{id}/editions", "ConcoursController@editions");
         // Gestion des produits buvette
         $this->addRoute("GET", "/concours/{id}/buvette", "ConcoursController@buvette");
+        // Gestion des greffes
+        $this->addRoute("GET", "/concours/{id}/greffes", "ConcoursController@greffes");
         // Route pour enregistrer le type de blason d'une cible
         $this->addRoute("POST", "/concours/plan-cible-type-blason", "ConcoursController@planCibleTypeBlason");
         // Route pour la mise à jour d'inscription (POST avec X-HTTP-Method-Override ou PUT)
