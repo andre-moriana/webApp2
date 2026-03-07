@@ -2734,8 +2734,9 @@ class ApiController {
             $method = $_SERVER['REQUEST_METHOD'];
             $queryString = $_SERVER['QUERY_STRING'] ?? '';
             $endpoint = "concours/{$concoursId}/greffes" . ($queryString ? "?{$queryString}" : "");
-
+console.log($endpoint);
             $response = $this->apiService->makeRequest($endpoint, $method);
+console.log($response);
 
             if (isset($response['data']) && is_array($response['data']) && isset($response['data']['success'])) {
                 $response = $response['data'];
@@ -2753,7 +2754,7 @@ class ApiController {
             ], 500);
         }
     }
-    
+
     /**
      * Proxy pour /api/concours/{id}/inscription/{inscriptionId} - Mise à jour d'inscription
      */
