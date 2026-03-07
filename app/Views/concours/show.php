@@ -120,7 +120,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         <?php
         if ($isDirigeant || $isAdmin): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/greffe" class="btn btn-success">
-                <i class="fas fa-greffe"></i> Gestion des greffes
+                <i class="fas fa-edit"></i> Gestion des greffes
             </a>
         <?php endif; ?>
 
