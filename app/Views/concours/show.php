@@ -117,6 +117,12 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
                 <i class="fas fa-coffee"></i> Gestion de la buvette
             </a>
         <?php endif; ?>
+        <?php
+        if ($isDirigeant || $isAdmin): ?>
+            <a href="/concours/<?= htmlspecialchars($concoursId) ?>/greffe" class="btn btn-success">
+                <i class="fas fa-greffe"></i> Gestion des greffes
+            </a>
+        <?php endif; ?>
 
     <?php endif; ?>
 </div>
