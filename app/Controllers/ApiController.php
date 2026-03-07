@@ -2722,7 +2722,7 @@ class ApiController {
     }
 
         /**
-     * Proxy pour /api/concours/{id}/inscriptions
+     * Proxy pour /api/concours/{id}/greffes
      */
     public function proxyConcoursGreffes($concoursId) {
         if (!$this->isAuthenticated()) {

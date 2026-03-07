@@ -1248,9 +1248,96 @@ class ConcoursController {
         header('Location: /concours');
         exit();
     }
+// Page de gestion des greffes
+public function greffes($concoursId)
+{
+    if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+        header('Location: /login');
+        exit;
+    }
+    // Récupérer les informations du concours
+    $concoursResponse = $this->apiService->getConcoursById($concoursId);
+    if (!$concoursResponse['success']) {
+        $_SESSION['error'] = 'Concours introuvable';
+        header('Location: /concours');
+        exit;
+    }
 
-    // Page d'inscription à un concours
-    public function inscription($concoursId)
+    // Unwrap les données si nécessaire
+    $concours = $this->apiService->unwrapData($concoursResponse);
+    if (is_array($concours) && isset($concours['data']) && isset($concours['success'])) {
+        $concours = $concours['data'];
+    }
+    // Convertir en objet si c'est un tableau pour faciliter l'accès dans la vue
+    if (is_array($concours)) {
+        $concours = (object)$concours;
+    }
+    // Normaliser departs : s'assurer que c'est un tableau indexé (0,1,2...) pour l'affichage
+    $departsRaw = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+    $concours->departs = array_values(is_array($departsRaw) ? $departsRaw : (array)$departsRaw);
+
+    // Récupérer les inscriptions existantes
+    $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
+    // Utiliser unwrapData pour être cohérent avec les autres appels API
+    $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+    if (!is_array($inscriptions)) {
+        $inscriptions = [];
+    }
+
+    // Enrichir les inscriptions sans user_id : ajouter user_id si numero_licence = licence de l'utilisateur connecté
+    $currentUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? $_SESSION['user']['_id'] ?? null;
+    $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));
+    if ($currentUserLicence === '' && $currentUserId) {
+        try {
+            $userResponse = $this->apiService->makeRequest("users/{$currentUserId}", 'GET');
+            if ($userResponse['success'] && isset($userResponse['data'])) {
+                $userData = $userResponse['data'];
+                $currentUserLicence = trim((string)($userData['numero_licence'] ?? $userData['licence_number'] ?? $userData['licenceNumber'] ?? ''));
+                if ($currentUserLicence !== '') {
+                    $_SESSION['user']['numero_licence'] = $currentUserLicence;
+                    $_SESSION['user']['licenceNumber'] = $currentUserLicence;
+                }
+            }
+        } catch (Exception $e) {
+            // Ignorer
+        }
+    }
+    foreach ($inscriptions as &$inscription) {
+        if (empty($inscription['user_id']) && $currentUserId && $currentUserLicence !== '') {
+            $inscLicence = trim((string)($inscription['numero_licence'] ?? ''));
+            if ($inscLicence !== '' && $inscLicence === $currentUserLicence) {
+                $inscription['user_id'] = $currentUserId;
+            }
+        }
+    }
+    unset($inscription);
+    $isDirigeant = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+    
+    // Récupérer les informations complètes des utilisateurs inscrits
+    $userIds = array_column($inscriptions, 'user_id');
+    $usersMap = [];
+    if (!empty($userIds)) {
+        foreach ($userIds as $userId) {
+            if ($userId) {
+                try {
+                    $userResponse = $this->apiService->makeRequest("users/{$userId}", 'GET');
+                    if ($userResponse['success'] && isset($userResponse['data'])) {
+                        $usersMap[$userId] = $userResponse['data'];
+                    }
+                } catch (Exception $e) {
+                    // Ignorer les erreurs pour continuer l'affichage
+                }
+            }
+        }
+    }
+    // Inclure header et footer
+    include 'app/Views/layouts/header.php';
+    include 'app/Views/concours/greffes.php';
+    include 'app/Views/layouts/footer.php';
+    
+}
+// Page d'inscription à un concours
+public function inscription($concoursId)
     {
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             header('Location: /login');

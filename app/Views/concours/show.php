@@ -97,14 +97,14 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
             </a>
         <?php endif; ?>
         <?php if ($canShowPlanCibleSection): ?>
-            <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-cible" class="btn btn-outline-primary ms-2">
+            <a href="/concours/<?= htmlspecialchars($concoursId) ?>/plan-cible" class="btn btn-outline-primary ms-2">
                 <i class="fas fa-list"></i> Voir le plan de cible
             </a>
         <div id="plan-cible-message" style="margin-top: 10px;"></div>
         <?php endif; ?>
     
         <?php if ($canShowPlanPelotonSection): ?>
-            <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/plan-peloton" class="btn btn-outline-primary <?= $canCreatePlanPeloton ? 'ms-2' : '' ?>">
+            <a href="/concours/<?= htmlspecialchars($concoursId) ?>/plan-peloton" class="btn btn-outline-primary <?= $canCreatePlanPeloton ? 'ms-2' : '' ?>">
                 <i class="fas fa-list"></i> Voir le plan de peloton
             </a>
             <div id="plan-peloton-message" style="margin-top: 10px;"></div>
@@ -113,7 +113,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         <?php
         $isDirigeant = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
         if ($isDirigeant): ?>
-            <a href="/concours/<?= htmlspecialchars($concours->id ?? $concours->_id ?? '') ?>/buvette" class="btn btn-outline-primary">
+            <a href="/concours/<?= htmlspecialchars($concoursId) ?>/buvette" class="btn btn-outline-primary">
                 <i class="fas fa-coffee"></i> Gestion de la buvette
             </a>
         <?php endif; ?>
