@@ -1330,6 +1330,122 @@ public function greffes($concoursId)
             }
         }
     }
+            // Récupérer l'abréviation de la discipline pour déterminer si c'est 3D, Nature ou Campagne
+            $disciplineAbv = null;
+            try {
+                $iddiscipline = null;
+                if (is_object($concours)) {
+                    $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+                } elseif (is_array($concours)) {
+                    $iddiscipline = $concours['discipline'] ?? $concours['iddiscipline'] ?? null;
+                }
+                
+                if ($iddiscipline) {
+                    // Récupérer toutes les disciplines pour trouver l'abv_discipline
+                    $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+                    $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+                    if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                        $disciplinesPayload = $disciplinesPayload['data'];
+                    }
+                    
+                    if (is_array($disciplinesPayload)) {
+                        foreach ($disciplinesPayload as $discipline) {
+                            $discId = $discipline['iddiscipline'] ?? $discipline['id'] ?? null;
+                            if ($discId == $iddiscipline || (string)$discId === (string)$iddiscipline) {
+                                $disciplineAbv = $discipline['abv_discipline'] ?? null;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Erreur lors de la récupération de l\'abréviation de la discipline: ' . $e->getMessage());
+            }
+            
+            // Récupérer les distances de tir filtrées par discipline et type de compétition
+            $distancesTir = [];
+            try {
+                // Récupérer l'iddiscipline et le type_competition du concours pour filtrer les distances
+                $iddiscipline = null;
+                $idtype_competition = null;
+                if (is_object($concours)) {
+                    $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+                    $idtype_competition = $concours->type_competition ?? null;
+                } elseif (is_array($concours)) {
+                    $iddiscipline = $concours['discipline'] ?? $concours['iddiscipline'] ?? null;
+                    $idtype_competition = $concours['type_competition'] ?? null;
+                }
+                
+                // Récupérer le libellé du type de compétition si idtype_competition est disponible
+                $type_compet = null;
+                if ($idtype_competition) {
+                    try {
+                        $typeCompetResponse = $this->apiService->makeRequest('concours/type-competitions', 'GET');
+                        if ($typeCompetResponse['success'] && isset($typeCompetResponse['data'])) {
+                            $typeCompetPayload = $this->apiService->unwrapData($typeCompetResponse);
+                            if (is_array($typeCompetPayload) && isset($typeCompetPayload['data']) && isset($typeCompetPayload['success'])) {
+                                $typeCompetPayload = $typeCompetPayload['data'];
+                            }
+                            if (is_array($typeCompetPayload)) {
+                                foreach ($typeCompetPayload as $tc) {
+                                    if (($tc['idformat_competition'] ?? null) == $idtype_competition) {
+                                        $type_compet = $tc['lb_format_competition'] ?? null;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception $e) {
+                        error_log('Erreur lors de la récupération du type de compétition: ' . $e->getMessage());
+                    }
+                }
+                
+                // Construire l'URL avec les paramètres si disponibles
+                $endpoint = 'concours/distances-tir';
+                $params = [];
+                if ($iddiscipline) {
+                    $params[] = 'iddiscipline=' . (int)$iddiscipline;
+                }
+                if ($type_compet) {
+                    $params[] = 'type_compet=' . urlencode($type_compet);
+                }
+                if (!empty($params)) {
+                    $endpoint .= '?' . implode('&', $params);
+                }
+                
+                $distancesResponse = $this->apiService->makeRequest($endpoint, 'GET');
+                
+                if ($distancesResponse['success'] && isset($distancesResponse['data'])) {
+                    $distancesPayload = $distancesResponse['data'];
+                    
+                    // Si data contient encore { success, data }, unwrap une deuxième fois
+                    if (is_array($distancesPayload) && isset($distancesPayload['data']) && isset($distancesPayload['success'])) {
+                        $distancesPayload = $distancesPayload['data'];
+                    }
+                    
+                    if (is_array($distancesPayload)) {
+                        // Normaliser l'ID de chaque distance
+                        foreach ($distancesPayload as &$distance) {
+                            if (!isset($distance['id']) && isset($distance['_id'])) {
+                                $distance['id'] = $distance['_id'];
+                            }
+                        }
+                        unset($distance);
+                        
+                        // Trier par distance_valeur (ordre croissant)
+                        usort($distancesPayload, function($a, $b) {
+                            $valeurA = (int)($a['distance_valeur'] ?? 0);
+                            $valeurB = (int)($b['distance_valeur'] ?? 0);
+                            return $valeurA <=> $valeurB;
+                        });
+                        
+                        // Réindexer le tableau pour avoir des clés séquentielles
+                        $distancesTir = array_values($distancesPayload);
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Erreur lors de la récupération des distances de tir: ' . $e->getMessage());
+            }
     // Inclure header et footer
     include 'app/Views/layouts/header.php';
     include 'app/Views/concours/greffes.php';
