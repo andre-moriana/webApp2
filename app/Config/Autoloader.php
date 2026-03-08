@@ -2,7 +2,6 @@
 class Autoloader {
     private static $directories = [
         'app/Controllers/',
-        'app/Models/',
         'app/Services/',
         'app/Helpers/',
         'app/Config/'
