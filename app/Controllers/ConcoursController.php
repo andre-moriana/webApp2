@@ -1330,6 +1330,161 @@ public function greffes($concoursId)
             }
         }
     }
+        // Charger les données pour afficher les libellés
+        $clubs = []; // Initialiser pour éviter les erreurs si l'API échoue
+        $clubsMap = []; // Mapping clubId -> club pour accès rapide
+        try {
+            // Clubs
+            $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+            $clubsPayload = $this->apiService->unwrapData($clubsResponse);
+            if ($clubsResponse['success'] && is_array($clubsPayload)) {
+                foreach ($clubsPayload as &$club) {
+                    if (!isset($club['id']) && isset($club['_id'])) {
+                        $club['id'] = $club['_id'];
+                    }
+                    // Créer un mapping pour accès rapide par ID (int et string)
+                    $clubId = $club['id'] ?? $club['_id'] ?? null;
+                    if ($clubId) {
+                        $clubsMap[$clubId] = $club;
+                        $clubsMap[(string)$clubId] = $club;
+                        $clubsMap[(int)$clubId] = $club;
+                    }
+                    // Créer aussi un mapping par name_short (car id_club peut contenir un name_short)
+                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? null;
+                    if ($nameShort) {
+                        // Normaliser la valeur (trim, convertir en string)
+                        $nameShortNormalized = trim((string)$nameShort);
+                        $clubsMap[$nameShortNormalized] = $club;
+                        // Aussi avec la valeur originale pour compatibilité
+                        $clubsMap[(string)$nameShort] = $club;
+                    }
+                }
+                unset($club);
+                $clubs = array_values($clubsPayload);
+            }
+        } catch (Exception $e) {
+            // Ignorer les erreurs pour continuer l'affichage
+        }
+        
+        // Enrichir les inscriptions avec le nom du club directement
+        // id_club peut contenir soit un ID numérique, soit un name_short
+        foreach ($inscriptions as &$inscription) {
+            $clubId = $inscription['id_club'] ?? null;
+            if ($clubId) {
+                // Normaliser la valeur (trim, convertir en string)
+                $clubIdStr = trim((string)$clubId);
+                
+                // Chercher dans le mapping (par ID ou par name_short) - essayer toutes les variantes
+                $club = null;
+                if (isset($clubsMap[$clubIdStr])) {
+                    $club = $clubsMap[$clubIdStr];
+                } elseif (isset($clubsMap[(string)$clubId])) {
+                    $club = $clubsMap[(string)$clubId];
+                } elseif (isset($clubsMap[(int)$clubId])) {
+                    $club = $clubsMap[(int)$clubId];
+                } elseif (isset($clubsMap[$clubId])) {
+                    $club = $clubsMap[$clubId];
+                } else {
+                    // Si pas trouvé dans le mapping, chercher directement dans les clubs
+                    if (isset($clubs) && is_array($clubs)) {
+                        foreach ($clubs as $c) {
+                            $nameShort = trim((string)($c['nameShort'] ?? $c['name_short'] ?? ''));
+                            if ($nameShort === $clubIdStr) {
+                                $club = $c;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if ($club) {
+                    // Utiliser le champ "name" (nom complet) comme demandé
+                    $inscription['club_name'] = $club['name'] ?? null;
+                    $inscription['club_name_short'] = $club['nameShort'] ?? $club['name_short'] ?? null;
+                }
+            }
+        }
+        unset($inscription);
+
+        // Récupérer les catégories de classement filtrées par discipline
+        $categoriesClassement = [];
+        $iddiscipline = null;
+        if (is_object($concours)) {
+            $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
+        } elseif (is_array($concours)) {
+            $iddiscipline = $concours['discipline'] ?? $concours['iddiscipline'] ?? null;
+        }
+        $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
+
+        $categoriesResponse = null;
+        try {
+            $categoriesResponse = $this->apiService->makeRequest($endpoint, 'GET');
+        } catch (Exception $e) {
+            error_log('Erreur makeRequest catégories: ' . $e->getMessage());
+        }
+        if (!$categoriesResponse || !($categoriesResponse['success'] ?? false) || empty($categoriesResponse['data'])) {
+            try {
+                $categoriesResponse = $this->apiService->makeRequestPublic($endpoint, 'GET');
+            } catch (Exception $e) {
+                error_log('Erreur makeRequestPublic catégories: ' . $e->getMessage());
+            }
+        }
+
+        if ($categoriesResponse && isset($categoriesResponse['data'])) {
+            $categoriesPayload = $categoriesResponse['data'];
+            if (is_array($categoriesPayload) && isset($categoriesPayload['data']) && isset($categoriesPayload['success'])) {
+                $categoriesPayload = $categoriesPayload['data'];
+            }
+            if (is_array($categoriesPayload)) {
+                foreach ($categoriesPayload as &$categorie) {
+                    if (!isset($categorie['id']) && isset($categorie['_id'])) {
+                        $categorie['id'] = $categorie['_id'];
+                    }
+                }
+                unset($categorie);
+                usort($categoriesPayload, function($a, $b) {
+                    return strcasecmp($a['lb_categorie_classement'] ?? '', $b['lb_categorie_classement'] ?? '');
+                });
+                $categoriesClassement = array_values($categoriesPayload);
+            }
+        }
+
+        // Récupérer les arcs
+        $arcs = [];
+        try {
+            $arcsResponse = $this->apiService->makeRequest('concours/arcs', 'GET');
+            
+            if ($arcsResponse['success'] && isset($arcsResponse['data'])) {
+                $arcsPayload = $arcsResponse['data'];
+                
+                // Si data contient encore { success, data }, unwrap une deuxième fois
+                if (is_array($arcsPayload) && isset($arcsPayload['data']) && isset($arcsPayload['success'])) {
+                    $arcsPayload = $arcsPayload['data'];
+                }
+                
+                if (is_array($arcsPayload)) {
+                    // Normaliser l'ID de chaque arc
+                    foreach ($arcsPayload as &$arc) {
+                        if (!isset($arc['id']) && isset($arc['_id'])) {
+                            $arc['id'] = $arc['_id'];
+                        }
+                    }
+                    unset($arc);
+                    
+                    // Trier par ordre alphabétique sur lb_arc
+                    usort($arcsPayload, function($a, $b) {
+                        $libelleA = $a['lb_arc'] ?? '';
+                        $libelleB = $b['lb_arc'] ?? '';
+                        return strcasecmp($libelleA, $libelleB);
+                    });
+                    
+                    // Réindexer le tableau pour avoir des clés séquentielles
+                    $arcs = array_values($arcsPayload);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des arcs: ' . $e->getMessage());
+        }
             // Récupérer l'abréviation de la discipline pour déterminer si c'est 3D, Nature ou Campagne
             $disciplineAbv = null;
             try {
