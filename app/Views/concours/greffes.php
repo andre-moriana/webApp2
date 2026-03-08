@@ -194,7 +194,53 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         if (empty($inscriptions)): ?>
                             <tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Chargement des inscriptions...</td></tr>
                         <?php else:
-                        foreach ($inscriptions as $inscription): ?>
+                        foreach ($inscriptions as $inscription): 
+                            $inscriptionLicence = trim((string)($inscription['numero_licence'] ?? ''));
+                            $inscriptionUserId = $inscription['user_id'] ?? null;
+                            $isOwnInscription = ($currentUserLicence !== '' && $inscriptionLicence !== '' && $currentUserLicence === $inscriptionLicence)
+                                || ($currentUserId && $inscriptionUserId && (string)$currentUserId === (string)$inscriptionUserId);
+                            $canManageInscription = $isDirigeant && !$isOwnInscription;
+                            $canEditDeleteInscription = $canManageInscription || $isOwnInscription;
+                            $userName = $inscription['user_nom'] ?? null;
+                            
+                            // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
+                            $piquetColorRaw = $inscription['piquet'] ?? null;
+                            $piquetColor = null;
+                            $rowStyle = '';
+                            
+                            if ($piquetColorRaw && $piquetColorRaw !== '') {
+                                $piquetColor = trim(strtolower($piquetColorRaw));
+                                $rowClass = 'piquet-' . $piquetColor;
+                                $dataPiquet = ' data-piquet="' . htmlspecialchars($piquetColor) . '"';
+                                
+                                // Appliquer le style inline
+                                $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                                if (isset($colors[$piquetColor])) {
+                                    $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
+                                }
+                            } elseif ($isNature3DOrCampagne) {
+                                $rowClass = 'piquet-manquant';
+                                $dataPiquet = '';
+                                $rowStyle = ' style="background-color: #dee2e6 !important;"';
+                            } else {
+                                $rowClass = '';
+                                $dataPiquet = '';
+                            }
+                        ?>
+                            <?php
+                            $statut = $inscription['statut_inscription'] ?? 'en_attente';
+                            $inscId = $inscription['id'] ?? '';
+                            if ($statut === 'confirmee') {
+                                $statutIcon = 'fa-check-circle text-success';
+                                $statutTitle = 'Confirmée';
+                            } elseif (in_array($statut, ['refuse', 'annule'], true)) {
+                                $statutIcon = 'fa-times-circle text-danger';
+                                $statutTitle = $statut === 'refuse' ? 'Refusée' : 'Annulée';
+                            } else {
+                                $statutIcon = 'fa-clock text-warning';
+                                $statutTitle = 'En attente';
+                            }
+                            ?>
                                 <tr class="user-row" data-status="<?php echo htmlspecialchars($inscription['status'] ?? 'active'); ?>" data-searchable="<?php 
                                     // Construire une chaîne de recherche avec toutes les données pertinentes
                                     $searchableText = '';
