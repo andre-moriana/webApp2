@@ -142,6 +142,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
     // Déterminer si c'est une discipline 3D, Nature ou Campagne (abv_discipline = "3", "N" ou "C")
     $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true);
     ?>
+    <?php echo '<script>console.log("inscriptions", ' . json_encode($inscriptions) . ');</script>'; ?>
     <div class="inscriptions-section">
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
