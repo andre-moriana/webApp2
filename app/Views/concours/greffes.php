@@ -143,25 +143,29 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
     $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true);
     ?>
     <div class="inscriptions-section">
-        <h3>Archers inscrits</h3>
-        <small id="inscriptions-filter-hint" class="text-muted d-block mb-2">La liste affiche toutes les inscriptions. Cochez des départs ci-dessus pour filtrer.</small>
-        <div class="d-flex flex-wrap align-items-center gap-2">
-            <div class="search-box">
-                <div class="input-group">
-                    <span class="input-group-text bg-white">
-                        <i class="fas fa-search text-muted"></i>
-                    </span>
-                    <input type="text" 
-                            class="form-control" 
-                            id="userSearchInput" 
-                            placeholder="Rechercher un utilisateur..." 
-                            autocomplete="off">
-                    <button class="btn btn-outline-secondary" 
-                            type="button" 
-                            id="clearSearchBtn" 
-                            style="display: none;">
-                        <i class="fas fa-times"></i>
-                    </button>
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>Archers inscrits</h3>
+                <small id="inscriptions-filter-hint" class="text-muted d-block mb-2">La liste affiche toutes les inscriptions. Cochez des départs ci-dessus pour filtrer.</small>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="search-box">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" 
+                                    class="form-control" 
+                                    id="userSearchInput" 
+                                    placeholder="Rechercher un utilisateur..." 
+                                    autocomplete="off">
+                            <button class="btn btn-outline-secondary" 
+                                    type="button" 
+                                    id="clearSearchBtn" 
+                                    style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
