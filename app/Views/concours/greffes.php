@@ -294,14 +294,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                         </div>
                                     </td>
                                     <td class="text-nowrap">
-                                        <div class="text-truncate" style="max-width: 200px;" title="<?php echo htmlspecialchars($user['email']); ?>">
-                                            <?php echo htmlspecialchars($user['email']); ?>
-                                        </div>
-                                    </td>
-                                    <td class="text-nowrap">
-                                        <span class="badge bg-<?php echo ($user['role'] === 'admin' || ($user['is_admin'] ?? $user['isAdmin'] ?? false)) ? 'danger' : 'secondary'; ?>">
-                                            <?php echo ucfirst($user['role'] ?? 'user'); ?>
-                                        </span>
+                                        <?php echo htmlspecialchars($inscription['numero_licence']); ?>
                                     </td>
                                     <td class="text-nowrap" data-column="club">
                                         <?php 
