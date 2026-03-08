@@ -189,7 +189,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <th>Date d'inscription</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="inscriptions-list">
                         <?php
                         if (empty($inscriptions)): ?>
                             <tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Chargement des inscriptions...</td></tr>
@@ -241,7 +241,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 $statutTitle = 'En attente';
                             }
                             ?>
-                                <tr class="user-row" data-status="<?php echo htmlspecialchars($inscription['status'] ?? 'active'); ?>" data-searchable="<?php 
+                                <tr data-inscription-id="<?php echo htmlspecialchars($inscId); ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?> data-searchable="<?php 
                                     // Construire une chaîne de recherche avec toutes les données pertinentes
                                     $searchableText = '';
                                     if (!empty($inscription['user_nom'])) $searchableText .= strtolower($inscription['user_nom']) . ' ';
@@ -274,7 +274,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                         <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="text-nowrap">
+                                    <td<?= $rowStyle ?>>
                                         <div class="d-flex align-items-center">
                                              <div class="text-truncate" style="max-width: 150px;">
                                                 <?php 
