@@ -137,44 +137,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
         </div>
     </div>
 
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-users me-2"></i>Liste des utilisateurs
-            </h5>
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <div class="search-box">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white">
-                            <i class="fas fa-search text-muted"></i>
-                        </span>
-                        <input type="text" 
-                                class="form-control" 
-                                id="userSearchInput" 
-                                placeholder="Rechercher un utilisateur..." 
-                                autocomplete="off">
-                        <button class="btn btn-outline-secondary" 
-                                type="button" 
-                                id="clearSearchBtn" 
-                                style="display: none;">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center">
-                    <label for="validationFilter" class="form-label mb-0 me-2 small text-muted">Validation&nbsp;:</label>
-                    <select class="form-select form-select-sm" id="validationFilter" style="min-width: 180px;">
-                        <option value="">Tous</option>
-                        <option value="active">Validé</option>
-                        <option value="pending">En attente</option>
-                        <option value="rejected">Rejeté</option>
-                        <option value="pending_deletion">En attente de suppression</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Liste des inscrits -->
     <?php
     // Déterminer si c'est une discipline 3D, Nature ou Campagne (abv_discipline = "3", "N" ou "C")
@@ -183,6 +145,26 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
     <div class="inscriptions-section">
         <h3>Archers inscrits</h3>
         <small id="inscriptions-filter-hint" class="text-muted d-block mb-2">La liste affiche toutes les inscriptions. Cochez des départs ci-dessus pour filtrer.</small>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <div class="search-box">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" 
+                            class="form-control" 
+                            id="userSearchInput" 
+                            placeholder="Rechercher un utilisateur..." 
+                            autocomplete="off">
+                    <button class="btn btn-outline-secondary" 
+                            type="button" 
+                            id="clearSearchBtn" 
+                            style="display: none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>        
         <div class="table-responsive">
             <table class="table table-bordered" id="inscriptions-table">
                     <thead>
