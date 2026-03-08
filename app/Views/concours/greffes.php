@@ -137,21 +137,39 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
         </div>
     </div>
 
-    <!-- Recherche d'archer dans le fichier XML -->
-    <div class="card mb-4">
-        <div class="card-header">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">
-                <i class="fas fa-search me-2"></i>Recherche d'archer
+                <i class="fas fa-users me-2"></i>Liste des utilisateurs
             </h5>
-        </div>
-        <div class="card-body">
-            <div class="row g-2 align-items-end">
-                <div class="col-md-8">
-                    <label for="licence-search-input" class="form-label">Numero de licence</label>
-                    <input type="text" class="form-control" id="licence-search-input" placeholder="Entrer le numero de licence" autocomplete="off">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="search-box">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" 
+                                class="form-control" 
+                                id="userSearchInput" 
+                                placeholder="Rechercher un utilisateur..." 
+                                autocomplete="off">
+                        <button class="btn btn-outline-secondary" 
+                                type="button" 
+                                id="clearSearchBtn" 
+                                style="display: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <button type="button" class="btn btn-primary w-100" id="archer-search-btn">Chercher</button>
+                <div class="d-flex align-items-center">
+                    <label for="validationFilter" class="form-label mb-0 me-2 small text-muted">Validation&nbsp;:</label>
+                    <select class="form-select form-select-sm" id="validationFilter" style="min-width: 180px;">
+                        <option value="">Tous</option>
+                        <option value="active">Validé</option>
+                        <option value="pending">En attente</option>
+                        <option value="rejected">Rejeté</option>
+                        <option value="pending_deletion">En attente de suppression</option>
+                    </select>
                 </div>
             </div>
         </div>
