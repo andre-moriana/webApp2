@@ -293,43 +293,28 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-nowrap">
-                                        <?php echo htmlspecialchars($inscription['numero_licence']); ?>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
+                                    <td<?= $rowStyle ?>>
+                                    <?php 
+                                    // Afficher le nom du club (lié à id_club), sinon id_club en fallback
+                                    $clubDisplay = $inscription['club_name'] ?? $inscription['id_club'] ?? null;
+                                    echo htmlspecialchars($clubDisplay ?? 'N/A');
+                                    ?>
                                     </td>
-                                    <td class="text-nowrap" data-column="club">
-                                        <?php 
-                                        // Utiliser exactement la même logique que dans show.php
-                                        // Récupérer clubName qui a été enrichi par le contrôleur
-                                        if (!empty($user['clubName'])) {
-                                            echo htmlspecialchars($user['clubName']);
-                                        } elseif (!empty($user['clubNameShort'])) {
-                                            echo htmlspecialchars($user['clubNameShort']);
-                                        } else {
-                                            echo '-';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td class="text-nowrap">
-                                        <?php echo htmlspecialchars($inscription['numero_depart']); ?>
-                                    </td>
-                                    <td class="text-nowrap">
-                                        <?php echo htmlspecialchars($inscription['numero_tir']); ?>
-                                    </td>
-                                    <?php if ($isNature3DOrCampagne): ?>
-                                        <td class="text-nowrap">
-                                            <?php echo htmlspecialchars($inscription['piquet']); ?>
-                                        </td>
-                                    <?php else: ?>
-                                        <td class="text-nowrap">
-                                            <?php echo htmlspecialchars($inscription['distance']); ?>
-                                        </td>
-                                        <td class="text-nowrap">
-                                            <?php echo htmlspecialchars($inscription['blason']); ?>
-                                        </td>
-                                    <?php endif; ?>
-                                    <td class="text-nowrap">
-                                        <?php echo htmlspecialchars($inscription['date_inscription']); ?>
-                                    </td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
+                                <?php if ($isNature3DOrCampagne): ?>
+                                    <?php 
+                                    // Récupérer la couleur du piquet pour l'affichage
+                                    $piquetDisplay = $inscription['piquet'] ?? null;
+                                    $piquetDisplay = $piquetDisplay ? ucfirst(trim(strtolower($piquetDisplay))) : 'N/A';
+                                    ?>
+                                    <td class="piquet-value"<?= $rowStyle ?>><?= htmlspecialchars($piquetDisplay) ?></td>
+                                <?php else: ?>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
+                                <?php endif; ?>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
 
                                 </tr>
                             <?php endforeach; ?>
