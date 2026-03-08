@@ -164,140 +164,143 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     </button>
                 </div>
             </div>
-        </div>        
-        <div class="table-responsive">
-            <table class="table table-bordered" id="inscriptions-table">
-                    <thead>
-                        <tr>
-                            <th>Statut</th>
-                            <th>Nom et Prénom</th>
-                            <th>Numéro de licence</th>
-                            <th>Club</th>
-                            <th>Départ</th>
-                            <th>N°Tir</th>
-                            <?php if ($isNature3DOrCampagne): ?>
-                                <th>Piquet</th>
-                            <?php else: ?>
-                                <th>Distance</th>
-                                <th>Blason</th>
-                            <?php endif; ?>
-                            <th>Date d'inscription</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inscriptions-list">
-                        <?php 
-                        // $usersMap est passé depuis le contrôleur
-                        if (empty($inscriptions)): ?>
-                            <tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Chargement des inscriptions...</td></tr>
-                        <?php else:
-                        foreach ($inscriptions as $inscription):
-                            $inscriptionLicence = trim((string)($inscription['numero_licence'] ?? ''));
-                            $inscriptionUserId = $inscription['user_id'] ?? null;
-                            $isOwnInscription = ($currentUserLicence !== '' && $inscriptionLicence !== '' && $currentUserLicence === $inscriptionLicence)
-                                || ($currentUserId && $inscriptionUserId && (string)$currentUserId === (string)$inscriptionUserId);
-                            $canManageInscription = $isDirigeant && !$isOwnInscription;
-                            $canEditDeleteInscription = $canManageInscription || $isOwnInscription;
-                            $userName = $inscription['user_nom'] ?? null;
-                            
-                            // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
-                            $piquetColorRaw = $inscription['piquet'] ?? null;
-                            $piquetColor = null;
-                            $rowStyle = '';
-                            
-                            if ($piquetColorRaw && $piquetColorRaw !== '') {
-                                $piquetColor = trim(strtolower($piquetColorRaw));
-                                $rowClass = 'piquet-' . $piquetColor;
-                                $dataPiquet = ' data-piquet="' . htmlspecialchars($piquetColor) . '"';
-                                
-                                // Appliquer le style inline
-                                $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
-                                if (isset($colors[$piquetColor])) {
-                                    $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
-                                }
-                            } elseif ($isNature3DOrCampagne) {
-                                $rowClass = 'piquet-manquant';
-                                $dataPiquet = '';
-                                $rowStyle = ' style="background-color: #dee2e6 !important;"';
-                            } else {
-                                $rowClass = '';
-                                $dataPiquet = '';
-                            }
-                        ?>
-                            <?php
-                            $statut = $inscription['statut_inscription'] ?? 'en_attente';
-                            $inscId = $inscription['id'] ?? '';
-                            if ($statut === 'confirmee') {
-                                $statutIcon = 'fa-check-circle text-success';
-                                $statutTitle = 'Confirmée';
-                            } elseif (in_array($statut, ['refuse', 'annule'], true)) {
-                                $statutIcon = 'fa-times-circle text-danger';
-                                $statutTitle = $statut === 'refuse' ? 'Refusée' : 'Annulée';
-                            } else {
-                                $statutIcon = 'fa-clock text-warning';
-                                $statutTitle = 'En attente';
-                            }
-                            ?>
-                            <tr data-inscription-id="<?= htmlspecialchars($inscId) ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
-                                <td class="statut-cell"<?= $rowStyle ?>>
-                                    <?php if ($canManageInscription): ?>
-                                    <div class="dropdown statut-dropdown" data-inscription-id="<?= htmlspecialchars($inscId) ?>">
-                                        <button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= htmlspecialchars($statutTitle) ?>">
-                                            <i class="fas <?= $statutIcon ?>"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>
-                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>
-                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>
-                                            <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>
-                                        </ul>
-                                    </div>
-                                    <?php else: ?>
-                                    <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['user_nom'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>>
-                                    <?php 
-                                    // Afficher le nom du club (lié à id_club), sinon id_club en fallback
-                                    $clubDisplay = $inscription['club_name'] ?? $inscription['id_club'] ?? null;
-                                    echo htmlspecialchars($clubDisplay ?? 'N/A');
-                                    ?>
-                                </td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="inscriptions-table">
+                        <thead>
+                            <tr>
+                                <th>Statut</th>
+                                <th>Nom et Prénom</th>
+                                <th>Numéro de licence</th>
+                                <th>Club</th>
+                                <th>Départ</th>
+                                <th>N°Tir</th>
                                 <?php if ($isNature3DOrCampagne): ?>
-                                    <?php 
-                                    // Récupérer la couleur du piquet pour l'affichage
-                                    $piquetDisplay = $inscription['piquet'] ?? null;
-                                    $piquetDisplay = $piquetDisplay ? ucfirst(trim(strtolower($piquetDisplay))) : 'N/A';
-                                    ?>
-                                    <td class="piquet-value"<?= $rowStyle ?>><?= htmlspecialchars($piquetDisplay) ?></td>
+                                    <th>Piquet</th>
                                 <?php else: ?>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
+                                    <th>Distance</th>
+                                    <th>Blason</th>
                                 <?php endif; ?>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>>
-                                    <?php if ($canEditDeleteInscription): ?>
-                                    <button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <?php else: ?>
-                                    —
-                                    <?php endif; ?>
-                                </td>
+                                <th>Date d'inscription</th>
+                                <th>Actions</th>
                             </tr>
-                        <?php 
-                        endforeach;
-                        endif; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody id="inscriptions-list">
+                            <?php 
+                            // $usersMap est passé depuis le contrôleur
+                            if (empty($inscriptions)): ?>
+                                <tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Chargement des inscriptions...</td></tr>
+                            <?php else:
+                            foreach ($inscriptions as $inscription):
+                                $inscriptionLicence = trim((string)($inscription['numero_licence'] ?? ''));
+                                $inscriptionUserId = $inscription['user_id'] ?? null;
+                                $isOwnInscription = ($currentUserLicence !== '' && $inscriptionLicence !== '' && $currentUserLicence === $inscriptionLicence)
+                                    || ($currentUserId && $inscriptionUserId && (string)$currentUserId === (string)$inscriptionUserId);
+                                $canManageInscription = $isDirigeant && !$isOwnInscription;
+                                $canEditDeleteInscription = $canManageInscription || $isOwnInscription;
+                                $userName = $inscription['user_nom'] ?? null;
+                                
+                                // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
+                                $piquetColorRaw = $inscription['piquet'] ?? null;
+                                $piquetColor = null;
+                                $rowStyle = '';
+                                
+                                if ($piquetColorRaw && $piquetColorRaw !== '') {
+                                    $piquetColor = trim(strtolower($piquetColorRaw));
+                                    $rowClass = 'piquet-' . $piquetColor;
+                                    $dataPiquet = ' data-piquet="' . htmlspecialchars($piquetColor) . '"';
+                                    
+                                    // Appliquer le style inline
+                                    $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                                    if (isset($colors[$piquetColor])) {
+                                        $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
+                                    }
+                                } elseif ($isNature3DOrCampagne) {
+                                    $rowClass = 'piquet-manquant';
+                                    $dataPiquet = '';
+                                    $rowStyle = ' style="background-color: #dee2e6 !important;"';
+                                } else {
+                                    $rowClass = '';
+                                    $dataPiquet = '';
+                                }
+                            ?>
+                                <?php
+                                $statut = $inscription['statut_inscription'] ?? 'en_attente';
+                                $inscId = $inscription['id'] ?? '';
+                                if ($statut === 'confirmee') {
+                                    $statutIcon = 'fa-check-circle text-success';
+                                    $statutTitle = 'Confirmée';
+                                } elseif (in_array($statut, ['refuse', 'annule'], true)) {
+                                    $statutIcon = 'fa-times-circle text-danger';
+                                    $statutTitle = $statut === 'refuse' ? 'Refusée' : 'Annulée';
+                                } else {
+                                    $statutIcon = 'fa-clock text-warning';
+                                    $statutTitle = 'En attente';
+                                }
+                                ?>
+                                <tr data-inscription-id="<?= htmlspecialchars($inscId) ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
+                                    <td class="statut-cell"<?= $rowStyle ?>>
+                                        <?php if ($canManageInscription): ?>
+                                        <div class="dropdown statut-dropdown" data-inscription-id="<?= htmlspecialchars($inscId) ?>">
+                                            <button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= htmlspecialchars($statutTitle) ?>">
+                                                <i class="fas <?= $statutIcon ?>"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>
+                                                <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>
+                                                <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>
+                                                <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>
+                                            </ul>
+                                        </div>
+                                        <?php else: ?>
+                                        <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['user_nom'] ?? 'N/A') ?></td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
+                                    <td<?= $rowStyle ?>>
+                                        <?php 
+                                        // Afficher le nom du club (lié à id_club), sinon id_club en fallback
+                                        $clubDisplay = $inscription['club_name'] ?? $inscription['id_club'] ?? null;
+                                        echo htmlspecialchars($clubDisplay ?? 'N/A');
+                                        ?>
+                                    </td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
+                                    <?php if ($isNature3DOrCampagne): ?>
+                                        <?php 
+                                        // Récupérer la couleur du piquet pour l'affichage
+                                        $piquetDisplay = $inscription['piquet'] ?? null;
+                                        $piquetDisplay = $piquetDisplay ? ucfirst(trim(strtolower($piquetDisplay))) : 'N/A';
+                                        ?>
+                                        <td class="piquet-value"<?= $rowStyle ?>><?= htmlspecialchars($piquetDisplay) ?></td>
+                                    <?php else: ?>
+                                        <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
+                                        <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
+                                    <?php endif; ?>
+                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
+                                    <td<?= $rowStyle ?>>
+                                        <?php if ($canEditDeleteInscription): ?>
+                                        <button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <?php else: ?>
+                                        —
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php 
+                            endforeach;
+                            endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
+        </div>
     </div>
 
     <div class="actions-section">
