@@ -250,7 +250,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             if (!empty($inscriptionLicence)) $searchableText .= strtolower($inscriptionLicence) . ' ';
                             echo htmlspecialchars(trim($searchableText));
                         ?>">
-                        <script>console.log('searchableText', <?php echo $searchableText; ?>);</script>
 
                             <td class="statut-cell"<?= $rowStyle ?>>
                                 <?php if ($canManageInscription): ?>
