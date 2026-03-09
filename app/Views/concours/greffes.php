@@ -191,7 +191,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="inscriptions-list">
+                    <tbody>
                         <?php
                         if (empty($inscriptions)): ?>
                             <tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Chargement des inscriptions...</td></tr>

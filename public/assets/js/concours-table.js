@@ -126,7 +126,7 @@ function applyFilters() {
         return;
     }
     
-    const tbody = table.querySelector('tbody#inscriptions-list');
+    const tbody = table.querySelector('tbody');
     if (!tbody) {
         return;
     }
