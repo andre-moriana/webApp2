@@ -100,7 +100,7 @@ function applyFilters() {
     if (!tbody) {
         return;
     }
-    
+    console.log('tbody', tbody);
     const userRows = tbody.querySelectorAll('tr.user-row');
     const noResultsRow = tbody.querySelector('tr.no-results-row');
     const searchInput = document.getElementById('userSearchInput');
