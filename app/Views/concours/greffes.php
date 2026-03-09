@@ -516,5 +516,5 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
         </div>
     </div>
 </div>
-<script src="/public/assets/js/concours-greffe.js"></script>
 <script src="/public/assets/js/concours-table.js"></script>
+<script src="/public/assets/js/concours-greffe.js"></script>
