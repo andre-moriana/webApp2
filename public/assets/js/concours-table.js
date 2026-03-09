@@ -1,6 +1,6 @@
 // Fonction de tri
 function sortTable(column) {
-    const table = document.getElementById('usersTable');
+    const table = document.getElementById('greffes-table');
     const tbody = table.querySelector('tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const header = table.querySelector(`th[data-column="${column}"]`);
@@ -79,39 +79,8 @@ function sortTable(column) {
 
 // Obtenir l'index de la colonne
 function getColumnIndex(column) {
-    const columns = ['id', 'name', 'email', 'role', 'club', 'status', 'lastLogin', 'actions'];
+    const columns = ['statut', 'nom et prénom', 'numéro de licence', 'club', 'départ', 'n°tir', 'piquet', 'distance', 'blason', 'date d\'inscription'];
     return columns.indexOf(column) + 1;
-}
-
-// Gérer l'affichage des avatars
-function handleAvatarDisplay() {
-    const profileImages = document.querySelectorAll('.profile-img');
-    
-    profileImages.forEach(img => {
-        // Cacher l'initial par défaut
-        const initial = img.nextElementSibling;
-        if (initial) {
-            initial.style.display = 'flex';
-        }
-        
-        // Tester si l'image se charge
-        const testImg = new Image();
-        testImg.onload = function() {
-            // Image chargée avec succès
-            img.style.display = 'block';
-            if (initial) {
-                initial.style.display = 'none';
-            }
-        };
-        testImg.onerror = function() {
-            // Image échouée, garder l'initial
-            img.style.display = 'none';
-            if (initial) {
-                initial.style.display = 'flex';
-            }
-        };
-        testImg.src = img.src;
-    });
 }
 
 // Fonction de recherche rapide (combine recherche texte + filtre validation)
@@ -144,7 +113,8 @@ function applyFilters() {
     userRows.forEach(row => {
         const rowStatus = row.getAttribute('data-status') || '';
         const matchValidation = !validationValue || rowStatus === validationValue;
-        
+    console.log('matchValidation', matchValidation);
+    console.log('searchTermTrimmed', searchTermTrimmed);
         let matchSearch = true;
         if (searchTermTrimmed) {
             const cells = row.querySelectorAll('td');
