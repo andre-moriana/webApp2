@@ -109,7 +109,6 @@ function applyFilters() {
     const validationValue = (validationFilter && validationFilter.value) ? validationFilter.value : '';
     
     let visibleCount = 0;
-    console.log('searchTermTrimmed', searchTermTrimmed);
     userRows.forEach(row => {
         const rowStatus = row.getAttribute('data-status') || '';
         const matchValidation = !validationValue || rowStatus === validationValue;
@@ -199,9 +198,7 @@ function initUsersTable() {
         });
     });
     
-    // Gérer l'affichage des avatars
-    handleAvatarDisplay();
-    
+   
     // Gérer la recherche rapide
     const searchInput = document.getElementById('userSearchInput');
     const clearSearchBtn = document.getElementById('clearSearchBtn');
