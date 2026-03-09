@@ -247,6 +247,7 @@ function initUsersTable() {
     searchInput.addEventListener('input', function(e) {
         const searchTerm = this.value;
         filterUsersTable(searchTerm);
+        console.log('searchTerm', searchTerm);
         
         // Afficher/masquer le bouton de réinitialisation
         if (clearSearchBtn) {
