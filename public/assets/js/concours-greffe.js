@@ -1936,8 +1936,11 @@ function renderInscriptions(inscriptions) {
 
         cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
         cells.push('<td' + rowStyle + '>' + actionsCell + '</td>');
-
-        return '<tr data-inscription-id="' + id + '" class="' + rowClass + '"' + dataPiquet + rowStyle + '>' + cells.join('') + '</tr>';
+        let searchableText = '';
+        if (inscription.user_nom) searchableText += strtolower(inscription.user_nom) + ' ';
+        if (inscription.numero_licence) searchableText += strtolower(inscription.numero_licence) + ' ';
+        searchableText = htmlspecialchars(trim(searchableText));
+        return '<tr data-inscription-id="' + id + '" class="' + rowClass + '"' + dataPiquet + rowStyle + 'data-searchable="' + searchableText + '">' + cells.join('') + '</tr>';
     });
 
     tbody.innerHTML = rows.join('');
