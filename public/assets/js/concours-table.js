@@ -113,9 +113,9 @@ function applyFilters() {
     userRows.forEach(row => {
         const rowStatus = row.getAttribute('data-status') || '';
         const matchValidation = !validationValue || rowStatus === validationValue;
-    console.log('matchValidation', matchValidation);
-    console.log('searchTermTrimmed', searchTermTrimmed);
-        let matchSearch = true;
+        console.log('matchValidation', matchValidation);
+        console.log('searchTermTrimmed', searchTermTrimmed);
+            let matchSearch = true;
         if (searchTermTrimmed) {
             const cells = row.querySelectorAll('td');
             let rowText = '';
