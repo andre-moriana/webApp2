@@ -191,7 +191,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="inscriptions-list">
+                    <tbody>
                         <?php
                         if (empty($inscriptions)): ?>
                             <tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Chargement des inscriptions...</td></tr>
@@ -243,21 +243,11 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 $statutTitle = 'En attente';
                             }
                             ?>
-                            <tr class="user-row" data-status="<?php echo htmlspecialchars($user['status'] ?? 'active'); ?>" data-searchable="<?php 
+                            <tr class="user-row" data-status="<?php echo htmlspecialchars($inscription['statut_inscription'] ?? 'confirmee'); ?>" data-searchable="<?php 
                             // Construire une chaîne de recherche avec toutes les données pertinentes
                             $searchableText = '';
-                            if (!empty($inscription['user_nom'])) $searchableText .= strtolower($inscription['user_nom']) . ' ';
-                            if (!empty($inscription['numero_licence'])) $searchableText .= strtolower($inscription['numero_licence']) . ' ';
-                            // Ajouter le club dans la recherche (nom complet et nom court)
-                            if (!empty($inscription['club_Name'])) {
-                                $searchableText .= strtolower($inscription['club_Name']) . ' ';
-                            } elseif (!empty($inscription['club_name'])) {
-                                $searchableText .= strtolower($inscription['club_name']) . ' ';
-                            }
-                            if (!empty($inscription['id_club'])) {
-                                $searchableText .= strtolower($inscription['id_club']) . ' ';
-                            }
-                            console.log('searchableText', searchableText);
+                            if (!empty($userName)) $searchableText .= strtolower($userName) . ' ';
+                            if (!empty($inscriptionLicence)) $searchableText .= strtolower($inscriptionLicence) . ' ';
                             echo htmlspecialchars(trim($searchableText));
                         ?>">
                             <td class="statut-cell"<?= $rowStyle ?>>
