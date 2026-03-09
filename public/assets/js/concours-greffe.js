@@ -1937,9 +1937,9 @@ function renderInscriptions(inscriptions) {
         cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
         cells.push('<td' + rowStyle + '>' + actionsCell + '</td>');
         let searchableText = '';
-        if (inscription.user_nom) searchableText += strtolower(inscription.user_nom) + ' ';
-        if (inscription.numero_licence) searchableText += strtolower(inscription.numero_licence) + ' ';
-        searchableText = htmlspecialchars(trim(searchableText));
+        if (inscription.user_nom) searchableText += inscription.user_nom.toLowerCase() + ' ';
+        if (inscription.numero_licence) searchableText += inscription.numero_licence.toLowerCase() + ' ';
+        searchableText = escapeHtml(searchableText);
         return '<tr data-inscription-id="' + id + '" class="' + rowClass + '"' + dataPiquet + rowStyle + 'data-searchable="' + searchableText + '">' + cells.join('') + '</tr>';
     });
 
