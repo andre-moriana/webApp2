@@ -257,6 +257,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             if (!empty($inscription['id_club'])) {
                                 $searchableText .= strtolower($inscription['id_club']) . ' ';
                             }
+                            console.log('searchableText', searchableText);
                             echo htmlspecialchars(trim($searchableText));
                         ?>">
                             <td class="statut-cell"<?= $rowStyle ?>>
