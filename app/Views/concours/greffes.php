@@ -172,7 +172,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-bordered" id="inscriptions-table">
+                <table class="table table-bordered" id="greffes-table">
                     <thead class="table-light">
                         <tr>
                             <th>Statut</th>
