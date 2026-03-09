@@ -85,6 +85,7 @@ function getColumnIndex(column) {
 
 // Fonction de recherche rapide (combine recherche texte + filtre validation)
 function filterUsersTable(searchTerm) {
+    console.log('searchTerm', searchTerm);
     applyFilters();
 }
 
