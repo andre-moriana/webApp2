@@ -243,83 +243,83 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 $statutTitle = 'En attente';
                             }
                             ?>
-                                <tr data-inscription-id="<?php echo htmlspecialchars($inscId); ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?> data-searchable="<?php 
-                                    // Construire une chaîne de recherche avec toutes les données pertinentes
-                                    $searchableText = '';
-                                    if (!empty($inscription['user_nom'])) $searchableText .= strtolower($inscription['user_nom']) . ' ';
-                                    if (!empty($inscription['numero_licence'])) $searchableText .= strtolower($inscription['numero_licence']) . ' ';
-                                    // Ajouter le club dans la recherche (nom complet et nom court)
-                                    if (!empty($inscription['club_Name'])) {
-                                        $searchableText .= strtolower($inscription['club_Name']) . ' ';
-                                    } elseif (!empty($inscription['club_name'])) {
-                                        $searchableText .= strtolower($inscription['club_name']) . ' ';
-                                    }
-                                    if (!empty($inscription['id_club'])) {
-                                        $searchableText .= strtolower($inscription['id_club']) . ' ';
-                                    }
-                                    echo htmlspecialchars(trim($searchableText));
-                                ?>">
-                                    <td class="statut-cell"<?= $rowStyle ?>>
-                                        <?php if ($canManageInscription): ?>
-                                        <div class="dropdown statut-dropdown" data-inscription-id="<?= htmlspecialchars($inscId) ?>">
-                                            <button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= htmlspecialchars($statutTitle) ?>">
-                                                <i class="fas <?= $statutIcon ?>"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>
-                                                <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>
-                                                <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>
-                                                <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>
-                                            </ul>
-                                        </div>
-                                        <?php else: ?>
-                                        <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td<?= $rowStyle ?>>
-                                        <div class="d-flex align-items-center">
-                                             <div class="text-truncate" style="max-width: 150px;">
-                                                <?php 
-                                                // Construire le nom complet en utilisant les champs disponibles
-                                                $fullName = '';
-                                                if (!empty($user['firstName'])) {
-                                                    $fullName = $user['firstName'];
-                                                    if (!empty($user['name'])) {
-                                                        $fullName .= ' ' . $user['name'];
-                                                    }
-                                                } else {
-                                                    $fullName = $user['name'] ?? 'Utilisateur';
-                                                }
-                                                echo htmlspecialchars($fullName); 
-                                                ?>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
-                                    <td<?= $rowStyle ?>>
-                                    <?php 
-                                    // Afficher le nom du club (lié à id_club), sinon id_club en fallback
-                                    $clubDisplay = $inscription['club_name'] ?? $inscription['id_club'] ?? null;
-                                    echo htmlspecialchars($clubDisplay ?? 'N/A');
-                                    ?>
-                                    </td>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
-                                <?php if ($isNature3DOrCampagne): ?>
-                                    <?php 
-                                    // Récupérer la couleur du piquet pour l'affichage
-                                    $piquetDisplay = $inscription['piquet'] ?? null;
-                                    $piquetDisplay = $piquetDisplay ? ucfirst(trim(strtolower($piquetDisplay))) : 'N/A';
-                                    ?>
-                                    <td class="piquet-value"<?= $rowStyle ?>><?= htmlspecialchars($piquetDisplay) ?></td>
+                            <tr class="user-row" data-status="<?php echo htmlspecialchars($user['status'] ?? 'active'); ?>" data-searchable="<?php 
+                            // Construire une chaîne de recherche avec toutes les données pertinentes
+                            $searchableText = '';
+                            if (!empty($inscription['user_nom'])) $searchableText .= strtolower($inscription['user_nom']) . ' ';
+                            if (!empty($inscription['numero_licence'])) $searchableText .= strtolower($inscription['numero_licence']) . ' ';
+                            // Ajouter le club dans la recherche (nom complet et nom court)
+                            if (!empty($inscription['club_Name'])) {
+                                $searchableText .= strtolower($inscription['club_Name']) . ' ';
+                            } elseif (!empty($inscription['club_name'])) {
+                                $searchableText .= strtolower($inscription['club_name']) . ' ';
+                            }
+                            if (!empty($inscription['id_club'])) {
+                                $searchableText .= strtolower($inscription['id_club']) . ' ';
+                            }
+                            echo htmlspecialchars(trim($searchableText));
+                        ?>">
+                            <td class="statut-cell"<?= $rowStyle ?>>
+                                <?php if ($canManageInscription): ?>
+                                <div class="dropdown statut-dropdown" data-inscription-id="<?= htmlspecialchars($inscId) ?>">
+                                    <button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= htmlspecialchars($statutTitle) ?>">
+                                        <i class="fas <?= $statutIcon ?>"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="en_attente" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-clock text-warning me-2"></i>En attente</a></li>
+                                        <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="confirmee" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-check-circle text-success me-2"></i>Confirmée</a></li>
+                                        <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>
+                                        <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>
+                                    </ul>
+                                </div>
                                 <?php else: ?>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
+                                <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
                                 <?php endif; ?>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
+                            </td>
+                            <td<?= $rowStyle ?>>
+                                <div class="d-flex align-items-center">
+                                        <div class="text-truncate" style="max-width: 150px;">
+                                        <?php 
+                                        // Construire le nom complet en utilisant les champs disponibles
+                                        $fullName = '';
+                                        if (!empty($user['firstName'])) {
+                                            $fullName = $user['firstName'];
+                                            if (!empty($user['name'])) {
+                                                $fullName .= ' ' . $user['name'];
+                                            }
+                                        } else {
+                                            $fullName = $user['name'] ?? 'Utilisateur';
+                                        }
+                                        echo htmlspecialchars($fullName); 
+                                        ?>
+                                    </div>
+                                </div>
+                            </td>
+                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
+                            <td<?= $rowStyle ?>>
+                            <?php 
+                            // Afficher le nom du club (lié à id_club), sinon id_club en fallback
+                            $clubDisplay = $inscription['club_name'] ?? $inscription['id_club'] ?? null;
+                            echo htmlspecialchars($clubDisplay ?? 'N/A');
+                            ?>
+                            </td>
+                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
+                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
+                            <?php if ($isNature3DOrCampagne): ?>
+                                <?php 
+                                // Récupérer la couleur du piquet pour l'affichage
+                                $piquetDisplay = $inscription['piquet'] ?? null;
+                                $piquetDisplay = $piquetDisplay ? ucfirst(trim(strtolower($piquetDisplay))) : 'N/A';
+                                ?>
+                                <td class="piquet-value"<?= $rowStyle ?>><?= htmlspecialchars($piquetDisplay) ?></td>
+                            <?php else: ?>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
+                            <?php endif; ?>
+                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
 
-                                </tr>
-                            <?php endforeach; ?>
+                            </tr>
+                        <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
 
