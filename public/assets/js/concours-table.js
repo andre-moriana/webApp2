@@ -121,7 +121,7 @@ function filterUsersTable(searchTerm) {
 
 // Applique le filtre validation et la recherche texte
 function applyFilters() {
-    const table = document.getElementById('usersTable');
+    const table = document.getElementById('greffes-table');
     if (!table) {
         return;
     }
