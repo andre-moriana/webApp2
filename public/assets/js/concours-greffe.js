@@ -1775,9 +1775,9 @@ function loadInscriptions() {
         return;
     }
 
-    const tbody = document.getElementById('inscriptions-list');
+    const tbody = document.getElementById('greffes-list');
     if (!tbody) {
-        console.warn('loadInscriptions: #inscriptions-list introuvable');
+        console.warn('loadInscriptions: #greffes-list introuvable');
         return;
     }
 
@@ -1823,7 +1823,7 @@ function applyDepartFilterAndRender() {
  * Affiche les inscriptions dans le tableau
  */
 function renderInscriptions(inscriptions) {
-    const tbody = document.getElementById('inscriptions-list');
+    const tbody = document.getElementById('greffes-list');
     if (!tbody) return;
 
     const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
