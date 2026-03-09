@@ -156,6 +156,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
             </div>
         </div>
     </div>
+    <?php echo '<script>console.log("inscriptions", ' . json_encode($inscriptions) . ');</script>'; ?>
 
     <!-- Liste des inscrits -->
     <?php
