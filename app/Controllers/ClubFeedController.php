@@ -262,6 +262,7 @@ class ClubFeedController
                 } catch (Throwable $e) {
                     error_log('ClubFeedController facebook-feed API: ' . $e->getMessage());
                     $facebookGraphError = true;
+                    $facebookFeedConfigured = true;
                 }
             } else {
                 try {
