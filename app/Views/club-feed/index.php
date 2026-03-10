@@ -2,6 +2,8 @@
 $facebookDisabled = isset($facebookDisabled) && $facebookDisabled;
 $clubName = $clubName ?? 'votre club';
 $fbHref = $fbHref ?? '';
+$facebookPosts = $facebookPosts ?? [];
+$facebookFeedConfigured = isset($facebookFeedConfigured) ? (bool)$facebookFeedConfigured : false;
 ?>
 <div class="container-fluid py-4">
     <div class="row">
@@ -11,8 +13,6 @@ $fbHref = $fbHref ?? '';
                 Actualités du club
             </h1>
             <?php if ($facebookDisabled): ?>
-<script>console.log('facebookDisabled: <?php echo $facebookDisabled; ?>');</script>
-<script>console.log('fbHref: <?php echo $fbHref; ?>');</script>
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center py-5">
                         <p class="text-muted mb-2">Les actualités du club ne sont pas affichées sur ce site.</p>
@@ -38,19 +38,78 @@ $fbHref = $fbHref ?? '';
                 </div>
             <?php else: ?>
                 <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center py-5">
-                        <p class="text-muted mb-4">
-                            Suivez les actualités de <strong><?php echo htmlspecialchars($clubName); ?></strong> sur Facebook.
+                    <div class="card-body py-4">
+                        <p class="text-muted mb-4 text-center">
+                            Dernières actualités de <strong><?php echo htmlspecialchars($clubName); ?></strong> publiées sur Facebook.
                         </p>
-                        <div class="fb-page" 
-                            data-tabs="timeline,events,messages"
-                            data-href="<?php echo htmlspecialchars($fbHref); ?>"
-                            data-width="380" 
-                            data-hide-cover="false">
-                        </div>
-                        <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
-                            <i class="fab fa-facebook me-2"></i> Voir la page Facebook du club
-                        </a>
+
+                        <?php if (!$facebookFeedConfigured): ?>
+                            <div class="alert alert-info text-center">
+                                <p class="mb-2">
+                                    L'import automatique des publications Facebook n'est pas configuré sur ce serveur.
+                                </p>
+                                <p class="small mb-3 text-muted">
+                                    Veuillez définir <code>FACEBOOK_APP_ID</code> et <code>FACEBOOK_APP_SECRET</code> dans le fichier <code>.env</code>.
+                                </p>
+                                <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                                    <i class="fab fa-facebook me-2"></i> Voir la page Facebook du club
+                                </a>
+                            </div>
+                        <?php elseif (empty($facebookPosts)): ?>
+                            <div class="alert alert-warning text-center">
+                                <p class="mb-2">
+                                    Aucune publication Facebook récente n'a pu être récupérée pour ce club.
+                                </p>
+                                <p class="small mb-3 text-muted">
+                                    Il se peut que la page ne publie pas souvent ou que les permissions Facebook soient limitées.
+                                </p>
+                                <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                                    <i class="fab fa-facebook me-2"></i> Voir la page Facebook du club
+                                </a>
+                            </div>
+                        <?php else: ?>
+                            <div class="row g-3">
+                                <?php foreach ($facebookPosts as $post): ?>
+                                    <div class="col-12 col-md-6 col-lg-4">
+                                        <div class="card h-100 border-0 shadow-sm">
+                                            <?php if (!empty($post['full_picture'])): ?>
+                                                <a href="<?php echo htmlspecialchars($post['permalink_url'] ?? $fbHref); ?>" target="_blank" rel="noopener noreferrer">
+                                                    <img src="<?php echo htmlspecialchars($post['full_picture']); ?>" class="card-img-top" alt="Publication Facebook">
+                                                </a>
+                                            <?php endif; ?>
+                                            <div class="card-body d-flex flex-column">
+                                                <?php
+                                                $created = '';
+                                                if (!empty($post['created_time'])) {
+                                                    $dt = date_create($post['created_time']);
+                                                    if ($dt) {
+                                                        $created = $dt->format('d/m/Y H:i');
+                                                    }
+                                                }
+                                                ?>
+                                                <?php if ($created): ?>
+                                                    <p class="text-muted small mb-2">
+                                                        <i class="far fa-clock me-1"></i>
+                                                        <?php echo htmlspecialchars($created); ?>
+                                                    </p>
+                                                <?php endif; ?>
+                                                <p class="card-text mb-3" style="white-space: pre-line;">
+                                                    <?php echo htmlspecialchars($post['message'] ?? ''); ?>
+                                                </p>
+                                                <div class="mt-auto">
+                                                    <a href="<?php echo htmlspecialchars($post['permalink_url'] ?? $fbHref); ?>"
+                                                       target="_blank"
+                                                       rel="noopener noreferrer"
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fab fa-facebook me-1"></i> Voir sur Facebook
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endif; ?>
