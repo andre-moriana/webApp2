@@ -62,6 +62,9 @@ class Router {
         $this->addRoute("GET", "/dashboard", "DashboardController@index");
         // Page Actualités du club (lien vers Facebook si configuré, sans plugin)
         $this->addRoute("GET", "/club-feed", "ClubFeedController@index");
+        $this->addRoute("GET", "/club-feed/facebook-connect", "ClubFeedController@facebookConnect");
+        $this->addRoute("GET", "/club-feed/facebook-callback", "ClubFeedController@facebookCallback");
+        $this->addRoute("GET", "/club-feed/facebook-disconnect", "ClubFeedController@facebookDisconnect");
         
         // Routes des exercices (protégées)
         $this->addRoute("GET", "/exercises", "ExerciseController@index");

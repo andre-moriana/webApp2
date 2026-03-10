@@ -5,6 +5,11 @@ $fbHref = $fbHref ?? '';
 $facebookPosts = $facebookPosts ?? [];
 $facebookFeedConfigured = isset($facebookFeedConfigured) ? (bool)$facebookFeedConfigured : false;
 $facebookGraphError = isset($facebookGraphError) ? (bool)$facebookGraphError : false;
+$facebookConnected = isset($facebookConnected) ? (bool)$facebookConnected : false;
+$canManageClub = isset($canManageClub) ? (bool)$canManageClub : false;
+$clubId = $clubId ?? '';
+$clubFeedError = $clubFeedError ?? '';
+$clubFeedSuccess = $clubFeedSuccess ?? '';
 ?>
 <div class="container-fluid py-4">
     <div class="row">
@@ -13,6 +18,18 @@ $facebookGraphError = isset($facebookGraphError) ? (bool)$facebookGraphError : f
                 <i class="fas fa-newspaper me-2 text-primary"></i>
                 Actualités du club
             </h1>
+            <?php if ($clubFeedError !== ''): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <?php echo htmlspecialchars($clubFeedError); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <?php endif; ?>
+            <?php if ($clubFeedSuccess !== ''): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <?php echo htmlspecialchars($clubFeedSuccess); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <?php endif; ?>
             <?php if ($facebookDisabled): ?>
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center py-5">
@@ -44,15 +61,33 @@ $facebookGraphError = isset($facebookGraphError) ? (bool)$facebookGraphError : f
                             Dernières actualités de <strong><?php echo htmlspecialchars($clubName); ?></strong> publiées sur Facebook.
                         </p>
 
-                        <?php if (!$facebookFeedConfigured): ?>
+                        <?php if ($canManageClub && !$facebookConnected && $clubId !== ''): ?>
                             <div class="alert alert-info text-center">
+                                <p class="mb-3">
+                                    Pour afficher les actualités du club ici, connectez la page Facebook du club. Une fenêtre vous demandera d'autoriser l'accès (autorisations conservées en base).
+                                </p>
+                                <a href="/club-feed/facebook-connect?club_id=<?php echo urlencode($clubId); ?>" class="btn btn-primary btn-lg">
+                                    <i class="fab fa-facebook me-2"></i> Connecter ma page Facebook
+                                </a>
+                                <p class="small text-muted mt-3 mb-0">
+                                    <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer">Ouvrir la page Facebook du club</a>
+                                </p>
+                            </div>
+                        <?php elseif ($facebookConnected && $canManageClub): ?>
+                            <p class="text-center small text-muted mb-3">
+                                Page Facebook connectée. <a href="/club-feed/facebook-disconnect?club_id=<?php echo urlencode($clubId); ?>" class="text-danger">Déconnecter la page</a>
+                            </p>
+                        <?php endif; ?>
+
+                        <?php if (!$facebookFeedConfigured && !$facebookConnected && !($canManageClub && $clubId !== '')): ?>
+                            <div class="alert alert-secondary text-center">
                                 <p class="mb-2">
                                     L'import automatique des publications Facebook n'est pas configuré sur ce serveur.
                                 </p>
                                 <p class="small mb-3 text-muted">
-                                    Veuillez définir <code>FACEBOOK_APP_ID</code> et <code>FACEBOOK_APP_SECRET</code> dans le fichier <code>.env</code>.
+                                    Définir <code>FACEBOOK_APP_ID</code> et <code>FACEBOOK_APP_SECRET</code> dans le fichier <code>.env</code>.
                                 </p>
-                                <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                                <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
                                     <i class="fab fa-facebook me-2"></i> Voir la page Facebook du club
                                 </a>
                             </div>
@@ -115,6 +150,13 @@ $facebookGraphError = isset($facebookGraphError) ? (bool)$facebookGraphError : f
                                                 <p class="card-text mb-3" style="white-space: pre-line;">
                                                     <?php echo htmlspecialchars($post['message'] ?? ''); ?>
                                                 </p>
+                                                <div class="mt-auto">
+                                                    <a href="<?php echo htmlspecialchars($post['permalink_url'] ?? $fbHref); ?>"
+                                                       target="_blank" rel="noopener noreferrer"
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fab fa-facebook me-1"></i> Voir sur Facebook
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
