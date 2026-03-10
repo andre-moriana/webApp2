@@ -32,6 +32,7 @@ class ClubFeedController
         $facebookDisabled = false;
         $facebookPosts = [];
         $facebookFeedConfigured = false;
+        $facebookGraphError = false;
 
         if (!$clubId) {
             try {
@@ -74,9 +75,14 @@ class ClubFeedController
                 $facebookFeedConfigured = $fbService->isConfigured();
                 if ($facebookFeedConfigured) {
                     $facebookPosts = $fbService->getPagePosts($fbHref, 15);
+                    // Si l'API renvoie une erreur ou rien, on garde facebookGraphError à true
+                    if (empty($facebookPosts)) {
+                        $facebookGraphError = true;
+                    }
                 }
             } catch (Throwable $e) {
                 error_log('ClubFeedController FacebookFeed error: ' . $e->getMessage());
+                $facebookGraphError = true;
             }
         }
 

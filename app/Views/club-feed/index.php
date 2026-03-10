@@ -4,6 +4,7 @@ $clubName = $clubName ?? 'votre club';
 $fbHref = $fbHref ?? '';
 $facebookPosts = $facebookPosts ?? [];
 $facebookFeedConfigured = isset($facebookFeedConfigured) ? (bool)$facebookFeedConfigured : false;
+$facebookGraphError = isset($facebookGraphError) ? (bool)$facebookGraphError : false;
 ?>
 <div class="container-fluid py-4">
     <div class="row">
@@ -55,13 +56,31 @@ $facebookFeedConfigured = isset($facebookFeedConfigured) ? (bool)$facebookFeedCo
                                     <i class="fab fa-facebook me-2"></i> Voir la page Facebook du club
                                 </a>
                             </div>
+                        <?php elseif ($facebookGraphError && empty($facebookPosts)): ?>
+                            <div class="alert alert-warning text-center">
+                                <p class="mb-2">
+                                    Les publications Facebook du club n'ont pas pu être récupérées automatiquement.
+                                </p>
+                                <p class="small mb-3 text-muted">
+                                    Il se peut que les permissions de l'API Facebook soient limitées pour cette page ou pour cette application.
+                                </p>
+                                <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                                    <i class="fab fa-facebook me-2"></i> Voir la page Facebook du club
+                                </a>
+                            </div>
+                            <!-- Fallback : affichage du plugin de page Facebook -->
+                            <div class="mt-4 text-center">
+                                <div class="fb-page"
+                                     data-tabs="timeline,events"
+                                     data-href="<?php echo htmlspecialchars($fbHref); ?>"
+                                     data-width="500"
+                                     data-hide-cover="false">
+                                </div>
+                            </div>
                         <?php elseif (empty($facebookPosts)): ?>
                             <div class="alert alert-warning text-center">
                                 <p class="mb-2">
-                                    Aucune publication Facebook récente n'a pu être récupérée pour ce club.
-                                </p>
-                                <p class="small mb-3 text-muted">
-                                    Il se peut que la page ne publie pas souvent ou que les permissions Facebook soient limitées.
+                                    Aucune publication Facebook récente n'a pu être trouvée pour ce club.
                                 </p>
                                 <a href="<?php echo htmlspecialchars($fbHref); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
                                     <i class="fab fa-facebook me-2"></i> Voir la page Facebook du club
