@@ -2266,7 +2266,7 @@ function loadBuvetteProduits() {
             }
             if (emptyEl) emptyEl.classList.add('d-none');
             listEl.innerHTML = produits.map(p => {
-                const prix = p.prix != null || p.prix != '0' ? parseFloat(p.prix).toFixed(2) + ' €' : '';
+                const prix = p.prix != null ? parseFloat(p.prix).toFixed(2) + ' €' : '';
                 const unite = p.unite || 'portion';
                 return '<div class="d-flex align-items-center justify-content-between mb-2"><label class="mb-0 flex-grow-1">' + (p.libelle || '') + (prix ? ' <span class="text-muted">(' + prix + ')</span>' : '') + '</label><input type="number" class="form-control form-control-sm buvette-qty" data-produit-id="' + (p.id || '') + '" min="0" value="0" style="width:70px;"> <span class="ms-1 small text-muted">' + unite + '</span></div>';
             }).join('');
@@ -2353,7 +2353,7 @@ function loadEditBuvetteProduits(concoursId, buvetteReservations, tokenConfirmat
             listEl.innerHTML = produits.map(p => {
                 const pid = p.id || '';
                 const qty = qtyByProduit[pid] || 0;
-                const prix = p.prix != null || p.prix != '0' ? parseFloat(p.prix).toFixed(2) + ' €' : '';
+                const prix = p.prix != null ? parseFloat(p.prix).toFixed(2) + ' €' : '';
                 const unite = p.unite || 'portion';
                 return '<div class="d-flex align-items-center justify-content-between mb-2"><label class="mb-0 flex-grow-1">' + (p.libelle || '') + (prix ? ' <span class="text-muted">(' + prix + ')</span>' : '') + '</label><input type="number" class="form-control form-control-sm buvette-qty" data-produit-id="' + pid + '" min="0" value="' + qty + '" style="width:70px;"> <span class="ms-1 small text-muted">' + unite + '</span></div>';
             }).join('');
