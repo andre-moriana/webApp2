@@ -22,9 +22,6 @@ class FacebookFeedService
 
     private function loadEnv(): void
     {
-        if (!empty($_ENV['FACEBOOK_APP_ID']) || !empty($_ENV['FACEBOOK_APP_SECRET'])) {
-            return;
-        }
         $envPath = __DIR__ . '/../../.env';
         if (!is_file($envPath)) {
             return;
@@ -33,7 +30,7 @@ class FacebookFeedService
         foreach ($lines as $line) {
             if (strpos($line, '=') !== false && strpos(trim($line), '#') !== 0) {
                 list($key, $value) = explode('=', $line, 2);
-                $_ENV[trim($key)] = trim($value);
+                $_ENV[trim($key)] = trim($value, " \t\"'");
             }
         }
     }
@@ -61,10 +58,12 @@ class FacebookFeedService
 
         // 1) Cas priorité : PAGE ACCESS TOKEN (développeur / test)
         if ($this->pageAccessToken !== '') {
-            $pageIdentifier = $this->extractPageIdentifier($facebookUrl);
-            if ($pageIdentifier === null) {
+            // Avec un page token, on utilise /me pour avoir l'ID de la page, puis published_posts
+            $pageId = $this->getPageIdFromPageToken();
+            if ($pageId === null) {
                 return [];
             }
+            $pageIdentifier = $pageId;
             $token = $this->pageAccessToken;
         } else {
             // 2) Cas production : App token + Page ID résolu
@@ -175,6 +174,24 @@ class FacebookFeedService
         $parts = explode('/', $path);
         $last = end($parts);
         return $last !== '' ? $last : null;
+    }
+
+    /**
+     * Avec un PAGE ACCESS TOKEN, /me renvoie la page (id). Utiliser cet ID pour published_posts.
+     */
+    private function getPageIdFromPageToken(): ?string
+    {
+        $url = 'https://graph.facebook.com/' . $this->graphVersion . '/me?fields=id&access_token=' . urlencode($this->pageAccessToken);
+        $json = $this->httpGet($url);
+        if ($json === null) {
+            return null;
+        }
+        $data = json_decode($json, true);
+        if (isset($data['error'])) {
+            error_log('FacebookFeedService /me error: ' . json_encode($data['error']));
+            return null;
+        }
+        return isset($data['id']) ? (string)$data['id'] : null;
     }
 
     private function getAppAccessToken(): ?string
