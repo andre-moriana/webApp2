@@ -11,9 +11,8 @@ $fbHref = $fbHref ?? '';
                 Actualités du club
             </h1>
 <script>console.log('facebookDisabled: <?php echo $facebookDisabled; ?>');</script>
-<script>console.log('fbHref: <?php echo $fbHref; ?>');</script>
-<script>console.log('clubName: <?php echo $clubName; ?>');</script>
             <?php if ($facebookDisabled): ?>
+<script>console.log('fbHref: <?php echo $fbHref; ?>');</script>
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center py-5">
                         <p class="text-muted mb-2">Les actualités du club ne sont pas affichées sur ce site.</p>
