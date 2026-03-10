@@ -1,12 +1,11 @@
 <?php
 
 require_once 'app/Services/ApiService.php';
-require_once 'app/Services/FacebookFeedService.php';
 require_once 'app/Middleware/SessionGuard.php';
 
 /**
- * Page « Actualités du club » : affiche les posts Facebook du club (via Graph API)
- * et un lien vers la page Facebook si configurée.
+ * Page « Actualités du club » : affiche un lien / widget vers la page Facebook du club si configurée,
+ * sans appel à l'API Graph (plugin côté navigateur uniquement).
  */
 class ClubFeedController
 {
@@ -17,9 +16,6 @@ class ClubFeedController
         $this->apiService = new ApiService();
     }
 
-    /**
-     * Page Actualités du club : infos club + import des posts Facebook si possible.
-     */
     public function index()
     {
         SessionGuard::check();
@@ -30,9 +26,6 @@ class ClubFeedController
         $facebookUrl = '';
         $fbHref = '';
         $facebookDisabled = false;
-        $facebookPosts = [];
-        $facebookFeedConfigured = false;
-        $facebookGraphError = false;
 
         if (!$clubId) {
             try {
@@ -66,24 +59,6 @@ class ClubFeedController
             $fbHref = (strpos($facebookUrl, 'http') === 0)
                 ? $facebookUrl
                 : 'https://www.facebook.com/' . ltrim($facebookUrl, '/');
-        }
-
-        // Import des posts Facebook si une page est configurée et non désactivée
-        if ($fbHref !== '' && !$facebookDisabled) {
-            try {
-                $fbService = new FacebookFeedService();
-                $facebookFeedConfigured = $fbService->isConfigured();
-                if ($facebookFeedConfigured) {
-                    $facebookPosts = $fbService->getPagePosts($fbHref, 15);
-                    // Si l'API renvoie une erreur ou rien, on garde facebookGraphError à true
-                    if (empty($facebookPosts)) {
-                        $facebookGraphError = true;
-                    }
-                }
-            } catch (Throwable $e) {
-                error_log('ClubFeedController FacebookFeed error: ' . $e->getMessage());
-                $facebookGraphError = true;
-            }
         }
 
         $title = 'Actualités du club - Portail Arc Training';

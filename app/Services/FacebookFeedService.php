@@ -9,6 +9,7 @@ class FacebookFeedService
 {
     private $appId;
     private $appSecret;
+    private $pageAccessToken;
     private $graphVersion = 'v18.0';
 
     public function __construct()
@@ -16,6 +17,7 @@ class FacebookFeedService
         $this->loadEnv();
         $this->appId = $_ENV['FACEBOOK_APP_ID'] ?? '';
         $this->appSecret = $_ENV['FACEBOOK_APP_SECRET'] ?? '';
+        $this->pageAccessToken = $_ENV['FACEBOOK_PAGE_ACCESS_TOKEN'] ?? '';
     }
 
     private function loadEnv(): void
@@ -38,6 +40,10 @@ class FacebookFeedService
 
     public function isConfigured(): bool
     {
+        // En mode dev, on peut se contenter d'un PAGE ACCESS TOKEN.
+        if ($this->pageAccessToken !== '') {
+            return true;
+        }
         return $this->appId !== '' && $this->appSecret !== '';
     }
 
@@ -53,17 +59,26 @@ class FacebookFeedService
             return [];
         }
 
-        $pageId = $this->resolvePageId($facebookUrl);
-        if ($pageId === null) {
-            return [];
+        // 1) Cas priorité : PAGE ACCESS TOKEN (développeur / test)
+        if ($this->pageAccessToken !== '') {
+            $pageIdentifier = $this->extractPageIdentifier($facebookUrl);
+            if ($pageIdentifier === null) {
+                return [];
+            }
+            $token = $this->pageAccessToken;
+        } else {
+            // 2) Cas production : App token + Page ID résolu
+            $pageIdentifier = $this->resolvePageId($facebookUrl);
+            if ($pageIdentifier === null) {
+                return [];
+            }
+            $token = $this->getAppAccessToken();
+            if ($token === null) {
+                return [];
+            }
         }
 
-        $token = $this->getAppAccessToken();
-        if ($token === null) {
-            return [];
-        }
-
-        $url = 'https://graph.facebook.com/' . $this->graphVersion . '/' . urlencode($pageId)
+        $url = 'https://graph.facebook.com/' . $this->graphVersion . '/' . urlencode($pageIdentifier)
             . '/published_posts?fields=id,message,created_time,full_picture,permalink_url'
             . '&limit=' . max(1, min(100, $limit))
             . '&access_token=' . urlencode($token);
@@ -74,6 +89,13 @@ class FacebookFeedService
         }
 
         $data = json_decode($json, true);
+
+        // Loguer éventuellement l'erreur Graph pour debug serveur
+        if (isset($data['error'])) {
+            error_log('FacebookFeedService Graph error: ' . json_encode($data['error']));
+            return [];
+        }
+
         if (!isset($data['data']) || !is_array($data['data'])) {
             return [];
         }
@@ -130,6 +152,29 @@ class FacebookFeedService
             return $data['id'];
         }
         return null;
+    }
+
+    /**
+     * Pour un PAGE ACCESS TOKEN : on n'a pas besoin de convertir username -> id.
+     * On extrait simplement le dernier segment de l'URL (username ou id).
+     */
+    private function extractPageIdentifier(string $facebookUrl): ?string
+    {
+        $url = trim($facebookUrl);
+        if ($url === '') {
+            return null;
+        }
+        if (strpos($url, 'http') !== 0) {
+            $url = 'https://www.facebook.com/' . ltrim($url, '/');
+        }
+        $path = parse_url($url, PHP_URL_PATH);
+        $path = trim((string)$path, '/');
+        if ($path === '') {
+            return null;
+        }
+        $parts = explode('/', $path);
+        $last = end($parts);
+        return $last !== '' ? $last : null;
     }
 
     private function getAppAccessToken(): ?string
