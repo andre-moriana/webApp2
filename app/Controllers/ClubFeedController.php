@@ -89,6 +89,19 @@ class ClubFeedController
             header('Location: /club-feed');
             exit;
         }
+        // Échanger le token court contre un token utilisateur longue durée (60 j) pour que le token de page le soit aussi
+        $longLivedUrl = 'https://graph.facebook.com/' . self::FB_GRAPH_VERSION . '/oauth/access_token'
+            . '?grant_type=fb_exchange_token'
+            . '&client_id=' . urlencode($_ENV['FACEBOOK_APP_ID'])
+            . '&client_secret=' . urlencode($_ENV['FACEBOOK_APP_SECRET'])
+            . '&fb_exchange_token=' . urlencode($userToken);
+        $longLivedJson = @file_get_contents($longLivedUrl);
+        if ($longLivedJson !== false) {
+            $longLivedData = json_decode($longLivedJson, true);
+            if (!empty($longLivedData['access_token'])) {
+                $userToken = $longLivedData['access_token'];
+            }
+        }
         $accountsUrl = 'https://graph.facebook.com/' . self::FB_GRAPH_VERSION . '/me/accounts'
             . '?fields=id,name,access_token'
             . '&access_token=' . urlencode($userToken);
