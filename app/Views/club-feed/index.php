@@ -115,14 +115,6 @@ $facebookGraphError = isset($facebookGraphError) ? (bool)$facebookGraphError : f
                                                 <p class="card-text mb-3" style="white-space: pre-line;">
                                                     <?php echo htmlspecialchars($post['message'] ?? ''); ?>
                                                 </p>
-                                                <div class="mt-auto">
-                                                    <a href="<?php echo htmlspecialchars($post['permalink_url'] ?? $fbHref); ?>"
-                                                       target="_blank"
-                                                       rel="noopener noreferrer"
-                                                       class="btn btn-sm btn-outline-primary">
-                                                        <i class="fab fa-facebook me-1"></i> Voir sur Facebook
-                                                    </a>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
