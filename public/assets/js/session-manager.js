@@ -162,6 +162,12 @@
          * Gère l'expiration de la session
          */
         handleSessionExpired() {
+            const path = window.location.pathname || '';
+            // Ne pas rediriger automatiquement depuis les pages publiques d'inscription concours
+            if (path.startsWith('/inscription-cible/')) {
+                this.stop();
+                return;
+            }
             // Arrêter le keep-alive
             this.stop();
             
