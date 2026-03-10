@@ -1607,14 +1607,9 @@ public function greffes($concoursId)
     include 'app/Views/layouts/footer.php';
     
 }
-// Page d'inscription à un concours
+// Page d'inscription à un concours (accessible même sans authentification)
 public function inscription($concoursId)
     {
-        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-            header('Location: /login');
-            exit;
-        }
-
         // Récupérer les informations du concours
         $concoursResponse = $this->apiService->getConcoursById($concoursId);
         if (!$concoursResponse['success']) {
