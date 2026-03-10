@@ -10,7 +10,9 @@ $fbHref = $fbHref ?? '';
                 <i class="fas fa-newspaper me-2 text-primary"></i>
                 Actualités du club
             </h1>
-
+<script>console.log('facebookDisabled: <?php echo $facebookDisabled; ?>');</script>
+<script>console.log('fbHref: <?php echo $fbHref; ?>');</script>
+<script>console.log('clubName: <?php echo $clubName; ?>');</script>
             <?php if ($facebookDisabled): ?>
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center py-5">
