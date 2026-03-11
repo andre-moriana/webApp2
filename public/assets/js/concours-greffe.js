@@ -2246,6 +2246,111 @@ function initEditInscriptionHandlers() {
 }
 
 /**
+ * Ouvre la modale de validation du greffe pour une inscription donnée
+ */
+window.validateGreffe = function(inscriptionId) {
+    if (!inscriptionId) {
+        alert('Erreur: ID de l\'inscription manquant');
+        return;
+    }
+
+    const modalElement = document.getElementById('validateGreffeModal');
+    if (!modalElement) {
+        alert('Erreur: la modale de validation du greffe est introuvable');
+        return;
+    }
+
+    // Stocker l'ID de l'inscription sur le formulaire (utile pour la sauvegarde plus tard)
+    const form = document.getElementById('validate-greffe-form');
+    if (form) {
+        form.dataset.inscriptionId = inscriptionId;
+    }
+
+    // Helpers pour remplir les champs texte de la modale
+    const setText = (elId, value, fallback) => {
+        const el = document.getElementById(elId);
+        if (el) {
+            el.textContent = (value != null && value !== '') ? value : (fallback !== undefined ? fallback : 'N/A');
+        }
+    };
+
+    // Chercher l'inscription correspondante dans le cache
+    let inscription = null;
+    if (Array.isArray(allInscriptionsCache) && allInscriptionsCache.length > 0) {
+        inscription = allInscriptionsCache.find(ins => String(ins.id) === String(inscriptionId));
+    }
+
+    // Si pas trouvée dans le cache, essayer de récupérer les infos depuis la ligne du tableau
+    if (!inscription) {
+        const row = document.querySelector('tr[data-inscription-id="' + inscriptionId + '"]');
+        if (row && row.children && row.children.length >= 5) {
+            const nom = row.children[1].innerText.trim();
+            const licence = row.children[2].innerText.trim();
+            const club = row.children[3].innerText.trim();
+            setText('greffe-archer-nom', nom || 'Inconnu');
+            setText('greffe-archer-licence', licence || 'N/A');
+            setText('greffe-archer-club', club || 'N/A');
+            setText('greffe-archer-categorie', 'N/A');
+            setText('greffe-archer-departs', '1');
+        } else {
+            setText('greffe-archer-nom', 'Chargement...');
+            setText('greffe-archer-licence', 'Chargement...');
+            setText('greffe-archer-club', 'Chargement...');
+            setText('greffe-archer-categorie', 'Chargement...');
+            setText('greffe-archer-departs', 'Chargement...');
+        }
+    } else {
+        const nom = inscription.user_nom || inscription.nom || inscription.name || '';
+        const licence = inscription.numero_licence || inscription.licence || '';
+        const club = inscription.club_name || inscription.id_club || '';
+        const categorie = inscription.categorie_classement || inscription.categorie || '';
+
+        setText('greffe-archer-nom', nom || 'Inconnu');
+        setText('greffe-archer-licence', licence || 'N/A');
+        setText('greffe-archer-club', club || 'N/A');
+        setText('greffe-archer-categorie', categorie || 'N/A');
+
+        // Calculer le nombre de départs pour cet archer (même licence ou même user_id)
+        let nbDeparts = 1;
+        try {
+            if (Array.isArray(allInscriptionsCache) && allInscriptionsCache.length > 0) {
+                nbDeparts = allInscriptionsCache.filter(ins => {
+                    const sameLicence = inscription.numero_licence && ins.numero_licence &&
+                        String(ins.numero_licence) === String(inscription.numero_licence);
+                    const sameUser = inscription.user_id && ins.user_id &&
+                        String(ins.user_id) === String(inscription.user_id);
+                    return sameLicence || sameUser;
+                }).length || 1;
+            }
+        } catch (e) {
+            nbDeparts = 1;
+        }
+        setText('greffe-archer-departs', String(nbDeparts));
+    }
+
+    // Réinitialiser les sélecteurs de validation (présent / payé)
+    const presentSelect = document.getElementById('greffe-present');
+    const payeSelect = document.getElementById('greffe-paye');
+    if (presentSelect) presentSelect.value = '';
+    if (payeSelect) payeSelect.value = '';
+
+    // Réinitialiser l'affichage des réservations buvette (chargement par défaut)
+    const buvetteLoading = document.getElementById('greffe-buvette-loading');
+    const buvetteList = document.getElementById('greffe-buvette-list');
+    const buvetteEmpty = document.getElementById('greffe-buvette-empty');
+    if (buvetteLoading) buvetteLoading.classList.remove('d-none');
+    if (buvetteList) {
+        buvetteList.classList.add('d-none');
+        buvetteList.innerHTML = '';
+    }
+    if (buvetteEmpty) buvetteEmpty.classList.add('d-none');
+
+    // Afficher la modale
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+};
+
+/**
  * Charge les produits buvette pour le concours et les affiche dans le modal
  */
 function loadBuvetteProduits() {
