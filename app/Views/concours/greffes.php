@@ -309,8 +309,9 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
                             <?php endif; ?>
                             <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
-
-                            </tr>
+                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['present_greffe'] ?? 'N/A') ?></td>
+                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['paye_greffe'] ?? 'N/A') ?></td>
+                        </tr>
                         <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
