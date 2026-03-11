@@ -2389,11 +2389,13 @@ function initValidateGreffeHandlers() {
 
         btnConfirmGreffe.disabled = true;
 
+        // POST + X-HTTP-Method-Override: PUT pour éviter la perte du body (certains serveurs ne fournissent pas php://input en PUT)
         fetch('/api/concours/' + concoursId + '/inscription/' + inscriptionId, {
-            method: 'PUT',
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-HTTP-Method-Override': 'PUT'
             },
             credentials: 'include',
             body: JSON.stringify({
