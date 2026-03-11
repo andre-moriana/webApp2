@@ -1939,6 +1939,8 @@ function renderInscriptions(inscriptions) {
         }
 
         cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
+        cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.present_greffe ?? 'N/A')) + '</td>');
+        cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.paye_greffe ?? 'N/A')) + '</td>');
         cells.push('<td' + rowStyle + '>' + actionsCell + '</td>');
         let searchableText = '';
         if (inscription.user_nom) searchableText += inscription.user_nom.toLowerCase() + ' ';
