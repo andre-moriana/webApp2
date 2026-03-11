@@ -2348,11 +2348,23 @@ window.validateGreffe = function(inscriptionId) {
         setText('greffe-archer-departs', String(nbDeparts));
     }
 
-    // Réinitialiser les sélecteurs de validation (présent / payé)
+    // Initialiser les sélecteurs de validation (présent / payé) avec les valeurs de la base si disponibles
     const presentSelect = document.getElementById('greffe-present');
     const payeSelect = document.getElementById('greffe-paye');
-    if (presentSelect) presentSelect.value = '';
-    if (payeSelect) payeSelect.value = '';
+    let presentValue = '';
+    let payeValue = '';
+    if (inscription) {
+        const rawPresent = inscription.present_greffe != null ? String(inscription.present_greffe).toLowerCase().trim() : '';
+        const rawPaye = inscription.paye_greffe != null ? String(inscription.paye_greffe).toLowerCase().trim() : '';
+        if (rawPresent === 'oui' || rawPresent === 'non') {
+            presentValue = rawPresent;
+        }
+        if (rawPaye === 'oui' || rawPaye === 'non') {
+            payeValue = rawPaye;
+        }
+    }
+    if (presentSelect) presentSelect.value = presentValue;
+    if (payeSelect) payeSelect.value = payeValue;
 
     // Réinitialiser l'affichage des réservations buvette (chargement par défaut)
     const buvetteLoading = document.getElementById('greffe-buvette-loading');
