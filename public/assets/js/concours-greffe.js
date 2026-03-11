@@ -1939,8 +1939,8 @@ function renderInscriptions(inscriptions) {
         }
 
         cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
-        cells.push('<td' + rowStyle + '>' + escapeHtml(formatGreffeValue(inscription.present_greffe)) + '</td>');
-        cells.push('<td' + rowStyle + '>' + escapeHtml(formatGreffeValue(inscription.paye_greffe)) + '</td>');
+        cells.push('<td class="text-center"' + rowStyle + '>' + formatGreffeIcon(inscription.present_greffe) + '</td>');
+        cells.push('<td class="text-center"' + rowStyle + '>' + formatGreffeIcon(inscription.paye_greffe) + '</td>');
         cells.push('<td' + rowStyle + '>' + actionsCell + '</td>');
         let searchableText = '';
         if (inscription.user_nom) searchableText += inscription.user_nom.toLowerCase() + ' ';
@@ -1959,13 +1959,19 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-/** Affiche "Oui", "Non" ou "—" pour les colonnes présent / payé greffe */
-function formatGreffeValue(val) {
-    if (val == null || val === undefined || val === '') return '—';
+/** Icônes vertes/rouges pour présent / payé au greffe */
+function formatGreffeIcon(val) {
+    if (val == null || val === undefined || val === '') {
+        return '—';
+    }
     const v = String(val).toLowerCase().trim();
-    if (v === 'oui') return 'Oui';
-    if (v === 'non') return 'Non';
-    return val;
+    if (v === 'oui') {
+        return '<i class="fas fa-check-circle text-success" title="Oui"></i>';
+    }
+    if (v === 'non') {
+        return '<i class="fas fa-times-circle text-danger" title="Non"></i>';
+    }
+    return escapeHtml(val);
 }
 
 /**

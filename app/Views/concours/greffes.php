@@ -311,8 +311,26 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
                             <?php endif; ?>
                             <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
-                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['present_greffe'] ?? 'N/A') ?></td>
-                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['paye_greffe'] ?? 'N/A') ?></td>
+                            <td class="text-center"<?= $rowStyle ?>>
+                                <?php $present = strtolower(trim((string)($inscription['present_greffe'] ?? ''))); ?>
+                                <?php if ($present === 'oui'): ?>
+                                    <i class="fas fa-check-circle text-success" title="Présent"></i>
+                                <?php elseif ($present === 'non'): ?>
+                                    <i class="fas fa-times-circle text-danger" title="Non présent"></i>
+                                <?php else: ?>
+                                    —
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-center"<?= $rowStyle ?>>
+                                <?php $paye = strtolower(trim((string)($inscription['paye_greffe'] ?? ''))); ?>
+                                <?php if ($paye === 'oui'): ?>
+                                    <i class="fas fa-check-circle text-success" title="Payé"></i>
+                                <?php elseif ($paye === 'non'): ?>
+                                    <i class="fas fa-times-circle text-danger" title="Non payé"></i>
+                                <?php else: ?>
+                                    —
+                                <?php endif; ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                         <?php endif; ?>
