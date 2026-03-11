@@ -2777,8 +2777,8 @@ console.log($response);
             
             $data = null;
             if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH') {
-                $input = file_get_contents('php://input');
-                $data = json_decode($input, true);
+                $input = $GLOBALS['__RAW_HTTP_INPUT'] ?? file_get_contents('php://input');
+                $data = is_string($input) && $input !== '' ? json_decode($input, true) : null;
             }
             
             // Utiliser PUT pour la mise à jour

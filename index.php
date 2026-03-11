@@ -3,6 +3,9 @@
  * Portail Web - Arc Training
  * Point d'entrée principal de l'application
  */
+// Lire le corps HTTP une seule fois (php://input ne peut être lu qu'une fois par requête)
+$GLOBALS['__RAW_HTTP_INPUT'] = file_get_contents('php://input');
+
 // Chargement de l'autoloader personnalisé
 require_once 'app/Config/Autoloader.php';
 // Chargement des variables d'environnement
