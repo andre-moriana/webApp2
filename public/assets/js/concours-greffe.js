@@ -2353,7 +2353,67 @@ window.validateGreffe = function(inscriptionId) {
     // Afficher la modale
     const modal = new bootstrap.Modal(modalElement);
     modal.show();
+
+    // Charger les réservations buvette de l'archer (GET inscription complète)
+    const concoursId = concoursIdValue || (typeof concoursId !== 'undefined' ? concoursId : null);
+    if (concoursId && inscriptionId) {
+        fetch('/api/concours/' + concoursId + '/inscription/' + inscriptionId, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+        })
+        .then(function(res) { return res.ok ? res.json() : Promise.reject(new Error('Erreur ' + res.status)); })
+        .then(function(data) {
+            const insc = (data.success && data.data) ? data.data : (data.id ? data : null);
+            const reservations = (insc && insc.buvette_reservations) ? insc.buvette_reservations : [];
+            loadGreffeBuvetteReservations(reservations);
+        })
+        .catch(function(err) {
+            console.warn('Chargement réservations buvette greffe:', err);
+            if (buvetteLoading) buvetteLoading.classList.add('d-none');
+            if (buvetteEmpty) {
+                buvetteEmpty.textContent = 'Impossible de charger les réservations.';
+                buvetteEmpty.classList.remove('d-none');
+            }
+        });
+    } else {
+        if (buvetteLoading) buvetteLoading.classList.add('d-none');
+        if (buvetteEmpty) buvetteEmpty.classList.remove('d-none');
+    }
 };
+
+/**
+ * Affiche la liste des réservations buvette dans la modale de validation du greffe
+ */
+function loadGreffeBuvetteReservations(reservations) {
+    const buvetteLoading = document.getElementById('greffe-buvette-loading');
+    const buvetteList = document.getElementById('greffe-buvette-list');
+    const buvetteEmpty = document.getElementById('greffe-buvette-empty');
+    if (!buvetteList) return;
+
+    if (buvetteLoading) buvetteLoading.classList.add('d-none');
+
+    if (!reservations || reservations.length === 0) {
+        if (buvetteEmpty) {
+            buvetteEmpty.textContent = 'Aucune réservation buvette pour cet archer.';
+            buvetteEmpty.classList.remove('d-none');
+        }
+        buvetteList.classList.add('d-none');
+        buvetteList.innerHTML = '';
+        return;
+    }
+
+    if (buvetteEmpty) buvetteEmpty.classList.add('d-none');
+    const lines = reservations.map(function(r) {
+        const libelle = (r.libelle || 'Article') + (r.unite ? ' (' + r.unite + ')' : '');
+        const qte = parseInt(r.quantite, 10) || 0;
+        const prix = r.prix != null ? parseFloat(r.prix).toFixed(2) + ' €' : '';
+        const line = '<div class="d-flex justify-content-between align-items-center py-1 border-bottom"><span>' + escapeHtml(libelle) + ' × ' + qte + '</span>' + (prix ? '<span class="text-muted">' + prix + '</span>' : '') + '</div>';
+        return line;
+    });
+    buvetteList.innerHTML = lines.join('');
+    buvetteList.classList.remove('d-none');
+}
 
 /**
  * Initialise le handler du bouton "Valider" de la modale de validation du greffe.
