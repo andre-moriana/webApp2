@@ -1913,7 +1913,8 @@ function renderInscriptions(inscriptions) {
         let actionsCell;
         if (canEditDeleteInscription) {
             actionsCell = '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(' + id + ')"><i class="fas fa-edit"></i></button> ' +
-                '<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')"><i class="fas fa-trash"></i></button>';
+                '<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')"><i class="fas fa-trash"></i></button>' +
+                '<button type="button" class="btn btn-sm btn-outline-success me-1" onclick="validateGreffe(' + id + ')"><i class="fas fa-check"></i></button>';
         } else {
             actionsCell = '—';
         }
