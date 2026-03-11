@@ -93,6 +93,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialiser les handlers pour l'édition
     initEditInscriptionHandlers();
 
+    // Initialiser le handler de validation du greffe (présent / payé)
+    initValidateGreffeHandlers();
+
     // Délégation d'événement pour le changement de statut (dropdown)
     document.addEventListener('click', function(e) {
         const item = e.target.closest('.statut-dropdown-item');
@@ -2349,6 +2352,77 @@ window.validateGreffe = function(inscriptionId) {
     const modal = new bootstrap.Modal(modalElement);
     modal.show();
 };
+
+/**
+ * Initialise le handler du bouton "Valider" de la modale de validation du greffe.
+ * Envoie présent et payé au backend puis ferme la modale et rafraîchit la liste.
+ */
+function initValidateGreffeHandlers() {
+    const btnConfirmGreffe = document.getElementById('btn-confirm-greffe');
+    if (!btnConfirmGreffe) return;
+
+    btnConfirmGreffe.addEventListener('click', function() {
+        const form = document.getElementById('validate-greffe-form');
+        const inscriptionId = form?.dataset?.inscriptionId;
+        const concoursId = concoursIdValue || (typeof concoursId !== 'undefined' ? concoursId : null);
+
+        if (!concoursId || !inscriptionId) {
+            alert('Erreur: Informations manquantes (concours ou inscription)');
+            return;
+        }
+
+        const presentEl = document.getElementById('greffe-present');
+        const payeEl = document.getElementById('greffe-paye');
+        const present = (presentEl && presentEl.value) ? presentEl.value : '';
+        const paye = (payeEl && payeEl.value) ? payeEl.value : '';
+
+        if (present !== 'oui' && present !== 'non') {
+            alert('Veuillez indiquer si l\'archer est présent.');
+            if (presentEl) presentEl.focus();
+            return;
+        }
+        if (paye !== 'oui' && paye !== 'non') {
+            alert('Veuillez indiquer si l\'inscription est payée.');
+            if (payeEl) payeEl.focus();
+            return;
+        }
+
+        btnConfirmGreffe.disabled = true;
+
+        fetch('/api/concours/' + concoursId + '/inscription/' + inscriptionId, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                present_greffe: present,
+                paye_greffe: paye
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const modalEl = document.getElementById('validateGreffeModal');
+                if (modalEl) {
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                }
+                loadInscriptions();
+            } else {
+                alert('Erreur lors de la sauvegarde: ' + (data.error || data.message || 'Erreur inconnue'));
+            }
+        })
+        .catch(error => {
+            console.error('Erreur sauvegarde greffe:', error);
+            alert('Erreur lors de la sauvegarde. Vérifiez votre connexion.');
+        })
+        .finally(() => {
+            btnConfirmGreffe.disabled = false;
+        });
+    });
+}
 
 /**
  * Charge les produits buvette pour le concours et les affiche dans le modal
