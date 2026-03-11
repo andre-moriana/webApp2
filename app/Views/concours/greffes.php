@@ -188,6 +188,8 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <th>Blason</th>
                             <?php endif; ?>
                             <th>Date d'inscription</th>
+                            <th>Présent</th>
+                            <th>Payé</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
