@@ -263,9 +263,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                         <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>
                                         <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-sm btn-outline-success me-1" title="Valider le greffe" data-bs-toggle="modal" data-bs-target="#validateGreffeModal" ...>
-                                        <i class="fas fa-check"></i>
-                                    </button>
                                 </div>
                                 <?php else: ?>
                                 <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
@@ -519,5 +516,74 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
         </div>
     </div>
 </div>
+
+<!-- Modale de validation du greffe -->
+<div class="modal fade" id="validateGreffeModal" tabindex="-1" aria-labelledby="validateGreffeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="validateGreffeModalLabel">Validation du greffe</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Informations de l'archer -->
+                <div class="archer-info-section mb-4">
+                    <h6 class="text-primary">Informations de l'archer</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nom :</strong> <span id="greffe-archer-nom">Chargement...</span></p>
+                            <p><strong>Numéro de licence :</strong> <span id="greffe-archer-licence">Chargement...</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Club :</strong> <span id="greffe-archer-club">Chargement...</span></p>
+                            <p><strong>Catégorie :</strong> <span id="greffe-archer-categorie">Chargement...</span></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nombre de départs :</strong> <span id="greffe-archer-departs">Chargement...</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Réservations buvette -->
+                <div class="buvette-reservations-section mb-4">
+                    <h6 class="text-primary"><i class="fas fa-coffee"></i> Réservations buvette</h6>
+                    <div id="greffe-buvette-loading" class="text-center py-2 text-muted small">Chargement des réservations...</div>
+                    <div id="greffe-buvette-list" class="d-none"></div>
+                    <div id="greffe-buvette-empty" class="text-muted small d-none">Aucune réservation buvette pour cet archer.</div>
+                </div>
+
+                <!-- Formulaire de validation -->
+                <form id="validate-greffe-form">
+                    <h6 class="text-primary">Validation</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="greffe-present" class="form-label">Présent <span class="text-danger">*</span></label>
+                            <select id="greffe-present" class="form-control" required>
+                                <option value="">Sélectionner</option>
+                                <option value="oui">Oui</option>
+                                <option value="non">Non</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="greffe-paye" class="form-label">Payé <span class="text-danger">*</span></label>
+                            <select id="greffe-paye" class="form-control" required>
+                                <option value="">Sélectionner</option>
+                                <option value="oui">Oui</option>
+                                <option value="non">Non</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm-greffe">Valider</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="/public/assets/js/concours-table.js"></script>
 <script src="/public/assets/js/concours-greffe.js"></script>
