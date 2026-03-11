@@ -1915,9 +1915,12 @@ function renderInscriptions(inscriptions) {
 
         let actionsCell;
         if (canEditDeleteInscription) {
-            actionsCell = '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(' + id + ')"><i class="fas fa-edit"></i></button> ' +
-                '<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')"><i class="fas fa-trash"></i></button>' +
-                '<button type="button" class="btn btn-sm btn-outline-success me-1" onclick="validateGreffe(' + id + ')"><i class="fas fa-check"></i></button>';
+            actionsCell =
+                '<div class="d-flex justify-content-center align-items-center gap-1">' +
+                    '<button type="button" class="btn btn-sm btn-outline-success" onclick="validateGreffe(' + id + ')" title="Valider le greffe"><i class="fas fa-check"></i></button>' +
+                    '<button type="button" class="btn btn-sm btn-primary" onclick="editInscription(' + id + ')" title="Éditer l\\\'inscription"><i class="fas fa-edit"></i></button>' +
+                    '<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')" title="Supprimer l\\\'inscription"><i class="fas fa-trash"></i></button>' +
+                '</div>';
         } else {
             actionsCell = '—';
         }
