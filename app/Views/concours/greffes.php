@@ -263,6 +263,9 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                         <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="refuse" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Refusée</a></li>
                                         <li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="<?= htmlspecialchars($inscId) ?>"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>
                                     </ul>
+                                    <button type="button" class="btn btn-sm btn-outline-success me-1" title="Valider le greffe" data-bs-toggle="modal" data-bs-target="#validateGreffeModal" ...>
+                                        <i class="fas fa-check"></i>
+                                    </button>
                                 </div>
                                 <?php else: ?>
                                 <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
