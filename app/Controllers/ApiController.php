@@ -2878,6 +2878,22 @@ console.log($response);
     /**
      * Proxy pour GET /api/concours/{id}/buvette/reservations - Liste des réservations buvette (admin)
      */
+    /**
+     * Proxy pour GET /api/concours/{id}/buvette/reservations/inscription/{inscriptionId} - Réservations buvette pour une inscription (modale greffe)
+     */
+    public function proxyConcoursBuvetteReservationsByInscription($concoursId, $inscriptionId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $response = $this->apiService->makeRequest("concours/{$concoursId}/buvette/reservations/inscription/{$inscriptionId}", 'GET');
+            $this->sendJsonResponse($response['data'] ?? $response, $response['status_code'] ?? 200);
+        } catch (Exception $e) {
+            $this->sendJsonResponse(['success' => false, 'error' => $e->getMessage(), 'reservations' => []], 500);
+        }
+    }
+
     public function proxyConcoursBuvetteReservationsList($concoursId) {
         if (!$this->isAuthenticated()) {
             $this->sendUnauthenticatedResponse();

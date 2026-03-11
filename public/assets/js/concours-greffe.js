@@ -2354,18 +2354,17 @@ window.validateGreffe = function(inscriptionId) {
     const modal = new bootstrap.Modal(modalElement);
     modal.show();
 
-    // Charger les réservations buvette de l'archer (GET inscription complète)
+    // Charger les réservations buvette via l'endpoint dédié (par inscription)
     const concoursId = concoursIdValue || (typeof concoursId !== 'undefined' ? concoursId : null);
     if (concoursId && inscriptionId) {
-        fetch('/api/concours/' + concoursId + '/inscription/' + inscriptionId, {
+        fetch('/api/concours/' + concoursId + '/buvette/reservations/inscription/' + inscriptionId, {
             method: 'GET',
             headers: { 'Accept': 'application/json' },
             credentials: 'include'
         })
         .then(function(res) { return res.ok ? res.json() : Promise.reject(new Error('Erreur ' + res.status)); })
         .then(function(data) {
-            const insc = (data.success && data.data) ? data.data : (data.id ? data : null);
-            const reservations = (insc && insc.buvette_reservations) ? insc.buvette_reservations : [];
+            const reservations = (data && Array.isArray(data.reservations)) ? data.reservations : [];
             loadGreffeBuvetteReservations(reservations);
         })
         .catch(function(err) {
