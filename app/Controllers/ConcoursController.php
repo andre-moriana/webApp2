@@ -3968,6 +3968,9 @@ public function inscription($concoursId)
 
         $planToken = $token ?: $tokenFromSession;
 
+        // Licence potentielle passée dans l'URL (accès public via email)
+        $licenceFromQuery = isset($_GET['licence']) ? trim((string)$_GET['licence']) : null;
+
         unset($_SESSION['error']);
         unset($_SESSION['success']);
 
