@@ -3711,12 +3711,18 @@ public function inscription($concoursId)
         }
         
         // Récupérer les plans de cible (endpoint public si non connecté, avec token)
+        $currentUserLicenceFromToken = null;
         try {
             $plansResponse = $isLoggedIn
                 ? $this->apiService->getPlanCible($concoursId)
                 : $this->apiService->makeRequestPublic("concours/{$concoursId}/plan-cible/public" . ($planToken ? "?token=" . urlencode($planToken) : ""), 'GET');
             if ($plansResponse['success']) {
-                $plans = $this->apiService->unwrapData($plansResponse);
+                $plansRaw = $this->apiService->unwrapData($plansResponse);
+                // Extraire éventuellement la licence associée au token (pour accès public)
+                if (is_array($plansRaw) && isset($plansRaw['current_user_licence'])) {
+                    $currentUserLicenceFromToken = trim((string)$plansRaw['current_user_licence']);
+                }
+                $plans = $plansRaw;
                 // Si les données sont encore encapsulées, les extraire
                 if (is_array($plans) && isset($plans['data']) && isset($plans['success'])) {
                     $plans = $plans['data'];
@@ -3831,7 +3837,12 @@ public function inscription($concoursId)
         $isAdmin = $isLoggedIn && (bool)($_SESSION['user']['is_admin'] ?? $_SESSION['user']['isAdmin'] ?? false);
         $isDirigeant = $isLoggedIn && (($_SESSION['user']['role'] ?? '') === 'Dirigeant');
         $canReleaseAsAdminOrDirigeant = $isAdmin || $isDirigeant;
-        $currentUserLicence = $isLoggedIn ? trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? '')) : '';
+        // Pour un accès public via lien email, la licence peut être fournie par l'API (current_user_licence)
+        if ($isLoggedIn) {
+            $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));
+        } else {
+            $currentUserLicence = $currentUserLicenceFromToken !== null ? $currentUserLicenceFromToken : '';
+        }
         $additionalJS = ['/public/assets/js/plan-cible.js'];
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/plan-cible.php';
@@ -3961,6 +3972,7 @@ public function inscription($concoursId)
         $plans = [];
         $inscriptionsMap = [];
         $usersMap = [];
+        $currentUserLicenceFromToken = null;
 
         $response = $isLoggedIn
             ? $this->apiService->getConcoursById($concoursId)
@@ -4012,7 +4024,12 @@ public function inscription($concoursId)
                 ? $this->apiService->getPlanPeloton($concoursId)
                 : $this->apiService->makeRequestPublic("concours/{$concoursId}/plan-peloton/public" . ($planToken ? "?token=" . urlencode($planToken) : ""), 'GET');
             if ($plansResponse['success'] ?? false) {
-                $plans = $this->apiService->unwrapData($plansResponse);
+                $plansRaw = $this->apiService->unwrapData($plansResponse);
+                // Extraire éventuellement la licence associée au token (pour accès public)
+                if (is_array($plansRaw) && isset($plansRaw['current_user_licence'])) {
+                    $currentUserLicenceFromToken = trim((string)$plansRaw['current_user_licence']);
+                }
+                $plans = $plansRaw;
                 // L'API peut retourner {success, data, message} ou directement les plans
                 if (is_array($plans) && isset($plans['data']) && isset($plans['success'])) {
                     $plans = $plans['data'];
@@ -4081,7 +4098,12 @@ public function inscription($concoursId)
         $isAdmin = $isLoggedIn && (bool)($_SESSION['user']['is_admin'] ?? $_SESSION['user']['isAdmin'] ?? false);
         $isDirigeant = $isLoggedIn && (($_SESSION['user']['role'] ?? '') === 'Dirigeant');
         $canReleaseAsAdminOrDirigeant = $isAdmin || $isDirigeant;
-        $currentUserLicence = $isLoggedIn ? trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? '')) : '';
+        // Pour un accès public via lien email, la licence peut être fournie par l'API (current_user_licence)
+        if ($isLoggedIn) {
+            $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));
+        } else {
+            $currentUserLicence = $currentUserLicenceFromToken !== null ? $currentUserLicenceFromToken : '';
+        }
         $additionalJS = ['/public/assets/js/plan-peloton.js'];
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/plan-peloton.php';
