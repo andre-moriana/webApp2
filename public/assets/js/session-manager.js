@@ -168,6 +168,10 @@
                 this.stop();
                 return;
             }
+            if (path.startsWith('/plan-peloton/')|path.startsWith('/plan-cible/')) {
+                this.stop();
+                return;
+            }
             // Arrêter le keep-alive
             this.stop();
             
