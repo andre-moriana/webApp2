@@ -3648,6 +3648,9 @@ public function inscription($concoursId)
 
         $planToken = $token ?: $tokenFromSession;
 
+        // Licence potentielle passée dans l'URL (accès public via email)
+        $licenceFromQuery = isset($_GET['licence']) ? trim((string)$_GET['licence']) : null;
+
         // Nettoyer les messages d'erreur de session
         unset($_SESSION['error']);
         unset($_SESSION['success']);
@@ -3972,7 +3975,8 @@ public function inscription($concoursId)
         $plans = [];
         $inscriptionsMap = [];
         $usersMap = [];
-        $currentUserLicenceFromToken = null;
+        // Licence "courante" pour un accès public : priorité au paramètre d'URL, sinon valeur renvoyée par l'API
+        $currentUserLicenceFromToken = $licenceFromQuery !== null ? $licenceFromQuery : null;
 
         $response = $isLoggedIn
             ? $this->apiService->getConcoursById($concoursId)
