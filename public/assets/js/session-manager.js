@@ -163,12 +163,12 @@
          */
         handleSessionExpired() {
             const path = window.location.pathname || '';
-            // Ne pas rediriger automatiquement depuis les pages publiques d'inscription concours
-            if (path.startsWith('/inscription-cible/')) {
-                this.stop();
-                return;
-            }
-            if (path.startsWith('/plan-peloton/')|path.startsWith('/plan-cible/')) {
+            // Ne pas rediriger automatiquement depuis les pages publiques d'inscription
+            // ou de configuration de plan de peloton / plan de cible (liens envoyés par mail)
+            if (
+                path.startsWith('/inscription-cible/') ||
+                (path.includes('/concours/') && (path.includes('/plan-peloton') || path.includes('/plan-cible')))
+            ) {
                 this.stop();
                 return;
             }
