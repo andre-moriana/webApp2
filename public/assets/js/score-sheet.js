@@ -416,7 +416,19 @@ async function loadExistingTrainingData(indicesWithLicence) {
             if (result.success && result.data) {
                 applyTrainingToSheet(sheet, result.data);
                 const notes = result.data.notes || (result.data.data && result.data.data.notes) || '';
-                if (notes) sheet.notes = notes;
+                if (notes) {
+                    sheet.notes = notes;
+                    // Harmonisation avec le mobile : si les notes contiennent __SIGNED__:1,
+                    // on marque aussi la feuille comme signée côté web pour verrouiller les scores.
+                    const parsed = parseSignaturesFromNotes(notes);
+                    if (parsed.signed) {
+                        sheet.signed = true;
+                    }
+                }
+                // Si l'API renvoie explicitement un flag signed, le prendre aussi en compte.
+                if (result.data.signed === true) {
+                    sheet.signed = true;
+                }
                 if (result.data.signed === true) sheet.signed = true;
                 if (notes) {
                     const { signatures, signed } = parseSignaturesFromNotes(notes);
