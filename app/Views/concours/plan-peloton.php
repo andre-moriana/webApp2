@@ -101,7 +101,7 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                 Règle de parité par couleur désactivée.
             <?php endif; ?>
         </p>
-        <?php if (!empty($canEditPlan)): ?>
+        <?php if (!empty($isAdmin) || !empty($isDirigeant)): ?>
             <div class="row g-2 mb-2">
                 <div class="col-md-4">
                     <label class="form-label mb-1">Max archers du même club</label>

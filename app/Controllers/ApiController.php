@@ -3214,6 +3214,18 @@ console.log($response);
             return;
         }
         try {
+            // Seuls admin et dirigeants peuvent modifier les règles de peloton
+            $user = $_SESSION['user'] ?? [];
+            $isAdmin = !empty($user['is_admin']) || !empty($user['isAdmin']);
+            $isDirigeant = ($user['role'] ?? '') === 'Dirigeant';
+            if (!$isAdmin && !$isDirigeant) {
+                $this->sendJsonResponse([
+                    'success' => false,
+                    'error' => 'Vous n\'êtes pas autorisé à modifier les règles de peloton.'
+                ], 403);
+                return;
+            }
+
             $endpoint = "concours/{$concoursId}/peloton-rules";
             $input = file_get_contents('php://input');
             $data = json_decode($input, true);
