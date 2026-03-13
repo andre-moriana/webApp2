@@ -415,31 +415,38 @@ async function loadExistingTrainingData(indicesWithLicence) {
             }
             if (result.success && result.data) {
                 applyTrainingToSheet(sheet, result.data);
+
+                // Récupérer les notes et extraire signature + flag signé (__SIGNED__:1)
                 const notes = result.data.notes || (result.data.data && result.data.data.notes) || '';
                 if (notes) {
                     sheet.notes = notes;
-                    // Harmonisation avec le mobile : si les notes contiennent __SIGNED__:1,
-                    // on marque aussi la feuille comme signée côté web pour verrouiller les scores.
-                    const parsed = parseSignaturesFromNotes(notes);
-                    if (parsed.signed) {
+                    const { signatures, signed } = parseSignaturesFromNotes(notes);
+                    if (signed) {
                         sheet.signed = true;
                     }
-                }
-                // Si l'API renvoie explicitement un flag signed, le prendre aussi en compte.
-                if (result.data.signed === true) {
-                    sheet.signed = true;
-                }
-                if (result.data.signed === true) sheet.signed = true;
-                if (notes) {
-                    const { signatures, signed } = parseSignaturesFromNotes(notes);
-                    if (signed) sheet.signed = true;
                     if (signatures && typeof signatures === 'object') {
                         if (signatures.archer) archerSignatures[sheetIndex] = signatures.archer;
                         if (signatures.scorer) scorerSignature = signatures.scorer;
                     }
-                    if (notes.indexOf('__EXPORTED_TO_CONCOURS__:1') !== -1) exportedToConcours = true;
+                    // Si les notes contiennent déjà le marqueur d'export concours, le refléter.
+                    if (notes.indexOf('__EXPORTED_TO_CONCOURS__:1') !== -1) {
+                        exportedToConcours = true;
+                    }
                 }
-                if (result.data.exported_to_concours === true) exportedToConcours = true;
+
+                // Si l'API renvoie explicitement un flag signed (colonne signed dans scored_trainings),
+                // on le prend aussi en compte, même si les notes ne sont pas encore enrichies.
+                const explicitSigned =
+                    result.data.signed === true ||
+                    (result.data.data && result.data.data.signed === true);
+                if (explicitSigned) {
+                    sheet.signed = true;
+                }
+
+                // Et si l'API signale directement que la session a déjà été exportée vers concours_resultats.
+                if (result.data.exported_to_concours === true) {
+                    exportedToConcours = true;
+                }
             }
         } catch (e) {
             console.warn('Chargement session existante pour feuille', sheetIndex, e);
