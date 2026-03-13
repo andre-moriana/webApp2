@@ -157,6 +157,53 @@
         }
     })();
 
+    // Bouton "Enregistrer les règles" : envoie les valeurs au backend
+    var btnSaveRules = document.getElementById('btn-save-peloton-rules');
+    var rulesMessageEl = document.getElementById('plan-peloton-rules-message');
+    if (btnSaveRules && planContainer) {
+        btnSaveRules.addEventListener('click', function () {
+            var concoursId = btnSaveRules.getAttribute('data-concours-id');
+            if (!concoursId) {
+                if (rulesMessageEl) rulesMessageEl.innerHTML = '<span class="text-danger">ID concours manquant.</span>';
+                return;
+            }
+            var maxClubInput = document.getElementById('rule-max-club-input');
+            var maxPiquetInput = document.getElementById('rule-max-piquet-input');
+            var pairCheckbox = document.getElementById('rule-pair-per-color-input');
+            var maxClub = maxClubInput ? (parseInt(maxClubInput.value, 10) || 0) : 0;
+            var maxPiquet = maxPiquetInput ? (parseInt(maxPiquetInput.value, 10) || 0) : 0;
+            var pairPerColor = pairCheckbox ? pairCheckbox.checked : true;
+            if (rulesMessageEl) rulesMessageEl.innerHTML = '';
+            btnSaveRules.disabled = true;
+            btnSaveRules.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+            fetch('/api/concours/' + concoursId + '/peloton-rules', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    peloton_max_archers_meme_club: maxClub,
+                    peloton_max_couleurs_piquet: maxPiquet,
+                    peloton_regle_pair_par_couleur: pairPerColor ? 1 : 0
+                })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (result) {
+                if (result.success) {
+                    if (rulesMessageEl) rulesMessageEl.innerHTML = '<span class="text-success"><i class="fas fa-check"></i> Règles enregistrées.</span>';
+                } else {
+                    if (rulesMessageEl) rulesMessageEl.innerHTML = '<span class="text-danger">' + (result.error || result.message || 'Erreur') + '</span>';
+                }
+            })
+            .catch(function (err) {
+                if (rulesMessageEl) rulesMessageEl.innerHTML = '<span class="text-danger">Erreur : ' + (err.message || 'réseau') + '</span>';
+            })
+            .finally(function () {
+                btnSaveRules.disabled = false;
+                btnSaveRules.innerHTML = '<i class="fas fa-save"></i> Enregistrer les règles';
+            });
+        });
+    }
+
     document.addEventListener('click', function(e) {
         var item = e.target.closest('.blason-item');
         if (!item) return;

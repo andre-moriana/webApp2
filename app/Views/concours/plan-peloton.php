@@ -54,13 +54,13 @@ $nombreArchersParPeloton = (int)($concours->nombre_archers_par_peloton ?? $conco
 $concoursId = $concours->id ?? $concours->_id ?? null;
 $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
 
-// Valeurs par défaut des règles (ancien comportement) :
-// - max 50% d'archers du même club par peloton (ex: 2 pour 4)
-// - max 2 couleurs de piquet différentes par peloton
-// - règle "pair par couleur" activée
-$defaultMaxSameClub = max(1, (int)floor($nombreArchersParPeloton / 2));
-$defaultMaxPiquetColors = 2;
-$defaultPairRuleEnabled = 1;
+// Règles : valeurs enregistrées en base (par concours) ou défauts
+$savedMaxClub = isset($concours->peloton_max_archers_meme_club) ? (int)$concours->peloton_max_archers_meme_club : null;
+$savedMaxPiquet = isset($concours->peloton_max_couleurs_piquet) ? (int)$concours->peloton_max_couleurs_piquet : null;
+$savedPairRule = isset($concours->peloton_regle_pair_par_couleur) ? (int)$concours->peloton_regle_pair_par_couleur : null;
+$defaultMaxSameClub = ($savedMaxClub !== null && $savedMaxClub > 0) ? $savedMaxClub : max(1, (int)floor($nombreArchersParPeloton / 2));
+$defaultMaxPiquetColors = ($savedMaxPiquet !== null && $savedMaxPiquet > 0) ? $savedMaxPiquet : 2;
+$defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
 
 // Les stocker également sur le conteneur principal (attributs data-*)
 ?>
@@ -125,6 +125,14 @@ $defaultPairRuleEnabled = 1;
                         </label>
                     </div>
                 </div>
+            </div>
+            <div class="row g-2 mb-2 align-items-center">
+                <div class="col-auto">
+                    <button type="button" class="btn btn-success" id="btn-save-peloton-rules" data-concours-id="<?= htmlspecialchars($concoursId) ?>">
+                        <i class="fas fa-save"></i> Enregistrer les règles
+                    </button>
+                </div>
+                <div class="col" id="plan-peloton-rules-message"></div>
             </div>
         <?php endif; ?>
         <div class="legend-items">

@@ -3208,6 +3208,29 @@ console.log($response);
         }
     }
 
+    public function proxyConcoursPelotonRules($concoursId) {
+        if (!$this->isAuthenticated()) {
+            $this->sendUnauthenticatedResponse();
+            return;
+        }
+        try {
+            $endpoint = "concours/{$concoursId}/peloton-rules";
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            $response = $this->apiService->makeRequest($endpoint, 'PUT', $data);
+            if (isset($response['success'])) {
+                $this->sendJsonResponse($response, $response['status_code'] ?? 200);
+            } else {
+                $this->sendJsonResponse($response, 200);
+            }
+        } catch (Exception $e) {
+            $this->sendJsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de l\'enregistrement des règles: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function proxyConcoursPlanPelotonAssign($concoursId) {
         $planToken = $this->getPlanTokenForConcours($concoursId);
         if (!$this->isAuthenticated() && !$planToken) {
