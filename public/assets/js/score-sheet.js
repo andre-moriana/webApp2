@@ -1855,8 +1855,11 @@ function updateExportButtonVisibility() {
         if (exportBtn) exportBtn.style.display = 'none';
         if (sigBtn) sigBtn.style.display = 'none';
     } else {
-        if (exportBtn) exportBtn.style.display = areAllSheetsSigned() ? 'inline-block' : 'none';
-        if (sigBtn) sigBtn.style.display = 'inline-block';
+        const allSigned = areAllSheetsSigned();
+        // Si toutes les feuilles avec scores sont déjà signées (y compris celles signées depuis le mobile),
+        // on n'affiche plus le bouton Signatures, uniquement éventuellement le bouton d'export.
+        if (exportBtn) exportBtn.style.display = allSigned ? 'inline-block' : 'none';
+        if (sigBtn) sigBtn.style.display = allSigned ? 'none' : 'inline-block';
     }
     if (saveBtn) saveBtn.style.display = (exportedToConcours || sheetsSavedForBatch) ? 'none' : 'inline-block';
 }
