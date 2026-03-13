@@ -3,7 +3,23 @@
 <link href="/public/assets/css/plan-cible.css" rel="stylesheet">
 <link href="/public/assets/css/plan-peloton.css" rel="stylesheet">
 
-<div class="container-fluid concours-create-container" data-can-edit-plan="<?= !empty($canEditPlan) ? '1' : '0' ?>" data-can-release-admin-dirigeant="<?= !empty($canReleaseAsAdminOrDirigeant) ? '1' : '0' ?>" data-current-user-licence="<?= htmlspecialchars($currentUserLicence ?? '') ?>">
+<?php
+// Valeurs par défaut des règles (ancien comportement) :
+// - max 50% d'archers du même club par peloton (ex: 2 pour 4)
+// - max 2 couleurs de piquet différentes par peloton
+// - règle "pair par couleur" activée
+$defaultMaxSameClub = max(1, (int)floor($nombreArchersParPeloton / 2));
+$defaultMaxPiquetColors = 2;
+$defaultPairRuleEnabled = 1;
+?>
+
+<div class="container-fluid concours-create-container"
+     data-can-edit-plan="<?= !empty($canEditPlan) ? '1' : '0' ?>"
+     data-can-release-admin-dirigeant="<?= !empty($canReleaseAsAdminOrDirigeant) ? '1' : '0' ?>"
+     data-current-user-licence="<?= htmlspecialchars($currentUserLicence ?? '') ?>"
+     data-max-club-per-peloton="<?= (int)$defaultMaxSameClub ?>"
+     data-max-piquet-colors="<?= (int)$defaultMaxPiquetColors ?>"
+     data-pair-per-color="<?= (int)$defaultPairRuleEnabled ?>">
 <h1>Plan de peloton - <?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?></h1>
 
 <?php if (isset($_SESSION['error'])): ?>
@@ -65,7 +81,41 @@ $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'
 <?php else: ?>
     <div class="plan-cible-legend">
         <h4><i class="fas fa-info-circle"></i> Règles</h4>
-        <p>Max 50% d'archers du même club par peloton (ex: 2 pour 4, 3 pour 6). Max 2 couleurs de piquet par peloton. S'il y a plus de 2 archers inscrits dans un peloton : pour chaque couleur de piquet, le nombre d'archers doit être <strong>pair</strong>.</p>
+        <p>
+            Max <span id="rule-max-club-display"><?= (int)$defaultMaxSameClub ?></span> archer(s) du même club par peloton.
+            Max <span id="rule-max-piquet-display"><?= (int)$defaultMaxPiquetColors ?></span> couleurs de piquet par peloton.
+            <?php if ($defaultPairRuleEnabled): ?>
+                S'il y a plus de 2 archers inscrits dans un peloton : pour chaque couleur de piquet, le nombre d'archers doit être <strong>pair</strong>.
+            <?php else: ?>
+                Règle de parité par couleur désactivée.
+            <?php endif; ?>
+        </p>
+        <?php if (!empty($canEditPlan)): ?>
+            <div class="row g-2 mb-2">
+                <div class="col-md-4">
+                    <label class="form-label mb-1">Max archers du même club</label>
+                    <input type="number" min="1" max="<?= (int)$nombreArchersParPeloton ?>" step="1"
+                           id="rule-max-club-input"
+                           class="form-control form-control-sm"
+                           value="<?= (int)$defaultMaxSameClub ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label mb-1">Max couleurs de piquet</label>
+                    <input type="number" min="1" max="4" step="1"
+                           id="rule-max-piquet-input"
+                           class="form-control form-control-sm"
+                           value="<?= (int)$defaultMaxPiquetColors ?>">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rule-pair-per-color-input"<?= $defaultPairRuleEnabled ? ' checked' : '' ?>>
+                        <label class="form-check-label" for="rule-pair-per-color-input">
+                            Nombre pair par couleur (si &gt; 2 archers)
+                        </label>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
         <div class="legend-items">
             <div class="legend-item"><div class="legend-color assigne"></div><span>Position assignée</span></div>
             <div class="legend-item"><div class="legend-color libre"></div><span>Position libre</span></div>

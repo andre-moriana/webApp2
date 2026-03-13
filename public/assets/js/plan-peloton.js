@@ -103,6 +103,60 @@
     var canReleaseAdminDirigeant = planContainer?.getAttribute('data-can-release-admin-dirigeant') === '1';
     var currentUserLicence = (planContainer?.getAttribute('data-current-user-licence') || '').trim();
 
+    // Règles configurables (valeurs initiales depuis data-*)
+    function getPelotonRules() {
+        if (!planContainer) {
+            return {
+                maxClubPerPeloton: 2,
+                maxPiquetColors: 2,
+                pairPerColor: true
+            };
+        }
+        var maxClub = parseInt(planContainer.getAttribute('data-max-club-per-peloton') || '0', 10) || 1;
+        var maxColors = parseInt(planContainer.getAttribute('data-max-piquet-colors') || '0', 10) || 2;
+        var pairPerColor = (planContainer.getAttribute('data-pair-per-color') || '1') === '1';
+        return {
+            maxClubPerPeloton: maxClub,
+            maxPiquetColors: maxColors,
+            pairPerColor: pairPerColor
+        };
+    }
+
+    // Si les inputs de règles existent et que l'utilisateur peut éditer, synchroniser avec les data-*
+    (function initPelotonRulesUI() {
+        if (!planContainer || !canEditPlanPeloton) return;
+        var maxClubInput = document.getElementById('rule-max-club-input');
+        var maxPiquetInput = document.getElementById('rule-max-piquet-input');
+        var pairCheckbox = document.getElementById('rule-pair-per-color-input');
+        var maxClubDisplay = document.getElementById('rule-max-club-display');
+        var maxPiquetDisplay = document.getElementById('rule-max-piquet-display');
+
+        if (maxClubInput) {
+            maxClubInput.addEventListener('change', function () {
+                var v = parseInt(maxClubInput.value || '0', 10);
+                if (!v || v < 1) v = 1;
+                maxClubInput.value = v;
+                planContainer.setAttribute('data-max-club-per-peloton', String(v));
+                if (maxClubDisplay) maxClubDisplay.textContent = String(v);
+            });
+        }
+        if (maxPiquetInput) {
+            maxPiquetInput.addEventListener('change', function () {
+                var v = parseInt(maxPiquetInput.value || '0', 10);
+                if (!v || v < 1) v = 1;
+                if (v > 4) v = 4;
+                maxPiquetInput.value = v;
+                planContainer.setAttribute('data-max-piquet-colors', String(v));
+                if (maxPiquetDisplay) maxPiquetDisplay.textContent = String(v);
+            });
+        }
+        if (pairCheckbox) {
+            pairCheckbox.addEventListener('change', function () {
+                planContainer.setAttribute('data-pair-per-color', pairCheckbox.checked ? '1' : '0');
+            });
+        }
+    })();
+
     document.addEventListener('click', function(e) {
         var item = e.target.closest('.blason-item');
         if (!item) return;
@@ -149,6 +203,71 @@
                 if (listSouhaites.length && listSouhaites.indexOf(piquetArcher) === -1) {
                     var msg = 'Cet archer n\'a pas la couleur de piquet souhaitée pour respecter la règle du nombre pair dans ce peloton.\nSouhaité : ' + listSouhaites.map(function(c) { return c.charAt(0).toUpperCase() + c.slice(1); }).join(', ') + '.\n\nVoulez-vous quand même l\'affecter ?';
                     if (!confirm(msg)) return;
+                }
+            }
+
+            // Vérifier les règles de peloton côté client avant d'envoyer au serveur
+            var rules = getPelotonRules();
+            if (rules && listContainer) {
+                // Reconstituer la composition actuelle du peloton (archers déjà affectés + nouvel archer)
+                var items = document.querySelectorAll('.blason-item[data-concours-id="' + currentTarget.concoursId + '"][data-depart="' + currentTarget.depart + '"][data-peloton="' + currentTarget.peloton + '"]');
+                var clubCounts = {};
+                var colorCounts = {};
+                var totalArchers = 0;
+                items.forEach(function (li) {
+                    var licence = (li.getAttribute('data-numero-licence') || '').trim();
+                    var clubId = (li.getAttribute('data-id-club') || '').trim();
+                    var badge = li.querySelector('.badge');
+                    var color = badge ? (badge.textContent || '').trim().toLowerCase() : '';
+                    if (licence) {
+                        totalArchers++;
+                        if (clubId) {
+                            clubCounts[clubId] = (clubCounts[clubId] || 0) + 1;
+                        }
+                        if (color) {
+                            colorCounts[color] = (colorCounts[color] || 0) + 1;
+                        }
+                    }
+                });
+                // Ajouter le nouvel archer
+                totalArchers++;
+                var newClubId = (btn.getAttribute('data-id-club') || '').trim();
+                if (newClubId) {
+                    clubCounts[newClubId] = (clubCounts[newClubId] || 0) + 1;
+                }
+                if (piquetArcher) {
+                    colorCounts[piquetArcher] = (colorCounts[piquetArcher] || 0) + 1;
+                }
+
+                // Règle: max N archers du même club
+                var maxClub = rules.maxClubPerPeloton || 1;
+                for (var club in clubCounts) {
+                    if (Object.prototype.hasOwnProperty.call(clubCounts, club) && clubCounts[club] > maxClub) {
+                        alert('Règle peloton: maximum ' + maxClub + ' archer(s) du même club par peloton dépassé.');
+                        return;
+                    }
+                }
+
+                // Règle: max M couleurs de piquet différentes
+                var maxColors = rules.maxPiquetColors || 2;
+                var nbColors = Object.keys(colorCounts).length;
+                if (piquetArcher && !(piquetArcher in colorCounts) && nbColors > maxColors) {
+                    alert('Règle peloton: maximum ' + maxColors + ' couleurs de piquet différentes par peloton dépassé.');
+                    return;
+                }
+
+                // Règle: si >2 archers et parité par couleur activée
+                if (rules.pairPerColor && totalArchers > 2) {
+                    var impairColors = [];
+                    for (var c in colorCounts) {
+                        if (Object.prototype.hasOwnProperty.call(colorCounts, c) && (colorCounts[c] % 2 !== 0)) {
+                            impairColors.push(c.charAt(0).toUpperCase() + c.slice(1) + ' (' + colorCounts[c] + ')');
+                        }
+                    }
+                    if (impairColors.length > 0) {
+                        alert('Règle peloton: pour chaque couleur de piquet, le nombre d\'archers doit être pair.\nActuellement impair: ' + impairColors.join(', ') + '.');
+                        return;
+                    }
                 }
             }
             var payload = {
