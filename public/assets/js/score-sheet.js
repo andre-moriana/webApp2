@@ -658,6 +658,10 @@ async function prefillArchersFromConcours() {
             const result = await resp.json().catch(() => ({}));
             if (result.success && Array.isArray(result.data?.training_ids)) {
                 if (result.data.exported_to_concours === true) exportedToConcours = true;
+
+                const signedByIndex = Array.isArray(result.data.signed_by_index) ? result.data.signed_by_index : [];
+                const notesByIndex = Array.isArray(result.data.existing_notes_by_index) ? result.data.existing_notes_by_index : [];
+
                 result.data.training_ids.forEach((tid, i) => {
                     const sheetIndex = indicesWithLicence[i];
                     if (sheetIndex != null && userSheets[sheetIndex] && tid != null) {
@@ -667,6 +671,14 @@ async function prefillArchersFromConcours() {
                     const ends = result.data.existing_ends_by_index?.[i];
                     if (sheetIndex != null && userSheets[sheetIndex] && Array.isArray(ends) && ends.length > 0) {
                         applyTrainingToSheet(userSheets[sheetIndex], { ends: ends });
+                    }
+                    // Si le backend indique que cette feuille est déjà signée, le refléter immédiatement
+                    if (sheetIndex != null && userSheets[sheetIndex] && signedByIndex[i]) {
+                        userSheets[sheetIndex].signed = true;
+                    }
+                    // Si des notes existent déjà (venues du mobile, avec __SIGNED__ / __FEUILLE_MARQUE__), les stocker
+                    if (sheetIndex != null && userSheets[sheetIndex] && typeof notesByIndex[i] === 'string' && notesByIndex[i]) {
+                        userSheets[sheetIndex].notes = notesByIndex[i];
                     }
                 });
                 // Toujours charger les données complètes (notes, __SIGNED__) pour chaque session existante,
