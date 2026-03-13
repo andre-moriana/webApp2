@@ -3,23 +3,13 @@
 <link href="/public/assets/css/plan-cible.css" rel="stylesheet">
 <link href="/public/assets/css/plan-peloton.css" rel="stylesheet">
 
-<?php
-// Valeurs par défaut des règles (ancien comportement) :
-// - max 50% d'archers du même club par peloton (ex: 2 pour 4)
-// - max 2 couleurs de piquet différentes par peloton
-// - règle "pair par couleur" activée
-$defaultMaxSameClub = max(1, (int)floor($nombreArchersParPeloton / 2));
-$defaultMaxPiquetColors = 2;
-$defaultPairRuleEnabled = 1;
-?>
-
 <div class="container-fluid concours-create-container"
      data-can-edit-plan="<?= !empty($canEditPlan) ? '1' : '0' ?>"
      data-can-release-admin-dirigeant="<?= !empty($canReleaseAsAdminOrDirigeant) ? '1' : '0' ?>"
      data-current-user-licence="<?= htmlspecialchars($currentUserLicence ?? '') ?>"
-     data-max-club-per-peloton="<?= (int)$defaultMaxSameClub ?>"
-     data-max-piquet-colors="<?= (int)$defaultMaxPiquetColors ?>"
-     data-pair-per-color="<?= (int)$defaultPairRuleEnabled ?>">
+     data-max-club-per-peloton=""
+     data-max-piquet-colors=""
+     data-pair-per-color="">
 <h1>Plan de peloton - <?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?></h1>
 
 <?php if (isset($_SESSION['error'])): ?>
@@ -63,6 +53,27 @@ $nombreDepart = !empty($departsForCreate) ? count($departsForCreate) : $nombreDe
 $nombreArchersParPeloton = (int)($concours->nombre_archers_par_peloton ?? $concours->nombre_tireurs_par_cibles ?? 0) ?: 4;
 $concoursId = $concours->id ?? $concours->_id ?? null;
 $piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+
+// Valeurs par défaut des règles (ancien comportement) :
+// - max 50% d'archers du même club par peloton (ex: 2 pour 4)
+// - max 2 couleurs de piquet différentes par peloton
+// - règle "pair par couleur" activée
+$defaultMaxSameClub = max(1, (int)floor($nombreArchersParPeloton / 2));
+$defaultMaxPiquetColors = 2;
+$defaultPairRuleEnabled = 1;
+
+// Les stocker également sur le conteneur principal (attributs data-*)
+?>
+<script>
+  (function() {
+    var container = document.querySelector('.concours-create-container[data-can-edit-plan]');
+    if (!container) return;
+    container.setAttribute('data-max-club-per-peloton', '<?= (int)$defaultMaxSameClub ?>');
+    container.setAttribute('data-max-piquet-colors', '<?= (int)$defaultMaxPiquetColors ?>');
+    container.setAttribute('data-pair-per-color', '<?= (int)$defaultPairRuleEnabled ?>');
+  })();
+</script>
+<?php
 ?>
 
 <?php if (empty($plans)): ?>
