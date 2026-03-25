@@ -16,7 +16,7 @@ $canAccessUsersList = $isAdmin || PermissionHelper::can('users_list', 'view', $c
         </div>
         <div class="collapse show" id="nav-section-club">
             <ul class="nav-menu-links">
-                <li><a href="/clubs"><i class="fas fa-info-circle me-2"></i>Infos du club</a></li>
+                <li><a href="/club-feed"><i class="fas fa-info-circle me-2"></i>Infos du club</a></li>
                 <?php if ($canAccessUsersList): ?>
                 <li><a href="/users"><i class="fas fa-users me-2"></i>Liste des membres</a></li>
                 <?php endif; ?>
@@ -68,6 +68,7 @@ $canAccessUsersList = $isAdmin || PermissionHelper::can('users_list', 'view', $c
         </div>
         <div class="collapse show" id="nav-section-admin">
             <ul class="nav-menu-links">
+                <li><a href="/clubs"><i class="fas fa-info-circle me-2"></i>Fiche club</a></li>
                 <li><a href="/user-validation"><i class="fas fa-user-check me-2"></i>Validation des comptes</a></li>
                 <li><a href="/themes"><i class="fas fa-palette me-2"></i>Thèmes</a></li>
             </ul>
