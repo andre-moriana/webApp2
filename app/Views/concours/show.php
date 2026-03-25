@@ -601,6 +601,10 @@ $debugLicence = isset($_GET['debug_licence']);
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
+                            <label for="edit-email" class="form-label">Email</label>
+                            <input type="email" id="edit-email" class="form-control" placeholder="exemple@email.com" autocomplete="email" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label for="edit-saison" class="form-label">Saison</label>
                             <input type="text" id="edit-saison" class="form-control" placeholder="Ex: 2024-2025">
                         </div>

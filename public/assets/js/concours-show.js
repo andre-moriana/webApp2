@@ -324,6 +324,7 @@ window.editInscription = function(inscriptionId) {
             if (el) el.checked = !!checked;
         };
 
+        setVal('edit-email', inscription.email);
         setVal('edit-saison', inscription.saison);
         setVal('edit-type_certificat_medical', inscription.type_certificat_medical);
         setVal('edit-type_licence', inscription.type_licence);
@@ -451,6 +452,7 @@ function initEditInscriptionHandlers() {
         const departSelect = document.getElementById('edit-depart-select');
         const numeroDepart = departSelect?.value || (currentEditInscription?.numero_depart ?? '');
         const updateData = {
+            email: document.getElementById('edit-email')?.value || '',  
             saison: document.getElementById('edit-saison')?.value || '',
             type_certificat_medical: document.getElementById('edit-type_certificat_medical')?.value || '',
             type_licence: document.getElementById('edit-type_licence')?.value || '',
