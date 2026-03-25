@@ -2074,7 +2074,22 @@ window.editInscription = function(inscriptionId) {
             inscription = inscription.data;
         }
         currentEditInscription = inscription;
-
+console.log('inscription:', inscription);
+console.log('inscription.email:', inscription.email);
+console.log('inscription.saison:', inscription.saison);
+console.log('inscription.type_certificat_medical:', inscription.type_certificat_medical);
+console.log('inscription.type_licence:', inscription.type_licence);
+console.log('inscription.creation_renouvellement:', inscription.creation_renouvellement);
+console.log('inscription.numero_depart:', inscription.numero_depart);
+console.log('inscription.categorie_classement:', inscription.categorie_classement);
+console.log('inscription.catage:', inscription.catage);
+console.log('inscription.arme:', inscription.arme);
+console.log('inscription.mobilite_reduite:', inscription.mobilite_reduite);
+console.log('inscription.piquet:', inscription.piquet);
+console.log('inscription.distance:', inscription.distance);
+console.log('inscription.blason:', inscription.blason);
+console.log('inscription.duel:', inscription.duel);
+console.log('inscription.trispot:', inscription.trispot);
         const fillForm = () => {
             const setVal = (id, val) => {
                 const el = document.getElementById(id);
