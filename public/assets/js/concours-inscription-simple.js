@@ -1793,6 +1793,7 @@ function loadInscriptions() {
     .then(response => parseJsonResponse(response))
     .then(data => {
         allInscriptionsCache = getInscriptionsFromResponse(data);
+        console.log('allInscriptionsCache:', allInscriptionsCache);
         try {
             applyDepartFilterAndRender();
         } catch (err) {
