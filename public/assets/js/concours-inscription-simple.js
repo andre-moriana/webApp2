@@ -1691,8 +1691,9 @@ function submitInscription() {
                 }).catch(function() {});
             }
             alert(successes.length === 1
-                ? 'Inscription enregistrée avec succès.'
-                : successes.length + ' inscription(s) enregistrée(s) avec succès.');
+                ? 'Inscription enregistrée avec succès.\n Vous allez recevoir un email pour valider votre inscription dans quelques instants.'
+                : successes.length + ' inscription(s) enregistrée(s) avec succès.\n Vous allez recevoir un email pour valider votre inscription dans quelques instants.'
+                );
         } else {
             const alreadyRegistered = failures.filter(f => {
                 const m = (f.body?.error || f.body?.message || '').toLowerCase();
