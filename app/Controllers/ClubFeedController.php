@@ -205,6 +205,8 @@ class ClubFeedController
         $facebookConnected = false;
         $canManageClub = false;
         $clubPayload = null;
+        $events = [];
+        $concoursUpcoming = [];
 
         if (!$clubId) {
             try {
@@ -279,6 +281,81 @@ class ClubFeedController
                     $facebookGraphError = true;
                 }
             }
+        }
+
+        // Évènements + concours à venir (pour la sidebar de la page)
+        try {
+            $eventsResponse = $this->apiService->getEvents();
+            if (!empty($eventsResponse['success']) && isset($eventsResponse['data']['events']) && is_array($eventsResponse['data']['events'])) {
+                $rawEvents = $eventsResponse['data']['events'];
+
+                $today = new DateTime('today');
+                $upcoming = [];
+                foreach ($rawEvents as $e) {
+                    if (!is_array($e)) {
+                        continue;
+                    }
+                    // Champs possibles: date + time, startDate, start_date
+                    $dateStr = $e['date'] ?? $e['startDate'] ?? $e['start_date'] ?? null;
+                    $timeStr = $e['time'] ?? $e['startTime'] ?? $e['start_time'] ?? null;
+                    $dt = null;
+                    if (is_string($dateStr) && $dateStr !== '') {
+                        $candidate = trim($dateStr . ' ' . (is_string($timeStr) ? $timeStr : ''));
+                        $dt = date_create($candidate) ?: date_create($dateStr);
+                    }
+                    if ($dt instanceof DateTime) {
+                        if ($dt < $today) {
+                            continue;
+                        }
+                        $e['_sort_dt'] = $dt->format('c');
+                    } else {
+                        // Si on ne sait pas dater, on garde quand même mais en fin
+                        $e['_sort_dt'] = '9999-12-31T00:00:00Z';
+                    }
+                    $upcoming[] = $e;
+                }
+
+                usort($upcoming, function ($a, $b) {
+                    return strcmp((string)($a['_sort_dt'] ?? ''), (string)($b['_sort_dt'] ?? ''));
+                });
+                $events = array_slice($upcoming, 0, 6);
+            }
+        } catch (Throwable $e) {
+            error_log('ClubFeedController events: ' . $e->getMessage());
+        }
+
+        try {
+            $concoursResponse = $this->apiService->getConcours();
+            $payload = $this->apiService->unwrapData($concoursResponse);
+            if (!empty($concoursResponse['success']) && is_array($payload)) {
+                $today = new DateTime('today');
+                $upcoming = [];
+                foreach ($payload as $c) {
+                    if (!is_array($c)) {
+                        continue;
+                    }
+                    $dateStr = $c['date'] ?? $c['startDate'] ?? $c['start_date'] ?? $c['dateStart'] ?? $c['date_start'] ?? null;
+                    $dt = null;
+                    if (is_string($dateStr) && $dateStr !== '') {
+                        $dt = date_create($dateStr);
+                    }
+                    if ($dt instanceof DateTime) {
+                        if ($dt < $today) {
+                            continue;
+                        }
+                        $c['_sort_dt'] = $dt->format('c');
+                    } else {
+                        $c['_sort_dt'] = '9999-12-31T00:00:00Z';
+                    }
+                    $upcoming[] = $c;
+                }
+                usort($upcoming, function ($a, $b) {
+                    return strcmp((string)($a['_sort_dt'] ?? ''), (string)($b['_sort_dt'] ?? ''));
+                });
+                $concoursUpcoming = array_slice($upcoming, 0, 6);
+            }
+        } catch (Throwable $e) {
+            error_log('ClubFeedController concours: ' . $e->getMessage());
         }
 
         $clubFeedError = $_SESSION['club_feed_error'] ?? '';
