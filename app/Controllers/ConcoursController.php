@@ -2281,7 +2281,79 @@ public function inscription($concoursId)
         }
 
         $doc = $_GET['doc'] ?? null;
-        $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement'];
+        $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement', 'commandes-buvette'];
+
+        // Commandes buvette : charger les réservations et agréger par produit
+        $commandesBuvetteGroupes = [];
+        if ($doc === 'commandes-buvette') {
+            try {
+                $resResponse = $this->apiService->makeRequest("concours/{$concoursId}/buvette/reservations", 'GET');
+                $reservationsRaw = $this->apiService->unwrapData($resResponse);
+                if (is_array($reservationsRaw) && isset($reservationsRaw['data']) && is_array($reservationsRaw['data'])) {
+                    $reservationsRaw = $reservationsRaw['data'];
+                }
+                $reservations = is_array($reservationsRaw) ? array_values(array_filter($reservationsRaw, function ($r) {
+                    return is_array($r);
+                })) : [];
+
+                foreach ($reservations as $r) {
+                    $libelle = trim((string)($r['libelle'] ?? ''));
+                    if ($libelle === '') $libelle = '—';
+                    $unite = trim((string)($r['unite'] ?? ''));
+                    $prix = ($r['prix'] ?? null);
+                    $prix = $prix !== null && $prix !== '' ? (float)$prix : null;
+                    $qty = (int)($r['quantite'] ?? 0);
+                    if ($qty <= 0) continue;
+
+                    $userNom = trim((string)($r['user_nom'] ?? $r['nom'] ?? ''));
+                    $email = trim((string)($r['email'] ?? ''));
+                    $inscriptionLabel = $userNom !== '' ? $userNom : '—';
+                    if ($email !== '') $inscriptionLabel .= ' — ' . $email;
+
+                    $key = mb_strtolower($libelle) . '||' . mb_strtolower($unite) . '||' . ($prix === null ? '' : (string)$prix);
+                    if (!isset($commandesBuvetteGroupes[$key])) {
+                        $commandesBuvetteGroupes[$key] = [
+                            'libelle' => $libelle,
+                            'unite' => $unite,
+                            'prix' => $prix,
+                            'total_qty' => 0,
+                            'total_amount' => 0.0,
+                            'lignes' => []
+                        ];
+                    }
+                    $commandesBuvetteGroupes[$key]['total_qty'] += $qty;
+                    if ($prix !== null) {
+                        $commandesBuvetteGroupes[$key]['total_amount'] += $prix * $qty;
+                    }
+                    $commandesBuvetteGroupes[$key]['lignes'][] = [
+                        'inscription' => $inscriptionLabel,
+                        'quantite' => $qty
+                    ];
+                }
+
+                // Trier les produits par libellé (insensible à la casse), puis unité, puis prix
+                uasort($commandesBuvetteGroupes, function ($a, $b) {
+                    $cmp = strcasecmp((string)($a['libelle'] ?? ''), (string)($b['libelle'] ?? ''));
+                    if ($cmp !== 0) return $cmp;
+                    $cmp = strcasecmp((string)($a['unite'] ?? ''), (string)($b['unite'] ?? ''));
+                    if ($cmp !== 0) return $cmp;
+                    $pa = $a['prix'] ?? null;
+                    $pb = $b['prix'] ?? null;
+                    if ($pa === $pb) return 0;
+                    if ($pa === null) return 1;
+                    if ($pb === null) return -1;
+                    return ($pa < $pb) ? -1 : 1;
+                });
+                foreach ($commandesBuvetteGroupes as &$g) {
+                    usort($g['lignes'], function ($x, $y) {
+                        return strcasecmp((string)($x['inscription'] ?? ''), (string)($y['inscription'] ?? ''));
+                    });
+                }
+                unset($g);
+            } catch (Exception $e) {
+                $commandesBuvetteGroupes = [];
+            }
+        }
 
         // Filtre par départ et tri pour liste des participants
         $departFilterListe = $_GET['depart'] ?? '';

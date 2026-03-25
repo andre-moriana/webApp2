@@ -84,6 +84,20 @@ $baseUrl = '/concours/' . (int)$concoursId . '/editions';
                 </div>
             </div>
         </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-coffee text-secondary me-2"></i>Commandes buvette
+                    </h5>
+                    <p class="card-text text-muted small">Synthèse des commandes buvette, triées par produit.</p>
+                    <a href="<?= $baseUrl ?>?doc=commandes-buvette" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-external-link-alt me-1"></i>Ouvrir</a>
+                    <a href="<?= $baseUrl ?>?doc=commandes-buvette" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="fas fa-print me-1"></i>Imprimer</a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="mt-4">

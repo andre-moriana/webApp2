@@ -3,7 +3,7 @@
  * Document à imprimer - avec en-tête
  * En-tête : logo club organisateur (gauche) | titre compétition (centre)
  * Fin de document : infos (nb archers, club, arbitres, entraîneurs)
- * $doc = avis | feuilles-marques | liste-participants | scores | classement
+ * $doc = avis | feuilles-marques | liste-participants | scores | classement | commandes-buvette
  */
 $concoursId = $concours->id ?? $concours->_id ?? null;
 $departsRaw = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
@@ -13,7 +13,8 @@ $docTitles = [
     'feuilles-marques' => 'Feuilles de marques',
     'liste-participants' => 'Liste des participants',
     'scores' => 'Scores',
-    'classement' => 'Classement'
+    'classement' => 'Classement',
+    'commandes-buvette' => 'Commandes buvette'
 ];
 $docTitle = $docTitles[$doc] ?? 'Document';
 $version = defined('APP_VERSION') ? APP_VERSION : ($_ENV['APP_VERSION'] ?? '1.0');
@@ -587,6 +588,9 @@ switch ($doc) {
         break;
     case 'classement':
         include __DIR__ . '/editions/classement.php';
+        break;
+    case 'commandes-buvette':
+        include __DIR__ . '/editions/commandes-buvette.php';
         break;
     default:
         echo '<p>Document inconnu.</p>';
