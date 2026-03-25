@@ -176,6 +176,13 @@ class Router {
         $this->addRoute("GET", "/api/messages/{groupId}/history", "ApiController@getGroupMessages");
         $this->addRoute("POST", "/api/messages/{groupId}/send", "ApiController@sendGroupMessage");
         
+        // Routes API internes - actualités (fil interne /club-feed)
+        $this->addRoute("GET", "/api/club-news", "ClubNewsApiController@index");
+        $this->addRoute("POST", "/api/club-news", "ClubNewsApiController@store");
+        $this->addRoute("PUT", "/api/club-news/{id}", "ClubNewsApiController@update");
+        $this->addRoute("DELETE", "/api/club-news/{id}", "ClubNewsApiController@destroy");
+        $this->addRoute("GET", "/api/club-news/attachment/{storedFilename}", "ClubNewsApiController@downloadAttachment");
+
         // Routes API pour les formulaires (proxy vers API externe)
         $this->addRoute("GET", "/api/topics/{topicId}/messages", "ApiController@getTopicMessages");
         $this->addRoute("POST", "/api/topics/{topicId}/messages", "ApiController@sendTopicMessage");
