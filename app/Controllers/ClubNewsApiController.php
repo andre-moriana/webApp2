@@ -73,13 +73,13 @@ class ClubNewsApiController
         if (!empty($a['attachment']) && is_array($a['attachment']) && !empty($a['id'])) {
             $mime = (string)($a['attachment']['mimeType'] ?? '');
             $name = strtolower((string)($a['attachment']['originalName'] ?? ''));
-            $isImage = str_starts_with($mime, 'image/')
-                || str_ends_with($name, '.jpg')
-                || str_ends_with($name, '.jpeg')
-                || str_ends_with($name, '.png')
-                || str_ends_with($name, '.gif')
-                || str_ends_with($name, '.webp')
-                || str_ends_with($name, '.bmp');
+            $isImage = $this->startsWith($mime, 'image/')
+                || $this->endsWith($name, '.jpg')
+                || $this->endsWith($name, '.jpeg')
+                || $this->endsWith($name, '.png')
+                || $this->endsWith($name, '.gif')
+                || $this->endsWith($name, '.webp')
+                || $this->endsWith($name, '.bmp');
 
             $a['attachment']['url'] = $isImage
                 ? '/club-news/image/' . rawurlencode((string)$a['id'])
@@ -97,6 +97,26 @@ class ClubNewsApiController
             }
         }
         return null;
+    }
+
+    private function startsWith(string $haystack, string $needle): bool
+    {
+        if ($needle === '') {
+            return true;
+        }
+        return substr($haystack, 0, strlen($needle)) === $needle;
+    }
+
+    private function endsWith(string $haystack, string $needle): bool
+    {
+        if ($needle === '') {
+            return true;
+        }
+        $len = strlen($needle);
+        if ($len > strlen($haystack)) {
+            return false;
+        }
+        return substr($haystack, -$len) === $needle;
     }
 
     public function index(): void
@@ -358,13 +378,13 @@ class ClubNewsApiController
 
         $mime = (string)($found['attachment']['mimeType'] ?? '');
         $name = strtolower((string)($found['attachment']['originalName'] ?? ''));
-        $isImage = str_starts_with($mime, 'image/')
-            || str_ends_with($name, '.jpg')
-            || str_ends_with($name, '.jpeg')
-            || str_ends_with($name, '.png')
-            || str_ends_with($name, '.gif')
-            || str_ends_with($name, '.webp')
-            || str_ends_with($name, '.bmp');
+        $isImage = $this->startsWith($mime, 'image/')
+            || $this->endsWith($name, '.jpg')
+            || $this->endsWith($name, '.jpeg')
+            || $this->endsWith($name, '.png')
+            || $this->endsWith($name, '.gif')
+            || $this->endsWith($name, '.webp')
+            || $this->endsWith($name, '.bmp');
         if (!$isImage) {
             http_response_code(404);
             echo 'Not found';
