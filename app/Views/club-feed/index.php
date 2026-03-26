@@ -188,8 +188,8 @@ $concoursUpcoming = isset($concoursUpcoming) && is_array($concoursUpcoming) ? $c
                             <?php foreach ($concoursUpcoming as $c): ?>
                                 <?php
                                 $cid = $c['id'] ?? $c['_id'] ?? '';
-                                $cTitle = $c['title'] ?? $c['name'] ?? 'Concours';
-                                $cDate = $c['date'] ?? $c['startDate'] ?? $c['start_date'] ?? '';
+                                $cTitle = (string)$c['titre_competition'];
+                                $cDate = (string)$c['date_debut'];
                                 ?>
                                 <div class="list-group-item px-0">
                                     <div class="fw-semibold"><?php echo htmlspecialchars((string)$cTitle); ?></div>
