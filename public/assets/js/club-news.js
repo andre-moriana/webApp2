@@ -168,10 +168,17 @@
 
       const likesCount = Number(a.likes_count || 0);
       const userLiked = !!a.user_liked;
+      const targetArrowIcon = `
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"></circle>
+          <circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2"></circle>
+          <path d="M12 12 L18.2 5.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
+          <path d="M18.2 5.8 L16.1 6.1 L17.9 7.9 Z" fill="currentColor"></path>
+        </svg>`;
       const likeBtn = a.id
-        ? `<button class="btn btn-sm ${userLiked ? "btn-warning" : "btn-outline-warning"}" data-action="like" data-id="${escapeHtml(a.id)}" title="J'aime">
-             <span class="me-1"><i class="fas fa-bullseye"></i><i class="fas fa-location-arrow" style="margin-left:-10px;font-size:11px;"></i></span>
-             ${likesCount}
+        ? `<button class="btn btn-sm ${userLiked ? "btn-danger" : "btn-outline-danger"} d-inline-flex align-items-center gap-1" data-action="like" data-id="${escapeHtml(a.id)}" title="J'aime">
+             <span class="d-inline-flex align-items-center">${targetArrowIcon}</span>
+             <span>${likesCount}</span>
            </button>`
         : "";
 
