@@ -182,6 +182,8 @@ class Router {
         $this->addRoute("PUT", "/api/club-news/{id}", "ClubNewsApiController@update");
         $this->addRoute("DELETE", "/api/club-news/{id}", "ClubNewsApiController@destroy");
         $this->addRoute("POST", "/api/club-news/{id}/comments", "ClubNewsApiController@comment");
+        $this->addRoute("PUT", "/api/club-news/{id}/comments/{commentId}", "ClubNewsApiController@updateComment");
+        $this->addRoute("DELETE", "/api/club-news/{id}/comments/{commentId}", "ClubNewsApiController@deleteComment");
         $this->addRoute("POST", "/api/club-news/{id}/likes", "ClubNewsApiController@like");
         $this->addRoute("POST", "/api/club-news/comments/{commentId}/report", "ClubNewsApiController@reportComment");
         // Infos club: API interne (les PJ sont servies via /messages/image|attachment déjà existants)

@@ -271,7 +271,8 @@ $concoursUpcoming = isset($concoursUpcoming) && is_array($concoursUpcoming) ? $c
 <script>
 window.clubNewsPage = {
     clubId: <?php echo json_encode((string)$clubId); ?>,
-    canManage: <?php echo $canManageClub ? 'true' : 'false'; ?>
+    canManage: <?php echo $canManageClub ? 'true' : 'false'; ?>,
+    currentUserId: <?php echo json_encode((string)(($_SESSION['user']['id'] ?? ''))); ?>
 };
 </script>
 <?php $clubNewsJsPath = __DIR__ . '/../../../public/assets/js/club-news.js'; ?>

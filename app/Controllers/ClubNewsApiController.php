@@ -212,6 +212,44 @@ class ClubNewsApiController
         $this->sendJson(is_array($data) ? $data : ['success' => true]);
     }
 
+    public function updateComment(string $id, string $commentId): void
+    {
+        SessionGuard::checkAjax();
+        $payload = json_decode(file_get_contents('php://input') ?: '', true);
+        if (!is_array($payload)) {
+            $this->sendJson(['success' => false, 'message' => 'JSON invalide'], 400);
+        }
+        $resp = $this->apiService->makeRequest("club-news/{$id}/comments/{$commentId}", 'PUT', $payload);
+        if (empty($resp['success'])) {
+            $this->sendJson([
+                'success' => false,
+                'message' => $this->getApiErrorMessage($resp, 'Erreur API club-news')
+            ], $resp['status_code'] ?? 500);
+        }
+        $data = $this->apiService->unwrapData($resp);
+        if (is_array($data) && isset($data['article']) && is_array($data['article'])) {
+            $data['article'] = $this->normalizeArticleForClient($data['article']);
+        }
+        $this->sendJson(is_array($data) ? $data : ['success' => true]);
+    }
+
+    public function deleteComment(string $id, string $commentId): void
+    {
+        SessionGuard::checkAjax();
+        $resp = $this->apiService->makeRequest("club-news/{$id}/comments/{$commentId}", 'DELETE');
+        if (empty($resp['success'])) {
+            $this->sendJson([
+                'success' => false,
+                'message' => $this->getApiErrorMessage($resp, 'Erreur API club-news')
+            ], $resp['status_code'] ?? 500);
+        }
+        $data = $this->apiService->unwrapData($resp);
+        if (is_array($data) && isset($data['article']) && is_array($data['article'])) {
+            $data['article'] = $this->normalizeArticleForClient($data['article']);
+        }
+        $this->sendJson(is_array($data) ? $data : ['success' => true]);
+    }
+
     public function reportComment(string $commentId): void
     {
         SessionGuard::checkAjax();

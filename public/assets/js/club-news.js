@@ -36,6 +36,7 @@
 
   const cfg = window.clubNewsPage || {};
   const canManage = !!cfg.canManage;
+  const currentUserId = String(cfg.currentUserId || "");
 
   function ensureLikeHoverStyle() {
     if (document.getElementById("club-news-like-hover-style")) return;
@@ -218,16 +219,30 @@
       const commentsHtml = comments.length
         ? comments
             .map(
-              (c) =>
-                `<div class="small border rounded p-2 mb-2">
+              (c) => {
+                const canEditComment = !!c && (canManage || (currentUserId !== "" && String(c.user_id || "") === currentUserId));
+                return `<div class="small border rounded p-2 mb-2">
                   <div class="d-flex align-items-center justify-content-between gap-2">
                     <div class="fw-semibold">${escapeHtml(c.user_name || "Utilisateur")}</div>
-                    <button class="btn btn-link btn-sm p-0 text-danger text-decoration-none" data-action="report-comment" data-comment-id="${escapeHtml(c.id || "")}" data-comment-user-id="${escapeHtml(c.user_id || "")}" data-comment-user-name="${escapeHtml(c.user_name || "")}">
-                      <i class="fas fa-flag me-1"></i>Signaler
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                      ${
+                        canEditComment
+                          ? `<button class="btn btn-link btn-sm p-0 text-primary text-decoration-none" data-action="edit-comment" data-id="${escapeHtml(a.id || "")}" data-comment-id="${escapeHtml(c.id || "")}" data-comment-content="${escapeHtml(c.content || "")}">
+                               <i class="fas fa-pen me-1"></i>Éditer
+                             </button>
+                             <button class="btn btn-link btn-sm p-0 text-danger text-decoration-none" data-action="delete-comment" data-id="${escapeHtml(a.id || "")}" data-comment-id="${escapeHtml(c.id || "")}">
+                               <i class="fas fa-trash me-1"></i>Supprimer
+                             </button>`
+                          : ""
+                      }
+                      <button class="btn btn-link btn-sm p-0 text-danger text-decoration-none" data-action="report-comment" data-comment-id="${escapeHtml(c.id || "")}" data-comment-user-id="${escapeHtml(c.user_id || "")}" data-comment-user-name="${escapeHtml(c.user_name || "")}">
+                        <i class="fas fa-flag me-1"></i>Signaler
+                      </button>
+                    </div>
                   </div>
                   <div>${escapeHtml(c.content || "").replace(/\n/g, "<br>")}</div>
-                </div>`
+                </div>`;
+              }
             )
             .join("")
         : `<div class="text-muted small">Aucun commentaire.</div>`;
@@ -487,6 +502,41 @@
     }
   }
 
+  async function editComment(articleId, commentId, currentContent) {
+    hideAlert();
+    if (!articleId || !commentId) return;
+    const updatedContent = window.prompt("Modifier le commentaire", String(currentContent || ""));
+    if (updatedContent === null) return;
+    const txt = String(updatedContent || "").trim();
+    if (!txt) return;
+    try {
+      await apiFetch(`/api/club-news/${encodeURIComponent(articleId)}/comments/${encodeURIComponent(commentId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: txt }),
+      });
+      showAlert("success", "Commentaire modifié.");
+      await load();
+    } catch (e) {
+      showAlert("danger", `Modification du commentaire impossible. ${e.message || ""}`.trim());
+    }
+  }
+
+  async function deleteComment(articleId, commentId) {
+    hideAlert();
+    if (!articleId || !commentId) return;
+    if (!window.confirm("Supprimer ce commentaire ?")) return;
+    try {
+      await apiFetch(`/api/club-news/${encodeURIComponent(articleId)}/comments/${encodeURIComponent(commentId)}`, {
+        method: "DELETE",
+      });
+      showAlert("success", "Commentaire supprimé.");
+      await load();
+    } catch (e) {
+      showAlert("danger", `Suppression du commentaire impossible. ${e.message || ""}`.trim());
+    }
+  }
+
   function findArticleById(id) {
     return (
       state.articlesPublic.find((a) => a && a.id === id) ||
@@ -524,6 +574,19 @@
         reportComment(commentId, commentUserId, commentUserName);
         return;
       }
+      if (action === "edit-comment") {
+        const articleId = btn.getAttribute("data-id");
+        const commentId = btn.getAttribute("data-comment-id");
+        const commentContent = btn.getAttribute("data-comment-content");
+        editComment(articleId, commentId, commentContent);
+        return;
+      }
+      if (action === "delete-comment") {
+        const articleId = btn.getAttribute("data-id");
+        const commentId = btn.getAttribute("data-comment-id");
+        deleteComment(articleId, commentId);
+        return;
+      }
       const id = btn.getAttribute("data-id");
       if (!id) return;
       if (action === "edit") {
@@ -550,6 +613,19 @@
         const commentUserId = btn.getAttribute("data-comment-user-id");
         const commentUserName = btn.getAttribute("data-comment-user-name");
         reportComment(commentId, commentUserId, commentUserName);
+        return;
+      }
+      if (action === "edit-comment") {
+        const articleId = btn.getAttribute("data-id");
+        const commentId = btn.getAttribute("data-comment-id");
+        const commentContent = btn.getAttribute("data-comment-content");
+        editComment(articleId, commentId, commentContent);
+        return;
+      }
+      if (action === "delete-comment") {
+        const articleId = btn.getAttribute("data-id");
+        const commentId = btn.getAttribute("data-comment-id");
+        deleteComment(articleId, commentId);
         return;
       }
       const id = btn.getAttribute("data-id");
