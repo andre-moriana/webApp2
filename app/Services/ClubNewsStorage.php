@@ -229,12 +229,45 @@ class ClubNewsStorage
         $storedFilename = bin2hex(random_bytes(16)) . ($ext ? '.' . strtolower($ext) : '');
         $dest = $this->attachmentsDir . '/' . $storedFilename;
 
-        if (!move_uploaded_file($tmpName, $dest)) {
-            throw new \RuntimeException('Impossible d\'enregistrer la pièce jointe (droits dossier attachments).');
+        // Même esprit "robuste" que le chat: on tente plusieurs méthodes d'écriture
+        $saved = false;
+        if (is_uploaded_file($tmpName)) {
+            $saved = move_uploaded_file($tmpName, $dest);
+        }
+        if (!$saved && is_readable($tmpName)) {
+            $saved = @copy($tmpName, $dest);
+        }
+        if (!$saved && is_readable($tmpName)) {
+            $in = @fopen($tmpName, 'rb');
+            $out = @fopen($dest, 'wb');
+            if ($in && $out) {
+                stream_copy_to_stream($in, $out);
+                fclose($in);
+                fclose($out);
+                $saved = is_file($dest) && filesize($dest) > 0;
+            } else {
+                if ($in) {
+                    fclose($in);
+                }
+                if ($out) {
+                    fclose($out);
+                }
+            }
         }
 
+        if (!$saved) {
+            throw new \RuntimeException(
+                'Impossible d\'enregistrer la pièce jointe. target=' . $dest . ' tmp=' . $tmpName
+            );
+        }
+        @chmod($dest, 0664);
+
         return [
+            // Structure compatible avec le chat de groupe
+            'filename' => $storedFilename,
             'storedFilename' => $storedFilename,
+            'path' => '/club-news/attachment/' . rawurlencode($storedFilename),
+            'url' => '/club-news/attachment/' . rawurlencode($storedFilename),
             'originalName' => (string)$originalName,
             'mimeType' => (string)$mimeType,
             'size' => $size,
