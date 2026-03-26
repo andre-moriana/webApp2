@@ -5,14 +5,18 @@ class ClubNewsStorage
     private string $baseDir;
     private string $dataFile;
     private string $attachmentsDir;
+    private string $attachmentsWebBase;
 
     public function __construct()
     {
-        // Stockage hors public/ (confidentiel pour les posts "club")
+        // Articles: stockage hors public/ (confidentiel pour les posts "club")
         $projectRoot = dirname(__DIR__, 2);
         $this->baseDir = $projectRoot . '/app/Storage/club-news';
         $this->dataFile = $this->baseDir . '/news.json';
-        $this->attachmentsDir = $this->baseDir . '/attachments';
+        // Pièces jointes: même approche que le chat => stockées sous /public/uploads
+        // (rend l'affichage simple via <img src="/uploads/...">)
+        $this->attachmentsDir = $projectRoot . '/public/uploads/club-news';
+        $this->attachmentsWebBase = '/uploads/club-news';
 
         $this->ensureDirs();
         $this->ensureDataFile();
@@ -21,17 +25,24 @@ class ClubNewsStorage
     private function ensureDirs(): void
     {
         if (!is_dir($this->baseDir)) {
-            @mkdir($this->baseDir, 0770, true);
+            if (!mkdir($this->baseDir, 0770, true) && !is_dir($this->baseDir)) {
+                throw new \RuntimeException('Impossible de créer le dossier de stockage des actualités.');
+            }
         }
         if (!is_dir($this->attachmentsDir)) {
-            @mkdir($this->attachmentsDir, 0770, true);
+            if (!mkdir($this->attachmentsDir, 0770, true) && !is_dir($this->attachmentsDir)) {
+                throw new \RuntimeException('Impossible de créer le dossier des pièces jointes (/public/uploads/club-news).');
+            }
         }
     }
 
     private function ensureDataFile(): void
     {
         if (!is_file($this->dataFile)) {
-            @file_put_contents($this->dataFile, json_encode(['articles' => []], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            $ok = file_put_contents($this->dataFile, json_encode(['articles' => []], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            if ($ok === false) {
+                throw new \RuntimeException('Impossible de créer le fichier de stockage des actualités.');
+            }
         }
     }
 
@@ -222,8 +233,8 @@ class ClubNewsStorage
         $storedFilename = bin2hex(random_bytes(16)) . ($ext ? '.' . strtolower($ext) : '');
         $dest = $this->attachmentsDir . '/' . $storedFilename;
 
-        if (!@move_uploaded_file($tmpName, $dest)) {
-            throw new \RuntimeException('Impossible d\'enregistrer la pièce jointe.');
+        if (!move_uploaded_file($tmpName, $dest)) {
+            throw new \RuntimeException('Impossible d\'enregistrer la pièce jointe (droits /public/uploads/club-news).');
         }
 
         return [
@@ -231,6 +242,7 @@ class ClubNewsStorage
             'originalName' => (string)$originalName,
             'mimeType' => (string)$mimeType,
             'size' => $size,
+            'url' => $this->attachmentsWebBase . '/' . rawurlencode($storedFilename),
         ];
     }
 
