@@ -72,9 +72,8 @@ class ClubNewsApiController
     {
         if (!empty($a['attachment']) && is_array($a['attachment']) && !empty($a['attachment']['storedFilename'])) {
             $stored = (string)$a['attachment']['storedFilename'];
-            // Même pattern que le chat: URL "publique" stable, servie par une route contrôleur
-            // (ici on intercepte /uploads/club-news/... via le routeur).
-            $a['attachment']['url'] = '/uploads/club-news/' . rawurlencode($stored);
+            // URL servie par la route applicative (évite les conflits de répertoires statiques)
+            $a['attachment']['url'] = '/club-news/attachment/' . rawurlencode($stored);
         }
         return $a;
     }
