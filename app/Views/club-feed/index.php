@@ -260,4 +260,5 @@ window.clubNewsPage = {
     canManage: <?php echo $canManageClub ? 'true' : 'false'; ?>
 };
 </script>
-<script src="/public/assets/js/club-news.js"></script>
+<?php $clubNewsJsPath = __DIR__ . '/../../../public/assets/js/club-news.js'; ?>
+<script src="/public/assets/js/club-news.js?v=<?php echo file_exists($clubNewsJsPath) ? (string)filemtime($clubNewsJsPath) : (string)time(); ?>"></script>
