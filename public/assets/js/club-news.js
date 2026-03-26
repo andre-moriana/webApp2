@@ -36,6 +36,35 @@
   const cfg = window.clubNewsPage || {};
   const canManage = !!cfg.canManage;
 
+  function ensureLikeHoverStyle() {
+    if (document.getElementById("club-news-like-hover-style")) return;
+    const style = document.createElement("style");
+    style.id = "club-news-like-hover-style";
+    style.textContent = `
+      .club-news-like-btn { position: relative; overflow: visible; }
+      .club-news-like-label {
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 6px);
+        transform: translateX(-50%);
+        background: rgba(33, 37, 41, 0.95);
+        color: #fff;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 11px;
+        line-height: 1.2;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .15s ease-in-out;
+      }
+      .club-news-like-btn:hover .club-news-like-label,
+      .club-news-like-btn:focus .club-news-like-label,
+      .club-news-like-btn:focus-visible .club-news-like-label { opacity: 1; }
+    `;
+    document.head.appendChild(style);
+  }
+
   function showAlert(type, message) {
     if (!els.alert) return;
     els.alert.className = `alert alert-${type}`;
@@ -176,7 +205,8 @@
           <path d="M18.2 5.8 L16.1 6.1 L17.9 7.9 Z" fill="currentColor"></path>
         </svg>`;
       const likeBtn = a.id
-        ? `<button class="btn btn-sm ${userLiked ? "btn-danger" : "btn-outline-danger"} d-inline-flex align-items-center gap-1" data-action="like" data-id="${escapeHtml(a.id)}" title="J'aime">
+        ? `<button class="btn btn-sm ${userLiked ? "btn-danger" : "btn-outline-danger"} d-inline-flex align-items-center gap-1 club-news-like-btn" data-action="like" data-id="${escapeHtml(a.id)}" aria-label="J'aime">
+             <span class="club-news-like-label">J'aime</span>
              <span class="d-inline-flex align-items-center">${targetArrowIcon}</span>
              <span>${likesCount}</span>
            </button>`
@@ -484,6 +514,7 @@
   if (els.editSaveBtn) els.editSaveBtn.addEventListener("click", () => saveEdit());
 
   // Init
+  ensureLikeHoverStyle();
   load();
 })();
 
