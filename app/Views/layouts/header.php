@@ -1,3 +1,43 @@
+<?php
+$topbarLogoSrc = '/public/assets/images/arc-training-logo.png';
+$topbarLogoAlt = 'Arc Training';
+
+$sessionUser = $_SESSION['user'] ?? [];
+$clubLogoRaw = $sessionUser['club_logo'] ?? $sessionUser['clubLogo'] ?? null;
+$clubName = $sessionUser['club_name'] ?? $sessionUser['clubName'] ?? 'Club';
+$clubIdForLogo = $sessionUser['clubId'] ?? $sessionUser['club_id'] ?? null;
+
+if ((!is_string($clubLogoRaw) || trim($clubLogoRaw) === '') && !empty($clubIdForLogo)) {
+    try {
+        require_once __DIR__ . '/../../Services/ApiService.php';
+        $apiServiceHeader = new ApiService();
+        $clubResponseHeader = $apiServiceHeader->makeRequest('clubs/' . urlencode((string)$clubIdForLogo), 'GET');
+        $clubPayloadHeader = $apiServiceHeader->unwrapData($clubResponseHeader);
+        if (is_array($clubPayloadHeader)) {
+            $clubLogoRaw = $clubPayloadHeader['logo'] ?? $clubPayloadHeader['club_logo'] ?? $clubPayloadHeader['clubLogo'] ?? null;
+            $clubName = $clubPayloadHeader['name'] ?? $clubPayloadHeader['club_name'] ?? $clubName;
+            if (is_string($clubLogoRaw) && trim($clubLogoRaw) !== '') {
+                $_SESSION['user']['club_logo'] = $clubLogoRaw;
+            }
+            if (is_string($clubName) && trim($clubName) !== '') {
+                $_SESSION['user']['club_name'] = $clubName;
+            }
+        }
+    } catch (Throwable $e) {
+        // Fallback silencieux vers le logo application
+    }
+}
+
+if (is_string($clubLogoRaw) && trim($clubLogoRaw) !== '') {
+    $clubLogoRaw = trim($clubLogoRaw);
+    if (strpos($clubLogoRaw, 'http://') === 0 || strpos($clubLogoRaw, 'https://') === 0) {
+        $topbarLogoSrc = $clubLogoRaw;
+    } else {
+        $topbarLogoSrc = 'https://api.arctraining.fr' . (strpos($clubLogoRaw, '/') === 0 ? '' : '/') . $clubLogoRaw;
+    }
+    $topbarLogoAlt = is_string($clubName) && trim($clubName) !== '' ? trim($clubName) : 'Logo du club';
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -40,7 +80,7 @@
     <header class="app-topbar">
         <div class="app-topbar-inner">
             <a class="app-topbar-logo" href="/dashboard" aria-label="Tableau de bord">
-                <img src="/public/assets/images/arc-training-logo.png" alt="Arc Training" class="app-topbar-logo-img">
+                <img src="<?php echo htmlspecialchars($topbarLogoSrc); ?>" alt="<?php echo htmlspecialchars($topbarLogoAlt); ?>" class="app-topbar-logo-img">
             </a>
             <div class="app-topbar-actions">
                 <a href="/dashboard" class="app-topbar-link d-md-none" title="Tableau de bord">
