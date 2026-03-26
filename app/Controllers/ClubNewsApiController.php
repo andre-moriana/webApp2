@@ -2,17 +2,17 @@
 
 require_once 'app/Middleware/SessionGuard.php';
 require_once 'app/Services/PermissionService.php';
-require_once 'app/Services/ClubNewsStorage.php';
+require_once 'app/Services/ApiService.php';
 
 class ClubNewsApiController
 {
     private PermissionService $permissionService;
-    private ClubNewsStorage $storage;
+    private ApiService $apiService;
 
     public function __construct()
     {
         $this->permissionService = new PermissionService();
-        $this->storage = new ClubNewsStorage();
+        $this->apiService = new ApiService();
     }
 
     private function sendJson($data, int $statusCode = 200): void
@@ -70,31 +70,67 @@ class ClubNewsApiController
 
     private function normalizeArticleForClient(array $a): array
     {
+        // On applique exactement la logique du chat: on garde l'URL originale (API)
+        // puis on construit une URL proxy WebApp2 /messages/image|attachment/... avec ?url=...
         if (!empty($a['attachment']) && is_array($a['attachment']) && !empty($a['id'])) {
-            $mime = (string)($a['attachment']['mimeType'] ?? '');
-            $name = strtolower((string)($a['attachment']['originalName'] ?? ''));
+            $att = $a['attachment'];
+            $originalUrl = $att['url'] ?? $att['path'] ?? null;
+            if (!is_string($originalUrl) || $originalUrl === '') {
+                if (!empty($att['storedFilename'])) {
+                    $originalUrl = '/uploads/messages/' . $att['storedFilename'];
+                } elseif (!empty($att['filename'])) {
+                    $originalUrl = '/uploads/messages/' . $att['filename'];
+                } else {
+                    $originalUrl = '';
+                }
+            }
+
+            $mime = (string)($att['mimeType'] ?? '');
+            $name = strtolower((string)($att['originalName'] ?? $att['filename'] ?? ''));
             $isImage = $this->startsWith($mime, 'image/')
                 || $this->endsWith($name, '.jpg')
                 || $this->endsWith($name, '.jpeg')
                 || $this->endsWith($name, '.png')
                 || $this->endsWith($name, '.gif')
                 || $this->endsWith($name, '.webp')
-                || $this->endsWith($name, '.bmp');
+                || $this->endsWith($name, '.bmp')
+                || $this->endsWith($name, '.svg');
+            $isPdf = $mime === 'application/pdf' || $this->endsWith($name, '.pdf');
 
-            $a['attachment']['url'] = $isImage
-                ? '/club-news/image/' . rawurlencode((string)$a['id'])
-                : '/club-news/attachment/' . rawurlencode((string)$a['id']);
+            if ($originalUrl !== '') {
+                if ($isImage) {
+                    $att['url'] = '/messages/image/' . rawurlencode((string)$a['id']) . '?url=' . urlencode($originalUrl);
+                } elseif ($isPdf) {
+                    $att['url'] = '/messages/attachment/' . rawurlencode((string)$a['id']) . '?inline=1&url=' . urlencode($originalUrl);
+                } else {
+                    $att['url'] = '/messages/attachment/' . rawurlencode((string)$a['id']) . '?url=' . urlencode($originalUrl);
+                }
+            }
+
+            $a['attachment'] = $att;
         }
         return $a;
     }
 
-    private function findArticleById(string $id): ?array
+    private function getClubGroupId(string $clubId): ?string
     {
-        $all = $this->storage->listAll();
-        foreach ($all as $a) {
-            if (($a['id'] ?? '') === $id) {
-                return $a;
+        try {
+            $groupsResponse = $this->apiService->makeRequest('groups/list', 'GET');
+            if (empty($groupsResponse['success']) || !is_array($groupsResponse['data'] ?? null)) {
+                return null;
             }
+            foreach ($groupsResponse['data'] as $g) {
+                if (!is_array($g)) {
+                    continue;
+                }
+                $gid = $g['id'] ?? $g['_id'] ?? null;
+                $gClubId = $g['club_id'] ?? $g['clubId'] ?? null;
+                if ($gid !== null && $gClubId !== null && (string)$gClubId === (string)$clubId) {
+                    return (string)$gid;
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log('ClubNewsApiController getClubGroupId error: ' . $e->getMessage());
         }
         return null;
     }
@@ -123,25 +159,54 @@ class ClubNewsApiController
     {
         SessionGuard::checkAjax();
         $user = $this->getUser();
+        $clubId = $this->getUserClubId($user);
+        if ($clubId === null) {
+            $this->sendJson(['success' => true, 'public' => [], 'club' => []]);
+        }
 
-        $all = $this->storage->listAll();
-        $public = [];
+        // Même méthode que le chat: on lit l'historique du groupe du club côté API backend.
+        $groupId = $this->getClubGroupId($clubId);
+        if ($groupId === null) {
+            $this->sendJson(['success' => true, 'public' => [], 'club' => []]);
+        }
+
+        $response = $this->apiService->makeRequest('messages/' . $groupId . '/history', 'GET');
+        $messages = [];
+        if (!empty($response['success']) && is_array($response['data'] ?? null)) {
+            $messages = $response['data'];
+        }
+
         $club = [];
-
-        foreach ($all as $a) {
-            $aud = $a['audience'] ?? 'public';
-            if ($aud === 'club') {
-                if ($this->canSeeClubArticle($user, $a)) {
-                    $club[] = $this->normalizeArticleForClient($a);
-                }
-            } else {
-                $public[] = $this->normalizeArticleForClient($a);
+        foreach ($messages as $m) {
+            if (!is_array($m)) {
+                continue;
             }
+            $id = (string)($m['_id'] ?? $m['id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+            $attachment = null;
+            if (isset($m['attachment']) && is_array($m['attachment'])) {
+                $attachment = $m['attachment'];
+            }
+            $article = [
+                'id' => $id,
+                'club_id' => $clubId,
+                'audience' => 'club',
+                'title' => '',
+                'content' => (string)($m['content'] ?? ''),
+                'created_at' => $m['createdAt'] ?? $m['created_at'] ?? null,
+                'updated_at' => $m['updatedAt'] ?? $m['updated_at'] ?? null,
+                'author_user_id' => (string)($m['user_id'] ?? $m['userId'] ?? ''),
+                'author_name' => (string)($m['author_name'] ?? $m['authorName'] ?? $m['user_name'] ?? $m['userName'] ?? ''),
+                'attachment' => $attachment,
+            ];
+            $club[] = $this->normalizeArticleForClient($article);
         }
 
         $this->sendJson([
             'success' => true,
-            'public' => $public,
+            'public' => [],
             'club' => $club,
         ]);
     }
@@ -155,18 +220,15 @@ class ClubNewsApiController
         }
 
         $clubId = $this->getUserClubId($user);
-        if ($clubId === null && !$this->permissionService->isAdmin($user)) {
+        if ($clubId === null) {
             $this->sendJson(['success' => false, 'message' => 'Club manquant en session.'], 400);
         }
 
-        $audience = $_POST['audience'] ?? 'public';
         $title = $_POST['title'] ?? '';
         $content = $_POST['content'] ?? '';
 
-        $audience = in_array($audience, ['public', 'club'], true) ? $audience : 'public';
         $content = is_string($content) ? trim($content) : '';
 
-        $attachment = null;
         $hasFile = !empty($_FILES['attachment']) && is_array($_FILES['attachment']) && ($_FILES['attachment']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
         if ($content === '' && !$hasFile) {
             $this->sendJson(['success' => false, 'message' => 'Le post doit contenir du texte ou une pièce jointe.'], 422);
@@ -181,34 +243,38 @@ class ClubNewsApiController
                 $this->sendJson(['success' => false, 'message' => 'Pièce jointe trop volumineuse (max 10 Mo).'], 422);
             }
         }
-        try {
-            if ($hasFile) {
-                $attachment = $this->storage->storeUploadedAttachment($_FILES['attachment']);
-            }
-
-            $article = $this->storage->create([
-                'club_id' => $clubId ?? '',
-                'club_name' => $user['clubName'] ?? $user['club_name'] ?? null,
-                'audience' => $audience,
-                'title' => is_string($title) ? trim($title) : '',
-                'content' => $content,
-                'author_user_id' => $user['id'] ?? $user['_id'] ?? '',
-                'author_name' => $user['name'] ?? $user['fullName'] ?? $user['fullname'] ?? $user['email'] ?? '',
-                'attachment' => $attachment,
-            ]);
-        } catch (\Throwable $e) {
-            error_log('ClubNewsApiController store error: ' . $e->getMessage());
-            $this->sendJson([
-                'success' => false,
-                'message' => 'Impossible d\'enregistrer le post. Vérifier les droits d\'écriture serveur.',
-                'error' => $e->getMessage(),
-            ], 500);
+        $groupId = $this->getClubGroupId($clubId);
+        if ($groupId === null) {
+            $this->sendJson(['success' => false, 'message' => 'Groupe du club introuvable.'], 500);
         }
 
-        $this->sendJson([
-            'success' => true,
-            'article' => $this->normalizeArticleForClient($article),
-        ], 201);
+        $finalContent = '';
+        $t = is_string($title) ? trim($title) : '';
+        if ($t !== '') {
+            $finalContent .= $t . "\n";
+        }
+        $finalContent .= $content;
+
+        try {
+            $postData = [
+                'content' => $finalContent,
+                'group_id' => (int)$groupId,
+            ];
+            if ($hasFile) {
+                $file = $_FILES['attachment'];
+                $postData['attachment'] = new CURLFile($file['tmp_name'], $file['type'], $file['name']);
+            }
+            $resp = $this->apiService->makeRequestWithFile("messages/{$groupId}/send", 'POST', $postData);
+            if (empty($resp['success'])) {
+                $this->sendJson(['success' => false, 'message' => $resp['message'] ?? 'Erreur envoi vers API'], $resp['status_code'] ?? 500);
+            }
+            // Recharger l'historique et renvoyer le dernier comme "article"
+            $this->sendJson(['success' => true], 201);
+        } catch (\Throwable $e) {
+            error_log('ClubNewsApiController store (proxy) error: ' . $e->getMessage());
+            $this->sendJson(['success' => false, 'message' => 'Erreur lors de l’envoi vers l’API.', 'error' => $e->getMessage()], 500);
+        }
+
     }
 
     public function update(string $id): void
@@ -219,45 +285,24 @@ class ClubNewsApiController
             $this->sendJson(['success' => false, 'message' => 'Non autorisé.'], 403);
         }
 
-        $all = $this->storage->listAll();
-        $existing = null;
-        foreach ($all as $a) {
-            if (($a['id'] ?? '') === $id) {
-                $existing = $a;
-                break;
-            }
-        }
-        if ($existing === null) {
-            $this->sendJson(['success' => false, 'message' => 'Actualité introuvable.'], 404);
-        }
-        if (!$this->canMutateArticle($user, $existing)) {
-            $this->sendJson(['success' => false, 'message' => 'Non autorisé.'], 403);
-        }
-
         $raw = file_get_contents('php://input') ?: '';
         $payload = json_decode($raw, true);
         if (!is_array($payload)) {
             $this->sendJson(['success' => false, 'message' => 'JSON invalide.'], 400);
         }
 
-        $audience = $payload['audience'] ?? null;
-        if ($audience !== null && !in_array($audience, ['public', 'club'], true)) {
-            $this->sendJson(['success' => false, 'message' => 'Audience invalide.'], 422);
+        $newContent = (string)($payload['content'] ?? '');
+        if (trim($newContent) === '') {
+            $this->sendJson(['success' => false, 'message' => 'Le contenu est requis.'], 422);
         }
 
-        $updated = $this->storage->update($id, [
-            'title' => $payload['title'] ?? '',
-            'content' => $payload['content'] ?? '',
-            'audience' => $audience ?? ($existing['audience'] ?? 'public'),
-        ]);
-
-        if ($updated === null) {
-            $this->sendJson(['success' => false, 'message' => 'Actualité introuvable.'], 404);
+        $resp = $this->apiService->makeRequest("messages/{$id}", "PUT", ['content' => $newContent]);
+        if (empty($resp['success'])) {
+            $this->sendJson(['success' => false, 'message' => $resp['message'] ?? 'Erreur'], $resp['status_code'] ?? 500);
         }
 
         $this->sendJson([
             'success' => true,
-            'article' => $this->normalizeArticleForClient($updated),
         ]);
     }
 
@@ -269,142 +314,12 @@ class ClubNewsApiController
             $this->sendJson(['success' => false, 'message' => 'Non autorisé.'], 403);
         }
 
-        $all = $this->storage->listAll();
-        $existing = null;
-        foreach ($all as $a) {
-            if (($a['id'] ?? '') === $id) {
-                $existing = $a;
-                break;
-            }
-        }
-        if ($existing === null) {
-            $this->sendJson(['success' => false, 'message' => 'Actualité introuvable.'], 404);
-        }
-        if (!$this->canMutateArticle($user, $existing)) {
-            $this->sendJson(['success' => false, 'message' => 'Non autorisé.'], 403);
-        }
-
-        $deleted = $this->storage->delete($id);
-        if ($deleted === null) {
-            $this->sendJson(['success' => false, 'message' => 'Actualité introuvable.'], 404);
-        }
-
-        // Supprimer la pièce jointe associée (si existante)
-        if (!empty($deleted['attachment']['storedFilename'])) {
-            $path = $this->storage->getAttachmentPath((string)$deleted['attachment']['storedFilename']);
-            if (is_file($path)) {
-                @unlink($path);
-            }
+        $resp = $this->apiService->makeRequest("messages/{$id}", "DELETE");
+        if (empty($resp['success'])) {
+            $this->sendJson(['success' => false, 'message' => $resp['message'] ?? 'Erreur'], $resp['status_code'] ?? 500);
         }
 
         $this->sendJson(['success' => true]);
-    }
-
-    public function downloadArticleAttachment(string $id): void
-    {
-        SessionGuard::check();
-        $user = $this->getUser();
-
-        $id = trim((string)$id);
-        if ($id === '') {
-            http_response_code(404);
-            echo 'Not found';
-            exit;
-        }
-
-        $found = $this->findArticleById($id);
-        if ($found === null) {
-            http_response_code(404);
-            echo 'Not found';
-            exit;
-        }
-        if (empty($found['attachment']['storedFilename'])) {
-            http_response_code(404);
-            echo 'Not found';
-            exit;
-        }
-
-        $aud = $found['audience'] ?? 'public';
-        if ($aud === 'club' && !$this->canSeeClubArticle($user, $found)) {
-            http_response_code(403);
-            echo 'Forbidden';
-            exit;
-        }
-
-        $storedFilename = (string)$found['attachment']['storedFilename'];
-        $path = $this->storage->getAttachmentPath($storedFilename);
-        if (!is_file($path)) {
-            http_response_code(404);
-            echo 'Not found';
-            exit;
-        }
-
-        $mime = $found['attachment']['mimeType'] ?? 'application/octet-stream';
-        $original = $found['attachment']['originalName'] ?? $storedFilename;
-
-        header('Content-Type: ' . $mime);
-        header('Content-Length: ' . filesize($path));
-        header('Cache-Control: public, max-age=3600');
-        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
-        header('Content-Disposition: inline; filename="' . str_replace('"', '', (string)$original) . '"');
-        readfile($path);
-        exit;
-    }
-
-    public function getArticleImage(string $id): void
-    {
-        SessionGuard::check();
-        $user = $this->getUser();
-        $id = trim((string)$id);
-        if ($id === '') {
-            http_response_code(404);
-            echo 'Not found';
-            exit;
-        }
-
-        $found = $this->findArticleById($id);
-        if ($found === null || empty($found['attachment']['storedFilename'])) {
-            http_response_code(404);
-            echo 'Not found';
-            exit;
-        }
-
-        $aud = $found['audience'] ?? 'public';
-        if ($aud === 'club' && !$this->canSeeClubArticle($user, $found)) {
-            http_response_code(403);
-            echo 'Forbidden';
-            exit;
-        }
-
-        $mime = (string)($found['attachment']['mimeType'] ?? '');
-        $name = strtolower((string)($found['attachment']['originalName'] ?? ''));
-        $isImage = $this->startsWith($mime, 'image/')
-            || $this->endsWith($name, '.jpg')
-            || $this->endsWith($name, '.jpeg')
-            || $this->endsWith($name, '.png')
-            || $this->endsWith($name, '.gif')
-            || $this->endsWith($name, '.webp')
-            || $this->endsWith($name, '.bmp');
-        if (!$isImage) {
-            http_response_code(404);
-            echo 'Not found';
-            exit;
-        }
-
-        $storedFilename = (string)$found['attachment']['storedFilename'];
-        $path = $this->storage->getAttachmentPath($storedFilename);
-        if (!is_file($path)) {
-            http_response_code(404);
-            echo 'Not found';
-            exit;
-        }
-
-        header('Content-Type: ' . ($mime !== '' ? $mime : 'image/jpeg'));
-        header('Content-Length: ' . filesize($path));
-        header('Cache-Control: public, max-age=3600');
-        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
-        readfile($path);
-        exit;
     }
 }
 
