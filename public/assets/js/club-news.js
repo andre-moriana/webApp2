@@ -208,7 +208,7 @@
         </svg>`;
       const likeBtn = a.id
         ? `<button class="btn btn-sm ${userLiked ? "btn-danger" : "btn-outline-danger"} d-inline-flex align-items-center gap-1 club-news-like-btn" data-action="like" data-id="${escapeHtml(a.id)}" aria-label="J'aime">
-             <span class="club-news-like-label">J'aime</span>
+             <span class="club-news-like-label">${userLiked ? "J'aime plus" : "J'aime"}</span>
              <span class="d-inline-flex align-items-center">${targetArrowIcon}</span>
              <span>${likesCount}</span>
            </button>`
