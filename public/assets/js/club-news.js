@@ -29,6 +29,7 @@
     editTitle: document.getElementById("club-news-edit-title"),
     editAudience: document.getElementById("club-news-edit-audience"),
     editContent: document.getElementById("club-news-edit-content"),
+    editCommentsEnabled: document.getElementById("club-news-edit-comments-enabled"),
     editSaveBtn: document.getElementById("club-news-edit-save-btn"),
     editSpinner: document.getElementById("club-news-edit-spinner"),
   };
@@ -213,6 +214,7 @@
         : "";
 
       const comments = Array.isArray(a.comments) ? a.comments : [];
+      const commentsEnabled = a.comments_enabled !== false;
       const commentsHtml = comments.length
         ? comments
             .map(
@@ -225,11 +227,14 @@
             .join("")
         : `<div class="text-muted small">Aucun commentaire.</div>`;
 
-      const commentForm = canManage && a.id
+      const commentForm = canManage && a.id && commentsEnabled
         ? `<div class="input-group input-group-sm mt-2">
              <input type="text" class="form-control" data-comment-input-id="${escapeHtml(a.id)}" placeholder="Ajouter un commentaire...">
              <button class="btn btn-outline-primary" data-action="comment" data-id="${escapeHtml(a.id)}">Commenter</button>
            </div>`
+        : "";
+      const commentsDisabledNote = !commentsEnabled
+        ? `<div class="text-muted small mt-2">Les commentaires sont désactivés pour ce post.</div>`
         : "";
 
       const title = a.title ? `<h3 class="h6 mb-2">${escapeHtml(a.title)}</h3>` : "";
@@ -254,6 +259,7 @@
               </div>
               <div class="mt-2">${commentsHtml}</div>
               ${commentForm}
+              ${commentsDisabledNote}
             </div>
             ${actions ? `<div class="flex-shrink-0">${actions}</div>` : ""}
           </div>
@@ -352,6 +358,9 @@
     els.editTitle.value = article.title || "";
     els.editContent.value = article.content || "";
     els.editAudience.value = article.audience || "public";
+    if (els.editCommentsEnabled) {
+      els.editCommentsEnabled.value = article.comments_enabled === false ? "0" : "1";
+    }
 
     if (window.bootstrap && window.bootstrap.Modal) {
       const modal = window.bootstrap.Modal.getOrCreateInstance(els.editModalEl);
@@ -371,6 +380,7 @@
         title: (els.editTitle && els.editTitle.value) || "",
         content: (els.editContent && els.editContent.value) || "",
         audience: (els.editAudience && els.editAudience.value) || "public",
+        comments_enabled: !els.editCommentsEnabled || els.editCommentsEnabled.value !== "0",
       };
       await apiFetch(`/api/club-news/${encodeURIComponent(id)}`, {
         method: "PUT",

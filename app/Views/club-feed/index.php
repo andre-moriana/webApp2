@@ -77,6 +77,13 @@ $concoursUpcoming = isset($concoursUpcoming) && is_array($concoursUpcoming) ? $c
                                 <label class="form-label" for="club-news-attachment">Pièce jointe (optionnel)</label>
                                 <input class="form-control" type="file" id="club-news-attachment" name="attachment">
                             </div>
+                            <div class="col-12 col-lg-4">
+                                <label class="form-label" for="club-news-comments-enabled">Commentaires</label>
+                                <select class="form-select" id="club-news-comments-enabled" name="comments_enabled">
+                                    <option value="1" selected>Autorisés</option>
+                                    <option value="0">Désactivés</option>
+                                </select>
+                            </div>
                             <div class="col-12 col-lg-4 d-flex align-items-end justify-content-end gap-2">
                                 <button type="button" class="btn btn-outline-secondary" id="club-news-reset-btn">
                                     Réinitialiser
@@ -237,6 +244,13 @@ $concoursUpcoming = isset($concoursUpcoming) && is_array($concoursUpcoming) ? $c
                     <div class="col-12">
                         <label class="form-label" for="club-news-edit-content">Contenu</label>
                         <textarea class="form-control" id="club-news-edit-content" rows="5" required></textarea>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <label class="form-label" for="club-news-edit-comments-enabled">Commentaires</label>
+                        <select class="form-select" id="club-news-edit-comments-enabled" required>
+                            <option value="1">Autorisés</option>
+                            <option value="0">Désactivés</option>
+                        </select>
                     </div>
                 </form>
                 <div class="text-muted small">
