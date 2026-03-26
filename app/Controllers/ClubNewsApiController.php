@@ -120,6 +120,7 @@ class ClubNewsApiController
                 'title' => $_POST['title'] ?? '',
                 'content' => $_POST['content'] ?? '',
                 'audience' => $_POST['audience'] ?? 'club',
+                'comments_enabled' => $_POST['comments_enabled'] ?? '1',
             ];
             $file = $_FILES['attachment'] ?? null;
             $resp = $this->apiService->makeRequestWithFile('club-news', 'POST', $data, $file);
@@ -208,6 +209,43 @@ class ClubNewsApiController
         if (is_array($data) && isset($data['article']) && is_array($data['article'])) {
             $data['article'] = $this->normalizeArticleForClient($data['article']);
         }
+        $this->sendJson(is_array($data) ? $data : ['success' => true]);
+    }
+
+    public function reportComment(string $commentId): void
+    {
+        SessionGuard::checkAjax();
+        $payload = json_decode(file_get_contents('php://input') ?: '', true);
+        if (!is_array($payload)) {
+            $this->sendJson(['success' => false, 'message' => 'JSON invalide'], 400);
+        }
+
+        $reason = (string)($payload['reason'] ?? 'other');
+        $description = trim((string)($payload['description'] ?? 'Signalement d\'un commentaire des infos club.'));
+        if ($description === '') {
+            $description = 'Signalement d\'un commentaire des infos club.';
+        }
+
+        $reportPayload = [
+            'reason' => $reason,
+            'description' => $description,
+            'messageId' => is_numeric($commentId) ? (int)$commentId : null,
+            'contentType' => 'club_news_comment',
+            'reportedUserId' => isset($payload['reportedUserId']) && is_numeric((string)$payload['reportedUserId'])
+                ? (int)$payload['reportedUserId']
+                : null,
+            'reportedUserName' => (string)($payload['reportedUserName'] ?? ''),
+        ];
+
+        $resp = $this->apiService->makeRequest('reports', 'POST', $reportPayload);
+        if (empty($resp['success'])) {
+            $this->sendJson([
+                'success' => false,
+                'message' => $this->getApiErrorMessage($resp, 'Erreur API reports')
+            ], $resp['status_code'] ?? 500);
+        }
+
+        $data = $this->apiService->unwrapData($resp);
         $this->sendJson(is_array($data) ? $data : ['success' => true]);
     }
 }

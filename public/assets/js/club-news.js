@@ -220,7 +220,12 @@
             .map(
               (c) =>
                 `<div class="small border rounded p-2 mb-2">
-                  <div class="fw-semibold">${escapeHtml(c.user_name || "Utilisateur")}</div>
+                  <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="fw-semibold">${escapeHtml(c.user_name || "Utilisateur")}</div>
+                    <button class="btn btn-link btn-sm p-0 text-danger text-decoration-none" data-action="report-comment" data-comment-id="${escapeHtml(c.id || "")}" data-comment-user-id="${escapeHtml(c.user_id || "")}" data-comment-user-name="${escapeHtml(c.user_name || "")}">
+                      <i class="fas fa-flag me-1"></i>Signaler
+                    </button>
+                  </div>
                   <div>${escapeHtml(c.content || "").replace(/\n/g, "<br>")}</div>
                 </div>`
             )
@@ -454,6 +459,34 @@
     }
   }
 
+  async function reportComment(commentId, reportedUserId, reportedUserName) {
+    hideAlert();
+    if (!commentId) return;
+    const reason = window.prompt(
+      "Raison du signalement (harassment, spam, inappropriate_content, violence, hate_speech, fake_news, other)",
+      "other"
+    );
+    if (reason === null) return;
+    const description = window.prompt("Description du signalement", "Commentaire inapproprié");
+    if (description === null) return;
+
+    try {
+      await apiFetch(`/api/club-news/comments/${encodeURIComponent(commentId)}/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reason: String(reason || "other").trim() || "other",
+          description: String(description || "").trim(),
+          reportedUserId: reportedUserId || null,
+          reportedUserName: reportedUserName || "",
+        }),
+      });
+      showAlert("success", "Commentaire signalé.");
+    } catch (e) {
+      showAlert("danger", `Signalement impossible. ${e.message || ""}`.trim());
+    }
+  }
+
   function findArticleById(id) {
     return (
       state.articlesPublic.find((a) => a && a.id === id) ||
@@ -496,6 +529,11 @@
       } else if (action === "comment") {
         const input = els.listPublic.querySelector(`input[data-comment-input-id="${CSS.escape(id)}"]`);
         addComment(id, input ? input.value : "");
+      } else if (action === "report-comment") {
+        const commentId = btn.getAttribute("data-comment-id");
+        const commentUserId = btn.getAttribute("data-comment-user-id");
+        const commentUserName = btn.getAttribute("data-comment-user-name");
+        reportComment(commentId, commentUserId, commentUserName);
       }
     });
   }
@@ -517,6 +555,11 @@
       } else if (action === "comment") {
         const input = els.listClub.querySelector(`input[data-comment-input-id="${CSS.escape(id)}"]`);
         addComment(id, input ? input.value : "");
+      } else if (action === "report-comment") {
+        const commentId = btn.getAttribute("data-comment-id");
+        const commentUserId = btn.getAttribute("data-comment-user-id");
+        const commentUserName = btn.getAttribute("data-comment-user-name");
+        reportComment(commentId, commentUserId, commentUserName);
       }
     });
   }
