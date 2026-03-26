@@ -181,9 +181,8 @@ class Router {
         $this->addRoute("POST", "/api/club-news", "ClubNewsApiController@store");
         $this->addRoute("PUT", "/api/club-news/{id}", "ClubNewsApiController@update");
         $this->addRoute("DELETE", "/api/club-news/{id}", "ClubNewsApiController@destroy");
-        $this->addRoute("GET", "/api/club-news/attachment/{storedFilename}", "ClubNewsApiController@downloadAttachment");
-        // Route sans /api/ (comme le chat) pour <img src=...>
-        $this->addRoute("GET", "/club-news/attachment/{storedFilename}", "ClubNewsApiController@downloadAttachment");
+        // Une seule route de fichiers joints pour les infos club
+        $this->addRoute("GET", "/uploads/club-news/{storedFilename}", "ClubNewsApiController@downloadAttachment");
 
         // Routes API pour les formulaires (proxy vers API externe)
         $this->addRoute("GET", "/api/topics/{topicId}/messages", "ApiController@getTopicMessages");

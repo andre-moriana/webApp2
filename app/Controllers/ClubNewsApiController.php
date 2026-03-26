@@ -71,9 +71,10 @@ class ClubNewsApiController
     private function normalizeArticleForClient(array $a): array
     {
         if (!empty($a['attachment']) && is_array($a['attachment']) && !empty($a['attachment']['storedFilename'])) {
-            // Comme le chat: URL servie par une route contrôleur (pas via /public/uploads)
             $stored = (string)$a['attachment']['storedFilename'];
-            $a['attachment']['url'] = '/club-news/attachment/' . rawurlencode($stored);
+            // Même pattern que le chat: URL "publique" stable, servie par une route contrôleur
+            // (ici on intercepte /uploads/club-news/... via le routeur).
+            $a['attachment']['url'] = '/uploads/club-news/' . rawurlencode($stored);
         }
         return $a;
     }
