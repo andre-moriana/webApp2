@@ -70,12 +70,33 @@ class ClubNewsApiController
 
     private function normalizeArticleForClient(array $a): array
     {
-        if (!empty($a['attachment']) && is_array($a['attachment']) && !empty($a['attachment']['storedFilename'])) {
-            $stored = (string)$a['attachment']['storedFilename'];
-            // URL servie par la route applicative (évite les conflits de répertoires statiques)
-            $a['attachment']['url'] = '/club-news/attachment/' . rawurlencode($stored);
+        if (!empty($a['attachment']) && is_array($a['attachment']) && !empty($a['id'])) {
+            $mime = (string)($a['attachment']['mimeType'] ?? '');
+            $name = strtolower((string)($a['attachment']['originalName'] ?? ''));
+            $isImage = str_starts_with($mime, 'image/')
+                || str_ends_with($name, '.jpg')
+                || str_ends_with($name, '.jpeg')
+                || str_ends_with($name, '.png')
+                || str_ends_with($name, '.gif')
+                || str_ends_with($name, '.webp')
+                || str_ends_with($name, '.bmp');
+
+            $a['attachment']['url'] = $isImage
+                ? '/club-news/image/' . rawurlencode((string)$a['id'])
+                : '/club-news/attachment/' . rawurlencode((string)$a['id']);
         }
         return $a;
+    }
+
+    private function findArticleById(string $id): ?array
+    {
+        $all = $this->storage->listAll();
+        foreach ($all as $a) {
+            if (($a['id'] ?? '') === $id) {
+                return $a;
+            }
+        }
+        return null;
     }
 
     public function index(): void
@@ -259,28 +280,25 @@ class ClubNewsApiController
         $this->sendJson(['success' => true]);
     }
 
-    public function downloadAttachment(string $storedFilename): void
+    public function downloadArticleAttachment(string $id): void
     {
         SessionGuard::check();
         $user = $this->getUser();
 
-        $storedFilename = basename((string)$storedFilename);
-        if ($storedFilename === '') {
+        $id = trim((string)$id);
+        if ($id === '') {
             http_response_code(404);
             echo 'Not found';
             exit;
         }
 
-        // Vérifier que l'utilisateur a le droit de télécharger (PJ attachée à un article visible)
-        $all = $this->storage->listAll();
-        $found = null;
-        foreach ($all as $a) {
-            if (!empty($a['attachment']['storedFilename']) && (string)$a['attachment']['storedFilename'] === $storedFilename) {
-                $found = $a;
-                break;
-            }
-        }
+        $found = $this->findArticleById($id);
         if ($found === null) {
+            http_response_code(404);
+            echo 'Not found';
+            exit;
+        }
+        if (empty($found['attachment']['storedFilename'])) {
             http_response_code(404);
             echo 'Not found';
             exit;
@@ -293,6 +311,7 @@ class ClubNewsApiController
             exit;
         }
 
+        $storedFilename = (string)$found['attachment']['storedFilename'];
         $path = $this->storage->getAttachmentPath($storedFilename);
         if (!is_file($path)) {
             http_response_code(404);
@@ -308,6 +327,62 @@ class ClubNewsApiController
         header('Cache-Control: public, max-age=3600');
         header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
         header('Content-Disposition: inline; filename="' . str_replace('"', '', (string)$original) . '"');
+        readfile($path);
+        exit;
+    }
+
+    public function getArticleImage(string $id): void
+    {
+        SessionGuard::check();
+        $user = $this->getUser();
+        $id = trim((string)$id);
+        if ($id === '') {
+            http_response_code(404);
+            echo 'Not found';
+            exit;
+        }
+
+        $found = $this->findArticleById($id);
+        if ($found === null || empty($found['attachment']['storedFilename'])) {
+            http_response_code(404);
+            echo 'Not found';
+            exit;
+        }
+
+        $aud = $found['audience'] ?? 'public';
+        if ($aud === 'club' && !$this->canSeeClubArticle($user, $found)) {
+            http_response_code(403);
+            echo 'Forbidden';
+            exit;
+        }
+
+        $mime = (string)($found['attachment']['mimeType'] ?? '');
+        $name = strtolower((string)($found['attachment']['originalName'] ?? ''));
+        $isImage = str_starts_with($mime, 'image/')
+            || str_ends_with($name, '.jpg')
+            || str_ends_with($name, '.jpeg')
+            || str_ends_with($name, '.png')
+            || str_ends_with($name, '.gif')
+            || str_ends_with($name, '.webp')
+            || str_ends_with($name, '.bmp');
+        if (!$isImage) {
+            http_response_code(404);
+            echo 'Not found';
+            exit;
+        }
+
+        $storedFilename = (string)$found['attachment']['storedFilename'];
+        $path = $this->storage->getAttachmentPath($storedFilename);
+        if (!is_file($path)) {
+            http_response_code(404);
+            echo 'Not found';
+            exit;
+        }
+
+        header('Content-Type: ' . ($mime !== '' ? $mime : 'image/jpeg'));
+        header('Content-Length: ' . filesize($path));
+        header('Cache-Control: public, max-age=3600');
+        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
         readfile($path);
         exit;
     }
