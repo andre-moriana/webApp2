@@ -234,11 +234,19 @@ class ClubFeedController
                     $facebookUrl = is_string($facebookUrl) ? trim($facebookUrl) : '';
                     $facebookDisabled = !empty($payload['facebookDisabled']);
                     $facebookConnected = !empty($payload['facebookConnected']);
-                    $userRole = $user['role'] ?? null;
+                    $userRole = strtolower(trim((string)($user['role'] ?? '')));
                     $userClubId = $user['clubId'] ?? $user['club_id'] ?? null;
                     $isAdmin = !empty($user['is_admin']);
-                    $canManageClub = $isAdmin
-                        || ($userClubId !== null && $userClubId !== '' && ((string)$userClubId === (string)($payload['id'] ?? '') || (string)$userClubId === (string)($payload['nameShort'] ?? $payload['name_short'] ?? '')));
+                    $isDirigeant = ($userRole === 'dirigeant');
+                    $isSameClub = $userClubId !== null
+                        && $userClubId !== ''
+                        && (
+                            (string)$userClubId === (string)($payload['id'] ?? '')
+                            || (string)$userClubId === (string)($payload['nameShort'] ?? $payload['name_short'] ?? '')
+                            || (string)$userClubId === (string)$clubId
+                        );
+                    // Gestion des posts réservée à Admin ou Dirigeant du club concerné
+                    $canManageClub = $isAdmin || ($isDirigeant && $isSameClub);
                 }
             } catch (Exception $e) {
                 error_log('ClubFeedController: ' . $e->getMessage());

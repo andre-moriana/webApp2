@@ -1,11 +1,5 @@
 <?php
-$facebookDisabled = isset($facebookDisabled) && $facebookDisabled;
 $clubName = $clubName ?? 'votre club';
-$fbHref = $fbHref ?? '';
-$facebookPosts = $facebookPosts ?? [];
-$facebookFeedConfigured = isset($facebookFeedConfigured) ? (bool)$facebookFeedConfigured : false;
-$facebookGraphError = isset($facebookGraphError) ? (bool)$facebookGraphError : false;
-$facebookConnected = isset($facebookConnected) ? (bool)$facebookConnected : false;
 $canManageClub = isset($canManageClub) ? (bool)$canManageClub : false;
 $clubId = $clubId ?? '';
 $clubFeedError = $clubFeedError ?? '';
