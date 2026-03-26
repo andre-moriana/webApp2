@@ -111,7 +111,16 @@
       const attUrl = att && att.url ? String(att.url) : "";
       const attName = att && att.originalName ? String(att.originalName) : "";
       const attMime = att && att.mimeType ? String(att.mimeType) : "";
-      const isImage = attUrl && attMime.startsWith("image/");
+      const attLower = attName.toLowerCase();
+      const isImageByExt =
+        attUrl &&
+        (attLower.endsWith(".jpg") ||
+          attLower.endsWith(".jpeg") ||
+          attLower.endsWith(".png") ||
+          attLower.endsWith(".gif") ||
+          attLower.endsWith(".webp") ||
+          attLower.endsWith(".bmp"));
+      const isImage = attUrl && (attMime.startsWith("image/") || isImageByExt);
       const isPdf = attUrl && (attMime === "application/pdf" || attName.toLowerCase().endsWith(".pdf"));
 
       const attachment = attName

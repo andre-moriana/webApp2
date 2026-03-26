@@ -72,7 +72,8 @@ class ClubNewsApiController
     {
         if (!empty($a['attachment']) && is_array($a['attachment']) && !empty($a['attachment']['storedFilename'])) {
             $stored = (string)$a['attachment']['storedFilename'];
-            $a['attachment']['url'] = '/api/club-news/attachment/' . rawurlencode($stored);
+            // Comme le chat (/messages/image/...), fournir une route "web" sans /api/ pour les <img src=...>
+            $a['attachment']['url'] = '/club-news/attachment/' . rawurlencode($stored);
         }
         return $a;
     }
@@ -291,7 +292,9 @@ class ClubNewsApiController
 
         header('Content-Type: ' . $mime);
         header('Content-Length: ' . filesize($path));
-        header('Content-Disposition: inline; filename="' . addslashes((string)$original) . '"');
+        header('Cache-Control: public, max-age=3600');
+        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
+        header('Content-Disposition: inline; filename="' . str_replace('"', '', (string)$original) . '"');
         readfile($path);
         exit;
     }
