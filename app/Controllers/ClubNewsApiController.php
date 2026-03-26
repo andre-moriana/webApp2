@@ -37,6 +37,26 @@ class ClubNewsApiController
         return substr($haystack, -$len) === $needle;
     }
 
+    private function getApiErrorMessage(array $response, string $fallback): string
+    {
+        if (!empty($response['message']) && is_string($response['message'])) {
+            return $response['message'];
+        }
+        if (!empty($response['error']) && is_string($response['error'])) {
+            return $response['error'];
+        }
+        $data = $response['data'] ?? null;
+        if (is_array($data)) {
+            if (!empty($data['message']) && is_string($data['message'])) {
+                return $data['message'];
+            }
+            if (!empty($data['error']) && is_string($data['error'])) {
+                return $data['error'];
+            }
+        }
+        return $fallback;
+    }
+
     private function normalizeArticleForClient(array $a): array
     {
         if (!empty($a['attachment']) && is_array($a['attachment']) && !empty($a['id'])) {
@@ -79,7 +99,7 @@ class ClubNewsApiController
         if (empty($response['success'])) {
             $this->sendJson([
                 'success' => false,
-                'message' => $response['message'] ?? $response['error'] ?? 'Erreur API club-news'
+                'message' => $this->getApiErrorMessage($response, 'Erreur API club-news')
             ], $response['status_code'] ?? 500);
         }
 
@@ -106,7 +126,7 @@ class ClubNewsApiController
             if (empty($resp['success'])) {
                 $this->sendJson([
                     'success' => false,
-                    'message' => $resp['message'] ?? $resp['error'] ?? 'Erreur API club-news'
+                    'message' => $this->getApiErrorMessage($resp, 'Erreur API club-news')
                 ], $resp['status_code'] ?? 500);
             }
             $payload = $this->apiService->unwrapData($resp);
@@ -130,7 +150,7 @@ class ClubNewsApiController
         if (empty($resp['success'])) {
             $this->sendJson([
                 'success' => false,
-                'message' => $resp['message'] ?? $resp['error'] ?? 'Erreur API club-news'
+                'message' => $this->getApiErrorMessage($resp, 'Erreur API club-news')
             ], $resp['status_code'] ?? 500);
         }
         $data = $this->apiService->unwrapData($resp);
@@ -147,7 +167,7 @@ class ClubNewsApiController
         if (empty($resp['success'])) {
             $this->sendJson([
                 'success' => false,
-                'message' => $resp['message'] ?? $resp['error'] ?? 'Erreur API club-news'
+                'message' => $this->getApiErrorMessage($resp, 'Erreur API club-news')
             ], $resp['status_code'] ?? 500);
         }
         $this->sendJson(['success' => true]);
