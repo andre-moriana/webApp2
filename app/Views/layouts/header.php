@@ -1,6 +1,7 @@
 <?php
 $topbarLogoSrc = '/public/assets/images/arc-training-logo.png';
 $topbarLogoAlt = 'Arc Training';
+$isClubLogo = false;
 
 $sessionUser = $_SESSION['user'] ?? [];
 $clubLogoRaw = $sessionUser['club_logo'] ?? $sessionUser['clubLogo'] ?? null;
@@ -36,6 +37,7 @@ if (is_string($clubLogoRaw) && trim($clubLogoRaw) !== '') {
         $topbarLogoSrc = 'https://api.arctraining.fr' . (strpos($clubLogoRaw, '/') === 0 ? '' : '/') . $clubLogoRaw;
     }
     $topbarLogoAlt = is_string($clubName) && trim($clubName) !== '' ? trim($clubName) : 'Logo du club';
+    $isClubLogo = true;
 }
 ?>
 <!DOCTYPE html>
@@ -80,7 +82,8 @@ if (is_string($clubLogoRaw) && trim($clubLogoRaw) !== '') {
     <header class="app-topbar">
         <div class="app-topbar-inner">
             <a class="app-topbar-logo" href="/dashboard" aria-label="Tableau de bord">
-                <img src="<?php echo htmlspecialchars($topbarLogoSrc); ?>" alt="<?php echo htmlspecialchars($topbarLogoAlt); ?>" class="app-topbar-logo-img">
+                <img src="<?php echo htmlspecialchars($topbarLogoSrc); ?>" alt="<?php echo htmlspecialchars($topbarLogoAlt); ?>" class="app-topbar-logo-img <?php echo $isClubLogo ? 'app-topbar-logo-img-club' : ''; ?>">
+                <span class="app-topbar-club-name d-none d-sm-inline"><?php echo htmlspecialchars((string)$clubName); ?></span>
             </a>
             <div class="app-topbar-actions">
                 <a href="/dashboard" class="app-topbar-link d-md-none" title="Tableau de bord">

@@ -1,7 +1,7 @@
 /* Menu contemporain : barre supérieure + modale */
 
 :root {
-    --topbar-height: 56px;
+    --topbar-height: 68px;
     --topbar-bg: linear-gradient(135deg, #002915 0%, #198754 50%, #20c997 100%);
     --topbar-text: rgba(255,255,255,0.95);
     --topbar-text-hover: #fff;
@@ -41,11 +41,27 @@
 }
 
 .app-topbar-logo-img {
-    height: 32px;
+    height: 48px;
     width: auto;
-    max-width: 140px;
+    max-width: 180px;
     object-fit: contain;
-    filter: brightness(2) invert(0);
+    filter: brightness(1.2);
+}
+
+.app-topbar-logo-img-club {
+    filter: none;
+}
+
+.app-topbar-club-name {
+    margin-left: 0.7rem;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .app-topbar-actions {
