@@ -5,18 +5,14 @@ class ClubNewsStorage
     private string $baseDir;
     private string $dataFile;
     private string $attachmentsDir;
-    private string $attachmentsWebBase;
 
     public function __construct()
     {
-        // Articles: stockage hors public/ (confidentiel pour les posts "club")
+        // Stockage hors public/ (comme le chat: rendu via route contrôleur, pas via fichiers statiques)
         $projectRoot = dirname(__DIR__, 2);
         $this->baseDir = $projectRoot . '/app/Storage/club-news';
         $this->dataFile = $this->baseDir . '/news.json';
-        // Pièces jointes: même approche que le chat => stockées sous /public/uploads
-        // (rend l'affichage simple via <img src="/uploads/...">)
-        $this->attachmentsDir = $projectRoot . '/public/uploads/club-news';
-        $this->attachmentsWebBase = '/uploads/club-news';
+        $this->attachmentsDir = $this->baseDir . '/attachments';
 
         $this->ensureDirs();
         $this->ensureDataFile();
@@ -31,7 +27,7 @@ class ClubNewsStorage
         }
         if (!is_dir($this->attachmentsDir)) {
             if (!mkdir($this->attachmentsDir, 0770, true) && !is_dir($this->attachmentsDir)) {
-                throw new \RuntimeException('Impossible de créer le dossier des pièces jointes (/public/uploads/club-news).');
+                throw new \RuntimeException('Impossible de créer le dossier des pièces jointes des actualités.');
             }
         }
     }
@@ -234,7 +230,7 @@ class ClubNewsStorage
         $dest = $this->attachmentsDir . '/' . $storedFilename;
 
         if (!move_uploaded_file($tmpName, $dest)) {
-            throw new \RuntimeException('Impossible d\'enregistrer la pièce jointe (droits /public/uploads/club-news).');
+            throw new \RuntimeException('Impossible d\'enregistrer la pièce jointe (droits dossier attachments).');
         }
 
         return [
@@ -242,7 +238,6 @@ class ClubNewsStorage
             'originalName' => (string)$originalName,
             'mimeType' => (string)$mimeType,
             'size' => $size,
-            'url' => $this->attachmentsWebBase . '/' . rawurlencode($storedFilename),
         ];
     }
 
