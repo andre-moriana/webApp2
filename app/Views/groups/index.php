@@ -163,6 +163,16 @@ $title = "Gestion des groupes - Portail Arc Training";
                                                     <?php endif; ?>
                                                 </small>
                                             </div>
+                                            <?php if (!empty($_SESSION['user']['is_admin']) || strtolower((string)($_SESSION['user']['role'] ?? '')) === 'dirigeant'): ?>
+                                            <div class="ms-2 d-flex gap-1">
+                                                <button type="button" class="btn btn-outline-primary btn-sm topic-edit-btn" data-topic-id="<?php echo (int)$topic['id']; ?>" title="Modifier le sujet">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm topic-delete-btn" data-topic-id="<?php echo (int)$topic['id']; ?>" title="Supprimer le sujet">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -253,6 +263,7 @@ $title = "Gestion des groupes - Portail Arc Training";
 window.currentUserId = <?php echo $_SESSION["user"]["id"]; ?>;
 window.initialGroupId = <?php echo !empty($groups) ? $groups[0]['id'] : 'null'; ?>;
 window.isAdmin = <?php echo $_SESSION["user"]["is_admin"] ? 'true' : 'false'; ?>;
+window.isDirigeant = <?php echo strtolower((string)($_SESSION["user"]["role"] ?? '')) === 'dirigeant' ? 'true' : 'false'; ?>;
 window.groupTopics = <?php echo json_encode($groupTopics); ?>;
 </script>
 

@@ -8,6 +8,17 @@ class TopicController {
     public function __construct() {
         $this->apiService = new ApiService();
     }
+
+    private function sendJson(array $payload, int $status = 200): void
+    {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code($status);
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
     
     public function show($groupId, $topicId) {
         if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
@@ -152,6 +163,45 @@ class TopicController {
             header("Location: /groups/{$groupId}/topics/create");
             exit;
         }
+    }
+
+    public function update($topicId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJson(['success' => false, 'message' => 'Non authentifié'], 401);
+        }
+
+        $payload = json_decode(file_get_contents('php://input') ?: '', true);
+        if (!is_array($payload)) {
+            $this->sendJson(['success' => false, 'message' => 'JSON invalide'], 400);
+        }
+
+        $response = $this->apiService->makeRequest("topics/{$topicId}", 'PUT', [
+            'title' => (string)($payload['title'] ?? ''),
+            'description' => (string)($payload['description'] ?? ''),
+        ]);
+
+        if (empty($response['success'])) {
+            $status = (int)($response['status_code'] ?? 500);
+            $message = $response['message'] ?? $response['error'] ?? 'Erreur lors de la modification du sujet';
+            $this->sendJson(['success' => false, 'message' => $message], $status);
+        }
+
+        $this->sendJson(['success' => true, 'data' => $response['data'] ?? null]);
+    }
+
+    public function destroy($topicId) {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            $this->sendJson(['success' => false, 'message' => 'Non authentifié'], 401);
+        }
+
+        $response = $this->apiService->makeRequest("topics/{$topicId}", 'DELETE');
+        if (empty($response['success'])) {
+            $status = (int)($response['status_code'] ?? 500);
+            $message = $response['message'] ?? $response['error'] ?? 'Erreur lors de la suppression du sujet';
+            $this->sendJson(['success' => false, 'message' => $message], $status);
+        }
+
+        $this->sendJson(['success' => true]);
     }
 }
 

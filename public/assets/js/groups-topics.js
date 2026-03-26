@@ -3,6 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    const canManageTopics = !!window.isAdmin || !!window.isDirigeant;
     //console.log('Script de gestion des groupes chargé');
     
     // Gérer les clics sur les groupes
@@ -92,6 +93,16 @@ document.addEventListener('DOMContentLoaded', function() {
                                     ${createdDate ? `<span class="ms-2"><i class="fas fa-calendar me-1"></i>${createdDate}</span>` : ''}
                                 </small>
                             </div>
+                            ${canManageTopics ? `
+                                <div class="ms-2 d-flex gap-1">
+                                    <button type="button" class="btn btn-outline-primary btn-sm topic-edit-btn" data-topic-id="${topic.id}" title="Modifier le sujet">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm topic-delete-btn" data-topic-id="${topic.id}" title="Supprimer le sujet">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -101,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Attacher les gestionnaires de clic aux sujets
             attachTopicClickHandlers();
+            attachTopicManageButtons();
         }
     }
     
@@ -114,6 +126,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function attachTopicClickHandlers() {
         document.querySelectorAll('.topic-item').forEach(function(topicItem) {
             topicItem.addEventListener('click', function(e) {
+                if (e.target.closest('.topic-edit-btn, .topic-delete-btn')) {
+                    return;
+                }
                 e.preventDefault();
                 e.stopPropagation();
                 
@@ -1483,6 +1498,71 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Attacher les gestionnaires au chargement initial
     attachTopicClickHandlers();
+    attachTopicManageButtons();
+
+    function attachTopicManageButtons() {
+        if (!canManageTopics) return;
+        document.querySelectorAll('.topic-edit-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const topicId = this.getAttribute('data-topic-id');
+                const topicItem = this.closest('.topic-item');
+                const currentTitle = topicItem ? topicItem.getAttribute('data-topic-title') : '';
+                const currentDescription = topicItem ? topicItem.getAttribute('data-topic-description') : '';
+                editTopic(topicId, currentTitle, currentDescription);
+            });
+        });
+        document.querySelectorAll('.topic-delete-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const topicId = this.getAttribute('data-topic-id');
+                deleteTopic(topicId);
+            });
+        });
+    }
+
+    async function editTopic(topicId, currentTitle, currentDescription) {
+        const newTitle = prompt('Modifier le titre du sujet', currentTitle || '');
+        if (newTitle === null) return;
+        const title = String(newTitle || '').trim();
+        if (!title) return;
+        const newDescription = prompt('Modifier la description du sujet', currentDescription || '');
+        if (newDescription === null) return;
+        try {
+            const res = await fetch(`/api/topics/${encodeURIComponent(topicId)}`, {
+                method: 'PUT',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description: String(newDescription || '').trim() })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || `Erreur HTTP ${res.status}`);
+            }
+            window.location.reload();
+        } catch (err) {
+            alert('Modification impossible: ' + (err.message || 'Erreur'));
+        }
+    }
+
+    async function deleteTopic(topicId) {
+        if (!confirm('Supprimer ce sujet ?')) return;
+        try {
+            const res = await fetch(`/api/topics/${encodeURIComponent(topicId)}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || `Erreur HTTP ${res.status}`);
+            }
+            window.location.reload();
+        } catch (err) {
+            alert('Suppression impossible: ' + (err.message || 'Erreur'));
+        }
+    }
     
     // Gérer les clics sur les boutons de suppression
     document.querySelectorAll('.delete-group-btn').forEach(function(button) {
