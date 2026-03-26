@@ -226,10 +226,14 @@ class ClubNewsApiController
             $description = 'Signalement d\'un commentaire des infos club.';
         }
 
+        $commentIdText = trim((string)$commentId);
+        $prefix = $commentIdText !== '' ? ('Commentaire infos club #' . $commentIdText . ' - ') : '';
         $reportPayload = [
             'reason' => $reason,
-            'description' => $description,
-            'messageId' => is_numeric($commentId) ? (int)$commentId : null,
+            'description' => $prefix . $description,
+            // Ne pas renseigner messageId: l'UI signalements tente sinon /signalements/message/{id}
+            // qui n'est valide que pour les messages chat, pas pour les commentaires d'actus club.
+            'messageId' => null,
             'contentType' => 'club_news_comment',
             'reportedUserId' => isset($payload['reportedUserId']) && is_numeric((string)$payload['reportedUserId'])
                 ? (int)$payload['reportedUserId']
