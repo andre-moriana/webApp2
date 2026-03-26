@@ -125,32 +125,45 @@ class ClubNewsApiController
 
         $audience = in_array($audience, ['public', 'club'], true) ? $audience : 'public';
         $content = is_string($content) ? trim($content) : '';
-        if ($content === '') {
-            $this->sendJson(['success' => false, 'message' => 'Le contenu est requis.'], 422);
-        }
 
         $attachment = null;
+        $hasFile = !empty($_FILES['attachment']) && is_array($_FILES['attachment']) && ($_FILES['attachment']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+        if ($content === '' && !$hasFile) {
+            $this->sendJson(['success' => false, 'message' => 'Le post doit contenir du texte ou une pièce jointe.'], 422);
+        }
+
         if (!empty($_FILES['attachment']) && is_array($_FILES['attachment']) && ($_FILES['attachment']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
             if (($_FILES['attachment']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-                $this->sendJson(['success' => false, 'message' => 'Erreur lors de l\'upload de la pièce jointe.'], 422);
+                $this->sendJson(['success' => false, 'message' => 'Erreur upload PJ (code ' . (int)($_FILES['attachment']['error'] ?? -1) . ').'], 422);
             }
             $max = 10 * 1024 * 1024;
             if ((int)($_FILES['attachment']['size'] ?? 0) > $max) {
                 $this->sendJson(['success' => false, 'message' => 'Pièce jointe trop volumineuse (max 10 Mo).'], 422);
             }
-            $attachment = $this->storage->storeUploadedAttachment($_FILES['attachment']);
         }
+        try {
+            if ($hasFile) {
+                $attachment = $this->storage->storeUploadedAttachment($_FILES['attachment']);
+            }
 
-        $article = $this->storage->create([
-            'club_id' => $clubId ?? '',
-            'club_name' => $user['clubName'] ?? $user['club_name'] ?? null,
-            'audience' => $audience,
-            'title' => is_string($title) ? trim($title) : '',
-            'content' => $content,
-            'author_user_id' => $user['id'] ?? $user['_id'] ?? '',
-            'author_name' => $user['name'] ?? $user['fullName'] ?? $user['fullname'] ?? $user['email'] ?? '',
-            'attachment' => $attachment,
-        ]);
+            $article = $this->storage->create([
+                'club_id' => $clubId ?? '',
+                'club_name' => $user['clubName'] ?? $user['club_name'] ?? null,
+                'audience' => $audience,
+                'title' => is_string($title) ? trim($title) : '',
+                'content' => $content,
+                'author_user_id' => $user['id'] ?? $user['_id'] ?? '',
+                'author_name' => $user['name'] ?? $user['fullName'] ?? $user['fullname'] ?? $user['email'] ?? '',
+                'attachment' => $attachment,
+            ]);
+        } catch (\Throwable $e) {
+            error_log('ClubNewsApiController store error: ' . $e->getMessage());
+            $this->sendJson([
+                'success' => false,
+                'message' => 'Impossible d\'enregistrer le post. Vérifier les droits d\'écriture serveur.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
 
         $this->sendJson([
             'success' => true,
