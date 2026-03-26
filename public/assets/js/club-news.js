@@ -107,24 +107,41 @@
           ? `<span class="badge bg-secondary">Mon club</span>`
           : `<span class="badge bg-primary">Public</span>`;
 
-      const attachment =
-        a.attachment && a.attachment.originalName
-          ? `
+      const att = a.attachment || null;
+      const attUrl = att && att.url ? String(att.url) : "";
+      const attName = att && att.originalName ? String(att.originalName) : "";
+      const attMime = att && att.mimeType ? String(att.mimeType) : "";
+      const isImage = attUrl && attMime.startsWith("image/");
+      const isPdf = attUrl && (attMime === "application/pdf" || attName.toLowerCase().endsWith(".pdf"));
+
+      const attachment = attName
+        ? `
             <div class="mt-3">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div class="text-muted small">
                   <i class="fas fa-paperclip me-1"></i>
-                  ${escapeHtml(a.attachment.originalName)}
+                  ${escapeHtml(attName)}
                 </div>
                 ${
-                  a.attachment.url
-                    ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(a.attachment.url)}" target="_blank" rel="noopener noreferrer">Ouvrir</a>`
+                  attUrl
+                    ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(attUrl)}" target="_blank" rel="noopener noreferrer">Ouvrir</a>`
                     : ""
                 }
               </div>
+              ${
+                isImage
+                  ? `<div class="mt-2">
+                       <a href="${escapeHtml(attUrl)}" target="_blank" rel="noopener noreferrer">
+                         <img src="${escapeHtml(attUrl)}" alt="${escapeHtml(attName)}" class="img-fluid rounded border" style="max-height: 420px; object-fit: contain;">
+                       </a>
+                     </div>`
+                  : isPdf
+                    ? `<div class="mt-2 text-muted small">Aperçu non intégré (PDF). Utilise “Ouvrir”.</div>`
+                    : ""
+              }
             </div>
           `
-          : "";
+        : "";
 
       const actions =
         canManage && a.id
