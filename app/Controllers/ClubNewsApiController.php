@@ -172,5 +172,43 @@ class ClubNewsApiController
         }
         $this->sendJson(['success' => true]);
     }
+
+    public function comment(string $id): void
+    {
+        SessionGuard::checkAjax();
+        $payload = json_decode(file_get_contents('php://input') ?: '', true);
+        if (!is_array($payload)) {
+            $this->sendJson(['success' => false, 'message' => 'JSON invalide'], 400);
+        }
+        $resp = $this->apiService->makeRequest("club-news/{$id}/comments", 'POST', $payload);
+        if (empty($resp['success'])) {
+            $this->sendJson([
+                'success' => false,
+                'message' => $this->getApiErrorMessage($resp, 'Erreur API club-news')
+            ], $resp['status_code'] ?? 500);
+        }
+        $data = $this->apiService->unwrapData($resp);
+        if (is_array($data) && isset($data['article']) && is_array($data['article'])) {
+            $data['article'] = $this->normalizeArticleForClient($data['article']);
+        }
+        $this->sendJson(is_array($data) ? $data : ['success' => true]);
+    }
+
+    public function like(string $id): void
+    {
+        SessionGuard::checkAjax();
+        $resp = $this->apiService->makeRequest("club-news/{$id}/likes", 'POST', []);
+        if (empty($resp['success'])) {
+            $this->sendJson([
+                'success' => false,
+                'message' => $this->getApiErrorMessage($resp, 'Erreur API club-news')
+            ], $resp['status_code'] ?? 500);
+        }
+        $data = $this->apiService->unwrapData($resp);
+        if (is_array($data) && isset($data['article']) && is_array($data['article'])) {
+            $data['article'] = $this->normalizeArticleForClient($data['article']);
+        }
+        $this->sendJson(is_array($data) ? $data : ['success' => true]);
+    }
 }
 

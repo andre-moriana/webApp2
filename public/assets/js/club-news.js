@@ -166,6 +166,35 @@
           `
           : "";
 
+      const likesCount = Number(a.likes_count || 0);
+      const userLiked = !!a.user_liked;
+      const likeBtn = a.id
+        ? `<button class="btn btn-sm ${userLiked ? "btn-warning" : "btn-outline-warning"}" data-action="like" data-id="${escapeHtml(a.id)}" title="J'aime">
+             <span class="me-1"><i class="fas fa-bullseye"></i><i class="fas fa-location-arrow" style="margin-left:-10px;font-size:11px;"></i></span>
+             ${likesCount}
+           </button>`
+        : "";
+
+      const comments = Array.isArray(a.comments) ? a.comments : [];
+      const commentsHtml = comments.length
+        ? comments
+            .map(
+              (c) =>
+                `<div class="small border rounded p-2 mb-2">
+                  <div class="fw-semibold">${escapeHtml(c.user_name || "Utilisateur")}</div>
+                  <div>${escapeHtml(c.content || "").replace(/\n/g, "<br>")}</div>
+                </div>`
+            )
+            .join("")
+        : `<div class="text-muted small">Aucun commentaire.</div>`;
+
+      const commentForm = canManage && a.id
+        ? `<div class="input-group input-group-sm mt-2">
+             <input type="text" class="form-control" data-comment-input-id="${escapeHtml(a.id)}" placeholder="Ajouter un commentaire...">
+             <button class="btn btn-outline-primary" data-action="comment" data-id="${escapeHtml(a.id)}">Commenter</button>
+           </div>`
+        : "";
+
       const title = a.title ? `<h3 class="h6 mb-2">${escapeHtml(a.title)}</h3>` : "";
       const content = a.content ? escapeHtml(a.content).replace(/\n/g, "<br>") : "";
 
@@ -182,6 +211,12 @@
               ${title}
               <div style="white-space: normal;">${content}</div>
               ${attachment}
+              <div class="mt-3 d-flex align-items-center gap-2">
+                ${likeBtn}
+                <span class="text-muted small">${comments.length} commentaire(s)</span>
+              </div>
+              <div class="mt-2">${commentsHtml}</div>
+              ${commentForm}
             </div>
             ${actions ? `<div class="flex-shrink-0">${actions}</div>` : ""}
           </div>
@@ -344,6 +379,34 @@
     }
   }
 
+  async function likeArticle(id) {
+    hideAlert();
+    if (!id) return;
+    try {
+      await apiFetch(`/api/club-news/${encodeURIComponent(id)}/likes`, { method: "POST" });
+      await load();
+    } catch (e) {
+      showAlert("danger", `Like impossible. ${e.message || ""}`.trim());
+    }
+  }
+
+  async function addComment(id, content) {
+    hideAlert();
+    if (!id) return;
+    const txt = String(content || "").trim();
+    if (!txt) return;
+    try {
+      await apiFetch(`/api/club-news/${encodeURIComponent(id)}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: txt }),
+      });
+      await load();
+    } catch (e) {
+      showAlert("danger", `Commentaire impossible. ${e.message || ""}`.trim());
+    }
+  }
+
   function findArticleById(id) {
     return (
       state.articlesPublic.find((a) => a && a.id === id) ||
@@ -381,6 +444,11 @@
         if (a) openEditModal(a);
       } else if (action === "delete") {
         deleteArticle(id);
+      } else if (action === "like") {
+        likeArticle(id);
+      } else if (action === "comment") {
+        const input = els.listPublic.querySelector(`input[data-comment-input-id="${CSS.escape(id)}"]`);
+        addComment(id, input ? input.value : "");
       }
     });
   }
@@ -397,6 +465,11 @@
         if (a) openEditModal(a);
       } else if (action === "delete") {
         deleteArticle(id);
+      } else if (action === "like") {
+        likeArticle(id);
+      } else if (action === "comment") {
+        const input = els.listClub.querySelector(`input[data-comment-input-id="${CSS.escape(id)}"]`);
+        addComment(id, input ? input.value : "");
       }
     });
   }

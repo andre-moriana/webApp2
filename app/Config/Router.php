@@ -181,6 +181,8 @@ class Router {
         $this->addRoute("POST", "/api/club-news", "ClubNewsApiController@store");
         $this->addRoute("PUT", "/api/club-news/{id}", "ClubNewsApiController@update");
         $this->addRoute("DELETE", "/api/club-news/{id}", "ClubNewsApiController@destroy");
+        $this->addRoute("POST", "/api/club-news/{id}/comments", "ClubNewsApiController@comment");
+        $this->addRoute("POST", "/api/club-news/{id}/likes", "ClubNewsApiController@like");
         // Infos club: API interne (les PJ sont servies via /messages/image|attachment déjà existants)
 
         // Routes API pour les formulaires (proxy vers API externe)
