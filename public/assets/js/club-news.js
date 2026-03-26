@@ -517,6 +517,13 @@
       const btn = e.target && e.target.closest ? e.target.closest("button[data-action]") : null;
       if (!btn) return;
       const action = btn.getAttribute("data-action");
+      if (action === "report-comment") {
+        const commentId = btn.getAttribute("data-comment-id");
+        const commentUserId = btn.getAttribute("data-comment-user-id");
+        const commentUserName = btn.getAttribute("data-comment-user-name");
+        reportComment(commentId, commentUserId, commentUserName);
+        return;
+      }
       const id = btn.getAttribute("data-id");
       if (!id) return;
       if (action === "edit") {
@@ -529,11 +536,6 @@
       } else if (action === "comment") {
         const input = els.listPublic.querySelector(`input[data-comment-input-id="${CSS.escape(id)}"]`);
         addComment(id, input ? input.value : "");
-      } else if (action === "report-comment") {
-        const commentId = btn.getAttribute("data-comment-id");
-        const commentUserId = btn.getAttribute("data-comment-user-id");
-        const commentUserName = btn.getAttribute("data-comment-user-name");
-        reportComment(commentId, commentUserId, commentUserName);
       }
     });
   }
@@ -543,6 +545,13 @@
       const btn = e.target && e.target.closest ? e.target.closest("button[data-action]") : null;
       if (!btn) return;
       const action = btn.getAttribute("data-action");
+      if (action === "report-comment") {
+        const commentId = btn.getAttribute("data-comment-id");
+        const commentUserId = btn.getAttribute("data-comment-user-id");
+        const commentUserName = btn.getAttribute("data-comment-user-name");
+        reportComment(commentId, commentUserId, commentUserName);
+        return;
+      }
       const id = btn.getAttribute("data-id");
       if (!id) return;
       if (action === "edit") {
@@ -555,11 +564,6 @@
       } else if (action === "comment") {
         const input = els.listClub.querySelector(`input[data-comment-input-id="${CSS.escape(id)}"]`);
         addComment(id, input ? input.value : "");
-      } else if (action === "report-comment") {
-        const commentId = btn.getAttribute("data-comment-id");
-        const commentUserId = btn.getAttribute("data-comment-user-id");
-        const commentUserName = btn.getAttribute("data-comment-user-name");
-        reportComment(commentId, commentUserId, commentUserName);
       }
     });
   }
