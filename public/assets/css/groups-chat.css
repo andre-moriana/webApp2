@@ -305,6 +305,7 @@
 .group-item.active {
     background-color: #e9ecef;
     border-color: #dee2e6;
+    color: #14532d;
 }
 
 .avatar-sm {
