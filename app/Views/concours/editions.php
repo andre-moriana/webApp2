@@ -8,6 +8,8 @@ $mailTargetsArchers = $mailTargetsArchers ?? [];
 $mailTargetsClubs = $mailTargetsClubs ?? [];
 $mailTargetsComitesRegionaux = $mailTargetsComitesRegionaux ?? [];
 $mailTargetsComitesDepartementaux = $mailTargetsComitesDepartementaux ?? [];
+$additionalJS = $additionalJS ?? [];
+$additionalJS[] = '/public/assets/js/concours-editions.js?v=' . time();
 ?>
 <div class="container-fluid concours-editions">
     <h1 class="mb-4">
@@ -57,8 +59,6 @@ $mailTargetsComitesDepartementaux = $mailTargetsComitesDepartementaux ?? [];
                         <i class="fas fa-external-link-alt me-1"></i>Ouvrir</a>
                     <a href="<?= $baseUrl ?>?doc=feuilles-marques" target="_blank" class="btn btn-primary btn-sm">
                         <i class="fas fa-print me-1"></i>Imprimer</a>
-                    <button type="button" class="btn btn-outline-success btn-sm btn-edition-mail" data-doc="feuilles-marques" data-doc-label="Feuilles de marques">
-                        <i class="fas fa-envelope me-1"></i>Diffuser par mail</button>
                 </div>
             </div>
         </div>
@@ -121,8 +121,6 @@ $mailTargetsComitesDepartementaux = $mailTargetsComitesDepartementaux ?? [];
                         <i class="fas fa-external-link-alt me-1"></i>Ouvrir</a>
                     <a href="<?= $baseUrl ?>?doc=commandes-buvette" target="_blank" class="btn btn-primary btn-sm">
                         <i class="fas fa-print me-1"></i>Imprimer</a>
-                    <button type="button" class="btn btn-outline-success btn-sm btn-edition-mail" data-doc="commandes-buvette" data-doc-label="Commandes buvette">
-                        <i class="fas fa-envelope me-1"></i>Diffuser par mail</button>
                 </div>
             </div>
         </div>
@@ -268,44 +266,3 @@ $mailTargetsComitesDepartementaux = $mailTargetsComitesDepartementaux ?? [];
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modalEl = document.getElementById('diffusionEditionModal');
-    if (!modalEl || typeof bootstrap === 'undefined') return;
-    const modal = new bootstrap.Modal(modalEl);
-    const docInput = document.getElementById('diffusionDocInput');
-    const docLabel = document.getElementById('diffusionDocLabel');
-    document.querySelectorAll('.btn-edition-mail').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            docInput.value = btn.getAttribute('data-doc') || '';
-            docLabel.textContent = btn.getAttribute('data-doc-label') || 'Document';
-            modal.show();
-        });
-    });
-
-    const groupMap = {
-        'clubs': '.group-clubs',
-        'comites-regionaux': '.group-comites-regionaux',
-        'comites-departementaux': '.group-comites-departementaux',
-        'archers': '.group-archers'
-    };
-
-    document.querySelectorAll('.check-all-group').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            const group = btn.getAttribute('data-target-group');
-            const selector = groupMap[group];
-            if (!selector) return;
-            modalEl.querySelectorAll(selector).forEach(function (cb) { cb.checked = true; });
-        });
-    });
-
-    document.querySelectorAll('.uncheck-all-group').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            const group = btn.getAttribute('data-target-group');
-            const selector = groupMap[group];
-            if (!selector) return;
-            modalEl.querySelectorAll(selector).forEach(function (cb) { cb.checked = false; });
-        });
-    });
-});
-</script>
