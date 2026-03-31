@@ -199,10 +199,11 @@ $title = "Détails de l'utilisateur - Portail Arc Training";
                                         <p class="form-control-plaintext">
                                             <?php 
                                             $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
+                                            $displayName = !empty($user['clubName']) ? $user['clubName'] : $user['clubNameShort'];
                                             if (!empty($clubNameShort)) {
                                                 // Afficher le nom complet du club si disponible, sinon le name_short
                                                 if (!empty($clubName)) {
-                                                    echo htmlspecialchars($clubName);
+                                                    echo htmlspecialchars($displayName);
                                                 } else {
                                                     echo htmlspecialchars($clubNameShort);
                                                 }
