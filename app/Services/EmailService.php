@@ -528,4 +528,58 @@ class EmailService {
         
         return $html;
     }
+
+    /**
+     * Envoie un email générique (diffusion, notifications internes, etc.)
+     *
+     * @param string $to Destinataire
+     * @param string $subject Sujet
+     * @param string $htmlMessage Contenu HTML
+     * @param string|null $replyToEmail Email de réponse (fallback: from)
+     * @param string|null $replyToName Nom de réponse (fallback: from)
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public static function sendGenericEmail($to, $subject, $htmlMessage, $replyToEmail = null, $replyToName = null) {
+        try {
+            $to = trim((string)$to);
+            $subject = trim((string)$subject);
+            $htmlMessage = trim((string)$htmlMessage);
+
+            if ($to === '' || $subject === '' || $htmlMessage === '') {
+                return [
+                    'success' => false,
+                    'message' => 'Paramètres email incomplets.'
+                ];
+            }
+
+            if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+                return [
+                    'success' => false,
+                    'message' => 'Adresse email destinataire invalide.'
+                ];
+            }
+
+            $fromEmail = EmailConfig::getFromEmail();
+            $fromName = EmailConfig::getFromName();
+            $replyEmail = $replyToEmail ?: $fromEmail;
+            $replyName = $replyToName ?: $fromName;
+
+            if (EmailConfig::useSmtp()) {
+                $success = self::sendViaSmtp($to, $fromEmail, $fromName, $replyName, $replyEmail, $subject, $htmlMessage);
+            } else {
+                $success = self::sendViaMail($to, $fromEmail, $fromName, $replyName, $replyEmail, $subject, $htmlMessage);
+            }
+
+            return [
+                'success' => (bool)$success,
+                'message' => $success ? 'Email envoyé.' : 'Échec envoi email.'
+            ];
+        } catch (Exception $e) {
+            error_log('Erreur EmailService::sendGenericEmail: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erreur envoi email: ' . $e->getMessage()
+            ];
+        }
+    }
 }

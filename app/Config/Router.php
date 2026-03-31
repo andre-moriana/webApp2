@@ -38,6 +38,7 @@ class Router {
         $this->addRoute("POST", "/concours/{id}/saisie-scores", "ConcoursController@storeScores");
         // Page Éditions - documents à imprimer
         $this->addRoute("GET", "/concours/{id}/editions", "ConcoursController@editions");
+        $this->addRoute("POST", "/concours/{id}/editions/diffusion-mail", "ConcoursController@sendEditionByMail");
         // Gestion des produits buvette
         $this->addRoute("GET", "/concours/{id}/buvette", "ConcoursController@buvette");
         // Gestion des greffes

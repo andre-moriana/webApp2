@@ -2240,6 +2240,13 @@ public function inscription($concoursId)
         }
         unset($insc);
 
+        // Préparer les destinataires de diffusion mail (archers, clubs, comités)
+        $mailTargets = $this->buildEditionMailTargets($inscriptions, $clubsMap);
+        $mailTargetsArchers = $mailTargets['archers'];
+        $mailTargetsClubs = $mailTargets['clubs'];
+        $mailTargetsComitesRegionaux = $mailTargets['comites_regionaux'];
+        $mailTargetsComitesDepartementaux = $mailTargets['comites_departementaux'];
+
         // Filtre type de classement (général / régional / départemental)
         $typeClassement = $_GET['type'] ?? 'general';
         $validTypes = ['general', 'regional', 'departemental'];
@@ -2522,6 +2529,316 @@ public function inscription($concoursId)
         require_once __DIR__ . '/../Views/layouts/header.php';
         require_once __DIR__ . '/../Views/concours/editions.php';
         require_once __DIR__ . '/../Views/layouts/footer.php';
+    }
+
+    private function buildEditionMailTargets(array $inscriptions, array $clubsMap)
+    {
+        $archers = [];
+        $clubs = [];
+        $comitesRegionaux = [];
+        $comitesDepartementaux = [];
+
+        foreach ($inscriptions as $insc) {
+            $email = trim((string)($insc['email'] ?? $insc['user_email'] ?? ''));
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+
+            $archerId = (string)($insc['id'] ?? $insc['_id'] ?? $insc['inscription_id'] ?? $insc['numero_licence'] ?? $email);
+            $nom = trim((string)($insc['user_nom'] ?? $insc['nom'] ?? 'Archer'));
+            $licence = trim((string)($insc['numero_licence'] ?? ''));
+            $archers[$archerId] = [
+                'id' => $archerId,
+                'label' => $nom . ($licence !== '' ? ' (' . $licence . ')' : '') . ' - ' . $email,
+                'email' => $email
+            ];
+
+            $clubIdRaw = $insc['id_club'] ?? null;
+            $clubKey = trim((string)$clubIdRaw);
+            if ($clubKey === '') {
+                $clubKey = 'club-inconnu';
+            }
+
+            $club = $clubsMap[$clubIdRaw] ?? $clubsMap[(string)$clubIdRaw] ?? null;
+            $clubCode = trim((string)($club['nameShort'] ?? $club['name_short'] ?? $clubKey));
+            $clubName = trim((string)($club['name'] ?? $insc['club_nom'] ?? $clubCode));
+
+            if (!isset($clubs[$clubKey])) {
+                $clubs[$clubKey] = [
+                    'id' => $clubKey,
+                    'label' => $clubName !== '' ? $clubName . ($clubCode !== '' ? ' (' . $clubCode . ')' : '') : $clubCode,
+                    'emails' => []
+                ];
+            }
+            $clubs[$clubKey]['emails'][$email] = true;
+
+            // Regroupement comités :
+            // - régional: 2 premiers chiffres
+            // - départemental: 3 premiers chiffres
+            if (preg_match('/^\d{7}$/', $clubCode)) {
+                $regionCode = substr($clubCode, 0, 2);
+                $comiteRegId = $regionCode . '00000';
+                if (!isset($comitesRegionaux[$comiteRegId])) {
+                    $comitesRegionaux[$comiteRegId] = [
+                        'id' => $comiteRegId,
+                        'label' => 'Comité régional ' . $regionCode,
+                        'emails' => []
+                    ];
+                }
+                $comitesRegionaux[$comiteRegId]['emails'][$email] = true;
+
+                $depCode = substr($clubCode, 0, 3);
+                $comiteDepId = $depCode . '0000';
+                if (!isset($comitesDepartementaux[$comiteDepId])) {
+                    $comitesDepartementaux[$comiteDepId] = [
+                        'id' => $comiteDepId,
+                        'label' => 'Comité départemental ' . $depCode,
+                        'emails' => []
+                    ];
+                }
+                $comitesDepartementaux[$comiteDepId]['emails'][$email] = true;
+            } else {
+                if (!isset($comitesRegionaux['autres'])) {
+                    $comitesRegionaux['autres'] = [
+                        'id' => 'autres',
+                        'label' => 'Autres clubs',
+                        'emails' => []
+                    ];
+                }
+                $comitesRegionaux['autres']['emails'][$email] = true;
+            }
+        }
+
+        foreach ($clubs as &$club) {
+            $club['emails'] = array_keys($club['emails']);
+            $club['count'] = count($club['emails']);
+        }
+        unset($club);
+        foreach ($comitesRegionaux as &$comite) {
+            $comite['emails'] = array_keys($comite['emails']);
+            $comite['count'] = count($comite['emails']);
+        }
+        unset($comite);
+        foreach ($comitesDepartementaux as &$comite) {
+            $comite['emails'] = array_keys($comite['emails']);
+            $comite['count'] = count($comite['emails']);
+        }
+        unset($comite);
+
+        uasort($archers, function ($a, $b) {
+            return strcasecmp((string)($a['label'] ?? ''), (string)($b['label'] ?? ''));
+        });
+        uasort($clubs, function ($a, $b) {
+            return strcasecmp((string)($a['label'] ?? ''), (string)($b['label'] ?? ''));
+        });
+        uasort($comitesRegionaux, function ($a, $b) {
+            return strcasecmp((string)($a['label'] ?? ''), (string)($b['label'] ?? ''));
+        });
+        uasort($comitesDepartementaux, function ($a, $b) {
+            return strcasecmp((string)($a['label'] ?? ''), (string)($b['label'] ?? ''));
+        });
+
+        return [
+            'archers' => array_values($archers),
+            'clubs' => array_values($clubs),
+            'comites_regionaux' => array_values($comitesRegionaux),
+            'comites_departementaux' => array_values($comitesDepartementaux)
+        ];
+    }
+
+    public function sendEditionByMail($concoursId)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+        $isAdmin = $_SESSION['user']['is_admin'] ?? false;
+        $isDirigeant = ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+        if (!$isAdmin && !$isDirigeant) {
+            $_SESSION['error'] = 'Accès réservé aux dirigeants et administrateurs.';
+            header('Location: /concours/' . (int)$concoursId . '/editions');
+            exit;
+        }
+
+        $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement', 'commandes-buvette'];
+        $doc = trim((string)($_POST['doc'] ?? ''));
+        if (!in_array($doc, $validDocs, true)) {
+            $_SESSION['error'] = 'Document de diffusion invalide.';
+            header('Location: /concours/' . (int)$concoursId . '/editions');
+            exit;
+        }
+
+        $concoursResponse = $this->apiService->getConcoursById($concoursId);
+        if (!($concoursResponse['success'] ?? false)) {
+            $_SESSION['error'] = 'Concours introuvable.';
+            header('Location: /concours');
+            exit;
+        }
+        $concours = $this->apiService->unwrapData($concoursResponse);
+        if (is_array($concours) && isset($concours['data'])) {
+            $concours = $concours['data'];
+        }
+        if (is_array($concours)) {
+            $concours = (object)$concours;
+        }
+
+        $inscriptions = [];
+        try {
+            $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
+            $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+            if (is_array($inscriptions) && isset($inscriptions['data']) && is_array($inscriptions['data'])) {
+                $inscriptions = $inscriptions['data'];
+            }
+            if (!is_array($inscriptions)) {
+                $inscriptions = [];
+            }
+            $inscriptions = array_values(array_filter($inscriptions, function ($i) {
+                return is_array($i) && (($i['statut_inscription'] ?? '') === 'confirmee');
+            }));
+        } catch (Exception $e) {
+            $inscriptions = [];
+        }
+
+        $clubsMap = [];
+        try {
+            $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+            $clubsPayload = $this->apiService->unwrapData($clubsResponse);
+            if (is_array($clubsPayload)) {
+                foreach ($clubsPayload as $club) {
+                    $clubId = $club['id'] ?? $club['_id'] ?? null;
+                    if ($clubId !== null && $clubId !== '') {
+                        $clubsMap[$clubId] = $club;
+                        $clubsMap[(string)$clubId] = $club;
+                    }
+                    $nameShort = trim((string)($club['nameShort'] ?? $club['name_short'] ?? ''));
+                    if ($nameShort !== '') {
+                        $clubsMap[$nameShort] = $club;
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            $clubsMap = [];
+        }
+
+        $targets = $this->buildEditionMailTargets($inscriptions, $clubsMap);
+        $emails = [];
+
+        $selectedArchers = $_POST['target_archers'] ?? [];
+        $selectedClubs = $_POST['target_clubs'] ?? [];
+        $selectedComitesRegionaux = $_POST['target_comites_regionaux'] ?? [];
+        $selectedComitesDepartementaux = $_POST['target_comites_departementaux'] ?? [];
+        $selectedArchers = is_array($selectedArchers) ? $selectedArchers : [];
+        $selectedClubs = is_array($selectedClubs) ? $selectedClubs : [];
+        $selectedComitesRegionaux = is_array($selectedComitesRegionaux) ? $selectedComitesRegionaux : [];
+        $selectedComitesDepartementaux = is_array($selectedComitesDepartementaux) ? $selectedComitesDepartementaux : [];
+
+        $archersById = [];
+        foreach ($targets['archers'] as $a) {
+            $archersById[(string)$a['id']] = $a;
+        }
+        $clubsById = [];
+        foreach ($targets['clubs'] as $c) {
+            $clubsById[(string)$c['id']] = $c;
+        }
+        $comitesRegionauxById = [];
+        foreach ($targets['comites_regionaux'] as $c) {
+            $comitesRegionauxById[(string)$c['id']] = $c;
+        }
+        $comitesDepartementauxById = [];
+        foreach ($targets['comites_departementaux'] as $c) {
+            $comitesDepartementauxById[(string)$c['id']] = $c;
+        }
+
+        foreach ($selectedArchers as $id) {
+            $key = (string)$id;
+            if (isset($archersById[$key])) {
+                $emails[$archersById[$key]['email']] = true;
+            }
+        }
+        foreach ($selectedClubs as $id) {
+            $key = (string)$id;
+            if (isset($clubsById[$key])) {
+                foreach (($clubsById[$key]['emails'] ?? []) as $email) {
+                    $emails[$email] = true;
+                }
+            }
+        }
+        foreach ($selectedComitesRegionaux as $id) {
+            $key = (string)$id;
+            if (isset($comitesRegionauxById[$key])) {
+                foreach (($comitesRegionauxById[$key]['emails'] ?? []) as $email) {
+                    $emails[$email] = true;
+                }
+            }
+        }
+        foreach ($selectedComitesDepartementaux as $id) {
+            $key = (string)$id;
+            if (isset($comitesDepartementauxById[$key])) {
+                foreach (($comitesDepartementauxById[$key]['emails'] ?? []) as $email) {
+                    $emails[$email] = true;
+                }
+            }
+        }
+
+        $emails = array_keys($emails);
+        if (empty($emails)) {
+            $_SESSION['error'] = 'Aucun destinataire sélectionné.';
+            header('Location: /concours/' . (int)$concoursId . '/editions');
+            exit;
+        }
+
+        $docTitles = [
+            'avis' => 'Avis de concours',
+            'feuilles-marques' => 'Feuilles de marques',
+            'liste-participants' => 'Liste des participants',
+            'scores' => 'Scores',
+            'classement' => 'Classement',
+            'commandes-buvette' => 'Commandes buvette'
+        ];
+        $docTitle = $docTitles[$doc] ?? 'Document';
+
+        $subject = trim((string)($_POST['subject'] ?? ''));
+        if ($subject === '') {
+            $subject = '[' . ($concours->titre_competition ?? 'Concours') . '] ' . $docTitle;
+        }
+        $message = trim((string)($_POST['message'] ?? ''));
+
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
+        $docUrl = $scheme . '://' . $host . '/concours/' . (int)$concoursId . '/editions?doc=' . urlencode($doc);
+
+        $htmlBody = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>' . htmlspecialchars($subject) . '</title></head><body style="font-family:Arial,sans-serif;line-height:1.6;color:#222;">';
+        $htmlBody .= '<h3 style="margin-bottom:12px;">' . htmlspecialchars($docTitle) . ' - ' . htmlspecialchars($concours->titre_competition ?? 'Concours') . '</h3>';
+        if ($message !== '') {
+            $htmlBody .= '<p>' . nl2br(htmlspecialchars($message)) . '</p>';
+        } else {
+            $htmlBody .= '<p>Bonjour,<br>Vous trouverez ci-dessous le document diffusé pour le concours.</p>';
+        }
+        $htmlBody .= '<p><a href="' . htmlspecialchars($docUrl) . '" style="background:#0d6efd;color:#fff;text-decoration:none;padding:10px 14px;border-radius:4px;display:inline-block;">Ouvrir le document</a></p>';
+        $htmlBody .= '<p style="color:#666;font-size:12px;">Lien direct: ' . htmlspecialchars($docUrl) . '</p>';
+        $htmlBody .= '</body></html>';
+
+        $sent = 0;
+        $failed = 0;
+        foreach ($emails as $email) {
+            $result = EmailService::sendGenericEmail($email, $subject, $htmlBody);
+            if ($result['success'] ?? false) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+
+        if ($sent > 0 && $failed === 0) {
+            $_SESSION['success'] = 'Diffusion envoyée à ' . $sent . ' destinataire(s).';
+        } elseif ($sent > 0) {
+            $_SESSION['warning'] = 'Diffusion partielle: ' . $sent . ' envoyé(s), ' . $failed . ' échec(s).';
+        } else {
+            $_SESSION['error'] = 'Aucun email n\'a pu être envoyé.';
+        }
+
+        header('Location: /concours/' . (int)$concoursId . '/editions');
+        exit;
     }
 
     /**
