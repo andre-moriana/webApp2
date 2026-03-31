@@ -2241,7 +2241,7 @@ public function inscription($concoursId)
         unset($insc);
 
         // Préparer les destinataires de diffusion mail (archers, clubs, comités)
-        $mailTargets = $this->buildEditionMailTargets($inscriptions, $clubsMap);
+        $mailTargets = $this->buildEditionMailTargets($inscriptions, $clubsMap, $clubs);
         $mailTargetsArchers = $mailTargets['archers'];
         $mailTargetsClubs = $mailTargets['clubs'];
         $mailTargetsComitesRegionaux = $mailTargets['comites_regionaux'];
@@ -2531,12 +2531,42 @@ public function inscription($concoursId)
         require_once __DIR__ . '/../Views/layouts/footer.php';
     }
 
-    private function buildEditionMailTargets(array $inscriptions, array $clubsMap)
+    private function buildEditionMailTargets(array $inscriptions, array $clubsMap, array $clubsList = [])
     {
         $archers = [];
         $clubs = [];
         $comitesRegionaux = [];
         $comitesDepartementaux = [];
+        $addEmailToComites = function ($clubCode, $email) use (&$comitesRegionaux, &$comitesDepartementaux) {
+            $clubCode = trim((string)$clubCode);
+            $email = trim((string)$email);
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return;
+            }
+            if (preg_match('/^\d{7}$/', $clubCode)) {
+                $regionCode = substr($clubCode, 0, 2);
+                $comiteRegId = $regionCode . '00000';
+                if (!isset($comitesRegionaux[$comiteRegId])) {
+                    $comitesRegionaux[$comiteRegId] = [
+                        'id' => $comiteRegId,
+                        'label' => 'Comité régional ' . $regionCode,
+                        'emails' => []
+                    ];
+                }
+                $comitesRegionaux[$comiteRegId]['emails'][$email] = true;
+
+                $depCode = substr($clubCode, 0, 3);
+                $comiteDepId = $depCode . '0000';
+                if (!isset($comitesDepartementaux[$comiteDepId])) {
+                    $comitesDepartementaux[$comiteDepId] = [
+                        'id' => $comiteDepId,
+                        'label' => 'Comité départemental ' . $depCode,
+                        'emails' => []
+                    ];
+                }
+                $comitesDepartementaux[$comiteDepId]['emails'][$email] = true;
+            }
+        };
 
         foreach ($inscriptions as $insc) {
             $email = trim((string)($insc['email'] ?? $insc['user_email'] ?? ''));
@@ -2572,41 +2602,19 @@ public function inscription($concoursId)
             }
             $clubs[$clubKey]['emails'][$email] = true;
 
-            // Regroupement comités :
-            // - régional: 2 premiers chiffres
-            // - départemental: 3 premiers chiffres
-            if (preg_match('/^\d{7}$/', $clubCode)) {
-                $regionCode = substr($clubCode, 0, 2);
-                $comiteRegId = $regionCode . '00000';
-                if (!isset($comitesRegionaux[$comiteRegId])) {
-                    $comitesRegionaux[$comiteRegId] = [
-                        'id' => $comiteRegId,
-                        'label' => 'Comité régional ' . $regionCode,
-                        'emails' => []
-                    ];
-                }
-                $comitesRegionaux[$comiteRegId]['emails'][$email] = true;
+            // Pour l'archer/club, on conserve le comportement actuel (inscriptions confirmées).
+            $addEmailToComites($clubCode, $email);
+        }
 
-                $depCode = substr($clubCode, 0, 3);
-                $comiteDepId = $depCode . '0000';
-                if (!isset($comitesDepartementaux[$comiteDepId])) {
-                    $comitesDepartementaux[$comiteDepId] = [
-                        'id' => $comiteDepId,
-                        'label' => 'Comité départemental ' . $depCode,
-                        'emails' => []
-                    ];
-                }
-                $comitesDepartementaux[$comiteDepId]['emails'][$email] = true;
-            } else {
-                if (!isset($comitesRegionaux['autres'])) {
-                    $comitesRegionaux['autres'] = [
-                        'id' => 'autres',
-                        'label' => 'Autres clubs',
-                        'emails' => []
-                    ];
-                }
-                $comitesRegionaux['autres']['emails'][$email] = true;
+        // IMPORTANT: pour les comités, utiliser la liste complète des clubs
+        // (et les emails clubs), pas seulement les clubs présents en inscriptions.
+        foreach ($clubsList as $club) {
+            if (!is_array($club)) {
+                continue;
             }
+            $clubCode = trim((string)($club['nameShort'] ?? $club['name_short'] ?? ''));
+            $clubEmail = trim((string)($club['email'] ?? ''));
+            $addEmailToComites($clubCode, $clubEmail);
         }
 
         foreach ($clubs as &$club) {
@@ -2700,10 +2708,12 @@ public function inscription($concoursId)
         }
 
         $clubsMap = [];
+        $clubsList = [];
         try {
             $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
             $clubsPayload = $this->apiService->unwrapData($clubsResponse);
             if (is_array($clubsPayload)) {
+                $clubsList = array_values($clubsPayload);
                 foreach ($clubsPayload as $club) {
                     $clubId = $club['id'] ?? $club['_id'] ?? null;
                     if ($clubId !== null && $clubId !== '') {
@@ -2720,7 +2730,7 @@ public function inscription($concoursId)
             $clubsMap = [];
         }
 
-        $targets = $this->buildEditionMailTargets($inscriptions, $clubsMap);
+        $targets = $this->buildEditionMailTargets($inscriptions, $clubsMap, $clubsList);
         $emails = [];
 
         $selectedArchers = $_POST['target_archers'] ?? [];
