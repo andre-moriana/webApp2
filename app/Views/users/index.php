@@ -127,7 +127,7 @@ $clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ??
                                             if (!empty($user['licenceNumber'])) $searchableText .= strtolower($user['licenceNumber']) . ' ';
                                             if (!empty($user['id'])) $searchableText .= $user['id'] . ' ';
                                             // Ajouter le club dans la recherche (nom complet et nom court)
-                                            /*if (!empty($user['clubName'])) {
+                                            if (!empty($user['clubName'])) {
                                                 $searchableText .= strtolower($user['clubName']) . ' ';
                                             } elseif (!empty($user['club_name'])) {
                                                 $searchableText .= strtolower($user['club_name']) . ' ';
@@ -136,9 +136,9 @@ $clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ??
                                                 $searchableText .= strtolower($user['clubNameShort']) . ' ';
                                             } elseif (!empty($user['club_name_short'])) {
                                                 $searchableText .= strtolower($user['club_name_short']) . ' ';
-                                            }*/
+                                            }
                                             // Fallback si club est un objet/tableau
-                                            if (isset($user['club'])) {
+                                            /*if (isset($user['club'])) {
                                                 if (is_array($user['club'])) {
                                                     $clubName = $user['club']['name'] ?? '';
                                                     $clubNameShort = $user['club']['nameShort'] ?? $user['club']['name_short'] ?? ' ';
@@ -147,7 +147,7 @@ $clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ??
                                                 } else {
                                                     $searchableText .= strtolower($user['club']) . ' ';
                                                 }
-                                            }
+                                            }*/
                                             echo htmlspecialchars(trim($searchableText));
                                         ?>">
                                             <td class="text-nowrap"><?php echo htmlspecialchars($user['id']); ?></td>
