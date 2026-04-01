@@ -198,15 +198,12 @@ $title = "Détails de l'utilisateur - Portail Arc Training";
                                         <label class="form-label fw-bold">Club :</label>
                                         <p class="form-control-plaintext">
                                             <?php 
-                                            $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
-                                            $displayName = !empty($user['clubName']) ? $user['clubName'] : $user['clubNameShort'];
-                                            if (!empty($clubNameShort)) {
-                                                // Afficher le nom complet du club si disponible, sinon le name_short
-                                                if (!empty($clubName)) {
-                                                    echo htmlspecialchars($displayName);
-                                                } else {
-                                                    echo htmlspecialchars($clubNameShort);
-                                                }
+                                            $clubName = $user['clubName'] ?? null;
+                                            $clubNameShort = $user['clubNameShort'] ?? $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
+                                            if (!empty($clubName) || !empty($clubNameShort)) {
+                                                // Afficher le nom complet si disponible, sinon la version courte.
+                                                $displayName = !empty($clubName) ? $clubName : $clubNameShort;
+                                                echo htmlspecialchars((string) $displayName);
                                             } else {
                                                 echo 'Non renseigné';
                                             }
