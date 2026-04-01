@@ -165,7 +165,7 @@ class UserController {
                                 if ($nameShort === $clubNameShort) {
                                     $clubName = $club['name'] ?? '';
                                     if (!empty($clubName)) {
-                                        $user['clubName'] = $clubName .'('.$nameShort.')';
+                                        $user['clubName'] = $clubName .' ('.$nameShort.')';
                                     }
                                     break;
                                 }
