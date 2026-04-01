@@ -141,9 +141,9 @@ $clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ??
                                             if (isset($user['club'])) {
                                                 if (is_array($user['club'])) {
                                                     $clubName = $user['club']['name'] ?? '';
-                                                    $clubNameShort = $user['club']['nameShort'] ?? $user['club']['name_short'] ?? 'aaaa';
-                                                    if ($clubName) $searchableText .= strtolower($clubName) . ' ';
-                                                    if ($clubNameShort) $searchableText .= strtolower($clubNameShort) . ' ';
+                                                    $clubNameShort = $user['club']['nameShort'] ?? $user['club']['name_short'] ?? ' ';
+                                                    if ($clubName) $searchableText .= strtolower($clubName) . ' aaa';
+                                                    if ($clubNameShort) $searchableText .= strtolower($clubNameShort) . ' bbb';
                                                 } else {
                                                     $searchableText .= strtolower($user['club']) . ' ';
                                                 }
