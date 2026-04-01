@@ -129,13 +129,13 @@ $clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ??
                                             // Ajouter le club dans la recherche (nom complet et nom court)
                                             if (!empty($user['clubName'])) {
                                                 $searchableText .= strtolower($user['clubName']) . ' ';
-                                            } elseif (!empty($user['club_name'])) {
+                                            /*} elseif (!empty($user['club_name'])) {
                                                 $searchableText .= strtolower($user['club_name']) . ' ';
                                             }
                                             if (!empty($user['clubNameShort'])) {
                                                 $searchableText .= strtolower($user['clubNameShort']) . ' ';
                                             } elseif (!empty($user['club_name_short'])) {
-                                                $searchableText .= strtolower($user['club_name_short']) . ' ';
+                                                $searchableText .= strtolower($user['club_name_short']) . ' ';*/
                                             }
                                             // Fallback si club est un objet/tableau
                                             /*if (isset($user['club'])) {
