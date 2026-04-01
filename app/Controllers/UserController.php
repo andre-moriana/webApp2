@@ -152,8 +152,22 @@ class UserController {
                 $error = 'Utilisateur non trouvé';
             } else {
                 // Récupérer le nom complet du club si l'utilisateur a un club
+/*                $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+                if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
+                    foreach ($clubsResponse['data'] as $club) {
+                        $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                        // Filtrer les clubs dont le name_short ne finit pas par "000"
+                        if (!empty($nameShort) === $user['club_id']) {
+                            $clubs[] = [
+                                'nameShort' => $nameShort,
+                                'name' => $club['name'] ?? ''
+                            ];
+                            break;
+                        }
+                    }
+                }
+*/
                 $clubNameShort = $user['club_id'] ?? null;
-                error_log('clubNameShort: ' . $clubNameShort);
                 if (!empty($clubNameShort)) {
                     try {
                         $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
@@ -161,7 +175,10 @@ class UserController {
                             foreach ($clubsResponse['data'] as $club) {
                                 $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
                                 if ($nameShort === $clubNameShort) {
-                                    $clubName = $club['name'] ?? '';
+                                    $clubs[] = [
+                                        'nameShort' => $nameShort,
+                                        'name' => $club['name'] ?? ''
+                                    ];
                                     break;
                                 }
                             }
