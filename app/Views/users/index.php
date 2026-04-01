@@ -145,7 +145,7 @@ $clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ??
                                                     if ($clubName) $searchableText .= strtolower($clubName) . ' ';
                                                     if ($clubNameShort) $searchableText .= strtolower($clubNameShort) . ' ';
                                                 } else {
-                                                    $searchableText .= strtolower($user['club']) . ' ';
+                                                    $searchableText .= strtolower($user['club']) . ' aaaas';
                                                 }
                                             }
                                             echo htmlspecialchars(trim($searchableText));
