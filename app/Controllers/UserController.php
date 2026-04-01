@@ -174,7 +174,6 @@ class UserController {
                                 }
                             }
                         }
-                        unset($user); // Libérer la référence
                     }
                 } catch (Exception $e) {
                     // En cas d'erreur, continuer sans enrichissement
