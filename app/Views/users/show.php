@@ -198,7 +198,7 @@ $title = "Détails de l'utilisateur - Portail Arc Training";
                                         <label class="form-label fw-bold">Club :</label>
                                         <p class="form-control-plaintext">
                                             <?php 
-                                                $currentClubId = $user['clubName'] ?? $user['clubId'] ?? '';
+                                                $currentClubId = $user['club_name'] ?? $user['clubId'] ?? '';
                                                 echo 'currentClubId: ' . $currentClubId;
                                                 $clubName = $user['club_name'] ?? null;
                                                $displayName = !empty($clubName) ? $clubName : 'Non renseigné';
