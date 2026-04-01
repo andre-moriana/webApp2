@@ -175,7 +175,7 @@ class UserController {
                             foreach ($clubsResponse['data'] as $club) {
                                 $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
                                 if ($nameShort === $clubNameShort) {
-                                    $clubs[] = [
+                                    $club[] = [
                                         'nameShort' => $nameShort,
                                         'name' => $club['name'] ?? ''
                                     ];
