@@ -154,23 +154,20 @@ class UserController {
                 try {
                     $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
                     if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
-                        // Enrichir chaque utilisateur avec le nom complet du club (même logique que show())
-                        foreach ($users as &$user) {
-                            // Récupérer le clubNameShort de la même manière que dans show()
-                            $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
-                            
-                            if (!empty($clubNameShort)) {
-                                // Chercher le club dans la liste (même logique que show())
-                                foreach ($clubsResponse['data'] as $club) {
-                                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                                    // Comparer exactement comme dans show() - par nameShort
-                                    if ($nameShort === $clubNameShort) {
-                                        $clubName = $club['name'] ?? '';
-                                        if (!empty($clubName)) {
-                                            $user['clubName'] = $clubName;
-                                        }
-                                        break;
+                        // Récupérer le clubNameShort de la même manière que dans show()
+                        $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
+                        
+                        if (!empty($clubNameShort)) {
+                            // Chercher le club dans la liste (même logique que show())
+                            foreach ($clubsResponse['data'] as $club) {
+                                $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                                // Comparer exactement comme dans show() - par nameShort
+                                if ($nameShort === $clubNameShort) {
+                                    $clubName = $club['name'] ?? '';
+                                    if (!empty($clubName)) {
+                                        $user['clubName'] = $clubName;
                                     }
+                                    break;
                                 }
                             }
                         }
