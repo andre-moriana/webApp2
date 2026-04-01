@@ -152,7 +152,8 @@ class UserController {
                 $error = 'Utilisateur non trouvé';
             } else {
                 // Récupérer le nom complet du club si l'utilisateur a un club
-                $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
+                $clubNameShort = $user['club_id'] ?? null;
+                error_log('clubNameShort: ' . $clubNameShort);
                 if (!empty($clubNameShort)) {
                     try {
                         $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
