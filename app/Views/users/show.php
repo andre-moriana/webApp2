@@ -199,9 +199,8 @@ $title = "Détails de l'utilisateur - Portail Arc Training";
                                         <p class="form-control-plaintext">
                                             <?php 
                                                 $currentClubId = $user['clubName'] ?? 'aaa';
-                                                echo 'currentClubName: ' . $clubs['nameShort'];
-                                                $clubName = $clubs['name'] ?? null;
-                                               $displayName = !empty($clubName) ? $clubName : 'Non renseigné';
+                                                echo 'currentClubName: ' . $user['clubName'];
+                                               $displayName = !empty($user['clubName']) ? $user['clubName'] : 'Non renseigné';
                                                echo htmlspecialchars($displayName);
                                             ?>
                                         </p>

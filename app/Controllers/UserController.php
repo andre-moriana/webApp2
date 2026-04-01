@@ -151,43 +151,36 @@ class UserController {
             if (!$user) {
                 $error = 'Utilisateur non trouvé';
             } else {
-                // Récupérer le nom complet du club si l'utilisateur a un club
-/*                $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
-                if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
-                    foreach ($clubsResponse['data'] as $club) {
-                        $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                        // Filtrer les clubs dont le name_short ne finit pas par "000"
-                        if (!empty($nameShort) === $user['club_id']) {
-                            $clubs[] = [
-                                'nameShort' => $nameShort,
-                                'name' => $club['name'] ?? ''
-                            ];
-                            break;
-                        }
-                    }
-                }
-*/
-                $clubNameShort = $user['club_id'] ?? null;
-                if (!empty($clubNameShort)) {
-                    try {
-                        $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
-                        if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
-                            foreach ($clubsResponse['data'] as $club) {
-                                $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
-                                if ($nameShort === $clubNameShort) {
-                                    $clubs[] = [
-                                        'nameShort' => $nameShort,
-                                        'name' => $club['name'] ?? ''
-                                    ];
-                                    break;
+                try {
+                    $clubsResponse = $this->apiService->makeRequest('clubs/list', 'GET');
+                    if ($clubsResponse['success'] && isset($clubsResponse['data']) && is_array($clubsResponse['data'])) {
+                        // Enrichir chaque utilisateur avec le nom complet du club (même logique que show())
+                        foreach ($users as &$user) {
+                            // Récupérer le clubNameShort de la même manière que dans show()
+                            $clubNameShort = $user['club'] ?? $user['clubId'] ?? $user['club_id'] ?? null;
+                            
+                            if (!empty($clubNameShort)) {
+                                // Chercher le club dans la liste (même logique que show())
+                                foreach ($clubsResponse['data'] as $club) {
+                                    $nameShort = $club['nameShort'] ?? $club['name_short'] ?? '';
+                                    // Comparer exactement comme dans show() - par nameShort
+                                    if ($nameShort === $clubNameShort) {
+                                        $clubName = $club['name'] ?? '';
+                                        if (!empty($clubName)) {
+                                            $user['clubName'] = $clubName;
+                                        }
+                                        break;
+                                    }
                                 }
                             }
                         }
-                    } catch (Exception $e) {
-                        // En cas d'erreur, on garde juste le name_short
-                        error_log('Erreur lors de la récupération du nom du club: ' . $e->getMessage());
+                        unset($user); // Libérer la référence
                     }
+                } catch (Exception $e) {
+                    // En cas d'erreur, continuer sans enrichissement
+                    error_log('Erreur lors de l\'enrichissement des clubs: ' . $e->getMessage());
                 }
+
             }
         } catch (Exception $e) {
             $error = 'Erreur lors de la récupération de l\'utilisateur';
