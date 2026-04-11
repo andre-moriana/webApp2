@@ -1510,7 +1510,7 @@ class ApiController {
                         
                         // Si storedFilename existe, construire l'URL correcte vers /uploads/events
                         if (isset($attachment['storedFilename'])) {
-                            $attachment['url'] = 'https://api.arctraining.fr/uploads/events/' . $attachment['storedFilename'];
+                            $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
                         }
                         // Sinon extraire depuis url existant
                         elseif (isset($attachment['url'])) {
