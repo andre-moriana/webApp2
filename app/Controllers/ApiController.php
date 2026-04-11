@@ -1522,35 +1522,41 @@ class ApiController {
                                     if (isset($queryParams['url'])) {
                                         $decodedPath = urldecode($queryParams['url']);
                                         // Si le chemin contient /uploads/messages, le remplacer par /uploads/events
-                                        if (strpos($decodedPath, '/uploads/messages/') !== false) {
-                                            $decodedPath = str_replace('/uploads/messages/', '/uploads/events/', $decodedPath);
+                                        if (preg_match('#^/uploads/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))$#i', $decodedPath, $fileMatches)) {
+                                            $decodedPath = '/uploads/messages/' . $fileMatches[1];
                                         }
-                                        // Le chemin contient déjà /uploads/... on ajoute juste le domaine
+                                       // Le chemin contient déjà /uploads/... on ajoute juste le domaine
                                         $attachment['url'] = 'https://api.arctraining.fr' . $decodedPath;
                                     }
                                 }
                             }
-                            // Sinon extraire le nom de fichier (hash.extension) et utiliser /uploads/events
+                            // Corriger les URLs qui sont juste /uploads/filename.pdf
+                            elseif (preg_match('#^/uploads/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))$#i', $attachment['url'], $fileMatches)) {
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $fileMatches[1];
+                            }
+                            // Sinon extraire le nom de fichier (hash.extension)
                             elseif (preg_match('/\/([a-f0-9]{32}\.[a-zA-Z0-9]+)(?:\?|$)/i', $attachment['url'], $matches)) {
-                                $attachment['url'] = 'https://api.arctraining.fr/uploads/events/' . $matches[1];
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
                             }
                             elseif (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['url'], $matches)) {
-                                $attachment['url'] = 'https://api.arctraining.fr/uploads/events/' . $matches[1];
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
                             }
-                            // Si l'URL contient /uploads/messages, la remplacer par /uploads/events
-                            elseif (strpos($attachment['url'], '/uploads/messages/') !== false) {
-                                $attachment['url'] = str_replace('/uploads/messages/', '/uploads/events/', $attachment['url']);
+                            // Si l'URL ne contient pas /uploads/messages/ ou /uploads/events/, essayer de la corriger
+                            elseif (strpos($attachment['url'], '/uploads/messages/') === false && strpos($attachment['url'], '/uploads/events/') === false) {
+                                // Extraire le nom du fichier
+                                if (preg_match('#/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))(?:\?|$)#i', $attachment['url'], $fileMatches)) {
+                                    $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $fileMatches[1];
+                                }
                             }
                         }
                         // Sinon extraire depuis path
                         elseif (isset($attachment['path'])) {
                             if (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['path'], $matches)) {
-                                $attachment['url'] = 'https://api.arctraining.fr/uploads/events/' . $matches[1];
+                                $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
                             }
                         }
                     }
-                }
-                
+                }                
                 $this->sendJsonResponse($messages);
             } else {
                 $this->sendJsonResponse([
