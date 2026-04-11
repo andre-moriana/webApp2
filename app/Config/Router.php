@@ -195,6 +195,8 @@ class Router {
         $this->addRoute("GET", "/api/topics/{topicId}/forms", "ApiController@getTopicForms");
         $this->addRoute("PUT", "/api/topics/{topicId}", "TopicController@update");
         $this->addRoute("DELETE", "/api/topics/{topicId}", "TopicController@destroy");
+        $this->addRoute("GET", "/api/events/{eventId}/messages", "ApiController@getEventMessages");
+        $this->addRoute("POST", "/api/events/{eventId}/messages", "ApiController@sendEventMessage");
         $this->addRoute("GET", "/api/events/{eventId}/forms", "ApiController@getEventForms");
         $this->addRoute("POST", "/api/forms", "ApiController@createForm");
         $this->addRoute("POST", "/api/forms/{formId}/responses", "ApiController@submitFormResponse");

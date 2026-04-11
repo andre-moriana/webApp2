@@ -62,14 +62,12 @@ function createMessageElement(message) {
     
     if (hasAttachment) {
         let attachmentUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
-        
-        // Détecter si c'est une image ou un PDF par mimeType ou par extension
+
         let isImage = false;
         let isPdf = false;
-        
-        // Gérer les différents formats de mimeType (mimeType, mime_type, etc.)
+
         const mimeType = message.attachment.mimeType || message.attachment.mime_type || '';
-        
+
         if (mimeType) {
             if (mimeType.startsWith("image/")) {
                 isImage = true;
@@ -77,71 +75,47 @@ function createMessageElement(message) {
                 isPdf = true;
             }
         }
-        
-        // Détecter par extension si mimeType n'est pas disponible
+
         if (!isImage && !isPdf) {
             const filename = message.attachment.filename || message.attachment.originalName || message.attachment.original_name || attachmentUrl;
             const lowerFilename = filename.toLowerCase();
             const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg"];
             const pdfExtensions = [".pdf"];
-            
+
             isImage = imageExtensions.some(ext => lowerFilename.endsWith(ext));
             isPdf = pdfExtensions.some(ext => lowerFilename.endsWith(ext));
         }
-        
+
         const originalName = message.attachment.originalName || message.attachment.original_name || message.attachment.filename || "Pièce jointe";
-        
-        // Définir l'URL originale pour tous les types de fichiers
+
+        // Même logique que groups-chat.js : l'URL absolue des fichiers est fournie par le backend WebApp2 (getEventMessages).
         let originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
-        
-        // IMPORTANT: Corriger l'URL pour tous les fichiers des événements
-        // Si l'URL contient déjà api.arctraining.fr, vérifier qu'elle pointe vers /uploads/events
-        if (originalUrl.includes('api.arctraining.fr')) {
-            // Si l'URL pointe vers /uploads/messages, la remplacer par /uploads/events
-            if (originalUrl.includes('/uploads/messages/')) {
-                originalUrl = originalUrl.replace('/uploads/messages/', '/uploads/events/');
-            }
+
+        if (/^https?:\/\//i.test(originalUrl)) {
+            // URL absolue déjà normalisée par le backend WebApp2
+        } else if (originalUrl.startsWith('/uploads/')) {
+            originalUrl = 'https://api.arctraining.fr' + originalUrl;
+        } else if (originalUrl.startsWith('uploads/')) {
+            originalUrl = 'https://api.arctraining.fr/' + originalUrl;
         } else {
-            // Pour tous les autres cas, construire l'URL correcte vers api.arctraining.fr
-            if (originalUrl.startsWith('/uploads/')) {
-                // Si c'est /uploads/messages, remplacer par /uploads/events
-                if (originalUrl.startsWith('/uploads/messages/')) {
-                    originalUrl = 'https://api.arctraining.fr' + originalUrl.replace('/uploads/messages/', '/uploads/events/');
-                } else {
-                    originalUrl = 'https://api.arctraining.fr' + originalUrl;
-                }
-            } else if (originalUrl.startsWith('uploads/')) {
-                // Si c'est uploads/messages, remplacer par uploads/events
-                if (originalUrl.startsWith('uploads/messages/')) {
-                    originalUrl = 'https://api.arctraining.fr/' + originalUrl.replace('uploads/messages/', 'uploads/events/');
-                } else {
-                    originalUrl = 'https://api.arctraining.fr/' + originalUrl;
-                }
-            } else {
-                // Si c'est juste un nom de fichier, utiliser le dossier events pour les événements
-                originalUrl = 'https://api.arctraining.fr/uploads/events/' + originalUrl;
-            }
+            originalUrl = 'https://api.arctraining.fr/uploads/messages/' + originalUrl;
         }
-        
-        // Pour les images, utiliser la route d'images du backend WebApp2
+
         if (isImage) {
-            // Pour toutes les images, utiliser la route proxy du backend WebApp2
-            attachmentUrl = "/messages/image/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
+            attachmentUrl = '/messages/image/' + (message._id || message.id) + '?url=' + encodeURIComponent(originalUrl);
         } else if (isPdf) {
-            // Pour les PDF, utiliser la route d'attachment avec paramètre pour affichage inline
-            attachmentUrl = "/messages/attachment/" + (message._id || message.id) + "?inline=1&url=" + encodeURIComponent(originalUrl);
+            attachmentUrl = '/messages/attachment/' + (message._id || message.id) + '?inline=1&url=' + encodeURIComponent(originalUrl);
         } else {
-            // Pour les autres fichiers, utiliser la route de téléchargement
-            attachmentUrl = "/messages/attachment/" + (message._id || message.id) + "?url=" + encodeURIComponent(originalUrl);
+            attachmentUrl = '/messages/attachment/' + (message._id || message.id) + '?url=' + encodeURIComponent(originalUrl);
         }
-        
+
         attachmentHtml = `
             <div class="message-attachment mt-2">
-                ${isImage 
+                ${isImage
                     ? `<a href="${attachmentUrl}" target="_blank" class="attachment-link">
-                        <img src="${attachmentUrl}" 
-                             alt="${escapeHtml(originalName)}" 
-                             class="img-fluid rounded message-image" 
+                        <img src="${attachmentUrl}"
+                             alt="${escapeHtml(originalName)}"
+                             class="img-fluid rounded message-image"
                              style="max-width: 300px; max-height: 300px; object-fit: cover; cursor: pointer;"
                              onerror="console.error('Erreur de chargement de l\\'image:', '${escapeHtml(originalName)}'); this.onerror=null; this.style.display='none'; const fallback = this.nextElementSibling; if(fallback) fallback.style.display='block';">
                         <div class="image-fallback" style="display: none;">
@@ -153,13 +127,14 @@ function createMessageElement(message) {
                     </a>`
                     : isPdf
                     ? `<div class="pdf-preview-container">
-                        <iframe src="${attachmentUrl}" 
+                        <iframe src="${attachmentUrl}"
                                 class="pdf-preview"
                                 style="width: 100%; max-width: 600px; height: 400px; border: 1px solid #dee2e6; border-radius: 8px;"
-                                title="${escapeHtml(originalName)}">
+                                title="${escapeHtml(originalName)}"
+                                type="application/pdf">
                         </iframe>
                         <div class="mt-2">
-                            <a href="${attachmentUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <a href="${attachmentUrl.replace('?inline=1&', '?')}" target="_blank" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-download me-1"></i>Télécharger le PDF
                             </a>
                         </div>
@@ -216,24 +191,48 @@ function createMessageElement(message) {
 }
 
 
-// Charger les messages d'un événement
+// Charger les messages d'un événement (même schéma que le chat groupe / sujet : API interne + jeton)
 async function loadEventMessages(eventId) {
+    if (!messagesContainer) {
+        return;
+    }
+
+    messagesContainer.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p class="mt-2">Chargement des messages...</p>
+        </div>
+    `;
+
+    const token = (typeof authToken !== "undefined" && authToken)
+        ? authToken
+        : (localStorage.getItem("token") || sessionStorage.getItem("token") || "");
+
     try {
-        const response = await fetch(`/events/${eventId}/messages`, {
+        const response = await fetch(`/api/events/${eventId}/messages`, {
             method: "GET",
             headers: {
-                "Content-Type": "application/json"
-            }
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            credentials: "same-origin"
         });
-        
+
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Erreur HTTP: ${response.status} - ${errorText}`);
+            messagesContainer.innerHTML = `
+                <div class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <p>Erreur ${response.status}: ${escapeHtml(errorText.substring(0, 500))}</p>
+                </div>
+            `;
+            return;
         }
-        
+
         const data = await response.json();
-        
-        // Gérer différents formats de réponse API
+
         let messages = [];
         if (Array.isArray(data)) {
             messages = data;
@@ -242,19 +241,25 @@ async function loadEventMessages(eventId) {
         } else if (data && data.success && Array.isArray(data.data)) {
             messages = data.data;
         }
-        
-        // Trier les messages du plus ancien au plus récent
+
         messages.sort((a, b) => {
             const dateA = new Date(a.created_at || a.createdAt || a.timestamp || 0);
             const dateB = new Date(b.created_at || b.createdAt || b.timestamp || 0);
             return dateA.getTime() - dateB.getTime();
         });
-        
+
         displayMessages(messages);
     } catch (error) {
-        console.error('Erreur lors du chargement des messages:', error);
-        displayMessages([]);
+        console.error("Erreur lors du chargement des messages:", error);
+        messagesContainer.innerHTML = `
+            <div class="text-center text-danger">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <p>Erreur de connexion: ${escapeHtml(error.message || "")}</p>
+            </div>
+        `;
     }
+
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 // Afficher les messages
@@ -307,9 +312,10 @@ async function sendMessage(content, attachment = null) {
             formData.append("attachment", attachment);
         }
         
-        const response = await fetch(`/events/${currentEventId}/messages`, {
+        const response = await fetch(`/api/events/${currentEventId}/messages`, {
             method: "POST",
-            body: formData
+            body: formData,
+            credentials: "same-origin"
         });
         
         if (!response.ok) {
