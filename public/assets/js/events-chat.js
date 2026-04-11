@@ -31,6 +31,41 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function formatPlainMessageSegment(part) {
+    return escapeHtml(part).replace(/\n/g, "<br>");
+}
+
+function formatChatMessageContent(text) {
+    if (text == null || text === "") {
+        return "";
+    }
+    const raw = String(text);
+    const urlRegex = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
+    const parts = raw.split(urlRegex);
+    const trimUrlTail = (url) => {
+        const clean = url.replace(/[),.;:!?]+$/g, "");
+        return { clean, tail: url.slice(clean.length) };
+    };
+    return parts.map(part => {
+        if (/^https?:\/\//i.test(part)) {
+            const { clean, tail } = trimUrlTail(part);
+            if (!clean) {
+                return formatPlainMessageSegment(part);
+            }
+            return `<a href="${escapeHtml(clean)}" target="_blank" rel="noopener noreferrer">${escapeHtml(clean)}</a>` + formatPlainMessageSegment(tail);
+        }
+        if (/^www\./i.test(part)) {
+            const { clean, tail } = trimUrlTail(part);
+            if (!clean) {
+                return formatPlainMessageSegment(part);
+            }
+            const href = "https://" + clean;
+            return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(clean)}</a>` + formatPlainMessageSegment(tail);
+        }
+        return formatPlainMessageSegment(part);
+    }).join("");
+}
+
 // Créer un élément de message (format similaire à groups-chat.js)
 function createMessageElement(message) {
     // Gérer les différentes structures de données du backend (historique event = author { _id, name } comme les groupes)
@@ -177,8 +212,9 @@ function createMessageElement(message) {
         `;
     }
 
-    const messageContent = message.content ? message.content.replace(/\n/g, "<br>") : "";
-    const hasContent = messageContent.trim() !== "";
+    const rawContent = message.content != null ? String(message.content) : "";
+    const hasContent = rawContent.trim() !== "";
+    const messageContent = hasContent ? formatChatMessageContent(rawContent) : "";
     
     if (!hasContent && !hasAttachment) {
         return "";
@@ -741,7 +777,7 @@ window.editMessage = async function(messageId) {
     
     if (messageElement) {
         // Récupérer seulement le texte du message, pas les métadonnées
-        const messageTextElement = messageElement.querySelector('.message-text');
+        const messageTextElement = messageElement.querySelector('.message-content');
         if (messageTextElement) {
             currentContent = messageTextElement.textContent || messageTextElement.innerText || "";
         }
@@ -828,8 +864,7 @@ async function saveMessageEdit(messageId) {
             if (messageElement) {
                 const contentElement = messageElement.querySelector('.message-content');
                 if (contentElement) {
-                    contentElement.textContent = newContent;
-                    contentElement.innerHTML = newContent.replace(/\n/g, "<br>");
+                    contentElement.innerHTML = formatChatMessageContent(newContent);
                 }
             }
         } else {
