@@ -1492,27 +1492,49 @@ class ApiController {
         }
 
         try {
-            $response = $this->apiService->makeRequest("events/" . $eventId . "/messages", "GET");
+            // Historique aligné sur le backend messages (même format que groupes / sujets : _id, author{}, attachment camelCase)
+            $response = $this->apiService->makeRequest("messages/event/" . $eventId . "/history", "GET");
             // Traiter la réponse comme pour les groupes
             if ($response['success']) {
-                // L'API retourne directement un tableau de messages
+                $raw = $response['data'] ?? [];
                 $messages = [];
-                if (is_array($response['data'])) {
-                    $messages = $response['data'];
-                } elseif (is_array($response)) {
-                    $messages = $response;
+                if (is_array($raw)) {
+                    if (isset($raw['messages']) && is_array($raw['messages'])) {
+                        $messages = $raw['messages'];
+                    } elseif ($raw === [] || array_keys($raw) === range(0, count($raw) - 1)) {
+                        $messages = $raw;
+                    }
                 }
-                
-                // Normaliser les pièces jointes (même principe que TopicController / getTopicMessages) : URLs absolues côté API, sans logique métier dans le JS.
+
                 $apiFilesBase = rtrim(rtrim($this->baseUrl, '/api'), '/');
                 if ($apiFilesBase === '') {
                     $apiFilesBase = 'https://api.arctraining.fr';
                 }
                 foreach ($messages as &$message) {
+                    if (isset($message['_id']) && !isset($message['id'])) {
+                        $message['id'] = $message['_id'];
+                    }
+                    if (isset($message['author']['_id']) && !isset($message['author_id'])) {
+                        $message['author_id'] = $message['author']['_id'];
+                    }
+                    if (isset($message['author']['name']) && !isset($message['author_name'])) {
+                        $message['author_name'] = $message['author']['name'];
+                    }
+                    if (isset($message['createdAt']) && !isset($message['created_at'])) {
+                        $message['created_at'] = $message['createdAt'];
+                    }
+
                     if (!isset($message['attachment']) || !is_array($message['attachment'])) {
                         continue;
                     }
                     $attachment = $message['attachment'];
+
+                    if (isset($attachment['mimeType']) && !isset($attachment['mime_type'])) {
+                        $attachment['mime_type'] = $attachment['mimeType'];
+                    }
+                    if (isset($attachment['originalName']) && !isset($attachment['original_name'])) {
+                        $attachment['original_name'] = $attachment['originalName'];
+                    }
 
                     if (isset($attachment['url']) && strpos($attachment['url'], 'url=') !== false) {
                         $urlParts = parse_url($attachment['url']);
@@ -1528,7 +1550,7 @@ class ApiController {
                             }
                         }
                     } elseif (isset($attachment['storedFilename'])) {
-                        $attachment['url'] = $apiFilesBase . '/uploads/events/' . $attachment['storedFilename'];
+                        $attachment['url'] = $apiFilesBase . '/uploads/messages/' . $attachment['storedFilename'];
                     } elseif (isset($attachment['path']) && is_string($attachment['path']) && $attachment['path'] !== '') {
                         $path = $attachment['path'];
                         if (str_starts_with($path, 'http')) {
@@ -1539,6 +1561,8 @@ class ApiController {
                     } elseif (isset($attachment['url']) && is_string($attachment['url']) && !str_starts_with($attachment['url'], 'http')) {
                         $path = $attachment['url'];
                         $attachment['url'] = $apiFilesBase . (str_starts_with($path, '/') ? '' : '/') . ltrim($path, '/');
+                    } elseif (!empty($attachment['filename'])) {
+                        $attachment['url'] = $apiFilesBase . '/uploads/messages/' . ltrim(basename($attachment['filename']), '/');
                     }
                     $message['attachment'] = $attachment;
                 }

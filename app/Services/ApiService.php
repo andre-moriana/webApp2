@@ -1804,8 +1804,8 @@ class ApiService {
             ];
         }
         
-        // Utiliser l'endpoint GET /events/{id}/messages
-        $result = $this->makeRequest("events/{$eventId}/messages", "GET");
+        // Même flux que le chat groupe : historique via /messages/event/{id}/history
+        $result = $this->makeRequest("messages/event/{$eventId}/history", "GET");
         
         return $result;
     }

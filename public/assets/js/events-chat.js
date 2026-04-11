@@ -33,7 +33,7 @@ function escapeHtml(text) {
 
 // Créer un élément de message (format similaire à groups-chat.js)
 function createMessageElement(message) {
-    // Gérer les différentes structures de données du backend
+    // Gérer les différentes structures de données du backend (historique event = author { _id, name } comme les groupes)
     const authorId = message.author_id || message.author?._id || message.author?.id || message.userId || message.user_id;
     const authorName = message.author_name || message.author?.name || message.userName || "Utilisateur";
     const messageTime = message.created_at || message.createdAt || message.timestamp;
@@ -54,19 +54,27 @@ function createMessageElement(message) {
     }
 
     let attachmentHtml = "";
-    // Vérifier si le message a une pièce jointe (peut être null, un objet, ou une chaîne)
-    const hasAttachment = message.attachment && 
-        (message.attachment !== null) && 
-        (typeof message.attachment === 'object') &&
-        (message.attachment.filename || message.attachment.url || message.attachment.path);
+    const att = message.attachment;
+    const hasAttachment = att != null
+        && typeof att === "object"
+        && !Array.isArray(att)
+        && (
+            att.filename
+            || att.url
+            || att.path
+            || att.storedFilename
+            || (typeof att.size === "number" && att.size > 0)
+            || att.originalName
+            || att.original_name
+        );
     
     if (hasAttachment) {
-        let attachmentUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
+        let attachmentUrl = att.url || att.path || (att.filename ? `/uploads/${att.filename}` : "");
 
         let isImage = false;
         let isPdf = false;
 
-        const mimeType = message.attachment.mimeType || message.attachment.mime_type || '';
+        const mimeType = att.mimeType || att.mime_type || "";
 
         if (mimeType) {
             if (mimeType.startsWith("image/")) {
@@ -77,8 +85,8 @@ function createMessageElement(message) {
         }
 
         if (!isImage && !isPdf) {
-            const filename = message.attachment.filename || message.attachment.originalName || message.attachment.original_name || attachmentUrl;
-            const lowerFilename = filename.toLowerCase();
+            const filename = att.filename || att.originalName || att.original_name || att.storedFilename || attachmentUrl;
+            const lowerFilename = String(filename).toLowerCase();
             const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg"];
             const pdfExtensions = [".pdf"];
 
@@ -86,10 +94,10 @@ function createMessageElement(message) {
             isPdf = pdfExtensions.some(ext => lowerFilename.endsWith(ext));
         }
 
-        const originalName = message.attachment.originalName || message.attachment.original_name || message.attachment.filename || "Pièce jointe";
+        const originalName = att.originalName || att.original_name || att.filename || att.storedFilename || "Pièce jointe";
 
         // Même logique que groups-chat.js : l'URL absolue des fichiers est fournie par le backend WebApp2 (getEventMessages).
-        let originalUrl = message.attachment.url || message.attachment.path || `/uploads/${message.attachment.filename}`;
+        let originalUrl = att.url || att.path || (att.filename ? `/uploads/${att.filename}` : "") || (att.storedFilename ? `/uploads/messages/${att.storedFilename}` : "");
 
         if (/^https?:\/\//i.test(originalUrl)) {
             // URL absolue déjà normalisée par le backend WebApp2
@@ -351,17 +359,16 @@ if (messageForm) {
         e.preventDefault();
         
         const content = messageInput.value.trim();
-        
-        if (!content) {
+        const attachmentInput = document.getElementById("message-attachment");
+        const attachment = attachmentInput && attachmentInput.files && attachmentInput.files[0] ? attachmentInput.files[0] : null;
+
+        if (!content && !attachment) {
             return;
         }
-        
-        const attachmentInput = document.getElementById("message-attachment");
-        const attachment = attachmentInput.files[0] || null;
-        
+
         sendMessage(content, attachment);
         messageInput.value = "";
-        attachmentInput.value = "";
+        if (attachmentInput) attachmentInput.value = "";
     });
 }
 
