@@ -99,14 +99,13 @@ function createMessageElement(message) {
         // Même logique que groups-chat.js : l'URL absolue des fichiers est fournie par le backend WebApp2 (getEventMessages).
         let originalUrl = att.url || att.path || (att.filename ? `/uploads/${att.filename}` : "") || (att.storedFilename ? `/uploads/messages/${att.storedFilename}` : "");
 
+        // Laisser les chemins relatifs (/uploads/...) : getMessageImage préfixe avec API_BASE_URL côté WebApp2.
         if (/^https?:\/\//i.test(originalUrl)) {
-            // URL absolue déjà normalisée par le backend WebApp2
-        } else if (originalUrl.startsWith('/uploads/')) {
-            originalUrl = 'https://api.arctraining.fr' + originalUrl;
+            // déjà absolue (normalisée par getEventMessages)
         } else if (originalUrl.startsWith('uploads/')) {
-            originalUrl = 'https://api.arctraining.fr/' + originalUrl;
-        } else {
-            originalUrl = 'https://api.arctraining.fr/uploads/messages/' + originalUrl;
+            originalUrl = '/' + originalUrl;
+        } else if (originalUrl !== '' && !originalUrl.startsWith('/')) {
+            originalUrl = '/uploads/messages/' + originalUrl;
         }
 
         if (isImage) {

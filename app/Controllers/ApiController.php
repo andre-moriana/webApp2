@@ -1066,7 +1066,9 @@ class ApiController {
             if (!empty($imageUrl)) {
                 // Décoder l'URL si elle est encodée
                 $imageUrl = urldecode($imageUrl);
-                
+                // Les pièces jointes des messages sont uniquement sous /uploads/messages/
+                $imageUrl = str_replace('/uploads/events/', '/uploads/messages/', $imageUrl);
+
                 // S'assurer que l'URL pointe vers l'API externe
                 $baseUrlWithoutApi = rtrim($this->baseUrl, '/api');
                 $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
@@ -1076,16 +1078,12 @@ class ApiController {
                     $baseUrlClean = 'https://api.arctraining.fr';
                 }
                 
-                // Si l'URL ne commence pas par https://, la rendre absolue
-                if (strpos($imageUrl, 'https://') !== 0) {
-                    // Corriger les URLs incomplètes qui pointent vers /uploads/ sans le dossier messages/events
+                // Si l'URL n'est pas absolue (http:// ou https://), la rendre absolue avec la base API
+                if (!preg_match('#^https?://#i', $imageUrl)) {
                     if (preg_match('#^/uploads/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))$#i', $imageUrl, $matches)) {
-                        // C'est un fichier directement dans /uploads/, pas dans un sous-dossier
                         $filename = $matches[1];
                         $imageUrl = '/uploads/messages/' . $filename;
                     }
-                    
-                    // Toujours rendre l'URL absolue
                     $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
                 }
                 
@@ -1109,56 +1107,7 @@ class ApiController {
                 $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
                 $curlError = curl_error($ch);
                 curl_close($ch);
-                
-                // Si le téléchargement échoue et que l'URL contient /uploads/messages/, essayer /uploads/events/
-                if ($httpCode !== 200 && strpos($imageUrl, '/uploads/messages/') !== false) {
-                    $imageUrl = str_replace('/uploads/messages/', '/uploads/events/', $imageUrl);
-                    
-                    // Réessayer avec le nouveau chemin
-                    $ch = curl_init();
-                    curl_setopt($ch, CURLOPT_URL, $imageUrl);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-                    
-                    if (isset($_SESSION['token'])) {
-                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                            'Authorization: Bearer ' . $_SESSION['token']
-                        ]);
-                    }
-                    
-                    $fileData = curl_exec($ch);
-                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-                    curl_close($ch);
-                }
-                
-                // Inversement, si l'URL contient /uploads/events/ et échoue, essayer /uploads/messages/
-                if ($httpCode !== 200 && strpos($imageUrl, '/uploads/events/') !== false) {
-                    $imageUrl = str_replace('/uploads/events/', '/uploads/messages/', $imageUrl);
-                    
-                    // Réessayer avec le nouveau chemin
-                    $ch = curl_init();
-                    curl_setopt($ch, CURLOPT_URL, $imageUrl);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-                    
-                    if (isset($_SESSION['token'])) {
-                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                            'Authorization: Bearer ' . $_SESSION['token']
-                        ]);
-                    }
-                    
-                    $fileData = curl_exec($ch);
-                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-                    $curlError = curl_error($ch);
-                    curl_close($ch);
-                }
-                
+
                 // Si toujours une erreur, essayer de récupérer le message via l'API pour obtenir l'URL correcte
                 if ($httpCode !== 200 && !empty($messageId)) {
                     error_log("DEBUG downloadMessageAttachment: Échec du téléchargement direct, tentative via API. URL essayée: " . $imageUrl . ", HTTP Code: " . $httpCode);
@@ -1175,62 +1124,40 @@ class ApiController {
                         } elseif (isset($attachment['path'])) {
                             $correctUrl = $attachment['path'];
                         } elseif (isset($attachment['storedFilename'])) {
-                            // Essayer les deux dossiers
-                            $correctUrl = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
+                            $apiRoot = rtrim(rtrim($this->baseUrl, '/api'), '/');
+                            if ($apiRoot === '') {
+                                $apiRoot = 'https://api.arctraining.fr';
+                            }
+                            $correctUrl = $apiRoot . '/uploads/messages/' . $attachment['storedFilename'];
                         }
-                        
+
                         if ($correctUrl) {
-                            // S'assurer que l'URL est complète
-                            if (strpos($correctUrl, 'https') !== 0) {
+                            $correctUrl = str_replace('/uploads/events/', '/uploads/messages/', $correctUrl);
+                            if (!preg_match('#^https?://#i', $correctUrl)) {
                                 $baseUrlClean = rtrim(rtrim($this->baseUrl, '/api'), '/');
                                 $correctUrl = $baseUrlClean . '/' . ltrim($correctUrl, '/');
                             }
-                            
+
                             error_log("DEBUG downloadMessageAttachment: URL corrigée depuis l'API: " . $correctUrl);
-                            
-                            // Réessayer avec l'URL de l'API
+
                             $ch = curl_init();
                             curl_setopt($ch, CURLOPT_URL, $correctUrl);
                             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
                             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-                            
+
                             if (isset($_SESSION['token'])) {
                                 curl_setopt($ch, CURLOPT_HTTPHEADER, [
                                     'Authorization: Bearer ' . $_SESSION['token']
                                 ]);
                             }
-                            
+
                             $fileData = curl_exec($ch);
                             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                             $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
                             $curlError = curl_error($ch);
                             curl_close($ch);
-                            
-                            // Si ça échoue encore, essayer l'autre dossier
-                            if ($httpCode !== 200 && strpos($correctUrl, '/uploads/messages/') !== false) {
-                                $correctUrl = str_replace('/uploads/messages/', '/uploads/events/', $correctUrl);
-                                error_log("DEBUG downloadMessageAttachment: Essai avec /uploads/events/: " . $correctUrl);
-                                
-                                $ch = curl_init();
-                                curl_setopt($ch, CURLOPT_URL, $correctUrl);
-                                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-                                
-                                if (isset($_SESSION['token'])) {
-                                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                                        'Authorization: Bearer ' . $_SESSION['token']
-                                    ]);
-                                }
-                                
-                                $fileData = curl_exec($ch);
-                                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                                $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-                                curl_close($ch);
-                            }
                         }
                     }
                 }
@@ -1402,12 +1329,10 @@ class ApiController {
 
     public function getMessageImage($messageId) {
         try {
-            // S'assurer qu'on est authentifié
             $this->ensureAuthenticated();
-            
-            // Récupérer l'URL de l'image depuis les paramètres GET
+
             $imageUrl = $_GET['url'] ?? '';
-            if (empty($imageUrl)) {
+            if ($imageUrl === '' || $imageUrl === null) {
                 $this->cleanOutput();
                 http_response_code(400);
                 echo json_encode([
@@ -1416,63 +1341,83 @@ class ApiController {
                 ]);
                 return;
             }
-            
-            // Décoder l'URL si elle est encodée
+
             $imageUrl = urldecode($imageUrl);
-            
-            // S'assurer que l'URL pointe vers l'API externe
+            $imageUrl = str_replace('/uploads/events/', '/uploads/messages/', $imageUrl);
+
             $baseUrlWithoutApi = rtrim($this->baseUrl, '/api');
             $baseUrlClean = rtrim($baseUrlWithoutApi, '/');
-            
-            // Si l'URL est relative, la rendre absolue
-            if (strpos($imageUrl, 'https') !== 0) {
-                // URL relative, la rendre absolue
-                $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
-            } elseif (strpos($imageUrl, $baseUrlClean) === false && strpos($imageUrl, $this->baseUrl) === false) {
-                // URL absolue mais qui ne pointe pas vers notre API, on l'utilise telle quelle
-                // (peut être une URL externe valide)
+            if ($baseUrlClean === '') {
+                $baseUrlClean = 'https://api.arctraining.fr';
             }
-            // Faire une requête pour récupérer l'image
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $imageUrl);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-            
-            // Ajouter le token d'authentification si disponible
-            if (isset($_SESSION['token'])) {
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Authorization: Bearer ' . $_SESSION['token']
-                ]);
-            }
-            
-            $imageData = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-            curl_close($ch);
 
-            if ($httpCode === 200 && !empty($imageData)) {
-                // Nettoyer la sortie et définir les headers appropriés pour l'affichage
+            // Même règle que downloadMessageAttachment : http:// OU https:// = absolue (l'ancien test "https" seul cassait http:// en local)
+            if (!preg_match('#^https?://#i', $imageUrl)) {
+                if (preg_match('#^/uploads/([^/]+\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg))$#i', $imageUrl, $matches)) {
+                    $imageUrl = '/uploads/messages/' . $matches[1];
+                }
+                $imageUrl = $baseUrlClean . '/' . ltrim($imageUrl, '/');
+            }
+
+            $curlHeaders = isset($_SESSION['token']) ? [
+                'Authorization: Bearer ' . $_SESSION['token']
+            ] : [];
+
+            $doFetch = function (string $url) use ($curlHeaders) {
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                if ($curlHeaders !== []) {
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, $curlHeaders);
+                }
+                $body = curl_exec($ch);
+                $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $ctype = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                curl_close($ch);
+                return [$code, $body, $ctype];
+            };
+
+            [$httpCode, $imageData, $contentType] = $doFetch($imageUrl);
+
+            if ($httpCode !== 200 && $messageId !== '' && $messageId !== null) {
+                $messageResponse = $this->apiService->makeRequest("messages/{$messageId}", "GET");
+                if ($messageResponse['success'] && isset($messageResponse['data']['attachment'])) {
+                    $attachment = $messageResponse['data']['attachment'];
+                    $correctUrl = $attachment['url'] ?? $attachment['path'] ?? null;
+                    if (!$correctUrl && !empty($attachment['storedFilename'])) {
+                        $correctUrl = $baseUrlClean . '/uploads/messages/' . $attachment['storedFilename'];
+                    }
+                    if ($correctUrl && !preg_match('#^https?://#i', $correctUrl)) {
+                        $correctUrl = $baseUrlClean . '/' . ltrim($correctUrl, '/');
+                    }
+                    if ($correctUrl) {
+                        $correctUrl = str_replace('/uploads/events/', '/uploads/messages/', $correctUrl);
+                        [$httpCode, $imageData, $contentType] = $doFetch($correctUrl);
+                    }
+                }
+            }
+
+            if ($httpCode === 200 && $imageData !== false && $imageData !== '') {
                 if (ob_get_level()) {
                     ob_clean();
                 }
-                
                 header('Content-Type: ' . ($contentType ?: 'image/jpeg'));
                 header('Content-Length: ' . strlen($imageData));
-                header('Cache-Control: public, max-age=3600'); // Cache pour 1 heure
+                header('Cache-Control: public, max-age=3600');
                 header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
-                
                 echo $imageData;
                 exit;
-            } else {
-                $this->cleanOutput();
-                http_response_code(404);
-                echo json_encode([
-                    "success" => false,
-                    "message" => "Image non trouvée"
-                ]);
             }
+
+            $this->cleanOutput();
+            http_response_code(404);
+            echo json_encode([
+                "success" => false,
+                "message" => "Image non trouvée"
+            ]);
         } catch (Exception $e) {
             $this->cleanOutput();
             http_response_code(500);
@@ -1528,6 +1473,12 @@ class ApiController {
                         continue;
                     }
                     $attachment = $message['attachment'];
+                    if (isset($attachment['path'])) {
+                        $attachment['path'] = str_replace('/uploads/events/', '/uploads/messages/', (string) $attachment['path']);
+                    }
+                    if (isset($attachment['url']) && is_string($attachment['url'])) {
+                        $attachment['url'] = str_replace('/uploads/events/', '/uploads/messages/', $attachment['url']);
+                    }
 
                     if (isset($attachment['mimeType']) && !isset($attachment['mime_type'])) {
                         $attachment['mime_type'] = $attachment['mimeType'];

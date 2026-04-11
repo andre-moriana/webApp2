@@ -155,7 +155,7 @@ class GroupController {
             $error = 'Erreur lors de la recuperation du groupe';
         }
         
-        $title = 'De�tails du groupe - Portail Arc Training';
+        $title = 'Détails du groupe - Portail Arc Training';
 
         
         include 'app/Views/layouts/header.php';
