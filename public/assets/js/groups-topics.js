@@ -121,6 +121,41 @@ document.addEventListener('DOMContentLoaded', function() {
         div.textContent = text;
         return div.innerHTML;
     }
+
+    function formatPlainMessageSegment(part) {
+        return escapeHtml(part).replace(/\n/g, '<br>');
+    }
+
+    function formatChatMessageContent(text) {
+        if (text == null || text === '') {
+            return '';
+        }
+        const raw = String(text);
+        const urlRegex = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
+        const parts = raw.split(urlRegex);
+        const trimUrlTail = function (url) {
+            const clean = url.replace(/[),.;:!?]+$/g, '');
+            return { clean: clean, tail: url.slice(clean.length) };
+        };
+        return parts.map(function (part) {
+            if (/^https?:\/\//i.test(part)) {
+                const t = trimUrlTail(part);
+                if (!t.clean) {
+                    return formatPlainMessageSegment(part);
+                }
+                return '<a href="' + escapeHtml(t.clean) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(t.clean) + '</a>' + formatPlainMessageSegment(t.tail);
+            }
+            if (/^www\./i.test(part)) {
+                const t = trimUrlTail(part);
+                if (!t.clean) {
+                    return formatPlainMessageSegment(part);
+                }
+                const href = 'https://' + t.clean;
+                return '<a href="' + escapeHtml(href) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(t.clean) + '</a>' + formatPlainMessageSegment(t.tail);
+            }
+            return formatPlainMessageSegment(part);
+        }).join('');
+    }
     
     // Attacher les gestionnaires de clic aux sujets
     function attachTopicClickHandlers() {
@@ -652,7 +687,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="message-author">${escapeHtml(authorName)}</span>
                             <span class="message-time">${messageTime}</span>
                         </div>
-                        ${messageContent ? `<div class="message-content">${escapeHtml(messageContent).replace(/\n/g, '<br>')}</div>` : ''}
+                        ${messageContent && String(messageContent).trim() !== '' ? `<div class="message-content">${formatChatMessageContent(messageContent)}</div>` : ''}
                         ${attachmentHtml}
                         ${actionsHtml}
                     </div>
@@ -1636,7 +1671,7 @@ window.editTopicMessage = async function(messageId) {
         return;
     }
     
-    const currentContent = contentElement.innerHTML.replace(/<br>/g, '\n');
+    const currentContent = contentElement.innerText || contentElement.textContent || '';
     const newContent = prompt('Modifier le message:', currentContent);
     
     if (newContent === null || newContent.trim() === currentContent.trim()) {
