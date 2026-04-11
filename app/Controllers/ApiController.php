@@ -1451,10 +1451,6 @@ class ApiController {
                     }
                 }
 
-                $apiFilesBase = rtrim(rtrim($this->baseUrl, '/api'), '/');
-                if ($apiFilesBase === '') {
-                    $apiFilesBase = 'https://api.arctraining.fr';
-                }
                 foreach ($messages as &$message) {
                     if (isset($message['_id']) && !isset($message['id'])) {
                         $message['id'] = $message['_id'];
@@ -1487,34 +1483,42 @@ class ApiController {
                         $attachment['original_name'] = $attachment['originalName'];
                     }
 
-                    if (isset($attachment['url']) && strpos($attachment['url'], 'url=') !== false) {
+                    // Même modèle que l'historique groupe : chemin relatif /uploads/messages/… uniquement.
+                    // Le JS (comme groups-chat.js) préfixe avec https://api.arctraining.fr pour le proxy ; ne pas
+                    // fabriquer d'URL absolue depuis API_BASE_URL (souvent différent de l'hôte qui sert les fichiers).
+                    if (isset($attachment['url']) && strpos((string) $attachment['url'], 'url=') !== false) {
                         $urlParts = parse_url($attachment['url']);
                         if (isset($urlParts['query'])) {
                             parse_str($urlParts['query'], $queryParams);
                             if (isset($queryParams['url'])) {
                                 $decodedPath = urldecode($queryParams['url']);
-                                if (str_starts_with($decodedPath, 'http')) {
-                                    $attachment['url'] = $decodedPath;
+                                if (preg_match('#^https?://#i', $decodedPath)) {
+                                    $p = parse_url($decodedPath, PHP_URL_PATH);
+                                    if ($p !== null && $p !== '') {
+                                        $attachment['path'] = $p;
+                                    }
                                 } else {
-                                    $attachment['url'] = $apiFilesBase . (str_starts_with($decodedPath, '/') ? '' : '/') . ltrim($decodedPath, '/');
+                                    $attachment['path'] = str_starts_with($decodedPath, '/') ? $decodedPath : '/' . $decodedPath;
                                 }
                             }
                         }
-                    } elseif (isset($attachment['storedFilename'])) {
-                        $attachment['url'] = $apiFilesBase . '/uploads/messages/' . $attachment['storedFilename'];
-                    } elseif (isset($attachment['path']) && is_string($attachment['path']) && $attachment['path'] !== '') {
-                        $path = $attachment['path'];
-                        if (str_starts_with($path, 'http')) {
-                            $attachment['url'] = $path;
-                        } else {
-                            $attachment['url'] = $apiFilesBase . (str_starts_with($path, '/') ? '' : '/') . ltrim($path, '/');
+                    } elseif (!empty($attachment['storedFilename']) && empty($attachment['path'])) {
+                        $attachment['path'] = '/uploads/messages/' . ltrim((string) $attachment['storedFilename'], '/');
+                    } elseif (!empty($attachment['filename']) && empty($attachment['path'])) {
+                        $attachment['path'] = '/uploads/messages/' . basename((string) $attachment['filename']);
+                    } elseif (empty($attachment['path']) && !empty($attachment['url']) && strpos((string) $attachment['url'], 'url=') === false) {
+                        $u = (string) $attachment['url'];
+                        if (preg_match('#^https?://#i', $u)) {
+                            $p = parse_url($u, PHP_URL_PATH);
+                            if ($p !== null && $p !== '') {
+                                $attachment['path'] = str_replace('/uploads/events/', '/uploads/messages/', $p);
+                            }
+                        } elseif (str_starts_with($u, '/')) {
+                            $attachment['path'] = str_replace('/uploads/events/', '/uploads/messages/', $u);
                         }
-                    } elseif (isset($attachment['url']) && is_string($attachment['url']) && !str_starts_with($attachment['url'], 'http')) {
-                        $path = $attachment['url'];
-                        $attachment['url'] = $apiFilesBase . (str_starts_with($path, '/') ? '' : '/') . ltrim($path, '/');
-                    } elseif (!empty($attachment['filename'])) {
-                        $attachment['url'] = $apiFilesBase . '/uploads/messages/' . ltrim(basename($attachment['filename']), '/');
                     }
+
+                    unset($attachment['url']);
                     $message['attachment'] = $attachment;
                 }
                 unset($message);
