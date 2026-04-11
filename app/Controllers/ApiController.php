@@ -817,7 +817,7 @@ class ApiController {
                             $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $attachment['storedFilename'];
                         }
                         // Sinon extraire depuis url existant
-                        elseif (isset($attachment['url'])) {
+/*                        elseif (isset($attachment['url'])) {
                             // Si l'URL contient un paramètre url=, l'extraire et utiliser le chemin tel quel
                             if (strpos($attachment['url'], '?') !== false && strpos($attachment['url'], 'url=') !== false) {
                                 $urlParts = parse_url($attachment['url']);
@@ -858,7 +858,7 @@ class ApiController {
                             if (preg_match('/([a-f0-9]{32}\.[a-zA-Z0-9]+)$/i', $attachment['path'], $matches)) {
                                 $attachment['url'] = 'https://api.arctraining.fr/uploads/messages/' . $matches[1];
                             }
-                        }
+                        }*/
                     }
                 }
                 
