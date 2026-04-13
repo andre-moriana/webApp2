@@ -243,7 +243,7 @@ if ($isNature) {
     }
 //    $archerVide = ['user_nom' => '', 'numero_licence' => '', 'categorie_classement' => '', 'position_archer' => '', 'numero_cible' => 0, 'depart' => $departDefaut, 'numero_tir' => null];
     $archerVideNature = ['user_nom' => '', 'numero_licence' => '', 'abv_categorie_classement' => '', 'position_archer' => '', 'numero_peloton' => 0, 'depart' => $departDefaut, 'numero_tir' => null];
-    $nbSlotsParPageNature = 2;
+    $nbSlotsParPageNature = 3;
 
     if (empty($archersParPeloton)) {
         $pelotonVide = 1;
