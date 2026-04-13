@@ -232,7 +232,7 @@ $dateFooter = date('d/m/Y H:i');
         /* Nature : 2 archers par page, grille 2 colonnes */
         .edition-feuilles-marques .feuille-marque-nature-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 0.75rem 1rem;
             align-items: start;
         }
