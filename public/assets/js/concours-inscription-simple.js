@@ -1912,13 +1912,18 @@ function renderInscriptions(inscriptions) {
             statutCell = '<td class="statut-cell"' + rowStyle + '><span title="' + escapeHtml(statutTitle) + '"><i class="fas ' + statutIconClass + '"></i></span></td>';
         }
 
-        let actionsCell;
-        if (canEditDeleteInscription) {
-            actionsCell = '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(' + id + ')"><i class="fas fa-edit"></i></button> ' +
-                '<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')"><i class="fas fa-trash"></i></button>';
-        } else {
-            actionsCell = '—';
+        let actionsCellParts = [];
+        if (canManageInscription) {
+            actionsCellParts.push(
+                '<button type="button" class="btn btn-sm btn-warning me-1" onclick="resendInscriptionConfirmationEmail(' + id + ')" title="Renvoyer l\'email de confirmation">' +
+                '<i class="fas fa-paper-plane"></i></button>'
+            );
         }
+        if (canEditDeleteInscription) {
+            actionsCellParts.push('<button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(' + id + ')"><i class="fas fa-edit"></i></button>');
+            actionsCellParts.push('<button type="button" class="btn btn-sm btn-danger" onclick="removeInscription(' + id + ')"><i class="fas fa-trash"></i></button>');
+        }
+        const actionsCell = actionsCellParts.length > 0 ? actionsCellParts.join(' ') : '—';
 
         let cells = [
             statutCell,
@@ -2023,6 +2028,75 @@ function removeInscription(inscriptionId) {
         console.error('Erreur:', error);
         alert('Erreur lors de la suppression: ' + error.message);
     });
+}
+
+/**
+ * Force la relance de l'email de confirmation pour une inscription
+ */
+window.resendInscriptionConfirmationEmail = async function(inscriptionId) {
+    const concoursId = concoursIdValue || (typeof concoursId !== 'undefined' ? concoursId : null);
+    if (!concoursId) {
+        alert('Erreur: ID du concours non disponible');
+        return;
+    }
+
+    const inscription = Array.isArray(allInscriptionsCache)
+        ? allInscriptionsCache.find(item => String(item.id) === String(inscriptionId))
+        : null;
+    if (!inscription) {
+        alert('Inscription introuvable dans la liste.');
+        return;
+    }
+
+    const token = (inscription.token_confirmation || '').toString().trim();
+    if (!token) {
+        alert('Impossible de renvoyer l\'email: token de confirmation manquant.');
+        return;
+    }
+
+    let email = (inscription.email || '').toString().trim();
+    if (!email) {
+        const askedEmail = prompt('Aucun email enregistré. Saisissez l\'adresse email de confirmation :');
+        email = askedEmail ? askedEmail.trim() : '';
+    }
+    if (!email) {
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Adresse email invalide.');
+        return;
+    }
+
+    if (!confirm('Renvoyer l\'email de confirmation pour cet archer ?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/concours/${concoursId}/inscriptions/send-confirmation-email`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ token, email })
+        });
+
+        const data = await parseJsonResponse(response);
+        const ok = response.ok && data && data.success !== false && !data.error;
+        if (!ok) {
+            const errMsg = (data && (data.error || data.message || (data.data && data.data.error))) || 'Erreur inconnue';
+            alert('Erreur lors de l\'envoi de l\'email: ' + errMsg);
+            return;
+        }
+
+        alert('Email de confirmation renvoyé avec succès.');
+    } catch (error) {
+        console.error('Erreur resendInscriptionConfirmationEmail:', error);
+        alert('Erreur lors de l\'envoi de l\'email de confirmation.');
+    }
 }
 
 // Inscription en cours d'édition (pour conserver numero_depart si le select n'existe pas)

@@ -279,6 +279,11 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <?php endif; ?>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>>
+                                    <?php if ($canManageInscription): ?>
+                                    <button type="button" class="btn btn-sm btn-warning me-1" onclick="resendInscriptionConfirmationEmail(<?= htmlspecialchars($inscription['id'] ?? '') ?>)" title="Renvoyer l'email de confirmation">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                    <?php endif; ?>
                                     <?php if ($canEditDeleteInscription): ?>
                                     <button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(<?= htmlspecialchars($inscription['id'] ?? '') ?>)">
                                         <i class="fas fa-edit"></i>
