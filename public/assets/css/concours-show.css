@@ -371,6 +371,18 @@
         color: #f9fafb !important;
     }
 
+    /* Les cellules avec couleur inline (piquet) gardent un fond clair en dark mode */
+    .inscriptions-section .table tbody td[style*="background-color"] {
+        color: #111827 !important;
+    }
+
+    .inscriptions-section .table tbody td[style*="background-color"] .text-muted,
+    .inscriptions-section .table tbody td[style*="background-color"] span,
+    .inscriptions-section .table tbody td[style*="background-color"] small,
+    .inscriptions-section .table tbody td[style*="background-color"] i {
+        color: #111827 !important;
+    }
+
     #concours-show-page .badge.bg-secondary {
         background-color: #4b5563 !important;
         color: #f9fafb !important;
