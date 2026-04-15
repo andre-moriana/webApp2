@@ -138,6 +138,18 @@
     line-height: 1.3;
 }
 
+/* Cellules colorées en inline (piquet) : garder un texte sombre lisible */
+.inscriptions-section .table tbody td[style*="background-color"] {
+    color: #212529 !important;
+}
+
+.inscriptions-section .table tbody td[style*="background-color"] span,
+.inscriptions-section .table tbody td[style*="background-color"] small,
+.inscriptions-section .table tbody td[style*="background-color"] i,
+.inscriptions-section .table tbody td[style*="background-color"] .text-muted {
+    color: #212529 !important;
+}
+
 /* Icônes d'actions côte à côte */
 .inscriptions-section table td:last-child {
     white-space: nowrap;
