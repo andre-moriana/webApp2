@@ -123,6 +123,13 @@
     margin-top: 10px;
 }
 
+/* Force la couleur du texte du tableau des inscrits */
+.inscriptions-section .table {
+    --bs-table-color: #111827;
+    --bs-table-striped-color: #111827;
+    --bs-table-hover-color: #111827;
+}
+
 .table th {
     background-color: #007bff;
     color: white;
@@ -148,6 +155,12 @@
 .inscriptions-section .table tbody td[style*="background-color"] i,
 .inscriptions-section .table tbody td[style*="background-color"] .text-muted {
     color: #212529 !important;
+}
+
+.inscriptions-section .table tbody td,
+.inscriptions-section .table tbody td *,
+.inscriptions-section .table.table-striped > tbody > tr > td {
+    color: #111827 !important;
 }
 
 /* Icônes d'actions côte à côte */
