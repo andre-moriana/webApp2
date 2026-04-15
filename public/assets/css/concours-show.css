@@ -306,7 +306,24 @@
     #concours-show-page li,
     #concours-show-page .text-muted,
     #concours-show-page .form-label,
-    #concours-show-page .form-check-label {
+    #concours-show-page .form-check-label,
+    .inscriptions-section h1,
+    .inscriptions-section h2,
+    .inscriptions-section h3,
+    .inscriptions-section h4,
+    .inscriptions-section h5,
+    .inscriptions-section h6,
+    .inscriptions-section label,
+    .inscriptions-section p,
+    .inscriptions-section small,
+    .inscriptions-section strong,
+    .inscriptions-section span,
+    .inscriptions-section td,
+    .inscriptions-section th,
+    .inscriptions-section li,
+    .inscriptions-section .text-muted,
+    .inscriptions-section .form-label,
+    .inscriptions-section .form-check-label {
         color: #e5e7eb !important;
     }
 
@@ -321,7 +338,17 @@
     #concours-show-page .table-bordered,
     #concours-show-page .table-bordered td,
     #concours-show-page .table-bordered th,
-    #concours-show-page .table-striped > tbody > tr:nth-of-type(odd) > * {
+    #concours-show-page .table-striped > tbody > tr:nth-of-type(odd) > *,
+    .inscriptions-section,
+    .inscriptions-section .table,
+    .inscriptions-section .table td,
+    .inscriptions-section .table th,
+    .inscriptions-section .table-bordered,
+    .inscriptions-section .table-bordered td,
+    .inscriptions-section .table-bordered th,
+    .inscriptions-section .table-striped > tbody > tr:nth-of-type(odd) > *,
+    .inscriptions-section .table-striped > tbody > tr:nth-of-type(even) > *,
+    .inscriptions-section .list-group-item {
         background-color: #1f2937 !important;
         border-color: #374151 !important;
     }
@@ -335,6 +362,11 @@
     }
 
     #concours-show-page .table th {
+        background-color: #1d4ed8 !important;
+        color: #f9fafb !important;
+    }
+
+    .inscriptions-section .table th {
         background-color: #1d4ed8 !important;
         color: #f9fafb !important;
     }
