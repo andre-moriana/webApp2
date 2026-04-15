@@ -172,7 +172,9 @@
     margin: 20px auto;
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
     justify-content: center;
+    align-items: stretch;
 }
 
 .actions-section .btn {
@@ -182,6 +184,31 @@
     font-weight: 500;
     transition: background-color 0.3s;
     display: inline-block;
+}
+
+@media (max-width: 992px) {
+    .actions-section {
+        justify-content: flex-start;
+    }
+
+    .actions-section .btn {
+        flex: 1 1 calc(50% - 10px);
+        min-width: 220px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .actions-section {
+        gap: 8px;
+    }
+
+    .actions-section .btn {
+        flex: 1 1 100%;
+        min-width: 0;
+        width: 100%;
+        padding: 10px 14px;
+    }
 }
 
 .actions-section .btn-secondary {
@@ -255,4 +282,70 @@
 .modal-footer .dropdown-item i {
     width: 20px;
     text-align: center;
+}
+
+/* Adaptation du contraste pour le thème sombre navigateur */
+@media (prefers-color-scheme: dark) {
+    #concours-show-page {
+        color: #e5e7eb;
+    }
+
+    #concours-show-page h1,
+    #concours-show-page h2,
+    #concours-show-page h3,
+    #concours-show-page h4,
+    #concours-show-page h5,
+    #concours-show-page h6,
+    #concours-show-page label,
+    #concours-show-page p,
+    #concours-show-page small,
+    #concours-show-page strong,
+    #concours-show-page span,
+    #concours-show-page td,
+    #concours-show-page th,
+    #concours-show-page li,
+    #concours-show-page .text-muted,
+    #concours-show-page .form-label,
+    #concours-show-page .form-check-label {
+        color: #e5e7eb !important;
+    }
+
+    #concours-show-page .form-section,
+    #concours-show-page .inscriptions-section,
+    #concours-show-page .lien-inscription-cible-qr,
+    #concours-show-page .informations-concours-display,
+    #concours-show-page .list-group-item,
+    #concours-show-page .table,
+    #concours-show-page .table td,
+    #concours-show-page .table th,
+    #concours-show-page .table-bordered,
+    #concours-show-page .table-bordered td,
+    #concours-show-page .table-bordered th,
+    #concours-show-page .table-striped > tbody > tr:nth-of-type(odd) > * {
+        background-color: #1f2937 !important;
+        border-color: #374151 !important;
+    }
+
+    #concours-show-page .form-group p,
+    #concours-show-page .bg-light,
+    #concours-show-page .alert-info {
+        background-color: #111827 !important;
+        color: #e5e7eb !important;
+        border-color: #374151 !important;
+    }
+
+    #concours-show-page .table th {
+        background-color: #1d4ed8 !important;
+        color: #f9fafb !important;
+    }
+
+    #concours-show-page .badge.bg-secondary {
+        background-color: #4b5563 !important;
+        color: #f9fafb !important;
+    }
+
+    #concours-show-page .qr-code-img {
+        border-color: #4b5563;
+        background-color: #ffffff;
+    }
 }
