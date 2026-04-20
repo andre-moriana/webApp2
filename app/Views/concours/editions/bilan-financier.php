@@ -37,7 +37,7 @@
                         <th>Archer</th>
                         <th>Licence</th>
                         <th>Depart</th>
-                        <th>Public</th>
+                        <th>Tarif</th>
                         <th>Type depart</th>
                         <th>Present</th>
                         <th>Paye</th>
