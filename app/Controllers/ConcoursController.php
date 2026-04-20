@@ -996,6 +996,7 @@ class ConcoursController {
         }
         $categoriesClassement = [];
         $categoriesAge = [];
+        $categoriesAge = [];
         $arcs = [];
         $distancesTir = [];
         if (!empty($inscriptions)) {
@@ -1494,6 +1495,26 @@ public function greffes($concoursId)
                 });
                 $categoriesClassement = array_values($categoriesPayload);
             }
+        }
+
+        // Récupérer les catégories d'âge (concour_categorie / concour_categories)
+        try {
+            $categoriesAgeResponse = $this->apiService->makeRequest('concours/categories-age', 'GET');
+            if (!($categoriesAgeResponse['success'] ?? false) || empty($categoriesAgeResponse['data'])) {
+                $categoriesAgeResponse = $this->apiService->makeRequestPublic('concours/categories-age', 'GET');
+            }
+            if ($categoriesAgeResponse['success'] ?? false) {
+                $agePayload = $categoriesAgeResponse['data'] ?? [];
+                if (is_array($agePayload) && isset($agePayload['data']) && isset($agePayload['success'])) {
+                    $agePayload = $agePayload['data'];
+                }
+                if (is_array($agePayload)) {
+                    $categoriesAge = array_values($agePayload);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des catégories d\'âge: ' . $e->getMessage());
+            $categoriesAge = [];
         }
 
         // Récupérer les catégories d'âge (table concour_categories)
