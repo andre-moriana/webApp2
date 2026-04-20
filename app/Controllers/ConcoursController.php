@@ -995,6 +995,7 @@ class ConcoursController {
             }
         }
         $categoriesClassement = [];
+        $categoriesAge = [];
         $arcs = [];
         $distancesTir = [];
         if (!empty($inscriptions)) {
@@ -1495,6 +1496,26 @@ public function greffes($concoursId)
             }
         }
 
+        // Récupérer les catégories d'âge (table concour_categories)
+        try {
+            $categoriesAgeResponse = $this->apiService->makeRequest('concours/categories-age', 'GET');
+            if (!($categoriesAgeResponse['success'] ?? false) || empty($categoriesAgeResponse['data'])) {
+                $categoriesAgeResponse = $this->apiService->makeRequestPublic('concours/categories-age', 'GET');
+            }
+            if ($categoriesAgeResponse['success'] ?? false) {
+                $agePayload = $categoriesAgeResponse['data'] ?? [];
+                if (is_array($agePayload) && isset($agePayload['data']) && isset($agePayload['success'])) {
+                    $agePayload = $agePayload['data'];
+                }
+                if (is_array($agePayload)) {
+                    $categoriesAge = array_values($agePayload);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Erreur lors de la récupération des catégories d\'âge: ' . $e->getMessage());
+            $categoriesAge = [];
+        }
+
         // Récupérer les arcs
         $arcs = [];
         try {
@@ -1811,6 +1832,7 @@ public function inscription($concoursId)
 
         // Récupérer les catégories de classement filtrées par discipline
         $categoriesClassement = [];
+        $categoriesAge = [];
         $iddiscipline = null;
         if (is_object($concours)) {
             $iddiscipline = $concours->discipline ?? $concours->iddiscipline ?? null;
@@ -3447,6 +3469,23 @@ public function inscription($concoursId)
             }
         } catch (Exception $e) {
             error_log('inscriptionCible: erreur catégories: ' . $e->getMessage());
+        }
+
+        // Récupérer les catégories d'âge (table concour_categories)
+        try {
+            $categoriesAgeResponse = $this->apiService->makeRequestPublic('concours/categories-age', 'GET');
+            if ($categoriesAgeResponse['success'] ?? false) {
+                $agePayload = $categoriesAgeResponse['data'] ?? [];
+                if (is_array($agePayload) && isset($agePayload['data']) && isset($agePayload['success'])) {
+                    $agePayload = $agePayload['data'];
+                }
+                if (is_array($agePayload)) {
+                    $categoriesAge = array_values($agePayload);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('inscriptionCible: erreur catégories âge: ' . $e->getMessage());
+            $categoriesAge = [];
         }
 
         // Récupérer les arcs

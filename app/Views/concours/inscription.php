@@ -14,6 +14,7 @@ $inscriptionConfig = [
     'inscriptionCible' => $inscriptionCible ?? false,
     'archerSearchUrl' => $archerSearchUrl ?? '/archer/search-or-create',
     'categoriesClassement' => $categoriesClassement ?? [],
+    'categoriesAge' => $categoriesAge ?? [],
     'arcs' => $arcs ?? [],
     'distancesTir' => $distancesTir ?? [],
     'concoursDiscipline' => is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null),
@@ -412,6 +413,11 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
+                            <label for="catage_label" class="form-label">Catégorie âge</label>
+                            <input type="text" id="catage_label" class="form-control" readonly placeholder="Récupérée depuis le fichier XML">
+                            <input type="hidden" id="catage_value" value="">
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label for="arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
                             <select id="arme" class="form-control">
                                 <option value="">Sélectionner</option>
@@ -609,8 +615,21 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-catage" class="form-label">Catégorie âge</label>
-                            <input type="text" id="edit-catage" class="form-control" placeholder="Ex: 13" maxlength="20">
+                            <label for="edit-catage-label" class="form-label">Catégorie âge</label>
+                            <select id="edit-catage-select" class="form-control">
+                                <option value="">Sélectionner une catégorie d'âge</option>
+                                <?php if (!empty($categoriesAge)): ?>
+                                    <?php foreach ($categoriesAge as $catAge): ?>
+                                        <?php
+                                        $catAgeId = $catAge['idcategorie'] ?? '';
+                                        $catAgeLabel = $catAge['lb_categorie'] ?? '';
+                                        ?>
+                                        <option value="<?= htmlspecialchars((string)$catAgeId) ?>">
+                                            <?= htmlspecialchars((string)$catAgeLabel) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit-arme" class="form-label">Arme (utilisée sur le pas de tir)</label>

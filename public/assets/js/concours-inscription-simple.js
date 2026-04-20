@@ -11,6 +11,7 @@
             window.inscriptionCible = !!c.inscriptionCible;
             window.archerSearchUrl = c.archerSearchUrl;
             window.categoriesClassement = c.categoriesClassement || [];
+            window.categoriesAge = c.categoriesAge || [];
             window.arcs = c.arcs || [];
             window.distancesTir = c.distancesTir || [];
             window.concoursDiscipline = c.concoursDiscipline;
@@ -31,6 +32,31 @@ var allInscriptionsCache = []; // Liste complète pour filtrage par départs coc
 var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concoursId :
     (document.querySelector('input[name="concours_id"]')?.value ||
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
+
+function getCategorieAgeLabelFromId(catageValue) {
+    const id = String(catageValue ?? '').trim();
+    if (!id || !Array.isArray(window.categoriesAge)) return '';
+    const found = window.categoriesAge.find(item => String(item.idcategorie ?? '').trim() === id);
+    return found ? String(found.lb_categorie || '').trim() : '';
+}
+
+function setCategorieAgeFields(prefix, catageValue) {
+    const selectField = document.getElementById(prefix + 'catage-select');
+    const idField = document.getElementById(prefix + 'catage-value');
+    const labelField = document.getElementById(prefix + 'catage-label');
+    const normalizedId = String(catageValue ?? '').trim();
+    const label = normalizedId ? getCategorieAgeLabelFromId(normalizedId) : '';
+
+    if (selectField) {
+        selectField.value = normalizedId;
+    }
+    if (idField) {
+        idField.value = normalizedId;
+    }
+    if (labelField) {
+        labelField.value = label || (normalizedId ? ('Catégorie #' + normalizedId) : '');
+    }
+}
 
 // Ajouter event listener au bouton de recherche
 document.addEventListener('DOMContentLoaded', function() {
@@ -690,6 +716,10 @@ function prefillFormFields(archer) {
         console.error('✗ Champ type_certificat_medical introuvable');
     }
     
+    // Pré-remplir la catégorie d'âge depuis le XML (CATAGE -> concour_categories.lb_categorie)
+    const catageXmlValue = archer.CATAGE != null ? String(archer.CATAGE).trim() : '';
+    setCategorieAgeFields('', catageXmlValue);
+
     // Pré-remplir la catégorie de classement
     // Utiliser CATAGE (idcategorie), TYPARC (idarc) et SEXE (1=H, 2=F) pour trouver la catégorie
     const categorieSelect = document.getElementById('categorie_classement');
@@ -1594,7 +1624,7 @@ function submitInscription() {
         type_licence: document.getElementById('type_licence')?.value || '',
         creation_renouvellement: document.getElementById('creation_renouvellement')?.value || '',
         categorie_classement: document.getElementById('categorie_classement')?.value || '',
-        catage: (selectedArcher.CATAGE != null && selectedArcher.CATAGE !== '') ? String(selectedArcher.CATAGE).trim() : '',
+        catage: document.getElementById('catage_value')?.value?.trim() || ((selectedArcher.CATAGE != null && selectedArcher.CATAGE !== '') ? String(selectedArcher.CATAGE).trim() : ''),
         arme: document.getElementById('arme')?.value || '',
         mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0
     };
@@ -2188,8 +2218,7 @@ console.log('inscription.trispot:', inscription.trispot);
             setVal('edit-creation_renouvellement', crVal || '');
             setVal('edit-depart-select', inscription.numero_depart);
             setVal('edit-categorie_classement', inscription.categorie_classement);
-            //setVal('edit-catage', inscription.ageCategory ?? '');
-            setVal('edit-catage', inscription.catage ?? '');
+            setCategorieAgeFields('edit-', inscription.catage ?? '');
             setVal('edit-arme', inscription.arme);
             
             // Sélectionner automatiquement la couleur de piquet pour Nature
@@ -2275,7 +2304,7 @@ function initEditInscriptionHandlers() {
             creation_renouvellement: document.getElementById('edit-creation_renouvellement')?.value || '',
             numero_depart: numeroDepart,
             categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
-            catage: document.getElementById('edit-catage')?.value ?? currentEditInscription?.catage ?? '',
+            catage: document.getElementById('edit-catage-select')?.value ?? currentEditInscription?.catage ?? '',
             arme: document.getElementById('edit-arme')?.value || '',
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
             numero_tir: currentEditInscription?.numero_tir ?? '',
