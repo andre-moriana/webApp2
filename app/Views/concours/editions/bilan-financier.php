@@ -1,5 +1,13 @@
 <div class="edition-bilan-financier">
     <h2 class="h4 mb-3">Bilan financier</h2>
+    <style>
+        @media print {
+            /* Evite la repetition du total en pied sur chaque page imprimee */
+            .edition-bilan-financier .bilan-financier-tfoot {
+                display: table-row-group;
+            }
+        }
+    </style>
 
     <?php
     $rows = isset($bilanFinancierRows) && is_array($bilanFinancierRows) ? $bilanFinancierRows : [];
@@ -51,7 +59,7 @@
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
-                <tfoot>
+                <tfoot class="bilan-financier-tfoot">
                     <tr class="table-secondary fw-bold">
                         <td colspan="3">Total general</td>
                         <td><?= (int)($totals['inscriptions'] ?? 0) ?></td>
