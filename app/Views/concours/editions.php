@@ -124,6 +124,20 @@ $additionalJS[] = '/public/assets/js/concours-editions.js?v=' . time();
                 </div>
             </div>
         </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-euro-sign text-success me-2"></i>Bilan financier
+                    </h5>
+                    <p class="card-text text-muted small">Recettes attendues et encaissées selon tarification et statut de greffe.</p>
+                    <a href="<?= $baseUrl ?>?doc=bilan-financier" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-external-link-alt me-1"></i>Ouvrir</a>
+                    <a href="<?= $baseUrl ?>?doc=bilan-financier" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="fas fa-print me-1"></i>Imprimer</a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="mt-4">

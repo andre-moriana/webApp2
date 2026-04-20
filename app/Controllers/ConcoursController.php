@@ -2334,7 +2334,7 @@ public function inscription($concoursId)
         }
 
         $doc = $_GET['doc'] ?? null;
-        $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement', 'commandes-buvette'];
+        $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement', 'commandes-buvette', 'bilan-financier'];
 
         // Commandes buvette : charger les réservations et agréger par produit
         $commandesBuvetteGroupes = [];
@@ -2406,6 +2406,160 @@ public function inscription($concoursId)
             } catch (Exception $e) {
                 $commandesBuvetteGroupes = [];
             }
+        }
+
+        // Bilan financier : calcul montants par inscription avec option sous-totaux club
+        $bilanFinancierRows = [];
+        $bilanFinancierTotals = [
+            'inscriptions' => 0,
+            'presentes' => 0,
+            'payees' => 0,
+            'montant_total' => 0.0,
+            'montant_present' => 0.0,
+            'montant_paye' => 0.0
+        ];
+        $bilanFinancierByClub = [];
+        $bilanSousTotauxClub = isset($_GET['sous_totaux_club']) && in_array((string)$_GET['sous_totaux_club'], ['1', 'true', 'oui'], true);
+        if ($doc === 'bilan-financier') {
+            $tarifsMap = [];
+            $tarifications = is_object($concours) ? ($concours->tarifications ?? []) : ($concours['tarifications'] ?? []);
+            if (is_object($tarifications)) {
+                $tarifications = array_values((array)$tarifications);
+            }
+            if (!is_array($tarifications)) {
+                $tarifications = [];
+            }
+            foreach ($tarifications as $tarif) {
+                $tarif = (array)$tarif;
+                $typePublic = trim((string)($tarif['type_public'] ?? ''));
+                $typeDepart = trim((string)($tarif['type_depart'] ?? ''));
+                if ($typePublic === '' || $typeDepart === '') {
+                    continue;
+                }
+                $key = $typePublic . '_' . $typeDepart;
+                $prix = $tarif['prix'] ?? null;
+                $tarifsMap[$key] = ($prix !== null && $prix !== '') ? (float)$prix : 0.0;
+            }
+
+            $inscriptionsByLicence = [];
+            foreach ($inscriptions as $insc) {
+                $licence = trim((string)($insc['numero_licence'] ?? ''));
+                if ($licence === '') {
+                    $licence = 'id-' . (string)($insc['id'] ?? uniqid('insc-', true));
+                }
+                if (!isset($inscriptionsByLicence[$licence])) {
+                    $inscriptionsByLicence[$licence] = [];
+                }
+                $inscriptionsByLicence[$licence][] = $insc;
+            }
+
+            $isEnfantInscription = function (array $insc) {
+                $catageRaw = trim((string)($insc['catage'] ?? ''));
+                if ($catageRaw !== '' && preg_match('/(\d{1,2})/', $catageRaw, $m)) {
+                    $age = (int)$m[1];
+                    if ($age >= 11 && $age <= 18) {
+                        return true;
+                    }
+                    if ($age >= 21) {
+                        return false;
+                    }
+                }
+
+                $cat = strtoupper(trim((string)($insc['abv_categorie_classement'] ?? $insc['categorie_classement'] ?? '')));
+                if (preg_match('/U(1[1-8])/', $cat)) {
+                    return true;
+                }
+                if (preg_match('/U(2[1-9]|[3-9]\d)/', $cat) || strpos($cat, 'S') === 0) {
+                    return false;
+                }
+
+                return false;
+            };
+
+            foreach ($inscriptionsByLicence as $licence => $rows) {
+                usort($rows, function ($a, $b) {
+                    $da = (int)($a['numero_depart'] ?? 0);
+                    $db = (int)($b['numero_depart'] ?? 0);
+                    if ($da !== $db) return $da <=> $db;
+                    $ca = (string)($a['created_at'] ?? '');
+                    $cb = (string)($b['created_at'] ?? '');
+                    return strcmp($ca, $cb);
+                });
+
+                foreach ($rows as $idx => $insc) {
+                    $isEnfant = $isEnfantInscription($insc);
+                    $typePublic = $isEnfant ? 'enfant' : 'adulte';
+                    $typeDepart = $idx === 0 ? 'premier' : 'supplementaire';
+                    $tarifKey = $typePublic . '_' . $typeDepart;
+                    $montant = (float)($tarifsMap[$tarifKey] ?? 0.0);
+
+                    $present = strtolower(trim((string)($insc['present_greffe'] ?? ''))) === 'oui';
+                    $paye = strtolower(trim((string)($insc['paye_greffe'] ?? ''))) === 'oui';
+
+                    $clubNom = trim((string)($insc['club_nom'] ?? ''));
+                    if ($clubNom === '') {
+                        $clubNom = trim((string)($insc['club_name'] ?? ''));
+                    }
+                    if ($clubNom === '') {
+                        $clubNom = 'Club inconnu';
+                    }
+
+                    $row = [
+                        'club_nom' => $clubNom,
+                        'user_nom' => trim((string)($insc['user_nom'] ?? $insc['nom'] ?? '')),
+                        'numero_licence' => trim((string)($insc['numero_licence'] ?? '')),
+                        'numero_depart' => (int)($insc['numero_depart'] ?? 0),
+                        'type_public' => $typePublic,
+                        'type_depart' => $typeDepart,
+                        'present_greffe' => $present,
+                        'paye_greffe' => $paye,
+                        'montant' => $montant
+                    ];
+                    $bilanFinancierRows[] = $row;
+
+                    $bilanFinancierTotals['inscriptions']++;
+                    $bilanFinancierTotals['montant_total'] += $montant;
+                    if ($present) {
+                        $bilanFinancierTotals['presentes']++;
+                        $bilanFinancierTotals['montant_present'] += $montant;
+                    }
+                    if ($paye) {
+                        $bilanFinancierTotals['payees']++;
+                        $bilanFinancierTotals['montant_paye'] += $montant;
+                    }
+
+                    if (!isset($bilanFinancierByClub[$clubNom])) {
+                        $bilanFinancierByClub[$clubNom] = [
+                            'inscriptions' => 0,
+                            'presentes' => 0,
+                            'payees' => 0,
+                            'montant_total' => 0.0,
+                            'montant_present' => 0.0,
+                            'montant_paye' => 0.0
+                        ];
+                    }
+                    $bilanFinancierByClub[$clubNom]['inscriptions']++;
+                    $bilanFinancierByClub[$clubNom]['montant_total'] += $montant;
+                    if ($present) {
+                        $bilanFinancierByClub[$clubNom]['presentes']++;
+                        $bilanFinancierByClub[$clubNom]['montant_present'] += $montant;
+                    }
+                    if ($paye) {
+                        $bilanFinancierByClub[$clubNom]['payees']++;
+                        $bilanFinancierByClub[$clubNom]['montant_paye'] += $montant;
+                    }
+                }
+            }
+
+            usort($bilanFinancierRows, function ($a, $b) {
+                $cmpClub = strcasecmp((string)($a['club_nom'] ?? ''), (string)($b['club_nom'] ?? ''));
+                if ($cmpClub !== 0) return $cmpClub;
+                $cmpNom = strcasecmp((string)($a['user_nom'] ?? ''), (string)($b['user_nom'] ?? ''));
+                if ($cmpNom !== 0) return $cmpNom;
+                return ((int)($a['numero_depart'] ?? 0)) <=> ((int)($b['numero_depart'] ?? 0));
+            });
+
+            ksort($bilanFinancierByClub, SORT_NATURAL | SORT_FLAG_CASE);
         }
 
         // Filtre par départ et tri pour liste des participants

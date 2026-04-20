@@ -3,7 +3,7 @@
  * Document à imprimer - avec en-tête
  * En-tête : logo club organisateur (gauche) | titre compétition (centre)
  * Fin de document : infos (nb archers, club, arbitres, entraîneurs)
- * $doc = avis | feuilles-marques | liste-participants | scores | classement | commandes-buvette
+ * $doc = avis | feuilles-marques | liste-participants | scores | classement | commandes-buvette | bilan-financier
  */
 $concoursId = $concours->id ?? $concours->_id ?? null;
 $departsRaw = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
@@ -14,7 +14,8 @@ $docTitles = [
     'liste-participants' => 'Liste des participants',
     'scores' => 'Scores',
     'classement' => 'Classement',
-    'commandes-buvette' => 'Commandes buvette'
+    'commandes-buvette' => 'Commandes buvette',
+    'bilan-financier' => 'Bilan financier'
 ];
 $docTitle = $docTitles[$doc] ?? 'Document';
 $version = defined('APP_VERSION') ? APP_VERSION : ($_ENV['APP_VERSION'] ?? '1.0');
@@ -557,6 +558,17 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
             Top 3 par catégorie
         </label>
         <?php endif; ?>
+        <?php if ($doc === 'bilan-financier'): ?>
+        <?php
+        $baseBilanUrl = '/concours/' . (int)$concoursId . '/editions?doc=bilan-financier';
+        $currentSousTotaux = !empty($bilanSousTotauxClub);
+        ?>
+        <label class="me-2">Sous-totaux club :</label>
+        <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
+            <option value="<?= htmlspecialchars($baseBilanUrl . '&sous_totaux_club=0') ?>"<?= !$currentSousTotaux ? ' selected' : '' ?>>Non</option>
+            <option value="<?= htmlspecialchars($baseBilanUrl . '&sous_totaux_club=1') ?>"<?= $currentSousTotaux ? ' selected' : '' ?>>Oui</option>
+        </select>
+        <?php endif; ?>
         <button type="button" class="btn btn-primary" onclick="window.print()">
             <i class="fas fa-print me-1"></i>Imprimer
         </button>
@@ -591,6 +603,9 @@ switch ($doc) {
         break;
     case 'commandes-buvette':
         include __DIR__ . '/editions/commandes-buvette.php';
+        break;
+    case 'bilan-financier':
+        include __DIR__ . '/editions/bilan-financier.php';
         break;
     default:
         echo '<p>Document inconnu.</p>';
