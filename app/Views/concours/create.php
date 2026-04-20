@@ -160,6 +160,48 @@
             <input type="hidden" name="departs_json" id="departs_json" value="">
         </div>
 
+        <?php
+        $tarifsMap = [];
+        $tarifs = isset($concours) ? ($concours->tarifications ?? []) : [];
+        foreach ((array)$tarifs as $t) {
+            $t = (array)$t;
+            $key = ($t['type_public'] ?? '') . '_' . ($t['type_depart'] ?? '');
+            $tarifsMap[$key] = $t['prix'] ?? '';
+        }
+        ?>
+        <div class="form-group tarifications-section" style="margin-top: 20px;">
+            <h4>Tarification</h4>
+            <p class="text-muted small">Tarifs d'inscription selon l'âge et le type de départ.</p>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Tarif (EUR)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Adulte (de U21 a S3) 1er départ</td>
+                            <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="tarif_adulte_premier_depart" value="<?= htmlspecialchars((string)($tarifsMap['adulte_premier'] ?? '')) ?>"></td>
+                        </tr>
+                        <tr>
+                            <td>Enfant (de U11 a U18) 1er départ</td>
+                            <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="tarif_enfant_premier_depart" value="<?= htmlspecialchars((string)($tarifsMap['enfant_premier'] ?? '')) ?>"></td>
+                        </tr>
+                        <tr>
+                            <td>Adulte (de U21 a S3) départ supplémentaire</td>
+                            <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="tarif_adulte_depart_supplementaire" value="<?= htmlspecialchars((string)($tarifsMap['adulte_supplementaire'] ?? '')) ?>"></td>
+                        </tr>
+                        <tr>
+                            <td>Enfant (de U11 a U18) départ supplémentaire</td>
+                            <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="tarif_enfant_depart_supplementaire" value="<?= htmlspecialchars((string)($tarifsMap['enfant_supplementaire'] ?? '')) ?>"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Section Arbitres -->
         <div class="form-group arbitres-section" style="margin-top: 20px;">
             <h4>Arbitres</h4>
