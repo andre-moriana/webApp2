@@ -260,33 +260,26 @@ if ($isNature) {
             foreach ($archers as $i => $a) {
                 $archers[$i] = array_merge($a, ['depart' => $dep, 'numero_peloton' => $numPeloton]);
             }
-            $byPosition = [];
-            $sansPosition = [];
-            foreach ($archers as $a) {
-                $pos = strtoupper(trim($a['position_archer'] ?? ''));
-                if ($pos !== '' && in_array($pos, $positionsBlasonOrdre, true) && !isset($byPosition[$pos])) {
-                    $byPosition[$pos] = $a;
-                } else {
-                    $sansPosition[] = $a;
-                }
-            }
-            $idxSans = 0;
-            $listeComplete = [];
-            for ($idx = 0; $idx < 8; $idx++) {
-                $lettre = $positionsBlasonOrdre[$idx];
-                if (isset($byPosition[$lettre])) {
-                    $listeComplete[] = $byPosition[$lettre];
-                } elseif ($idxSans < count($sansPosition)) {
-                    $a = $sansPosition[$idxSans++];
-                    $listeComplete[] = array_merge($a, ['position_archer' => $lettre]);
-                } else {
-                    $listeComplete[] = array_merge($archerVideNature, ['depart' => $dep, 'numero_peloton' => $numPeloton, 'position_archer' => $lettre]);
-                }
-            }
-            // Nature : 2 archers par page (A,B puis C,D etc.), au plus 4 pages
+            // Ne conserver que les archers réellement affectés (pas de positions vides).
+            usort($archers, function ($a, $b) use ($positionsBlasonOrdre) {
+                $pa = strtoupper(trim($a['position_archer'] ?? ''));
+                $pb = strtoupper(trim($b['position_archer'] ?? ''));
+                $ia = array_search($pa, $positionsBlasonOrdre, true);
+                $ib = array_search($pb, $positionsBlasonOrdre, true);
+                if ($ia === false) $ia = 999;
+                if ($ib === false) $ib = 999;
+                if ($ia !== $ib) return $ia - $ib;
+                return strcasecmp((string)($a['user_nom'] ?? ''), (string)($b['user_nom'] ?? ''));
+            });
+
+            // Nature : 3 archers max par page (sans lignes vides), au plus 4 pages.
             $nbPagesNature = min(4, max(1, (int)ceil(count($archers) / $nbSlotsParPageNature)));
             for ($p = 0; $p < $nbPagesNature; $p++) {
-                $feuillesNature[] = ['depart' => $dep, 'peloton' => $numPeloton, 'archers' => array_slice($listeComplete, $p * $nbSlotsParPageNature, $nbSlotsParPageNature)];
+                $pageArchers = array_slice($archers, $p * $nbSlotsParPageNature, $nbSlotsParPageNature);
+                if (empty($pageArchers)) {
+                    continue;
+                }
+                $feuillesNature[] = ['depart' => $dep, 'peloton' => $numPeloton, 'archers' => $pageArchers];
             }
         }
     }
