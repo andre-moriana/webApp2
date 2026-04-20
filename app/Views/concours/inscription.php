@@ -414,9 +414,21 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <small class="form-text text-muted">Champ de classement sportif (distinct de la catégorie d'âge).</small>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="catage_label" class="form-label">Catégorie âge</label>
-                            <input type="text" id="catage_label" class="form-control" readonly placeholder="Récupérée depuis le fichier XML">
-                            <input type="hidden" id="catage_value" value="">
+                            <label for="catage-select" class="form-label">Catégorie âge</label>
+                            <select id="catage-select" class="form-control">
+                                <option value="">Sélectionner une catégorie d'âge</option>
+                                <?php if (!empty($categoriesAge)): ?>
+                                    <?php foreach ($categoriesAge as $catAge): ?>
+                                        <?php
+                                        $catAgeId = $catAge['idcategorie'] ?? '';
+                                        $catAgeLabel = $catAge['lb_categorie'] ?? '';
+                                        ?>
+                                        <option value="<?= htmlspecialchars((string)$catAgeId) ?>">
+                                            <?= htmlspecialchars((string)$catAgeLabel) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
                             <small class="form-text text-muted">Valeur CATAGE issue du fichier XML / table catégories d'âge.</small>
                         </div>
                         <div class="col-md-6 mb-3">

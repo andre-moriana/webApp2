@@ -1624,7 +1624,7 @@ function submitInscription() {
         type_licence: document.getElementById('type_licence')?.value || '',
         creation_renouvellement: document.getElementById('creation_renouvellement')?.value || '',
         categorie_classement: document.getElementById('categorie_classement')?.value || '',
-        catage: document.getElementById('catage_value')?.value?.trim() || ((selectedArcher.CATAGE != null && selectedArcher.CATAGE !== '') ? String(selectedArcher.CATAGE).trim() : ''),
+        catage: document.getElementById('catage-select')?.value?.trim() || ((selectedArcher.CATAGE != null && selectedArcher.CATAGE !== '') ? String(selectedArcher.CATAGE).trim() : ''),
         arme: document.getElementById('arme')?.value || '',
         mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0
     };
