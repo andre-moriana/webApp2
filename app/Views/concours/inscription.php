@@ -411,11 +411,13 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                     <?php error_log('DEBUG: Aucune catégorie dans $categoriesClassement'); ?>
                                 <?php endif; ?>
                             </select>
+                            <small class="form-text text-muted">Champ de classement sportif (distinct de la catégorie d'âge).</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="catage_label" class="form-label">Catégorie âge</label>
                             <input type="text" id="catage_label" class="form-control" readonly placeholder="Récupérée depuis le fichier XML">
                             <input type="hidden" id="catage_value" value="">
+                            <small class="form-text text-muted">Valeur CATAGE issue du fichier XML / table catégories d'âge.</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
@@ -613,9 +615,10 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
+                            <small class="form-text text-muted">Champ de classement sportif (distinct de la catégorie d'âge).</small>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-catage-label" class="form-label">Catégorie âge</label>
+                            <label for="edit-catage-select" class="form-label">Catégorie âge</label>
                             <select id="edit-catage-select" class="form-control">
                                 <option value="">Sélectionner une catégorie d'âge</option>
                                 <?php if (!empty($categoriesAge)): ?>
@@ -630,6 +633,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
+                            <small class="form-text text-muted">Valeur CATAGE issue du fichier XML / table catégories d'âge.</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit-arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
