@@ -2518,25 +2518,11 @@ public function inscription($concoursId)
 
             $isEnfantInscription = function (array $insc) {
                 $catageRaw = trim((string)($insc['catage'] ?? ''));
-                if ($catageRaw !== '' && preg_match('/(\d{1,2})/', $catageRaw, $m)) {
-                    $age = (int)$m[1];
-                    if ($age >= 11 && $age <= 18) {
-                        return true;
-                    }
-                    if ($age >= 21) {
-                        return false;
-                    }
-                }
-
-                $cat = strtoupper(trim((string)($insc['abv_categorie_classement'] ?? $insc['categorie_classement'] ?? '')));
-                if (preg_match('/U(1[1-8])/', $cat)) {
-                    return true;
-                }
-                if (preg_match('/U(2[1-9]|[3-9]\d)/', $cat) || strpos($cat, 'S') === 0) {
+                if ($catageRaw === '' || !is_numeric($catageRaw)) {
                     return false;
                 }
-
-                return false;
+                $catageId = (int)$catageRaw;
+                return in_array($catageId, [2, 3, 4, 19, 20, 21], true);
             };
 
             foreach ($inscriptionsByLicence as $licence => $rows) {
