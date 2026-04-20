@@ -287,6 +287,56 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     </div>
     <?php endif; ?>
 
+    <!-- Tarification -->
+    <?php
+    $tarificationsList = is_object($concours) ? ($concours->tarifications ?? []) : ($concours['tarifications'] ?? []);
+    if (is_object($tarificationsList)) {
+        $tarificationsList = array_values((array)$tarificationsList);
+    }
+    $tarificationsList = is_array($tarificationsList) ? $tarificationsList : [];
+    $tarifMap = [];
+    foreach ($tarificationsList as $t) {
+        $t = (array)$t;
+        $key = ($t['type_public'] ?? '') . '_' . ($t['type_depart'] ?? '');
+        $tarifMap[$key] = $t['prix'] ?? null;
+    }
+    $formatTarif = function ($value) {
+        if ($value === null || $value === '') return 'Non renseigné';
+        return number_format((float)$value, 2, ',', ' ') . ' EUR';
+    };
+    ?>
+    <div class="form-group" style="margin-top: 20px;">
+        <label><strong>Tarification :</strong></label>
+        <div class="table-responsive" style="max-width: 700px;">
+            <table class="table table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Tarif</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Adulte (de U21 a S3) 1er départ</td>
+                        <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_premier'] ?? null)) ?></td>
+                    </tr>
+                    <tr>
+                        <td>Enfant (de U11 a U18) 1er départ</td>
+                        <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_premier'] ?? null)) ?></td>
+                    </tr>
+                    <tr>
+                        <td>Adulte (de U21 a S3) départ supplémentaire</td>
+                        <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_supplementaire'] ?? null)) ?></td>
+                    </tr>
+                    <tr>
+                        <td>Enfant (de U11 a U18) départ supplémentaire</td>
+                        <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_supplementaire'] ?? null)) ?></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Liste des arbitres (jury, arbitre, entraineur) -->
     <?php
     $arbitresList = [];
