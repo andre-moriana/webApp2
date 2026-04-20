@@ -329,10 +329,10 @@ $dateFooter = date('d/m/Y H:i');
             body.edition-doc-feuilles-marques .edition-doc-print-thead {
                 display: table-header-group;
             }
-            /* Nature : masquer l'en-tête document (logo + titre) 
+            /* Nature : masquer l'en-tête document (logo + titre) */
             body.edition-doc-feuilles-marques-nature .edition-doc-print-thead {
                 display: none !important;
-            }*/
+            }
             .edition-doc-print-thead td {
                 padding: 0;
                 vertical-align: top;
