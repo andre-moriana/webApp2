@@ -1,0 +1,47 @@
+.informations-avis-prewrap {
+    white-space: pre-wrap;
+    line-height: 1.35;
+}
+
+.informations-avis-default {
+    line-height: 1.35;
+}
+
+.tarification-group {
+    margin-top: 20px;
+}
+
+.tarification-table-wrap {
+    max-width: 700px;
+}
+
+.tarification-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.tarification-type-col {
+    width: auto;
+}
+
+.tarification-price-col {
+    width: 1%;
+}
+
+.tarification-nowrap {
+    white-space: nowrap;
+}
+
+.tarification-type-cell {
+    word-break: break-word;
+}
+
+.edition-avis-qr-image {
+    display: block;
+    width: 120px;
+    height: 120px;
+}
+
+.edition-avis-link-break {
+    word-break: break-all;
+}

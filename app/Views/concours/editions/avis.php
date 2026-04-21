@@ -1,6 +1,7 @@
 <?php
 /** Avis de concours - document officiel */
 ?>
+<link href="/public/assets/css/concours-avis.css" rel="stylesheet">
 <div class="edition-avis">
     <h1 class="text-center mb-4">Avis de concours</h1>
 
@@ -72,9 +73,9 @@
     <div class="mt-4">
         <h4>Informations</h4>
         <?php if ($avisInformations !== ''): ?>
-        <div class="informations-avis-concours" style="white-space: pre-wrap; line-height: 1.35;"><?= nl2br(htmlspecialchars($avisInformations)) ?></div>
+        <div class="informations-avis-concours informations-avis-prewrap"><?= nl2br(htmlspecialchars($avisInformations)) ?></div>
         <?php else: ?>
-        <p class="informations-avis-concours" style="line-height: 1.35;"><?= htmlspecialchars($texteInformationsDefaut) ?></p>
+        <p class="informations-avis-concours informations-avis-default"><?= htmlspecialchars($texteInformationsDefaut) ?></p>
         <?php endif; ?>
     </div>
 
@@ -96,49 +97,53 @@
         return number_format((float)$value, 2, ',', ' ') . ' EUR';
     };
     ?>
-    <div class="form-group" style="margin-top: 20px;">
+    <div class="form-group tarification-group">
         <label><strong>Tarification :</strong></label>
-        <div class="table-responsive" style="max-width: 700px;">
-            <table class="table table-bordered table-sm">
+        <div class="table-responsive tarification-table-wrap">
+            <table class="table table-bordered table-sm tarification-table">
+                <colgroup>
+                    <col class="tarification-type-col">
+                    <col class="tarification-price-col">
+                </colgroup>
                 <thead>
                     <tr>
                         <th>Type</th>
-                        <th>Tarif</th>
+                        <th class="text-end tarification-nowrap">Tarif</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Adulte (de U21 a S3) 1er départ</td>
-                        <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_premier'] ?? null)) ?></td>
+                        <td class="tarification-type-cell">Adulte (de U21 a S3) 1er départ</td>
+                        <td class="text-end tarification-nowrap"><?= htmlspecialchars($formatTarif($tarifMap['adulte_premier'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Enfant (de U11 a U18) 1er départ</td>
-                        <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_premier'] ?? null)) ?></td>
+                        <td class="tarification-type-cell">Enfant (de U11 a U18) 1er départ</td>
+                        <td class="text-end tarification-nowrap"><?= htmlspecialchars($formatTarif($tarifMap['enfant_premier'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Adulte (de U21 a S3) départ supplémentaire</td>
-                        <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_supplementaire'] ?? null)) ?></td>
+                        <td class="tarification-type-cell">Adulte (de U21 a S3) départ supplémentaire</td>
+                        <td class="text-end tarification-nowrap"><?= htmlspecialchars($formatTarif($tarifMap['adulte_supplementaire'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Enfant (de U11 a U18) départ supplémentaire</td>
-                        <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_supplementaire'] ?? null)) ?></td>
+                        <td class="tarification-type-cell">Enfant (de U11 a U18) départ supplémentaire</td>
+                        <td class="text-end tarification-nowrap"><?= htmlspecialchars($formatTarif($tarifMap['enfant_supplementaire'] ?? null)) ?></td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
-    
+
     <?php
     $lienInscription = trim(is_object($concours) ? ($concours->lien_inscription_cible ?? '') : ($concours['lien_inscription_cible'] ?? ''));
     if ($lienInscription !== ''): ?>
     <div class="mt-4 d-flex flex-wrap align-items-start gap-3">
         <div class="edition-avis-qr">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=<?= urlencode($lienInscription) ?>" alt="QR Code formulaire d'inscription" style="display: block; width: 120px; height: 120px;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=<?= urlencode($lienInscription) ?>" alt="QR Code formulaire d'inscription" class="edition-avis-qr-image">
             <small class="text-muted">Formulaire d'inscription</small>
         </div>
         <div class="edition-avis-lien flex-grow-1">
             <strong>Lien d'inscription :</strong>
-            <a href="<?= htmlspecialchars($lienInscription) ?>" target="_blank" rel="noopener noreferrer" style="word-break: break-all;"><?= htmlspecialchars($lienInscription) ?></a>
+            <a href="<?= htmlspecialchars($lienInscription) ?>" target="_blank" rel="noopener noreferrer" class="edition-avis-link-break"><?= htmlspecialchars($lienInscription) ?></a>
         </div>
     </div>
     <?php endif; ?>
