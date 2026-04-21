@@ -21,11 +21,11 @@
 }
 
 .tarification-type-col {
-    width: auto;
+    width: 80%;
 }
 
 .tarification-price-col {
-    width: 1%;
+    width: 20%;
 }
 
 .tarification-nowrap {
