@@ -43,13 +43,14 @@ $dateFooter = date('d/m/Y H:i');
             align-items: center;
             justify-content: space-between;
         }
-        .edition-doc-header-left, .edition-doc-header-center {
+        .edition-doc-header-left, .edition-doc-header-center, .edition-doc-header-right {
             flex: 1;
             display: flex;
             align-items: center;
         }
         .edition-doc-header-left { justify-content: flex-start; }
         .edition-doc-header-center { justify-content: center; text-align: center; }
+        .edition-doc-header-right { justify-content: flex-end; gap: 0.5rem; }
         .edition-doc-header-center .edition-doc-title {
             margin: 0;
             font-size: 1.1rem;
@@ -79,6 +80,12 @@ $dateFooter = date('d/m/Y H:i');
             padding: 0 8px;
         }
         .edition-doc-logo-placeholder { font-size: 10pt; color: #6c757d; }
+        .edition-doc-logo-affiliate {
+            height: 80px;
+            max-width: 160px;
+            width: auto;
+            object-fit: contain;
+        }
         /* Table structure pour impression (invisible à l'écran) */
         .edition-doc-print-table {
             width: 100%;
@@ -358,13 +365,14 @@ $dateFooter = date('d/m/Y H:i');
                 align-items: center;
                 justify-content: space-between;
             }
-            .edition-doc-header-left, .edition-doc-header-center {
+            .edition-doc-header-left, .edition-doc-header-center, .edition-doc-header-right {
                 flex: 1;
                 display: flex;
                 align-items: center;
             }
             .edition-doc-header-left { justify-content: flex-start; }
             .edition-doc-header-center { justify-content: center; text-align: center; }
+            .edition-doc-header-right { justify-content: flex-end; gap: 2mm; }
             .edition-doc-header-center .edition-doc-title {
                 margin: 0;
                 font-size: 14pt;
@@ -397,6 +405,12 @@ $dateFooter = date('d/m/Y H:i');
             }
             .edition-doc-logo-placeholder {
                 font-size: 10pt;
+            }
+            .edition-doc-logo-affiliate {
+                height: 16mm;
+                max-width: 30mm;
+                width: auto;
+                object-fit: contain;
             }
             .edition-liste-participants table,
             .edition-liste-participants table th,
