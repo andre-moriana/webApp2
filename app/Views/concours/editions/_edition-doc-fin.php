@@ -90,4 +90,84 @@ if ($doc === 'classement') {
         <strong>Liste des entraîneurs</strong>
         <p class="mb-0 mt-1"><?= htmlspecialchars($formatLigne($listeEntraineurs)) ?></p>
     </div>
+
+    <?php if (($doc ?? '') === 'avis'): ?>
+    <?php
+    $toAbsLogoUrl = function ($logoPath) {
+        $logoPath = trim((string)$logoPath);
+        if ($logoPath === '') {
+            return '';
+        }
+        if (strpos($logoPath, 'http://') === 0 || strpos($logoPath, 'https://') === 0) {
+            return $logoPath;
+        }
+        $apiBase = $_ENV['API_BASE_URL'] ?? 'https://api.arctraining.fr/api';
+        $apiBase = rtrim($apiBase, '/');
+        if (substr($apiBase, -4) === '/api') {
+            $apiBase = substr($apiBase, 0, -4);
+        }
+        return $apiBase . (strpos($logoPath, '/') === 0 ? '' : '/') . $logoPath;
+    };
+
+    $allClubs = [];
+    if (isset($clubs) && is_array($clubs)) {
+        $allClubs = $clubs;
+    } elseif (isset($clubsMap) && is_array($clubsMap)) {
+        foreach ($clubsMap as $clubItem) {
+            if (is_array($clubItem)) {
+                $allClubs[] = $clubItem;
+            }
+        }
+    }
+
+    $clubOrganisateurCodeDigits = preg_replace('/\D/', '', (string)$clubOrgCode);
+    $niveauChampionnatRaw = trim((string)($niveauChampionnatName ?? ''));
+    $niveauChampionnatNorm = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $niveauChampionnatRaw) ?: $niveauChampionnatRaw);
+    $isChampionnatRegional = strpos($niveauChampionnatNorm, 'regional') !== false;
+    $isChampionnatDepartemental = strpos($niveauChampionnatNorm, 'departemental') !== false;
+
+    $fftaLogoUrl = '';
+    foreach ($allClubs as $clubItem) {
+        $clubShortCode = preg_replace('/\D/', '', (string)($clubItem['nameShort'] ?? $clubItem['name_short'] ?? ''));
+        if ($clubShortCode === '0000001') {
+            $fftaLogoUrl = $toAbsLogoUrl($clubItem['logo'] ?? '');
+            if ($fftaLogoUrl !== '') {
+                break;
+            }
+        }
+    }
+
+    $comiteLogoUrl = '';
+    if (($isChampionnatRegional || $isChampionnatDepartemental) && strlen($clubOrganisateurCodeDigits) >= 4) {
+        $prefix = $isChampionnatRegional
+            ? substr($clubOrganisateurCodeDigits, 0, 2)
+            : substr($clubOrganisateurCodeDigits, 0, 4);
+        foreach ($allClubs as $clubItem) {
+            $candidateCode = preg_replace('/\D/', '', (string)($clubItem['nameShort'] ?? $clubItem['name_short'] ?? ''));
+            if ($candidateCode === '' || strpos($candidateCode, $prefix) !== 0) {
+                continue;
+            }
+            $suffix = substr($candidateCode, strlen($prefix));
+            if ($suffix === '' || !preg_match('/^0+$/', $suffix)) {
+                continue;
+            }
+            $candidateLogo = $toAbsLogoUrl($clubItem['logo'] ?? '');
+            if ($candidateLogo !== '') {
+                $comiteLogoUrl = $candidateLogo;
+                break;
+            }
+        }
+    }
+    ?>
+    <?php if ($fftaLogoUrl !== '' || $comiteLogoUrl !== ''): ?>
+    <div class="edition-avis-footer-logos">
+        <?php if ($fftaLogoUrl !== ''): ?>
+        <img src="<?= htmlspecialchars($fftaLogoUrl) ?>" alt="Logo FFTA" class="edition-avis-footer-logo">
+        <?php endif; ?>
+        <?php if ($comiteLogoUrl !== ''): ?>
+        <img src="<?= htmlspecialchars($comiteLogoUrl) ?>" alt="Logo comité" class="edition-avis-footer-logo">
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+    <?php endif; ?>
 </div>
