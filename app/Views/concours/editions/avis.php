@@ -98,7 +98,7 @@
     };
     ?>
     <div class="form-group tarification-group">
-        <label><strong>Tarification :</strong></label>
+        <label><h4>Tarification :</h4></label>
         <div class="table-responsive tarification-table-wrap">
             <table class="table table-bordered table-sm tarification-table">
                 <colgroup>
