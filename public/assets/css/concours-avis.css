@@ -45,3 +45,19 @@
 .edition-avis-link-break {
     word-break: break-all;
 }
+
+.edition-avis-footer-logos {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.edition-avis-footer-logo {
+    max-height: 80px;
+    max-width: 240px;
+    width: auto;
+    object-fit: contain;
+}

@@ -166,4 +166,116 @@
         </p>
     </div>
     <?php endif; ?>
+
+    <?php
+    $toAbsLogoUrl = function ($logoPath) {
+        $logoPath = trim((string)$logoPath);
+        if ($logoPath === '') {
+            return '';
+        }
+        if (strpos($logoPath, 'http://') === 0 || strpos($logoPath, 'https://') === 0) {
+            return $logoPath;
+        }
+        $apiBase = $_ENV['API_BASE_URL'] ?? 'https://api.arctraining.fr/api';
+        $apiBase = rtrim($apiBase, '/');
+        if (substr($apiBase, -4) === '/api') {
+            $apiBase = substr($apiBase, 0, -4);
+        }
+        return $apiBase . (strpos($logoPath, '/') === 0 ? '' : '/') . $logoPath;
+    };
+
+    $allClubs = [];
+    if (isset($clubs) && is_array($clubs)) {
+        $allClubs = $clubs;
+    } elseif (isset($clubsMap) && is_array($clubsMap)) {
+        foreach ($clubsMap as $clubItem) {
+            if (is_array($clubItem)) {
+                $allClubs[] = $clubItem;
+            }
+        }
+    }
+
+    $clubOrgId = is_object($concours) ? ($concours->club_organisateur ?? null) : ($concours['club_organisateur'] ?? null);
+    $clubOrganisateur = null;
+    if ($clubOrgId !== null && $clubOrgId !== '') {
+        if (isset($clubsMap) && is_array($clubsMap)) {
+            $clubOrganisateur = $clubsMap[$clubOrgId] ?? $clubsMap[(string)$clubOrgId] ?? $clubsMap[(int)$clubOrgId] ?? null;
+        }
+        if (!$clubOrganisateur && is_array($allClubs)) {
+            foreach ($allClubs as $clubItem) {
+                $clubItemId = $clubItem['id'] ?? $clubItem['_id'] ?? null;
+                if ($clubItemId !== null && ((string)$clubItemId === (string)$clubOrgId)) {
+                    $clubOrganisateur = $clubItem;
+                    break;
+                }
+            }
+        }
+    }
+
+    $clubOrganisateurCode = '';
+    if (is_array($clubOrganisateur)) {
+        $clubOrganisateurCode = trim((string)($clubOrganisateur['nameShort'] ?? $clubOrganisateur['name_short'] ?? ''));
+    }
+    if ($clubOrganisateurCode === '' && is_string($clubOrgId)) {
+        $clubOrganisateurCode = trim($clubOrgId);
+    }
+    $clubOrganisateurCodeDigits = preg_replace('/\D/', '', $clubOrganisateurCode);
+
+    $niveauChampionnatRaw = trim((string)($niveauChampionnatName ?? ''));
+    $niveauChampionnatNorm = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $niveauChampionnatRaw) ?: $niveauChampionnatRaw);
+    $isChampionnatRegional = strpos($niveauChampionnatNorm, 'regional') !== false;
+    $isChampionnatDepartemental = strpos($niveauChampionnatNorm, 'departemental') !== false;
+
+    $fftaLogoUrl = '';
+    foreach ($allClubs as $clubItem) {
+        $clubName = strtolower(trim((string)($clubItem['name'] ?? '')));
+        $clubShortName = strtolower(trim((string)($clubItem['nameShort'] ?? $clubItem['name_short'] ?? '')));
+        if (
+            strpos($clubName, 'ffta') !== false ||
+            $clubShortName === 'ffta'
+        ) {
+            $fftaLogoUrl = $toAbsLogoUrl($clubItem['logo'] ?? '');
+            if ($fftaLogoUrl !== '') {
+                break;
+            }
+        }
+    }
+
+    $comiteLogoUrl = '';
+    if (($isChampionnatRegional || $isChampionnatDepartemental) && strlen($clubOrganisateurCodeDigits) >= 4) {
+        $prefix = $isChampionnatRegional
+            ? substr($clubOrganisateurCodeDigits, 0, 2)
+            : substr($clubOrganisateurCodeDigits, 0, 4);
+
+        foreach ($allClubs as $clubItem) {
+            $candidateCode = preg_replace('/\D/', '', (string)($clubItem['nameShort'] ?? $clubItem['name_short'] ?? ''));
+            if ($candidateCode === '') {
+                continue;
+            }
+            if (strpos($candidateCode, $prefix) !== 0) {
+                continue;
+            }
+            $suffix = substr($candidateCode, strlen($prefix));
+            if ($suffix === '' || !preg_match('/^0+$/', $suffix)) {
+                continue;
+            }
+            $candidateLogo = $toAbsLogoUrl($clubItem['logo'] ?? '');
+            if ($candidateLogo !== '') {
+                $comiteLogoUrl = $candidateLogo;
+                break;
+            }
+        }
+    }
+    ?>
+
+    <?php if ($fftaLogoUrl !== '' || $comiteLogoUrl !== ''): ?>
+    <div class="edition-avis-footer-logos">
+        <?php if ($fftaLogoUrl !== ''): ?>
+        <img src="<?= htmlspecialchars($fftaLogoUrl) ?>" alt="Logo FFTA" class="edition-avis-footer-logo">
+        <?php endif; ?>
+        <?php if ($comiteLogoUrl !== ''): ?>
+        <img src="<?= htmlspecialchars($comiteLogoUrl) ?>" alt="Logo comité" class="edition-avis-footer-logo">
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 </div>
