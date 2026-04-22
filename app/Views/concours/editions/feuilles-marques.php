@@ -17,6 +17,7 @@ $plansCible = $plansCibleFeuilles ?? [];
 $plansPeloton = $plansPelotonFeuilles ?? [];
 $isSalle = ($disciplineAbv === 'S');
 $isNature = ($disciplineAbv === 'N');
+$is3D = ($disciplineAbv === '3');
 $isCible = in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
 $isPeloton = in_array($disciplineAbv, ['3', 'N', 'C'], true);
 
@@ -71,6 +72,10 @@ $nbSeriesSalle = 2;
 // Nature : 21 volées de 2 flèches, comptage 20-15, 20-10, 15-15, 15-10
 $nbVoleesNature = 21;
 $nbFlechesNature = 2;
+
+// 3D : 24 volées de 2 flèches, comptage 11-10-8-5-0
+$nbVolees3D = 24;
+$nbFleches3D = 2;
 
 // Extraire les archers assignés du plan cible, groupés par (depart, cible)
 $archersParCible = [];
@@ -284,6 +289,58 @@ if ($isNature) {
         }
     }
 }
+
+// Feuilles Nature : même principe que Salle mais 21 volées x 2 flèches, archers du plan peloton, une feuille par peloton
+$feuilles3D = [];
+if ($is3D) {
+    $departDefaut = 1;
+    if (!empty($departsList)) {
+        $first = is_array($departsList[0] ?? null) ? ($departsList[0]['numero_depart'] ?? 1) : ($departsList[0]->numero_depart ?? 1);
+        $departDefaut = (int)$first ?: 1;
+    }
+//    $archerVide = ['user_nom' => '', 'numero_licence' => '', 'categorie_classement' => '', 'position_archer' => '', 'numero_cible' => 0, 'depart' => $departDefaut, 'numero_tir' => null];
+    $archerVide3D = ['user_nom' => '', 'numero_licence' => '', 'abv_categorie_classement' => '', 'position_archer' => '', 'numero_peloton' => 0, 'depart' => $departDefaut, 'numero_tir' => null];
+    $nbSlotsParPage3D = 4;
+
+    if (empty($archersParPeloton)) {
+        $pelotonVide = 1;
+        $archersOrdre = [];
+        for ($idx = 0; $idx < $nbSlotsParPage3D; $idx++) {
+            $archersOrdre[] = array_merge($archerVide3D, ['depart' => $departDefaut, 'numero_peloton' => $pelotonVide, 'position_archer' => $positionsBlasonOrdre[$idx]]);
+        }
+        $feuilles3D[] = ['depart' => $departDefaut, 'peloton' => $pelotonVide, 'archers' => $archersOrdre];
+    } else {
+        foreach ($archersParPeloton as $g) {
+            $dep = (int)($g['depart'] ?? $departDefaut);
+            $numPeloton = (int)($g['peloton'] ?? 0);
+            $archers = $g['archers'];
+            foreach ($archers as $i => $a) {
+                $archers[$i] = array_merge($a, ['depart' => $dep, 'numero_peloton' => $numPeloton]);
+            }
+            // Ne conserver que les archers réellement affectés (pas de positions vides).
+            usort($archers, function ($a, $b) use ($positionsBlasonOrdre) {
+                $pa = strtoupper(trim($a['position_archer'] ?? ''));
+                $pb = strtoupper(trim($b['position_archer'] ?? ''));
+                $ia = array_search($pa, $positionsBlasonOrdre, true);
+                $ib = array_search($pb, $positionsBlasonOrdre, true);
+                if ($ia === false) $ia = 999;
+                if ($ib === false) $ib = 999;
+                if ($ia !== $ib) return $ia - $ib;
+                return strcasecmp((string)($a['user_nom'] ?? ''), (string)($b['user_nom'] ?? ''));
+            });
+
+            // 3D : 4 archers max par page (sans lignes vides), au plus 4 pages.
+            $nbPages3D = min(4, max(1, (int)ceil(count($archers) / $nbSlotsParPage3D)));
+            for ($p = 0; $p < $nbPages3D; $p++) {
+                $pageArchers = array_slice($archers, $p * $nbSlotsParPage3D, $nbSlotsParPage3D);
+                if (empty($pageArchers)) {
+                    continue;
+                }
+                $feuilles3D[] = ['depart' => $dep, 'peloton' => $numPeloton, 'archers' => $pageArchers];
+            }
+        }
+    }
+}
 ?>
 <div class="edition-feuilles-marques">
     <?php if ($isSalle && !empty($feuillesSalle)): ?>
@@ -443,6 +500,80 @@ if ($isNature) {
                     </div>
                 </div>
         <?php endforeach; ?>
+
+    <?php elseif ($is3D && !empty($feuilles3D)): ?>
+        <?php
+            $logoBgStyle3D = '';
+            if (!empty($clubLogoUrl)) {
+                $logoEsc = htmlspecialchars($clubLogoUrl, ENT_QUOTES, 'UTF-8');
+                $logoBgStyle3D = "background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)), url('" . $logoEsc . "') no-repeat center; background-size: 35%;";
+            }
+        ?>
+        <?php foreach ($feuilles3D as $f): ?>
+                <div class="feuille-marque-nature feuille-marque-salle-landscape mb-4 page-break">
+                    <div class="feuille-marque-nature-grid">
+                    <?php foreach ($f['archers'] as $archer): ?>
+                        <div class="feuille-marque-archer-block">
+                            <div class="feuille-marque-archer-header border-bottom pb-1 mb-2">
+                                <div class="d-flex justify-content-between align-items-center"><span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong></span><span class="feuille-marque-blason text-nowrap" style="font-size: 1.15em;"><strong>N° peloton : <?= (int)($f['peloton'] ?? 0) ?></strong></span></div>
+                                <div class="d-flex justify-content-between align-items-center"><span><?= htmlspecialchars($archer['club_nom'] ?? $archer['club_name'] ?? '—') ?></span><span class="feuille-marque-categorie"><?php
+                                    $piquetLibelle = isset($archer['piquet']) && $archer['piquet'] !== '' ? ucfirst(mb_strtolower(trim($archer['piquet']))) : '';
+                                    $piquetCouleurs = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+                                    $piquetBordures = ['rouge' => '#d0a0a0', 'bleu' => '#a0b0d0', 'blanc' => '#cccccc'];
+                                    $piquetHex = $piquetLibelle !== '' && isset($piquetCouleurs[mb_strtolower(trim($archer['piquet']))]) ? $piquetCouleurs[mb_strtolower(trim($archer['piquet']))] : null;
+                                    $piquetBordure = $piquetLibelle !== '' && isset($piquetBordures[mb_strtolower(trim($archer['piquet']))]) ? $piquetBordures[mb_strtolower(trim($archer['piquet']))] : $piquetHex;
+                                    $catLibelle = htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—';
+                                    if ($piquetLibelle !== '') {
+                                        $piquetStyle = $piquetHex ? 'padding: 2px 6px; border: 2px solid ' . $piquetBordure . '; background-color: ' . $piquetHex . '; border-radius: 4px;' : '';
+                                        echo '<span' . ($piquetStyle ? ' style="' . $piquetStyle . '"' : '') . '>Piquet : ' . htmlspecialchars($piquetLibelle) . '</span>';
+                                        if ($catLibelle !== '—') echo ' — ';
+                                    }
+                                    echo $catLibelle !== '—' ? 'Cat. : ' . $catLibelle : ($piquetLibelle === '' ? $catLibelle : '');
+                                ?></span></div>
+                                <div class="mb-1"></div>
+                                <div class="d-flex justify-content-between align-items-center"><span>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?></span><span>N° départ <?= (int)($f['depart'] ?? $archer['depart'] ?? 0) ?> — N° tir <?= isset($archer['numero_tir']) && $archer['numero_tir'] !== '' && $archer['numero_tir'] !== null ? (int)$archer['numero_tir'] : '—' ?></span></div>
+                            </div>
+                            <?php if ($logoBgStyle3D !== ''): ?><div class="feuille-marque-table-nature-logo-wrap" style="<?= $logoBgStyle3D ?>"><?php endif; ?>
+                            <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-nature<?= $logoBgStyle3D !== '' ? ' has-logo-bg' : '' ?>">
+                                <thead>
+                                    <tr>
+                                        <th >N° cible</th>
+                                        <th >Flèche 1</th>
+                                        <th >Flèche 2</th>
+                                        <th >Total</th>
+                                        <th >Cumul</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php for ($v = 1; $v <= $nbVolees3D; $v++):
+                                        $rowEven = ($v % 2 === 0);
+                                        $tdBg3D = $rowEven ? ' style="background-color: #e9ecef;"' : '';
+                                    ?>
+                                    <tr class="<?= $rowEven ? 'feuille-marque-row-even' : '' ?>">
+                                        <td<?= $tdBg3D ?>><?= $v ?></td>
+                                        <td<?= $tdBg3D ?>></td>
+                                        <td<?= $tdBg3D ?>></td>
+                                        <td<?= $tdBg3D ?>></td>
+                                        <td<?= $tdBg3D ?>></td>
+                                    </tr>
+                                    <?php endfor; ?>
+                                    <tr class="table-secondary feuille-marque-ligne-resume">
+                                        <td colspan="4"><strong>Total des cibles</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <?php if ($logoBgStyle3D !== ''): ?></div><?php endif; ?>
+                            <div class="feuille-marque-signatures row g-2 small mt-2">
+                                <div class="col-6">Signature du marqueur </div>
+                                <div class="col-6">Signature de l'archer </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    </div>
+                </div>
+        <?php endforeach; ?>        
+
 
     <?php elseif ($isPeloton && !empty($archersParPeloton)): ?>
         <?php foreach ($archersParPeloton as $g): ?>
