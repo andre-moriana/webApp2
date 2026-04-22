@@ -510,8 +510,8 @@ if ($is3D) {
             }
         ?>
         <?php foreach ($feuilles3D as $f): ?>
-                <div class="feuille-marque-nature feuille-marque-salle-landscape mb-4 page-break">
-                    <div class="feuille-marque-nature-grid">
+                <div class="feuille-marque-3D feuille-marque-3D-landscape mb-4 page-break">
+                    <div class="feuille-marque-3D-grid">
                     <?php foreach ($f['archers'] as $archer): ?>
                         <div class="feuille-marque-archer-block">
                             <div class="feuille-marque-archer-header border-bottom pb-1 mb-2">
@@ -533,8 +533,8 @@ if ($is3D) {
                                 <div class="mb-1"></div>
                                 <div class="d-flex justify-content-between align-items-center"><span>N° licence : <?= htmlspecialchars($archer['numero_licence'] ?: '—') ?></span><span>N° départ <?= (int)($f['depart'] ?? $archer['depart'] ?? 0) ?> — N° tir <?= isset($archer['numero_tir']) && $archer['numero_tir'] !== '' && $archer['numero_tir'] !== null ? (int)$archer['numero_tir'] : '—' ?></span></div>
                             </div>
-                            <?php if ($logoBgStyle3D !== ''): ?><div class="feuille-marque-table-nature-logo-wrap" style="<?= $logoBgStyle3D ?>"><?php endif; ?>
-                            <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-nature<?= $logoBgStyle3D !== '' ? ' has-logo-bg' : '' ?>">
+                            <?php if ($logoBgStyle3D !== ''): ?><div class="feuille-marque-table-3D-logo-wrap" style="<?= $logoBgStyle3D ?>"><?php endif; ?>
+                            <table class="table table-bordered table-sm feuille-marque-table-volees feuille-marque-table-3D<?= $logoBgStyle3D !== '' ? ' has-logo-bg' : '' ?>">
                                 <thead>
                                     <tr>
                                         <th >N° cible</th>
