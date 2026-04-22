@@ -3,21 +3,28 @@
 $categoriesMap = $categoriesMap ?? [];
 $resultatsByLicence = $resultatsByLicence ?? [];
 $disciplineAbv = $disciplineAbv ?? null;
-// Nature : discipline N/3/C/3D OU présence des scores 20-15, 20-10, etc. OU libellé catégorie (ARC CHASSE, NATURE, 3D)
+// Détection des formats de départage selon discipline/scores.
 $hasNatureScores = !empty(array_filter($resultats ?? [], function($r) {
     return isset($r['nb_20_15']) || isset($r['nb_20_10']) || isset($r['nb_15_15']) || isset($r['nb_15_10']);
 }));
+$has3DScores = !empty(array_filter($resultats ?? [], function($r) {
+    return isset($r['nb_11']) || isset($r['nb_8']) || isset($r['nb_5']);
+}));
 $hasNatureLabel = false;
+$has3DLabel = false;
 foreach ($categoriesMap as $abv => $lb) {
     $abvUpper = strtoupper((string)$abv);
     $lbUpper = strtoupper((string)$lb);
-    if (strpos($lbUpper, 'ARC CHASSE') !== false || strpos($lbUpper, 'ARC DROIT') !== false || strpos($lbUpper, 'NATURE') !== false || strpos($lbUpper, '3D') !== false
+    if (strpos($lbUpper, '3D') !== false || strpos($abvUpper, '3D') !== false) {
+        $has3DLabel = true;
+    }
+    if (strpos($lbUpper, 'ARC CHASSE') !== false || strpos($lbUpper, 'ARC DROIT') !== false || strpos($lbUpper, 'NATURE') !== false
         || strpos($lbUpper, 'CHASSE') !== false || strpos($abvUpper, 'FAC') !== false || strpos($abvUpper, 'HAD') !== false) {
         $hasNatureLabel = true;
-        break;
     }
 }
-$isNature = ($disciplineAbv && in_array($disciplineAbv, ['N', '3', 'C', '3D'], true)) || $hasNatureScores || $hasNatureLabel;
+$is3D = ($disciplineAbv && in_array($disciplineAbv, ['3', '3D'], true)) || $has3DScores || $has3DLabel;
+$isNature = !$is3D && (($disciplineAbv && in_array($disciplineAbv, ['N', 'C'], true)) || $hasNatureScores || $hasNatureLabel);
 // P2 : uniquement pour Nature 2×21 cibles (série2 réellement renseignée, pas 0)
 $has2x21 = $isNature && !empty(array_filter($resultats ?? [], function($r) {
     $s2 = $r['serie2_score'] ?? null;
@@ -105,14 +112,25 @@ uksort($byCategorie, function($a, $b) use ($categoriesMap) {
     return strcasecmp($lbA, $lbB);
 });
 
-// Pour chaque catégorie : trier par score décroissant, puis en cas d'égalité Nature : 20-15, 20-10, 15-15, 15-10, 15, 10 (décroissant), manqués (croissant)
+// Pour chaque catégorie : trier par score décroissant, puis départage.
 foreach ($byCategorie as $cat => &$items) {
-    usort($items, function($a, $b) use ($isNature) {
+    usort($items, function($a, $b) use ($isNature, $is3D) {
         $diff = $b['score'] - $a['score'];
         if ($diff !== 0) return $diff;
-        if (!$isNature) return 0;
         $rA = $a['resultat'] ?? [];
         $rB = $b['resultat'] ?? [];
+        if ($is3D) {
+            $tiebreakers3D = ['nb_11', 'nb_10', 'nb_8', 'nb_5'];
+            foreach ($tiebreakers3D as $k) {
+                $vA = (int)($rA[$k] ?? 0);
+                $vB = (int)($rB[$k] ?? 0);
+                if ($vA !== $vB) return $vB - $vA;
+            }
+            $nb0A = (int)($rA['nb_0'] ?? 0);
+            $nb0B = (int)($rB['nb_0'] ?? 0);
+            return $nb0A - $nb0B;
+        }
+        if (!$isNature) return 0;
         $tiebreakers = ['nb_20_15', 'nb_20_10', 'nb_15_15', 'nb_15_10', 'nb_15', 'nb_10'];
         foreach ($tiebreakers as $k) {
             $vA = (int)($rA[$k] ?? 0);
@@ -180,7 +198,18 @@ if ($top3ParCategorie) {
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <?php if ($isNature): ?>
+                        <?php if ($is3D): ?>
+                            <th>Clt</th>
+                            <th>Nom</th>
+                            <th>Club</th>
+                            <th>Licence</th>
+                            <th>Cat.</th>
+                            <th>Total</th>
+                            <th>11</th>
+                            <th>10</th>
+                            <th>8</th>
+                            <th>5</th>
+                        <?php elseif ($isNature): ?>
                             <th>Clt</th>
                             <th>Nom</th>
                             <th>Club</th>
@@ -206,7 +235,18 @@ if ($top3ParCategorie) {
                     <?php foreach ($items as $item): ?>
                         <?php $insc = $item['inscription']; $r = $item['resultat']; ?>
                         <tr>
-                            <?php if ($isNature): ?>
+                            <?php if ($is3D): ?>
+                                <td><?= $item['rang'] ?></td>
+                                <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
+                                <td><?= $r ? (($v = $r['score'] ?? null) !== null && $v !== '' ? (int)$v : '-') : '-' ?></td>
+                                <td><?= $r ? ($r['nb_11'] ?? '-') : '-' ?></td>
+                                <td><?= $r ? ($r['nb_10'] ?? '-') : '-' ?></td>
+                                <td><?= $r ? ($r['nb_8'] ?? '-') : '-' ?></td>
+                                <td><?= $r ? ($r['nb_5'] ?? '-') : '-' ?></td>
+                            <?php elseif ($isNature): ?>
                                 <td><?= $item['rang'] ?></td>
                                 <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>

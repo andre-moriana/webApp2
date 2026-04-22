@@ -3224,7 +3224,8 @@ public function inscription($concoursId)
                 }
             }
         }
-        $isNature = $abv_discipline && in_array($abv_discipline, ['N', '3', 'C', '3D']);
+        $is3D = $abv_discipline && in_array($abv_discipline, ['3', '3D'], true);
+        $isNature = $abv_discipline && in_array($abv_discipline, ['N', 'C'], true);
         $isSalleTae = $abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H']);
         // Nature 21 cibles : type_competition 13 = 21 cibles (1 passage, P1), 14 = 21 cibles x 2 (P1 + P2)
         $c = is_object($concours) ? (array)$concours : $concours;
@@ -3309,7 +3310,10 @@ public function inscription($concoursId)
             $nb_15_15 = (isset($data['nb_15_15']) && $data['nb_15_15'] !== '') ? (int)$data['nb_15_15'] : null;
             $nb_15_10 = (isset($data['nb_15_10']) && $data['nb_15_10'] !== '') ? (int)$data['nb_15_10'] : null;
             $nb_15 = (isset($data['nb_15']) && $data['nb_15'] !== '') ? (int)$data['nb_15'] : null;
+            $nb_11 = (isset($data['nb_11']) && $data['nb_11'] !== '') ? (int)$data['nb_11'] : null;
             $nb_10 = (isset($data['nb_10']) && $data['nb_10'] !== '') ? (int)$data['nb_10'] : null;
+            $nb_8 = (isset($data['nb_8']) && $data['nb_8'] !== '') ? (int)$data['nb_8'] : null;
+            $nb_5 = (isset($data['nb_5']) && $data['nb_5'] !== '') ? (int)$data['nb_5'] : null;
             $nb_0 = (isset($data['nb_0']) && $data['nb_0'] !== '') ? (int)$data['nb_0'] : null;
             $serie1_score = (isset($data['serie1_score']) && $data['serie1_score'] !== '') ? (int)$data['serie1_score'] : null;
             $serie1_nb_10 = (isset($data['serie1_nb_10']) && $data['serie1_nb_10'] !== '') ? (int)$data['serie1_nb_10'] : null;
@@ -3320,7 +3324,8 @@ public function inscription($concoursId)
 
             $hasSalleTae = $serie1_score !== null || $serie1_nb_10 !== null || $serie1_nb_9 !== null || $serie2_score !== null || $serie2_nb_10 !== null || $serie2_nb_9 !== null;
             $hasNature = $score !== null || $nb_20_15 !== null || $nb_20_10 !== null || $nb_15_15 !== null || $nb_15_10 !== null || $nb_15 !== null || $nb_10 !== null || $nb_0 !== null;
-            if (!$hasSalleTae && !$hasNature) {
+            $has3D = $score !== null || $nb_11 !== null || $nb_10 !== null || $nb_8 !== null || $nb_5 !== null || $nb_0 !== null;
+            if (!$hasSalleTae && !$hasNature && !$has3D) {
                 continue;
             }
 
@@ -3338,7 +3343,10 @@ public function inscription($concoursId)
                     'nb_15_15' => $nb_15_15,
                     'nb_15_10' => $nb_15_10,
                     'nb_15' => $nb_15,
+                    'nb_11' => $nb_11,
                     'nb_10' => $nb_10,
+                    'nb_8' => $nb_8,
+                    'nb_5' => $nb_5,
                     'nb_0' => $nb_0,
                 ];
                 $serieMode = $_POST['serie_mode'] ?? 'both';

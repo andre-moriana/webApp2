@@ -7,6 +7,7 @@
  */
 $concoursId = $concoursId ?? ($concours->id ?? $concours->_id ?? null);
 $isNature = $isNature ?? false;
+$is3D = $is3D ?? false;
 $isSalleTae = $isSalleTae ?? false;
 // Nature 21 cibles : type_competition 13 = 21 cibles (1 passage, P1), 14 = 21 cibles x 2 (P1 + P2)
 $c = is_object($concours) ? (array)$concours : $concours;
@@ -133,6 +134,9 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                 <?php elseif ($isNature21cibles): ?>
                     <i class="fas fa-leaf me-2"></i>Concours Nature 21 cibles<?= $isNature2x21 ? ' x 2' : '' ?> – Saisie des scores
                     <small class="d-block text-muted mt-1">P1 = passage 1<?= $isNature2x21 ? ', P2 = passage 2, score total = P1 + P2' : ', score total = P1' ?></small>
+                <?php elseif ($is3D): ?>
+                    <i class="fas fa-mountain me-2"></i>Concours 3D – Saisie des scores
+                    <small class="d-block text-muted mt-1">Score total et détail des impacts (11, 10, 8, 5, manqués)</small>
                 <?php elseif ($isNature): ?>
                     <i class="fas fa-leaf me-2"></i>Concours Nature – Saisie des scores
                     <small class="d-block text-muted mt-1">Score total et détail des impacts (20-15, 20-10, 15-15, 15-10, 15, 10, manqués)</small>
@@ -195,6 +199,13 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                                     <th>15</th>
                                     <th>10</th>
                                     <th>Manqués (0)</th>
+                                <?php elseif ($is3D): ?>
+                                    <th>Score total</th>
+                                    <th>11</th>
+                                    <th>10</th>
+                                    <th>8</th>
+                                    <th>5</th>
+                                    <th>Manqués (0)</th>
                                 <?php elseif ($isNature): ?>
                                     <th>Score total</th>
                                     <th>20-15</th>
@@ -224,7 +235,10 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                                 $nb1515 = $res['nb_15_15'] ?? '';
                                 $nb1510 = $res['nb_15_10'] ?? '';
                                 $nb15 = $res['nb_15'] ?? '';
+                                $nb11 = $res['nb_11'] ?? '';
                                 $nb10 = $res['nb_10'] ?? '';
+                                $nb8 = $res['nb_8'] ?? '';
+                                $nb5 = $res['nb_5'] ?? '';
                                 $nb0 = $res['nb_0'] ?? '';
                                 $s1_score = $res['serie1_score'] ?? '';
                                 $s1_10 = $res['serie1_nb_10'] ?? '';
@@ -322,6 +336,37 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][nb_10]" 
                                                    value="<?= htmlspecialchars($nb10 !== '' ? $nb10 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_0]" 
+                                                   value="<?= htmlspecialchars($nb0 !== '' ? $nb0 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                    <?php elseif ($is3D): ?>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][score]" 
+                                                   value="<?= htmlspecialchars($scoreVal !== '' ? $scoreVal : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_11]" 
+                                                   value="<?= htmlspecialchars($nb11 !== '' ? $nb11 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_10]" 
+                                                   value="<?= htmlspecialchars($nb10 !== '' ? $nb10 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_8]" 
+                                                   value="<?= htmlspecialchars($nb8 !== '' ? $nb8 : '') ?>" 
+                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                        </td>
+                                        <td>
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][nb_5]" 
+                                                   value="<?= htmlspecialchars($nb5 !== '' ? $nb5 : '') ?>" 
                                                    class="form-control form-control-sm" min="0" step="1" placeholder="0">
                                         </td>
                                         <td>
