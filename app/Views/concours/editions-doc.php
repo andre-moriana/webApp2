@@ -74,6 +74,8 @@ $dateFooter = date('d/m/Y H:i');
         body.edition-doc-feuilles-marques .edition-doc-header-left { min-width: 80px; padding: 0 4px; }
         /* Nature : masquer l'en-tête (logo + titre) à l'écran */
         body.edition-doc-feuilles-marques-nature .edition-doc-print-thead { display: none; }
+        /* 3D : masquer l'en-tête (logo + titre) à l'écran */
+        body.edition-doc-feuilles-marques-3D .edition-doc-print-thead { display: none; }
         /* Espace libre autour du logo */
         .edition-doc-header-left {
             min-width: 150px;
@@ -389,6 +391,10 @@ $dateFooter = date('d/m/Y H:i');
             body.edition-doc-feuilles-marques-nature .edition-doc-print-thead {
                 display: none !important;
             }
+            /* 3D : masquer l'en-tête document (logo + titre) */
+            body.edition-doc-feuilles-marques-3D .edition-doc-print-thead {
+                display: none !important;
+            }
             .edition-doc-print-thead td {
                 padding: 0;
                 vertical-align: top;
@@ -495,6 +501,7 @@ $bodyClasses = [];
 if ($doc === 'liste-participants') $bodyClasses[] = 'edition-doc-liste-participants';
 if ($doc === 'feuilles-marques') $bodyClasses[] = 'edition-doc-feuilles-marques';
 if ($doc === 'feuilles-marques' && ($disciplineAbv ?? '') === 'N') $bodyClasses[] = 'edition-doc-feuilles-marques-nature';
+if ($doc === 'feuilles-marques' && ($disciplineAbv ?? '') === '3') $bodyClasses[] = 'edition-doc-feuilles-marques-3D';
 echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
 ?>>
     <div class="no-print mb-3">
