@@ -329,12 +329,23 @@ if ($is3D) {
                 return strcasecmp((string)($a['user_nom'] ?? ''), (string)($b['user_nom'] ?? ''));
             });
 
-            // 3D : 4 archers max par page (sans lignes vides), au plus 4 pages.
+            // 3D : 4 archers par page, compléter avec des blocs vides si besoin (au plus 4 pages).
             $nbPages3D = min(4, max(1, (int)ceil(count($archers) / $nbSlotsParPage3D)));
             for ($p = 0; $p < $nbPages3D; $p++) {
                 $pageArchers = array_slice($archers, $p * $nbSlotsParPage3D, $nbSlotsParPage3D);
                 if (empty($pageArchers)) {
                     continue;
+                }
+                // Toujours afficher 4 grilles par page en 3D.
+                while (count($pageArchers) < $nbSlotsParPage3D) {
+                    $pageArchers[] = array_merge(
+                        $archerVide3D,
+                        [
+                            'depart' => $dep,
+                            'numero_peloton' => $numPeloton,
+                            'position_archer' => $positionsBlasonOrdre[count($pageArchers)] ?? ''
+                        ]
+                    );
                 }
                 $feuilles3D[] = ['depart' => $dep, 'peloton' => $numPeloton, 'archers' => $pageArchers];
             }

@@ -288,6 +288,52 @@ $dateFooter = date('d/m/Y H:i');
         .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature tr.table-secondary td {
             background-color: rgba(233, 236, 239, 0.85) !important;
         }
+        /* 3D : 4 grilles par page, style compact similaire salle */
+        .edition-feuilles-marques .feuille-marque-3D-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem 0.75rem;
+            align-items: start;
+        }
+        .edition-feuilles-marques .feuille-marque-3D .feuille-marque-archer-header {
+            font-size: 0.65rem;
+            padding-bottom: 0.2rem !important;
+            margin-bottom: 0.35rem !important;
+        }
+        .edition-feuilles-marques .feuille-marque-table-3D {
+            font-size: 0.65rem;
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .edition-feuilles-marques .feuille-marque-table-3D th,
+        .edition-feuilles-marques .feuille-marque-table-3D td {
+            border: 1px solid #333;
+            padding: 3px 2px;
+            min-height: 1.3em;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .edition-feuilles-marques .feuille-marque-table-3D-logo-wrap {
+            position: relative;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 35%;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .edition-feuilles-marques .feuille-marque-table-3D-logo-wrap .feuille-marque-table-3D,
+        .edition-feuilles-marques .feuille-marque-table-3D-logo-wrap .feuille-marque-table-3D thead,
+        .edition-feuilles-marques .feuille-marque-table-3D-logo-wrap .feuille-marque-table-3D tbody,
+        .edition-feuilles-marques .feuille-marque-table-3D-logo-wrap .feuille-marque-table-3D tr,
+        .edition-feuilles-marques .feuille-marque-table-3D-logo-wrap .feuille-marque-table-3D th,
+        .edition-feuilles-marques .feuille-marque-table-3D-logo-wrap .feuille-marque-table-3D td {
+            background: transparent !important;
+        }
+        .edition-feuilles-marques .feuille-marque-table-3D-logo-wrap .feuille-marque-table-3D tbody tr.feuille-marque-row-even td {
+            background-color: #e9ecef !important;
+            background: #e9ecef !important;
+        }
         @media print {
             @page {
                 margin: 15mm 15mm 20mm 15mm;
@@ -313,6 +359,9 @@ $dateFooter = date('d/m/Y H:i');
                 margin: 15mm 12mm 20mm 12mm;
             }
             .edition-feuilles-marques .feuille-marque-salle-landscape {
+                page: feuilles-marques-landscape;
+            }
+            .edition-feuilles-marques .feuille-marque-3D-landscape {
                 page: feuilles-marques-landscape;
             }
             /* Liste des participants : pas de footer imprimé (date, page, etc.) */
@@ -428,6 +477,11 @@ $dateFooter = date('d/m/Y H:i');
             }
             /* Nature : lignes paires grisées à l'impression */
             .edition-feuilles-marques .feuille-marque-table-nature-logo-wrap .feuille-marque-table-nature tbody tr.feuille-marque-row-even td {
+                background-color: #e9ecef !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .edition-feuilles-marques .feuille-marque-table-3D-logo-wrap .feuille-marque-table-3D tbody tr.feuille-marque-row-even td {
                 background-color: #e9ecef !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
