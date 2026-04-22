@@ -528,17 +528,7 @@ if ($is3D) {
                             <div class="feuille-marque-archer-header border-bottom pb-1 mb-2">
                                 <div class="d-flex justify-content-between align-items-center"><span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong></span><span class="feuille-marque-blason text-nowrap" style="font-size: 1.15em;"><strong>N° peloton : <?= (int)($f['peloton'] ?? 0) ?></strong></span></div>
                                 <div class="d-flex justify-content-between align-items-center"><span><?= htmlspecialchars($archer['club_nom'] ?? $archer['club_name'] ?? '—') ?></span><span class="feuille-marque-categorie"><?php
-                                    $piquetLibelle = isset($archer['piquet']) && $archer['piquet'] !== '' ? ucfirst(mb_strtolower(trim($archer['piquet']))) : '';
-                                    $piquetCouleurs = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
-                                    $piquetBordures = ['rouge' => '#d0a0a0', 'bleu' => '#a0b0d0', 'blanc' => '#cccccc'];
-                                    $piquetHex = $piquetLibelle !== '' && isset($piquetCouleurs[mb_strtolower(trim($archer['piquet']))]) ? $piquetCouleurs[mb_strtolower(trim($archer['piquet']))] : null;
-                                    $piquetBordure = $piquetLibelle !== '' && isset($piquetBordures[mb_strtolower(trim($archer['piquet']))]) ? $piquetBordures[mb_strtolower(trim($archer['piquet']))] : $piquetHex;
                                     $catLibelle = htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—';
-                                    if ($piquetLibelle !== '') {
-                                        $piquetStyle = $piquetHex ? 'padding: 2px 6px; border: 2px solid ' . $piquetBordure . '; background-color: ' . $piquetHex . '; border-radius: 4px;' : '';
-                                        echo '<span' . ($piquetStyle ? ' style="' . $piquetStyle . '"' : '') . '>Piquet : ' . htmlspecialchars($piquetLibelle) . '</span>';
-                                        if ($catLibelle !== '—') echo ' — ';
-                                    }
                                     echo $catLibelle !== '—' ? 'Cat. : ' . $catLibelle : ($piquetLibelle === '' ? $catLibelle : '');
                                 ?></span></div>
                                 <div class="mb-1"></div>
