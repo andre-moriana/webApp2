@@ -1242,40 +1242,41 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
     // L'arme est à la fin de la catégorie (2 derniers caractères)
     // Format : Catégorie d'âge (2-3 chars) + Sexe (1 char) + Arme (2 chars)
     // Exemples : S3HCL, U18HBB, U15FTL
-    let arme = '';
+    let armeFromCategorie = '';
     if (categorieUpper.length >= 2) {
         const lastTwoChars = categorieUpper.substring(categorieUpper.length - 2);
         if (lastTwoChars === 'BB') {
-            arme = 'BB';
+            armeFromCategorie = 'BB';
         } else if (lastTwoChars === 'CO') {
-            arme = 'CO';
+            armeFromCategorie = 'CO';
         } else if (lastTwoChars === 'AD') {
-            arme = 'AD';
+            armeFromCategorie = 'AD';
         } else if (lastTwoChars === 'AC') {
-            arme = 'AC';
+            armeFromCategorie = 'AC';
         } else if (lastTwoChars === 'TL') {
-            arme = 'TL';
+            armeFromCategorie = 'TL';
         }
     }
-    const armeOverride = normalizeArmeCodeFromLabel(selectedArme);
-    if (armeOverride) {
-        arme = armeOverride;
-    }
+    const armeFromField = normalizeArmeCodeFromLabel(selectedArme);
+    const effectiveArme = armeFromField || armeFromCategorie;
     
     // Appliquer les règles
     let piquetColor = '';
     
-    if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21') {
+    if (armeFromCategorie === 'TL') {
+        // Règle prioritaire: catégorie TL => rouge (distinct du champ arme)
+        piquetColor = 'rouge';
+    } else if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21') {
         // S1, S2, S3, U21 : piquet rouge
         piquetColor = 'rouge';
     } else if (ageCategory === 'U18') {
         // U18 : arc nu (BB) et TL : piquet bleu
-        if (arme === 'BB' || arme === 'TL') {
+        if (effectiveArme === 'BB' || effectiveArme === 'TL') {
             piquetColor = 'bleu';
         }
     } else if (ageCategory === 'U15' || ageCategory === 'U13') {
         // U15, U13 : arc nu (BB) : piquet blanc
-        if (arme === 'BB') {
+        if (effectiveArme === 'BB') {
             piquetColor = 'blanc';
         }
     }
@@ -1285,11 +1286,11 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
         piquetSelect.value = piquetColor;
         // Retirer la classe is-invalid si elle existe
         piquetSelect.classList.remove('is-invalid');
-        console.log('✓ Piquet sélectionné automatiquement:', piquetColor, 'pour catégorie:', abvCategorie, '(âge:', ageCategory + ', arme:', arme + ')', isEditModal ? '(modale édition)' : '');
+        console.log('✓ Piquet sélectionné automatiquement:', piquetColor, 'pour catégorie:', abvCategorie, '(âge:', ageCategory + ', armeCat:', armeFromCategorie + ', armeChamp:', armeFromField + ')', isEditModal ? '(modale édition)' : '');
     } else {
         // Aucune règle ne correspond : colorer le champ en rouge
         piquetSelect.classList.add('is-invalid');
-        console.log('⚠ Aucune règle de piquet trouvée pour catégorie:', abvCategorie, '(âge:', ageCategory + ', arme:', arme + ') - champ coloré en rouge');
+        console.log('⚠ Aucune règle de piquet trouvée pour catégorie:', abvCategorie, '(âge:', ageCategory + ', armeCat:', armeFromCategorie + ', armeChamp:', armeFromField + ') - champ coloré en rouge');
     }
 }
 function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = false, selectedArme = '') {
@@ -1346,39 +1347,40 @@ function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = fal
     // L'arme est à la fin de la catégorie (2 derniers caractères)
     // Format : Catégorie d'âge (2-3 chars) + Sexe (1 char) + Arme (2 chars)
     // Exemples : S3HCL, U18HBB, U15FTL
-    let arme = '';
+    let armeFromCategorie = '';
     if (categorieUpper.length >= 2) {
         const lastTwoChars = categorieUpper.substring(categorieUpper.length - 2);
         if (lastTwoChars === 'BB') {
-            arme = 'BB';
+            armeFromCategorie = 'BB';
         } else if (lastTwoChars === 'CO') {
-            arme = 'CO';
+            armeFromCategorie = 'CO';
         } else if (lastTwoChars === 'AD') {
-            arme = 'AD';
+            armeFromCategorie = 'AD';
         } else if (lastTwoChars === 'AC') {
-            arme = 'AC';
+            armeFromCategorie = 'AC';
         } else if (lastTwoChars === 'TL') {
-            arme = 'TL';
+            armeFromCategorie = 'TL';
         }
     }
-    const armeOverride = normalizeArmeCodeFromLabel(selectedArme);
-    if (armeOverride) {
-        arme = armeOverride;
-    }
+    const armeFromField = normalizeArmeCodeFromLabel(selectedArme);
+    const effectiveArme = armeFromField || armeFromCategorie;
     
     // Appliquer les règles
     let piquetColor = '';
     const isSeniorOrU21 = ['S1', 'S2', 'S3', 'U21'].includes(ageCategory);
 
-    if (isSeniorOrU21) {
+    if (armeFromCategorie === 'TL') {
+        // Règle prioritaire: catégorie TL => rouge (distinct du champ arme)
+        piquetColor = 'rouge';
+    } else if (isSeniorOrU21) {
         // Senior/U21 : TL = rouge, autres armes = bleu
-        piquetColor = arme === 'TL' ? 'rouge' : 'bleu';
+        piquetColor = effectiveArme === 'TL' ? 'rouge' : 'bleu';
     } else if (ageCategory === 'U18') {
         // U18 : TL = rouge, autres armes = bleu
-        piquetColor = arme === 'TL' ? 'rouge' : 'bleu';
+        piquetColor = effectiveArme === 'TL' ? 'rouge' : 'bleu';
     } else if (ageCategory === 'DE' || ageCategory === 'U15' || ageCategory === 'U13') {
         // DE/U15/U13 : BB = blanc
-        if (arme === 'BB') {
+        if (effectiveArme === 'BB') {
             piquetColor = 'blanc';
         }
     }
