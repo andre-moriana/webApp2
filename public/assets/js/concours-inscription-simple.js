@@ -1238,6 +1238,8 @@ function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = fal
         ageCategory = 'U15';
     } else if (categorieUpper.startsWith('U13')) {
         ageCategory = 'U13';
+    } else if (categorieUpper.startsWith('DE')) {
+        ageCategory = 'DE';
     }
     
     // Extraire l'arme (BB = arc nu, TL = TL)
@@ -1269,8 +1271,8 @@ function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = fal
     } else if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21' ||ageCategory === 'U18' && arme !== 'TL') {
         // S1, S2, S3, U21, U18 : arc nu (BB) 5AC) (AD) (CO) : piquet bleu
             piquetColor = 'bleu';
-    } else if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21' ||ageCategory === 'U18' || ageCategory === 'U15' || ageCategory === 'U13' && arme !== 'TL') {
-        // U15, U13 : arc nu (BB) : piquet blanc
+    } else if (ageCategory === 'DE' || ageCategory === 'U15' || ageCategory === 'U13' && arme === 'BB') {
+        // DE, U15, U13 : arc nu (BB) : piquet blanc
             piquetColor = 'blanc';
     }
     
