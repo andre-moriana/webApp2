@@ -370,9 +370,11 @@ function setupBlasonAutoUpdate() {
     // Ajouter un listener pour la sélection automatique du piquet en Nature
     categorieSelect.addEventListener('change', function() {
         const selectedCategorie = categorieSelect.value;
-        if (selectedCategorie) {
+        if (selectedCategorie && disciplineAbv === 'N') {
             selectPiquetColorForNature(selectedCategorie);
-        }
+        } else if (selectedCategorie && disciplineAbv === '3') {
+            selectPiquetColorFor3D(selectedCategorie);
+        }   
     });
     
     // Ajouter un listener sur le champ piquet pour retirer la classe is-invalid quand l'utilisateur sélectionne manuellement
@@ -385,13 +387,7 @@ function setupBlasonAutoUpdate() {
             }
         });
     }
-    
-    console.log('✓ Listeners pour mise à jour automatique du blason configurés');
-    console.log('Éléments:', {
-        categorieSelect: categorieSelect.id,
-        distanceSelect: distanceSelect.id,
-        blasonInput: blasonInput.id
-    });
+
 }
 
 /**
@@ -538,7 +534,11 @@ function showSearchResult() {
         const categorieSelect = document.getElementById('categorie_classement');
         if (categorieSelect && categorieSelect.value) {
             setTimeout(() => {
-                selectPiquetColorForNature(categorieSelect.value);
+                if (disciplineAbv === 'N') {
+                    selectPiquetColorForNature(categorieSelect.value);
+                } else if (disciplineAbv === '3') {
+                    selectPiquetColorFor3D(categorieSelect.value);
+                }
             }, 100);
         }
         // Charger les produits buvette
@@ -605,27 +605,12 @@ function prefillFormFields(archer) {
         console.error('prefillFormFields: archer est null');
         return;
     }
-    
-    console.log('=== prefillFormFields appelé ===');
-    console.log('Données disponibles:', {
-        saison: archer.saison,
-        type_licence: archer.type_licence,
-        creation_renouvellement: archer.creation_renouvellement,
-        certificat_medical: archer.certificat_medical,
-        CATEGORIE: archer.CATEGORIE,
-        CATAGE: archer.CATAGE,
-        TYPARC: archer.TYPARC,
-        SEXE: archer.SEXE
-    });
-    
+   
     // Pré-remplir la saison
     const saisonInput = document.getElementById('saison');
     if (saisonInput) {
         if (archer.saison) {
             saisonInput.value = archer.saison;
-            console.log('✓ Saison pré-remplie:', saisonInput.value);
-        } else {
-            console.log('✗ Saison non disponible dans les données');
         }
     } else {
         console.error('✗ Champ saison introuvable');
@@ -637,7 +622,6 @@ function prefillFormFields(archer) {
         if (archer.type_licence) {
             const cleanedTypeLicence = archer.type_licence.trim().toUpperCase();
             const firstLetter = cleanedTypeLicence.length > 0 ? cleanedTypeLicence[0] : '';
-            console.log('Tentative pré-remplissage type_licence:', cleanedTypeLicence, '-> première lettre:', firstLetter);
             // Chercher l'option correspondante
             let found = false;
             for (let i = 0; i < typeLicenceSelect.options.length; i++) {
@@ -646,18 +630,12 @@ function prefillFormFields(archer) {
                     typeLicenceSelect.disabled = false;
                     typeLicenceSelect.value = firstLetter;
                     typeLicenceSelect.disabled = true; // Re-désactiver
-                    console.log('✓ Type licence pré-rempli:', firstLetter);
                     // Afficher l'avertissement si nécessaire
                     updateLicenceWarning(firstLetter, 'type_licence_warning');
                     found = true;
                     break;
                 }
             }
-            if (!found) {
-                console.log('✗ Aucune option trouvée pour type_licence:', firstLetter);
-            }
-        } else {
-            console.log('✗ type_licence non disponible dans les données');
         }
     } else {
         console.error('✗ Champ type_licence introuvable');
@@ -668,9 +646,6 @@ function prefillFormFields(archer) {
     if (creationRenouvellementInput) {
         if (archer.creation_renouvellement) {
             creationRenouvellementInput.value = archer.creation_renouvellement;
-            console.log('✓ Création/renouvellement pré-rempli:', archer.creation_renouvellement);
-        } else {
-            console.log('✗ creation_renouvellement non disponible dans les données');
         }
     } else {
         console.error('✗ Champ creation_renouvellement introuvable');
@@ -681,8 +656,6 @@ function prefillFormFields(archer) {
     if (certificatSelect) {
         if (archer.certificat_medical) {
             const certValue = archer.certificat_medical.trim();
-            console.log('Tentative pré-remplissage certificat_medical:', certValue);
-            
             // Le champ XML contient directement "Compétition" ou "Pratique"
             // Chercher l'option correspondante
             let found = false;
@@ -700,17 +673,10 @@ function prefillFormFields(archer) {
                     certificatSelect.disabled = false;
                     certificatSelect.value = optionValue;
                     certificatSelect.disabled = true; // Re-désactiver
-                    console.log('✓ Certificat médical pré-rempli:', certificatSelect.value);
                     found = true;
                     break;
                 }
             }
-            if (!found) {
-                console.log('✗ Aucune option trouvée pour certificat_medical:', certValue);
-                console.log('Options disponibles:', Array.from(certificatSelect.options).map(o => ({ value: o.value, text: o.textContent })));
-            }
-        } else {
-            console.log('✗ certificat_medical non disponible dans les données');
         }
     } else {
         console.error('✗ Champ type_certificat_medical introuvable');
@@ -732,8 +698,6 @@ function prefillFormFields(archer) {
             const typarc = archer.TYPARC ? String(archer.TYPARC).trim() : '';
             const sexeXml = (archer.SEXE || '').trim();
             const sexeLetter = sexeXml === '1' ? 'H' : (sexeXml === '2' ? 'F' : '');
-            
-            console.log('Tentative pré-remplissage catégorie. CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeXml, '->', sexeLetter);
             
             if (catage && typarc) {
                 // Récupérer CATEGORIE du XML pour prioriser la bonne catégorie
@@ -775,13 +739,9 @@ function prefillFormFields(archer) {
                 if (categorieXml && sexeLetter) {
                     const parsed = parseCategorieXml(categorieXml, sexeLetter);
                     if (parsed) {
-                        console.log('Catégorie XML parsée:', parsed, 'depuis:', categorieXml);
-                        
                         // Construire la catégorie recherchée : catégorie d'âge + sexe + arme
                         // Format dans la DB: S3HCL, S3HTL, U18HAD, etc.
                         const categorieRecherchee = parsed.ageCategory + parsed.sexe + parsed.arme;
-                        console.log('Catégorie recherchée construite:', categorieRecherchee);
-                        
                         // Chercher d'abord une correspondance exacte dans toutes les catégories
                         categorieFound = categoriesClassement.find(cat => {
                             const catAbv = (cat.abv_categorie_classement || '').trim().toUpperCase();
@@ -808,7 +768,6 @@ function prefillFormFields(archer) {
                             });
                             
                             if (categoriesWithAgeAndSexe.length > 0) {
-                                console.log('Catégories trouvées avec catégorie d\'âge + sexe:', categoriesWithAgeAndSexe.length, categoriesWithAgeAndSexe.map(c => c.abv_categorie_classement));
                                 
                                 // Prioriser celles qui correspondent aussi à CATAGE et TYPARC
                                 const foundWithIds = categoriesWithAgeAndSexe.find(cat => {
@@ -819,25 +778,17 @@ function prefillFormFields(archer) {
                                 
                                 if (foundWithIds) {
                                     categorieFound = foundWithIds;
-                                    console.log('  ⚠ Catégorie trouvée avec catégorie d\'âge + sexe + CATAGE/TYPARC:', categorieFound.abv_categorie_classement);
                                 } else {
                                     // Prendre la première catégorie avec la catégorie d'âge et le sexe
                                     categorieFound = categoriesWithAgeAndSexe[0];
-                                    console.log('  ⚠ Première catégorie avec catégorie d\'âge + sexe sélectionnée:', categorieFound.abv_categorie_classement, '(arme XML:', parsed.arme + ')');
                                 }
-                            } else {
-                                console.log('  ✗ Aucune catégorie trouvée avec catégorie d\'âge:', parsed.ageCategory, 'et sexe:', parsed.sexe, '(arme XML:', parsed.arme + ')');
-                                console.log('  Debug: Recherche dans', categoriesClassement.length, 'catégories disponibles');
                             }
                         }
-                    } else {
-                        console.log('  ✗ Impossible de parser la catégorie XML:', categorieXml);
                     }
                 }
                 
                 // Si toujours pas trouvé et qu'on a des catégories correspondantes, utiliser la première
                 if (!categorieFound && matchingCategories.length > 0) {
-                    console.log('Aucune correspondance trouvée, utilisation de la première catégorie correspondante');
                     categorieFound = matchingCategories[0];
                 }
                 
@@ -870,7 +821,6 @@ function prefillFormFields(archer) {
                             
                             if (categorieFound) {
                                 transformed = categorieFound.abv_categorie_classement;
-                                console.log('  ✓ Catégorie AD trouvée (fallback):', categorieFound.abv_categorie_classement);
                             }
                         } else if (parsed.arme === 'BB') {
                             const categorieRecherchee = parsed.ageCategory + parsed.sexe + 'BB';
@@ -893,7 +843,6 @@ function prefillFormFields(archer) {
                             
                             if (categorieFound) {
                                 transformed = categorieFound.abv_categorie_classement;
-                                console.log('  ✓ Catégorie BB trouvée (fallback):', categorieFound.abv_categorie_classement);
                             }
                         }
                         // Note: CL est déjà géré dans la recherche principale (lignes 741-774)
@@ -927,7 +876,6 @@ function prefillFormFields(archer) {
                     // Si la catégorie exacte n'a pas été trouvée, colorer en rouge
                     if (!isExactMatch && categorieXml) {
                         categorieSelect.classList.add('categorie-auto-selected');
-                        console.log('  ⚠ Catégorie sélectionnée automatiquement (non exacte) - colorée en rouge');
                     } else {
                         categorieSelect.classList.remove('categorie-auto-selected');
                     }
@@ -939,13 +887,6 @@ function prefillFormFields(archer) {
                     };
                     categorieSelect.addEventListener('change', removeRedClass);
                     
-                    console.log('✓ Catégorie pré-remplie via CATAGE/TYPARC/SEXE:', categorieSelect.value);
-                    console.log('  CATEGORIE XML:', categorieXml || 'non disponible');
-                    console.log('  Catégories correspondantes trouvées:', matchingCategories.length);
-                    if (matchingCategories.length > 1) {
-                        console.log('  Liste des catégories correspondantes:', matchingCategories.map(c => c.abv_categorie_classement));
-                    }
-                    
                     // Appliquer la colorisation après un court délai pour s'assurer que le DOM est mis à jour
                     setTimeout(() => {
                         applyCategorieColorization();
@@ -956,13 +897,6 @@ function prefillFormFields(archer) {
                         fillDistanceAndBlasonFromCategorie(categorieFound.abv_categorie_classement);
                     }, 300);
                 } else {
-                    console.log('✗ Catégorie non trouvée avec CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter);
-                    console.log('Catégories disponibles:', categoriesClassement.map(c => ({
-                        abv: c.abv_categorie_classement,
-                        idcategorie: c.idcategorie || c.id_categorie,
-                        idarc: c.idarc || c.id_arc,
-                        sexe: c.sexe || c.SEXE || 'N/A'
-                    })));
                     
                     // Afficher les catégories qui correspondent à CATAGE et TYPARC (sans le sexe)
                     const matchingCategoriesDebug = categoriesClassement.filter(cat => {
@@ -971,10 +905,6 @@ function prefillFormFields(archer) {
                         return catIdcategorie === catage && catIdarc === typarc;
                     });
                     if (matchingCategoriesDebug.length > 0) {
-                        console.log('Catégories correspondant à CATAGE et TYPARC (sans sexe):', matchingCategoriesDebug.map(c => ({
-                            abv: c.abv_categorie_classement,
-                            sexe: c.sexe || c.SEXE || 'N/A'
-                        })));
                         
                         // Si aucune catégorie CL n'a été trouvée mais qu'il y a des catégories correspondant à CATAGE/TYPARC,
                         // sélectionner la première qui correspond au sexe
@@ -994,11 +924,9 @@ function prefillFormFields(archer) {
                             
                             if (foundBySexe) {
                                 categorieFound = foundBySexe;
-                                console.log('  ⚠ Catégorie sélectionnée (CL non trouvée, utilisation de', foundBySexe.abv_categorie_classement, 'avec CATAGE:', catage, 'TYPARC:', typarc, 'SEXE:', sexeLetter, ')');
                             } else if (matchingCategoriesDebug.length > 0) {
                                 // Prendre la première catégorie même si le sexe ne correspond pas exactement
                                 categorieFound = matchingCategoriesDebug[0];
-                                console.log('  ⚠ Catégorie sélectionnée (CL non trouvée, utilisation de la première avec CATAGE:', catage, 'TYPARC:', typarc, ')');
                             }
                         }
                     }
@@ -1020,7 +948,6 @@ function prefillFormFields(archer) {
                         // Si la catégorie exacte n'a pas été trouvée, colorer en rouge
                         if (!isExactMatch && categorieXml) {
                             categorieSelect.classList.add('categorie-auto-selected');
-                            console.log('  ⚠ Catégorie sélectionnée automatiquement (non exacte) - colorée en rouge');
                         } else {
                             categorieSelect.classList.remove('categorie-auto-selected');
                         }
@@ -1031,8 +958,6 @@ function prefillFormFields(archer) {
                             categorieSelect.removeEventListener('change', removeRedClass);
                         };
                         categorieSelect.addEventListener('change', removeRedClass);
-                        
-                        console.log('✓ Catégorie pré-remplie:', categorieSelect.value);
                         
                         // Appliquer la colorisation après un court délai
                         setTimeout(() => {
@@ -1047,7 +972,11 @@ function prefillFormFields(archer) {
                         // Sélectionner automatiquement la couleur de piquet pour Nature
                         // Utiliser un délai plus long pour s'assurer que la modale est ouverte
                         setTimeout(() => {
-                            selectPiquetColorForNature(categorieFound.abv_categorie_classement);
+                            if (disciplineAbv === 'N') {
+                                selectPiquetColorForNature(categorieFound.abv_categorie_classement);
+                            } else if (disciplineAbv === '3') {
+                                selectPiquetColorFor3D(categorieFound.abv_categorie_classement);
+                            }
                         }, 500);
                     }
                     
@@ -1055,12 +984,10 @@ function prefillFormFields(archer) {
                     if (!categorieFound) {
                         const categorieXmlFallback = (archer.CATEGORIE || '').trim().toUpperCase();
                         if (categorieXmlFallback && sexeLetter) {
-                            console.log('Fallback: Recherche avec CATEGORIE XML:', categorieXmlFallback, 'SEXE:', sexeXml, '->', sexeLetter);
                             
                             // Parser la catégorie XML
                             const parsedFallback = parseCategorieXml(categorieXmlFallback, sexeLetter);
                             if (parsedFallback) {
-                                console.log('Fallback: Catégorie XML parsée:', parsedFallback);
                                 
                                 // Construire la catégorie recherchée
                                 const categorieRechercheeFallback = parsedFallback.ageCategory + parsedFallback.sexe + parsedFallback.arme;
@@ -1073,7 +1000,6 @@ function prefillFormFields(archer) {
                                 
                                 if (categoriesWithAgeAndSexeFallback.length > 0) {
                                     categorieFound = categoriesWithAgeAndSexeFallback[0];
-                                    console.log('  ⚠ Catégorie sélectionnée via fallback (catégorie d\'âge + sexe):', categorieFound.abv_categorie_classement);
                                     
                                     categorieSelect.value = categorieFound.abv_categorie_classement || '';
                                     
@@ -1084,7 +1010,6 @@ function prefillFormFields(archer) {
                                     // Si la catégorie exacte n'a pas été trouvée, colorer en rouge
                                     if (!isExactMatchFallback) {
                                         categorieSelect.classList.add('categorie-auto-selected');
-                                        console.log('  ⚠ Catégorie sélectionnée via fallback (non exacte) - colorée en rouge');
                                     } else {
                                         categorieSelect.classList.remove('categorie-auto-selected');
                                     }
@@ -1096,7 +1021,6 @@ function prefillFormFields(archer) {
                                     };
                                     categorieSelect.addEventListener('change', removeRedClassFallback);
                                     
-                                    console.log('✓ Catégorie pré-remplie via CATEGORIE (fallback):', categorieSelect.value, 'depuis XML:', categorieXmlFallback);
                                     
                                     // Appliquer la colorisation après un court délai
                                     setTimeout(() => {
@@ -1106,15 +1030,11 @@ function prefillFormFields(archer) {
                                     setTimeout(() => {
                                         fillDistanceAndBlasonFromCategorie(categorieFound.abv_categorie_classement);
                                     }, 300);
-                                } else {
-                                    console.log('✗ Aucune catégorie trouvée avec catégorie d\'âge + sexe (fallback)');
                                 }
                             }
                         }
                     }
                 }
-            } else {
-                console.log('✗ CATAGE ou TYPARC manquant. CATAGE:', catage, 'TYPARC:', typarc);
             }
         } else {
             console.error('✗ categoriesClassement non défini ou vide');
@@ -1130,7 +1050,6 @@ function prefillFormFields(archer) {
         if (typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
             const typarc = archer.TYPARC ? String(archer.TYPARC).trim() : '';
             if (typarc) {
-                console.log('Tentative pré-remplissage arme. TYPARC (idarc):', typarc);
                 // Chercher l'arc correspondant avec idarc = TYPARC
                 const arcFound = arcs.find(arc => {
                     const arcIdarc = String(arc.idarc || arc.id_arc || arc.id || '').trim();
@@ -1139,13 +1058,7 @@ function prefillFormFields(archer) {
                 
                 if (arcFound) {
                     armeSelect.value = arcFound.lb_arc || '';
-                    console.log('✓ Arme pré-remplie via TYPARC:', armeSelect.value);
                 } else {
-                    console.log('✗ Arc non trouvé pour TYPARC (idarc):', typarc);
-                    console.log('Arcs disponibles:', arcs.map(a => ({
-                        lb_arc: a.lb_arc,
-                        idarc: a.idarc || a.id_arc || a.id
-                    })));
                     
                     // Fallback: chercher par nom si disponible
                     const arcFoundFallback = arcs.find(arc => {
@@ -1155,11 +1068,8 @@ function prefillFormFields(archer) {
                     
                     if (arcFoundFallback) {
                         armeSelect.value = arcFoundFallback.lb_arc || '';
-                        console.log('✓ Arme pré-remplie via nom (fallback):', armeSelect.value);
                     }
                 }
-            } else {
-                console.log('✗ TYPARC non disponible dans les données');
             }
         } else {
             console.error('✗ arcs non défini ou vide');
@@ -1167,8 +1077,6 @@ function prefillFormFields(archer) {
     } else {
         console.error('✗ Champ arme introuvable');
     }
-    
-    console.log('=== Fin prefillFormFields ===');
     
     // Pré-remplir l'affichage des départs sélectionnés
     if (typeof window.updateModalDepartDisplay === 'function') {
@@ -1189,32 +1097,24 @@ function prefillFormFields(archer) {
 function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry = false) {
     // Vérifier si c'est la discipline Nature
     if (typeof disciplineAbv === 'undefined' || disciplineAbv !== 'N') {
-        console.log('selectPiquetColorForNature: Pas Nature (disciplineAbv:', typeof disciplineAbv !== 'undefined' ? disciplineAbv : 'undefined', ')');
         return; // Pas Nature, ne rien faire
     }
     
     if (!abvCategorie || abvCategorie.trim() === '') {
-        console.log('selectPiquetColorForNature: Catégorie vide');
         return; // Catégorie vide
     }
     
     const piquetSelect = document.getElementById(isEditModal ? 'edit-piquet' : 'piquet');
     if (!piquetSelect) {
-        console.log('selectPiquetColorForNature: Champ piquet non trouvé (id:', isEditModal ? 'edit-piquet' : 'piquet', ')');
         // Essayer de trouver le champ même s'il n'est pas encore dans le DOM
         // Réessayer après un court délai (une seule fois pour éviter la récursion)
         if (!isRetry) {
-            console.log('selectPiquetColorForNature: Tentative de retry après délai...');
             setTimeout(() => {
                 selectPiquetColorForNature(abvCategorie, isEditModal, true);
             }, 300);
-        } else {
-            console.log('selectPiquetColorForNature: Retry échoué, champ toujours introuvable');
         }
         return; // Champ piquet non trouvé
     }
-    
-    console.log('selectPiquetColorForNature: Champ piquet trouvé, catégorie:', abvCategorie);
     
     if (!abvCategorie || abvCategorie.trim() === '') {
         return; // Catégorie vide
@@ -1251,6 +1151,12 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
         const lastTwoChars = categorieUpper.substring(categorieUpper.length - 2);
         if (lastTwoChars === 'BB') {
             arme = 'BB';
+        } else if (lastTwoChars === 'CO') {
+            arme = 'CO';
+        } else if (lastTwoChars === 'AD') {
+            arme = 'AD';
+        } else if (lastTwoChars === 'AC') {
+            arme = 'AC';
         } else if (lastTwoChars === 'TL') {
             arme = 'TL';
         }
@@ -1284,6 +1190,98 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
         // Aucune règle ne correspond : colorer le champ en rouge
         piquetSelect.classList.add('is-invalid');
         console.log('⚠ Aucune règle de piquet trouvée pour catégorie:', abvCategorie, '(âge:', ageCategory + ', arme:', arme + ') - champ coloré en rouge');
+    }
+}
+function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = false) {
+    // Vérifier si c'est la discipline 3D
+    if (typeof disciplineAbv === 'undefined' || disciplineAbv !== '3') {
+        return; // Pas 3D, ne rien faire
+    }
+    
+    if (!abvCategorie || abvCategorie.trim() === '') {
+        return; // Catégorie vide
+    }
+    
+    const piquetSelect = document.getElementById(isEditModal ? 'edit-piquet' : 'piquet');
+    if (!piquetSelect) {
+        // Essayer de trouver le champ même s'il n'est pas encore dans le DOM
+        // Réessayer après un court délai (une seule fois pour éviter la récursion)
+        if (!isRetry) {
+            setTimeout(() => {
+                selectPiquetColorFor3D(abvCategorie, isEditModal, true);
+            }, 300);
+        }
+        return; // Champ piquet non trouvé
+    }
+    
+    if (!abvCategorie || abvCategorie.trim() === '') {
+        return; // Catégorie vide
+    }
+    
+    const categorieUpper = abvCategorie.trim().toUpperCase();
+    
+    // Extraire la catégorie d'âge (S1, S2, S3, U21, U18, U15, U13)
+    // Format des catégories : S3HCL, U18HBB, U15FTL, etc.
+    // Structure : Catégorie d'âge (2 ou 3 chars) + Sexe (1 char) + Arme (2 chars)
+    let ageCategory = '';
+    if (categorieUpper.startsWith('S1')) {
+        ageCategory = 'S1';
+    } else if (categorieUpper.startsWith('S2')) {
+        ageCategory = 'S2';
+    } else if (categorieUpper.startsWith('S3')) {
+        ageCategory = 'S3';
+    } else if (categorieUpper.startsWith('U21')) {
+        ageCategory = 'U21';
+    } else if (categorieUpper.startsWith('U18')) {
+        ageCategory = 'U18';
+    } else if (categorieUpper.startsWith('U15')) {
+        ageCategory = 'U15';
+    } else if (categorieUpper.startsWith('U13')) {
+        ageCategory = 'U13';
+    }
+    
+    // Extraire l'arme (BB = arc nu, TL = TL)
+    // L'arme est à la fin de la catégorie (2 derniers caractères)
+    // Format : Catégorie d'âge (2-3 chars) + Sexe (1 char) + Arme (2 chars)
+    // Exemples : S3HCL, U18HBB, U15FTL
+    let arme = '';
+    if (categorieUpper.length >= 2) {
+        const lastTwoChars = categorieUpper.substring(categorieUpper.length - 2);
+        if (lastTwoChars === 'BB') {
+            arme = 'BB';
+        } else if (lastTwoChars === 'CO') {
+            arme = 'CO';
+        } else if (lastTwoChars === 'AD') {
+            arme = 'AD';
+        } else if (lastTwoChars === 'AC') {
+            arme = 'AC';
+        } else if (lastTwoChars === 'TL') {
+            arme = 'TL';
+        }
+    }
+    
+    // Appliquer les règles
+    let piquetColor = '';
+    
+    if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21' && arme === 'TL') {
+        // S1, S2, S3, U21 : piquet rouge
+        piquetColor = 'rouge';
+    } else if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21' ||ageCategory === 'U18' && arme !== 'TL') {
+        // S1, S2, S3, U21, U18 : arc nu (BB) 5AC) (AD) (CO) : piquet bleu
+            piquetColor = 'bleu';
+    } else if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21' ||ageCategory === 'U18' || ageCategory === 'U15' || ageCategory === 'U13' && arme !== 'TL') {
+        // U15, U13 : arc nu (BB) : piquet blanc
+            piquetColor = 'blanc';
+    }
+    
+    // Sélectionner la couleur si trouvée
+    if (piquetColor) {
+        piquetSelect.value = piquetColor;
+        // Retirer la classe is-invalid si elle existe
+        piquetSelect.classList.remove('is-invalid');
+    } else {
+        // Aucune règle ne correspond : colorer le champ en rouge
+        piquetSelect.classList.add('is-invalid');
     }
 }
 
@@ -2179,22 +2177,7 @@ window.editInscription = function(inscriptionId) {
             inscription = inscription.data;
         }
         currentEditInscription = inscription;
-console.log('inscription:', inscription);
-console.log('inscription.email:', inscription.email);
-console.log('inscription.saison:', inscription.saison);
-console.log('inscription.type_certificat_medical:', inscription.type_certificat_medical);
-console.log('inscription.type_licence:', inscription.type_licence);
-console.log('inscription.creation_renouvellement:', inscription.creation_renouvellement);
-console.log('inscription.numero_depart:', inscription.numero_depart);
-console.log('inscription.categorie_classement:', inscription.categorie_classement);
-console.log('inscription.catage:', inscription.catage);
-console.log('inscription.arme:', inscription.arme);
-console.log('inscription.mobilite_reduite:', inscription.mobilite_reduite);
-console.log('inscription.piquet:', inscription.piquet);
-console.log('inscription.distance:', inscription.distance);
-console.log('inscription.blason:', inscription.blason);
-console.log('inscription.duel:', inscription.duel);
-console.log('inscription.trispot:', inscription.trispot);
+
         const fillForm = () => {
             const setVal = (id, val) => {
                 const el = document.getElementById(id);
@@ -2224,7 +2207,11 @@ console.log('inscription.trispot:', inscription.trispot);
             // Sélectionner automatiquement la couleur de piquet pour Nature
             setTimeout(() => {
                 if (inscription.categorie_classement) {
-                    selectPiquetColorForNature(inscription.categorie_classement, true);
+                    if (disciplineAbv === 'N') {
+                        selectPiquetColorForNature(inscription.categorie_classement, true);
+                    } else if (disciplineAbv === '3') {
+                        selectPiquetColorFor3D(inscription.categorie_classement, true);
+                    }
                 }
             }, 100);
             setCheck('edit-mobilite_reduite', inscription.mobilite_reduite);
@@ -2244,8 +2231,10 @@ console.log('inscription.trispot:', inscription.trispot);
                 // Retirer l'ancien listener s'il existe (en créant une nouvelle fonction à chaque fois)
                 const editCategorieChangeHandler = function() {
                     const selectedCategorie = editCategorieSelect.value;
-                    if (selectedCategorie) {
+                    if (selectedCategorie && disciplineAbv === 'N') {
                         selectPiquetColorForNature(selectedCategorie, true);
+                    } else if (selectedCategorie && disciplineAbv === '3') {
+                        selectPiquetColorFor3D(selectedCategorie, true);
                     }
                 };
                 editCategorieSelect.removeEventListener('change', editCategorieChangeHandler);
