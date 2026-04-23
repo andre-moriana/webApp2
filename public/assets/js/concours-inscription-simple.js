@@ -85,6 +85,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Ajouter les listeners pour mettre à jour le blason automatiquement
     setupBlasonAutoUpdate();
+    // Ajouter les listeners globaux pour mettre à jour le piquet dynamiquement
+    setupPiquetAutoUpdate();
     
     // Ajouter les listeners pour les avertissements de type de licence
     setupLicenceTypeWarnings();
@@ -140,6 +142,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Variable pour stocker la fonction de mise à jour du blason (pour pouvoir la retirer si nécessaire)
 let blasonUpdateHandler = null;
+let piquetCreateUpdateHandler = null;
+let piquetEditUpdateHandler = null;
 
 /**
  * Configure les listeners pour afficher les avertissements selon le type de licence
@@ -395,6 +399,53 @@ function setupBlasonAutoUpdate() {
         });
     }
 
+}
+
+function setupPiquetAutoUpdate() {
+    const categorieSelect = document.getElementById('categorie_classement');
+    const armeSelect = document.getElementById('arme');
+    const editCategorieSelect = document.getElementById('edit-categorie_classement');
+    const editArmeSelect = document.getElementById('edit-arme');
+
+    if (categorieSelect) {
+        if (piquetCreateUpdateHandler) {
+            categorieSelect.removeEventListener('change', piquetCreateUpdateHandler);
+            if (armeSelect) {
+                armeSelect.removeEventListener('change', piquetCreateUpdateHandler);
+            }
+        }
+
+        piquetCreateUpdateHandler = function() {
+            const selectedCategorie = document.getElementById('categorie_classement')?.value || '';
+            const selectedArme = document.getElementById('arme')?.value || '';
+            applyAutoPiquetSelection(selectedCategorie, false, selectedArme);
+        };
+
+        categorieSelect.addEventListener('change', piquetCreateUpdateHandler);
+        if (armeSelect) {
+            armeSelect.addEventListener('change', piquetCreateUpdateHandler);
+        }
+    }
+
+    if (editCategorieSelect) {
+        if (piquetEditUpdateHandler) {
+            editCategorieSelect.removeEventListener('change', piquetEditUpdateHandler);
+            if (editArmeSelect) {
+                editArmeSelect.removeEventListener('change', piquetEditUpdateHandler);
+            }
+        }
+
+        piquetEditUpdateHandler = function() {
+            const selectedCategorie = document.getElementById('edit-categorie_classement')?.value || '';
+            const selectedArme = document.getElementById('edit-arme')?.value || '';
+            applyAutoPiquetSelection(selectedCategorie, true, selectedArme);
+        };
+
+        editCategorieSelect.addEventListener('change', piquetEditUpdateHandler);
+        if (editArmeSelect) {
+            editArmeSelect.addEventListener('change', piquetEditUpdateHandler);
+        }
+    }
 }
 
 function normalizeArmeCodeFromLabel(armeValue) {
