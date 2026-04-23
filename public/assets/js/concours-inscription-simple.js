@@ -372,11 +372,7 @@ function setupBlasonAutoUpdate() {
     categorieSelect.addEventListener('change', function() {
         const selectedCategorie = categorieSelect.value;
         const selectedArme = armeSelect ? armeSelect.value : '';
-        if (selectedCategorie && disciplineAbv === 'N') {
-            selectPiquetColorForNature(selectedCategorie, false, false, selectedArme);
-        } else if (selectedCategorie && disciplineAbv === '3') {
-            selectPiquetColorFor3D(selectedCategorie, false, false, selectedArme);
-        }   
+        applyAutoPiquetSelection(selectedCategorie, false, selectedArme);
     });
 
     // Mettre à jour le piquet aussi quand l'arme change
@@ -384,11 +380,7 @@ function setupBlasonAutoUpdate() {
         armeSelect.addEventListener('change', function() {
             const selectedCategorie = categorieSelect.value;
             const selectedArme = armeSelect.value;
-            if (selectedCategorie && disciplineAbv === 'N') {
-                selectPiquetColorForNature(selectedCategorie, false, false, selectedArme);
-            } else if (selectedCategorie && disciplineAbv === '3') {
-                selectPiquetColorFor3D(selectedCategorie, false, false, selectedArme);
-            }
+            applyAutoPiquetSelection(selectedCategorie, false, selectedArme);
         });
     }
     
@@ -422,6 +414,22 @@ function normalizeArmeCodeFromLabel(armeValue) {
     if (upper.includes('LIBRE') || upper.includes('TL')) return 'TL';
 
     return '';
+}
+
+function applyAutoPiquetSelection(abvCategorie, isEditModal = false, selectedArme = '') {
+    if (!abvCategorie) {
+        return;
+    }
+
+    if (disciplineAbv === '3') {
+        selectPiquetColorFor3D(abvCategorie, isEditModal, false, selectedArme);
+        return;
+    }
+
+    if (disciplineAbv === 'N' || disciplineAbv === 'C') {
+        // Campagne: meme logique de selection automatique que Nature.
+        selectPiquetColorForNature(abvCategorie, isEditModal, false, selectedArme);
+    }
 }
 
 /**
@@ -568,11 +576,8 @@ function showSearchResult() {
         const categorieSelect = document.getElementById('categorie_classement');
         if (categorieSelect && categorieSelect.value) {
             setTimeout(() => {
-                if (disciplineAbv === 'N') {
-                    selectPiquetColorForNature(categorieSelect.value);
-                } else if (disciplineAbv === '3') {
-                    selectPiquetColorFor3D(categorieSelect.value);
-                }
+                const selectedArme = document.getElementById('arme')?.value || '';
+                applyAutoPiquetSelection(categorieSelect.value, false, selectedArme);
             }, 100);
         }
         // Charger les produits buvette
@@ -1006,11 +1011,8 @@ function prefillFormFields(archer) {
                         // Sélectionner automatiquement la couleur de piquet pour Nature
                         // Utiliser un délai plus long pour s'assurer que la modale est ouverte
                         setTimeout(() => {
-                            if (disciplineAbv === 'N') {
-                                selectPiquetColorForNature(categorieFound.abv_categorie_classement);
-                            } else if (disciplineAbv === '3') {
-                                selectPiquetColorFor3D(categorieFound.abv_categorie_classement);
-                            }
+                            const selectedArme = document.getElementById('arme')?.value || '';
+                            applyAutoPiquetSelection(categorieFound.abv_categorie_classement, false, selectedArme);
                         }, 500);
                     }
                     
@@ -1129,9 +1131,9 @@ function prefillFormFields(archer) {
  * @param {boolean} isRetry - Indique si c'est un retry (pour éviter la récursion infinie)
  */
 function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry = false, selectedArme = '') {
-    // Vérifier si c'est la discipline Nature
-    if (typeof disciplineAbv === 'undefined' || disciplineAbv !== 'N') {
-        return; // Pas Nature, ne rien faire
+    // Vérifier si c'est la discipline Nature/Campagne
+    if (typeof disciplineAbv === 'undefined' || (disciplineAbv !== 'N' && disciplineAbv !== 'C')) {
+        return; // Pas Nature/Campagne, ne rien faire
     }
     
     if (!abvCategorie || abvCategorie.trim() === '') {
@@ -2252,11 +2254,7 @@ window.editInscription = function(inscriptionId) {
             setTimeout(() => {
                 if (inscription.categorie_classement) {
                     const selectedEditArme = document.getElementById('edit-arme')?.value || '';
-                    if (disciplineAbv === 'N') {
-                        selectPiquetColorForNature(inscription.categorie_classement, true, false, selectedEditArme);
-                    } else if (disciplineAbv === '3') {
-                        selectPiquetColorFor3D(inscription.categorie_classement, true, false, selectedEditArme);
-                    }
+                    applyAutoPiquetSelection(inscription.categorie_classement, true, selectedEditArme);
                 }
             }, 100);
             setCheck('edit-mobilite_reduite', inscription.mobilite_reduite);
@@ -2278,11 +2276,7 @@ window.editInscription = function(inscriptionId) {
                 const editCategorieChangeHandler = function() {
                     const selectedCategorie = editCategorieSelect.value;
                     const selectedEditArme = editArmeSelect ? editArmeSelect.value : '';
-                    if (selectedCategorie && disciplineAbv === 'N') {
-                        selectPiquetColorForNature(selectedCategorie, true, false, selectedEditArme);
-                    } else if (selectedCategorie && disciplineAbv === '3') {
-                        selectPiquetColorFor3D(selectedCategorie, true, false, selectedEditArme);
-                    }
+                    applyAutoPiquetSelection(selectedCategorie, true, selectedEditArme);
                 };
                 editCategorieSelect.removeEventListener('change', editCategorieChangeHandler);
                 editCategorieSelect.addEventListener('change', editCategorieChangeHandler);
@@ -2292,11 +2286,7 @@ window.editInscription = function(inscriptionId) {
                 const editArmeChangeHandler = function() {
                     const selectedCategorie = editCategorieSelect ? editCategorieSelect.value : '';
                     const selectedEditArme = editArmeSelect.value;
-                    if (selectedCategorie && disciplineAbv === 'N') {
-                        selectPiquetColorForNature(selectedCategorie, true, false, selectedEditArme);
-                    } else if (selectedCategorie && disciplineAbv === '3') {
-                        selectPiquetColorFor3D(selectedCategorie, true, false, selectedEditArme);
-                    }
+                    applyAutoPiquetSelection(selectedCategorie, true, selectedEditArme);
                 };
                 editArmeSelect.removeEventListener('change', editArmeChangeHandler);
                 editArmeSelect.addEventListener('change', editArmeChangeHandler);
