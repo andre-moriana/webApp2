@@ -259,6 +259,7 @@ function applyCategorieColorization() {
  */
 function setupBlasonAutoUpdate() {
     const categorieSelect = document.getElementById('categorie_classement');
+    const armeSelect = document.getElementById('arme');
     const distanceSelect = document.getElementById('distance');
     const blasonInput = document.getElementById('blason');
     
@@ -370,12 +371,26 @@ function setupBlasonAutoUpdate() {
     // Ajouter un listener pour la sélection automatique du piquet en Nature
     categorieSelect.addEventListener('change', function() {
         const selectedCategorie = categorieSelect.value;
+        const selectedArme = armeSelect ? armeSelect.value : '';
         if (selectedCategorie && disciplineAbv === 'N') {
-            selectPiquetColorForNature(selectedCategorie);
+            selectPiquetColorForNature(selectedCategorie, false, false, selectedArme);
         } else if (selectedCategorie && disciplineAbv === '3') {
-            selectPiquetColorFor3D(selectedCategorie);
+            selectPiquetColorFor3D(selectedCategorie, false, false, selectedArme);
         }   
     });
+
+    // Mettre à jour le piquet aussi quand l'arme change
+    if (armeSelect) {
+        armeSelect.addEventListener('change', function() {
+            const selectedCategorie = categorieSelect.value;
+            const selectedArme = armeSelect.value;
+            if (selectedCategorie && disciplineAbv === 'N') {
+                selectPiquetColorForNature(selectedCategorie, false, false, selectedArme);
+            } else if (selectedCategorie && disciplineAbv === '3') {
+                selectPiquetColorFor3D(selectedCategorie, false, false, selectedArme);
+            }
+        });
+    }
     
     // Ajouter un listener sur le champ piquet pour retirer la classe is-invalid quand l'utilisateur sélectionne manuellement
     const piquetSelect = document.getElementById('piquet');
@@ -388,6 +403,25 @@ function setupBlasonAutoUpdate() {
         });
     }
 
+}
+
+function normalizeArmeCodeFromLabel(armeValue) {
+    const raw = String(armeValue || '').trim();
+    if (!raw) return '';
+
+    const upper = raw.toUpperCase();
+    if (['CL', 'CO', 'AD', 'AC', 'TL', 'BB'].includes(upper)) {
+        return upper;
+    }
+
+    if (upper.includes('CLASSIQUE') || upper.includes('RECURVE')) return 'CL';
+    if (upper.includes('POUL') || upper.includes('COMPOUND')) return 'CO';
+    if (upper.includes('DROIT') || upper.includes('LONGBOW')) return 'AD';
+    if (upper.includes('CHASSE') || upper.includes('HUNT')) return 'AC';
+    if (upper.includes('NU') || upper.includes('BAREBOW') || upper.includes('BB')) return 'BB';
+    if (upper.includes('LIBRE') || upper.includes('TL')) return 'TL';
+
+    return '';
 }
 
 /**
@@ -1094,7 +1128,7 @@ function prefillFormFields(archer) {
  * @param {boolean} isEditModal - Si true, utilise le champ edit-piquet au lieu de piquet
  * @param {boolean} isRetry - Indique si c'est un retry (pour éviter la récursion infinie)
  */
-function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry = false) {
+function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry = false, selectedArme = '') {
     // Vérifier si c'est la discipline Nature
     if (typeof disciplineAbv === 'undefined' || disciplineAbv !== 'N') {
         return; // Pas Nature, ne rien faire
@@ -1161,6 +1195,10 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
             arme = 'TL';
         }
     }
+    const armeOverride = normalizeArmeCodeFromLabel(selectedArme);
+    if (armeOverride) {
+        arme = armeOverride;
+    }
     
     // Appliquer les règles
     let piquetColor = '';
@@ -1192,7 +1230,7 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
         console.log('⚠ Aucune règle de piquet trouvée pour catégorie:', abvCategorie, '(âge:', ageCategory + ', arme:', arme + ') - champ coloré en rouge');
     }
 }
-function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = false) {
+function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = false, selectedArme = '') {
     // Vérifier si c'est la discipline 3D
     if (typeof disciplineAbv === 'undefined' || disciplineAbv !== '3') {
         return; // Pas 3D, ne rien faire
@@ -1260,6 +1298,10 @@ function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = fal
         } else if (lastTwoChars === 'TL') {
             arme = 'TL';
         }
+    }
+    const armeOverride = normalizeArmeCodeFromLabel(selectedArme);
+    if (armeOverride) {
+        arme = armeOverride;
     }
     
     // Appliquer les règles
@@ -2209,10 +2251,11 @@ window.editInscription = function(inscriptionId) {
             // Sélectionner automatiquement la couleur de piquet pour Nature
             setTimeout(() => {
                 if (inscription.categorie_classement) {
+                    const selectedEditArme = document.getElementById('edit-arme')?.value || '';
                     if (disciplineAbv === 'N') {
-                        selectPiquetColorForNature(inscription.categorie_classement, true);
+                        selectPiquetColorForNature(inscription.categorie_classement, true, false, selectedEditArme);
                     } else if (disciplineAbv === '3') {
-                        selectPiquetColorFor3D(inscription.categorie_classement, true);
+                        selectPiquetColorFor3D(inscription.categorie_classement, true, false, selectedEditArme);
                     }
                 }
             }, 100);
@@ -2229,18 +2272,34 @@ window.editInscription = function(inscriptionId) {
             
             // Ajouter un listener pour la sélection automatique du piquet en Nature lors du changement de catégorie
             const editCategorieSelect = document.getElementById('edit-categorie_classement');
+            const editArmeSelect = document.getElementById('edit-arme');
             if (editCategorieSelect) {
                 // Retirer l'ancien listener s'il existe (en créant une nouvelle fonction à chaque fois)
                 const editCategorieChangeHandler = function() {
                     const selectedCategorie = editCategorieSelect.value;
+                    const selectedEditArme = editArmeSelect ? editArmeSelect.value : '';
                     if (selectedCategorie && disciplineAbv === 'N') {
-                        selectPiquetColorForNature(selectedCategorie, true);
+                        selectPiquetColorForNature(selectedCategorie, true, false, selectedEditArme);
                     } else if (selectedCategorie && disciplineAbv === '3') {
-                        selectPiquetColorFor3D(selectedCategorie, true);
+                        selectPiquetColorFor3D(selectedCategorie, true, false, selectedEditArme);
                     }
                 };
                 editCategorieSelect.removeEventListener('change', editCategorieChangeHandler);
                 editCategorieSelect.addEventListener('change', editCategorieChangeHandler);
+            }
+
+            if (editArmeSelect) {
+                const editArmeChangeHandler = function() {
+                    const selectedCategorie = editCategorieSelect ? editCategorieSelect.value : '';
+                    const selectedEditArme = editArmeSelect.value;
+                    if (selectedCategorie && disciplineAbv === 'N') {
+                        selectPiquetColorForNature(selectedCategorie, true, false, selectedEditArme);
+                    } else if (selectedCategorie && disciplineAbv === '3') {
+                        selectPiquetColorFor3D(selectedCategorie, true, false, selectedEditArme);
+                    }
+                };
+                editArmeSelect.removeEventListener('change', editArmeChangeHandler);
+                editArmeSelect.addEventListener('change', editArmeChangeHandler);
             }
             
             // Ajouter un listener sur le champ edit-piquet pour retirer la classe is-invalid quand l'utilisateur sélectionne manuellement
