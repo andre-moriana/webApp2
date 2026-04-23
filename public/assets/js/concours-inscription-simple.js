@@ -17,7 +17,7 @@
             window.concoursDiscipline = c.concoursDiscipline;
             window.concoursTypeCompetition = c.concoursTypeCompetition;
             window.concoursNombreDepart = c.concoursNombreDepart;
-            window.disciplineAbv = c.disciplineAbv;
+            window.disciplineAbv = String(c.disciplineAbv ?? '').trim().toUpperCase();
             window.isNature3DOrCampagne = !!c.isNature3DOrCampagne;
             window.isDirigeant = !!c.isDirigeant;
             window.currentUserLicence = (c.currentUserLicence || '').toString().trim();
@@ -416,17 +416,25 @@ function normalizeArmeCodeFromLabel(armeValue) {
     return '';
 }
 
+function getNormalizedDisciplineAbv() {
+    return String(typeof disciplineAbv !== 'undefined' ? disciplineAbv : '')
+        .trim()
+        .toUpperCase();
+}
+
 function applyAutoPiquetSelection(abvCategorie, isEditModal = false, selectedArme = '') {
     if (!abvCategorie) {
         return;
     }
 
-    if (disciplineAbv === '3') {
+    const currentDisciplineAbv = getNormalizedDisciplineAbv();
+
+    if (currentDisciplineAbv === '3') {
         selectPiquetColorFor3D(abvCategorie, isEditModal, false, selectedArme);
         return;
     }
 
-    if (disciplineAbv === 'N' || disciplineAbv === 'C') {
+    if (currentDisciplineAbv === 'N' || currentDisciplineAbv === 'C') {
         // Campagne: meme logique de selection automatique que Nature.
         selectPiquetColorForNature(abvCategorie, isEditModal, false, selectedArme);
     }
@@ -1132,7 +1140,8 @@ function prefillFormFields(archer) {
  */
 function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry = false, selectedArme = '') {
     // Vérifier si c'est la discipline Nature/Campagne
-    if (typeof disciplineAbv === 'undefined' || (disciplineAbv !== 'N' && disciplineAbv !== 'C')) {
+    const currentDisciplineAbv = getNormalizedDisciplineAbv();
+    if (currentDisciplineAbv !== 'N' && currentDisciplineAbv !== 'C') {
         return; // Pas Nature/Campagne, ne rien faire
     }
     
@@ -1234,7 +1243,7 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
 }
 function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = false, selectedArme = '') {
     // Vérifier si c'est la discipline 3D
-    if (typeof disciplineAbv === 'undefined' || disciplineAbv !== '3') {
+    if (getNormalizedDisciplineAbv() !== '3') {
         return; // Pas 3D, ne rien faire
     }
     
