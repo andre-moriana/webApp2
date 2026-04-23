@@ -389,7 +389,7 @@ class AuthController {
         }
 
         if (strlen($password) < 6) {
-            $_SESSION['error'] = 'Le mot de passe doit contenir au moins 6 caractères';
+            $_SESSION['error'] = 'Le mot de passe doit contenir au moins 8 caractères';
             header('Location: /auth/register');
             exit;
         }
