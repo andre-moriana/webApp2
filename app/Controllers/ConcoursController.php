@@ -1247,17 +1247,6 @@ class ConcoursController {
             $data['departs'] = is_array($decoded) ? $decoded : [];
         }
         unset($data['departs_json']);
-        // L'API backend n'accepte que type_depart: premier|supplementaire.
-        // On garde compatibilité avec l'ancien champ "deuxieme" en fallback.
-        $tarifAdulteSupplementaireRaw = $data['tarif_adulte_depart_supplementaire'] ?? '';
-        if ($tarifAdulteSupplementaireRaw === '' && isset($data['tarif_adulte_deuxieme_depart'])) {
-            $tarifAdulteSupplementaireRaw = $data['tarif_adulte_deuxieme_depart'];
-        }
-        $tarifEnfantSupplementaireRaw = $data['tarif_enfant_depart_supplementaire'] ?? '';
-        if ($tarifEnfantSupplementaireRaw === '' && isset($data['tarif_enfant_deuxieme_depart'])) {
-            $tarifEnfantSupplementaireRaw = $data['tarif_enfant_deuxieme_depart'];
-        }
-
         $data['tarifications'] = [
             [
                 'type_public' => 'adulte',
@@ -1271,13 +1260,23 @@ class ConcoursController {
             ],
             [
                 'type_public' => 'adulte',
+                'type_depart' => 'deuxieme',
+                'prix' => ($data['tarif_adulte_deuxieme_depart'] ?? '') !== '' ? (float)$data['tarif_adulte_deuxieme_depart'] : null
+            ],
+            [
+                'type_public' => 'enfant',
+                'type_depart' => 'deuxieme',
+                'prix' => ($data['tarif_enfant_deuxieme_depart'] ?? '') !== '' ? (float)$data['tarif_enfant_deuxieme_depart'] : null
+            ],
+            [
+                'type_public' => 'adulte',
                 'type_depart' => 'supplementaire',
-                'prix' => $tarifAdulteSupplementaireRaw !== '' ? (float)$tarifAdulteSupplementaireRaw : null
+                'prix' => ($data['tarif_adulte_depart_supplementaire'] ?? '') !== '' ? (float)$data['tarif_adulte_depart_supplementaire'] : null
             ],
             [
                 'type_public' => 'enfant',
                 'type_depart' => 'supplementaire',
-                'prix' => $tarifEnfantSupplementaireRaw !== '' ? (float)$tarifEnfantSupplementaireRaw : null
+                'prix' => ($data['tarif_enfant_depart_supplementaire'] ?? '') !== '' ? (float)$data['tarif_enfant_depart_supplementaire'] : null
             ]
         ];
         unset(
