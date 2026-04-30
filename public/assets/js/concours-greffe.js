@@ -28,6 +28,7 @@
 // Variables globales
 var selectedArcher = null;
 var allInscriptionsCache = []; // Liste complète pour filtrage par départs cochés
+var currentRenderedInscriptions = []; // Dernière liste rendue (utile pour actions globales)
 var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concoursId :
     (document.querySelector('input[name="concours_id"]')?.value ||
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
@@ -95,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialiser le handler de validation du greffe (présent / payé)
     initValidateGreffeHandlers();
+    initBulkGreffeHandlers();
 
     // Délégation d'événement pour le changement de statut (dropdown)
     document.addEventListener('click', function(e) {
@@ -1828,10 +1830,12 @@ function applyDepartFilterAndRender() {
 function renderInscriptions(inscriptions) {
     const tbody = document.getElementById('greffes-list');
     if (!tbody) return;
+    currentRenderedInscriptions = Array.isArray(inscriptions) ? inscriptions : [];
 
     const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
     const checkedDeparts = Array.from(document.querySelectorAll('.depart-checkbox:checked')).map(cb => cb.value);
     const isFiltered = checkedDeparts.length > 0;
+    updateBulkGreffeActions(currentRenderedInscriptions, isFiltered);
 
     const hintEl = document.getElementById('inscriptions-filter-hint');
     if (hintEl) {
@@ -1953,6 +1957,103 @@ function renderInscriptions(inscriptions) {
     });
 
     tbody.innerHTML = rows.join('');
+}
+
+function computeInscriptionDueAmount(inscription) {
+    if (!inscription) return 0;
+    const raw = inscription.tarif_competition ?? inscription.tarif ?? inscription.montant ?? 0;
+    const normalized = String(raw).replace(',', '.').trim();
+    const value = parseFloat(normalized);
+    return Number.isFinite(value) ? value : 0;
+}
+
+function formatEuroAmount(value) {
+    try {
+        return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value || 0);
+    } catch (e) {
+        return (Math.round((value || 0) * 100) / 100).toFixed(2) + ' EUR';
+    }
+}
+
+function updateBulkGreffeActions(filteredInscriptions, isFiltered) {
+    const container = document.getElementById('greffe-bulk-actions');
+    const totalEl = document.getElementById('greffe-bulk-total');
+    const btn = document.getElementById('btn-greffe-bulk-validate');
+    if (!container || !totalEl || !btn) return;
+
+    const rows = Array.isArray(filteredInscriptions) ? filteredInscriptions : [];
+    const canShow = !!isFiltered && rows.length > 0;
+    if (!canShow) {
+        container.classList.add('d-none');
+        totalEl.textContent = '';
+        btn.disabled = false;
+        return;
+    }
+
+    const totalDue = rows.reduce((acc, ins) => acc + computeInscriptionDueAmount(ins), 0);
+    totalEl.textContent = rows.length + ' inscrit(s) filtré(s) - Total dû cumulé : ' + formatEuroAmount(totalDue);
+    container.classList.remove('d-none');
+}
+
+function initBulkGreffeHandlers() {
+    const btn = document.getElementById('btn-greffe-bulk-validate');
+    if (!btn) return;
+
+    btn.addEventListener('click', async function() {
+        const concoursId = concoursIdValue || (typeof concoursId !== 'undefined' ? concoursId : null);
+        const rows = Array.isArray(currentRenderedInscriptions) ? currentRenderedInscriptions : [];
+        const inscriptionIds = rows
+            .map(ins => parseInt(ins?.id, 10))
+            .filter(id => Number.isInteger(id) && id > 0);
+
+        if (!concoursId || inscriptionIds.length === 0) {
+            alert('Aucune inscription filtrée à valider.');
+            return;
+        }
+
+        const totalDue = rows.reduce((acc, ins) => acc + computeInscriptionDueAmount(ins), 0);
+        const ok = window.confirm(
+            'Valider globalement ' + inscriptionIds.length + ' inscription(s) filtrée(s) ?\n' +
+            'Total dû cumulé : ' + formatEuroAmount(totalDue) + '\n\n' +
+            'Cette action mettra "Présent" et "Payé" à "oui" pour toute la liste filtrée.'
+        );
+        if (!ok) return;
+
+        btn.disabled = true;
+        let successCount = 0;
+        let failureCount = 0;
+
+        for (const inscriptionId of inscriptionIds) {
+            try {
+                const res = await fetch('/api/concours/' + concoursId + '/inscription/' + inscriptionId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-HTTP-Method-Override': 'PUT'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        present_greffe: 'oui',
+                        paye_greffe: 'oui',
+                        statut_inscription: 'confirmee'
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data && data.success) {
+                    successCount++;
+                } else {
+                    failureCount++;
+                }
+            } catch (e) {
+                failureCount++;
+            }
+        }
+
+        alert('Validation globale terminée : ' + successCount + ' succès, ' + failureCount + ' échec(s).');
+        btn.disabled = false;
+        loadInscriptions();
+    });
 }
 
 function escapeHtml(text) {
