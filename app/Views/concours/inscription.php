@@ -77,9 +77,25 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
         foreach ($inscriptions as $i) {
             $statut = $i['statut_inscription'] ?? 'en_attente';
             if (!in_array($statut, ['confirmee', 'en_attente'], true)) continue;
-            $nd = $i['numero_depart'] ?? null;
-            if ($nd !== null && $nd !== '') {
-                $key = (int)$nd;
+
+            $rawDepart = $i['numero_depart'] ?? $i['numeroDepart'] ?? $i['depart'] ?? null;
+            $departNums = [];
+            if (is_array($rawDepart)) {
+                foreach ($rawDepart as $v) {
+                    $n = (int)$v;
+                    if ($n > 0) $departNums[] = $n;
+                }
+            } elseif (is_string($rawDepart) && preg_match('/[,;|]/', $rawDepart)) {
+                foreach (preg_split('/[,;|]/', $rawDepart) as $part) {
+                    $n = (int)trim((string)$part);
+                    if ($n > 0) $departNums[] = $n;
+                }
+            } else {
+                $n = (int)$rawDepart;
+                if ($n > 0) $departNums[] = $n;
+            }
+
+            foreach (array_unique($departNums) as $key) {
                 $countByDepart[$key] = ($countByDepart[$key] ?? 0) + 1;
             }
         }
