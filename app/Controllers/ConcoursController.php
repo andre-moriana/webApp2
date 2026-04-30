@@ -475,6 +475,15 @@ class ConcoursController {
             ],
             [
                 'type_public' => 'adulte',
+                'type_depart' => 'deuxieme',
+                'prix' => ($_POST['tarif_adulte_deuxieme_depart'] ?? '') !== '' ? (float)$_POST['tarif_adulte_deuxieme_depart'] : null
+            ],
+            [
+                'type_public' => 'enfant',
+                'type_depart' => 'deuxieme',
+                'prix' => ($_POST['tarif_enfant_deuxieme_depart'] ?? '') !== '' ? (float)$_POST['tarif_enfant_deuxieme_depart'] : null
+            ],            [
+                'type_public' => 'adulte',
                 'type_depart' => 'supplementaire',
                 'prix' => ($_POST['tarif_adulte_depart_supplementaire'] ?? '') !== '' ? (float)$_POST['tarif_adulte_depart_supplementaire'] : null
             ],
@@ -1238,6 +1247,17 @@ class ConcoursController {
             $data['departs'] = is_array($decoded) ? $decoded : [];
         }
         unset($data['departs_json']);
+        // L'API backend n'accepte que type_depart: premier|supplementaire.
+        // On garde compatibilité avec l'ancien champ "deuxieme" en fallback.
+        $tarifAdulteSupplementaireRaw = $data['tarif_adulte_depart_supplementaire'] ?? '';
+        if ($tarifAdulteSupplementaireRaw === '' && isset($data['tarif_adulte_deuxieme_depart'])) {
+            $tarifAdulteSupplementaireRaw = $data['tarif_adulte_deuxieme_depart'];
+        }
+        $tarifEnfantSupplementaireRaw = $data['tarif_enfant_depart_supplementaire'] ?? '';
+        if ($tarifEnfantSupplementaireRaw === '' && isset($data['tarif_enfant_deuxieme_depart'])) {
+            $tarifEnfantSupplementaireRaw = $data['tarif_enfant_deuxieme_depart'];
+        }
+
         $data['tarifications'] = [
             [
                 'type_public' => 'adulte',
@@ -1252,15 +1272,22 @@ class ConcoursController {
             [
                 'type_public' => 'adulte',
                 'type_depart' => 'supplementaire',
-                'prix' => ($data['tarif_adulte_depart_supplementaire'] ?? '') !== '' ? (float)$data['tarif_adulte_depart_supplementaire'] : null
+                'prix' => $tarifAdulteSupplementaireRaw !== '' ? (float)$tarifAdulteSupplementaireRaw : null
             ],
             [
                 'type_public' => 'enfant',
                 'type_depart' => 'supplementaire',
-                'prix' => ($data['tarif_enfant_depart_supplementaire'] ?? '') !== '' ? (float)$data['tarif_enfant_depart_supplementaire'] : null
+                'prix' => $tarifEnfantSupplementaireRaw !== '' ? (float)$tarifEnfantSupplementaireRaw : null
             ]
         ];
-        unset($data['tarif_adulte_premier_depart'], $data['tarif_enfant_premier_depart'], $data['tarif_adulte_depart_supplementaire'], $data['tarif_enfant_depart_supplementaire']);
+        unset(
+            $data['tarif_adulte_premier_depart'],
+            $data['tarif_enfant_premier_depart'],
+            $data['tarif_adulte_deuxieme_depart'],
+            $data['tarif_enfant_deuxieme_depart'],
+            $data['tarif_adulte_depart_supplementaire'],
+            $data['tarif_enfant_depart_supplementaire']
+        );
         // Arbitres (toujours définir pour que l'API mette à jour)
         if (isset($data['arbitres_json']) && $data['arbitres_json'] !== '') {
             $decoded = json_decode($data['arbitres_json'], true);
@@ -2538,7 +2565,7 @@ public function inscription($concoursId)
                 foreach ($rows as $idx => $insc) {
                     $isEnfant = $isEnfantInscription($insc);
                     $typePublic = $isEnfant ? 'enfant' : 'adulte';
-                    $typeDepart = $idx === 0 ? 'premier' : 'supplementaire';
+                    $typeDepart = $idx === 0 ? 'premier' : ($idx === 1 ? 'deuxieme' : 'supplementaire');
                     $tarifKey = $typePublic . '_' . $typeDepart;
                     $montant = (float)($tarifsMap[$tarifKey] ?? 0.0);
 
