@@ -16,6 +16,7 @@ $inscriptionConfig = [
     'categoriesClassement' => $categoriesClassement ?? [],
     'arcs' => $arcs ?? [],
     'distancesTir' => $distancesTir ?? [],
+    'concoursTarifications' => is_object($concours) ? ($concours->tarifications ?? []) : ($concours['tarifications'] ?? []),
     'concoursDiscipline' => is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null),
     'concoursTypeCompetition' => is_object($concours) ? ($concours->type_competition ?? null) : ($concours['type_competition'] ?? null),
     'concoursNombreDepart' => is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null),
@@ -196,13 +197,14 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <th>Date d'inscription</th>
                             <th>Présent</th>
                             <th>Payé</th>
+                            <th>Montant dû</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="greffes-list">
                         <?php
                         if (empty($inscriptions)): ?>
-                            <tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">Chargement des inscriptions...</td></tr>
+                            <tr id="inscriptions-empty-row"><td colspan="20" class="text-center text-muted">Chargement des inscriptions...</td></tr>
                         <?php else:
                         foreach ($inscriptions as $inscription): 
                             $inscriptionLicence = trim((string)($inscription['numero_licence'] ?? ''));
@@ -336,6 +338,17 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <?php else: ?>
                                     —
                                 <?php endif; ?>
+                            </td>
+                            <td class="text-end"<?= $rowStyle ?>>
+                                <?php
+                                $rawMontant = $inscription['tarif_competition'] ?? $inscription['tarif'] ?? $inscription['montant'] ?? null;
+                                if ($rawMontant === null || $rawMontant === '') {
+                                    echo '—';
+                                } else {
+                                    $value = (float)str_replace(',', '.', (string)$rawMontant);
+                                    echo htmlspecialchars(number_format($value, 2, ',', ' ') . ' EUR');
+                                }
+                                ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>

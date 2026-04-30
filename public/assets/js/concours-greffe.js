@@ -13,6 +13,7 @@
             window.categoriesClassement = c.categoriesClassement || [];
             window.arcs = c.arcs || [];
             window.distancesTir = c.distancesTir || [];
+            window.concoursTarifications = c.concoursTarifications || [];
             window.concoursDiscipline = c.concoursDiscipline;
             window.concoursTypeCompetition = c.concoursTypeCompetition;
             window.concoursNombreDepart = c.concoursNombreDepart;
@@ -1881,7 +1882,7 @@ function renderInscriptions(inscriptions) {
         const msg = isFiltered
             ? 'Aucune inscription pour les départs sélectionnés.'
             : 'Aucun archer inscrit pour le moment.';
-        tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="10" class="text-center text-muted">' + msg + '</td></tr>';
+        tbody.innerHTML = '<tr id="inscriptions-empty-row"><td colspan="20" class="text-center text-muted">' + msg + '</td></tr>';
         return;
     }
 
@@ -1981,6 +1982,7 @@ function renderInscriptions(inscriptions) {
         cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
         cells.push('<td class="text-center"' + rowStyle + '>' + formatGreffeIcon(inscription.present_greffe) + '</td>');
         cells.push('<td class="text-center"' + rowStyle + '>' + formatGreffeIcon(inscription.paye_greffe) + '</td>');
+        cells.push('<td class="text-end"' + rowStyle + '>' + escapeHtml(formatEuroAmount(computeInscriptionDueAmount(inscription))) + '</td>');
         cells.push('<td' + rowStyle + '>' + actionsCell + '</td>');
         let searchableText = '';
         if (inscription.user_nom) searchableText += inscription.user_nom.toLowerCase() + ' ';
@@ -1994,10 +1996,52 @@ function renderInscriptions(inscriptions) {
 
 function computeInscriptionDueAmount(inscription) {
     if (!inscription) return 0;
-    const raw = inscription.tarif_competition ?? inscription.tarif ?? inscription.montant ?? 0;
-    const normalized = String(raw).replace(',', '.').trim();
-    const value = parseFloat(normalized);
-    return Number.isFinite(value) ? value : 0;
+
+    // 1) Priorité à un montant explicitement stocké sur l'inscription
+    const explicitRaw = inscription.tarif_competition ?? inscription.tarif ?? inscription.montant ?? null;
+    const explicitValue = parseCurrencyLikeValue(explicitRaw);
+    if (explicitValue !== null) return explicitValue;
+
+    // 2) Fallback : calcul depuis la grille de tarification du concours
+    const tarifications = Array.isArray(window.concoursTarifications) ? window.concoursTarifications : [];
+    if (!tarifications.length) return 0;
+
+    const numeroTir = parseInt(inscription.numero_tir, 10);
+    const typeDepart = !Number.isFinite(numeroTir) || numeroTir <= 1
+        ? 'premier'
+        : (numeroTir === 2 ? 'deuxieme' : 'supplementaire');
+    const typePublic = isEnfantInscription(inscription) ? 'enfant' : 'adulte';
+    const key = typePublic + '_' + typeDepart;
+
+    let price = null;
+    for (const t of tarifications) {
+        const tp = (t?.type_public ?? '').toString().trim().toLowerCase();
+        const td = (t?.type_depart ?? '').toString().trim().toLowerCase();
+        if ((tp + '_' + td) === key) {
+            price = parseCurrencyLikeValue(t?.prix);
+            break;
+        }
+    }
+    return price ?? 0;
+}
+
+function parseCurrencyLikeValue(raw) {
+    if (raw === null || raw === undefined || raw === '') return null;
+    const cleaned = String(raw)
+        .replace(/\s+/g, '')
+        .replace(/€/g, '')
+        .replace(/[^\d,.-]/g, '')
+        .replace(',', '.');
+    if (cleaned === '' || cleaned === '-' || cleaned === '.' || cleaned === ',') return null;
+    const n = parseFloat(cleaned);
+    return Number.isFinite(n) ? n : null;
+}
+
+function isEnfantInscription(inscription) {
+    const raw = inscription?.catage;
+    const catage = parseInt(raw, 10);
+    if (!Number.isFinite(catage)) return false;
+    return [2, 3, 4, 19, 20, 21].includes(catage);
 }
 
 function formatEuroAmount(value) {
