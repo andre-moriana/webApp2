@@ -54,6 +54,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const userSearchInput = document.getElementById('userSearchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    if (userSearchInput) {
+        userSearchInput.addEventListener('input', function() {
+            applyDepartFilterAndRender();
+        });
+    }
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            // Laisser le script de table vider le champ si présent, puis recalculer.
+            setTimeout(function() { applyDepartFilterAndRender(); }, 0);
+        });
+    }
+
     if (confirmBtn) {
         confirmBtn.addEventListener('click', confirmArcherSelection);
     }
@@ -1821,6 +1835,22 @@ function applyDepartFilterAndRender() {
         const depSet = new Set(checkedDeparts.map(String));
         toRender = allInscriptionsCache.filter(ins => depSet.has(String(ins.numero_depart ?? '')));
     }
+    const searchInput = document.getElementById('userSearchInput');
+    const searchTerm = (searchInput && searchInput.value ? String(searchInput.value) : '').trim().toLowerCase();
+    if (searchTerm) {
+        toRender = toRender.filter(ins => {
+            const haystack = [
+                ins?.user_nom,
+                ins?.numero_licence,
+                ins?.club_name,
+                ins?.id_club
+            ]
+                .filter(v => v != null && v !== '')
+                .map(v => String(v).toLowerCase())
+                .join(' ');
+            return haystack.includes(searchTerm);
+        });
+    }
     renderInscriptions(toRender);
 }
 
@@ -1834,7 +1864,9 @@ function renderInscriptions(inscriptions) {
 
     const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
     const checkedDeparts = Array.from(document.querySelectorAll('.depart-checkbox:checked')).map(cb => cb.value);
-    const isFiltered = checkedDeparts.length > 0;
+    const searchInput = document.getElementById('userSearchInput');
+    const hasSearchFilter = !!(searchInput && String(searchInput.value || '').trim() !== '');
+    const isFiltered = checkedDeparts.length > 0 || hasSearchFilter;
     updateBulkGreffeActions(currentRenderedInscriptions, isFiltered);
 
     const hintEl = document.getElementById('inscriptions-filter-hint');
