@@ -325,6 +325,13 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
                         <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_premier'] ?? null)) ?></td>
                     </tr>
                     <tr>
+                        <td>Adulte (de U21 a S3) 2eme départ</td>
+                        <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_deuxieme'] ?? null)) ?></td>
+                    </tr>
+                    <tr>
+                        <td>Enfant (de U11 a U18) 2eme départ</td>
+                        <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_deuxieme'] ?? null)) ?></td>
+                    </tr>                    <tr>
                         <td>Adulte (de U21 a S3) départ supplémentaire</td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_supplementaire'] ?? null)) ?></td>
                     </tr>
