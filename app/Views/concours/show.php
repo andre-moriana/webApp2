@@ -758,6 +758,24 @@ $debugLicence = isset($_GET['debug_licence']);
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
+                            <div class="col-md-6 mb-3">
+                            <label for="edit-catage-select" class="form-label">Catégorie âge</label>
+                            <select id="edit-catage-select" class="form-control">
+                                <option value="">Sélectionner une catégorie d'âge</option>
+                                <?php if (!empty($categoriesAge)): ?>
+                                    <?php foreach ($categoriesAge as $catAge): ?>
+                                        <?php
+                                        $catAgeId = $catAge['idcategorie'] ?? '';
+                                        $catAgeLabel = $catAge['lb_categorie'] ?? '';
+                                        ?>
+                                        <option value="<?= htmlspecialchars((string)$catAgeId) ?>">
+                                            <?= htmlspecialchars((string)$catAgeLabel) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                            <small class="form-text text-muted">Valeur CATAGE issue du fichier XML / table catégories d'âge.</small>
+                        </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit-arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
