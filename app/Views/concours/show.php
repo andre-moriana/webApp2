@@ -758,6 +758,8 @@ $debugLicence = isset($_GET['debug_licence']);
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
+                            <small class="form-text text-muted">Champ de classement sportif (distinct de la catégorie d'âge).</small>
+                        </div>
                             <div class="col-md-6 mb-3">
                             <label for="edit-catage-select" class="form-label">Catégorie âge</label>
                             <select id="edit-catage-select" class="form-control">
@@ -775,7 +777,6 @@ $debugLicence = isset($_GET['debug_licence']);
                                 <?php endif; ?>
                             </select>
                             <small class="form-text text-muted">Valeur CATAGE issue du fichier XML / table catégories d'âge.</small>
-                        </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit-arme" class="form-label">Arme (utilisée sur le pas de tir)</label>
