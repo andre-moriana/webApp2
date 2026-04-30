@@ -137,10 +137,12 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <input type="checkbox" id="<?= htmlspecialchars($cbId) ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $numero ?>" data-date-depart="<?= htmlspecialchars($getD($d, 'date_depart', '')) ?>" data-heure-greffe="<?= htmlspecialchars($getD($d, 'heure_greffe', '')) ?>">
                             <label for="<?= htmlspecialchars($cbId) ?>" class="form-check-label">
                                 <?= htmlspecialchars($label) ?>
-                                <span class="text-muted ms-1">(<?= (int)$inscritsDepart ?> inscrit<?= (int)$inscritsDepart !== 1 ? 's' : '' ?>)</span>
-                                <?php if ($placesDispo !== null): ?>
-                                    <span class="text-muted ms-1">(<?= $placesDispo ?> place<?= $placesDispo !== 1 ? 's' : '' ?> disponible<?= $placesDispo !== 1 ? 's' : '' ?>)</span>
-                                <?php endif; ?>
+                                <span class="text-muted ms-1">
+                                    <?= (int)$inscritsDepart ?> inscrit<?= (int)$inscritsDepart !== 1 ? 's' : '' ?>
+                                    <?php if ($placesDispo !== null): ?>
+                                        / <?= $placesDispo ?> place<?= $placesDispo !== 1 ? 's' : '' ?>
+                                    <?php endif; ?>
+                                </span>
                             </label>
                         </div>
                     <?php endforeach; ?>
@@ -158,10 +160,12 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <input type="checkbox" id="depart-cb-<?= $i ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $i ?>" data-date-depart="" data-heure-greffe="">
                             <label for="depart-cb-<?= $i ?>" class="form-check-label">
                                 Départ <?= $i ?>
-                                <span class="text-muted ms-1">(<?= (int)$inscritsDepart ?> inscrit<?= (int)$inscritsDepart !== 1 ? 's' : '' ?>)</span>
-                                <?php if ($placesDispo !== null): ?>
-                                    <span class="text-muted ms-1">(<?= $placesDispo ?> place<?= $placesDispo !== 1 ? 's' : '' ?> disponible<?= $placesDispo !== 1 ? 's' : '' ?>)</span>
-                                <?php endif; ?>
+                                <span class="text-muted ms-1">
+                                    <?= (int)$inscritsDepart ?> inscrit<?= (int)$inscritsDepart !== 1 ? 's' : '' ?>
+                                    <?php if ($placesDispo !== null): ?>
+                                        / <?= $placesDispo ?> place<?= $placesDispo !== 1 ? 's' : '' ?>
+                                    <?php endif; ?>
+                                </span>
                             </label>
                         </div>
                     <?php endfor; ?>
