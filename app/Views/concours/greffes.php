@@ -150,12 +150,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                 <h3>Archers inscrits</h3>
                 <small id="inscriptions-filter-hint" class="text-muted d-block mb-2">La liste affiche toutes les inscriptions. Cochez des départs ci-dessus pour filtrer.</small>
                 <div class="d-flex flex-wrap align-items-center gap-2">
-                    <div id="greffe-bulk-actions" class="d-none align-items-center gap-2">
-                        <span id="greffe-bulk-total" class="text-muted small"></span>
-                        <button type="button" id="btn-greffe-bulk-validate" class="btn btn-sm btn-success">
-                            <i class="fas fa-check-double me-1"></i>Validation globale
-                        </button>
-                    </div>
                     <div class="search-box">
                         <div class="input-group">
                             <span class="input-group-text bg-white">
@@ -357,6 +351,12 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
 
                     </table>
                 </div>
+            </div>
+            <div id="greffe-bulk-actions" class="d-none align-items-center gap-2 p-3 border-top">
+                <span id="greffe-bulk-total" class="text-muted small"></span>
+                <button type="button" id="btn-greffe-bulk-validate" class="btn btn-sm btn-success">
+                    <i class="fas fa-check-double me-1"></i>Validation globale
+                </button>
             </div>
         </div>
     </div>
