@@ -279,7 +279,12 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
                     <span><i class="fas fa-flag text-muted me-2"></i><?= htmlspecialchars($label) ?></span>
                     <span class="d-flex align-items-center gap-2">
                         <?php if ($numero): ?><span class="badge bg-secondary">N°<?= $numero ?></span><?php endif; ?>
-                        <span class="text-muted small"><?= $inscritsDepart ?> / <?= $placesParDepart ?></span>
+                        <span class="text-muted small">
+                            <?= (int)$inscritsDepart ?> inscrit<?= (int)$inscritsDepart !== 1 ? 's' : '' ?>
+                            <?php if ($placesParDepart > 0): ?>
+                                / <?= (int)$placesParDepart ?> place<?= (int)$placesParDepart !== 1 ? 's' : '' ?>
+                            <?php endif; ?>
+                        </span>
                     </span>
                 </li>
             <?php endforeach; ?>
