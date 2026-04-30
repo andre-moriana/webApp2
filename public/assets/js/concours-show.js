@@ -336,6 +336,7 @@ console.log('inscription.email:', inscription.email);
         setVal('edit-creation_renouvellement', crVal || '');
         setVal('edit-depart-select', inscription.numero_depart);
         setVal('edit-categorie_classement', inscription.categorie_classement);
+        setVal('edit-catage-select', inscription.catage);
         setVal('edit-arme', inscription.arme);
         setCheck('edit-mobilite_reduite', inscription.mobilite_reduite);
 
@@ -461,6 +462,7 @@ function initEditInscriptionHandlers() {
             creation_renouvellement: document.getElementById('edit-creation_renouvellement')?.value || '',
             numero_depart: numeroDepart,
             categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
+            catage: document.getElementById('edit-catage-select')?.value || '',
             arme: document.getElementById('edit-arme')?.value || '',
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
             numero_tir: currentEditInscription?.numero_tir ?? '',
