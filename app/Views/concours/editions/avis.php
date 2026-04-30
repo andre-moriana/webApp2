@@ -113,19 +113,27 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="tarification-type-cell">Adulte (de U21 a S3) 1er départ</td>
+                        <td class="tarification-type-cell">Adulte (de U21 a S3) 1er tir</td>
                         <td class="text-end tarification-nowrap"><?= htmlspecialchars($formatTarif($tarifMap['adulte_premier'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td class="tarification-type-cell">Enfant (de U11 a U18) 1er départ</td>
+                        <td class="tarification-type-cell">Enfant (de U11 a U18) 1er tir</td>
                         <td class="text-end tarification-nowrap"><?= htmlspecialchars($formatTarif($tarifMap['enfant_premier'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td class="tarification-type-cell">Adulte (de U21 a S3) départ supplémentaire</td>
+                        <td class="tarification-type-cell">Adulte (de U21 a S3) 2eme tir</td>
+                        <td class="text-end tarification-nowrap"><?= htmlspecialchars($formatTarif($tarifMap['adulte_deuxieme'] ?? null)) ?></td>
+                    </tr>
+                    <tr>
+                        <td class="tarification-type-cell">Enfant (de U11 a U18) 2eme tir</td>
+                        <td class="text-end tarification-nowrap"><?= htmlspecialchars($formatTarif($tarifMap['enfant_deuxieme'] ?? null)) ?></td>
+                    </tr>
+                    <tr>
+                        <td class="tarification-type-cell">Adulte (de U21 a S3) tir supplementaire</td>
                         <td class="text-end tarification-nowrap"><?= htmlspecialchars($formatTarif($tarifMap['adulte_supplementaire'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td class="tarification-type-cell">Enfant (de U11 a U18) départ supplémentaire</td>
+                        <td class="tarification-type-cell">Enfant (de U11 a U18) tir supplementaire</td>
                         <td class="text-end tarification-nowrap"><?= htmlspecialchars($formatTarif($tarifMap['enfant_supplementaire'] ?? null)) ?></td>
                     </tr>
                 </tbody>

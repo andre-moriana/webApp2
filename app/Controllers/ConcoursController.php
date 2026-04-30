@@ -2564,6 +2564,8 @@ public function inscription($concoursId)
                 foreach ($rows as $idx => $insc) {
                     $isEnfant = $isEnfantInscription($insc);
                     $typePublic = $isEnfant ? 'enfant' : 'adulte';
+                    // IMPORTANT: la tarification se base sur le numero de tir (ordre des inscriptions d'un archer),
+                    // et non sur le numero de depart.
                     $typeDepart = $idx === 0 ? 'premier' : ($idx === 1 ? 'deuxieme' : 'supplementaire');
                     $tarifKey = $typePublic . '_' . $typeDepart;
                     $montant = (float)($tarifsMap[$tarifKey] ?? 0.0);

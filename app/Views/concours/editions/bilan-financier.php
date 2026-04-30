@@ -38,7 +38,7 @@
                         <th>Licence</th>
                         <th>Depart</th>
                         <th>Tarif</th>
-                        <th>Type depart</th>
+                        <th>Type tir</th>
                         <th>Present</th>
                         <th>Paye</th>
                         <th>Montant</th>
@@ -52,7 +52,16 @@
                             <td><?= htmlspecialchars((string)($r['numero_licence'] ?? '')) ?></td>
                             <td><?= (int)($r['numero_depart'] ?? 0) ?></td>
                             <td><?= htmlspecialchars(($r['type_public'] ?? '') === 'enfant' ? 'Enfant' : 'Adulte') ?></td>
-                            <td><?= htmlspecialchars(($r['type_depart'] ?? '') === 'premier' ? '1er depart' : 'Supplementaire') ?></td>
+                            <td><?php
+                                $typeTir = (string)($r['type_depart'] ?? '');
+                                if ($typeTir === 'premier') {
+                                    echo '1er tir';
+                                } elseif ($typeTir === 'deuxieme') {
+                                    echo '2eme tir';
+                                } else {
+                                    echo 'Tir supplementaire';
+                                }
+                            ?></td>
                             <td><?= htmlspecialchars($fmtBool(!empty($r['present_greffe']))) ?></td>
                             <td><?= htmlspecialchars($fmtBool(!empty($r['paye_greffe']))) ?></td>
                             <td class="text-end"><?= htmlspecialchars($fmtMoney((float)($r['montant'] ?? 0))) ?></td>

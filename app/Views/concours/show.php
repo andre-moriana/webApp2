@@ -317,26 +317,26 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Adulte (de U21 a S3) 1er départ</td>
+                        <td>Adulte (de U21 a S3) 1er tir</td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_premier'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Enfant (de U11 a U18) 1er départ</td>
+                        <td>Enfant (de U11 a U18) 1er tir</td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_premier'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Adulte (de U21 a S3) 2eme départ</td>
+                        <td>Adulte (de U21 a S3) 2eme tir</td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_deuxieme'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Enfant (de U11 a U18) 2eme départ</td>
+                        <td>Enfant (de U11 a U18) 2eme tir</td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_deuxieme'] ?? null)) ?></td>
                     </tr>                    <tr>
-                        <td>Adulte (de U21 a S3) départ supplémentaire</td>
+                        <td>Adulte (de U21 a S3) tir supplementaire</td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_supplementaire'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Enfant (de U11 a U18) départ supplémentaire</td>
+                        <td>Enfant (de U11 a U18) tir supplementaire</td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_supplementaire'] ?? null)) ?></td>
                     </tr>
                 </tbody>

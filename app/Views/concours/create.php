@@ -171,7 +171,7 @@
         ?>
         <div class="form-group tarifications-section" style="margin-top: 20px;">
             <h4>Tarification</h4>
-            <p class="text-muted small">Tarifs d'inscription selon l'âge et le type de départ.</p>
+            <p class="text-muted small">Tarifs d'inscription selon l'age et le numero de tir.</p>
             <div class="table-responsive">
                 <table class="table table-bordered table-sm">
                     <thead>
@@ -182,27 +182,27 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Adulte (de U21 a S3) 1er départ</td>
+                            <td>Adulte (de U21 a S3) 1er tir</td>
                             <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="tarif_adulte_premier_depart" value="<?= htmlspecialchars((string)($tarifsMap['adulte_premier'] ?? '')) ?>"></td>
                         </tr>
                         <tr>
-                            <td>Enfant (de U11 a U18) 1er départ</td>
+                            <td>Enfant (de U11 a U18) 1er tir</td>
                             <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="tarif_enfant_premier_depart" value="<?= htmlspecialchars((string)($tarifsMap['enfant_premier'] ?? '')) ?>"></td>
                         </tr>
                         <tr>
-                            <td>Adulte (de U21 a S3) 2eme départ</td>
+                            <td>Adulte (de U21 a S3) 2eme tir</td>
                             <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="tarif_adulte_deuxieme_depart" value="<?= htmlspecialchars((string)($tarifsMap['adulte_deuxieme'] ?? '')) ?>"></td>
                         </tr>
                         <tr>
-                            <td>Enfant (de U11 a U18) 2eme départ</td>
+                            <td>Enfant (de U11 a U18) 2eme tir</td>
                             <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="tarif_enfant_deuxieme_depart" value="<?= htmlspecialchars((string)($tarifsMap['enfant_deuxieme'] ?? '')) ?>"></td>
                         </tr>
                         <tr>
-                            <td>Adulte (de U21 a S3) départ supplémentaire</td>
+                            <td>Adulte (de U21 a S3) tir supplementaire</td>
                             <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="tarif_adulte_depart_supplementaire" value="<?= htmlspecialchars((string)($tarifsMap['adulte_supplementaire'] ?? '')) ?>"></td>
                         </tr>
                         <tr>
-                            <td>Enfant (de U11 a U18) départ supplémentaire</td>
+                            <td>Enfant (de U11 a U18) tir supplementaire</td>
                             <td><input type="number" step="0.01" min="0" class="form-control form-control-sm" name="tarif_enfant_depart_supplementaire" value="<?= htmlspecialchars((string)($tarifsMap['enfant_supplementaire'] ?? '')) ?>"></td>
                         </tr>
                     </tbody>
