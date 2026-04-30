@@ -3777,6 +3777,7 @@ public function inscription($concoursId)
             'numero_depart' => $numero_depart,
             'numero_tir' => $numero_tir,
             'categorie_classement' => isset($_POST['categorie_classement']) && $_POST['categorie_classement'] !== '' ? trim((string)$_POST['categorie_classement']) : null,
+            'catage' => isset($_POST['catage']) && $_POST['catage'] !== '' ? trim((string)$_POST['catage']) : null,
             'arme' => isset($_POST['arme']) && $_POST['arme'] !== '' ? trim((string)$_POST['arme']) : null,
             'distance' => isset($_POST['distance']) && $_POST['distance'] !== '' ? (int)$_POST['distance'] : null,
             'blason' => isset($_POST['blason']) && $_POST['blason'] !== '' ? (int)$_POST['blason'] : null,
