@@ -71,6 +71,20 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
     if (empty($departsList) && $nombreDepart) {
         $nombreDepart = (int)$nombreDepart;
     }
+    // Nombre d'inscrits par départ (confirmées ou en attente)
+    $countByDepart = [];
+    if (!empty($inscriptions) && is_array($inscriptions)) {
+        foreach ($inscriptions as $i) {
+            $statut = $i['statut_inscription'] ?? 'en_attente';
+            if (!in_array($statut, ['confirmee', 'en_attente'], true)) continue;
+            $nd = $i['numero_depart'] ?? null;
+            if ($nd !== null && $nd !== '') {
+                $key = (int)$nd;
+                $countByDepart[$key] = ($countByDepart[$key] ?? 0) + 1;
+            }
+        }
+    }
+    
     ?>
     <div class="depart-selection-section mb-4">
         <h3>Sélectionner un ou plusieurs départs</h3>
@@ -118,9 +132,10 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         <input type="checkbox" id="depart-select-all" class="form-check-input">
                         <label for="depart-select-all" class="form-check-label fw-bold">Tout sélectionner</label>
                     </div>
-                    <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): 
-                        $placesDispo = isset($placesParDepart[$i]) ? (int)$placesParDepart[$i] : null;
-                    ?>
+                    <?php $inscritsDepart = $i ? ($countByDepart[$i] ?? 0) : 0; ?>
+                    <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): ?>
+                        <?php $inscritsDepart = $i ? ($countByDepart[$i] ?? 0) : 0; ?>
+                        <?php $placesDispo = isset($placesParDepart[$i]) ? (int)$placesParDepart[$i] : null; ?>
                         <div class="form-check">
                             <input type="checkbox" id="depart-cb-<?= $i ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $i ?>" data-date-depart="" data-heure-greffe="">
                             <label for="depart-cb-<?= $i ?>" class="form-check-label">
