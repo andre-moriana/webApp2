@@ -1038,6 +1038,26 @@ class ConcoursController {
                 }
             } catch (Exception $e) {}
         }
+
+        // Charger les catégories d'âge même s'il n'y a pas encore d'inscriptions,
+        // pour que le select CATAGE de la modale soit toujours alimenté.
+        try {
+            $categoriesAgeResponse = $this->apiService->makeRequest('concours/categories-age', 'GET');
+            if (!($categoriesAgeResponse['success'] ?? false) || empty($categoriesAgeResponse['data'])) {
+                $categoriesAgeResponse = $this->apiService->makeRequestPublic('concours/categories-age', 'GET');
+            }
+            if ($categoriesAgeResponse['success'] ?? false) {
+                $agePayload = $categoriesAgeResponse['data'] ?? [];
+                if (is_array($agePayload) && isset($agePayload['data']) && isset($agePayload['success'])) {
+                    $agePayload = $agePayload['data'];
+                }
+                if (is_array($agePayload)) {
+                    $categoriesAge = array_values($agePayload);
+                }
+            }
+        } catch (Exception $e) {
+            $categoriesAge = [];
+        }
         
         $title = 'Détails du concours - Portail Arc Training';
         include 'app/Views/layouts/header.php';

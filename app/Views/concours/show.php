@@ -760,7 +760,7 @@ $debugLicence = isset($_GET['debug_licence']);
                             </select>
                             <small class="form-text text-muted">Champ de classement sportif (distinct de la catégorie d'âge).</small>
                         </div>
-                            <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label for="edit-catage-select" class="form-label">Catégorie âge</label>
                             <select id="edit-catage-select" class="form-control">
                                 <option value="">Sélectionner une catégorie d'âge</option>
