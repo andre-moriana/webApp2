@@ -1748,11 +1748,18 @@ public function inscription($concoursId)
 
         // Récupérer les inscriptions existantes
         $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
-        // Utiliser unwrapData pour être cohérent avec les autres appels API
+        // Normaliser comme dans show(): l'API peut renvoyer directement la liste
+        // ou un wrapper contenant la clé data.
         $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
-        if (!is_array($inscriptions)) {
+        if (is_array($inscriptions) && isset($inscriptions['data']) && is_array($inscriptions['data'])) {
+            $inscriptions = $inscriptions['data'];
+        }
+        if (!is_array($inscriptions) || isset($inscriptions['error']) || (isset($inscriptions['success']) && $inscriptions['success'] === false)) {
             $inscriptions = [];
         }
+        $inscriptions = array_values(array_filter($inscriptions, function ($i) {
+            return is_array($i);
+        }));
 
         // Enrichir les inscriptions sans user_id : ajouter user_id si numero_licence = licence de l'utilisateur connecté
         $currentUserId = $_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? $_SESSION['user']['_id'] ?? null;
