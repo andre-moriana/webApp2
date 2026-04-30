@@ -1982,9 +1982,10 @@ function updateBulkGreffeActions(filteredInscriptions, isFiltered) {
     if (!container || !totalEl || !btn) return;
 
     const rows = Array.isArray(filteredInscriptions) ? filteredInscriptions : [];
-    const canShow = !!isFiltered && rows.length > 0;
+    const canShow = !!isFiltered;
     if (!canShow) {
         container.classList.add('d-none');
+        container.classList.remove('d-flex');
         totalEl.textContent = '';
         btn.disabled = false;
         return;
@@ -1993,6 +1994,8 @@ function updateBulkGreffeActions(filteredInscriptions, isFiltered) {
     const totalDue = rows.reduce((acc, ins) => acc + computeInscriptionDueAmount(ins), 0);
     totalEl.textContent = rows.length + ' inscrit(s) filtré(s) - Total dû cumulé : ' + formatEuroAmount(totalDue);
     container.classList.remove('d-none');
+    container.classList.add('d-flex');
+    btn.disabled = rows.length === 0;
 }
 
 function initBulkGreffeHandlers() {
