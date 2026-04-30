@@ -131,10 +131,11 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         if (empty($label)) $label = 'Départ ' . $numero;
                         $inscritsDepart = $numero ? ($countByDepart[$numero] ?? 0) : 0;
                         $placesDispo = isset($placesParDepart[$numero]) ? (int)$placesParDepart[$numero] : null;
+                        $isDepartComplet = ($placesDispo !== null && $placesDispo > 0 && (int)$inscritsDepart >= $placesDispo);
                         $cbId = 'depart-cb-' . $departId;
                         ?>
                         <div class="form-check">
-                            <input type="checkbox" id="<?= htmlspecialchars($cbId) ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $numero ?>" data-date-depart="<?= htmlspecialchars($getD($d, 'date_depart', '')) ?>" data-heure-greffe="<?= htmlspecialchars($getD($d, 'heure_greffe', '')) ?>">
+                            <input type="checkbox" id="<?= htmlspecialchars($cbId) ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $numero ?>" data-date-depart="<?= htmlspecialchars($getD($d, 'date_depart', '')) ?>" data-heure-greffe="<?= htmlspecialchars($getD($d, 'heure_greffe', '')) ?>"<?= $isDepartComplet ? ' disabled' : '' ?>>
                             <label for="<?= htmlspecialchars($cbId) ?>" class="form-check-label">
                                 <?= htmlspecialchars($label) ?>
                                 <span class="text-muted ms-1">
@@ -143,6 +144,9 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                         / <?= $placesDispo ?> place<?= $placesDispo !== 1 ? 's' : '' ?>
                                     <?php endif; ?>
                                 </span>
+                                <?php if ($isDepartComplet): ?>
+                                    <span class="text-danger ms-1">(Complet)</span>
+                                <?php endif; ?>
                             </label>
                         </div>
                     <?php endforeach; ?>
@@ -156,8 +160,9 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): ?>
                         <?php $inscritsDepart = $i ? ($countByDepart[$i] ?? 0) : 0; ?>
                         <?php $placesDispo = isset($placesParDepart[$i]) ? (int)$placesParDepart[$i] : null; ?>
+                        <?php $isDepartComplet = ($placesDispo !== null && $placesDispo > 0 && (int)$inscritsDepart >= $placesDispo); ?>
                         <div class="form-check">
-                            <input type="checkbox" id="depart-cb-<?= $i ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $i ?>" data-date-depart="" data-heure-greffe="">
+                            <input type="checkbox" id="depart-cb-<?= $i ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $i ?>" data-date-depart="" data-heure-greffe=""<?= $isDepartComplet ? ' disabled' : '' ?>>
                             <label for="depart-cb-<?= $i ?>" class="form-check-label">
                                 Départ <?= $i ?>
                                 <span class="text-muted ms-1">
@@ -166,6 +171,9 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                         / <?= $placesDispo ?> place<?= $placesDispo !== 1 ? 's' : '' ?>
                                     <?php endif; ?>
                                 </span>
+                                <?php if ($isDepartComplet): ?>
+                                    <span class="text-danger ms-1">(Complet)</span>
+                                <?php endif; ?>
                             </label>
                         </div>
                     <?php endfor; ?>
