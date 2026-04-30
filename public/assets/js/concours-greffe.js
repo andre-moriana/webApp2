@@ -1863,11 +1863,12 @@ function renderInscriptions(inscriptions) {
     currentRenderedInscriptions = Array.isArray(inscriptions) ? inscriptions : [];
 
     const isNature = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
-    const checkedDeparts = Array.from(document.querySelectorAll('.depart-checkbox:checked')).map(cb => cb.value);
     const searchInput = document.getElementById('userSearchInput');
     const hasSearchFilter = !!(searchInput && String(searchInput.value || '').trim() !== '');
+    const checkedDeparts = Array.from(document.querySelectorAll('.depart-checkbox:checked')).map(cb => cb.value);
     const isFiltered = checkedDeparts.length > 0 || hasSearchFilter;
-    updateBulkGreffeActions(currentRenderedInscriptions, isFiltered);
+    // Le bouton de validation globale ne doit pas dépendre du filtre des départs.
+    updateBulkGreffeActions(currentRenderedInscriptions, hasSearchFilter);
 
     const hintEl = document.getElementById('inscriptions-filter-hint');
     if (hintEl) {
