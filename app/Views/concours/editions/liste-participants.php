@@ -34,6 +34,33 @@ foreach ($groupes as $cle => $liste) {
         return strcasecmp($getNom($a), $getNom($b));
     });
 }
+
+$formatStatutInscription = function ($insc) {
+    $statut = strtolower(trim((string)($insc['statut_inscription'] ?? $insc['status'] ?? '')));
+    if ($statut === 'confirmee' || $statut === 'confirmée') return 'Confirmée';
+    if ($statut === 'en_attente' || $statut === 'attente') return 'En attente';
+    if ($statut === 'annulee' || $statut === 'annulée') return 'Annulée';
+    if ($statut === 'refusee' || $statut === 'refusée') return 'Refusée';
+    if ($statut === 'validee' || $statut === 'validée') return 'Validée';
+    return $statut !== '' ? ucfirst($statut) : '—';
+};
+
+$getStatutRowClass = function ($insc) {
+    $statut = strtolower(trim((string)($insc['statut_inscription'] ?? $insc['status'] ?? '')));
+    if ($statut === 'confirmee' || $statut === 'confirmée' || $statut === 'validee' || $statut === 'validée') {
+        return 'inscription-statut-confirmee';
+    }
+    if ($statut === 'en_attente' || $statut === 'attente') {
+        return 'inscription-statut-attente';
+    }
+    if ($statut === 'annulee' || $statut === 'annulée') {
+        return 'inscription-statut-annulee';
+    }
+    if ($statut === 'refusee' || $statut === 'refusée') {
+        return 'inscription-statut-refusee';
+    }
+    return 'inscription-statut-inconnu';
+};
 ?>
 <div class="edition-liste-participants">
     <h1 class="text-center mb-4">Liste des participants</h1>
@@ -53,6 +80,7 @@ foreach ($groupes as $cle => $liste) {
             <thead>
                 <tr>
                     <th>N°</th>
+                    <th>Statut</th>
                     <th>Nom</th>
                     <th>N° Licence</th>
                     <th>Club</th>
@@ -62,8 +90,9 @@ foreach ($groupes as $cle => $liste) {
             </thead>
             <tbody>
                 <?php $n = 1; foreach ($liste as $insc): ?>
-                <tr>
+                <tr class="<?= htmlspecialchars($getStatutRowClass($insc)) ?>">
                     <td><?= $n++ ?></td>
+                    <td><?= htmlspecialchars($formatStatutInscription($insc)) ?></td>
                     <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>

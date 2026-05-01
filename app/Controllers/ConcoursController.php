@@ -2212,7 +2212,7 @@ public function inscription($concoursId)
             $concours = (object)$concours;
         }
 
-        // Inscriptions confirmées (API renvoie { data: [...], current_user_licence: "..." })
+        // Toutes les inscriptions (API renvoie { data: [...], current_user_licence: "..." })
         $inscriptions = [];
         try {
             $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
@@ -2224,9 +2224,6 @@ public function inscription($concoursId)
                 $inscriptions = [];
             }
             $inscriptions = array_values(array_filter($inscriptions, function ($i) { return is_array($i); }));
-            $inscriptions = array_filter($inscriptions, function($i) {
-                return ($i['statut_inscription'] ?? '') === 'confirmee';
-            });
         } catch (Exception $e) {
             $inscriptions = [];
         }

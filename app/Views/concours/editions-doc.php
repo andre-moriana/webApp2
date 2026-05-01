@@ -198,6 +198,20 @@ $dateFooter = date('d/m/Y H:i');
         .edition-doc-fin table tbody tr:nth-child(even) td {
             background-color: #e9ecef !important;
         }
+        /* Liste participants : couleur de ligne selon le statut */
+        .edition-liste-participants table tbody tr.inscription-statut-confirmee td {
+            background-color: #d1e7dd !important;
+        }
+        .edition-liste-participants table tbody tr.inscription-statut-attente td {
+            background-color: #fff3cd !important;
+        }
+        .edition-liste-participants table tbody tr.inscription-statut-annulee td,
+        .edition-liste-participants table tbody tr.inscription-statut-refusee td {
+            background-color: #f8d7da !important;
+        }
+        .edition-liste-participants table tbody tr.inscription-statut-inconnu td {
+            background-color: #e2e3e5 !important;
+        }
         /* Tableau scores : griser une ligne sur deux (classe sur les lignes paires) */
         .edition-scores .edition-scores-table tbody tr.edition-scores-row-even td {
             background-color: #e9ecef !important;
@@ -478,6 +492,27 @@ $dateFooter = date('d/m/Y H:i');
             .edition-scores table tbody tr:nth-child(even) td,
             .edition-scores .edition-scores-table tbody tr.edition-scores-row-even td {
                 background-color: #e9ecef !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .edition-liste-participants table tbody tr.inscription-statut-confirmee td {
+                background-color: #d1e7dd !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .edition-liste-participants table tbody tr.inscription-statut-attente td {
+                background-color: #fff3cd !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .edition-liste-participants table tbody tr.inscription-statut-annulee td,
+            .edition-liste-participants table tbody tr.inscription-statut-refusee td {
+                background-color: #f8d7da !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .edition-liste-participants table tbody tr.inscription-statut-inconnu td {
+                background-color: #e2e3e5 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
