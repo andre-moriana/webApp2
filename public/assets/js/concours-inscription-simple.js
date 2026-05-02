@@ -1377,7 +1377,7 @@ function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = fal
         piquetColor = effectiveArme === 'TL' ? 'rouge' : 'bleu';
     } else if (ageCategory === 'U18') {
         // U18 : TL = rouge, autres armes = bleu
-        piquetColor = effectiveArme === 'TL' ? 'rouge' : 'bleu';
+        piquetColor = 'bleu';
     } else if (ageCategory === 'DE' || ageCategory === 'U15' || ageCategory === 'U13') {
         // DE/U15/U13 : BB = blanc
         if (effectiveArme === 'BB') {
