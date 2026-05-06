@@ -1,6 +1,24 @@
 <?php
 
 class ArcherSearchController {
+
+    /**
+     * Le contenu d'une balise peut être réparti sur plusieurs nœuds (TEXT / espaces / CDATA).
+     * L'ancien code écrasait après le premier fragment et vidait $currentTag : les valeurs comme TYPARC/SEXE étaient perdues.
+     */
+    private static function xmlReaderIsTextContent(XMLReader $reader) {
+        $t = $reader->nodeType;
+        if ($t === XMLReader::TEXT || $t === XMLReader::WHITESPACE) {
+            return true;
+        }
+        if (defined('XMLReader::CDATA') && $t === XMLReader::CDATA) {
+            return true;
+        }
+        if (defined('XMLReader::SIGNIFICANT_WHITESPACE') && $t === XMLReader::SIGNIFICANT_WHITESPACE) {
+            return true;
+        }
+        return false;
+    }
     
     /**
      * Recherche archer par licence - version publique pour inscription ciblée (sans auth).
@@ -89,6 +107,9 @@ class ArcherSearchController {
             return;
         }
         
+        $trimField = function ($v) {
+            return is_string($v) ? trim($v) : (string) $v;
+        };
         echo json_encode([
             'success' => true,
             'source' => 'xml',
@@ -97,17 +118,17 @@ class ArcherSearchController {
                 'first_name' => $xmlData['first_name'] ?? '',
                 'name' => $xmlData['name'] ?? '',
                 'club' => $xmlData['club_name'] ?? $xmlData['club'] ?? '',
-                'id_club' => $xmlData['club_unique'] ?? $xmlEntry['club_unique'] ?? '',
+                'id_club' => $trimField($xmlData['club_unique'] ?? $xmlEntry['club_unique'] ?? ''),
                 'age_category' => $xmlData['ageCategory'] ?? '',
-                'bow_type' => $xmlData['bowType'] ?? '',
-                'CATEGORIE' => $xmlData['categorie'] ?? '',
-                'TYPARC' => $xmlEntry['TYPARC'] ?? '',
-                'CATAGE' => $xmlEntry['CATAGE'] ?? '',
-                'SEXE' => $xmlEntry['SEXE'] ?? '',
-                'saison' => $xmlEntry['ABREV'] ?? '',
-                'type_licence' => $xmlEntry['type_licence'] ?? '',
-                'creation_renouvellement' => $xmlEntry['Creation_renouvellement'] ?? '',
-                'certificat_medical' => $xmlEntry['certificat_medical'] ?? ''
+                'bow_type' => $trimField($xmlData['bowType'] ?? $xmlEntry['TYPARC'] ?? ''),
+                'CATEGORIE' => $trimField($xmlData['categorie'] ?? $xmlEntry['CATEGORIE'] ?? ''),
+                'TYPARC' => $trimField($xmlEntry['TYPARC'] ?? ''),
+                'CATAGE' => $trimField($xmlEntry['CATAGE'] ?? ''),
+                'SEXE' => $trimField($xmlEntry['SEXE'] ?? ''),
+                'saison' => $trimField($xmlEntry['ABREV'] ?? ''),
+                'type_licence' => $trimField($xmlEntry['type_licence'] ?? ''),
+                'creation_renouvellement' => $trimField($xmlEntry['Creation_renouvellement'] ?? ''),
+                'certificat_medical' => $trimField($xmlEntry['certificat_medical'] ?? '')
             ]
         ]);
     }
@@ -134,10 +155,10 @@ class ArcherSearchController {
                     $currentEntry = [];
                 } elseif ($inTableContenu && !$reader->isEmptyElement) {
                     $currentTag = $tagName;
+                    $currentEntry[$currentTag] = '';
                 }
-            } elseif ($reader->nodeType === XMLReader::TEXT && $inTableContenu && $currentTag) {
-                $currentEntry[$currentTag] = $reader->value;
-                $currentTag = '';
+            } elseif (self::xmlReaderIsTextContent($reader) && $inTableContenu && $currentTag !== '') {
+                $currentEntry[$currentTag] .= $reader->value;
             } elseif ($reader->nodeType === XMLReader::END_ELEMENT) {
                 if ($reader->name === 'TABLE_CONTENU' && $inTableContenu) {
                     $entryLicence = trim($currentEntry['IDLicence'] ?? '');
@@ -198,10 +219,10 @@ class ArcherSearchController {
                     $currentEntry = [];
                 } elseif ($inTableContenu && !$reader->isEmptyElement) {
                     $currentTag = $tagName;
+                    $currentEntry[$currentTag] = '';
                 }
-            } elseif ($reader->nodeType === XMLReader::TEXT && $inTableContenu && $currentTag) {
-                $currentEntry[$currentTag] = $reader->value;
-                $currentTag = '';
+            } elseif (self::xmlReaderIsTextContent($reader) && $inTableContenu && $currentTag !== '') {
+                $currentEntry[$currentTag] .= $reader->value;
             } elseif ($reader->nodeType === XMLReader::END_ELEMENT) {
                 if ($reader->name === 'TABLE_CONTENU' && $inTableContenu) {
                     $entryLicence = trim($currentEntry['IDLicence'] ?? '');
@@ -266,10 +287,10 @@ class ArcherSearchController {
                     $currentEntry = [];
                 } elseif ($inTableContenu && !$reader->isEmptyElement) {
                     $currentTag = $tagName;
+                    $currentEntry[$currentTag] = '';
                 }
-            } elseif ($reader->nodeType === XMLReader::TEXT && $inTableContenu && $currentTag) {
-                $currentEntry[$currentTag] = $reader->value;
-                $currentTag = '';
+            } elseif (self::xmlReaderIsTextContent($reader) && $inTableContenu && $currentTag !== '') {
+                $currentEntry[$currentTag] .= $reader->value;
             } elseif ($reader->nodeType === XMLReader::END_ELEMENT) {
                 if ($reader->name === 'TABLE_CONTENU' && $inTableContenu) {
                     $entryLicence = trim($currentEntry['IDLicence'] ?? '');
@@ -302,25 +323,26 @@ class ArcherSearchController {
             return null;
         }
         
-        $licenceNumber = $entry['IDLicence'] ?? '';
-        $nom = $entry['NOM'] ?? '';
-        $prenom = $entry['PRENOM'] ?? '';
+        $licenceNumber = trim((string) ($entry['IDLicence'] ?? ''));
+        $nom = trim((string) ($entry['NOM'] ?? ''));
+        $prenom = trim((string) ($entry['PRENOM'] ?? ''));
         
-        if (empty($licenceNumber) || empty($nom) || empty($prenom)) {
+        if ($licenceNumber === '' || $nom === '' || $prenom === '') {
             return null;
         }
+        $sexeRaw = trim((string) ($entry['SEXE'] ?? ''));
         
         return [
             'licenceNumber' => $licenceNumber,
             'first_name' => $prenom,
             'name' => $nom,
-            'club_name' => $entry['CIE'] ?? '',
-            'club_unique' => $entry['club_unique'] ?? '', // ID unique du club pour id_club
-            'categorie' => $entry['CATEGORIE'] ?? '',
-            'gender' => $entry['SEXE'] === '1' ? 'M' : ($entry['SEXE'] === '2' ? 'F' : ''),
-            'birthDate' => $entry['DATENAISSANCE'] ?? '',
-            'ageCategory' => $entry['CATEGORIE'] ?? '',
-            'bowType' => $entry['TYPARC'] ?? ''
+            'club_name' => trim((string) ($entry['CIE'] ?? '')),
+            'club_unique' => trim((string) ($entry['club_unique'] ?? '')),
+            'categorie' => trim((string) ($entry['CATEGORIE'] ?? '')),
+            'gender' => $sexeRaw === '1' ? 'M' : ($sexeRaw === '2' ? 'F' : ''),
+            'birthDate' => trim((string) ($entry['DATENAISSANCE'] ?? '')),
+            'ageCategory' => trim((string) ($entry['CATEGORIE'] ?? '')),
+            'bowType' => trim((string) ($entry['TYPARC'] ?? ''))
         ];
     }
 }
