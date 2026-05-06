@@ -375,6 +375,8 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                 </div>
                 
                 <form id="inscription-form">
+                    <input type="hidden" id="inscription-xml-typarc" name="TYPARC" value="">
+                    <input type="hidden" id="inscription-xml-sexe" name="SEXE" value="">
                     <h5 class="mb-3">Informations d'inscription</h5>
                     
                     <div class="row">

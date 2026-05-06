@@ -703,6 +703,14 @@ function prefillFormFields(archer) {
         console.error('prefillFormFields: archer est null');
         return;
     }
+
+    const typarcHiddenVal = archer.TYPARC != null && archer.TYPARC !== '' ? String(archer.TYPARC).trim()
+        : (archer.bow_type != null && archer.bow_type !== '' ? String(archer.bow_type).trim() : '');
+    const sexeHiddenVal = archer.SEXE != null && archer.SEXE !== '' ? String(archer.SEXE).trim() : '';
+    const hidTyp = document.getElementById('inscription-xml-typarc');
+    const hidSex = document.getElementById('inscription-xml-sexe');
+    if (hidTyp) hidTyp.value = typarcHiddenVal;
+    if (hidSex) hidSex.value = sexeHiddenVal;
    
     // Pré-remplir la saison
     const saisonInput = document.getElementById('saison');
@@ -1723,9 +1731,14 @@ function submitInscription() {
     if (numeroLicence.length === 7) {
         numeroLicence = '0' + numeroLicence;
     }
-    const typarcXml = selectedArcher.TYPARC != null && selectedArcher.TYPARC !== '' ? String(selectedArcher.TYPARC).trim() : '';
+    const typarcFromArcher = selectedArcher.TYPARC != null && selectedArcher.TYPARC !== '' ? String(selectedArcher.TYPARC).trim() : '';
+    const typarcFromBow = selectedArcher.bow_type != null && selectedArcher.bow_type !== '' ? String(selectedArcher.bow_type).trim() : '';
+    const typarcHidden = document.getElementById('inscription-xml-typarc')?.value?.trim() || '';
+    const typarcXml = typarcFromArcher || typarcHidden || typarcFromBow;
     const idarcFromXml = typarcXml !== '' ? parseInt(typarcXml, 10) : NaN;
-    const sexeXmlStr = selectedArcher.SEXE != null && selectedArcher.SEXE !== '' ? String(selectedArcher.SEXE).trim() : '';
+    const sexeFromArcher = selectedArcher.SEXE != null && selectedArcher.SEXE !== '' ? String(selectedArcher.SEXE).trim() : '';
+    const sexeHidden = document.getElementById('inscription-xml-sexe')?.value?.trim() || '';
+    const sexeXmlStr = sexeFromArcher || sexeHidden;
     const baseData = {
         user_nom: user_nom,
         numero_licence: numeroLicence,

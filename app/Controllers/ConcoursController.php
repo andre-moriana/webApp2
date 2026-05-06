@@ -3932,6 +3932,9 @@ public function inscription($concoursId)
         if ($numeroLicence !== '' && strlen($numeroLicence) === 7) {
             $numeroLicence = '0' . $numeroLicence;
         }
+        $typarcPost = isset($_POST['TYPARC']) ? trim((string) $_POST['TYPARC']) : '';
+        $sexePost = isset($_POST['SEXE']) ? trim((string) $_POST['SEXE']) : '';
+
         $inscriptionData = [
             'user_id' => null,
             'user_nom' => $user_nom,
@@ -3949,6 +3952,18 @@ public function inscription($concoursId)
             'duel' => isset($_POST['duel']) ? (int)$_POST['duel'] : 0,
             'trispot' => isset($_POST['trispot']) ? (int)$_POST['trispot'] : 0,
         ];
+        if ($typarcPost !== '') {
+            $inscriptionData['TYPARC'] = $typarcPost;
+            if (ctype_digit($typarcPost)) {
+                $inscriptionData['idarc'] = (int) $typarcPost;
+            }
+        }
+        if ($sexePost !== '') {
+            $inscriptionData['SEXE'] = $sexePost;
+            if ($sexePost === '1' || $sexePost === '2') {
+                $inscriptionData['sexe'] = (int) $sexePost;
+            }
+        }
         if (empty($inscriptionData['numero_licence'])) {
             $_SESSION['error'] = 'Numéro de licence requis';
             header("Location: /inscription-cible/{$concoursId}{$redirectSuffix}");

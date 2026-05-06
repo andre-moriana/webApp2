@@ -19,6 +19,23 @@ class ArcherSearchController {
         }
         return false;
     }
+
+    /**
+     * Première valeur non vide parmi plusieurs clés possibles (casse / exports XML variables).
+     */
+    private static function xmlEntryFirstNonEmpty(array $entry, array $keys): string {
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $entry)) {
+                continue;
+            }
+            $v = $entry[$key];
+            $s = is_string($v) ? trim($v) : trim((string) $v);
+            if ($s !== '') {
+                return $s;
+            }
+        }
+        return '';
+    }
     
     /**
      * Recherche archer par licence - version publique pour inscription ciblée (sans auth).
@@ -99,15 +116,15 @@ class ArcherSearchController {
             echo json_encode(['success' => false, 'error' => 'Archer non trouvé dans le XML pour la licence: ' . $licenceNumber]);
             return;
         }
-        $typRaw = $xmlEntry['TYPARC'] ?? null;
-        $sexeRaw = $xmlEntry['SEXE'] ?? null;
+        $typRaw = self::xmlEntryFirstNonEmpty($xmlEntry, ['TYPARC', 'typarc', 'Typarc', 'TYP_ARC']);
+        $sexeRaw = self::xmlEntryFirstNonEmpty($xmlEntry, ['SEXE', 'sexe', 'Sexe']);
         error_log('[TRACE idarc/sexe] ' . json_encode([
             '_step' => 'xml_entry_matched',
             'licence' => $licenceNumber,
-            'TYPARC_xml' => $typRaw,
-            'SEXE_xml' => $sexeRaw,
-            'TYPARC_len' => is_string($typRaw) ? strlen($typRaw) : (is_scalar($typRaw) ? strlen((string) $typRaw) : null),
-            'SEXE_len' => is_string($sexeRaw) ? strlen($sexeRaw) : (is_scalar($sexeRaw) ? strlen((string) $sexeRaw) : null),
+            'TYPARC_xml' => $typRaw !== '' ? $typRaw : null,
+            'SEXE_xml' => $sexeRaw !== '' ? $sexeRaw : null,
+            'TYPARC_len' => $typRaw !== '' ? strlen($typRaw) : 0,
+            'SEXE_len' => $sexeRaw !== '' ? strlen($sexeRaw) : 0,
         ], JSON_UNESCAPED_UNICODE));
         
         $xmlData = $this->processUserEntry($xmlEntry);
@@ -130,11 +147,11 @@ class ArcherSearchController {
                 'club' => $xmlData['club_name'] ?? $xmlData['club'] ?? '',
                 'id_club' => $trimField($xmlData['club_unique'] ?? $xmlEntry['club_unique'] ?? ''),
                 'age_category' => $xmlData['ageCategory'] ?? '',
-                'bow_type' => $trimField($xmlData['bowType'] ?? $xmlEntry['TYPARC'] ?? ''),
+                'bow_type' => $trimField($xmlData['bowType'] ?? $typRaw),
                 'CATEGORIE' => $trimField($xmlData['categorie'] ?? $xmlEntry['CATEGORIE'] ?? ''),
-                'TYPARC' => $trimField($xmlEntry['TYPARC'] ?? ''),
+                'TYPARC' => $trimField($typRaw),
                 'CATAGE' => $trimField($xmlEntry['CATAGE'] ?? ''),
-                'SEXE' => $trimField($xmlEntry['SEXE'] ?? ''),
+                'SEXE' => $trimField($sexeRaw),
                 'saison' => $trimField($xmlEntry['ABREV'] ?? ''),
                 'type_licence' => $trimField($xmlEntry['type_licence'] ?? ''),
                 'creation_renouvellement' => $trimField($xmlEntry['Creation_renouvellement'] ?? ''),
