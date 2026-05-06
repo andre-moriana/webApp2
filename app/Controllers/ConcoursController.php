@@ -2794,16 +2794,16 @@ public function inscription($concoursId)
             };
 
             $lines = [];
-            $lines[] = implode("\t", [
-                'Licence',
-                'Categorie Age',
-                'Sexe',
-                'Arme',
-                'N° depart',
-                'N° cibles',
-                'Mode de paiement',
-                'TriSpot (O/N)'
-            ]);
+            $header = array_fill(0, 13, '');
+            $header[1] = 'N° Licence';
+            $header[3] = 'Catégorie Age';
+            $header[4] = 'Sexe';
+            $header[5] = 'Arme';
+            $header[9] = 'N° départ';
+            $header[10] = 'N° cibles';
+            $header[11] = 'Mode de paiement';
+            $header[12] = 'TriSpot (O/N)';
+            $lines[] = implode("\t", $header);
 
             foreach ($inscriptions as $insc) {
                 $licence = trim((string)($insc['numero_licence'] ?? ''));
@@ -2826,16 +2826,15 @@ public function inscription($concoursId)
                     : (in_array((string)$trispotInsc, ['1', 'true', 'oui', 'on'], true) || $trispotInsc === 1 || $trispotInsc === true);
                 $trispot = $trispotBool ? 'O' : 'N';
 
-                $line = [
-                    $licence,
-                    $catage,
-                    $sexe,
-                    $arme,
-                    $numeroDepart,
-                    $numeroPosition,
-                    '',
-                    $trispot
-                ];
+                $line = array_fill(0, 13, '');
+                $line[1] = $licence;
+                $line[3] = $catage;
+                $line[4] = $sexe;
+                $line[5] = $arme;
+                $line[9] = $numeroDepart;
+                $line[10] = $numeroPosition;
+                $line[11] = '';
+                $line[12] = $trispot;
                 $lines[] = implode("\t", array_map($escapeField, $line));
             }
 
