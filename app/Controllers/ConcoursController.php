@@ -2795,14 +2795,14 @@ public function inscription($concoursId)
 
             $lines = [];
             $lines[] = implode("\t", [
-                'licence',
-                'catage',
-                'sexe',
-                'arme',
-                'Numero_depart',
-                'Numero_cible',
-                'Mode_de_payemant',
-                'Trispot'
+                'Licence',
+                'Categorie Age',
+                'Sexe',
+                'Arme',
+                'N° depart',
+                'N° cibles',
+                'Mode de paiement',
+                'TriSpot (O/N)'
             ]);
 
             foreach ($inscriptions as $insc) {
@@ -2839,7 +2839,7 @@ public function inscription($concoursId)
                 $lines[] = implode("\t", array_map($escapeField, $line));
             }
 
-            $filename = 'resultarc-concours-' . (int)$concoursId . '-' . date('Ymd-His') . '.txt';
+            $filename = 'resultarc-concours-' . (int)$concoursId . '-' . date('Ymd-His') . '.csv';
             while (ob_get_level()) {
                 ob_end_clean();
             }
