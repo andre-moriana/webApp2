@@ -1723,6 +1723,9 @@ function submitInscription() {
     if (numeroLicence.length === 7) {
         numeroLicence = '0' + numeroLicence;
     }
+    const typarcXml = selectedArcher.TYPARC != null && selectedArcher.TYPARC !== '' ? String(selectedArcher.TYPARC).trim() : '';
+    const idarcFromXml = typarcXml !== '' ? parseInt(typarcXml, 10) : NaN;
+    const sexeXmlStr = selectedArcher.SEXE != null && selectedArcher.SEXE !== '' ? String(selectedArcher.SEXE).trim() : '';
     const baseData = {
         user_nom: user_nom,
         numero_licence: numeroLicence,
@@ -1735,7 +1738,9 @@ function submitInscription() {
         categorie_classement: document.getElementById('categorie_classement')?.value || '',
         catage: document.getElementById('catage-select')?.value?.trim() || ((selectedArcher.CATAGE != null && selectedArcher.CATAGE !== '') ? String(selectedArcher.CATAGE).trim() : ''),
         arme: document.getElementById('arme')?.value || '',
-        mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0
+        mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0,
+        ...(Number.isFinite(idarcFromXml) ? { idarc: idarcFromXml } : {}),
+        ...((sexeXmlStr === '1' || sexeXmlStr === '2') ? { sexe: parseInt(sexeXmlStr, 10) } : {})
     };
     const piquetSelect = document.getElementById('piquet');
     if (piquetSelect) {
