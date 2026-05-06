@@ -2787,7 +2787,7 @@ public function inscription($concoursId)
 
             $escapeField = function ($value) {
                 $str = (string)$value;
-                if (str_contains($str, "\t") || str_contains($str, '"') || str_contains($str, "\n") || str_contains($str, "\r")) {
+                if (str_contains($str, ';') || str_contains($str, '"') || str_contains($str, "\n") || str_contains($str, "\r")) {
                     return '"' . str_replace('"', '""', $str) . '"';
                 }
                 return $str;
@@ -2803,7 +2803,7 @@ public function inscription($concoursId)
             $header[10] = 'N° cibles';
             $header[11] = 'Mode de paiement';
             $header[12] = 'TriSpot (O/N)';
-            $lines[] = implode("\t", $header);
+            $lines[] = implode(';', $header);
 
             foreach ($inscriptions as $insc) {
                 $licence = trim((string)($insc['numero_licence'] ?? ''));
@@ -2835,18 +2835,18 @@ public function inscription($concoursId)
                 $line[10] = $numeroPosition;
                 $line[11] = '';
                 $line[12] = $trispot;
-                $lines[] = implode("\t", array_map($escapeField, $line));
+                $lines[] = implode(';', array_map($escapeField, $line));
             }
 
             $filename = 'resultarc-concours-' . (int)$concoursId . '-' . date('Ymd-His') . '.csv';
             while (ob_get_level()) {
                 ob_end_clean();
             }
-            header('Content-Type: text/plain; charset=UTF-8');
+            header('Content-Type: text/csv; charset=UTF-8');
             header('Content-Disposition: attachment; filename="' . $filename . '"');
             header('Pragma: no-cache');
             header('Expires: 0');
-            echo "\xEF\xBB\xBF" . implode("\r\n", $lines);
+            echo "\xEF\xBB\xBF" . "sep=;\r\n" . implode("\r\n", $lines);
             exit;
         }
 
