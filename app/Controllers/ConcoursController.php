@@ -2793,6 +2793,26 @@ public function inscription($concoursId)
                 return $str;
             };
 
+            $licencesExport = [];
+            foreach ($inscriptions as $insc) {
+                $lic = trim((string)($insc['numero_licence'] ?? ''));
+                if ($lic !== '') {
+                    $licencesExport[] = $lic;
+                }
+            }
+            $licencesExport = array_values(array_unique($licencesExport));
+            $sexeByLicenceExport = [];
+            if (!empty($licencesExport)) {
+                try {
+                    $sexeByLicenceExport = ArcherSearchController::getSexeByLicences($licencesExport);
+                    if (!is_array($sexeByLicenceExport)) {
+                        $sexeByLicenceExport = [];
+                    }
+                } catch (Exception $e) {
+                    $sexeByLicenceExport = [];
+                }
+            }
+
             $lines = [];
             $header = array_fill(0, 13, '');
             $header[1] = 'N° Licence';
@@ -2814,10 +2834,13 @@ public function inscription($concoursId)
                 } elseif ($catageRaw !== '' && isset($categoriesAgeIdToAbv[$catageRaw])) {
                     $catage = trim((string)$categoriesAgeIdToAbv[$catageRaw]);
                 } else {
-                    $catage = trim((string)($insc['abv_categorie'] ?? ''));
+                    $catage = trim((string)($insc['abv_categorie'] ?? $insc['abv_categorie_classement'] ?? $insc['categorie_classement'] ?? ''));
                 }
                 $sexe = trim((string)($insc['abv_sexe'] ?? $insc['sexe'] ?? ''));
-                $arme = trim((string)($insc['abv_arc'] ?? $insc['arc'] ?? ''));
+                if ($sexe === '' && $licence !== '' && isset($sexeByLicenceExport[$licence])) {
+                    $sexe = trim((string)$sexeByLicenceExport[$licence]);
+                }
+                $arme = trim((string)($insc['arme'] ?? $insc['abv_arc'] ?? $insc['arc'] ?? ''));
                 $numeroDepart = trim((string)($insc['numero_depart'] ?? ''));
                 $numeroPosition = $licence !== '' ? trim((string)($numeroPositionByLicence[$licence] ?? '')) : '';
                 $trispotInsc = $insc['trispot'] ?? null;
