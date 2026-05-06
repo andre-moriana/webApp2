@@ -2787,21 +2787,21 @@ public function inscription($concoursId)
 
             $escapeField = function ($value) {
                 $str = (string)$value;
-                if (str_contains($str, ';') || str_contains($str, '"') || str_contains($str, "\n") || str_contains($str, "\r")) {
+                if (str_contains($str, "\t") || str_contains($str, '"') || str_contains($str, "\n") || str_contains($str, "\r")) {
                     return '"' . str_replace('"', '""', $str) . '"';
                 }
                 return $str;
             };
 
             $lines = [];
-            $lines[] = implode(';', [
+            $lines[] = implode("\t", [
                 'licence',
                 'catage',
                 'sexe',
                 'arme',
-                'Numero depart',
-                'Numero peloton ou cible',
-                'Mode de payemant',
+                'Numero_depart',
+                'Numero_cible',
+                'Mode_de_payemant',
                 'Trispot'
             ]);
 
@@ -2836,7 +2836,7 @@ public function inscription($concoursId)
                     '',
                     $trispot
                 ];
-                $lines[] = implode(';', array_map($escapeField, $line));
+                $lines[] = implode("\t", array_map($escapeField, $line));
             }
 
             $filename = 'resultarc-concours-' . (int)$concoursId . '-' . date('Ymd-His') . '.txt';
