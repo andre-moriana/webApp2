@@ -1623,6 +1623,19 @@ function submitInscription() {
         ...(Number.isFinite(idarcFromXml) ? { idarc: idarcFromXml } : {}),
         ...((sexeXmlStr === '1' || sexeXmlStr === '2') ? { sexe: parseInt(sexeXmlStr, 10) } : {})
     };
+    if (typarcXml !== '') {
+        baseData.TYPARC = typarcXml;
+    }
+    if (sexeXmlStr !== '') {
+        baseData.SEXE = sexeXmlStr;
+    }
+    const bowTypeRaw = selectedArcher.bow_type != null && selectedArcher.bow_type !== '' ? String(selectedArcher.bow_type).trim() : '';
+    if (bowTypeRaw !== '' && !Number.isFinite(idarcFromXml)) {
+        const n = parseInt(bowTypeRaw, 10);
+        if (Number.isFinite(n)) {
+            baseData.bow_type = bowTypeRaw;
+        }
+    }
     const piquetSelect = document.getElementById('piquet');
     if (piquetSelect) {
         baseData.piquet = piquetSelect.value || '';
