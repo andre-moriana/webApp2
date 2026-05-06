@@ -99,6 +99,16 @@ class ArcherSearchController {
             echo json_encode(['success' => false, 'error' => 'Archer non trouvé dans le XML pour la licence: ' . $licenceNumber]);
             return;
         }
+        $typRaw = $xmlEntry['TYPARC'] ?? null;
+        $sexeRaw = $xmlEntry['SEXE'] ?? null;
+        error_log('[TRACE idarc/sexe] ' . json_encode([
+            '_step' => 'xml_entry_matched',
+            'licence' => $licenceNumber,
+            'TYPARC_xml' => $typRaw,
+            'SEXE_xml' => $sexeRaw,
+            'TYPARC_len' => is_string($typRaw) ? strlen($typRaw) : (is_scalar($typRaw) ? strlen((string) $typRaw) : null),
+            'SEXE_len' => is_string($sexeRaw) ? strlen($sexeRaw) : (is_scalar($sexeRaw) ? strlen((string) $sexeRaw) : null),
+        ], JSON_UNESCAPED_UNICODE));
         
         $xmlData = $this->processUserEntry($xmlEntry);
         if (!$xmlData) {
@@ -110,7 +120,7 @@ class ArcherSearchController {
         $trimField = function ($v) {
             return is_string($v) ? trim($v) : (string) $v;
         };
-        echo json_encode([
+        $payload = [
             'success' => true,
             'source' => 'xml',
             'data' => [
@@ -130,7 +140,17 @@ class ArcherSearchController {
                 'creation_renouvellement' => $trimField($xmlEntry['Creation_renouvellement'] ?? ''),
                 'certificat_medical' => $trimField($xmlEntry['certificat_medical'] ?? '')
             ]
-        ]);
+        ];
+        error_log('[TRACE idarc/sexe] ' . json_encode([
+            '_step' => 'archer_api_response',
+            'licence' => $licenceNumber,
+            'data.TYPARC' => $payload['data']['TYPARC'],
+            'data.SEXE' => $payload['data']['SEXE'],
+            'data.bow_type' => $payload['data']['bow_type'],
+            'processUserEntry.bowType' => $xmlData['bowType'] ?? null,
+            'processUserEntry.gender' => $xmlData['gender'] ?? null,
+        ], JSON_UNESCAPED_UNICODE));
+        echo json_encode($payload);
     }
     
     /**
