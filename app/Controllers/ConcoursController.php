@@ -2348,7 +2348,11 @@ public function inscription($concoursId)
                         $catAgeId = $catAge['idcategorie'] ?? null;
                         $catAgeAbv = trim((string)($catAge['abv_categorie'] ?? ''));
                         if ($catAgeId !== null && $catAgeId !== '' && $catAgeAbv !== '') {
-                            $categoriesAgeIdToAbv[(string)$catAgeId] = $catAgeAbv;
+                            $catAgeIdStr = trim((string)$catAgeId);
+                            $categoriesAgeIdToAbv[$catAgeIdStr] = $catAgeAbv;
+                            if (is_numeric($catAgeIdStr)) {
+                                $categoriesAgeIdToAbv[(string)((int)$catAgeIdStr)] = $catAgeAbv;
+                            }
                         }
                     }
                 }
@@ -2828,10 +2832,13 @@ public function inscription($concoursId)
                 $licence = trim((string)($insc['numero_licence'] ?? ''));
                 $catageRaw = trim((string)($insc['catage'] ?? ''));
                 $catage = '';
-                if ($catageRaw !== '' && is_numeric($catageRaw) && isset($categoriesAgeIdToAbv[(int)$catageRaw])) {
-                    $catage = trim((string)$categoriesAgeIdToAbv[(int)$catageRaw]);
-                } elseif ($catageRaw !== '' && isset($categoriesAgeIdToAbv[$catageRaw])) {
+                if ($catageRaw !== '' && isset($categoriesAgeIdToAbv[$catageRaw])) {
                     $catage = trim((string)$categoriesAgeIdToAbv[$catageRaw]);
+                } elseif ($catageRaw !== '' && is_numeric($catageRaw)) {
+                    $catageKey = (string)((int)$catageRaw);
+                    if (isset($categoriesAgeIdToAbv[$catageKey])) {
+                        $catage = trim((string)$categoriesAgeIdToAbv[$catageKey]);
+                    }
                 }
 
                 $sexe = trim((string)($insc['abv_sexe'] ?? $insc['sexe'] ?? ''));
