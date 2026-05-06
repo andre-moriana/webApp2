@@ -2308,6 +2308,7 @@ public function inscription($concoursId)
         $categoriesClassement = [];
         $categoriesMap = [];
         $categoriesIdToAbv = [];
+        $categoriesAgeIdToAbv = [];
         try {
             $iddiscipline = $concours->discipline ?? null;
             $endpoint = 'concours/categories-classement' . ($iddiscipline ? '?iddiscipline=' . (int)$iddiscipline : '');
@@ -2324,6 +2325,31 @@ public function inscription($concoursId)
                         if ($id !== null && $id !== '') {
                             $categoriesIdToAbv[(int)$id] = $abv;
                             $categoriesIdToAbv[(string)$id] = $abv;
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {}
+        try {
+            $categoriesAgeResponse = $this->apiService->makeRequest('concours/categories-age', 'GET');
+            if (!($categoriesAgeResponse['success'] ?? false) || empty($categoriesAgeResponse['data'])) {
+                $categoriesAgeResponse = $this->apiService->makeRequestPublic('concours/categories-age', 'GET');
+            }
+            if ($categoriesAgeResponse['success'] ?? false) {
+                $agePayload = $categoriesAgeResponse['data'] ?? [];
+                if (is_array($agePayload) && isset($agePayload['data']) && isset($agePayload['success'])) {
+                    $agePayload = $agePayload['data'];
+                }
+                if (is_array($agePayload)) {
+                    foreach ($agePayload as $catAge) {
+                        if (!is_array($catAge)) {
+                            continue;
+                        }
+                        $catAgeId = $catAge['idcategorie'] ?? $catAge['id'] ?? null;
+                        $catAgeAbv = trim((string)($catAge['abv_categorie'] ?? ''));
+                        if ($catAgeId !== null && $catAgeId !== '' && $catAgeAbv !== '') {
+                            $categoriesAgeIdToAbv[(int)$catAgeId] = $catAgeAbv;
+                            $categoriesAgeIdToAbv[(string)$catAgeId] = $catAgeAbv;
                         }
                     }
                 }
@@ -2768,10 +2794,28 @@ public function inscription($concoursId)
             };
 
             $lines = [];
+            $lines[] = implode(';', [
+                'licence',
+                'catage',
+                'sexe',
+                'arme',
+                'Numero depart',
+                'Numero peloton ou cible',
+                'Mode de payemant',
+                'Trispot'
+            ]);
 
             foreach ($inscriptions as $insc) {
                 $licence = trim((string)($insc['numero_licence'] ?? ''));
-                $catage = trim((string)($insc['abv_categorie_classement'] ?? $insc['categorie_classement'] ?? ''));
+                $catageRaw = trim((string)($insc['catage'] ?? ''));
+                $catage = '';
+                if ($catageRaw !== '' && is_numeric($catageRaw) && isset($categoriesAgeIdToAbv[(int)$catageRaw])) {
+                    $catage = trim((string)$categoriesAgeIdToAbv[(int)$catageRaw]);
+                } elseif ($catageRaw !== '' && isset($categoriesAgeIdToAbv[$catageRaw])) {
+                    $catage = trim((string)$categoriesAgeIdToAbv[$catageRaw]);
+                } else {
+                    $catage = trim((string)($insc['abv_categorie'] ?? ''));
+                }
                 $sexe = trim((string)($insc['abv_sexe'] ?? $insc['sexe'] ?? ''));
                 $arme = trim((string)($insc['abv_arc'] ?? $insc['arc'] ?? ''));
                 $numeroDepart = trim((string)($insc['numero_depart'] ?? ''));
