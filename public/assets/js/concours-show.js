@@ -337,7 +337,23 @@ console.log('inscription.email:', inscription.email);
         setVal('edit-depart-select', inscription.numero_depart);
         setVal('edit-categorie_classement', inscription.categorie_classement);
         setVal('edit-catage-select', inscription.catage);
-        setVal('edit-arme', inscription.arme);
+        const editIdarcEl = document.getElementById('edit-idarc-select');
+        if (editIdarcEl) {
+            if (inscription.idarc != null && inscription.idarc !== '') {
+                editIdarcEl.value = String(inscription.idarc);
+            }
+            if (!editIdarcEl.value) {
+                const lb = String(inscription.lb_arc || inscription.arme || '').trim();
+                if (lb) {
+                    for (let i = 0; i < editIdarcEl.options.length; i++) {
+                        if (String(editIdarcEl.options[i].text || '').trim() === lb) {
+                            editIdarcEl.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         setCheck('edit-mobilite_reduite', inscription.mobilite_reduite);
 
         const isNature = !!(typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne) || !!(inscription.piquet && String(inscription.piquet).trim() !== '');
@@ -463,7 +479,12 @@ function initEditInscriptionHandlers() {
             numero_depart: numeroDepart,
             categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
             catage: document.getElementById('edit-catage-select')?.value || '',
-            arme: document.getElementById('edit-arme')?.value || '',
+            idarc: (() => {
+                const v = document.getElementById('edit-idarc-select')?.value?.trim() || '';
+                if (v === '') return null;
+                const n = parseInt(v, 10);
+                return Number.isFinite(n) ? n : null;
+            })(),
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
             numero_tir: currentEditInscription?.numero_tir ?? '',
         };

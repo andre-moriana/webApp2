@@ -2845,7 +2845,7 @@ public function inscription($concoursId)
                 if ($sexe === '' && $licence !== '' && isset($sexeByLicenceExport[$licence])) {
                     $sexe = trim((string)$sexeByLicenceExport[$licence]);
                 }
-                $arme = trim((string)($insc['arme'] ?? $insc['abv_arc'] ?? $insc['arc'] ?? ''));
+                $arme = trim((string)($insc['abv_arc'] ?? $insc['arme'] ?? $insc['arc'] ?? ''));
                 $numeroDepart = trim((string)($insc['numero_depart'] ?? ''));
                 $numeroPosition = $licence !== '' ? trim((string)($numeroPositionByLicence[$licence] ?? '')) : '';
                 $trispotInsc = $insc['trispot'] ?? null;
@@ -3945,7 +3945,6 @@ public function inscription($concoursId)
             'numero_tir' => $numero_tir,
             'categorie_classement' => isset($_POST['categorie_classement']) && $_POST['categorie_classement'] !== '' ? trim((string)$_POST['categorie_classement']) : null,
             'catage' => isset($_POST['catage']) && $_POST['catage'] !== '' ? trim((string)$_POST['catage']) : null,
-            'arme' => isset($_POST['arme']) && $_POST['arme'] !== '' ? trim((string)$_POST['arme']) : null,
             'distance' => isset($_POST['distance']) && $_POST['distance'] !== '' ? (int)$_POST['distance'] : null,
             'blason' => isset($_POST['blason']) && $_POST['blason'] !== '' ? (int)$_POST['blason'] : null,
             'piquet' => $_POST['piquet'] ?? null,
@@ -3957,6 +3956,9 @@ public function inscription($concoursId)
             if (ctype_digit($typarcPost)) {
                 $inscriptionData['idarc'] = (int) $typarcPost;
             }
+        }
+        if (isset($_POST['idarc']) && $_POST['idarc'] !== '' && ctype_digit((string) $_POST['idarc'])) {
+            $inscriptionData['idarc'] = (int) $_POST['idarc'];
         }
         if ($sexePost !== '') {
             $inscriptionData['SEXE'] = $sexePost;
@@ -4358,7 +4360,7 @@ public function inscription($concoursId)
                 (in_array(strtoupper(trim($_POST['creation_renouvellement'])), ['C', 'R'], true) ? 
                     strtoupper(trim($_POST['creation_renouvellement'])) : null) : null,
             'categorie_classement' => $_POST['categorie_classement'] ?? null,
-            'arme' => $_POST['arme'] ?? null,
+            'idarc' => isset($_POST['idarc']) && $_POST['idarc'] !== '' ? (int) $_POST['idarc'] : null,
             'mobilite_reduite' => isset($_POST['mobilite_reduite']) ? (int)$_POST['mobilite_reduite'] : 0,
             'numero_tir' => $numero_tir,
             'tarif_competition' => $_POST['tarif_competition'] ?? null,
@@ -4996,7 +4998,8 @@ public function inscription($concoursId)
                                     'nom' => $insc['user_nom'] ?? '',
                                     'name' => $insc['user_nom'] ?? '',
                                     'clubName' => $insc['club_name'] ?? null,
-                                    'arme' => $insc['arme'] ?? null,
+                                    'lb_arc' => $insc['lb_arc'] ?? null,
+                                    'abv_arc' => $insc['abv_arc'] ?? null,
                                     'categorie_classement' => $insc['categorie_classement'] ?? null
                                 ];
                             }

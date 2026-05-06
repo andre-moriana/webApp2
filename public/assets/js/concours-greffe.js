@@ -591,6 +591,13 @@ function parseCategorieXml(categorieXml, sexeLetter) {
     };
 }
 
+function getArcLabelFromIdarcSelect(selectId) {
+    const sel = document.getElementById(selectId);
+    if (!sel || sel.selectedIndex < 0) return '';
+    const opt = sel.options[sel.selectedIndex];
+    return opt ? String(opt.text || opt.textContent || '').trim() : '';
+}
+
 /**
  * Pré-remplit les champs du formulaire avec les données de l'archer
  */
@@ -1121,49 +1128,26 @@ function prefillFormFields(archer) {
         console.error('✗ Champ categorie_classement introuvable');
     }
     
-    // Pré-remplir l'arme (type d'arc)
-    // Utiliser TYPARC qui correspond à idarc de la table concour_arcs
-    const armeSelect = document.getElementById('arme');
-    if (armeSelect) {
-        if (typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
-            const typarc = archer.TYPARC ? String(archer.TYPARC).trim() : '';
-            if (typarc) {
-                console.log('Tentative pré-remplissage arme. TYPARC (idarc):', typarc);
-                // Chercher l'arc correspondant avec idarc = TYPARC
-                const arcFound = arcs.find(arc => {
-                    const arcIdarc = String(arc.idarc || arc.id_arc || arc.id || '').trim();
-                    return arcIdarc === typarc;
-                });
-                
-                if (arcFound) {
-                    armeSelect.value = arcFound.lb_arc || '';
-                    console.log('✓ Arme pré-remplie via TYPARC:', armeSelect.value);
-                } else {
-                    console.log('✗ Arc non trouvé pour TYPARC (idarc):', typarc);
-                    console.log('Arcs disponibles:', arcs.map(a => ({
-                        lb_arc: a.lb_arc,
-                        idarc: a.idarc || a.id_arc || a.id
-                    })));
-                    
-                    // Fallback: chercher par nom si disponible
-                    const arcFoundFallback = arcs.find(arc => {
-                        const lbArc = (arc.lb_arc || '').trim().toLowerCase();
-                        return lbArc.includes(typarc.toLowerCase()) || typarc.toLowerCase().includes(lbArc);
-                    });
-                    
-                    if (arcFoundFallback) {
-                        armeSelect.value = arcFoundFallback.lb_arc || '';
-                        console.log('✓ Arme pré-remplie via nom (fallback):', armeSelect.value);
-                    }
-                }
+    const idarcSelectPref = document.getElementById('idarc-select');
+    if (idarcSelectPref && typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
+        const typarc = archer.TYPARC ? String(archer.TYPARC).trim() : '';
+        if (typarc) {
+            const arcFound = arcs.find(arc => {
+                const arcIdarc = String(arc.idarc || arc.id_arc || arc.id || '').trim();
+                return arcIdarc === typarc;
+            });
+            if (arcFound && arcFound.idarc != null) {
+                idarcSelectPref.value = String(arcFound.idarc);
             } else {
-                console.log('✗ TYPARC non disponible dans les données');
+                const arcFoundFallback = arcs.find(arc => {
+                    const lbArc = (arc.lb_arc || '').trim().toLowerCase();
+                    return lbArc.includes(typarc.toLowerCase()) || typarc.toLowerCase().includes(lbArc);
+                });
+                if (arcFoundFallback && arcFoundFallback.idarc != null) {
+                    idarcSelectPref.value = String(arcFoundFallback.idarc);
+                }
             }
-        } else {
-            console.error('✗ arcs non défini ou vide');
         }
-    } else {
-        console.error('✗ Champ arme introuvable');
     }
     
     console.log('=== Fin prefillFormFields ===');
@@ -1617,6 +1601,9 @@ function submitInscription() {
     const typarcHidden = document.getElementById('inscription-xml-typarc')?.value?.trim() || '';
     const typarcXml = typarcFromArcher || typarcHidden || typarcFromBow;
     const idarcFromXml = typarcXml !== '' ? parseInt(typarcXml, 10) : NaN;
+    const idarcSelRaw = document.getElementById('idarc-select')?.value?.trim() || '';
+    const idarcFromSelect = idarcSelRaw !== '' ? parseInt(idarcSelRaw, 10) : NaN;
+    let idarcFinal = Number.isFinite(idarcFromSelect) ? idarcFromSelect : idarcFromXml;
     const sexeFromArcher = selectedArcher.SEXE != null && selectedArcher.SEXE !== '' ? String(selectedArcher.SEXE).trim() : '';
     const sexeHidden = document.getElementById('inscription-xml-sexe')?.value?.trim() || '';
     const sexeXmlStr = sexeFromArcher || sexeHidden;
@@ -1631,9 +1618,8 @@ function submitInscription() {
         creation_renouvellement: document.getElementById('creation_renouvellement')?.value || '',
         categorie_classement: document.getElementById('categorie_classement')?.value || '',
         catage: (selectedArcher.CATAGE != null && selectedArcher.CATAGE !== '') ? String(selectedArcher.CATAGE).trim() : '',
-        arme: document.getElementById('arme')?.value || '',
         mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0,
-        ...(Number.isFinite(idarcFromXml) ? { idarc: idarcFromXml } : {}),
+        ...(Number.isFinite(idarcFinal) ? { idarc: idarcFinal } : {}),
         ...((sexeXmlStr === '1' || sexeXmlStr === '2') ? { sexe: parseInt(sexeXmlStr, 10) } : {})
     };
     if (typarcXml !== '') {
@@ -1643,10 +1629,12 @@ function submitInscription() {
         baseData.SEXE = sexeXmlStr;
     }
     const bowTypeRaw = selectedArcher.bow_type != null && selectedArcher.bow_type !== '' ? String(selectedArcher.bow_type).trim() : '';
-    if (bowTypeRaw !== '' && !Number.isFinite(idarcFromXml)) {
+    if (bowTypeRaw !== '' && !Number.isFinite(idarcFinal)) {
         const n = parseInt(bowTypeRaw, 10);
         if (Number.isFinite(n)) {
             baseData.bow_type = bowTypeRaw;
+            baseData.idarc = n;
+            idarcFinal = n;
         }
     }
     const piquetSelect = document.getElementById('piquet');
@@ -2338,7 +2326,23 @@ window.editInscription = function(inscriptionId) {
             setVal('edit-categorie_classement', inscription.categorie_classement);
             //setVal('edit-catage', inscription.ageCategory ?? '');
             setVal('edit-catage', inscription.catage ?? '');
-            setVal('edit-arme', inscription.arme);
+            const editIdarcEl = document.getElementById('edit-idarc-select');
+            if (editIdarcEl) {
+                if (inscription.idarc != null && inscription.idarc !== '') {
+                    editIdarcEl.value = String(inscription.idarc);
+                }
+                if (!editIdarcEl.value) {
+                    const lb = String(inscription.lb_arc || inscription.arme || '').trim();
+                    if (lb) {
+                        for (let i = 0; i < editIdarcEl.options.length; i++) {
+                            if (String(editIdarcEl.options[i].text || '').trim() === lb) {
+                                editIdarcEl.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
             
             // Sélectionner automatiquement la couleur de piquet pour Nature
             setTimeout(() => {
@@ -2423,7 +2427,12 @@ function initEditInscriptionHandlers() {
             numero_depart: numeroDepart,
             categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
             catage: document.getElementById('edit-catage')?.value ?? currentEditInscription?.catage ?? '',
-            arme: document.getElementById('edit-arme')?.value || '',
+            idarc: (() => {
+                const v = document.getElementById('edit-idarc-select')?.value?.trim() || '';
+                if (v === '') return null;
+                const n = parseInt(v, 10);
+                return Number.isFinite(n) ? n : null;
+            })(),
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
             numero_tir: currentEditInscription?.numero_tir ?? '',
         };

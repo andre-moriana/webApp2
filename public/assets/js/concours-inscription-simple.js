@@ -263,7 +263,7 @@ function applyCategorieColorization() {
  */
 function setupBlasonAutoUpdate() {
     const categorieSelect = document.getElementById('categorie_classement');
-    const armeSelect = document.getElementById('arme');
+    const idarcSelect = document.getElementById('idarc-select');
     const distanceSelect = document.getElementById('distance');
     const blasonInput = document.getElementById('blason');
     
@@ -375,15 +375,14 @@ function setupBlasonAutoUpdate() {
     // Ajouter un listener pour la sélection automatique du piquet en Nature
     categorieSelect.addEventListener('change', function() {
         const selectedCategorie = categorieSelect.value;
-        const selectedArme = armeSelect ? armeSelect.value : '';
+        const selectedArme = getArcLabelFromIdarcSelect('idarc-select');
         applyAutoPiquetSelection(selectedCategorie, false, selectedArme);
     });
 
-    // Mettre à jour le piquet aussi quand l'arme change
-    if (armeSelect) {
-        armeSelect.addEventListener('change', function() {
+    if (idarcSelect) {
+        idarcSelect.addEventListener('change', function() {
             const selectedCategorie = categorieSelect.value;
-            const selectedArme = armeSelect.value;
+            const selectedArme = getArcLabelFromIdarcSelect('idarc-select');
             applyAutoPiquetSelection(selectedCategorie, false, selectedArme);
         });
     }
@@ -403,47 +402,47 @@ function setupBlasonAutoUpdate() {
 
 function setupPiquetAutoUpdate() {
     const categorieSelect = document.getElementById('categorie_classement');
-    const armeSelect = document.getElementById('arme');
+    const idarcSelect = document.getElementById('idarc-select');
     const editCategorieSelect = document.getElementById('edit-categorie_classement');
-    const editArmeSelect = document.getElementById('edit-arme');
+    const editIdarcSelect = document.getElementById('edit-idarc-select');
 
     if (categorieSelect) {
         if (piquetCreateUpdateHandler) {
             categorieSelect.removeEventListener('change', piquetCreateUpdateHandler);
-            if (armeSelect) {
-                armeSelect.removeEventListener('change', piquetCreateUpdateHandler);
+            if (idarcSelect) {
+                idarcSelect.removeEventListener('change', piquetCreateUpdateHandler);
             }
         }
 
         piquetCreateUpdateHandler = function() {
             const selectedCategorie = document.getElementById('categorie_classement')?.value || '';
-            const selectedArme = document.getElementById('arme')?.value || '';
+            const selectedArme = getArcLabelFromIdarcSelect('idarc-select');
             applyAutoPiquetSelection(selectedCategorie, false, selectedArme);
         };
 
         categorieSelect.addEventListener('change', piquetCreateUpdateHandler);
-        if (armeSelect) {
-            armeSelect.addEventListener('change', piquetCreateUpdateHandler);
+        if (idarcSelect) {
+            idarcSelect.addEventListener('change', piquetCreateUpdateHandler);
         }
     }
 
     if (editCategorieSelect) {
         if (piquetEditUpdateHandler) {
             editCategorieSelect.removeEventListener('change', piquetEditUpdateHandler);
-            if (editArmeSelect) {
-                editArmeSelect.removeEventListener('change', piquetEditUpdateHandler);
+            if (editIdarcSelect) {
+                editIdarcSelect.removeEventListener('change', piquetEditUpdateHandler);
             }
         }
 
         piquetEditUpdateHandler = function() {
             const selectedCategorie = document.getElementById('edit-categorie_classement')?.value || '';
-            const selectedArme = document.getElementById('edit-arme')?.value || '';
+            const selectedArme = getArcLabelFromIdarcSelect('edit-idarc-select');
             applyAutoPiquetSelection(selectedCategorie, true, selectedArme);
         };
 
         editCategorieSelect.addEventListener('change', piquetEditUpdateHandler);
-        if (editArmeSelect) {
-            editArmeSelect.addEventListener('change', piquetEditUpdateHandler);
+        if (editIdarcSelect) {
+            editIdarcSelect.addEventListener('change', piquetEditUpdateHandler);
         }
     }
 }
@@ -465,6 +464,14 @@ function normalizeArmeCodeFromLabel(armeValue) {
     if (upper.includes('LIBRE') || upper.includes('TL')) return 'TL';
 
     return '';
+}
+
+/** Libellé d'arc affiché pour le select idarc (texte de l'option), pour règles piquet etc. */
+function getArcLabelFromIdarcSelect(selectId) {
+    const sel = document.getElementById(selectId);
+    if (!sel || sel.selectedIndex < 0) return '';
+    const opt = sel.options[sel.selectedIndex];
+    return opt ? String(opt.text || opt.textContent || '').trim() : '';
 }
 
 function getNormalizedDisciplineAbv() {
@@ -635,7 +642,7 @@ function showSearchResult() {
         const categorieSelect = document.getElementById('categorie_classement');
         if (categorieSelect && categorieSelect.value) {
             setTimeout(() => {
-                const selectedArme = document.getElementById('arme')?.value || '';
+                const selectedArme = getArcLabelFromIdarcSelect('idarc-select');
                 applyAutoPiquetSelection(categorieSelect.value, false, selectedArme);
             }, 100);
         }
@@ -1078,7 +1085,7 @@ function prefillFormFields(archer) {
                         // Sélectionner automatiquement la couleur de piquet pour Nature
                         // Utiliser un délai plus long pour s'assurer que la modale est ouverte
                         setTimeout(() => {
-                            const selectedArme = document.getElementById('arme')?.value || '';
+                            const selectedArme = getArcLabelFromIdarcSelect('idarc-select');
                             applyAutoPiquetSelection(categorieFound.abv_categorie_classement, false, selectedArme);
                         }, 500);
                     }
@@ -1146,39 +1153,33 @@ function prefillFormFields(archer) {
         console.error('✗ Champ categorie_classement introuvable');
     }
     
-    // Pré-remplir l'arme (type d'arc)
-    // Utiliser TYPARC qui correspond à idarc de la table concour_arcs
-    const armeSelect = document.getElementById('arme');
-    if (armeSelect) {
-        if (typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
-            const typarc = archer.TYPARC ? String(archer.TYPARC).trim() : '';
-            if (typarc) {
-                // Chercher l'arc correspondant avec idarc = TYPARC
-                const arcFound = arcs.find(arc => {
-                    const arcIdarc = String(arc.idarc || arc.id_arc || arc.id || '').trim();
-                    return arcIdarc === typarc;
+    const idarcSelectPref = document.getElementById('idarc-select');
+    if (idarcSelectPref && typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
+        const typarc = archer.TYPARC ? String(archer.TYPARC).trim() : '';
+        if (typarc) {
+            const arcFound = arcs.find(arc => {
+                const arcIdarc = String(arc.idarc || arc.id_arc || arc.id || '').trim();
+                return arcIdarc === typarc;
+            });
+            if (arcFound && arcFound.idarc != null) {
+                idarcSelectPref.value = String(arcFound.idarc);
+            } else {
+                const arcFoundFallback = arcs.find(arc => {
+                    const lbArc = (arc.lb_arc || '').trim().toLowerCase();
+                    return lbArc.includes(typarc.toLowerCase()) || typarc.toLowerCase().includes(lbArc);
                 });
-                
-                if (arcFound) {
-                    armeSelect.value = arcFound.lb_arc || '';
-                } else {
-                    
-                    // Fallback: chercher par nom si disponible
-                    const arcFoundFallback = arcs.find(arc => {
-                        const lbArc = (arc.lb_arc || '').trim().toLowerCase();
-                        return lbArc.includes(typarc.toLowerCase()) || typarc.toLowerCase().includes(lbArc);
-                    });
-                    
-                    if (arcFoundFallback) {
-                        armeSelect.value = arcFoundFallback.lb_arc || '';
-                    }
+                if (arcFoundFallback && arcFoundFallback.idarc != null) {
+                    idarcSelectPref.value = String(arcFoundFallback.idarc);
                 }
             }
-        } else {
-            console.error('✗ arcs non défini ou vide');
         }
-    } else {
-        console.error('✗ Champ arme introuvable');
+        if (!idarcSelectPref.value && archer.bow_type) {
+            const bowLabel = String(archer.bow_type).trim();
+            const byLb = arcs.find(arc => String(arc.lb_arc || '').trim() === bowLabel);
+            if (byLb && byLb.idarc != null) {
+                idarcSelectPref.value = String(byLb.idarc);
+            }
+        }
     }
     
     // Pré-remplir l'affichage des départs sélectionnés
@@ -1736,6 +1737,9 @@ function submitInscription() {
     const typarcHidden = document.getElementById('inscription-xml-typarc')?.value?.trim() || '';
     const typarcXml = typarcFromArcher || typarcHidden || typarcFromBow;
     const idarcFromXml = typarcXml !== '' ? parseInt(typarcXml, 10) : NaN;
+    const idarcSelRaw = document.getElementById('idarc-select')?.value?.trim() || '';
+    const idarcFromSelect = idarcSelRaw !== '' ? parseInt(idarcSelRaw, 10) : NaN;
+    let idarcFinal = Number.isFinite(idarcFromSelect) ? idarcFromSelect : idarcFromXml;
     const sexeFromArcher = selectedArcher.SEXE != null && selectedArcher.SEXE !== '' ? String(selectedArcher.SEXE).trim() : '';
     const sexeHidden = document.getElementById('inscription-xml-sexe')?.value?.trim() || '';
     const sexeXmlStr = sexeFromArcher || sexeHidden;
@@ -1750,9 +1754,8 @@ function submitInscription() {
         creation_renouvellement: document.getElementById('creation_renouvellement')?.value || '',
         categorie_classement: document.getElementById('categorie_classement')?.value || '',
         catage: document.getElementById('catage-select')?.value?.trim() || ((selectedArcher.CATAGE != null && selectedArcher.CATAGE !== '') ? String(selectedArcher.CATAGE).trim() : ''),
-        arme: document.getElementById('arme')?.value || '',
         mobilite_reduite: document.getElementById('mobilite_reduite')?.checked ? 1 : 0,
-        ...(Number.isFinite(idarcFromXml) ? { idarc: idarcFromXml } : {}),
+        ...(Number.isFinite(idarcFinal) ? { idarc: idarcFinal } : {}),
         ...((sexeXmlStr === '1' || sexeXmlStr === '2') ? { sexe: parseInt(sexeXmlStr, 10) } : {})
     };
     if (typarcXml !== '') {
@@ -1762,10 +1765,12 @@ function submitInscription() {
         baseData.SEXE = sexeXmlStr;
     }
     const bowTypeRaw = selectedArcher.bow_type != null && selectedArcher.bow_type !== '' ? String(selectedArcher.bow_type).trim() : '';
-    if (bowTypeRaw !== '' && !Number.isFinite(idarcFromXml)) {
+    if (bowTypeRaw !== '' && !Number.isFinite(idarcFinal)) {
         const n = parseInt(bowTypeRaw, 10);
         if (Number.isFinite(n)) {
             baseData.bow_type = bowTypeRaw;
+            baseData.idarc = n;
+            idarcFinal = n;
         }
     }
     const piquetSelect = document.getElementById('piquet');
@@ -2344,12 +2349,24 @@ window.editInscription = function(inscriptionId) {
             setVal('edit-depart-select', inscription.numero_depart);
             setVal('edit-categorie_classement', inscription.categorie_classement);
             setCategorieAgeFields('edit-', inscription.catage ?? '');
-            setVal('edit-arme', inscription.arme);
+            const editIdarcEl = document.getElementById('edit-idarc-select');
+            if (editIdarcEl) {
+                if (inscription.idarc != null && inscription.idarc !== '') {
+                    editIdarcEl.value = String(inscription.idarc);
+                }
+                if (!editIdarcEl.value) {
+                    const lb = String(inscription.lb_arc || inscription.arme || '').trim();
+                    if (lb && typeof arcs !== 'undefined' && arcs.length) {
+                        const found = arcs.find(a => String(a.lb_arc || '').trim() === lb);
+                        if (found && found.idarc != null) editIdarcEl.value = String(found.idarc);
+                    }
+                }
+            }
             
             // Sélectionner automatiquement la couleur de piquet pour Nature
             setTimeout(() => {
                 if (inscription.categorie_classement) {
-                    const selectedEditArme = document.getElementById('edit-arme')?.value || '';
+                    const selectedEditArme = getArcLabelFromIdarcSelect('edit-idarc-select');
                     applyAutoPiquetSelection(inscription.categorie_classement, true, selectedEditArme);
                 }
             }, 100);
@@ -2366,26 +2383,26 @@ window.editInscription = function(inscriptionId) {
             
             // Ajouter un listener pour la sélection automatique du piquet en Nature lors du changement de catégorie
             const editCategorieSelect = document.getElementById('edit-categorie_classement');
-            const editArmeSelect = document.getElementById('edit-arme');
+            const editIdarcSelectEl = document.getElementById('edit-idarc-select');
             if (editCategorieSelect) {
                 // Retirer l'ancien listener s'il existe (en créant une nouvelle fonction à chaque fois)
                 const editCategorieChangeHandler = function() {
                     const selectedCategorie = editCategorieSelect.value;
-                    const selectedEditArme = editArmeSelect ? editArmeSelect.value : '';
+                    const selectedEditArme = getArcLabelFromIdarcSelect('edit-idarc-select');
                     applyAutoPiquetSelection(selectedCategorie, true, selectedEditArme);
                 };
                 editCategorieSelect.removeEventListener('change', editCategorieChangeHandler);
                 editCategorieSelect.addEventListener('change', editCategorieChangeHandler);
             }
 
-            if (editArmeSelect) {
-                const editArmeChangeHandler = function() {
+            if (editIdarcSelectEl) {
+                const editIdarcChangeHandler = function() {
                     const selectedCategorie = editCategorieSelect ? editCategorieSelect.value : '';
-                    const selectedEditArme = editArmeSelect.value;
+                    const selectedEditArme = getArcLabelFromIdarcSelect('edit-idarc-select');
                     applyAutoPiquetSelection(selectedCategorie, true, selectedEditArme);
                 };
-                editArmeSelect.removeEventListener('change', editArmeChangeHandler);
-                editArmeSelect.addEventListener('change', editArmeChangeHandler);
+                editIdarcSelectEl.removeEventListener('change', editIdarcChangeHandler);
+                editIdarcSelectEl.addEventListener('change', editIdarcChangeHandler);
             }
             
             // Ajouter un listener sur le champ edit-piquet pour retirer la classe is-invalid quand l'utilisateur sélectionne manuellement
@@ -2441,7 +2458,12 @@ function initEditInscriptionHandlers() {
             numero_depart: numeroDepart,
             categorie_classement: document.getElementById('edit-categorie_classement')?.value || '',
             catage: document.getElementById('edit-catage-select')?.value ?? currentEditInscription?.catage ?? '',
-            arme: document.getElementById('edit-arme')?.value || '',
+            idarc: (() => {
+                const v = document.getElementById('edit-idarc-select')?.value?.trim() || '';
+                if (v === '') return null;
+                const n = parseInt(v, 10);
+                return Number.isFinite(n) ? n : null;
+            })(),
             mobilite_reduite: document.getElementById('edit-mobilite_reduite')?.checked ? 1 : 0,
             numero_tir: currentEditInscription?.numero_tir ?? '',
         };
