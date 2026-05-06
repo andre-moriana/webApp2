@@ -480,18 +480,29 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <small class="form-text text-muted">Valeur CATAGE issue du fichier XML / table catégories d'âge.</small>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="idarc-select" class="form-label">Type d'arc (réf. FFTA)</label>
-                            <select id="idarc-select" name="idarc" class="form-control">
+                            <label for="idarc-select" class="form-label">Type d'arc (idarc FFTA)</label>
+                            <select id="idarc-select" name="idarc" class="form-control" title="Valeur enregistrée : idarc (référence FFTA)">
                                 <option value="">Sélectionner</option>
                                 <?php if (!empty($arcs)): ?>
                                     <?php foreach ($arcs as $arc): ?>
-                                        <?php $arcId = (string)($arc['idarc'] ?? ''); ?>
-                                        <option value="<?= htmlspecialchars($arcId) ?>">
-                                            <?= htmlspecialchars($arc['lb_arc'] ?? $arcId) ?>
+                                        <?php
+                                        $idarcOpt = $arc['idarc'] ?? $arc['id_arc'] ?? null;
+                                        if ($idarcOpt === null || $idarcOpt === '') {
+                                            continue;
+                                        }
+                                        $idarcOpt = (string)(int)$idarcOpt;
+                                        if ($idarcOpt === '0') {
+                                            continue;
+                                        }
+                                        $lb = (string)($arc['lb_arc'] ?? $arc['name'] ?? $arc['nom'] ?? $idarcOpt);
+                                        ?>
+                                        <option value="<?= htmlspecialchars($idarcOpt) ?>" data-idarc="<?= htmlspecialchars($idarcOpt) ?>">
+                                            <?= htmlspecialchars($lb) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
+                            <small class="form-text text-muted">Chaque choix enregistre l’<strong>idarc</strong> (identifiant type d’arc FFTA), pas le libellé seul.</small>
                         </div>
                     </div>
                     
@@ -704,18 +715,29 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <small class="form-text text-muted">Valeur CATAGE issue du fichier XML / table catégories d'âge.</small>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-idarc-select" class="form-label">Type d'arc (réf. FFTA)</label>
-                            <select id="edit-idarc-select" name="idarc" class="form-control">
+                            <label for="edit-idarc-select" class="form-label">Type d'arc (idarc FFTA)</label>
+                            <select id="edit-idarc-select" name="idarc" class="form-control" title="Valeur enregistrée : idarc (référence FFTA)">
                                 <option value="">Sélectionner</option>
                                 <?php if (!empty($arcs)): ?>
                                     <?php foreach ($arcs as $arc): ?>
-                                        <?php $arcId = (string)($arc['idarc'] ?? ''); ?>
-                                        <option value="<?= htmlspecialchars($arcId) ?>">
-                                            <?= htmlspecialchars($arc['lb_arc'] ?? $arcId) ?>
+                                        <?php
+                                        $idarcOpt = $arc['idarc'] ?? $arc['id_arc'] ?? null;
+                                        if ($idarcOpt === null || $idarcOpt === '') {
+                                            continue;
+                                        }
+                                        $idarcOpt = (string)(int)$idarcOpt;
+                                        if ($idarcOpt === '0') {
+                                            continue;
+                                        }
+                                        $lb = (string)($arc['lb_arc'] ?? $arc['name'] ?? $arc['nom'] ?? $idarcOpt);
+                                        ?>
+                                        <option value="<?= htmlspecialchars($idarcOpt) ?>" data-idarc="<?= htmlspecialchars($idarcOpt) ?>">
+                                            <?= htmlspecialchars($lb) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
+                            <small class="form-text text-muted">Valeur stockée : <strong>idarc</strong>.</small>
                         </div>
                     </div>
                     

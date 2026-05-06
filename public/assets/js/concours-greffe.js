@@ -591,6 +591,14 @@ function parseCategorieXml(categorieXml, sexeLetter) {
     };
 }
 
+function arcRowIdarcString(arc) {
+    if (!arc) return '';
+    const v = arc.idarc != null ? arc.idarc : arc.id_arc;
+    if (v === null || v === undefined || String(v).trim() === '') return '';
+    const n = parseInt(String(v), 10);
+    return Number.isFinite(n) && n > 0 ? String(n) : '';
+}
+
 function getArcLabelFromIdarcSelect(selectId) {
     const sel = document.getElementById(selectId);
     if (!sel || sel.selectedIndex < 0) return '';
@@ -1132,19 +1140,18 @@ function prefillFormFields(archer) {
     if (idarcSelectPref && typeof arcs !== 'undefined' && arcs && arcs.length > 0) {
         const typarc = archer.TYPARC ? String(archer.TYPARC).trim() : '';
         if (typarc) {
-            const arcFound = arcs.find(arc => {
-                const arcIdarc = String(arc.idarc || arc.id_arc || arc.id || '').trim();
-                return arcIdarc === typarc;
-            });
-            if (arcFound && arcFound.idarc != null) {
-                idarcSelectPref.value = String(arcFound.idarc);
+            const arcFound = arcs.find(arc => arcRowIdarcString(arc) === typarc);
+            const idStr = arcFound ? arcRowIdarcString(arcFound) : '';
+            if (idStr !== '') {
+                idarcSelectPref.value = idStr;
             } else {
                 const arcFoundFallback = arcs.find(arc => {
                     const lbArc = (arc.lb_arc || '').trim().toLowerCase();
                     return lbArc.includes(typarc.toLowerCase()) || typarc.toLowerCase().includes(lbArc);
                 });
-                if (arcFoundFallback && arcFoundFallback.idarc != null) {
-                    idarcSelectPref.value = String(arcFoundFallback.idarc);
+                const idFb = arcFoundFallback ? arcRowIdarcString(arcFoundFallback) : '';
+                if (idFb !== '') {
+                    idarcSelectPref.value = idFb;
                 }
             }
         }
