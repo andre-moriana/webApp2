@@ -100,10 +100,7 @@ class ArcherSearchController {
         $xmlPath = __DIR__ . '/../../public/data/licences-users.xml';
         $xmlPath = realpath($xmlPath);
         
-        error_log("ArcherSearchController: Recherche licence '$licenceNumber'");
-        
         if (!$xmlPath || !file_exists($xmlPath) || !is_readable($xmlPath)) {
-            error_log("ArcherSearchController: Fichier XML non trouvé ou non lisible");
             http_response_code(404);
             echo json_encode(['success' => false, 'error' => 'Fichier XML non trouvé']);
             return;
@@ -111,21 +108,12 @@ class ArcherSearchController {
         
         $xmlEntry = $this->findXmlEntryByLicence($xmlPath, $licenceNumber);
         if (!$xmlEntry) {
-            error_log("ArcherSearchController: Aucune entrée trouvée pour licence '$licenceNumber'");
             http_response_code(404);
             echo json_encode(['success' => false, 'error' => 'Archer non trouvé dans le XML pour la licence: ' . $licenceNumber]);
             return;
         }
         $typRaw = self::xmlEntryFirstNonEmpty($xmlEntry, ['TYPARC', 'typarc', 'Typarc', 'TYP_ARC']);
         $sexeRaw = self::xmlEntryFirstNonEmpty($xmlEntry, ['SEXE', 'sexe', 'Sexe']);
-        error_log('[TRACE idarc/sexe] ' . json_encode([
-            '_step' => 'xml_entry_matched',
-            'licence' => $licenceNumber,
-            'TYPARC_xml' => $typRaw !== '' ? $typRaw : null,
-            'SEXE_xml' => $sexeRaw !== '' ? $sexeRaw : null,
-            'TYPARC_len' => $typRaw !== '' ? strlen($typRaw) : 0,
-            'SEXE_len' => $sexeRaw !== '' ? strlen($sexeRaw) : 0,
-        ], JSON_UNESCAPED_UNICODE));
         
         $xmlData = $this->processUserEntry($xmlEntry);
         if (!$xmlData) {
@@ -158,15 +146,6 @@ class ArcherSearchController {
                 'certificat_medical' => $trimField($xmlEntry['certificat_medical'] ?? '')
             ]
         ];
-        error_log('[TRACE idarc/sexe] ' . json_encode([
-            '_step' => 'archer_api_response',
-            'licence' => $licenceNumber,
-            'data.TYPARC' => $payload['data']['TYPARC'],
-            'data.SEXE' => $payload['data']['SEXE'],
-            'data.bow_type' => $payload['data']['bow_type'],
-            'processUserEntry.bowType' => $xmlData['bowType'] ?? null,
-            'processUserEntry.gender' => $xmlData['gender'] ?? null,
-        ], JSON_UNESCAPED_UNICODE));
         echo json_encode($payload);
     }
     
