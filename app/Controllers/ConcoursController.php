@@ -2345,10 +2345,9 @@ public function inscription($concoursId)
                         if (!is_array($catAge)) {
                             continue;
                         }
-                        $catAgeId = $catAge['idcategorie'] ?? $catAge['id'] ?? null;
-                        $catAgeAbv = trim((string)($catAge['abv_catage'] ?? $catAge['abv_categorie'] ?? ''));
+                        $catAgeId = $catAge['idcategorie'] ?? null;
+                        $catAgeAbv = trim((string)($catAge['abv_categorie'] ?? ''));
                         if ($catAgeId !== null && $catAgeId !== '' && $catAgeAbv !== '') {
-                            $categoriesAgeIdToAbv[(int)$catAgeId] = $catAgeAbv;
                             $categoriesAgeIdToAbv[(string)$catAgeId] = $catAgeAbv;
                         }
                     }
@@ -2834,6 +2833,7 @@ public function inscription($concoursId)
                 } elseif ($catageRaw !== '' && isset($categoriesAgeIdToAbv[$catageRaw])) {
                     $catage = trim((string)$categoriesAgeIdToAbv[$catageRaw]);
                 }
+
                 $sexe = trim((string)($insc['abv_sexe'] ?? $insc['sexe'] ?? ''));
                 if ($sexe === '' && $licence !== '' && isset($sexeByLicenceExport[$licence])) {
                     $sexe = trim((string)$sexeByLicenceExport[$licence]);
