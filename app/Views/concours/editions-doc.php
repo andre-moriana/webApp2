@@ -571,6 +571,12 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
             <option value="<?= htmlspecialchars($url) ?>"<?= $sel ?>><?= htmlspecialchars($label) ?></option>
             <?php endforeach; ?>
         </select>
+        <a
+            href="<?= htmlspecialchars($baseListeUrl . '&depart=' . $currentDepartListe . '&tri=' . $currentTriListe . '&export=resultarc') ?>"
+            class="btn btn-outline-success btn-sm me-2"
+        >
+            <i class="fas fa-file-export me-1"></i>Export ResultArc
+        </a>
         <?php endif; ?>
         <?php if ($doc === 'scores'): ?>
         <?php

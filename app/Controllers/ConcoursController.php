@@ -2711,6 +2711,102 @@ public function inscription($concoursId)
             });
         }
 
+        if ($doc === 'liste-participants' && (($_GET['export'] ?? '') === 'resultarc')) {
+            $numeroPositionByLicence = [];
+            $trispotByLicence = [];
+            $isPelotonDiscipline = in_array((string)($disciplineAbv ?? ''), ['3', 'N', 'C'], true);
+            try {
+                if ($isPelotonDiscipline) {
+                    $respPlan = $this->apiService->getPlanPeloton($concoursId);
+                } else {
+                    $respPlan = $this->apiService->getPlanCible($concoursId);
+                }
+                $planPayload = $this->apiService->unwrapData($respPlan);
+                if (is_array($planPayload) && isset($planPayload['data']) && is_array($planPayload['data'])) {
+                    $planPayload = $planPayload['data'];
+                }
+                if (is_array($planPayload)) {
+                    $plansFlat = [];
+                    foreach ($planPayload as $value) {
+                        if (is_array($value) && isset($value[0]) && is_array($value[0])) {
+                            foreach ($value as $sub) {
+                                if (is_array($sub)) {
+                                    $plansFlat[] = $sub;
+                                }
+                            }
+                        } elseif (is_array($value) && (isset($value['numero_licence']) || isset($value['numero_depart']))) {
+                            $plansFlat[] = $value;
+                        }
+                    }
+                    foreach ($plansFlat as $plan) {
+                        $licence = trim((string)($plan['numero_licence'] ?? ''));
+                        if ($licence === '') {
+                            continue;
+                        }
+                        if (!isset($numeroPositionByLicence[$licence])) {
+                            $numeroPositionByLicence[$licence] = $isPelotonDiscipline
+                                ? trim((string)($plan['numero_peloton'] ?? ''))
+                                : trim((string)($plan['numero_cible'] ?? ''));
+                        }
+                        if (!isset($trispotByLicence[$licence])) {
+                            $trispotVal = $plan['trispot'] ?? null;
+                            $trispotByLicence[$licence] = in_array((string)$trispotVal, ['1', 'true', 'oui', 'on'], true) || $trispotVal === 1 || $trispotVal === true;
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                $numeroPositionByLicence = [];
+                $trispotByLicence = [];
+            }
+
+            $escapeField = function ($value) {
+                $str = (string)$value;
+                if (str_contains($str, ';') || str_contains($str, '"') || str_contains($str, "\n") || str_contains($str, "\r")) {
+                    return '"' . str_replace('"', '""', $str) . '"';
+                }
+                return $str;
+            };
+
+            $lines = [];
+
+            foreach ($inscriptions as $insc) {
+                $licence = trim((string)($insc['numero_licence'] ?? ''));
+                $catage = trim((string)($insc['abv_categorie_classement'] ?? $insc['categorie_classement'] ?? ''));
+                $sexe = trim((string)($insc['abv_sexe'] ?? $insc['sexe'] ?? ''));
+                $arme = trim((string)($insc['abv_arc'] ?? $insc['arc'] ?? ''));
+                $numeroDepart = trim((string)($insc['numero_depart'] ?? ''));
+                $numeroPosition = $licence !== '' ? trim((string)($numeroPositionByLicence[$licence] ?? '')) : '';
+                $trispotInsc = $insc['trispot'] ?? null;
+                $trispotBool = $licence !== '' && isset($trispotByLicence[$licence])
+                    ? (bool)$trispotByLicence[$licence]
+                    : (in_array((string)$trispotInsc, ['1', 'true', 'oui', 'on'], true) || $trispotInsc === 1 || $trispotInsc === true);
+                $trispot = $trispotBool ? 'O' : 'N';
+
+                $line = [
+                    $licence,
+                    $catage,
+                    $sexe,
+                    $arme,
+                    $numeroDepart,
+                    $numeroPosition,
+                    '',
+                    $trispot
+                ];
+                $lines[] = implode(';', array_map($escapeField, $line));
+            }
+
+            $filename = 'resultarc-concours-' . (int)$concoursId . '-' . date('Ymd-His') . '.txt';
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Content-Type: text/plain; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+            echo "\xEF\xBB\xBF" . implode("\r\n", $lines);
+            exit;
+        }
+
         // Filtre par départ et tri (catégorie, club, départ) pour l'édition scores
         $departFilterScores = $_GET['depart'] ?? '';
         $triScores = $_GET['tri'] ?? 'club';
