@@ -223,9 +223,9 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                         <div class="pas-de-tir peloton-card">
                             <div class="pas-de-tir-header">
                                 <h3>Peloton <?= htmlspecialchars($numeroPeloton) ?></h3>
-                                <?php if ($nbCompound >= 2): ?>
+                                <?php if ($nbCompound >= 4): ?>
                                     <div class="alert alert-warning py-2 px-3 mt-2 mb-0" role="alert">
-                                        <i class="fas fa-exclamation-triangle"></i> <strong>Attention :</strong> <?= $nbCompound ?> tireur(s) à compound dans ce peloton (max 2 recommandé).
+                                        <i class="fas fa-exclamation-triangle"></i> <strong>Attention :</strong> <?= $nbCompound ?> tireur(s) TL dans ce peloton (max 4 recommandé).
                                     </div>
                                 <?php endif; ?>
                                 <?php if ($afficherReglePiquet): ?>
