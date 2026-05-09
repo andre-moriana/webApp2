@@ -2139,7 +2139,8 @@ public function inscription($concoursId)
             }
         }
 
-        // Places disponibles par départ : (nb cibles ou pelotons × nb archers par unité) - nb inscrits
+        // Capacité du plan par départ (une ligne = une place au tir) ; placesParDepart = places restantes
+        $capaciteParDepart = [];
         $placesParDepart = [];
         $inscritsParDepart = [];
         foreach ($inscriptions as $insc) {
@@ -2164,6 +2165,7 @@ public function inscription($concoursId)
                         $numDep = (int)$numDep;
                         $capacity = is_array($slots) ? count($slots) : 0;
                         $inscrits = $inscritsParDepart[$numDep] ?? 0;
+                        $capaciteParDepart[$numDep] = $capacity;
                         $placesParDepart[$numDep] = max(0, $capacity - $inscrits);
                     }
                 }
@@ -3842,7 +3844,8 @@ public function inscription($concoursId)
             }
         }
 
-        // Places disponibles par départ (même formule que page inscription classique)
+        // Capacité du plan et places restantes (même logique que inscription classique)
+        $capaciteParDepart = [];
         $placesParDepart = [];
         $inscritsParDepart = [];
         foreach ($inscriptions as $insc) {
@@ -3867,6 +3870,7 @@ public function inscription($concoursId)
                         $numDep = (int)$numDep;
                         $capacity = is_array($slots) ? count($slots) : 0;
                         $inscrits = $inscritsParDepart[$numDep] ?? 0;
+                        $capaciteParDepart[$numDep] = $capacity;
                         $placesParDepart[$numDep] = max(0, $capacity - $inscrits);
                     }
                 }

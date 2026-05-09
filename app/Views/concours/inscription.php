@@ -118,6 +118,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         return is_array($d) ? ($d[$key] ?? $default) : ($d->$key ?? $default);
                     };
                     $placesParDepart = $placesParDepart ?? [];
+                    $capaciteParDepart = $capaciteParDepart ?? [];
                     foreach ($departsList as $idx => $d): 
                         $dateDep = $getD($d, 'date_depart', '');
                         $heureGreffe = $getD($d, 'heure_greffe', '');
@@ -130,8 +131,9 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                         $label = trim($dateDep . ($heureGreffe ? ' ' . $heureGreffe : ''));
                         if (empty($label)) $label = 'Départ ' . $numero;
                         $inscritsDepart = $numero ? ($countByDepart[$numero] ?? 0) : 0;
-                        $placesDispo = isset($placesParDepart[$numero]) ? (int)$placesParDepart[$numero] : null;
-                        $isDepartComplet = ($placesDispo !== null && $placesDispo > 0 && (int)$inscritsDepart >= $placesDispo);
+                        $capaciteDepart = isset($capaciteParDepart[$numero]) ? (int)$capaciteParDepart[$numero] : null;
+                        $placesRestantes = isset($placesParDepart[$numero]) ? (int)$placesParDepart[$numero] : null;
+                        $isDepartComplet = ($capaciteDepart !== null && $capaciteDepart > 0 && (int)$inscritsDepart >= $capaciteDepart);
                         $cbId = 'depart-cb-' . $departId;
                         ?>
                         <div class="form-check">
@@ -140,8 +142,11 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <?= htmlspecialchars($label) ?>
                                 <span class="text-muted ms-1">
                                     <?= (int)$inscritsDepart ?> inscrit<?= (int)$inscritsDepart !== 1 ? 's' : '' ?>
-                                    <?php if ($placesDispo !== null): ?>
-                                        / <?= $placesDispo ?> place<?= $placesDispo !== 1 ? 's' : '' ?>
+                                    <?php if ($capaciteDepart !== null): ?>
+                                        / <?= (int)$capaciteDepart ?> place<?= (int)$capaciteDepart !== 1 ? 's' : '' ?>
+                                    <?php endif; ?>
+                                    <?php if ($placesRestantes !== null && $capaciteDepart !== null && $placesRestantes > 0): ?>
+                                        <span class="text-muted">(<?= (int)$placesRestantes ?> libre<?= (int)$placesRestantes !== 1 ? 's' : '' ?>)</span>
                                     <?php endif; ?>
                                 </span>
                                 <?php if ($isDepartComplet): ?>
@@ -152,23 +157,27 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     <?php endforeach; ?>
                 <?php elseif ($nombreDepart && is_numeric($nombreDepart) && $nombreDepart > 0): ?>
                     <?php $placesParDepart = $placesParDepart ?? []; ?>
+                    <?php $capaciteParDepart = $capaciteParDepart ?? []; ?>
                     <div class="form-check mb-1">
                         <input type="checkbox" id="depart-select-all" class="form-check-input">
                         <label for="depart-select-all" class="form-check-label fw-bold">Tout sélectionner</label>
                     </div>
-                    <?php $inscritsDepart = $i ? ($countByDepart[$i] ?? 0) : 0; ?>
                     <?php for ($i = 1; $i <= (int)$nombreDepart; $i++): ?>
                         <?php $inscritsDepart = $i ? ($countByDepart[$i] ?? 0) : 0; ?>
-                        <?php $placesDispo = isset($placesParDepart[$i]) ? (int)$placesParDepart[$i] : null; ?>
-                        <?php $isDepartComplet = ($placesDispo !== null && $placesDispo > 0 && (int)$inscritsDepart >= $placesDispo); ?>
+                        <?php $capaciteDepart = isset($capaciteParDepart[$i]) ? (int)$capaciteParDepart[$i] : null; ?>
+                        <?php $placesRestantes = isset($placesParDepart[$i]) ? (int)$placesParDepart[$i] : null; ?>
+                        <?php $isDepartComplet = ($capaciteDepart !== null && $capaciteDepart > 0 && (int)$inscritsDepart >= $capaciteDepart); ?>
                         <div class="form-check">
                             <input type="checkbox" id="depart-cb-<?= $i ?>" class="form-check-input depart-checkbox" name="numero_depart[]" value="<?= $i ?>" data-date-depart="" data-heure-greffe=""<?= $isDepartComplet ? ' disabled' : '' ?>>
                             <label for="depart-cb-<?= $i ?>" class="form-check-label">
                                 Départ <?= $i ?>
                                 <span class="text-muted ms-1">
                                     <?= (int)$inscritsDepart ?> inscrit<?= (int)$inscritsDepart !== 1 ? 's' : '' ?>
-                                    <?php if ($placesDispo !== null): ?>
-                                        / <?= $placesDispo ?> place<?= $placesDispo !== 1 ? 's' : '' ?>
+                                    <?php if ($capaciteDepart !== null): ?>
+                                        / <?= (int)$capaciteDepart ?> place<?= (int)$capaciteDepart !== 1 ? 's' : '' ?>
+                                    <?php endif; ?>
+                                    <?php if ($placesRestantes !== null && $capaciteDepart !== null && $placesRestantes > 0): ?>
+                                        <span class="text-muted">(<?= (int)$placesRestantes ?> libre<?= (int)$placesRestantes !== 1 ? 's' : '' ?>)</span>
                                     <?php endif; ?>
                                 </span>
                                 <?php if ($isDepartComplet): ?>
