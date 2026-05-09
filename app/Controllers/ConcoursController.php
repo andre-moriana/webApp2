@@ -3859,8 +3859,21 @@ public function inscription($concoursId)
         $isPeloton = in_array($abv, ['3', 'N', 'C', '3D'], true);
         if ($isCible || $isPeloton) {
             try {
-                $endpoint = $isCible ? "concours/{$concoursId}/plan-cible" : "concours/{$concoursId}/plan-peloton";
-                $planResponse = $this->apiService->makeRequestPublic($endpoint, 'GET');
+                // Sans JWT, l'API n'expose le plan qu'en /plan-cible/public (ou peloton) avec token_acces_inscription.
+                $planToken = $token ?: ($tokenFromSession ?? '');
+                $planResponse = ['success' => false];
+                if ($planToken !== '') {
+                    $pubEndpoint = $isCible
+                        ? "concours/{$concoursId}/plan-cible/public"
+                        : "concours/{$concoursId}/plan-peloton/public";
+                    $planResponse = $this->apiService->makeRequestPublic($pubEndpoint, 'GET', null, $planToken);
+                }
+                if (!($planResponse['success'] ?? false)
+                    && isset($_SESSION['logged_in'])
+                    && $_SESSION['logged_in'] === true) {
+                    $endpoint = $isCible ? "concours/{$concoursId}/plan-cible" : "concours/{$concoursId}/plan-peloton";
+                    $planResponse = $this->apiService->makeRequest($endpoint, 'GET');
+                }
                 $planData = $planResponse['data'] ?? $planResponse;
                 if (is_array($planData) && isset($planData['data']) && isset($planData['success'])) {
                     $planData = $planData['data'];
