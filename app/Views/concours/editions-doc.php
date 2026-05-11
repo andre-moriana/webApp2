@@ -202,13 +202,17 @@ $dateFooter = date('d/m/Y H:i');
         .edition-scores table th:nth-child(7),
         .edition-scores table td:nth-child(7),
         .edition-classement table th:nth-child(7),
-        .edition-classement table td:nth-child(7) { width: 8%; }
+        .edition-classement table td:nth-child(7) { width: 5%; }
         .edition-liste-participants table th:nth-child(n+8),
         .edition-liste-participants table td:nth-child(n+8),
         .edition-scores table th:nth-child(n+8),
         .edition-scores table td:nth-child(n+8),
         .edition-classement table th:nth-child(n+8),
         .edition-classement table td:nth-child(n+8) { width: 5%; }
+        .edition-classement table th:nth-child(n+9),
+        .edition-classement table td:nth-child(n+9) { width: 5%; }
+        .edition-classement table th:nth-child(n+10),
+        .edition-classement table td:nth-child(n+10) { width: 5%; }
         /* Tableau liste des départs (avis) */
         .edition-avis table.table-sm {
             table-layout: fixed;
