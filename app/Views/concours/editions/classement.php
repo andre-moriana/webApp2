@@ -201,9 +201,9 @@ if ($top3ParCategorie) {
                         <?php if ($is3D): ?>
                             <th>Clt</th>
                             <th>Nom</th>
-                            <th>Club</th>
                             <th>Licence</th>
                             <th>Cat.</th>
+                            <th>Club</th>
                             <th>Total</th>
                             <th>11</th>
                             <th>10</th>
@@ -212,9 +212,9 @@ if ($top3ParCategorie) {
                         <?php elseif ($isNature): ?>
                             <th>Clt</th>
                             <th>Nom</th>
-                            <th>Club</th>
                             <th>Licence</th>
                             <th>Cat.</th>
+                            <th>Club</th>
                             <th>P1</th>
                             <?php if ($has2x21): ?><th>P2</th><?php endif; ?>
                             <th>Total</th>
@@ -238,9 +238,9 @@ if ($top3ParCategorie) {
                             <?php if ($is3D): ?>
                                 <td><?= $item['rang'] ?></td>
                                 <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
+                                <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                                 <td><?= $r ? (($v = $r['score'] ?? null) !== null && $v !== '' ? (int)$v : '-') : '-' ?></td>
                                 <td><?= $r ? ($r['nb_11'] ?? '-') : '-' ?></td>
                                 <td><?= $r ? ($r['nb_10'] ?? '-') : '-' ?></td>
@@ -249,9 +249,9 @@ if ($top3ParCategorie) {
                             <?php elseif ($isNature): ?>
                                 <td><?= $item['rang'] ?></td>
                                 <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
+                                <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                                 <td><?= $r ? (($v = $r['serie1_score'] ?? $r['score'] ?? null) !== null && $v !== '' ? (int)$v : '-') : '-' ?></td>
                                 <?php if ($has2x21): ?><td><?= $r ? ($r['serie2_score'] ?? '-') : '-' ?></td><?php endif; ?>
                                 <td><?= $r ? (($v = $r['score'] ?? null) !== null && $v !== '' ? (int)$v : '-') : '-' ?></td>

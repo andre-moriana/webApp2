@@ -135,25 +135,35 @@ $dateFooter = date('d/m/Y H:i');
         .edition-scores table th:nth-child(2),
         .edition-scores table td:nth-child(2),
         .edition-classement table th:nth-child(2),
-        .edition-classement table td:nth-child(2) { width: 20%; }
+        .edition-classement table td:nth-child(2) { 
+            width: 22%;
+            white-space: nowrap;
+        }
         .edition-liste-participants table th:nth-child(3),
         .edition-liste-participants table td:nth-child(3),
         .edition-scores table th:nth-child(3),
         .edition-scores table td:nth-child(3),
         .edition-classement table th:nth-child(3),
-        .edition-classement table td:nth-child(3) { width: 11%; }
+        .edition-classement table td:nth-child(3) { 
+            width: 6%;
+        }
         .edition-liste-participants table th:nth-child(4),
         .edition-liste-participants table td:nth-child(4),
         .edition-scores table th:nth-child(4),
         .edition-scores table td:nth-child(4),
         .edition-classement table th:nth-child(4),
-        .edition-classement table td:nth-child(4) { width: 15%; }
+        .edition-classement table td:nth-child(4) { 
+            width: 6%;
+         }
         .edition-liste-participants table th:nth-child(5),
         .edition-liste-participants table td:nth-child(5),
         .edition-scores table th:nth-child(5),
         .edition-scores table td:nth-child(5),
         .edition-classement table th:nth-child(5),
-        .edition-classement table td:nth-child(5) { width: 12%; }
+        .edition-classement table td:nth-child(5) { 
+            width: 22%;
+            white-space: nowrap;
+        }
         .edition-liste-participants table th:nth-child(6),
         .edition-liste-participants table td:nth-child(6),
         .edition-scores table th:nth-child(6),
