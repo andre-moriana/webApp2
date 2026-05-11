@@ -171,6 +171,8 @@ $dateFooter = date('d/m/Y H:i');
             width: 6%;
             white-space: nowrap;
         }
+        .edition-liste-participants table th:nth-child(4),
+        .edition-liste-participants table td:nth-child(4) { width: 6%; }
         .edition-liste-participants table th:nth-child(5),
         .edition-liste-participants table td:nth-child(5) { width: 22%; }
         .edition-liste-participants table th:nth-child(6),
