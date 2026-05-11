@@ -38,7 +38,7 @@ if ($triScores === 'depart') {
 }
 
 $hasSeries = !empty(array_filter($resultats, function ($r) { return isset($r['serie1_score']) || isset($r['serie2_score']); }));
-$hasDetail = !empty(array_filter($resultats, function ($r) { return isset($r['nb_20_15']); }));
+$hasDetail = !empty(array_filter($resultats, function ($r) { return isset($r['nb_20_15']) || isset($r['nb_11]']); }));
 ?>
 <div class="edition-scores">
     <h1 class="text-center mb-4">Scores</h1>
@@ -61,8 +61,8 @@ $hasDetail = !empty(array_filter($resultats, function ($r) { return isset($r['nb
                     <th>N°</th>
                     <th>Nom</th>
                     <th>Licence</th>
-                    <th>Club</th>
                     <th>Catégorie</th>
+                    <th>Club</th>
                     <th>Départ</th>
                     <th>Score</th>
                     <?php if ($hasSeries): ?>
@@ -87,8 +87,8 @@ $hasDetail = !empty(array_filter($resultats, function ($r) { return isset($r['nb
                     <td<?= $tdBg ?>><?= $n++ ?></td>
                     <td<?= $tdBg ?>><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                     <td<?= $tdBg ?>><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
+                    <td<?= $tdBg ?>><?= htmlspecialchars($insc['abv_categorie_classement'] ?? $insc['abv_classement'] ?? '-') ?></td>
                     <td<?= $tdBg ?>><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
-                    <td<?= $tdBg ?>><?= htmlspecialchars($insc['categorie_libelle'] ?? $insc['categorie_classement'] ?? '-') ?></td>
                     <td<?= $tdBg ?>><?= htmlspecialchars($insc['numero_depart'] ?? '-') ?></td>
                     <td<?= $tdBg ?>><?= $r ? ($r['score'] ?? '-') : '-' ?></td>
                     <?php if ($hasSeries): ?>
@@ -96,10 +96,10 @@ $hasDetail = !empty(array_filter($resultats, function ($r) { return isset($r['nb
                     <td<?= $tdBg ?>><?= $r ? ($r['serie2_score'] ?? '-') : '-' ?></td>
                     <?php endif; ?>
                     <?php if ($hasDetail): ?>
-                    <td<?= $tdBg ?>><?= $r ? ($r['nb_20_15'] ?? '-') : '-' ?></td>
-                    <td<?= $tdBg ?>><?= $r ? ($r['nb_20_10'] ?? '-') : '-' ?></td>
-                    <td<?= $tdBg ?>><?= $r ? ($r['nb_15_15'] ?? '-') : '-' ?></td>
-                    <td<?= $tdBg ?>><?= $r ? ($r['nb_15_10'] ?? '-') : '-' ?></td>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_20_15'] ?? $r['nb_11'] ?? '-') : '-' ?></td>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_20_10'] ?? $r['nb_10'] ?? '-') : '-' ?></td>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_15_15'] ?? $r['nb_8'] ?? '-') : '-' ?></td>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_15_10'] ?? $r['nb_5'] ?? '-') : '-' ?></td>
                     <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
