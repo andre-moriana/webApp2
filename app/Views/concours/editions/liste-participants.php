@@ -83,9 +83,10 @@ $getStatutRowClass = function ($insc) {
                     <th>Statut</th>
                     <th>Nom</th>
                     <th>N° Licence</th>
+                    <th>Catégorie de classement</th>
                     <th>Club</th>
                     <th>Départ</th>
-                    <th>Catégorie</th>
+
                 </tr>
             </thead>
             <tbody>
@@ -95,9 +96,9 @@ $getStatutRowClass = function ($insc) {
                     <td><?= htmlspecialchars($formatStatutInscription($insc)) ?></td>
                     <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($insc['categorie_libelle'] ?? $insc['categorie_classement'] ?? '—') ?></td>
                     <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['numero_depart'] ?? '-') ?></td>
-                    <td><?= htmlspecialchars($insc['categorie_libelle'] ?? $insc['categorie_classement'] ?? '—') ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
