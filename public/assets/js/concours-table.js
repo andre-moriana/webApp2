@@ -79,7 +79,7 @@ function sortTable(column) {
 
 // Obtenir l'index de la colonne
 function getColumnIndex(column) {
-    const columns = ['statut', 'nom et prénom', 'numéro de licence', 'club', 'départ', 'n°tir', 'piquet', 'distance', 'blason', 'date d\'inscription'];
+    const columns = ['statut', 'nom et prénom', 'numéro de licence', 'catégorie de classement', 'club', 'départ', 'n°tir', 'piquet', 'distance', 'blason', 'date d\'inscription'];
     return columns.indexOf(column) + 1;
 }
 
