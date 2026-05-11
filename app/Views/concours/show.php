@@ -492,6 +492,7 @@ $debugLicence = isset($_GET['debug_licence']);
                             <th>Statut</th>
                             <th>Nom - Prénom</th>
                             <th>Numéro de licence</th>
+                            <th>Catégorie de classement</th>
                             <th>Club</th>
                             <th>Départ</th>
                             <th>N°Tir</th>
@@ -571,6 +572,7 @@ $debugLicence = isset($_GET['debug_licence']);
                                 </td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ?? '') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscriptionLicence ?: 'N/A') ?></td>
+                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['abv_categorie_classement'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
