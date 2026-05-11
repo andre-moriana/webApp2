@@ -164,7 +164,7 @@ $dateFooter = date('d/m/Y H:i');
         .edition-liste-participants table th:nth-child(1),
         .edition-liste-participants table th:nth-child(2),
         .edition-liste-participants table td:nth-child(1){
-        width: 6%;
+        width: 3%;
             white-space: nowrap;
         }
         .edition-liste-participants table td:nth-child(2) {
@@ -174,9 +174,12 @@ $dateFooter = date('d/m/Y H:i');
         .edition-liste-participants table th:nth-child(4),
         .edition-liste-participants table td:nth-child(4) { width: 6%; }
         .edition-liste-participants table th:nth-child(5),
-        .edition-liste-participants table td:nth-child(5) { width: 22%; }
+        .edition-liste-participants table td:nth-child(5) { width: 6%; }
         .edition-liste-participants table th:nth-child(6),
-        .edition-liste-participants table td:nth-child(6) { width: 6%; }
+        .edition-liste-participants table td:nth-child(6) { 
+            width: 22%;
+            white-space: nowrap;
+        }
         .edition-liste-participants table th:nth-child(7),
         .edition-liste-participants table td:nth-child(7),
         .edition-scores table th:nth-child(7),

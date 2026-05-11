@@ -96,7 +96,7 @@ $getStatutRowClass = function ($insc) {
                     <td><?= htmlspecialchars($formatStatutInscription($insc)) ?></td>
                     <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
-                    <td><?= htmlspecialchars($insc['categorie_libelle'] ?? $insc['categorie_classement'] ?? '—') ?></td>
+                    <td><?= htmlspecialchars($insc['abv_categorie_classement'] ?? $insc['abv_classement'] ?? '—') ?></td>
                     <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['numero_depart'] ?? '-') ?></td>
                 </tr>
