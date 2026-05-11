@@ -38,7 +38,26 @@ if ($triScores === 'depart') {
 }
 
 $hasSeries = !empty(array_filter($resultats, function ($r) { return isset($r['serie1_score']) || isset($r['serie2_score']); }));
-$hasDetail = !empty(array_filter($resultats, function ($r) { return isset($r['nb_20_15']) || isset($r['nb_11]']); }));
+
+$resultats = $resultats ?? [];
+$disciplineAbv = $disciplineAbv ?? null;
+$categoriesMap = $categoriesMap ?? [];
+$hasNatureDetail = !empty(array_filter($resultats, function ($r) {
+    return isset($r['nb_20_15']) || isset($r['nb_20_10']) || isset($r['nb_15_15']) || isset($r['nb_15_10']);
+}));
+$has3DDetail = !empty(array_filter($resultats, function ($r) {
+    return isset($r['nb_11']) || isset($r['nb_10']) || isset($r['nb_8']) || isset($r['nb_5']);
+}));
+$has3DLabel = false;
+foreach ($categoriesMap as $abv => $lb) {
+    $abvUpper = strtoupper((string)$abv);
+    $lbUpper = strtoupper((string)$lb);
+    if (strpos($lbUpper, '3D') !== false || strpos($abvUpper, '3D') !== false) {
+        $has3DLabel = true;
+    }
+}
+$is3D = ($disciplineAbv && in_array((string)$disciplineAbv, ['3', '3D'], true)) || $has3DDetail || $has3DLabel;
+$hasDetail = $hasNatureDetail || $has3DDetail;
 ?>
 <div class="edition-scores">
     <h1 class="text-center mb-4">Scores</h1>
@@ -70,10 +89,17 @@ $hasDetail = !empty(array_filter($resultats, function ($r) { return isset($r['nb
                     <th>Série 2</th>
                     <?php endif; ?>
                     <?php if ($hasDetail): ?>
+                    <?php if ($is3D): ?>
+                    <th>11</th>
+                    <th>10</th>
+                    <th>8</th>
+                    <th>5</th>
+                    <?php else: ?>
                     <th>20-15</th>
                     <th>20-10</th>
                     <th>15-15</th>
                     <th>15-10</th>
+                    <?php endif; ?>
                     <?php endif; ?>
                 </tr>
             </thead>
@@ -96,10 +122,17 @@ $hasDetail = !empty(array_filter($resultats, function ($r) { return isset($r['nb
                     <td<?= $tdBg ?>><?= $r ? ($r['serie2_score'] ?? '-') : '-' ?></td>
                     <?php endif; ?>
                     <?php if ($hasDetail): ?>
-                    <td<?= $tdBg ?>><?= $r ? ($r['nb_20_15'] ?? $r['nb_11'] ?? '-') : '-' ?></td>
-                    <td<?= $tdBg ?>><?= $r ? ($r['nb_20_10'] ?? $r['nb_10'] ?? '-') : '-' ?></td>
-                    <td<?= $tdBg ?>><?= $r ? ($r['nb_15_15'] ?? $r['nb_8'] ?? '-') : '-' ?></td>
-                    <td<?= $tdBg ?>><?= $r ? ($r['nb_15_10'] ?? $r['nb_5'] ?? '-') : '-' ?></td>
+                    <?php if ($is3D): ?>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_11'] ?? '-') : '-' ?></td>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_10'] ?? '-') : '-' ?></td>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_8'] ?? '-') : '-' ?></td>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_5'] ?? '-') : '-' ?></td>
+                    <?php else: ?>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_20_15'] ?? '-') : '-' ?></td>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_20_10'] ?? '-') : '-' ?></td>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_15_15'] ?? '-') : '-' ?></td>
+                    <td<?= $tdBg ?>><?= $r ? ($r['nb_15_10'] ?? '-') : '-' ?></td>
+                    <?php endif; ?>
                     <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
