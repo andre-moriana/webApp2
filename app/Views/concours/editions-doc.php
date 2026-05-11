@@ -215,14 +215,14 @@ $dateFooter = date('d/m/Y H:i');
         }
         /* Liste participants : couleur de ligne selon le statut */
         .edition-liste-participants table tbody tr.inscription-statut-confirmee td {
-            background-color: #d1e7dd !important;
+            background-color:rgb(115, 186, 154) !important;
         }
         .edition-liste-participants table tbody tr.inscription-statut-attente td {
-            background-color: #fff3cd !important;
+            background-color:rgb(241, 215, 130) !important;
         }
         .edition-liste-participants table tbody tr.inscription-statut-annulee td,
         .edition-liste-participants table tbody tr.inscription-statut-refusee td {
-            background-color: #f8d7da !important;
+            background-color:rgb(248, 197, 201) !important;
         }
         .edition-liste-participants table tbody tr.inscription-statut-inconnu td {
             background-color: #e2e3e5 !important;
