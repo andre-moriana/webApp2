@@ -215,10 +215,10 @@ $dateFooter = date('d/m/Y H:i');
         }
         /* Liste participants : couleur de ligne selon le statut */
         .edition-liste-participants table tbody tr.inscription-statut-confirmee td {
-            background-color:rgb(115, 186, 154) !important;
+            background-color:rgb(155, 205, 183) !important;
         }
         .edition-liste-participants table tbody tr.inscription-statut-attente td {
-            background-color:rgb(241, 215, 130) !important;
+            background-color:rgb(240, 223, 167) !important;
         }
         .edition-liste-participants table tbody tr.inscription-statut-annulee td,
         .edition-liste-participants table tbody tr.inscription-statut-refusee td {
