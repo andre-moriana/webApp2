@@ -2113,6 +2113,7 @@ function renderInscriptions(inscriptions) {
             statutCell,
             '<td' + rowStyle + '>' + escapeHtml(inscription.user_nom || 'N/A') + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(inscription.numero_licence || 'N/A') + '</td>',
+            '<td' + rowStyle + '>' + escapeHtml(inscription.abv_categorie_classement || 'N/A') + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(clubDisplay) + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(String(inscription.numero_depart ?? 'N/A')) + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(String(inscription.numero_tir ?? 'N/A')) + '</td>'
