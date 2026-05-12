@@ -396,23 +396,31 @@ document.addEventListener('DOMContentLoaded', function() {
     window.loadTopicMessages = function loadTopicMessages(topicId) {
         const messagesContainer = document.getElementById('topic-messages-container');
         if (!messagesContainer) return;
+        const requestedTopicId = String(topicId);
         
-        // Ne pas afficher le loader si on attend juste les messages (les formulaires sont déjà chargés)
-        const hasForms = messagesContainer.querySelectorAll('.form-message').length > 0;
-        const hasLoader = messagesContainer.querySelector('.fa-spinner');
-        const hasMessages = messagesContainer.querySelectorAll('[data-message-id]').length > 0;
-        
-        if (!hasForms && !hasMessages && !hasLoader) {
-            // Supprimer tout sauf les formulaires
-            const forms = messagesContainer.querySelectorAll('.form-message');
-            messagesContainer.innerHTML = '';
-            forms.forEach(form => messagesContainer.appendChild(form));
-            // Ajouter le loader
-            const loaderDiv = document.createElement('div');
-            loaderDiv.className = 'text-center text-muted py-3';
-            loaderDiv.innerHTML = '<i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Chargement des messages...</p>';
-            messagesContainer.appendChild(loaderDiv);
+        // Toujours retirer les messages du sujet précédent tout de suite (sinon liste obsolète tant que le fetch n'a pas fini, et branche « 0 message » ne les supprimait pas)
+        messagesContainer.querySelectorAll('[data-message-id]').forEach(function(el) {
+            el.remove();
+        });
+        const oldLoader = messagesContainer.querySelector('.fa-spinner');
+        if (oldLoader && oldLoader.closest('.text-center')) {
+            oldLoader.closest('.text-center').remove();
         }
+        messagesContainer.querySelectorAll('.text-center:not(.form-message)').forEach(function(el) {
+            const text = el.textContent || '';
+            if (text.includes('Chargement') || text.includes('Aucun message')) {
+                el.remove();
+            }
+        });
+        messagesContainer.querySelectorAll('.alert-danger').forEach(function(el) {
+            if ((el.textContent || '').indexOf('chargement des messages') !== -1) {
+                el.remove();
+            }
+        });
+        const loaderDiv = document.createElement('div');
+        loaderDiv.className = 'text-center text-muted py-3';
+        loaderDiv.innerHTML = '<i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Chargement des messages...</p>';
+        messagesContainer.appendChild(loaderDiv);
         
         // Appeler le backend de l'application web au lieu de l'API externe directement
         fetch(`/api/topics/${topicId}/messages`, {
@@ -442,6 +450,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         })
         .then(data => {
+            const activeTopicId = document.getElementById('current-topic-id-input')?.value;
+            if (String(activeTopicId) !== requestedTopicId) {
+                return;
+            }
             //console.log('Données reçues pour le sujet:', topicId, data);
             // L'API peut retourner directement un tableau ou un objet avec data
             let messages = [];
@@ -473,24 +485,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 displayTopicMessages(messages);
             } else {
-                // Si pas de messages, vérifier s'il y a des formulaires
-                const hasFormsDisplayed = messagesContainer.querySelectorAll('.form-message').length > 0;
-                // Supprimer le loader si présent
-                const loader = messagesContainer.querySelector('.fa-spinner');
-                if (loader && loader.closest('.text-center')) {
-                    loader.closest('.text-center').remove();
-                }
-                
-                // Afficher un message seulement s'il n'y a ni messages ni formulaires
-                if (!hasFormsDisplayed) {
-                    const emptyMessage = document.createElement('div');
-                    emptyMessage.className = 'text-center text-muted py-3';
-                    emptyMessage.innerHTML = '<i class="fas fa-comments fa-2x mb-2"></i><p>Aucun message dans ce sujet</p>';
-                    messagesContainer.appendChild(emptyMessage);
-                }
+                displayTopicMessages([]);
             }
         })
         .catch(error => {
+            const activeTopicId = document.getElementById('current-topic-id-input')?.value;
+            if (String(activeTopicId) !== requestedTopicId) {
+                return;
+            }
             console.error('Erreur lors du chargement des messages:', error);
             const hasFormsDisplayed = messagesContainer.querySelectorAll('.form-message').length > 0;
             // Supprimer le loader si présent
