@@ -42,16 +42,16 @@ $getArcherDisplayInfo = function($plan, $inscriptionsMap = []) {
     }
     if ($inscRow !== null) {
         $i = $inscRow;
-        $nom = $i['user_nom'] ?? $i['nom'] ?? $i['name'] ?? '';
-        $club = trim((string)($i['club_name'] ?? $i['clubName'] ?? $i['id_club'] ?? ''));
-        $cat = trim((string)($i['categorie_classement'] ?? ''));
-        if ($cat === '') {
-            $cat = trim((string)($i['abv_categorie_classement'] ?? ''));
-        }
-        return ['nom' => $nom, 'club' => $club, 'nomComplet' => $nom, 'categorie' => $cat];
+        $nom = trim((string)($i['user_nom'] ?? ''));
+        $planUserNom = trim((string)($plan['user_nom'] ?? ''));
+        $club = trim((string)($i['club_name'] ?? ''));
+        $abv = trim((string)($i['abv_categorie_classement'] ?? ''));
+        $nomComplet = $nom !== '' ? $nom : $planUserNom;
+        return ['nom' => $nomComplet, 'club' => $club, 'nomComplet' => $nomComplet, 'abv_classement' => $abv];
     }
     if ($userNom) {
-        return ['nom' => $userNom, 'club' => '', 'nomComplet' => $userNom, 'categorie' => ''];
+        $u = trim((string)$userNom);
+        return ['nom' => $u, 'club' => '', 'nomComplet' => $u, 'abv_classement' => ''];
     }
     return null;
 };
@@ -279,13 +279,17 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                                     $info = $isAssigne && $plan ? $getArcherDisplayInfo($plan, $inscriptionsMap ?? []) : null;
                                     $nomComplet = $info ? $info['nomComplet'] : ($isAssigne ? ($plan['user_nom'] ?? '') : 'Libre');
                                     $clubComplet = $info ? ($info['club'] ?? '') : '';
-                                    $categorieComplet = $info ? trim((string)($info['categorie'] ?? '')) : '';
-                                    $nameTooltipParts = [];
+                                    $abvClassement = $info ? trim((string)($info['abv_classement'] ?? '')) : '';
+                                    $tooltipParts = [];
                                     if ($isAssigne) {
-                                        $nameTooltipParts[] = 'Catégorie : ' . ($categorieComplet !== '' ? $categorieComplet : '—');
-                                        $nameTooltipParts[] = 'Club : ' . ($clubComplet !== '' ? $clubComplet : '—');
+                                        if ($abvClassement !== '') {
+                                            $tooltipParts[] = $abvClassement;
+                                        }
+                                        if ($clubComplet !== '') {
+                                            $tooltipParts[] = $clubComplet;
+                                        }
                                     }
-                                    $nameTooltip = $isAssigne ? implode(' • ', $nameTooltipParts) : '';
+                                    $nameTooltip = $tooltipParts ? implode(' • ', $tooltipParts) : '';
                                     $piquetVal = ($plan && isset($plan['piquet'])) ? $plan['piquet'] : null;
                                     $piquetColor = $piquetVal && isset($piquetColors[strtolower($piquetVal)]) ? $piquetColors[strtolower($piquetVal)] : null;
                                     $letterRectStyle = ($isAssigne && $piquetColor) ? 'background-color:' . $piquetColor . ';' : '';
