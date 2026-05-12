@@ -142,7 +142,9 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
             <div class="legend-item"><div class="legend-color libre"></div><span>Position libre</span></div>
         </div>
     </div>
-
+    <p style="margin-top: 20px;">
+        <a href="/concours/show/<?= htmlspecialchars($concoursId) ?>" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Retour au concours</a>
+    </p>
     <?php
     $departsList = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
     $departsLabelMap = [];
