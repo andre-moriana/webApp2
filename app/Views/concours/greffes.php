@@ -72,6 +72,10 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
         $nombreDepart = (int)$nombreDepart;
     }
     ?>
+    <div class="actions-section">
+        <a href="/concours/show/<?= htmlspecialchars($concoursId ?? '') ?>" class="btn btn-secondary">Retour au concours</a>
+        <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
+    </div>
     <div class="depart-selection-section mb-4">
         <h3>Sélectionner un ou plusieurs départs</h3>
         <div class="form-group">
