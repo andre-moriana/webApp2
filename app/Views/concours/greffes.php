@@ -28,7 +28,7 @@ $inscriptionConfig = [
 ];
 $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
 ?>
-<div class="container-fluid concours-inscription-container" id="inscription-page" data-config="<?= $inscriptionConfigJson ?>">
+<div class="container-fluid concours-inscription-container concours-greffe-page" id="inscription-page" data-config="<?= $inscriptionConfigJson ?>">
     <h1>Greffes</h1>
 
     <?php if (isset($_SESSION['error'])): ?>
@@ -179,8 +179,8 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <th>Statut</th>
                             <th>Nom et Prénom</th>
                             <th>Numéro de licence</th>
-                            <th>Club</th>
                             <th>Catégorie</th>
+                            <th>Club</th>
                             <th>Départ</th>
                             <th>N°Tir</th>
                             <?php if ($isNature3DOrCampagne): ?>
@@ -273,24 +273,20 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
                                 <?php endif; ?>
                             </td>
-                            <td<?= $rowStyle ?>>
-                                <div class="d-flex align-items-center">
-                                        <div class="text-truncate" style="max-width: 150px;">
-                                        <?php 
-                                        // Construire le nom complet en utilisant les champs disponibles
-                                        $fullName = '';
-                                        if (!empty($user['firstName'])) {
-                                            $fullName = $user['firstName'];
-                                            if (!empty($user['name'])) {
-                                                $fullName .= ' ' . $user['name'];
-                                            }
-                                        } else {
-                                            $fullName = $user['name'] ?? 'Utilisateur';
-                                        }
-                                        echo htmlspecialchars($fullName); 
-                                        ?>
-                                    </div>
-                                </div>
+                            <td class="greffe-col-nom"<?= $rowStyle ?>>
+                                <?php 
+                                // Construire le nom complet en utilisant les champs disponibles
+                                $fullName = '';
+                                if (!empty($user['firstName'])) {
+                                    $fullName = $user['firstName'];
+                                    if (!empty($user['name'])) {
+                                        $fullName .= ' ' . $user['name'];
+                                    }
+                                } else {
+                                    $fullName = $user['name'] ?? 'Utilisateur';
+                                }
+                                echo htmlspecialchars($fullName); 
+                                ?>
                             </td>
                             <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
                             <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['categorie_classement'] ?? 'N/A') ?></td>

@@ -380,3 +380,55 @@ select.categorie-auto-selected {
     border-color: #dc3545;
     box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
+
+/* --- Page greffe : tableau des inscrits lisible, toutes colonnes accessibles (scroll horizontal si besoin) --- */
+.concours-greffe-page.concours-inscription-container {
+    max-width: none;
+    width: 100%;
+    padding-left: clamp(8px, 1.2vw, 20px);
+    padding-right: clamp(8px, 1.2vw, 20px);
+}
+
+.concours-greffe-page .inscriptions-section .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.concours-greffe-page #greffes-table {
+    width: max-content;
+    min-width: 100%;
+    font-size: 0.8125rem;
+    margin-bottom: 0;
+}
+
+.concours-greffe-page #greffes-table thead th {
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 0.4rem 0.45rem;
+    vertical-align: middle;
+}
+
+.concours-greffe-page #greffes-table tbody td {
+    white-space: nowrap;
+    padding: 0.35rem 0.45rem;
+    vertical-align: middle;
+}
+
+.concours-greffe-page #greffes-table tbody td.greffe-col-nom,
+.concours-greffe-page #greffes-table thead th:nth-child(2),
+.concours-greffe-page #greffes-table tbody td:nth-child(5),
+.concours-greffe-page #greffes-table thead th:nth-child(5) {
+    white-space: normal;
+    max-width: 12rem;
+    word-break: break-word;
+}
+
+.concours-greffe-page #greffes-table td:last-child {
+    white-space: nowrap;
+}
+
+.concours-greffe-page #greffes-table .btn-sm {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+}

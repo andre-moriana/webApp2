@@ -1991,7 +1991,7 @@ function renderInscriptions(inscriptions) {
 
         let cells = [
             statutCell,
-            '<td' + rowStyle + '>' + escapeHtml(inscription.user_nom || 'N/A') + '</td>',
+            '<td class="greffe-col-nom"' + rowStyle + '>' + escapeHtml(inscription.user_nom || 'N/A') + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(inscription.numero_licence || 'N/A') + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(inscription.abv_categorie_classement || 'N/A') + '</td>',
             '<td' + rowStyle + '>' + escapeHtml(clubDisplay) + '</td>',
@@ -2015,7 +2015,7 @@ function renderInscriptions(inscriptions) {
         if (inscription.user_nom) searchableText += inscription.user_nom.toLowerCase() + ' ';
         if (inscription.numero_licence) searchableText += inscription.numero_licence.toLowerCase() + ' ';
         searchableText = escapeHtml(searchableText);
-        return '<tr data-inscription-id="' + id + '" class=user-row "' + '"' + dataPiquet + rowStyle + 'data-searchable="' + searchableText + '">' + cells.join('') + '</tr>';
+        return '<tr data-inscription-id="' + id + '" class="user-row' + (rowClass ? ' ' + rowClass.trim() : '') + '"' + dataPiquet + rowStyle + ' data-searchable="' + searchableText + '">' + cells.join('') + '</tr>';
     });
 
     tbody.innerHTML = rows.join('');
