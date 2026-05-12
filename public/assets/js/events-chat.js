@@ -1596,7 +1596,10 @@ window.addEventFormQuestion = function() {
     
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = questionHtml;
-    questionsList.appendChild(tempDiv.firstChild);
+    const questionEl = tempDiv.firstElementChild;
+    if (questionEl) {
+        questionsList.appendChild(questionEl);
+    }
 };
 
 // Fonction pour mettre à jour le type de question
@@ -1664,7 +1667,10 @@ function updateEventOptionsDisplay(questionId) {
         `;
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = optionHtml;
-        optionsList.appendChild(tempDiv.firstChild);
+        const rowEl = tempDiv.firstElementChild;
+        if (rowEl) {
+            optionsList.appendChild(rowEl);
+        }
     });
 }
 
