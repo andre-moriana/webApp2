@@ -293,6 +293,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 </div>
                             </td>
                             <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
+                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['categorie_classement'] ?? 'N/A') ?></td>
                             <td<?= $rowStyle ?>>
                             <?php 
                             // Afficher le nom du club (lié à id_club), sinon id_club en fallback
