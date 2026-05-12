@@ -180,6 +180,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             <th>Nom et Prénom</th>
                             <th>Numéro de licence</th>
                             <th>Club</th>
+                            <th>Catégorie</th>
                             <th>Départ</th>
                             <th>N°Tir</th>
                             <?php if ($isNature3DOrCampagne): ?>
