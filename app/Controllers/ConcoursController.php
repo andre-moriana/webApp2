@@ -3001,6 +3001,26 @@ public function inscription($concoursId)
         require_once __DIR__ . '/../Views/layouts/footer.php';
     }
 
+    /**
+     * GET concours/{id}/inscriptions renvoie souvent { "data": [ ... ], "current_user_licence": "..." }.
+     * unwrapData renvoie ce corps JSON : sans extraction de "data", une boucle foreach traite des clés invalides.
+     */
+    private function normalizeInscriptionsApiRows($inscriptions): array
+    {
+        if (!is_array($inscriptions)) {
+            return [];
+        }
+        if (isset($inscriptions['data']) && is_array($inscriptions['data'])) {
+            $inscriptions = $inscriptions['data'];
+        }
+        if (!is_array($inscriptions) || isset($inscriptions['error']) || (isset($inscriptions['success']) && $inscriptions['success'] === false)) {
+            return [];
+        }
+        return array_values(array_filter($inscriptions, function ($i) {
+            return is_array($i);
+        }));
+    }
+
     private function buildEditionMailTargets(array $inscriptions, array $clubsMap, array $clubsList = [])
     {
         $archers = [];
@@ -4705,23 +4725,22 @@ public function inscription($concoursId)
                     $inscResponse = $isLoggedIn
                         ? $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET')
                         : $this->apiService->makeRequestPublic("concours/{$concoursId}/inscriptions/public", 'GET');
-                    if ($inscResponse['success']) {
-                        $inscriptions = $this->apiService->unwrapData($inscResponse);
-                        if (is_array($inscriptions)) {
-                            foreach ($inscriptions as $insc) {
-                                $lic = $insc['numero_licence'] ?? null;
-                                if ($lic) {
-                                    $inscriptionsMap[$lic] = [
-                                        'user_nom' => $insc['user_nom'] ?? '',
-                                        'numero_licence' => $lic,
-                                        'id_club' => $insc['id_club'] ?? null,
-                                        'club_name' => $insc['club_name'] ?? $insc['id_club'] ?? null,
-                                        'nom' => $insc['user_nom'] ?? '',
-                                        'name' => $insc['user_nom'] ?? '',
-                                        'clubName' => $insc['club_name'] ?? null
-                                    ];
-                                }
+                    if ($inscResponse['success'] ?? false) {
+                        $inscriptions = $this->normalizeInscriptionsApiRows($this->apiService->unwrapData($inscResponse));
+                        foreach ($inscriptions as $insc) {
+                            $lic = trim((string)($insc['numero_licence'] ?? ''));
+                            if ($lic === '') {
+                                continue;
                             }
+                            $inscriptionsMap[$lic] = [
+                                'user_nom' => $insc['user_nom'] ?? '',
+                                'numero_licence' => $lic,
+                                'id_club' => $insc['id_club'] ?? null,
+                                'club_name' => $insc['club_name'] ?? $insc['clubName'] ?? $insc['club_name_short'] ?? null,
+                                'nom' => $insc['user_nom'] ?? '',
+                                'name' => $insc['user_nom'] ?? '',
+                                'clubName' => $insc['club_name'] ?? $insc['clubName'] ?? null
+                            ];
                         }
                     }
                 } catch (Exception $e) {
@@ -5002,24 +5021,31 @@ public function inscription($concoursId)
                     ? $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET')
                     : $this->apiService->makeRequestPublic("concours/{$concoursId}/inscriptions/public", 'GET');
                 if ($inscResponse['success'] ?? false) {
-                    $inscriptions = $this->apiService->unwrapData($inscResponse);
-                    if (is_array($inscriptions)) {
-                        foreach ($inscriptions as $insc) {
-                            $lic = $insc['numero_licence'] ?? null;
-                            if ($lic) {
-                                $inscriptionsMap[$lic] = [
-                                    'user_nom' => $insc['user_nom'] ?? '',
-                                    'numero_licence' => $lic,
-                                    'id_club' => $insc['id_club'] ?? null,
-                                    'club_name' => $insc['club_name'] ?? $insc['id_club'] ?? null,
-                                    'nom' => $insc['user_nom'] ?? '',
-                                    'name' => $insc['user_nom'] ?? '',
-                                    'clubName' => $insc['club_name'] ?? null,
-                                    'lb_arc' => $insc['lb_arc'] ?? null,
-                                    'abv_arc' => $insc['abv_arc'] ?? null,
-                                    'categorie_classement' => $insc['categorie_classement'] ?? null,
-                                    'abv_categorie_classement' => $insc['abv_categorie_classement'] ?? null
-                                ];
+                    $inscriptions = $this->normalizeInscriptionsApiRows($this->apiService->unwrapData($inscResponse));
+                    foreach ($inscriptions as $insc) {
+                        $lic = trim((string)($insc['numero_licence'] ?? ''));
+                        if ($lic === '') {
+                            continue;
+                        }
+                        $inscriptionsMap[$lic] = [
+                            'user_nom' => $insc['user_nom'] ?? '',
+                            'numero_licence' => $lic,
+                            'id_club' => $insc['id_club'] ?? null,
+                            'club_name' => $insc['club_name'] ?? $insc['clubName'] ?? $insc['club_name_short'] ?? null,
+                            'nom' => $insc['user_nom'] ?? '',
+                            'name' => $insc['user_nom'] ?? '',
+                            'clubName' => $insc['club_name'] ?? $insc['clubName'] ?? null,
+                            'lb_arc' => $insc['lb_arc'] ?? null,
+                            'abv_arc' => $insc['abv_arc'] ?? null,
+                            'categorie_classement' => $insc['categorie_classement'] ?? null,
+                            'abv_categorie_classement' => $insc['abv_categorie_classement'] ?? null,
+                            'abv_classement' => $insc['abv_classement'] ?? null
+                        ];
+                        if (ctype_digit($lic)) {
+                            if (strlen($lic) === 7) {
+                                $inscriptionsMap['0' . $lic] = $inscriptionsMap[$lic];
+                            } elseif (strlen($lic) === 8 && $lic[0] === '0') {
+                                $inscriptionsMap[ltrim($lic, '0')] = $inscriptionsMap[$lic];
                             }
                         }
                     }
