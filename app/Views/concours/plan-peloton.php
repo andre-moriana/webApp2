@@ -29,9 +29,16 @@ $getArcherDisplayInfo = function($plan, $inscriptionsMap = []) {
     if ($numeroLicence && isset($inscriptionsMap[$numeroLicence])) {
         $i = $inscriptionsMap[$numeroLicence];
         $nom = $i['user_nom'] ?? $i['nom'] ?? $i['name'] ?? '';
-        return ['nom' => $nom, 'club' => $i['club_name'] ?? $i['clubName'] ?? '', 'nomComplet' => $nom];
+        $club = trim((string)($i['club_name'] ?? $i['clubName'] ?? $i['id_club'] ?? ''));
+        $cat = trim((string)($i['categorie_classement'] ?? ''));
+        if ($cat === '') {
+            $cat = trim((string)($i['abv_categorie_classement'] ?? ''));
+        }
+        return ['nom' => $nom, 'club' => $club, 'nomComplet' => $nom, 'categorie' => $cat];
     }
-    if ($userNom) return ['nom' => $userNom, 'club' => '', 'nomComplet' => $userNom];
+    if ($userNom) {
+        return ['nom' => $userNom, 'club' => '', 'nomComplet' => $userNom, 'categorie' => ''];
+    }
     return null;
 };
 
@@ -244,13 +251,26 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                                     $info = $isAssigne && $plan ? $getArcherDisplayInfo($plan, $inscriptionsMap ?? []) : null;
                                     $nomComplet = $info ? $info['nomComplet'] : ($isAssigne ? ($plan['user_nom'] ?? '') : 'Libre');
                                     $clubComplet = $info ? ($info['club'] ?? '') : '';
-                                    $piquetVal = $plan['piquet'] ?? null;
+                                    $categorieComplet = $info ? trim((string)($info['categorie'] ?? '')) : '';
+                                    $nameTooltipParts = [];
+                                    if ($isAssigne) {
+                                        if ($categorieComplet !== '') {
+                                            $nameTooltipParts[] = 'Catégorie : ' . $categorieComplet;
+                                        }
+                                        if ($clubComplet !== '') {
+                                            $nameTooltipParts[] = 'Club : ' . $clubComplet;
+                                        }
+                                    }
+                                    $nameTooltip = $nameTooltipParts ? implode(' • ', $nameTooltipParts) : '';
+                                    $piquetVal = ($plan && isset($plan['piquet'])) ? $plan['piquet'] : null;
                                     $piquetColor = $piquetVal && isset($piquetColors[strtolower($piquetVal)]) ? $piquetColors[strtolower($piquetVal)] : null;
                                     $letterRectStyle = ($isAssigne && $piquetColor) ? 'background-color:' . $piquetColor . ';' : '';
                                     $frameBorderStyle = ($isAssigne && $piquetColor) ? 'border-color:' . $piquetColor . ' !important;' : '';
-                                    $tooltipText = $isAssigne ? $nomComplet . (!empty($clubComplet) ? ' - ' . $clubComplet : '') : 'Cliquer pour assigner un archer';
                                     $canReleaseThis = $isAssigne && ($canReleaseAsAdminOrDirigeant || (trim($plan['numero_licence'] ?? '') === ($currentUserLicence ?? '')));
                                     $noClickClass = ($isAssigne && !$canReleaseThis) ? ' blason-item-no-click' : '';
+                                    $liTitle = !$isAssigne
+                                        ? 'Cliquer pour assigner un archer'
+                                        : ($isAssigne && !$canReleaseThis ? 'Position affectée (vous ne pouvez pas la libérer)' : '');
                                     ?>
                                     <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?><?= $noClickClass ?>" <?= $frameBorderStyle ? 'style="' . $frameBorderStyle . '"' : '' ?>
                                         data-concours-id="<?= htmlspecialchars($concoursId) ?>"
@@ -261,10 +281,10 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                                         data-user-nom="<?= htmlspecialchars($plan['user_nom'] ?? '') ?>"
                                         data-assignable="<?= $isAssigne ? '0' : '1' ?>"
                                         data-piquet-souhaites="<?= htmlspecialchars($piquetSouhaitesStr) ?>"
-                                        title="<?= htmlspecialchars($isAssigne && !$canReleaseThis ? 'Position affectée (vous ne pouvez pas la libérer)' : $tooltipText) ?>">
+                                        <?= $liTitle !== '' ? 'title="' . htmlspecialchars($liTitle) . '"' : '' ?>>
                                         <span class="peloton-position-letter"<?= $letterRectStyle ? ' style="' . $letterRectStyle . '"' : '' ?>><?= htmlspecialchars($position) ?></span>
                                         <div class="peloton-position-content">
-                                            <span class="peloton-position-name"><?= htmlspecialchars($nomComplet) ?></span>
+                                            <span class="peloton-position-name"<?= $nameTooltip !== '' ? ' title="' . htmlspecialchars($nameTooltip) . '"' : '' ?>><?= htmlspecialchars($nomComplet) ?></span>
                                             <?php if (!empty($clubComplet)): ?>
                                                 <span class="peloton-position-club"><?= htmlspecialchars($clubComplet) ?></span>
                                             <?php endif; ?>

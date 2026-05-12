@@ -5017,7 +5017,8 @@ public function inscription($concoursId)
                                     'clubName' => $insc['club_name'] ?? null,
                                     'lb_arc' => $insc['lb_arc'] ?? null,
                                     'abv_arc' => $insc['abv_arc'] ?? null,
-                                    'categorie_classement' => $insc['categorie_classement'] ?? null
+                                    'categorie_classement' => $insc['categorie_classement'] ?? null,
+                                    'abv_categorie_classement' => $insc['abv_categorie_classement'] ?? null
                                 ];
                             }
                         }

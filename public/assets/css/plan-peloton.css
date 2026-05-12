@@ -102,6 +102,10 @@
     overflow-wrap: break-word;
 }
 
+.peloton-position-name[title] {
+    cursor: help;
+}
+
 .peloton-position-club {
     font-size: 0.8em;
     color: #6c757d;
