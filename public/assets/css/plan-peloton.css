@@ -102,7 +102,7 @@
     overflow-wrap: break-word;
 }
 
-.peloton-position-name[title] {
+.peloton-position-content[title] {
     cursor: help;
 }
 

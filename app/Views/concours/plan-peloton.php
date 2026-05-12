@@ -26,8 +26,22 @@
 $getArcherDisplayInfo = function($plan, $inscriptionsMap = []) {
     $numeroLicence = $plan['numero_licence'] ?? null;
     $userNom = $plan['user_nom'] ?? null;
-    if ($numeroLicence && isset($inscriptionsMap[$numeroLicence])) {
-        $i = $inscriptionsMap[$numeroLicence];
+    $licKey = $numeroLicence !== null && $numeroLicence !== '' ? trim((string)$numeroLicence) : '';
+    $inscRow = null;
+    if ($licKey !== '' && is_array($inscriptionsMap)) {
+        if (isset($inscriptionsMap[$licKey])) {
+            $inscRow = $inscriptionsMap[$licKey];
+        } else {
+            foreach ($inscriptionsMap as $k => $row) {
+                if (is_string($k) && strcasecmp(trim($k), $licKey) === 0) {
+                    $inscRow = $row;
+                    break;
+                }
+            }
+        }
+    }
+    if ($inscRow !== null) {
+        $i = $inscRow;
         $nom = $i['user_nom'] ?? $i['nom'] ?? $i['name'] ?? '';
         $club = trim((string)($i['club_name'] ?? $i['clubName'] ?? $i['id_club'] ?? ''));
         $cat = trim((string)($i['categorie_classement'] ?? ''));
@@ -44,8 +58,22 @@ $getArcherDisplayInfo = function($plan, $inscriptionsMap = []) {
 
 // Vérifier si un archer est compound (arc à poulies) via inscription
 $isCompound = function($numeroLicence, $inscriptionsMap = []) {
-    if (!$numeroLicence || !isset($inscriptionsMap[$numeroLicence])) return false;
-    $i = $inscriptionsMap[$numeroLicence];
+    if (!$numeroLicence || !is_array($inscriptionsMap)) {
+        return false;
+    }
+    $licKey = trim((string)$numeroLicence);
+    $i = $inscriptionsMap[$licKey] ?? null;
+    if ($i === null) {
+        foreach ($inscriptionsMap as $k => $row) {
+            if (is_string($k) && strcasecmp(trim($k), $licKey) === 0) {
+                $i = $row;
+                break;
+            }
+        }
+    }
+    if ($i === null) {
+        return false;
+    }
     $abvArc = strtoupper(trim($i['abv_arc'] ?? ''));
     if ($abvArc === 'CO') return true;
     $arme = strtolower(trim($i['lb_arc'] ?? $i['arme'] ?? ''));
@@ -254,14 +282,10 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                                     $categorieComplet = $info ? trim((string)($info['categorie'] ?? '')) : '';
                                     $nameTooltipParts = [];
                                     if ($isAssigne) {
-                                        if ($categorieComplet !== '') {
-                                            $nameTooltipParts[] = 'Catégorie : ' . $categorieComplet;
-                                        }
-                                        if ($clubComplet !== '') {
-                                            $nameTooltipParts[] = 'Club : ' . $clubComplet;
-                                        }
+                                        $nameTooltipParts[] = 'Catégorie : ' . ($categorieComplet !== '' ? $categorieComplet : '—');
+                                        $nameTooltipParts[] = 'Club : ' . ($clubComplet !== '' ? $clubComplet : '—');
                                     }
-                                    $nameTooltip = $nameTooltipParts ? implode(' • ', $nameTooltipParts) : '';
+                                    $nameTooltip = $isAssigne ? implode(' • ', $nameTooltipParts) : '';
                                     $piquetVal = ($plan && isset($plan['piquet'])) ? $plan['piquet'] : null;
                                     $piquetColor = $piquetVal && isset($piquetColors[strtolower($piquetVal)]) ? $piquetColors[strtolower($piquetVal)] : null;
                                     $letterRectStyle = ($isAssigne && $piquetColor) ? 'background-color:' . $piquetColor . ';' : '';
@@ -283,8 +307,8 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                                         data-piquet-souhaites="<?= htmlspecialchars($piquetSouhaitesStr) ?>"
                                         <?= $liTitle !== '' ? 'title="' . htmlspecialchars($liTitle) . '"' : '' ?>>
                                         <span class="peloton-position-letter"<?= $letterRectStyle ? ' style="' . $letterRectStyle . '"' : '' ?>><?= htmlspecialchars($position) ?></span>
-                                        <div class="peloton-position-content">
-                                            <span class="peloton-position-name"<?= $nameTooltip !== '' ? ' title="' . htmlspecialchars($nameTooltip) . '"' : '' ?>><?= htmlspecialchars($nomComplet) ?></span>
+                                        <div class="peloton-position-content"<?= $nameTooltip !== '' ? ' title="' . htmlspecialchars($nameTooltip) . '"' : '' ?>>
+                                            <span class="peloton-position-name"><?= htmlspecialchars($nomComplet) ?></span>
                                             <?php if (!empty($clubComplet)): ?>
                                                 <span class="peloton-position-club"><?= htmlspecialchars($clubComplet) ?></span>
                                             <?php endif; ?>
