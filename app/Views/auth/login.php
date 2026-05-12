@@ -31,13 +31,17 @@ $qrAndroid = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . 
                     </div>
                     <div class="login-phone login-phone--iphone mx-auto">
                         <div class="login-phone-notch"></div>
-                        <div class="login-phone-screen">
-                            <iframe
-                                src="<?= htmlspecialchars($arcTrainingAppStoreUrl, ENT_QUOTES, 'UTF-8') ?>"
-                                title="Arc Training sur l’App Store"
-                                loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"
-                            ></iframe>
+                        <div class="login-phone-screen login-phone-screen--appstore">
+                            <a href="<?= htmlspecialchars($arcTrainingAppStoreUrl, ENT_QUOTES, 'UTF-8') ?>"
+                               target="_blank" rel="noopener noreferrer"
+                               class="login-phone-store-card">
+                                <img src="/public/assets/images/arc-training-logo.png" alt="Arc Training" class="login-phone-store-logo" width="72" height="72">
+                                <span class="login-phone-store-name">Arc Training</span>
+                                <span class="login-phone-store-tagline">Application mobile</span>
+                                <span class="login-phone-store-cta login-phone-store-cta--ios">
+                                    <i class="fab fa-apple me-1"></i>Ouvrir sur l’App Store
+                                </span>
+                            </a>
                         </div>
                     </div>
                     <div class="login-app-qr text-center mt-3">
@@ -186,13 +190,17 @@ $qrAndroid = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . 
                     </div>
                     <div class="login-phone login-phone--android mx-auto">
                         <div class="login-phone-punch"></div>
-                        <div class="login-phone-screen">
-                            <iframe
-                                src="<?= htmlspecialchars($arcTrainingPlayStoreUrl, ENT_QUOTES, 'UTF-8') ?>"
-                                title="Arc Training sur Google Play"
-                                loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"
-                            ></iframe>
+                        <div class="login-phone-screen login-phone-screen--play">
+                            <a href="<?= htmlspecialchars($arcTrainingPlayStoreUrl, ENT_QUOTES, 'UTF-8') ?>"
+                               target="_blank" rel="noopener noreferrer"
+                               class="login-phone-store-card">
+                                <img src="/public/assets/images/arc-training-logo.png" alt="Arc Training" class="login-phone-store-logo" width="72" height="72">
+                                <span class="login-phone-store-name">Arc Training</span>
+                                <span class="login-phone-store-tagline">Application mobile</span>
+                                <span class="login-phone-store-cta login-phone-store-cta--play">
+                                    <i class="fab fa-google-play me-1"></i>Ouvrir sur Google Play
+                                </span>
+                            </a>
                         </div>
                     </div>
                     <div class="login-app-qr text-center mt-3">

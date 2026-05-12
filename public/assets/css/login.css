@@ -106,20 +106,102 @@
 .login-phone-screen {
     border-radius: 22px;
     overflow: hidden;
-    background: #f1f3f4;
     aspect-ratio: 9 / 19.5;
     max-height: 460px;
+    position: relative;
 }
 
 .login-phone--iphone .login-phone-screen {
     border-radius: 26px;
 }
 
-.login-phone-screen iframe {
-    width: 100%;
+/* Aperçu « fiche store » (les vrais sites refusent l’iframe) */
+.login-phone-screen--appstore {
+    background: linear-gradient(180deg, #e8f4fc 0%, #f5f5f7 45%, #ffffff 100%);
+}
+
+.login-phone-screen--play {
+    background: linear-gradient(180deg, #1a237e 0%, #283593 35%, #37474f 100%);
+}
+
+.login-phone-store-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     height: 100%;
-    border: 0;
-    display: block;
+    min-height: 200px;
+    padding: 1.25rem 0.85rem;
+    text-align: center;
+    text-decoration: none;
+    color: #1d1d1f;
+}
+
+.login-phone-screen--play .login-phone-store-card {
+    color: #eceff1;
+}
+
+.login-phone-store-logo {
+    width: 72px;
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    margin-bottom: 0.75rem;
+}
+
+.login-phone-screen--play .login-phone-store-logo {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.login-phone-store-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.2rem;
+}
+
+.login-phone-store-tagline {
+    font-size: 0.72rem;
+    opacity: 0.75;
+    margin-bottom: 1rem;
+}
+
+.login-phone-store-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    margin-top: auto;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.login-phone-store-cta--ios {
+    background: #0071e3;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(0, 113, 227, 0.35);
+}
+
+.login-phone-store-cta--play {
+    background: #00c853;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(0, 200, 83, 0.35);
+}
+
+.login-phone-store-card:hover .login-phone-store-cta {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+}
+
+.login-phone-store-card:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.9);
+    outline-offset: 2px;
+}
+
+.login-phone-screen--play .login-phone-store-card:focus-visible {
+    outline-color: #80deea;
 }
 
 .login-app-qr-img {
