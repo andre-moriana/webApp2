@@ -370,4 +370,28 @@
             });
         });
     }
+
+    /** Infobulles archer (club + abv) : Bootstrap, rendu dans body (fiable dans le scroll horizontal) */
+    function initPelotonArcherTooltips() {
+        if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) {
+            return;
+        }
+        document.querySelectorAll('.js-peloton-archer-tip').forEach(function (el) {
+            var text = el.getAttribute('data-bs-title') || '';
+            if (!text) {
+                return;
+            }
+            var existing = bootstrap.Tooltip.getInstance(el);
+            if (existing) {
+                existing.dispose();
+            }
+            new bootstrap.Tooltip(el, {
+                container: 'body',
+                placement: 'top',
+                trigger: 'hover focus',
+                customClass: 'peloton-archer-tooltip'
+            });
+        });
+    }
+    initPelotonArcherTooltips();
 })();

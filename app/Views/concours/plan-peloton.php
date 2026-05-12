@@ -45,7 +45,13 @@ $getArcherDisplayInfo = function($plan, $inscriptionsMap = []) {
         $nom = trim((string)($i['user_nom'] ?? ''));
         $planUserNom = trim((string)($plan['user_nom'] ?? ''));
         $club = trim((string)($i['club_name'] ?? ''));
+        if ($club === '') {
+            $club = trim((string)($i['clubName'] ?? ''));
+        }
         $abv = trim((string)($i['abv_categorie_classement'] ?? ''));
+        if ($abv === '') {
+            $abv = trim((string)($i['abv_classement'] ?? ''));
+        }
         $nomComplet = $nom !== '' ? $nom : $planUserNom;
         return ['nom' => $nomComplet, 'club' => $club, 'nomComplet' => $nomComplet, 'abv_classement' => $abv];
     }
@@ -311,7 +317,8 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                                         data-piquet-souhaites="<?= htmlspecialchars($piquetSouhaitesStr) ?>"
                                         <?= $liTitle !== '' ? 'title="' . htmlspecialchars($liTitle) . '"' : '' ?>>
                                         <span class="peloton-position-letter"<?= $letterRectStyle ? ' style="' . $letterRectStyle . '"' : '' ?>><?= htmlspecialchars($position) ?></span>
-                                        <div class="peloton-position-content"<?= $nameTooltip !== '' ? ' title="' . htmlspecialchars($nameTooltip) . '"' : '' ?>>
+                                        <div class="peloton-position-content<?= $nameTooltip !== '' ? ' js-peloton-archer-tip' : '' ?>"
+                                            <?php if ($nameTooltip !== ''): ?>data-bs-toggle="tooltip" data-bs-placement="top" data-bs-container="body" data-bs-title="<?= htmlspecialchars($nameTooltip, ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>>
                                             <span class="peloton-position-name"><?= htmlspecialchars($nomComplet) ?></span>
                                             <?php if (!empty($clubComplet)): ?>
                                                 <span class="peloton-position-club"><?= htmlspecialchars($clubComplet) ?></span>
