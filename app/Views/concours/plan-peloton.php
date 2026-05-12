@@ -291,6 +291,9 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                                         if ($abvClassement !== '') {
                                             $tooltipParts[] = $abvClassement;
                                         }
+                                        if ($nomComplet !== '') {
+                                            $tooltipParts[] = $nomComplet;
+                                        }
                                         if ($clubComplet !== '') {
                                             $tooltipParts[] = $clubComplet;
                                         }
