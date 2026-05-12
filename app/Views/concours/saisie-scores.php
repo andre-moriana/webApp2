@@ -72,9 +72,9 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                 <input type="hidden" name="format" value="2x21">
                 <?php endif; ?>
                 <?php if (!empty($departsForSelect)): ?>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-3">
                     <label for="select-depart" class="mb-0 fw-bold">
-                        <i class="fas fa-flag me-1"></i>Départ :
+                        <i class="fas fa-flag me-1"></i>Départ(s):
                     </label>
                     <select name="depart" id="select-depart" class="form-select form-select-sm" style="max-width: 280px;">
                         <option value="">-- Tous les départs --</option>
@@ -124,7 +124,10 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
         </a>
         <?php return; ?>
     <?php endif; ?>
-
+    <div class="actions-section">
+            <a href="/concours/show/<?= (int)$concoursId ?>" class="btn btn-secondary">Retour au concours</a>
+            <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
+    </div>
     <div class="card">
         <div class="card-header bg-light">
             <h5 class="mb-0">
@@ -478,6 +481,10 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                     <a href="/concours" class="btn btn-link text-muted">Liste des concours</a>
                 </div>
             </form>
+        </div>
+        <div class="actions-section">
+            <a href="/concours/show/<?= (int)$concoursId ?>" class="btn btn-secondary">Retour au concours</a>
+            <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
         </div>
     </div>
 </div>
