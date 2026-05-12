@@ -175,6 +175,11 @@ foreach ($allConcours as $item) {
                                                     <i class="fas fa-user-plus"></i>
                                                 </a>
                                                 <?php if ($isAdmin || $isDirigeant): ?>
+                                                <a href="/concours/<?php echo $concoursId; ?>/greffes" class="btn btn-sm btn-outline-warning" title="Gérer les greffes">
+                                                    <i class="fas fa-money-bill"></i>
+                                                </a>
+                                                <?php endif; ?>
+                                                <?php if ($isAdmin || $isDirigeant): ?>
                                                 <a href="/concours/<?php echo $concoursId; ?>/saisie-scores" class="btn btn-sm btn-outline-warning" title="Saisie des scores">
                                                     <i class="fas fa-calculator"></i>
                                                 </a>
