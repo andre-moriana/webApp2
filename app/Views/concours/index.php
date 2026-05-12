@@ -176,7 +176,7 @@ foreach ($allConcours as $item) {
                                                 </a>
                                                 <?php if ($isAdmin || $isDirigeant): ?>
                                                 <a href="/concours/<?php echo $concoursId; ?>/greffes" class="btn btn-sm btn-outline-primary" title="Gérer les greffes">
-                                                    <i class="fas fa-edit"></i>
+                                                    <i class="fas fa-money-bill-wave"></i>
                                                 </a>
                                                 <?php endif; ?>
                                                 <?php if ($isAdmin || $isDirigeant): ?>
