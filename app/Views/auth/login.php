@@ -2,7 +2,7 @@
 /** URLs des stores — surcharge via variables d'environnement si besoin */
 $arcTrainingPlayStoreUrl = getenv('ARC_PLAY_STORE_URL') ?: 'https://play.google.com/store/apps/details?id=fr.arctraining.mobile';
 $arcTrainingAppStoreUrl = getenv('ARC_APP_STORE_URL')
-    ?: 'https://apps.apple.com/fr/search?term=ArcTraining';
+    ?: 'https://apps.apple.com/fr/app/arctraning/id6755296711';
 $qrIos = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . rawurlencode($arcTrainingAppStoreUrl);
 $qrAndroid = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . rawurlencode($arcTrainingPlayStoreUrl);
 ?>
