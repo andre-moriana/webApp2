@@ -124,7 +124,7 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
         </a>
         <?php return; ?>
     <?php endif; ?>
-    <div class="actions-section">
+    <div class="actions-section mb-4">
             <a href="/concours/show/<?= (int)$concoursId ?>" class="btn btn-secondary">Retour au concours</a>
             <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
     </div>
