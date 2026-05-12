@@ -31,6 +31,23 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+/** Clé JSON des réponses : id question si présent, sinon index. */
+function formQuestionResponseKey(question, index) {
+    if (question && question.id !== undefined && question.id !== null && String(question.id).trim() !== '') {
+        return String(question.id);
+    }
+    return String(index);
+}
+
+function isFormQuestionRequired(question) {
+    if (!question) return false;
+    const r = question.required;
+    const ir = question.is_required;
+    if (r === true || r === 1 || r === '1' || r === 'true') return true;
+    if (ir === true || ir === 1 || ir === '1' || ir === 'true') return true;
+    return false;
+}
+
 function formatPlainMessageSegment(part) {
     return escapeHtml(part).replace(/\n/g, "<br>");
 }
@@ -1132,40 +1149,44 @@ window.openEventFormModal = function(formId) {
     
     if (form.questions && Array.isArray(form.questions)) {
         form.questions.forEach(function(question, index) {
+            const fieldKey = formQuestionResponseKey(question, index);
+            const req = isFormQuestionRequired(question);
             formHtml += `
                 <div class="mb-3">
                     <label class="form-label">
                         ${escapeHtml(question.text || '')}
-                        ${question.required ? '<span class="text-danger">*</span>' : ''}
+                        ${req ? '<span class="text-danger">*</span>' : ''}
                     </label>
             `;
             
             if (question.type === 'text') {
                 formHtml += `
-                    <textarea class="form-control" name="question_${question.id}" 
-                              ${question.required ? 'required' : ''} 
+                    <textarea class="form-control" name="question_${fieldKey}" 
+                              ${req ? 'required' : ''} 
                               rows="3" placeholder="Votre réponse..."></textarea>
                 `;
             } else if (question.type === 'radio' && question.options) {
-                question.options.forEach(function(option) {
+                question.options.forEach(function(option, optIdx) {
+                    const inputId = 'evfq_r_' + index + '_' + optIdx;
                     formHtml += `
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="question_${question.id}" 
-                                   value="${escapeHtml(option)}" id="radio_${question.id}_${option}" 
-                                   ${question.required ? 'required' : ''}>
-                            <label class="form-check-label" for="radio_${question.id}_${option}">
+                            <input class="form-check-input" type="radio" name="question_${fieldKey}" 
+                                   value="${escapeHtml(option)}" id="${inputId}" 
+                                   ${req ? 'required' : ''}>
+                            <label class="form-check-label" for="${inputId}">
                                 ${escapeHtml(option)}
                             </label>
                         </div>
                     `;
                 });
             } else if (question.type === 'checkbox' && question.options) {
-                question.options.forEach(function(option) {
+                question.options.forEach(function(option, optIdx) {
+                    const inputId = 'evfq_c_' + index + '_' + optIdx;
                     formHtml += `
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="question_${question.id}[]" 
-                                   value="${escapeHtml(option)}" id="checkbox_${question.id}_${option}">
-                            <label class="form-check-label" for="checkbox_${question.id}_${option}">
+                            <input class="form-check-input" type="checkbox" name="question_${fieldKey}[]" 
+                                   value="${escapeHtml(option)}" id="${inputId}">
+                            <label class="form-check-label" for="${inputId}">
                                 ${escapeHtml(option)}
                             </label>
                         </div>
@@ -1219,12 +1240,18 @@ window.submitEventFormResponse = function() {
         }
     });
     
-    // Vérifier les champs obligatoires
+    // Vérifier les champs obligatoires (clés = id ou index)
     const formObj = currentEventForms.find(f => f.id == formId);
     if (formObj && formObj.questions) {
-        const missingRequired = formObj.questions.filter(q => 
-            q.required && (!responses[q.id] || (Array.isArray(responses[q.id]) && responses[q.id].length === 0))
-        );
+        const missingRequired = formObj.questions.filter(function(q, index) {
+            if (!isFormQuestionRequired(q)) return false;
+            const key = formQuestionResponseKey(q, index);
+            const val = responses[key];
+            if (val === undefined || val === null) return true;
+            if (typeof val === 'string' && !val.trim()) return true;
+            if (Array.isArray(val) && val.length === 0) return true;
+            return false;
+        });
         if (missingRequired.length > 0) {
             alert('Veuillez répondre à toutes les questions obligatoires');
             return;
@@ -1354,7 +1381,12 @@ function showEventFormResultsModal(form, responses) {
                     
                     let answer = null;
                     if (parsedResponses && typeof parsedResponses === 'object') {
-                        answer = parsedResponses[question.id] || parsedResponses[question._id] || parsedResponses[String(question.id)] || parsedResponses[String(question._id)];
+                        const rk = formQuestionResponseKey(question, questionIndex);
+                        answer = parsedResponses[rk]
+                            || parsedResponses[question.id]
+                            || parsedResponses[question._id]
+                            || parsedResponses[String(question.id)]
+                            || parsedResponses[String(question._id)];
                         if (!answer && questionIndex !== undefined) {
                             const keys = Object.keys(parsedResponses);
                             if (keys[questionIndex]) {
