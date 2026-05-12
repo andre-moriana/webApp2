@@ -1,3 +1,11 @@
+<?php
+/** URLs des stores — surcharge via variables d'environnement si besoin */
+$arcTrainingPlayStoreUrl = getenv('ARC_PLAY_STORE_URL') ?: 'https://play.google.com/store/apps/details?id=fr.arctraining.mobile';
+$arcTrainingAppStoreUrl = getenv('ARC_APP_STORE_URL')
+    ?: 'https://apps.apple.com/fr/search?term=ArcTraining';
+$qrIos = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . rawurlencode($arcTrainingAppStoreUrl);
+$qrAndroid = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . rawurlencode($arcTrainingPlayStoreUrl);
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -13,9 +21,36 @@
     <link href="/public/assets/css/login.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-4">
+    <div class="container login-page-wrap py-4">
+        <div class="row align-items-start justify-content-center g-4">
+            <!-- Appli mobile : App Store (aperçu + QR) -->
+            <div class="col-12 col-md-6 col-xl-3 order-2 order-xl-1">
+                <div class="login-app-showcase">
+                    <div class="login-app-showcase-label text-white text-center mb-2">
+                        <i class="fab fa-apple me-2"></i>App Store
+                    </div>
+                    <div class="login-phone login-phone--iphone mx-auto">
+                        <div class="login-phone-notch"></div>
+                        <div class="login-phone-screen">
+                            <iframe
+                                src="<?= htmlspecialchars($arcTrainingAppStoreUrl, ENT_QUOTES, 'UTF-8') ?>"
+                                title="Arc Training sur l’App Store"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                            ></iframe>
+                        </div>
+                    </div>
+                    <div class="login-app-qr text-center mt-3">
+                        <img src="<?= htmlspecialchars($qrIos, ENT_QUOTES, 'UTF-8') ?>" width="160" height="160" alt="QR code App Store Arc Training" class="login-app-qr-img">
+                        <div class="small text-white mt-2 opacity-90">Scannez pour télécharger (iPhone)</div>
+                        <a href="<?= htmlspecialchars($arcTrainingAppStoreUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-light mt-2">
+                            Ouvrir l’App Store
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-8 col-xl-5 order-1 order-xl-2">
                 <div class="login-container">
                     <div class="login-header">
                         <img src="/public/assets/images/arc-training-logo.png" alt="Arc Training Logo" class="login-logo mb-3" style="max-width: 200px; height: auto;">
@@ -134,12 +169,39 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="text-center mt-4">
                     <small class="text-white">
                         <i class="fas fa-code me-1"></i>
                         Développé par André Moriana pour Arc Training
                     </small>
+                </div>
+            </div>
+
+            <!-- Appli mobile : Google Play (aperçu + QR) -->
+            <div class="col-12 col-md-6 col-xl-3 order-3">
+                <div class="login-app-showcase">
+                    <div class="login-app-showcase-label text-white text-center mb-2">
+                        <i class="fab fa-google-play me-2"></i>Google Play
+                    </div>
+                    <div class="login-phone login-phone--android mx-auto">
+                        <div class="login-phone-punch"></div>
+                        <div class="login-phone-screen">
+                            <iframe
+                                src="<?= htmlspecialchars($arcTrainingPlayStoreUrl, ENT_QUOTES, 'UTF-8') ?>"
+                                title="Arc Training sur Google Play"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                            ></iframe>
+                        </div>
+                    </div>
+                    <div class="login-app-qr text-center mt-3">
+                        <img src="<?= htmlspecialchars($qrAndroid, ENT_QUOTES, 'UTF-8') ?>" width="160" height="160" alt="QR code Google Play Arc Training" class="login-app-qr-img">
+                        <div class="small text-white mt-2 opacity-90">Scannez pour télécharger (Android)</div>
+                        <a href="<?= htmlspecialchars($arcTrainingPlayStoreUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-light mt-2">
+                            Ouvrir Google Play
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -148,6 +210,6 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
-    <script src="public/assets/js/login.js"></script>
+    <script src="/public/assets/js/login.js"></script>
 </body>
 </html>
