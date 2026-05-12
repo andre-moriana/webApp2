@@ -291,12 +291,12 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                                         if ($abvClassement !== '') {
                                             $tooltipParts[] = $abvClassement;
                                         }
-                                        if ($nomComplet !== '') {
+                                        /*if ($nomComplet !== '') {
                                             $tooltipParts[] = $nomComplet;
                                         }
                                         if ($clubComplet !== '') {
                                             $tooltipParts[] = $clubComplet;
-                                        }
+                                        }*/
                                     }
                                     $nameTooltip = $tooltipParts ? implode(' • ', $tooltipParts) : '';
                                     $piquetVal = ($plan && isset($plan['piquet'])) ? $plan['piquet'] : null;
