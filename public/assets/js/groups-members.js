@@ -15,19 +15,24 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadAllUsers() {
     try {
         // Utiliser l'endpoint du backend PHP
-        const response = await fetch('/users', {
+        const response = await fetch('/api/users', {
+            credentials: 'same-origin',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
         });
         
         if (response.ok) {
             const data = await response.json();
             
-            // Gérer les deux formats possibles de réponse
-            if (data.data && Array.isArray(data.data)) {
-                allUsers = data.data;
+            // Réponse ApiController / makeRequest : { success, data, status_code, ... } ou liste directe
+            const payload = data.data !== undefined ? data.data : data;
+            if (Array.isArray(payload)) {
+                allUsers = payload;
+            } else if (payload && Array.isArray(payload.users)) {
+                allUsers = payload.users;
             } else if (Array.isArray(data)) {
                 allUsers = data;
             } else {
@@ -246,6 +251,7 @@ document.getElementById('addSelectedUsers').addEventListener('click', async func
         
         const response = await fetch(`/groups/${groupId}/members`, {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`
@@ -271,6 +277,7 @@ function removeMember(memberId, memberName) {
         // Appel API pour retirer le membre
         fetch(`/groups/${groupId}/remove-member/${memberId}`, {
             method: 'DELETE',
+            credentials: 'same-origin',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
