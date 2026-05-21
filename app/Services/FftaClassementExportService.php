@@ -216,12 +216,9 @@ class FftaClassementExportService
         array $exportOptions
     ): array {
         $map = self::computeRangParCategorieLicenceMap($inscriptions, $resultats, $resultatsByLicence, $disciplineAbv, $exportOptions);
-        $categoriesExport = $exportOptions['categoriesExport'] ?? [];
         foreach ($rows as &$row) {
             $insc = $row['inscription'];
-            $abvCat = trim((string)($insc['abv_categorie_classement'] ?? $insc['categorie_classement'] ?? ''));
-            $fgFfta = !empty(($categoriesExport[$abvCat] ?? [])['fg_ffta']);
-            $row['rangClassement'] = self::resolveRangClassementParCategorie($insc, $map, $fgFfta);
+            $row['rangClassement'] = self::resolveRangClassementParCategorie($insc, $map);
         }
         unset($row);
         return $rows;
@@ -297,6 +294,40 @@ class FftaClassementExportService
                 $rang++;
             }
         }
+
+        // Même classement pour tous les tirs (2e, 3e…) : licence + catégorie + départ identiques.
+        foreach ($inscriptions as $insc) {
+            $lic = trim((string)($insc['numero_licence'] ?? ''));
+            if ($lic === '') {
+                continue;
+            }
+            $key = self::rangParGroupeMapKey($lic, $insc);
+            if (isset($map[$key])) {
+                continue;
+            }
+            $nt = $insc['numero_tir'] ?? null;
+            if ($nt === null || $nt === '' || (int)$nt === 1) {
+                continue;
+            }
+            foreach ($inscriptions as $insc1er) {
+                $nt1 = $insc1er['numero_tir'] ?? null;
+                if ($nt1 !== null && $nt1 !== '' && (int)$nt1 !== 1) {
+                    continue;
+                }
+                if (trim((string)($insc1er['numero_licence'] ?? '')) !== $lic) {
+                    continue;
+                }
+                if (self::groupeClassementKey($insc1er) !== self::groupeClassementKey($insc)) {
+                    continue;
+                }
+                $key1er = self::rangParGroupeMapKey($lic, $insc1er);
+                if (isset($map[$key1er])) {
+                    $map[$key] = $map[$key1er];
+                    break;
+                }
+            }
+        }
+
         return $map;
     }
 
@@ -326,15 +357,9 @@ class FftaClassementExportService
     /**
      * @param array<string, int> $map
      */
-    private static function resolveRangClassementParCategorie(array $insc, array $map, bool $fgFfta): int
+    private static function resolveRangClassementParCategorie(array $insc, array $map): int
     {
-        if (!$fgFfta) {
-            return 0;
-        }
         $lic = trim((string)($insc['numero_licence'] ?? ''));
-        if ($lic === '') {
-            return 0;
-        }
         return $map[self::rangParGroupeMapKey($lic, $insc)] ?? 0;
     }
 
