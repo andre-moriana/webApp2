@@ -513,13 +513,7 @@ class FftaClassementExportService
         $dix = $res ? self::num2($res['nb_10'] ?? $res['serie1_nb_10'] ?? '') : '';
         $neuf = $res ? self::num2($res['nb_9'] ?? $res['serie1_nb_9'] ?? $res['total_nb_9'] ?? '') : '';
 
-        $distance = '';
-        $piquet = trim((string)($insc['piquet'] ?? ''));
-        if ($piquet !== '' && is_numeric($piquet)) {
-            $distance = (string)(int)$piquet;
-        } elseif (isset($insc['distance']) && $insc['distance'] !== '' && $insc['distance'] !== null) {
-            $distance = self::num2($insc['distance']);
-        }
+        $champ18 = self::resolveChamp18DistanceOuPiquet($insc);
 
         $blason = '';
         if (isset($insc['blason']) && $insc['blason'] !== '' && $insc['blason'] !== null) {
@@ -566,7 +560,7 @@ class FftaClassementExportService
         $fields[14] = $paille;
         $fields[15] = $dix;
         $fields[16] = $neuf;
-        $fields[17] = $distance;
+        $fields[17] = $champ18;
         $fields[18] = $blason;
         $fields[19] = $dateConcours;
         $fields[20] = $lieu;
@@ -635,6 +629,39 @@ class FftaClassementExportService
             return '';
         }
         return str_pad(substr($digits, -7), 7, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Champ 18 : piquet (rouge=1, bleu=2, blanc=3) ou distance en mètres (18, 25, 30…).
+     */
+    private static function resolveChamp18DistanceOuPiquet(array $insc): string
+    {
+        $piquetRaw = trim((string)($insc['piquet'] ?? ''));
+        if ($piquetRaw !== '') {
+            $codePiquet = self::mapPiquetCouleurFfta($piquetRaw);
+            if ($codePiquet !== '') {
+                return self::num2($codePiquet);
+            }
+        }
+        if (isset($insc['distance']) && $insc['distance'] !== '' && $insc['distance'] !== null) {
+            return self::num2($insc['distance']);
+        }
+        return '';
+    }
+
+    /** Rouge=1, bleu=2, blanc=3 (spec FFTA champ 18). */
+    private static function mapPiquetCouleurFfta(string $piquet): string
+    {
+        $p = strtolower(trim($piquet));
+        $map = [
+            'rouge' => '1',
+            'bleu' => '2',
+            'blanc' => '3',
+            '1' => '1',
+            '2' => '2',
+            '3' => '3',
+        ];
+        return $map[$p] ?? '';
     }
 
     /** Champ 8 : catégorie de classement (2 car. si commence par S, sinon 3). */
