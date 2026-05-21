@@ -122,7 +122,7 @@ class FftaClassementExportService
     }
 
     /**
-     * Lignes exportées dans le même ordre que la page Scores (filtre départ, tri club/catégorie/départ).
+     * Export FFTA : tous les départs, tri par catégorie (puis n° départ, nom dans chaque catégorie).
      * Le rang FFTA (champ 22) est calculé par catégorie de classement et n° de départ (1er tir).
      *
      * @param array<string, mixed> $options
@@ -133,7 +133,10 @@ class FftaClassementExportService
         $inscriptions = $options['inscriptions'] ?? [];
         $resultats = $options['resultats'] ?? [];
         $resultatsByLicence = $options['resultatsByLicence'] ?? [];
-        $triScores = $options['triScores'] ?? 'club';
+        $triScores = $options['triScores'] ?? 'categorie';
+        if ($triScores !== 'categorie') {
+            $triScores = 'categorie';
+        }
         $disciplineAbv = $options['disciplineAbv'] ?? null;
 
         $resolveResultat = function (array $insc) use ($resultats, $resultatsByLicence) {
@@ -178,8 +181,15 @@ class FftaClassementExportService
 
         $flat = [];
         foreach ($groups as $rows) {
+            usort($rows, function ($a, $b) {
+                $da = (int)($a['numero_depart'] ?? 0);
+                $db = (int)($b['numero_depart'] ?? 0);
+                if ($da !== $db) {
+                    return $da <=> $db;
+                }
+                return strcasecmp($a['user_nom'] ?? $a['nom'] ?? '', $b['user_nom'] ?? $b['nom'] ?? '');
+            });
             foreach ($rows as $insc) {
-                $inscId = $insc['id'] ?? $insc['_id'] ?? null;
                 $flat[] = [
                     'inscription' => $insc,
                     'resultat' => $resolveResultat($insc),

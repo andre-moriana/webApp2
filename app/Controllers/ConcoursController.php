@@ -2914,6 +2914,30 @@ public function inscription($concoursId)
                 ksort($nums);
                 $departsListScores = array_map(function ($n) { return ['numero_depart' => $n]; }, array_keys($nums));
             }
+
+            if (($_GET['export'] ?? '') === 'ffta') {
+                require_once __DIR__ . '/../Services/FftaClassementExportService.php';
+                $exportVersion = defined('APP_VERSION') ? APP_VERSION : ($_ENV['APP_VERSION'] ?? '1.0');
+                FftaClassementExportService::buildAndDownload([
+                    'mode' => 'scores',
+                    'inscriptions' => $inscriptions,
+                    'resultats' => $resultats,
+                    'resultatsByLicence' => $resultatsByLicence,
+                    'triScores' => 'categorie',
+                    'clubOrganisateurCode' => $clubOrganisateurCode,
+                    'clubsMap' => $clubsMap,
+                    'disciplineAbv' => $disciplineAbv,
+                    'categoriesExport' => $categoriesExport,
+                    'categoriesAgeIdToAbv' => $categoriesAgeIdToAbv,
+                    'concours' => $concours,
+                    'arbitres' => $concours->arbitres ?? [],
+                    'niveauChampionnatAbv' => $niveauChampionnatAbv,
+                    'typeCompetitionName' => $typeCompetitionName,
+                    'version' => $exportVersion,
+                    'epreuve' => 'a',
+                ]);
+            }
+
             if ($departFilterScores !== '' && $departFilterScores !== 'tout' && $departFilterScores !== 'all') {
                 $departNum = (int) $departFilterScores;
                 $inscriptions = array_values(array_filter($inscriptions, function ($i) use ($departNum) {
@@ -2943,33 +2967,6 @@ public function inscription($concoursId)
                 }
                 return 0;
             });
-
-            if (($_GET['export'] ?? '') === 'ffta') {
-                require_once __DIR__ . '/../Services/FftaClassementExportService.php';
-                $exportVersion = defined('APP_VERSION') ? APP_VERSION : ($_ENV['APP_VERSION'] ?? '1.0');
-                $epreuve = 'a';
-                if ($departFilterScores !== '' && $departFilterScores !== 'tout' && $departFilterScores !== 'all') {
-                    $epreuve = (string)(int)$departFilterScores;
-                }
-                FftaClassementExportService::buildAndDownload([
-                    'mode' => 'scores',
-                    'inscriptions' => $inscriptions,
-                    'resultats' => $resultats,
-                    'resultatsByLicence' => $resultatsByLicence,
-                    'triScores' => $triScores,
-                    'clubOrganisateurCode' => $clubOrganisateurCode,
-                    'clubsMap' => $clubsMap,
-                    'disciplineAbv' => $disciplineAbv,
-                    'categoriesExport' => $categoriesExport,
-                    'categoriesAgeIdToAbv' => $categoriesAgeIdToAbv,
-                    'concours' => $concours,
-                    'arbitres' => $concours->arbitres ?? [],
-                    'niveauChampionnatAbv' => $niveauChampionnatAbv,
-                    'typeCompetitionName' => $typeCompetitionName,
-                    'version' => $exportVersion,
-                    'epreuve' => $epreuve,
-                ]);
-            }
         }
 
         // Feuilles de marques : charger le plan cible (S, T, I, H) ou peloton (3, N, C) pour affecter les archers

@@ -646,15 +646,25 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
             <?php endforeach; ?>
         </select>
         <?php
-        $fftaExportUrl = $baseScoresUrl . '&depart=' . $currentDepartScores . '&tri=' . $currentTriScores . '&export=ffta';
+        $fftaExportUrl = $baseScoresUrl . '&depart=tout&tri=categorie&export=ffta';
+        $fftaExportTousDeparts = ($currentDepartScores === 'tout');
         ?>
+        <?php if ($fftaExportTousDeparts): ?>
         <a
             href="<?= htmlspecialchars($fftaExportUrl) ?>"
             class="btn btn-outline-primary btn-sm ms-2"
-            title="Télécharger les scores affichés au format texte FFTA (tabulations)"
+            title="Export FFTA : tous les départs, tri par catégorie (tabulations)"
         >
             <i class="fas fa-file-export me-1"></i>Export FFTA
         </a>
+        <?php else: ?>
+        <span
+            class="btn btn-outline-secondary btn-sm ms-2 disabled"
+            title="Export FFTA disponible uniquement avec « Tous » les départs (tous les scores du concours)"
+        >
+            <i class="fas fa-file-export me-1"></i>Export FFTA
+        </span>
+        <?php endif; ?>
         <?php endif; ?>
         <?php if ($doc === 'feuilles-marques'): ?>
         <?php

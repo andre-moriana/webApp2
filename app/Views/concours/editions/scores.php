@@ -62,16 +62,22 @@ $hasDetail = $hasNatureDetail || $has3DDetail;
 <div class="edition-scores">
     <?php
     $concoursIdScores = $concours->id ?? $concours->_id ?? null;
+    $departScoresFfta = isset($departFilterScores) && $departFilterScores !== '' && $departFilterScores !== 'tout' && $departFilterScores !== 'all'
+        ? $departFilterScores : 'tout';
+    $fftaScoresTousDeparts = ($departScoresFfta === 'tout');
     if ($concoursIdScores):
-        $departScores = isset($departFilterScores) && $departFilterScores !== '' && $departFilterScores !== 'tout' && $departFilterScores !== 'all'
-            ? $departFilterScores : 'tout';
-        $fftaScoresUrl = '/concours/' . (int)$concoursIdScores . '/editions?doc=scores&depart=' . urlencode((string)$departScores)
-            . '&tri=' . urlencode($triScores ?? 'club') . '&export=ffta';
+        $fftaScoresUrl = '/concours/' . (int)$concoursIdScores . '/editions?doc=scores&depart=tout&tri=categorie&export=ffta';
     ?>
     <p class="text-center d-print-none mb-3">
-        <a href="<?= htmlspecialchars($fftaScoresUrl) ?>" class="btn btn-outline-primary btn-sm" title="Export texte FFTA des scores affichés (tabulations)">
+        <?php if ($fftaScoresTousDeparts): ?>
+        <a href="<?= htmlspecialchars($fftaScoresUrl) ?>" class="btn btn-outline-primary btn-sm" title="Export FFTA : tous les départs, tri par catégorie">
             <i class="fas fa-file-export me-1"></i>Export FFTA
         </a>
+        <?php else: ?>
+        <span class="btn btn-outline-secondary btn-sm disabled" title="Export FFTA : affichez tous les départs">
+            <i class="fas fa-file-export me-1"></i>Export FFTA
+        </span>
+        <?php endif; ?>
     </p>
     <?php endif; ?>
     <h1 class="text-center mb-4">Scores</h1>
