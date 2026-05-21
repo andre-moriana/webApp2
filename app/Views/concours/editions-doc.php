@@ -645,6 +645,16 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
             <option value="<?= htmlspecialchars($url) ?>"<?= $sel ?>><?= htmlspecialchars($label) ?></option>
             <?php endforeach; ?>
         </select>
+        <?php
+        $fftaExportUrl = $baseScoresUrl . '&depart=' . $currentDepartScores . '&tri=' . $currentTriScores . '&export=ffta';
+        ?>
+        <a
+            href="<?= htmlspecialchars($fftaExportUrl) ?>"
+            class="btn btn-outline-primary btn-sm ms-2"
+            title="Télécharger les scores affichés au format texte FFTA (tabulations)"
+        >
+            <i class="fas fa-file-export me-1"></i>Export FFTA
+        </a>
         <?php endif; ?>
         <?php if ($doc === 'feuilles-marques'): ?>
         <?php
@@ -709,19 +719,6 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
             <input type="checkbox" <?= !empty($top3ParCategorie) ? 'checked' : '' ?> onchange="var u='/concours/<?= (int)$concoursId ?>/editions?doc=classement&type=<?= htmlspecialchars($typeClassement ?? 'general') ?>'; if(this.checked) u+='&top3=1'; location.href=u;">
             Top 3 par catégorie
         </label>
-        <?php
-        $fftaExportUrl = '/concours/' . (int)$concoursId . '/editions?doc=classement&type=' . urlencode($typeClassement ?? 'general') . '&export=ffta';
-        if (!empty($top3ParCategorie)) {
-            $fftaExportUrl .= '&top3=1';
-        }
-        ?>
-        <a
-            href="<?= htmlspecialchars($fftaExportUrl) ?>"
-            class="btn btn-outline-primary btn-sm ms-2"
-            title="Télécharger le classement au format texte FFTA (tabulations)"
-        >
-            <i class="fas fa-file-export me-1"></i>Export FFTA
-        </a>
         <?php endif; ?>
         <?php if ($doc === 'bilan-financier'): ?>
         <?php

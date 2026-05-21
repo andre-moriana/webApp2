@@ -60,6 +60,20 @@ $is3D = ($disciplineAbv && in_array((string)$disciplineAbv, ['3', '3D'], true)) 
 $hasDetail = $hasNatureDetail || $has3DDetail;
 ?>
 <div class="edition-scores">
+    <?php
+    $concoursIdScores = $concours->id ?? $concours->_id ?? null;
+    if ($concoursIdScores):
+        $departScores = isset($departFilterScores) && $departFilterScores !== '' && $departFilterScores !== 'tout' && $departFilterScores !== 'all'
+            ? $departFilterScores : 'tout';
+        $fftaScoresUrl = '/concours/' . (int)$concoursIdScores . '/editions?doc=scores&depart=' . urlencode((string)$departScores)
+            . '&tri=' . urlencode($triScores ?? 'club') . '&export=ffta';
+    ?>
+    <p class="text-center d-print-none mb-3">
+        <a href="<?= htmlspecialchars($fftaScoresUrl) ?>" class="btn btn-outline-primary btn-sm" title="Export texte FFTA des scores affichés (tabulations)">
+            <i class="fas fa-file-export me-1"></i>Export FFTA
+        </a>
+    </p>
+    <?php endif; ?>
     <h1 class="text-center mb-4">Scores</h1>
     <p class="text-center"><strong><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? '') ?></strong></p>
 

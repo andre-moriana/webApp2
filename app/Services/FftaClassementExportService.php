@@ -16,7 +16,10 @@ class FftaClassementExportService
      */
     public static function buildAndDownload(array $options): void
     {
-        $rows = self::buildClassementRows($options);
+        $mode = $options['mode'] ?? 'classement';
+        $rows = ($mode === 'scores')
+            ? self::buildScoresPageRows($options)
+            : self::buildClassementRows($options);
         $content = self::buildFileContent($rows, $options);
         $filename = self::buildFilename($options);
 
@@ -46,14 +49,7 @@ class FftaClassementExportService
         $top3ParCategorie = !empty($options['top3ParCategorie']);
         $disciplineAbv = $options['disciplineAbv'] ?? null;
 
-        $hasNatureScores = !empty(array_filter($resultats, function ($r) {
-            return isset($r['nb_20_15']) || isset($r['nb_20_10']) || isset($r['nb_15_15']) || isset($r['nb_15_10']);
-        }));
-        $has3DScores = !empty(array_filter($resultats, function ($r) {
-            return isset($r['nb_11']) || isset($r['nb_8']) || isset($r['nb_5']);
-        }));
-        $is3D = ($disciplineAbv && in_array($disciplineAbv, ['3', '3D'], true)) || $has3DScores;
-        $isNature = !$is3D && (($disciplineAbv && in_array($disciplineAbv, ['N', 'C'], true)) || $hasNatureScores);
+        [$is3D, $isNature] = self::detectDisciplineFlags($resultats, $disciplineAbv);
 
         $inscriptions1erTir = array_filter($inscriptions, function ($insc) {
             $nt = $insc['numero_tir'] ?? null;
@@ -96,33 +92,7 @@ class FftaClassementExportService
 
         foreach ($byCategorie as &$items) {
             usort($items, function ($a, $b) use ($isNature, $is3D) {
-                $diff = $b['score'] - $a['score'];
-                if ($diff !== 0) {
-                    return $diff;
-                }
-                $rA = $a['resultat'] ?? [];
-                $rB = $b['resultat'] ?? [];
-                if ($is3D) {
-                    foreach (['nb_11', 'nb_10', 'nb_8', 'nb_5'] as $k) {
-                        $vA = (int)($rA[$k] ?? 0);
-                        $vB = (int)($rB[$k] ?? 0);
-                        if ($vA !== $vB) {
-                            return $vB - $vA;
-                        }
-                    }
-                    return (int)($rA['nb_0'] ?? 0) - (int)($rB['nb_0'] ?? 0);
-                }
-                if (!$isNature) {
-                    return 0;
-                }
-                foreach (['nb_20_15', 'nb_20_10', 'nb_15_15', 'nb_15_10', 'nb_15', 'nb_10'] as $k) {
-                    $vA = (int)($rA[$k] ?? 0);
-                    $vB = (int)($rB[$k] ?? 0);
-                    if ($vA !== $vB) {
-                        return $vB - $vA;
-                    }
-                }
-                return (int)($rA['nb_0'] ?? 0) - (int)($rB['nb_0'] ?? 0);
+                return self::compareScoreItems($a, $b, $isNature, $is3D);
             });
             $rang = 1;
             foreach ($items as &$item) {
@@ -148,6 +118,167 @@ class FftaClassementExportService
             }
         }
         return $flat;
+    }
+
+    /**
+     * Lignes exportées dans le même ordre que la page Scores (filtre départ, tri club/catégorie/départ).
+     * Le rang FFTA est calculé par catégorie de classement sur les inscriptions affichées.
+     *
+     * @param array<string, mixed> $options
+     * @return list<array{inscription: array, resultat: ?array, rang: int}>
+     */
+    public static function buildScoresPageRows(array $options): array
+    {
+        $inscriptions = $options['inscriptions'] ?? [];
+        $resultats = $options['resultats'] ?? [];
+        $resultatsByLicence = $options['resultatsByLicence'] ?? [];
+        $triScores = $options['triScores'] ?? 'club';
+        $disciplineAbv = $options['disciplineAbv'] ?? null;
+
+        [$is3D, $isNature] = self::detectDisciplineFlags($resultats, $disciplineAbv);
+
+        $resolveResultat = function (array $insc) use ($resultats, $resultatsByLicence) {
+            $inscId = $insc['id'] ?? $insc['_id'] ?? null;
+            $r = $inscId ? ($resultats[(int)$inscId] ?? null) : null;
+            if ($r === null) {
+                $lic = trim((string)($insc['numero_licence'] ?? ''));
+                $r = ($lic !== '' && isset($resultatsByLicence[$lic])) ? $resultatsByLicence[$lic] : null;
+            }
+            return $r;
+        };
+
+        $byCategorie = [];
+        foreach ($inscriptions as $insc) {
+            $cat = trim((string)($insc['categorie_classement'] ?? $insc['abv_categorie_classement'] ?? ''));
+            if ($cat === '') {
+                $cat = 'Sans catégorie';
+            }
+            if (!isset($byCategorie[$cat])) {
+                $byCategorie[$cat] = [];
+            }
+            $r = $resolveResultat($insc);
+            $byCategorie[$cat][] = [
+                'inscription' => $insc,
+                'resultat' => $r,
+                'score' => $r ? (int)($r['score'] ?? 0) : 0,
+            ];
+        }
+
+        foreach ($byCategorie as &$items) {
+            usort($items, function ($a, $b) use ($isNature, $is3D) {
+                return self::compareScoreItems($a, $b, $isNature, $is3D);
+            });
+            $rang = 1;
+            foreach ($items as &$item) {
+                $item['rang'] = $rang++;
+            }
+            unset($item);
+        }
+        unset($items);
+
+        $rangByInscId = [];
+        foreach ($byCategorie as $items) {
+            foreach ($items as $item) {
+                $inscId = $item['inscription']['id'] ?? $item['inscription']['_id'] ?? null;
+                if ($inscId !== null && $inscId !== '') {
+                    $rangByInscId[(int)$inscId] = (int)($item['rang'] ?? 0);
+                }
+            }
+        }
+
+        $groupKey = function (array $insc) use ($triScores): string {
+            if ($triScores === 'club') {
+                $v = trim($insc['club_nom'] ?? '');
+                return $v !== '' ? $v : 'Sans club';
+            }
+            if ($triScores === 'categorie') {
+                $v = trim($insc['categorie_libelle'] ?? $insc['categorie_classement'] ?? $insc['abv_categorie_classement'] ?? '');
+                return $v !== '' ? $v : 'Sans catégorie';
+            }
+            if ($triScores === 'depart') {
+                $v = $insc['numero_depart'] ?? null;
+                return $v !== null && $v !== '' ? (string)$v : 'Non défini';
+            }
+            return '—';
+        };
+
+        $groups = [];
+        foreach ($inscriptions as $insc) {
+            $k = $groupKey($insc);
+            if (!isset($groups[$k])) {
+                $groups[$k] = [];
+            }
+            $groups[$k][] = $insc;
+        }
+        if ($triScores === 'depart') {
+            ksort($groups, SORT_NATURAL);
+        } else {
+            ksort($groups, SORT_FLAG_CASE | SORT_NATURAL);
+        }
+
+        $flat = [];
+        foreach ($groups as $rows) {
+            foreach ($rows as $insc) {
+                $inscId = $insc['id'] ?? $insc['_id'] ?? null;
+                $flat[] = [
+                    'inscription' => $insc,
+                    'resultat' => $resolveResultat($insc),
+                    'rang' => $inscId !== null ? ($rangByInscId[(int)$inscId] ?? 0) : 0,
+                ];
+            }
+        }
+        return $flat;
+    }
+
+    /**
+     * @return array{0: bool, 1: bool} [is3D, isNature]
+     */
+    private static function detectDisciplineFlags(array $resultats, ?string $disciplineAbv): array
+    {
+        $hasNatureScores = !empty(array_filter($resultats, function ($r) {
+            return isset($r['nb_20_15']) || isset($r['nb_20_10']) || isset($r['nb_15_15']) || isset($r['nb_15_10']);
+        }));
+        $has3DScores = !empty(array_filter($resultats, function ($r) {
+            return isset($r['nb_11']) || isset($r['nb_8']) || isset($r['nb_5']);
+        }));
+        $is3D = ($disciplineAbv && in_array($disciplineAbv, ['3', '3D'], true)) || $has3DScores;
+        $isNature = !$is3D && (($disciplineAbv && in_array($disciplineAbv, ['N', 'C'], true)) || $hasNatureScores);
+        return [$is3D, $isNature];
+    }
+
+    /**
+     * @param array{inscription: array, resultat: ?array, score: int} $a
+     * @param array{inscription: array, resultat: ?array, score: int} $b
+     */
+    private static function compareScoreItems(array $a, array $b, bool $isNature, bool $is3D): int
+    {
+        $diff = $b['score'] - $a['score'];
+        if ($diff !== 0) {
+            return $diff;
+        }
+        $rA = $a['resultat'] ?? [];
+        $rB = $b['resultat'] ?? [];
+        if ($is3D) {
+            foreach (['nb_11', 'nb_10', 'nb_8', 'nb_5'] as $k) {
+                $vA = (int)($rA[$k] ?? 0);
+                $vB = (int)($rB[$k] ?? 0);
+                if ($vA !== $vB) {
+                    return $vB - $vA;
+                }
+            }
+            return (int)($rA['nb_0'] ?? 0) - (int)($rB['nb_0'] ?? 0);
+        }
+        if (!$isNature) {
+            return 0;
+        }
+        foreach (['nb_20_15', 'nb_20_10', 'nb_15_15', 'nb_15_10', 'nb_15', 'nb_10'] as $k) {
+            $vA = (int)($rA[$k] ?? 0);
+            $vB = (int)($rB[$k] ?? 0);
+            if ($vA !== $vB) {
+                return $vB - $vA;
+            }
+        }
+        return (int)($rA['nb_0'] ?? 0) - (int)($rB['nb_0'] ?? 0);
     }
 
     /**

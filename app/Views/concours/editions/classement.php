@@ -161,20 +161,6 @@ if ($top3ParCategorie) {
 }
 ?>
 <div class="edition-classement">
-    <?php
-    $concoursIdClt = $concours->id ?? $concours->_id ?? null;
-    if ($concoursIdClt):
-        $fftaUrl = '/concours/' . (int)$concoursIdClt . '/editions?doc=classement&type=' . urlencode($typeClassement ?? 'general') . '&export=ffta';
-        if (!empty($top3ParCategorie)) {
-            $fftaUrl .= '&top3=1';
-        }
-    ?>
-    <p class="text-center d-print-none mb-3">
-        <a href="<?= htmlspecialchars($fftaUrl) ?>" class="btn btn-outline-primary btn-sm" title="Export texte FFTA (tabulations)">
-            <i class="fas fa-file-export me-1"></i>Export FFTA
-        </a>
-    </p>
-    <?php endif; ?>
     <h1 class="text-center mb-4">Classement</h1>
     <p class="text-center text-muted small">(1er tir uniquement)</p>
     <?php if ($typeClassement === 'regional'): ?>
