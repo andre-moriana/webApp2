@@ -556,7 +556,7 @@ class FftaClassementExportService
         $fields[10] = '';
         $fields[11] = $clubNom;
         $fields[12] = $affiliation;
-        $fields[13] = self::num4($score);
+        $fields[13] = $score;
         $fields[14] = $paille;
         $fields[15] = $dix;
         $fields[16] = $neuf;
@@ -564,14 +564,14 @@ class FftaClassementExportService
         $fields[18] = $blason;
         $fields[19] = $dateConcours;
         $fields[20] = $lieu;
-        $fields[21] = self::num3($rangClassement);
+        $fields[21] = $rangClassement;
         $fields[22] = $score1Dist;
         $fields[23] = $score2Dist;
         $fields[24] = $score3Dist;
         $fields[25] = $score4Dist;
         // 26-46 : phases éliminatoires (vides)
         $placeDefinitive = self::inscriptionHasDuel($insc) ? $rangClassement : 0;
-        $fields[47] = self::num3($placeDefinitive);
+        $fields[47] = $placeDefinitive;
         $fields[48] = $fgFfta ? '1' : '0';
         $fields[49] = $armeUtilisee;
         $fields[50] = substr($numeroTir, 0, 1);
@@ -640,11 +640,11 @@ class FftaClassementExportService
         if ($piquetRaw !== '') {
             $codePiquet = self::mapPiquetCouleurFfta($piquetRaw);
             if ($codePiquet !== '') {
-                return self::num2($codePiquet);
+                return $codePiquet;
             }
         }
         if (isset($insc['distance']) && $insc['distance'] !== '' && $insc['distance'] !== null) {
-            return self::num2($insc['distance']);
+            return $insc['distance'];
         }
         return '';
     }
