@@ -449,7 +449,7 @@ class FftaClassementExportService
             return isset($r['nb_20_15']) || isset($r['nb_20_10']) || isset($r['nb_15_15']) || isset($r['nb_15_10']);
         }));
         $has3DScores = !empty(array_filter($resultats, function ($r) {
-            return isset($r['nb_11']) || isset($r['nb_8']) || isset($r['nb_5']);
+            return isset($r['nb_11']) || isset($r['nb_10']) || isset($r['nb_8']) || isset($r['nb_5']);
         }));
         $is3D = ($disciplineAbv && in_array($disciplineAbv, ['3', '3D'], true)) || $has3DScores;
         $isNature = !$is3D && (($disciplineAbv && in_array($disciplineAbv, ['N', 'C'], true)) || $hasNatureScores);
@@ -538,6 +538,16 @@ class FftaClassementExportService
         $nomPrenomByLicence = !empty($licences) ? ArcherSearchController::getNomPrenomByLicences($licences) : [];
         $sexeByLicence = !empty($licences) ? ArcherSearchController::getSexeByLicences($licences) : [];
 
+        $resultatsForDetect = [];
+        foreach ($rows as $row) {
+            $r = $row['resultat'] ?? null;
+            if (is_array($r) && $r !== []) {
+                $resultatsForDetect[] = $r;
+            }
+        }
+        [$is3D] = self::detectDisciplineFlags($resultatsForDetect, $options['disciplineAbv'] ?? null);
+        $options['is3D'] = $is3D;
+
         foreach ($rows as $row) {
             $lines[] = self::buildDataLine($row, $options, $nomPrenomByLicence, $sexeByLicence);
         }
@@ -621,9 +631,16 @@ class FftaClassementExportService
         $affiliation = self::clubAffiliationCode($insc, $clubsMap);
 
         $score = $res ? (int)($res['score'] ?? 0) : 0;
+        $is3D = !empty($options['is3D']);
         $paille = $res ? self::num2($res['nb_paille'] ?? '') : '';
-        $dix = $res ? self::num2($res['nb_10'] ?? $res['serie1_nb_10'] ?? '') : '';
-        $neuf = $res ? self::num2($res['nb_9'] ?? $res['serie1_nb_9'] ?? $res['total_nb_9'] ?? '') : '';
+        if ($is3D) {
+            // Tir 3D : champs FFTA 16 = nb 11, 17 = nb 10 (colonnes « dix » / « neuf » du format).
+            $dix = $res ? self::num2($res['nb_11'] ?? '') : '';
+            $neuf = $res ? self::num2($res['nb_10'] ?? '') : '';
+        } else {
+            $dix = $res ? self::num2($res['nb_10'] ?? $res['serie1_nb_10'] ?? '') : '';
+            $neuf = $res ? self::num2($res['nb_9'] ?? $res['serie1_nb_9'] ?? $res['total_nb_9'] ?? '') : '';
+        }
 
         $champ18 = self::resolveChamp18DistanceOuPiquet($insc);
 
