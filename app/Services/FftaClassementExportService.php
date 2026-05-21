@@ -436,7 +436,7 @@ class FftaClassementExportService
         }
 
         $dateConcours = self::formatDateFfta($concours);
-        $lieu = is_object($concours) ? trim((string)($concours->lieu ?? '')) : trim((string)($concours['lieu'] ?? ''));
+        $lieu = self::resolveLieuConcours($concours, $clubsMap);
 
         $serie1 = $res ? (int)($res['serie1_score'] ?? 0) : 0;
         $serie2 = $res ? (int)($res['serie2_score'] ?? 0) : 0;
@@ -604,6 +604,41 @@ class FftaClassementExportService
         }
         $ts = strtotime($raw);
         return $ts ? date('d/m/Y', $ts) : '';
+    }
+
+    /**
+     * Lieu du concours FFTA : ville du club organisateur, sinon lieu du concours.
+     *
+     * @param object|array|null $concours
+     * @param array<string|int, array> $clubsMap
+     */
+    private static function resolveLieuConcours($concours, array $clubsMap): string
+    {
+        $clubOrgId = null;
+        if (is_object($concours)) {
+            $clubOrgId = $concours->club_organisateur ?? null;
+        } elseif (is_array($concours)) {
+            $clubOrgId = $concours['club_organisateur'] ?? null;
+        }
+        if ($clubOrgId !== null && $clubOrgId !== '') {
+            $club = $clubsMap[$clubOrgId] ?? $clubsMap[(string)$clubOrgId] ?? $clubsMap[(int)$clubOrgId] ?? null;
+            if (!$club && is_string($clubOrgId)) {
+                $club = $clubsMap[trim((string)$clubOrgId)] ?? null;
+            }
+            if (is_array($club)) {
+                $ville = trim((string)($club['city'] ?? $club['ville'] ?? ''));
+                if ($ville !== '') {
+                    return $ville;
+                }
+            }
+        }
+        if (is_object($concours)) {
+            return trim((string)($concours->lieu ?? ''));
+        }
+        if (is_array($concours)) {
+            return trim((string)($concours['lieu'] ?? ''));
+        }
+        return '';
     }
 
     private static function num2($value): string
