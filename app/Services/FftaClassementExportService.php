@@ -20,6 +20,7 @@ class FftaClassementExportService
         $rows = ($mode === 'scores')
             ? self::buildScoresPageRows($options)
             : self::buildClassementRows($options);
+        $options['inscriptions'] = $options['inscriptions'] ?? [];
         $content = self::buildFileContent($rows, $options);
         $filename = self::buildFilename($options);
 
@@ -117,7 +118,7 @@ class FftaClassementExportService
                 $flat[] = $item;
             }
         }
-        return $flat;
+        return self::attachRangGeneral($flat, $inscriptions1erTir, $resultats, $resultatsByLicence, $disciplineAbv);
     }
 
     /**
@@ -227,7 +228,59 @@ class FftaClassementExportService
                 ];
             }
         }
-        return $flat;
+        return self::attachRangGeneral($flat, $inscriptions, $resultats, $resultatsByLicence, $disciplineAbv);
+    }
+
+    /**
+     * @param list<array{inscription: array, resultat: ?array, rang: int}> $rows
+     * @param array<int, array> $inscriptions
+     * @return list<array{inscription: array, resultat: ?array, rang: int, rangGeneral: int}>
+     */
+    private static function attachRangGeneral(array $rows, array $inscriptions, array $resultats, array $resultatsByLicence, ?string $disciplineAbv): array
+    {
+        $rangGeneralMap = self::computeRangGeneralMap($inscriptions, $resultats, $resultatsByLicence, $disciplineAbv);
+        foreach ($rows as &$row) {
+            $inscId = $row['inscription']['id'] ?? $row['inscription']['_id'] ?? null;
+            $row['rangGeneral'] = ($inscId !== null && $inscId !== '') ? ($rangGeneralMap[(int)$inscId] ?? 0) : 0;
+        }
+        unset($row);
+        return $rows;
+    }
+
+    /**
+     * Classement général (tous archers confondus) sur le périmètre exporté.
+     *
+     * @param array<int, array> $inscriptions
+     * @return array<int, int> inscription_id => rang
+     */
+    private static function computeRangGeneralMap(array $inscriptions, array $resultats, array $resultatsByLicence, ?string $disciplineAbv): array
+    {
+        [$is3D, $isNature] = self::detectDisciplineFlags($resultats, $disciplineAbv);
+        $items = [];
+        foreach ($inscriptions as $insc) {
+            $inscId = $insc['id'] ?? $insc['_id'] ?? null;
+            $r = $inscId ? ($resultats[(int)$inscId] ?? null) : null;
+            if ($r === null) {
+                $lic = trim((string)($insc['numero_licence'] ?? ''));
+                $r = ($lic !== '' && isset($resultatsByLicence[$lic])) ? $resultatsByLicence[$lic] : null;
+            }
+            $items[] = [
+                'inscription_id' => $inscId !== null ? (int)$inscId : 0,
+                'resultat' => $r,
+                'score' => $r ? (int)($r['score'] ?? 0) : 0,
+            ];
+        }
+        usort($items, function ($a, $b) use ($isNature, $is3D) {
+            return self::compareScoreItems($a, $b, $isNature, $is3D);
+        });
+        $map = [];
+        $rang = 1;
+        foreach ($items as $item) {
+            if ($item['inscription_id'] > 0) {
+                $map[$item['inscription_id']] = $rang++;
+            }
+        }
+        return $map;
     }
 
     /**
@@ -346,18 +399,19 @@ class FftaClassementExportService
         $insc = $row['inscription'];
         $res = $row['resultat'] ?? [];
         $rang = (int)($row['rang'] ?? 0);
+        $rangGeneral = (int)($row['rangGeneral'] ?? $rang);
         $clubsMap = $options['clubsMap'] ?? [];
         $categoriesExport = $options['categoriesExport'] ?? [];
+        $categoriesAgeIdToAbv = $options['categoriesAgeIdToAbv'] ?? [];
         $concours = $options['concours'] ?? null;
         $disciplineAbv = strtoupper(substr((string)($options['disciplineAbv'] ?? ''), 0, 1));
         $niveauAbv = self::mapNiveauFfta($options['niveauChampionnatAbv'] ?? '');
-        $typeChpt = self::mapTypeChampionnat($options['typeCompetitionName'] ?? '', $concours);
+        $typeChpt = self::resolveTypeChampionnat($options['typeCompetitionName'] ?? '', $concours);
         $isShortDistance = in_array($disciplineAbv, ['S', 'I'], true);
 
         $abvCat = trim((string)($insc['abv_categorie_classement'] ?? $insc['categorie_classement'] ?? ''));
         $catMeta = $categoriesExport[$abvCat] ?? [];
         $fgFfta = !empty($catMeta['fg_ffta']);
-        $place = $fgFfta ? $rang : 0;
 
         $licence = trim((string)($insc['numero_licence'] ?? ''));
         $typeLicence = strtoupper(substr(trim((string)($insc['type_licence'] ?? '')), 0, 1));
@@ -384,15 +438,8 @@ class FftaClassementExportService
             }
         }
 
-        $catExport = trim((string)($catMeta['abv_export_cat'] ?? ''));
-        if ($catExport === '') {
-            $catExport = self::extractCategorieAge($abvCat, trim((string)($insc['catage'] ?? '')));
-        }
-
-        $surclassement = '';
-        if (stripos($abvCat, 'DEC') !== false || stripos((string)($catMeta['lb_categorie_classement'] ?? ''), 'PROMOTION') !== false) {
-            $surclassement = 'D';
-        }
+        $catageFfta = self::resolveCatageAbv($insc, $categoriesAgeIdToAbv);
+        $catClassementFfta = substr($abvCat, 0, 3);
 
         $sexe = strtoupper(trim((string)($insc['abv_sexe'] ?? '')));
         if ($sexe === 'M') {
@@ -464,8 +511,8 @@ class FftaClassementExportService
         $fields[3] = $licence;
         $fields[4] = $nom;
         $fields[5] = $prenom;
-        $fields[6] = substr($catExport, 0, 3);
-        $fields[7] = substr($surclassement, 0, 3);
+        $fields[6] = $catageFfta;
+        $fields[7] = $catClassementFfta;
         $fields[8] = $sexe;
         $fields[9] = substr($armeClassement, 0, 2);
         $fields[10] = '';
@@ -479,13 +526,14 @@ class FftaClassementExportService
         $fields[18] = $blason;
         $fields[19] = $dateConcours;
         $fields[20] = $lieu;
-        $fields[21] = self::num3($place);
+        $fields[21] = self::num3($rangGeneral);
         $fields[22] = $score1Dist;
         $fields[23] = $score2Dist;
         $fields[24] = $score3Dist;
         $fields[25] = $score4Dist;
         // 26-46 : phases éliminatoires (vides)
-        $fields[47] = self::num3($place);
+        $placeDefinitive = self::inscriptionHasDuel($insc) ? $rangGeneral : 0;
+        $fields[47] = self::num3($placeDefinitive);
         $fields[48] = $fgFfta ? '1' : '0';
         $fields[49] = $armeUtilisee;
         $fields[50] = substr($numeroTir, 0, 1);
@@ -571,24 +619,54 @@ class FftaClassementExportService
         return $map[$abv] ?? ($abv !== '' ? $abv : 'C');
     }
 
-    private static function mapTypeChampionnat(string $typeName, $concours): string
+    /**
+     * Champ 3 : I (individuel) par défaut, E uniquement si le type de compétition est un tir en équipe.
+     */
+    private static function resolveTypeChampionnat(string $typeName, $concours = null): string
     {
-        $name = strtoupper($typeName);
-        if (str_contains($name, 'EQUIPE') || str_contains($name, 'ÉQUIPE')) {
-            return 'E';
-        }
+        $labels = [strtoupper(trim($typeName))];
         if (is_object($concours)) {
-            $div = strtoupper((string)($concours->division_equipe ?? ''));
-            if (str_contains($div, 'EQUIPE')) {
-                return 'E';
-            }
+            $labels[] = strtoupper(trim((string)($concours->type_competition_text ?? '')));
         } elseif (is_array($concours)) {
-            $div = strtoupper((string)($concours['division_equipe'] ?? ''));
-            if (str_contains($div, 'EQUIPE')) {
+            $labels[] = strtoupper(trim((string)($concours['type_competition_text'] ?? '')));
+        }
+        foreach ($labels as $name) {
+            if ($name !== '' && (str_contains($name, 'EQUIPE') || str_contains($name, 'ÉQUIPE'))) {
                 return 'E';
             }
         }
         return 'I';
+    }
+
+    /**
+     * Champ 7 : CATAGE (catégorie d'âge FFTA, ex. U13, S1).
+     *
+     * @param array<string, string> $categoriesAgeIdToAbv
+     */
+    private static function resolveCatageAbv(array $insc, array $categoriesAgeIdToAbv): string
+    {
+        $raw = trim((string)($insc['catage'] ?? ''));
+        if ($raw !== '' && isset($categoriesAgeIdToAbv[$raw])) {
+            return substr(trim((string)$categoriesAgeIdToAbv[$raw]), 0, 3);
+        }
+        if ($raw !== '' && is_numeric($raw)) {
+            $key = (string)(int)$raw;
+            if (isset($categoriesAgeIdToAbv[$key])) {
+                return substr(trim((string)$categoriesAgeIdToAbv[$key]), 0, 3);
+            }
+        }
+        if (preg_match('/(U1[1358]|U21|S[123])/i', $raw, $m)) {
+            return strtoupper($m[1]);
+        }
+        return substr($raw, 0, 3);
+    }
+
+    /** Champ 48 (place définitives) : renseigné seulement si l'archer est engagé en duel. */
+    private static function inscriptionHasDuel(array $insc): bool
+    {
+        $v = $insc['duel'] ?? null;
+        return $v === 1 || $v === true
+            || in_array(strtolower(trim((string)$v)), ['1', 'true', 'oui', 'on'], true);
     }
 
     private static function formatDateFfta($concours): string

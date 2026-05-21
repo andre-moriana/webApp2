@@ -2961,6 +2961,7 @@ public function inscription($concoursId)
                     'clubsMap' => $clubsMap,
                     'disciplineAbv' => $disciplineAbv,
                     'categoriesExport' => $categoriesExport,
+                    'categoriesAgeIdToAbv' => $categoriesAgeIdToAbv,
                     'concours' => $concours,
                     'arbitres' => $concours->arbitres ?? [],
                     'niveauChampionnatAbv' => $niveauChampionnatAbv,
