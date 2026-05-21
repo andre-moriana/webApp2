@@ -2929,6 +2929,7 @@ public function inscription($concoursId)
                     'disciplineAbv' => $disciplineAbv,
                     'categoriesExport' => $categoriesExport,
                     'categoriesAgeIdToAbv' => $categoriesAgeIdToAbv,
+                    'categoriesIdToAbv' => $categoriesIdToAbv,
                     'concours' => $concours,
                     'arbitres' => $concours->arbitres ?? [],
                     'niveauChampionnatAbv' => $niveauChampionnatAbv,

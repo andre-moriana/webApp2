@@ -123,7 +123,7 @@ class FftaClassementExportService
 
     /**
      * Export FFTA : tous les départs, tri par catégorie (puis n° départ, nom dans chaque catégorie).
-     * Le rang FFTA (champ 22) est calculé par catégorie de classement et n° de départ (1er tir).
+     * Le rang FFTA (champ 22) est calculé par catégorie de classement et n° de départ (chaque départ séparément).
      *
      * @param array<string, mixed> $options
      * @return list<array{inscription: array, resultat: ?array, rang: int}>
@@ -139,15 +139,7 @@ class FftaClassementExportService
         }
         $disciplineAbv = $options['disciplineAbv'] ?? null;
 
-        $resolveResultat = function (array $insc) use ($resultats, $resultatsByLicence) {
-            $inscId = $insc['id'] ?? $insc['_id'] ?? null;
-            $r = $inscId ? ($resultats[(int)$inscId] ?? null) : null;
-            if ($r === null) {
-                $lic = trim((string)($insc['numero_licence'] ?? ''));
-                $r = ($lic !== '' && isset($resultatsByLicence[$lic])) ? $resultatsByLicence[$lic] : null;
-            }
-            return $r;
-        };
+        $resolveResultat = self::makeResultatResolver($resultats, $resultatsByLicence);
 
         $groupKey = function (array $insc) use ($triScores): string {
             if ($triScores === 'club') {
@@ -200,7 +192,7 @@ class FftaClassementExportService
     }
 
     /**
-     * Classement par catégorie et n° de départ (1er tir, départage) — même rang pour tous les tirs d'une licence sur le même départ.
+     * Classement par catégorie et n° de départ (chaque départ a son propre classement) — même rang pour tous les tirs d'une licence sur ce départ.
      *
      * @param list<array{inscription: array, resultat: ?array}> $rows
      * @param array<int, array> $inscriptions
@@ -215,17 +207,18 @@ class FftaClassementExportService
         ?string $disciplineAbv,
         array $exportOptions
     ): array {
+        $categoriesIdToAbv = $exportOptions['categoriesIdToAbv'] ?? [];
         $map = self::computeRangParCategorieLicenceMap($inscriptions, $resultats, $resultatsByLicence, $disciplineAbv, $exportOptions);
         foreach ($rows as &$row) {
             $insc = $row['inscription'];
-            $row['rangClassement'] = self::resolveRangClassementParCategorie($insc, $map);
+            $row['rangClassement'] = self::resolveRangClassementParCategorie($insc, $map, $categoriesIdToAbv);
         }
         unset($row);
         return $rows;
     }
 
     /**
-     * Rang par catégorie de classement et n° de départ (1er tir), clé licence|catégorie|départ.
+     * Rang par catégorie de classement et n° de départ, clé licence|catégorie|départ.
      *
      * @param array<int, array> $inscriptions
      * @param array<string, mixed> $exportOptions
@@ -241,99 +234,120 @@ class FftaClassementExportService
         $typeClassement = $exportOptions['typeClassement'] ?? 'general';
         $clubOrganisateurCode = preg_replace('/\D/', '', (string)($exportOptions['clubOrganisateurCode'] ?? ''));
         $clubsMap = $exportOptions['clubsMap'] ?? [];
+        $categoriesIdToAbv = $exportOptions['categoriesIdToAbv'] ?? [];
 
         [$is3D, $isNature] = self::detectDisciplineFlags($resultats, $disciplineAbv);
 
-        $inscriptions1erTir = array_values(array_filter($inscriptions, function ($insc) {
-            $nt = $insc['numero_tir'] ?? null;
-            return $nt === null || $nt === '' || (int)$nt === 1;
-        }));
-
+        $inscriptionsPourRang = $inscriptions;
         if ($typeClassement === 'regional' && strlen($clubOrganisateurCode) >= 2) {
             $prefixOrg = substr($clubOrganisateurCode, 0, 2);
-            $inscriptions1erTir = array_values(array_filter($inscriptions1erTir, function ($insc) use ($prefixOrg, $clubsMap) {
+            $inscriptionsPourRang = array_values(array_filter($inscriptionsPourRang, function ($insc) use ($prefixOrg, $clubsMap) {
                 return self::clubCodeMatchesPrefix($insc, $clubsMap, $prefixOrg, 2);
             }));
         } elseif ($typeClassement === 'departemental' && strlen($clubOrganisateurCode) >= 4) {
             $prefixOrg = substr($clubOrganisateurCode, 0, 4);
-            $inscriptions1erTir = array_values(array_filter($inscriptions1erTir, function ($insc) use ($prefixOrg, $clubsMap) {
+            $inscriptionsPourRang = array_values(array_filter($inscriptionsPourRang, function ($insc) use ($prefixOrg, $clubsMap) {
                 return self::clubCodeMatchesPrefix($insc, $clubsMap, $prefixOrg, 4);
             }));
         }
 
-        $byGroupe = [];
-        foreach ($inscriptions1erTir as $insc) {
-            $groupe = self::groupeClassementKey($insc);
-            if (!isset($byGroupe[$groupe])) {
-                $byGroupe[$groupe] = [];
+        $resolveResultat = self::makeResultatResolver($resultats, $resultatsByLicence);
+
+        // Liste de tous les groupes (catégorie × n° départ) présents dans les inscriptions.
+        $groupes = [];
+        foreach ($inscriptionsPourRang as $insc) {
+            $lic = self::normalizeLicenceKey((string)($insc['numero_licence'] ?? ''));
+            if ($lic === '') {
+                continue;
             }
-            $inscId = $insc['id'] ?? $insc['_id'] ?? null;
-            $r = $inscId ? ($resultats[(int)$inscId] ?? null) : null;
-            if ($r === null) {
-                $lic = trim((string)($insc['numero_licence'] ?? ''));
-                $r = ($lic !== '' && isset($resultatsByLicence[$lic])) ? $resultatsByLicence[$lic] : null;
-            }
-            $byGroupe[$groupe][] = [
-                'inscription' => $insc,
-                'resultat' => $r,
-                'score' => $r ? (int)($r['score'] ?? 0) : 0,
-            ];
+            $groupes[self::groupeClassementKey($insc, $categoriesIdToAbv)] = true;
         }
 
-        $map = [];
-        foreach ($byGroupe as $items) {
+        /** @var array<string, int> $rangParLicenceGroupe licence|groupe => rang */
+        $rangParLicenceGroupe = [];
+        foreach (array_keys($groupes) as $groupe) {
+            /** @var array<string, array{inscription: array, resultat: ?array, score: int}> $parLicence */
+            $parLicence = [];
+            foreach ($inscriptionsPourRang as $insc) {
+                if (self::groupeClassementKey($insc, $categoriesIdToAbv) !== $groupe) {
+                    continue;
+                }
+                $lic = self::normalizeLicenceKey((string)($insc['numero_licence'] ?? ''));
+                if ($lic === '') {
+                    continue;
+                }
+                $r = $resolveResultat($insc);
+                $item = [
+                    'inscription' => $insc,
+                    'resultat' => $r,
+                    'score' => $r ? (int)($r['score'] ?? 0) : 0,
+                ];
+                if (!isset($parLicence[$lic])) {
+                    $parLicence[$lic] = $item;
+                    continue;
+                }
+                if (self::preferInscriptionForRankingOnDepart($item, $parLicence[$lic])) {
+                    $parLicence[$lic] = $item;
+                }
+            }
+
+            $items = array_values($parLicence);
             usort($items, function ($a, $b) use ($isNature, $is3D) {
                 return self::compareScoreItems($a, $b, $isNature, $is3D);
             });
             $rang = 1;
             foreach ($items as $item) {
-                $lic = trim((string)($item['inscription']['numero_licence'] ?? ''));
+                $lic = self::normalizeLicenceKey((string)($item['inscription']['numero_licence'] ?? ''));
                 if ($lic !== '') {
-                    $map[self::rangParGroupeMapKey($lic, $item['inscription'])] = $rang;
+                    $rangParLicenceGroupe[$lic . '|' . $groupe] = $rang;
                 }
                 $rang++;
             }
         }
 
-        // Même classement pour tous les tirs (2e, 3e…) : licence + catégorie + départ identiques.
+        // Appliquer le même rang à toutes les lignes exportées (tous les tirs).
+        $map = [];
         foreach ($inscriptions as $insc) {
-            $lic = trim((string)($insc['numero_licence'] ?? ''));
+            $lic = self::normalizeLicenceKey((string)($insc['numero_licence'] ?? ''));
             if ($lic === '') {
                 continue;
             }
-            $key = self::rangParGroupeMapKey($lic, $insc);
-            if (isset($map[$key])) {
-                continue;
-            }
-            $nt = $insc['numero_tir'] ?? null;
-            if ($nt === null || $nt === '' || (int)$nt === 1) {
-                continue;
-            }
-            foreach ($inscriptions as $insc1er) {
-                $nt1 = $insc1er['numero_tir'] ?? null;
-                if ($nt1 !== null && $nt1 !== '' && (int)$nt1 !== 1) {
-                    continue;
-                }
-                if (trim((string)($insc1er['numero_licence'] ?? '')) !== $lic) {
-                    continue;
-                }
-                if (self::groupeClassementKey($insc1er) !== self::groupeClassementKey($insc)) {
-                    continue;
-                }
-                $key1er = self::rangParGroupeMapKey($lic, $insc1er);
-                if (isset($map[$key1er])) {
-                    $map[$key] = $map[$key1er];
-                    break;
-                }
+            $groupe = self::groupeClassementKey($insc, $categoriesIdToAbv);
+            $lk = $lic . '|' . $groupe;
+            if (isset($rangParLicenceGroupe[$lk])) {
+                $map[self::rangParGroupeMapKey($lic, $insc, $categoriesIdToAbv)] = $rangParLicenceGroupe[$lk];
             }
         }
 
         return $map;
     }
 
-    private static function categorieClassementKey(array $insc): string
+    private static function normalizeLicenceKey(string $licence): string
     {
-        $cat = trim((string)($insc['categorie_classement'] ?? $insc['abv_categorie_classement'] ?? ''));
+        $lic = trim($licence);
+        if ($lic === '') {
+            return '';
+        }
+        return self::formatLicence($lic) ?: $lic;
+    }
+
+    /**
+     * @param array<string, string> $categoriesIdToAbv
+     */
+    private static function categorieClassementKey(array $insc, array $categoriesIdToAbv = []): string
+    {
+        $cat = trim((string)($insc['abv_categorie_classement'] ?? ''));
+        if ($cat === '') {
+            $cat = trim((string)($insc['categorie_classement'] ?? ''));
+        }
+        if ($cat !== '' && is_numeric($cat)) {
+            $id = (int)$cat;
+            if (isset($categoriesIdToAbv[$id])) {
+                $cat = trim((string)$categoriesIdToAbv[$id]);
+            } elseif (isset($categoriesIdToAbv[(string)$id])) {
+                $cat = trim((string)$categoriesIdToAbv[(string)$id]);
+            }
+        }
         return $cat !== '' ? $cat : 'Sans catégorie';
     }
 
@@ -344,23 +358,86 @@ class FftaClassementExportService
     }
 
     /** Groupe de classement : catégorie + n° départ. */
-    private static function groupeClassementKey(array $insc): string
+    private static function groupeClassementKey(array $insc, array $categoriesIdToAbv = []): string
     {
-        return self::categorieClassementKey($insc) . '|' . self::numeroDepartKey($insc);
+        return self::categorieClassementKey($insc, $categoriesIdToAbv) . '|' . self::numeroDepartKey($insc);
     }
 
-    private static function rangParGroupeMapKey(string $licence, array $insc): string
+    private static function rangParGroupeMapKey(string $licence, array $insc, array $categoriesIdToAbv = []): string
     {
-        return trim($licence) . '|' . self::groupeClassementKey($insc);
+        return self::normalizeLicenceKey($licence) . '|' . self::groupeClassementKey($insc, $categoriesIdToAbv);
+    }
+
+    /**
+     * Meilleur score sur le même départ (tous les tirs), puis n° de tir le plus bas en cas d'égalité.
+     *
+     * @param array{inscription: array, resultat: ?array, score: int} $candidate
+     * @param array{inscription: array, resultat: ?array, score: int} $current
+     */
+    private static function preferInscriptionForRankingOnDepart(array $candidate, array $current): bool
+    {
+        $diff = ($candidate['score'] ?? 0) - ($current['score'] ?? 0);
+        if ($diff !== 0) {
+            return $diff > 0;
+        }
+        $ntC = $candidate['inscription']['numero_tir'] ?? null;
+        $ntCur = $current['inscription']['numero_tir'] ?? null;
+        $tirC = ($ntC === null || $ntC === '') ? 1 : (int)$ntC;
+        $tirCur = ($ntCur === null || $ntCur === '') ? 1 : (int)$ntCur;
+        return $tirC < $tirCur;
+    }
+
+    /**
+     * @return callable(array): ?array
+     */
+    private static function makeResultatResolver(array $resultats, array $resultatsByLicence): callable
+    {
+        $index = $resultatsByLicence;
+        foreach ($resultats as $r) {
+            if (!is_array($r)) {
+                continue;
+            }
+            $inscId = $r['inscription_id'] ?? $r['inscriptionId'] ?? null;
+            if ($inscId !== null && $inscId !== '') {
+                $index['id:' . (int)$inscId] = $r;
+            }
+            $lic = trim((string)($r['numero_licence'] ?? ''));
+            if ($lic !== '') {
+                $index[$lic] = $r;
+                $norm = self::normalizeLicenceKey($lic);
+                if ($norm !== '') {
+                    $index[$norm] = $r;
+                }
+            }
+        }
+
+        return function (array $insc) use ($index): ?array {
+            $inscId = $insc['id'] ?? $insc['_id'] ?? null;
+            if ($inscId !== null && $inscId !== '' && isset($index['id:' . (int)$inscId])) {
+                return $index['id:' . (int)$inscId];
+            }
+            $lic = trim((string)($insc['numero_licence'] ?? ''));
+            if ($lic !== '' && isset($index[$lic])) {
+                return $index[$lic];
+            }
+            $norm = self::normalizeLicenceKey($lic);
+            if ($norm !== '' && isset($index[$norm])) {
+                return $index[$norm];
+            }
+            return null;
+        };
     }
 
     /**
      * @param array<string, int> $map
      */
-    private static function resolveRangClassementParCategorie(array $insc, array $map): int
+    private static function resolveRangClassementParCategorie(array $insc, array $map, array $categoriesIdToAbv = []): int
     {
-        $lic = trim((string)($insc['numero_licence'] ?? ''));
-        return $map[self::rangParGroupeMapKey($lic, $insc)] ?? 0;
+        $lic = self::normalizeLicenceKey((string)($insc['numero_licence'] ?? ''));
+        if ($lic === '') {
+            return 0;
+        }
+        return $map[self::rangParGroupeMapKey($lic, $insc, $categoriesIdToAbv)] ?? 0;
     }
 
     /**
