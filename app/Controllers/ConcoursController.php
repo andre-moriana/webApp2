@@ -2309,6 +2309,7 @@ public function inscription($concoursId)
         } catch (Exception $e) {}
         $categoriesClassement = [];
         $categoriesMap = [];
+        $categoriesExport = [];
         $categoriesIdToAbv = [];
         $categoriesAgeIdToAbv = [];
         try {
@@ -2323,6 +2324,12 @@ public function inscription($concoursId)
                     $abv = $cat['abv_categorie_classement'] ?? '';
                     if ($abv) {
                         $categoriesMap[$abv] = $cat['lb_categorie_classement'] ?? $abv;
+                        $categoriesExport[$abv] = [
+                            'abv_export_cat' => $cat['abv_export_cat'] ?? null,
+                            'abv_export_arme' => $cat['abv_export_arme'] ?? null,
+                            'fg_ffta' => !empty($cat['fg_ffta']),
+                            'lb_categorie_classement' => $cat['lb_categorie_classement'] ?? '',
+                        ];
                         $id = $cat['id'] ?? $cat['idcategorie_classement'] ?? null;
                         if ($id !== null && $id !== '') {
                             $categoriesIdToAbv[(int)$id] = $abv;
@@ -2384,6 +2391,17 @@ public function inscription($concoursId)
         }
         $typeCompetitionName = findLabelEditions($typeCompetitions, $concours->type_competition ?? null, 'idformat_competition', 'lb_format_competition');
         $niveauChampionnatName = findLabelEditions($niveauChampionnat, $concours->idniveau_championnat ?? null, 'idniveau_championnat', 'lb_niveauchampionnat');
+        $niveauChampionnatAbv = '';
+        foreach ($niveauChampionnat as $niv) {
+            $nivId = $niv['idniveau_championnat'] ?? $niv['id'] ?? null;
+            if ($nivId == ($concours->idniveau_championnat ?? null) || (string)$nivId === (string)($concours->idniveau_championnat ?? '')) {
+                $niveauChampionnatAbv = $niv['abv_niveauchampionnat'] ?? '';
+                break;
+            }
+        }
+        if ($niveauChampionnatAbv === '' && !empty($concours->niveau_championnat)) {
+            $niveauChampionnatAbv = (string)$concours->niveau_championnat;
+        }
 
         // Enrichir arbitres avec nom (résolution licence → nom depuis le XML)
         if (!isset($concours->arbitres) || !is_array($concours->arbitres)) {
@@ -2925,6 +2943,28 @@ public function inscription($concoursId)
                 }
                 return 0;
             });
+        }
+
+        if ($doc === 'classement' && (($_GET['export'] ?? '') === 'ffta')) {
+            require_once __DIR__ . '/../Services/FftaClassementExportService.php';
+            $exportVersion = defined('APP_VERSION') ? APP_VERSION : ($_ENV['APP_VERSION'] ?? '1.0');
+            FftaClassementExportService::buildAndDownload([
+                'inscriptions' => $inscriptions,
+                'resultats' => $resultats,
+                'resultatsByLicence' => $resultatsByLicence,
+                'typeClassement' => $typeClassement,
+                'clubOrganisateurCode' => $clubOrganisateurCode,
+                'clubsMap' => $clubsMap,
+                'top3ParCategorie' => $top3ParCategorie,
+                'disciplineAbv' => $disciplineAbv,
+                'categoriesExport' => $categoriesExport,
+                'concours' => $concours,
+                'arbitres' => $concours->arbitres ?? [],
+                'niveauChampionnatAbv' => $niveauChampionnatAbv,
+                'typeCompetitionName' => $typeCompetitionName,
+                'version' => $exportVersion,
+                'epreuve' => $_GET['epreuve'] ?? 'a',
+            ]);
         }
 
         // Feuilles de marques : charger le plan cible (S, T, I, H) ou peloton (3, N, C) pour affecter les archers
