@@ -439,7 +439,7 @@ class FftaClassementExportService
         }
 
         $catageFfta = self::resolveCatageAbv($insc, $categoriesAgeIdToAbv);
-        $catClassementFfta = substr($abvCat, 0, 3);
+        $catClassementFfta = self::formatCategorieClassementFfta($abvCat);
 
         $sexe = strtoupper(trim((string)($insc['abv_sexe'] ?? '')));
         if ($sexe === 'M') {
@@ -546,9 +546,9 @@ class FftaClassementExportService
      */
     public static function buildFilename(array $options): string
     {
-        $epreuve = strtolower(substr(trim((string)($options['epreuve'] ?? 'a')), 0, 1));
-        if ($epreuve === '' || !preg_match('/^[a-z]$/', $epreuve)) {
-            $epreuve = 'a';
+        $epreuve = strtoupper(substr(trim((string)($options['epreuve'] ?? 'a')), 0, 1));
+        if ($epreuve === '' || !preg_match('/^[A-Z]$/', $epreuve)) {
+            $epreuve = 'A';
         }
         $discipline = strtolower(substr((string)($options['disciplineAbv'] ?? 's'), 0, 1));
         $code = preg_replace('/\D/', '', (string)($options['clubOrganisateurCode'] ?? ''));
@@ -591,6 +591,17 @@ class FftaClassementExportService
             return '';
         }
         return str_pad(substr($digits, -7), 7, '0', STR_PAD_LEFT);
+    }
+
+    /** Champ 8 : catégorie de classement (2 car. si commence par S, sinon 3). */
+    private static function formatCategorieClassementFfta(string $abvCat): string
+    {
+        $abv = trim($abvCat);
+        if ($abv === '') {
+            return '';
+        }
+        $len = (strtoupper($abv[0]) === 'S') ? 2 : 3;
+        return substr($abv, 0, $len);
     }
 
     private static function extractCategorieAge(string $abvCat, string $catage): string
