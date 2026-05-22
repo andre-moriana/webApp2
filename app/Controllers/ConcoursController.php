@@ -3578,6 +3578,9 @@ public function inscription($concoursId)
             $scores = [];
         }
 
+        $abvDiscipline = $this->resolveConcoursDisciplineAbv((int)$concoursId);
+        $concoursIs3D = $abvDiscipline && in_array($abvDiscipline, ['3', '3D'], true);
+
         $saved = 0;
         $errors = [];
         $lastApiResponse = null;
@@ -3606,17 +3609,23 @@ public function inscription($concoursId)
             $serie2_nb_10 = (isset($data['serie2_nb_10']) && $data['serie2_nb_10'] !== '') ? (int)$data['serie2_nb_10'] : null;
             $serie2_nb_9 = (isset($data['serie2_nb_9']) && $data['serie2_nb_9'] !== '') ? (int)$data['serie2_nb_9'] : null;
 
+            if ($concoursIs3D && $serie1_score === null && $score !== null) {
+                $serie1_score = $score;
+            }
+
             $hasSalleTae = $serie1_score !== null || $serie1_nb_10 !== null || $serie1_nb_9 !== null || $serie2_score !== null || $serie2_nb_10 !== null || $serie2_nb_9 !== null;
             $hasNature = $score !== null || $nb_20_15 !== null || $nb_20_10 !== null || $nb_15_15 !== null || $nb_15_10 !== null || $nb_15 !== null || $nb_10 !== null || $nb_0 !== null;
-            $has3D = $score !== null || $nb_11 !== null || $nb_10 !== null || $nb_8 !== null || $nb_5 !== null || $nb_0 !== null;
+            $has3D = $serie1_score !== null || $serie2_score !== null || $score !== null || $nb_11 !== null || $nb_10 !== null || $nb_8 !== null || $nb_5 !== null || $nb_0 !== null;
             if (!$hasSalleTae && !$hasNature && !$has3D) {
                 continue;
             }
 
             try {
-                // Pour Salle/TAE : si score non fourni mais serie1_score/serie2_score oui, calculer score pour l'API
+                // score BDD = serie1_score + serie2_score (3D et Salle/TAE/Nature 2 passages)
                 $scoreToSend = $score;
-                if ($scoreToSend === null && ($serie1_score !== null || $serie2_score !== null)) {
+                if ($concoursIs3D && ($serie1_score !== null || $serie2_score !== null)) {
+                    $scoreToSend = ($serie1_score ?? 0) + ($serie2_score ?? 0);
+                } elseif ($scoreToSend === null && ($serie1_score !== null || $serie2_score !== null)) {
                     $scoreToSend = ($serie1_score ?? 0) + ($serie2_score ?? 0);
                 }
                 $payload = [
@@ -3633,22 +3642,27 @@ public function inscription($concoursId)
                     'nb_5' => $nb_5,
                     'nb_0' => $nb_0,
                 ];
-                $serieMode = $_POST['serie_mode'] ?? 'both';
-                if ($serieMode === '1') {
+                if ($concoursIs3D) {
                     $payload['serie1_score'] = $serie1_score;
-                    $payload['serie1_nb_10'] = $serie1_nb_10;
-                    $payload['serie1_nb_9'] = $serie1_nb_9;
-                } elseif ($serieMode === '2') {
                     $payload['serie2_score'] = $serie2_score;
-                    $payload['serie2_nb_10'] = $serie2_nb_10;
-                    $payload['serie2_nb_9'] = $serie2_nb_9;
                 } else {
-                    $payload['serie1_score'] = $serie1_score;
-                    $payload['serie1_nb_10'] = $serie1_nb_10;
-                    $payload['serie1_nb_9'] = $serie1_nb_9;
-                    $payload['serie2_score'] = $serie2_score;
-                    $payload['serie2_nb_10'] = $serie2_nb_10;
-                    $payload['serie2_nb_9'] = $serie2_nb_9;
+                    $serieMode = $_POST['serie_mode'] ?? 'both';
+                    if ($serieMode === '1') {
+                        $payload['serie1_score'] = $serie1_score;
+                        $payload['serie1_nb_10'] = $serie1_nb_10;
+                        $payload['serie1_nb_9'] = $serie1_nb_9;
+                    } elseif ($serieMode === '2') {
+                        $payload['serie2_score'] = $serie2_score;
+                        $payload['serie2_nb_10'] = $serie2_nb_10;
+                        $payload['serie2_nb_9'] = $serie2_nb_9;
+                    } else {
+                        $payload['serie1_score'] = $serie1_score;
+                        $payload['serie1_nb_10'] = $serie1_nb_10;
+                        $payload['serie1_nb_9'] = $serie1_nb_9;
+                        $payload['serie2_score'] = $serie2_score;
+                        $payload['serie2_nb_10'] = $serie2_nb_10;
+                        $payload['serie2_nb_9'] = $serie2_nb_9;
+                    }
                 }
                 $response = $this->apiService->makeRequest("concours/{$concoursId}/resultat", 'POST', $payload);
                 $apiSuccess = $response['success'] ?? false;
@@ -5113,5 +5127,43 @@ public function inscription($concoursId)
         include 'app/Views/layouts/header.php';
         include 'app/Views/concours/plan-peloton.php';
         include 'app/Views/layouts/footer.php';
+    }
+
+    /**
+     * Abréviation discipline du concours (ex. 3, N, S).
+     */
+    private function resolveConcoursDisciplineAbv(int $concoursId): ?string
+    {
+        try {
+            $concoursResponse = $this->apiService->makeRequest("concours/{$concoursId}", 'GET');
+            $concours = $this->apiService->unwrapData($concoursResponse);
+            if (is_object($concours)) {
+                $concours = (array)$concours;
+            }
+            if (!is_array($concours)) {
+                return null;
+            }
+            $disciplineId = $concours['discipline'] ?? $concours['iddiscipline'] ?? null;
+            if ($disciplineId === null || $disciplineId === '') {
+                return null;
+            }
+            $disciplinesResponse = $this->apiService->makeRequest('concours/disciplines', 'GET');
+            $disciplinesPayload = $this->apiService->unwrapData($disciplinesResponse);
+            if (is_array($disciplinesPayload) && isset($disciplinesPayload['data']) && isset($disciplinesPayload['success'])) {
+                $disciplinesPayload = $disciplinesPayload['data'];
+            }
+            if (!is_array($disciplinesPayload)) {
+                return null;
+            }
+            foreach ($disciplinesPayload as $disc) {
+                $discId = $disc['iddiscipline'] ?? $disc['id'] ?? null;
+                if ($discId == $disciplineId || (string)$discId === (string)$disciplineId) {
+                    return $disc['abv_discipline'] ?? null;
+                }
+            }
+        } catch (Exception $e) {
+            // ignore
+        }
+        return null;
     }
 }

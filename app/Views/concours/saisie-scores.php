@@ -347,10 +347,14 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                                                    class="form-control form-control-sm" min="0" step="1" placeholder="0">
                                         </td>
                                     <?php elseif ($is3D): ?>
+                                        <?php
+                                        $score3dVal = $s1_score !== '' ? $s1_score : $scoreVal;
+                                        ?>
                                         <td>
-                                            <input type="number" name="scores[<?= (int)$inscId ?>][score]" 
-                                                   value="<?= htmlspecialchars($scoreVal !== '' ? $scoreVal : '') ?>" 
-                                                   class="form-control form-control-sm" min="0" step="1" placeholder="0">
+                                            <input type="number" name="scores[<?= (int)$inscId ?>][serie1_score]" 
+                                                   value="<?= htmlspecialchars($score3dVal !== '' ? $score3dVal : '') ?>" 
+                                                   class="form-control form-control-sm serie1-score-input" min="0" step="1" placeholder="0"
+                                                   title="Score enregistré en série 1 (total BDD = série 1 + série 2)">
                                         </td>
                                         <td>
                                             <input type="number" name="scores[<?= (int)$inscId ?>][nb_11]" 
