@@ -123,7 +123,7 @@ class FftaClassementExportService
 
     /**
      * Export FFTA : tous les départs, tri par catégorie (puis n° départ, nom dans chaque catégorie).
-     * Le rang FFTA (champ 22) est calculé par catégorie de classement et n° de départ (chaque départ séparément).
+     * Le rang FFTA (champ 22) est calculé par catégorie et n° de départ uniquement si des duels sont prévus au concours.
      *
      * @param array<string, mixed> $options
      * @return list<array{inscription: array, resultat: ?array, rang: int}>
@@ -207,6 +207,14 @@ class FftaClassementExportService
         ?string $disciplineAbv,
         array $exportOptions
     ): array {
+        if (!self::concoursHasDuelsPrevus($exportOptions)) {
+            foreach ($rows as &$row) {
+                $row['rangClassement'] = 0;
+            }
+            unset($row);
+            return $rows;
+        }
+
         $categoriesIdToAbv = $exportOptions['categoriesIdToAbv'] ?? [];
         $map = self::computeRangParCategorieLicenceMap($inscriptions, $resultats, $resultatsByLicence, $disciplineAbv, $exportOptions);
         foreach ($rows as &$row) {
@@ -870,6 +878,23 @@ class FftaClassementExportService
             return strtoupper($m[1]);
         }
         return substr($raw, 0, 3);
+    }
+
+    /**
+     * Duels prévus au concours (option « Duel » à la création/édition du concours).
+     * Le champ 22 (place qualif.) n'est calculé que dans ce cas (sinon 0).
+     *
+     * @param array<string, mixed> $exportOptions
+     */
+    private static function concoursHasDuelsPrevus(array $exportOptions): bool
+    {
+        $concours = $exportOptions['concours'] ?? null;
+        if ($concours === null) {
+            return false;
+        }
+        $v = is_object($concours) ? ($concours->duel ?? null) : ($concours['duel'] ?? null);
+        return $v === 1 || $v === true
+            || in_array(strtolower(trim((string)$v)), ['1', 'true', 'oui', 'on'], true);
     }
 
     /** Champ 48 (place définitives) : renseigné seulement si l'archer est engagé en duel. */
