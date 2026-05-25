@@ -30,7 +30,7 @@
 var selectedArcher = null;
 var allInscriptionsCache = []; // Liste complète pour filtrage par départs cochés
 var currentRenderedInscriptions = []; // Dernière liste rendue (utile pour actions globales)
-var greffesSort = { column: '', asc: true }; // '' = ordre API ; 'nom' | 'club'
+var greffesSort = { column: 'nom', asc: true }; // tri par défaut : nom A→Z
 var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concoursId :
     (document.querySelector('input[name="concours_id"]')?.value ||
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
