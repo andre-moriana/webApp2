@@ -2435,7 +2435,10 @@ public function inscription($concoursId)
         foreach ($inscriptions as &$insc) {
             $clubId = $insc['id_club'] ?? null;
             $c = $clubId ? ($clubsMap[$clubId] ?? $clubsMap[(string)$clubId] ?? null) : null;
-            $insc['club_nom'] = $c ? ($c['name'] ?? $c['nameShort'] ?? $c['name_short'] ?? '') : '';
+            $clubNomFromMap = $c ? trim((string)($c['name'] ?? $c['nameShort'] ?? $c['name_short'] ?? '')) : '';
+            $clubNomFromApi = trim((string)($insc['club_name'] ?? $insc['club_name_short'] ?? ''));
+            // clubs/list est filtré par droits (dirigeant ≠ tous les clubs) ; l'API inscriptions fournit déjà club_name
+            $insc['club_nom'] = $clubNomFromMap !== '' ? $clubNomFromMap : $clubNomFromApi;
             $catRaw = $insc['categorie_classement'] ?? $insc['abv_categorie_classement'] ?? '';
             $abvCat = trim((string)$catRaw);
             if ($abvCat !== '' && is_numeric($abvCat) && isset($categoriesIdToAbv[(int)$abvCat])) {
@@ -3123,8 +3126,8 @@ public function inscription($concoursId)
             }
 
             $club = $clubsMap[$clubIdRaw] ?? $clubsMap[(string)$clubIdRaw] ?? null;
-            $clubCode = trim((string)($club['nameShort'] ?? $club['name_short'] ?? $clubKey));
-            $clubName = trim((string)($club['name'] ?? $insc['club_nom'] ?? $clubCode));
+            $clubCode = trim((string)($club['nameShort'] ?? $club['name_short'] ?? $insc['club_name_short'] ?? $clubKey));
+            $clubName = trim((string)($club['name'] ?? $insc['club_nom'] ?? $insc['club_name'] ?? $clubCode));
 
             if (!isset($clubs[$clubKey])) {
                 $clubs[$clubKey] = [
