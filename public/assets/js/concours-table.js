@@ -79,6 +79,10 @@ function sortTable(column) {
 
 // Obtenir l'index de la colonne
 function getColumnIndex(column) {
+    const greffesColumns = { statut: 1, nom: 2, club: 5 };
+    if (Object.prototype.hasOwnProperty.call(greffesColumns, column)) {
+        return greffesColumns[column];
+    }
     const columns = ['statut', 'nom et prénom', 'numéro de licence', 'catégorie de classement', 'club', 'départ', 'n°tir', 'piquet', 'distance', 'blason', 'date d\'inscription'];
     return columns.indexOf(column) + 1;
 }
@@ -192,10 +196,13 @@ function initUsersTable() {
     // Gérer le tri
     const sortableHeaders = document.querySelectorAll('.sortable');
     sortableHeaders.forEach(header => {
+        const column = header.getAttribute('data-column');
+        if (!column) return;
+        // Greffes : tri géré par concours-greffe.js (re-render du tbody)
+        if (header.closest('#greffes-table')) return;
         header.style.cursor = 'pointer';
         header.addEventListener('click', function() {
-            const column = this.getAttribute('data-column');
-            sortTable(column);
+            sortTable(this.getAttribute('data-column'));
         });
     });
     

@@ -181,10 +181,10 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     <thead class="table-light">
                         <tr>
                             <th>Statut</th>
-                            <th>Nom et Prénom</th>
+                            <th class="sortable" data-column="nom" style="cursor: pointer;" title="Cliquer pour trier par nom">Nom et Prénom <i class="fas fa-sort ms-1"></i></th>
                             <th>Numéro de licence</th>
                             <th>Catégorie</th>
-                            <th>Club</th>
+                            <th class="sortable" data-column="club" style="cursor: pointer;" title="Cliquer pour trier par club">Club <i class="fas fa-sort ms-1"></i></th>
                             <th>Départ</th>
                             <th>N°Tir</th>
                             <?php if ($isNature3DOrCampagne): ?>

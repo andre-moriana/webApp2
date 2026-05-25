@@ -30,6 +30,7 @@
 var selectedArcher = null;
 var allInscriptionsCache = []; // Liste complète pour filtrage par départs cochés
 var currentRenderedInscriptions = []; // Dernière liste rendue (utile pour actions globales)
+var greffesSort = { column: '', asc: true }; // '' = ordre API ; 'nom' | 'club'
 var concoursIdValue = (typeof concoursId !== 'undefined' && concoursId) ? concoursId :
     (document.querySelector('input[name="concours_id"]')?.value ||
     window.location.pathname.match(/\/concours\/(\d+)/)?.[1]);
@@ -68,6 +69,22 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() { applyDepartFilterAndRender(); }, 0);
         });
     }
+
+    document.querySelectorAll('#greffes-table th.sortable[data-column]').forEach(function(th) {
+        th.addEventListener('click', function() {
+            const col = this.getAttribute('data-column');
+            if (!col) return;
+            if (greffesSort.column === col) {
+                greffesSort.asc = !greffesSort.asc;
+            } else {
+                greffesSort.column = col;
+                greffesSort.asc = true;
+            }
+            updateGreffesSortHeaders();
+            applyDepartFilterAndRender();
+        });
+    });
+    updateGreffesSortHeaders();
 
     if (confirmBtn) {
         confirmBtn.addEventListener('click', confirmArcherSelection);
@@ -1852,6 +1869,54 @@ function loadInscriptions() {
     });
 }
 
+function getInscriptionNomForSort(inscription) {
+    return (inscription && inscription.user_nom != null ? String(inscription.user_nom) : '').trim();
+}
+
+function getInscriptionClubForSort(inscription) {
+    if (!inscription) return '';
+    const club = inscription.club_name || inscription.club_nom || inscription.id_club || '';
+    return String(club).trim();
+}
+
+function sortInscriptionsList(inscriptions) {
+    if (!greffesSort.column || !Array.isArray(inscriptions)) {
+        return inscriptions;
+    }
+    const dir = greffesSort.asc ? 1 : -1;
+    const localeOpts = { sensitivity: 'base' };
+    return inscriptions.slice().sort(function(a, b) {
+        let cmp = 0;
+        if (greffesSort.column === 'nom') {
+            cmp = getInscriptionNomForSort(a).localeCompare(getInscriptionNomForSort(b), 'fr', localeOpts);
+        } else if (greffesSort.column === 'club') {
+            cmp = getInscriptionClubForSort(a).localeCompare(getInscriptionClubForSort(b), 'fr', localeOpts);
+            if (cmp === 0) {
+                cmp = getInscriptionNomForSort(a).localeCompare(getInscriptionNomForSort(b), 'fr', localeOpts);
+            }
+        }
+        return cmp * dir;
+    });
+}
+
+function updateGreffesSortHeaders() {
+    const table = document.getElementById('greffes-table');
+    if (!table) return;
+    table.querySelectorAll('th.sortable[data-column]').forEach(function(th) {
+        th.classList.remove('sort-asc', 'sort-desc');
+        const icon = th.querySelector('i');
+        if (icon) icon.className = 'fas fa-sort ms-1';
+    });
+    if (!greffesSort.column) return;
+    const active = table.querySelector('th.sortable[data-column="' + greffesSort.column + '"]');
+    if (!active) return;
+    active.classList.add(greffesSort.asc ? 'sort-asc' : 'sort-desc');
+    const icon = active.querySelector('i');
+    if (icon) {
+        icon.className = greffesSort.asc ? 'fas fa-sort-up ms-1' : 'fas fa-sort-down ms-1';
+    }
+}
+
 /**
  * Filtre les inscriptions selon les départs cochés et affiche le tableau
  */
@@ -1878,6 +1943,7 @@ function applyDepartFilterAndRender() {
             return haystack.includes(searchTerm);
         });
     }
+    toRender = sortInscriptionsList(toRender);
     renderInscriptions(toRender);
 }
 
@@ -1899,9 +1965,15 @@ function renderInscriptions(inscriptions) {
 
     const hintEl = document.getElementById('inscriptions-filter-hint');
     if (hintEl) {
-        hintEl.textContent = isFiltered
+        let hint = isFiltered
             ? 'Affichage filtré : inscriptions des départs sélectionnés (' + checkedDeparts.length + ' départ(s)).'
             : 'La liste affiche toutes les inscriptions. Cochez des départs ci-dessus pour filtrer.';
+        if (greffesSort.column === 'nom') {
+            hint += ' Tri : nom (' + (greffesSort.asc ? 'A→Z' : 'Z→A') + ').';
+        } else if (greffesSort.column === 'club') {
+            hint += ' Tri : club (' + (greffesSort.asc ? 'A→Z' : 'Z→A') + '), puis nom.';
+        }
+        hintEl.textContent = hint;
     }
 
     if (!inscriptions || inscriptions.length === 0) {
