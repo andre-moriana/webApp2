@@ -316,11 +316,26 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     }
     $tarificationsList = is_array($tarificationsList) ? $tarificationsList : [];
     $tarifMap = [];
+    $tarifLabelMap = [];
     foreach ($tarificationsList as $t) {
         $t = (array)$t;
         $key = ($t['type_public'] ?? '') . '_' . ($t['type_depart'] ?? '');
         $tarifMap[$key] = $t['prix'] ?? null;
+        $tarifLabelMap[$key] = $t['type_label'] ?? $t['label'] ?? null;
     }
+    $defaultTarifLabels = [
+        'adulte_premier' => 'Adulte (de U21 a S3) 1er tir',
+        'enfant_premier' => 'Enfant (de U11 a U18) 1er tir',
+        'adulte_deuxieme' => 'Adulte (de U21 a S3) 2eme tir',
+        'enfant_deuxieme' => 'Enfant (de U11 a U18) 2eme tir',
+        'adulte_supplementaire' => 'Adulte (de U21 a S3) tir supplementaire',
+        'enfant_supplementaire' => 'Enfant (de U11 a U18) tir supplementaire',
+    ];
+    $getTarifLabel = function (string $key) use ($tarifLabelMap, $defaultTarifLabels) {
+        $val = $tarifLabelMap[$key] ?? null;
+        $val = is_string($val) ? trim($val) : '';
+        return $val !== '' ? $val : ($defaultTarifLabels[$key] ?? $key);
+    };
     $formatTarif = function ($value) {
         if ($value === null || $value === '') return 'Non renseigné';
         return number_format((float)$value, 2, ',', ' ') . ' EUR';
@@ -338,26 +353,26 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Adulte (de U21 a S3) 1er tir</td>
+                        <td><?= htmlspecialchars($getTarifLabel('adulte_premier')) ?></td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_premier'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Enfant (de U11 a U18) 1er tir</td>
+                        <td><?= htmlspecialchars($getTarifLabel('enfant_premier')) ?></td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_premier'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Adulte (de U21 a S3) 2eme tir</td>
+                        <td><?= htmlspecialchars($getTarifLabel('adulte_deuxieme')) ?></td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_deuxieme'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Enfant (de U11 a U18) 2eme tir</td>
+                        <td><?= htmlspecialchars($getTarifLabel('enfant_deuxieme')) ?></td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_deuxieme'] ?? null)) ?></td>
                     </tr>                    <tr>
-                        <td>Adulte (de U21 a S3) tir supplementaire</td>
+                        <td><?= htmlspecialchars($getTarifLabel('adulte_supplementaire')) ?></td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['adulte_supplementaire'] ?? null)) ?></td>
                     </tr>
                     <tr>
-                        <td>Enfant (de U11 a U18) tir supplementaire</td>
+                        <td><?= htmlspecialchars($getTarifLabel('enfant_supplementaire')) ?></td>
                         <td><?= htmlspecialchars($formatTarif($tarifMap['enfant_supplementaire'] ?? null)) ?></td>
                     </tr>
                 </tbody>
