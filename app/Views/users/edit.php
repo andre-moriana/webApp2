@@ -275,7 +275,7 @@ $title = "Modifier l'utilisateur - Portail Arc Training";
                                             <select class="form-select" id="clubId" name="clubId">
                                                 <option value="">Sélectionner un club...</option>
                                                 <?php
-                                                $currentClubId = $user['club'] ?? $user['clubId'] ?? '';
+                                                $currentClubId = $user['clubNameShort'] ?? $user['club'] ?? $user['clubId'] ?? '';
                                                 if (!empty($clubs)) {
                                                     foreach ($clubs as $club) {
                                                         $selected = ($currentClubId === $club['nameShort']) ? 'selected' : '';
