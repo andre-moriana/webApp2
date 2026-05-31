@@ -429,6 +429,13 @@ class ApiService {
     }
 
     /**
+     * Formulaire de contact → POST /api/contact/send (même principe que les emails concours via l'API).
+     */
+    public function submitContactForm(array $fields) {
+        return $this->makeRequestPublic('contact/send', 'POST', $fields);
+    }
+
+    /**
      * Requête API sans authentification (pour inscription ciblée publique).
      * Si $token est fourni, l'ajoute en query (GET) ou en header (POST). Si $licence est fourni, restreint aux actions sur sa propre inscription.
      */

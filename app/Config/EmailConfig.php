@@ -106,6 +106,7 @@ class EmailConfig {
 
         // Compléter depuis le .env du backend si SMTP non configuré côté WebApp
         self::mergeBackendEnvIfNeeded($envVars);
+        self::mergeBackendEnvFromSiblingPath($envVars);
 
         // Activer SMTP automatiquement si un relais est configuré
         if (
@@ -176,27 +177,7 @@ class EmailConfig {
 
         $backendEnv = self::parseEnvFile($backendEnvFile);
         $envVars = array_merge($backendEnv, $envVars);
-
-        $map = [
-            'CONTACT_EMAIL' => 'contact_email',
-            'SMTP_HOST' => 'smtp_host',
-            'SMTP_PORT' => 'smtp_port',
-            'SMTP_SECURE' => 'smtp_encryption',
-            'SMTP_USERNAME' => 'smtp_username',
-            'SMTP_PASSWORD' => 'smtp_password',
-            'SMTP_FROM_EMAIL' => 'from_email',
-            'SMTP_FROM_NAME' => 'from_name',
-        ];
-
-        foreach ($map as $envKey => $configKey) {
-            if (!empty(self::$config[$configKey]) && self::$config[$configKey] !== 'localhost') {
-                continue;
-            }
-            $value = self::envValue($backendEnv, $envKey);
-            if ($value !== null) {
-                self::$config[$configKey] = ($configKey === 'smtp_port') ? (int)$value : $value;
-            }
-        }
+        self::applyBackendEnvMap($backendEnv);
 
         if (self::envValue($backendEnv, 'EMAIL_METHOD') === 'smtp') {
             self::$config['use_smtp'] = true;
@@ -212,12 +193,70 @@ class EmailConfig {
                 $candidates[] = $value;
             }
         }
+        $webRoot = dirname(__DIR__, 2);
+        $candidates[] = $webRoot . '/../BackendPHP';
+        $candidates[] = $webRoot . '/../wamp64/www/BackendPHP';
+        $candidates[] = '/home/www/BackendPHP';
+
         foreach ($candidates as $path) {
-            if (is_dir($path)) {
+            if (is_string($path) && $path !== '' && is_dir($path)) {
                 return rtrim(str_replace('\\', '/', $path), '/');
             }
         }
         return null;
+    }
+
+    /**
+     * Sur IONOS, le backend est souvent dans /home/www/BackendPHP à côté du portail.
+     */
+    private static function mergeBackendEnvFromSiblingPath(array &$envVars): void {
+        if (!empty(self::$config['smtp_host']) && self::$config['smtp_host'] !== 'localhost') {
+            return;
+        }
+
+        $candidates = [
+            dirname(__DIR__, 2) . '/../BackendPHP/.env',
+            '/home/www/BackendPHP/.env',
+        ];
+        $backendPath = self::resolveBackendPath($envVars);
+        if ($backendPath !== null) {
+            $candidates[] = $backendPath . '/.env';
+        }
+
+        foreach ($candidates as $envFile) {
+            if (!is_readable($envFile)) {
+                continue;
+            }
+            $backendEnv = self::parseEnvFile($envFile);
+            $envVars = array_merge($backendEnv, $envVars);
+            self::applyBackendEnvMap($backendEnv);
+            if (self::envValue($backendEnv, 'EMAIL_METHOD') === 'smtp') {
+                self::$config['use_smtp'] = true;
+            }
+            return;
+        }
+    }
+
+    private static function applyBackendEnvMap(array $backendEnv): void {
+        $map = [
+            'CONTACT_EMAIL' => 'contact_email',
+            'SMTP_HOST' => 'smtp_host',
+            'SMTP_PORT' => 'smtp_port',
+            'SMTP_SECURE' => 'smtp_encryption',
+            'SMTP_USERNAME' => 'smtp_username',
+            'SMTP_PASSWORD' => 'smtp_password',
+            'SMTP_FROM_EMAIL' => 'from_email',
+            'SMTP_FROM_NAME' => 'from_name',
+        ];
+        foreach ($map as $envKey => $configKey) {
+            if (!empty(self::$config[$configKey]) && self::$config[$configKey] !== 'localhost') {
+                continue;
+            }
+            $value = self::envValue($backendEnv, $envKey);
+            if ($value !== null) {
+                self::$config[$configKey] = ($configKey === 'smtp_port') ? (int)$value : $value;
+            }
+        }
     }
     
     /**
