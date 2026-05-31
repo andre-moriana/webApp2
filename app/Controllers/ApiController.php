@@ -2628,37 +2628,6 @@ class ApiController {
     /**
      * Proxy pour POST /api/concours/{id}/inscriptions/send-confirmation-email - Envoie l'email de confirmation pour un batch d'inscriptions
      */
-    /**
-     * Proxy POST /api/contact/send — formulaire de contact (public).
-     */
-    public function proxyContactSend() {
-        header('Content-Type: application/json; charset=utf-8');
-        try {
-            $raw = $GLOBALS['__RAW_HTTP_INPUT'] ?? file_get_contents('php://input');
-            $data = json_decode($raw, true);
-            if (!is_array($data)) {
-                $data = [
-                    'name' => trim($_POST['name'] ?? ''),
-                    'email' => trim($_POST['email'] ?? ''),
-                    'subject' => trim($_POST['subject'] ?? ''),
-                    'message' => trim($_POST['message'] ?? ''),
-                ];
-            }
-            $response = $this->apiService->submitContactForm($data);
-            $payload = is_array($response['data'] ?? null) ? $response['data'] : ['success' => false, 'message' => 'Réponse API invalide'];
-            $status = (int)($response['status_code'] ?? 200);
-            if ($status < 100) {
-                $status = 502;
-            }
-            http_response_code($status);
-            echo json_encode($payload, JSON_UNESCAPED_UNICODE);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
-        }
-        exit;
-    }
-
     public function proxyConcoursSendConfirmationEmail($concoursId) {
         if (!$this->isAuthenticated()) {
             $this->sendUnauthenticatedResponse();

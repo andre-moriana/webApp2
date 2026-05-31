@@ -12,27 +12,67 @@ class EmailService {
      * @param string $message Contenu du message
      * @return array ['success' => bool, 'message' => string]
      */
-    /**
-     * @deprecated Utiliser l'API backend contact/send (voir ContactController).
-     */
     public static function sendContactEmail($name, $email, $subject, $message) {
         try {
-            require_once __DIR__ . '/ApiService.php';
-            $api = new ApiService();
-            $response = $api->makeRequestPublic('contact/send', 'POST', compact('name', 'email', 'subject', 'message'));
-            $payload = is_array($response['data'] ?? null) ? $response['data'] : [];
-            if (!empty($response['success']) && !empty($payload['success'])) {
+            $to = EmailConfig::getContactEmail();
+            $fromEmail = EmailConfig::getFromEmail();
+            $fromName = EmailConfig::getFromName();
+
+            if (empty($name) || empty($email) || empty($subject) || empty($message)) {
+                return ['success' => false, 'message' => 'Tous les champs sont requis.'];
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return ['success' => false, 'message' => 'Adresse email invalide.'];
+            }
+
+            if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
                 return [
-                    'success' => true,
-                    'message' => $payload['message'] ?? 'Votre message a été envoyé avec succès.',
+                    'success' => false,
+                    'message' => 'Adresse de réception non configurée (CONTACT_EMAIL dans le .env du portail).',
                 ];
             }
+
+            $htmlMessage = self::buildHtmlEmail($name, $email, $subject, $message);
+            $emailSubject = 'Contact : ' . $subject;
+            $lastError = '';
+            $success = false;
+
+            if (self::hasSmtpCredentials()) {
+                $success = self::sendViaBackendMailer($to, $name, $email, $emailSubject, $htmlMessage, $lastError);
+            } elseif (EmailConfig::useSmtp()) {
+                $success = self::sendViaSmtpWithFallback(
+                    $to,
+                    $fromEmail,
+                    $fromName,
+                    $name,
+                    $email,
+                    $emailSubject,
+                    $htmlMessage,
+                    $lastError
+                );
+            } else {
+                $success = self::sendViaMail($to, $fromEmail, $fromName, $name, $email, $emailSubject, $htmlMessage);
+            }
+
+            if ($success) {
+                return [
+                    'success' => true,
+                    'message' => 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.',
+                ];
+            }
+
+            error_log('Contact: échec envoi — ' . $lastError);
             return [
                 'success' => false,
-                'message' => $payload['message'] ?? 'Erreur lors de l\'envoi de l\'email.',
+                'message' => self::buildContactFailureMessage($lastError),
             ];
         } catch (Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+            error_log('Erreur EmailService (contact): ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de l\'envoi de votre message.',
+            ];
         }
     }
     
@@ -91,7 +131,7 @@ class EmailService {
             return $base . ' Détail : ' . $detail;
         }
         if (!EmailConfig::useSmtp() && !self::hasSmtpCredentials()) {
-            return $base . ' Vérifiez SMTP et CONTACT_EMAIL dans le .env du backend (API).';
+            return $base . ' Vérifiez CONTACT_EMAIL et SMTP (EMAIL_METHOD=smtp) dans le .env du portail.';
         }
         return $base . ' Veuillez réessayer plus tard ou contacter l\'administrateur.';
     }
