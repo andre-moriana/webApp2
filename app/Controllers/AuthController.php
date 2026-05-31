@@ -20,12 +20,26 @@ class AuthController {
     }
 
     public function login() {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            if ($this->hasValidSessionToken()) {
+                $returnUrl = $this->sanitizeReturnUrl(
+                    $_GET['return'] ?? $_SESSION['login_return_url'] ?? '/dashboard'
+                );
+                unset($_SESSION['login_return_url']);
+                header('Location: ' . $returnUrl);
+                exit;
+            }
+            if (!empty($_SESSION['logged_in'])) {
+                $this->clearAuthSession();
+            }
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = $_POST['username'] ?? '';
             $password = $_POST['password'] ?? '';
             
             
-            $result = $this->apiService->login($username, $password);
+            $result = $this->getApiService()->login($username, $password);
             
             if ($result['success']) {
                 // Stocker les informations dans la session
@@ -152,15 +166,11 @@ class AuthController {
                 $_SESSION['logged_in'] = true;
                 $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                 
-                $returnUrl = $_SESSION['login_return_url'] ?? $_POST['return'] ?? $_GET['return'] ?? '';
-                if (!empty($returnUrl)) {
-                    unset($_SESSION['login_return_url']);
-                }
-                if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/\-_]+$#', $returnUrl)) {
-                    header('Location: ' . $returnUrl);
-                } else {
-                    header('Location: /dashboard');
-                }
+                $returnUrl = $this->sanitizeReturnUrl(
+                    $_SESSION['login_return_url'] ?? $_POST['return'] ?? $_GET['return'] ?? '/dashboard'
+                );
+                unset($_SESSION['login_return_url']);
+                header('Location: ' . $returnUrl);
                 exit;
             } else {
                 // Échec de la connexion via l'API, essayer les identifiants de test
@@ -178,15 +188,11 @@ class AuthController {
                     $_SESSION['logged_in'] = true;
                     $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                     
-                    $returnUrl = $_SESSION['login_return_url'] ?? $_POST['return'] ?? $_GET['return'] ?? '';
-                    if (!empty($returnUrl)) {
-                        unset($_SESSION['login_return_url']);
-                    }
-                    if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/\-_]+$#', $returnUrl)) {
-                        header('Location: ' . $returnUrl);
-                    } else {
-                        header('Location: /dashboard');
-                    }
+                    $returnUrl = $this->sanitizeReturnUrl(
+                        $_SESSION['login_return_url'] ?? $_POST['return'] ?? $_GET['return'] ?? '/dashboard'
+                    );
+                    unset($_SESSION['login_return_url']);
+                    header('Location: ' . $returnUrl);
                     exit;
                 } else {
                     $_SESSION['error'] = $loginResult['message'] ?? 'Identifiants incorrects';
@@ -210,15 +216,11 @@ class AuthController {
                 $_SESSION['last_activity'] = time(); // Initialiser le timestamp d'activité
                 $_SESSION['logged_in'] = true;
                 
-                $returnUrl = $_SESSION['login_return_url'] ?? $_POST['return'] ?? $_GET['return'] ?? '';
-                if (!empty($returnUrl)) {
-                    unset($_SESSION['login_return_url']);
-                }
-                if (!empty($returnUrl) && preg_match('#^/[a-zA-Z0-9/\-_]+$#', $returnUrl)) {
-                    header('Location: ' . $returnUrl);
-                } else {
-                    header('Location: /dashboard');
-                }
+                $returnUrl = $this->sanitizeReturnUrl(
+                    $_SESSION['login_return_url'] ?? $_POST['return'] ?? $_GET['return'] ?? '/dashboard'
+                );
+                unset($_SESSION['login_return_url']);
+                header('Location: ' . $returnUrl);
                 exit;
             } else {
                 $_SESSION['error'] = 'Erreur de connexion à l\'API. Utilisez admin/admin1234';
@@ -745,5 +747,62 @@ class AuthController {
         }
         
         exit;
+    }
+
+    /**
+     * Vérifie que la session PHP contient un token JWT encore valide.
+     */
+    private function hasValidSessionToken(): bool {
+        if (empty($_SESSION['logged_in']) || empty($_SESSION['token']) || empty($_SESSION['user'])) {
+            return false;
+        }
+
+        $token = $_SESSION['token'];
+        $tokenParts = explode('.', $token);
+        if (count($tokenParts) !== 3) {
+            return strpos($token, 'demo-token-') === 0;
+        }
+
+        try {
+            $payload = json_decode(base64_decode(strtr($tokenParts[1], '-_', '+/')), true);
+            if (!$payload || !isset($payload['exp'])) {
+                return false;
+            }
+            return time() < (int) $payload['exp'];
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Supprime les données d'authentification sans détruire les messages flash.
+     */
+    private function clearAuthSession(): void {
+        unset(
+            $_SESSION['logged_in'],
+            $_SESSION['user'],
+            $_SESSION['token'],
+            $_SESSION['refresh_token'],
+            $_SESSION['last_activity']
+        );
+    }
+
+    /**
+     * URL de retour sûre après connexion (évite les boucles vers /login).
+     */
+    private function sanitizeReturnUrl(?string $url): string {
+        $url = trim((string) $url);
+        if ($url === '' || $url[0] !== '/') {
+            return '/dashboard';
+        }
+        $path = parse_url($url, PHP_URL_PATH) ?: $url;
+        $normalized = strtolower(rtrim($path, '/')) ?: '/';
+        if ($normalized === '/login' || $normalized === '/logout' || strpos($normalized, '/login/') === 0) {
+            return '/dashboard';
+        }
+        if (!preg_match('#^/[a-zA-Z0-9/\-_.?=&%]+$#', $url)) {
+            return '/dashboard';
+        }
+        return $url;
     }
 }

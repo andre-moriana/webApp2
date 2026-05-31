@@ -547,6 +547,7 @@ class Router {
         }
         
         header("HTTP/1.0 404 Not Found");
+        $skipSessionManager = true;
         include "app/Views/layouts/header.php";
         include "app/Views/errors/404.php";
         include "app/Views/layouts/footer.php";

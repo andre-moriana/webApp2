@@ -28,10 +28,19 @@
         '/inscription-cible/',
     ];
 
+    function normalizePathname(pathname) {
+        const path = (pathname || window.location.pathname || '/').toLowerCase();
+        if (path.length > 1 && path.endsWith('/')) {
+            return path.slice(0, -1);
+        }
+        return path || '/';
+    }
+
     function isPublicPagePath(pathname) {
-        const path = pathname || '';
+        const path = normalizePathname(pathname);
         if (PUBLIC_PATH_PREFIXES.some(function(prefix) {
-            return path === prefix || path.startsWith(prefix);
+            const normalizedPrefix = prefix.toLowerCase().replace(/\/$/, '') || '/';
+            return path === normalizedPrefix || path.startsWith(normalizedPrefix + '/');
         })) {
             return true;
         }
@@ -39,6 +48,10 @@
             return true;
         }
         return false;
+    }
+
+    function isLoginPage() {
+        return isPublicPagePath('/login');
     }
 
     class SessionManager {
@@ -59,6 +72,7 @@
             );
             
             this.intervalId = null;
+            this.periodicCheckId = null;
             this.lastActivityTime = Date.now();
             this.isActive = false;
             
@@ -74,6 +88,7 @@
 
         init() {
             if (this.isPublicPage()) {
+                sessionStorage.removeItem('sessionExpired');
                 return;
             }
 
@@ -131,8 +146,11 @@
          * Pour les pages normales, vérifier périodiquement la session sans la maintenir active
          */
         startPeriodicCheck() {
+            if (this.periodicCheckId) {
+                return;
+            }
             // Vérifier toutes les 10 secondes si la session est toujours valide
-            setInterval(() => this.checkSessionOnly(), 10 * 1000);
+            this.periodicCheckId = setInterval(() => this.checkSessionOnly(), 10 * 1000);
         }
         
         /**
@@ -196,16 +214,26 @@
          * Gère l'expiration de la session
          */
         handleSessionExpired() {
-            if (this.isPublicPage()) {
+            if (this.isPublicPage() || isLoginPage()) {
                 this.stop();
+                if (this.periodicCheckId) {
+                    clearInterval(this.periodicCheckId);
+                    this.periodicCheckId = null;
+                }
+                sessionStorage.removeItem('sessionExpired');
                 return;
             }
             // Arrêter le keep-alive
             this.stop();
+            if (this.periodicCheckId) {
+                clearInterval(this.periodicCheckId);
+                this.periodicCheckId = null;
+            }
             
             // Sauvegarder l'URL actuelle pour rediriger après login (optionnel)
             const currentUrl = window.location.pathname + window.location.search;
-            if (currentUrl !== '/login' && currentUrl !== '/logout') {
+            const currentPath = normalizePathname(window.location.pathname);
+            if (currentPath !== '/login' && currentPath !== '/logout') {
                 sessionStorage.setItem('redirectAfterLogin', currentUrl);
             }
             
@@ -215,8 +243,13 @@
             }
             sessionStorage.setItem('sessionExpired', 'true');
             
+            // Ne pas recharger si l'utilisateur est déjà sur la page de connexion
+            if (isLoginPage()) {
+                sessionStorage.removeItem('sessionExpired');
+                return;
+            }
+
             // Redirection immédiate vers la page de login
-            // console.log('[SessionManager] Redirection immédiate vers /login');
             window.location.replace('/login?expired=1');
         }
         
@@ -247,9 +280,19 @@
     // Exposer la classe globalement
     window.SessionManager = SessionManager;
 
+    // Ne pas initialiser sur les pages publiques (login, contact, etc.)
+    if (isPublicPagePath(window.location.pathname)) {
+        sessionStorage.removeItem('sessionExpired');
+        return;
+    }
+
     // Initialiser automatiquement le gestionnaire de session (une seule fois)
     if (typeof window.sessionManager === 'undefined') {
         document.addEventListener('DOMContentLoaded', function() {
+            if (isPublicPagePath(window.location.pathname)) {
+                sessionStorage.removeItem('sessionExpired');
+                return;
+            }
             window.sessionManager = new SessionManager({
                 checkInterval: 5 * 60 * 1000, // 5 minutes
                 keepAlivePages: [

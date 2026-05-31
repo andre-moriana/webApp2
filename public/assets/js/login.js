@@ -1,5 +1,6 @@
-// Nettoyer le flag de session expirée au chargement de la page de login
+// Nettoyer les flags de redirection session au chargement de la page de login
 sessionStorage.removeItem('sessionExpired');
+sessionStorage.removeItem('redirectAfterLogin');
 
 // Toggle password visibility
 document.getElementById('togglePassword').addEventListener('click', function() {

@@ -33,6 +33,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <?php endif; ?>
+<?php
+    if (!isset($skipSessionManager)) {
+        $skipSessionManager = false;
+        $footerPath = strtolower(rtrim(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '/', '/')) ?: '/';
+        $publicPathPrefixes = [
+            '/login', '/contact', '/privacy', '/donnees-personnelles',
+            '/auth/register', '/auth/forgot-password', '/auth/reset-password', '/auth/delete-account',
+        ];
+        foreach ($publicPathPrefixes as $prefix) {
+            $normalizedPrefix = rtrim(strtolower($prefix), '/');
+            if ($footerPath === $normalizedPrefix || strpos($footerPath, $normalizedPrefix . '/') === 0) {
+                $skipSessionManager = true;
+                break;
+            }
+        }
+        if (!$skipSessionManager && strpos($footerPath, '/inscription-cible/') === 0) {
+            $skipSessionManager = true;
+        }
+        if (!$skipSessionManager && strpos($footerPath, '/concours/') !== false
+            && (strpos($footerPath, '/plan-peloton') !== false || strpos($footerPath, '/plan-cible') !== false)) {
+            $skipSessionManager = true;
+        }
+    }
+?>
 <?php if (empty($skipSessionManager)): ?>
     <!-- Gestionnaire de session (pages authentifiées uniquement) -->
     <script src="/public/assets/js/session-manager.js?v=<?php echo time(); ?>"></script>
