@@ -80,21 +80,29 @@ class ContactController {
                 $_SESSION['contact_success'] = $payload['message']
                     ?? 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.';
             } else {
-                $errorMessage = $payload['message'] ?? 'Erreur lors de l\'envoi de l\'email.';
-                if ($httpCode === 404) {
-                    $errorMessage = 'Route contact absente sur l\'API. Déployez routes/contact.php sur api.arctraining.fr.';
-                } elseif ($httpCode === 500) {
-                    $errorMessage = $payload['message']
-                        ?? 'L\'API a reçu le message mais l\'envoi email a échoué. Vérifiez CONTACT_EMAIL et SMTP dans le .env du backend.';
-                } elseif ($httpCode === 0 || $response['data'] === null) {
+                $apiDetail = $payload['message'] ?? $payload['error'] ?? null;
+                if ($httpCode === 0 || $response['data'] === null) {
                     $curlErr = $response['curl_error'] ?? '';
                     $triedUrl = $response['url'] ?? ApiService::resolveApiBaseUrl() . '/contact/send';
                     $errorMessage = 'Impossible de joindre l\'API (' . $triedUrl . ')';
                     if ($curlErr !== '') {
                         $errorMessage .= ' : ' . $curlErr;
+                    } elseif ($httpCode === 500) {
+                        $errorMessage = 'L\'API a répondu en erreur sans détail JSON (HTTP 500). Vérifiez les logs PHP sur api.arctraining.fr.';
+                        $raw = $response['raw_response'] ?? '';
+                        if ($raw !== '') {
+                            error_log('Contact: réponse brute API — ' . substr((string)$raw, 0, 300));
+                        }
                     } else {
                         $errorMessage .= '. Vérifiez API_BASE_URL=https://api.arctraining.fr/api dans le .env du portail (sans guillemets).';
                     }
+                } elseif ($httpCode === 404) {
+                    $errorMessage = 'Route contact absente sur l\'API. Déployez routes/contact.php sur api.arctraining.fr.';
+                } elseif ($httpCode === 500) {
+                    $errorMessage = $apiDetail
+                        ?? 'L\'API a reçu le message mais l\'envoi email a échoué. Vérifiez CONTACT_EMAIL et SMTP dans le .env du backend.';
+                } else {
+                    $errorMessage = $apiDetail ?? 'Erreur lors de l\'envoi de l\'email.';
                 }
                 error_log('Contact: échec API contact/send (HTTP ' . $httpCode . ') — ' . $errorMessage);
                 $_SESSION['contact_error'] = $errorMessage;
