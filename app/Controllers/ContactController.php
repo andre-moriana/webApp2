@@ -73,14 +73,20 @@ class ContactController {
             ]);
 
             $payload = is_array($response['data'] ?? null) ? $response['data'] : [];
-            $apiSuccess = !empty($response['success']) && !empty($payload['success']);
+            $httpCode = (int)($response['status_code'] ?? 0);
+            $apiSuccess = $httpCode >= 200 && $httpCode < 300 && !empty($payload['success']);
 
             if ($apiSuccess) {
                 $_SESSION['contact_success'] = $payload['message']
                     ?? 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.';
             } else {
                 $errorMessage = $payload['message'] ?? $response['message'] ?? 'Erreur lors de l\'envoi de l\'email.';
-                error_log('Contact: échec API contact/send — ' . $errorMessage);
+                if ($httpCode === 404) {
+                    $errorMessage = 'Service contact indisponible (vérifiez que API_BASE_URL se termine par /api et que la route contact est déployée sur le serveur).';
+                } elseif ($httpCode === 0 || $response['data'] === null) {
+                    $errorMessage = 'Impossible de joindre l\'API. Vérifiez API_BASE_URL dans le .env du portail.';
+                }
+                error_log('Contact: échec API contact/send (HTTP ' . $httpCode . ') — ' . $errorMessage);
                 $_SESSION['contact_error'] = $errorMessage;
                 $_SESSION['contact_data'] = [
                     'name' => $name,
