@@ -219,7 +219,8 @@ class ApiService {
     
     public function makeRequest($endpoint, $method = 'GET', $data = null, $retryWithHttp = true) {
         // Vérifier et rafraîchir le token si nécessaire (sauf pour auth/refresh)
-        if ($endpoint !== 'auth/refresh' && $endpoint !== 'auth/login') {
+        $publicAuthEndpoints = ['auth/refresh', 'auth/login', 'auth/forgot-password', 'auth/reset-password'];
+        if (!in_array($endpoint, $publicAuthEndpoints, true)) {
             $this->ensureValidToken();
         }
         
@@ -630,6 +631,34 @@ class ApiService {
         ];
     }
     
+    public function forgotPassword($email, $baseUrl = null) {
+        $data = ['email' => $email];
+        if (!empty($baseUrl)) {
+            $data['base_url'] = rtrim($baseUrl, '/');
+        }
+
+        $result = $this->makeRequest('auth/forgot-password', 'POST', $data);
+        $payload = $result['data'] ?? $result;
+
+        return [
+            'success' => ($result['success'] ?? false) || ($payload['success'] ?? false),
+            'message' => $payload['message'] ?? $result['message'] ?? 'Si cette adresse email est associée à un compte, vous recevrez un lien de réinitialisation par email.',
+        ];
+    }
+
+    public function resetPassword($token, $newPassword) {
+        $result = $this->makeRequest('auth/reset-password', 'POST', [
+            'token' => $token,
+            'new_password' => $newPassword,
+        ]);
+        $payload = is_array($result['data'] ?? null) ? $result['data'] : [];
+
+        return [
+            'success' => !empty($result['success']) && ($payload['success'] ?? true),
+            'message' => $payload['message'] ?? $result['message'] ?? 'Erreur lors de la mise à jour du mot de passe',
+        ];
+    }
+
     public function login($username, $password) {
         $loginData = [
             "username" => $username,

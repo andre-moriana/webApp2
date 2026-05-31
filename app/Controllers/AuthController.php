@@ -234,19 +234,48 @@ class AuthController {
         exit;
     }
 
-    public function resetPassword() {
-        $token = $_GET['token'] ?? '';
-        
-        if (empty($token)) {
-            $_SESSION['error'] = 'Token de réinitialisation manquant';
-            header('Location: /login');
+    public function forgotPassword() {
+        include 'app/Views/auth/forgot-password.php';
+    }
+
+    public function requestPasswordReset() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /auth/forgot-password');
             exit;
         }
 
-        $title = 'Nouveau mot de passe - Portail Arc Training';
-        include 'app/Views/layouts/header.php';
+        $email = trim($_POST['email'] ?? '');
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['error'] = 'Veuillez saisir une adresse email valide';
+            header('Location: /auth/forgot-password');
+            exit;
+        }
+
+        $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
+            . '://' . $_SERVER['HTTP_HOST'];
+
+        try {
+            $result = $this->getApiService()->forgotPassword($email, $baseUrl);
+            $_SESSION['success'] = $result['message']
+                ?? 'Si cette adresse email est associée à un compte, vous recevrez un lien de réinitialisation par email.';
+        } catch (Exception $e) {
+            $_SESSION['success'] = 'Si cette adresse email est associée à un compte, vous recevrez un lien de réinitialisation par email.';
+        }
+
+        header('Location: /auth/forgot-password');
+        exit;
+    }
+
+    public function resetPassword() {
+        $token = trim($_GET['token'] ?? '');
+
+        if (empty($token)) {
+            header('Location: /auth/forgot-password');
+            exit;
+        }
+
         include 'app/Views/auth/reset-password.php';
-        include 'app/Views/layouts/footer.php';
     }
 
     public function updatePassword() {

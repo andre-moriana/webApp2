@@ -327,6 +327,8 @@ class Router {
         $this->addRoute("GET", "/login", "AuthController@login");
         $this->addRoute("POST", "/auth/authenticate", "AuthController@authenticate");
         $this->addRoute("GET", "/logout", "AuthController@logout");
+        $this->addRoute("GET", "/auth/forgot-password", "AuthController@forgotPassword");
+        $this->addRoute("POST", "/auth/request-password-reset", "AuthController@requestPasswordReset");
         $this->addRoute("GET", "/auth/reset-password", "AuthController@resetPassword");
         $this->addRoute("POST", "/auth/update-password", "AuthController@updatePassword");
         $this->addRoute("GET", "/auth/register", "AuthController@register");

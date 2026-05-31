@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nouveau mot de passe - Portail Arc Training</title>
+    <title>Mot de passe oublié - Portail Arc Training</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -18,9 +18,9 @@
             <div class="col-md-6 col-lg-4">
                 <div class="login-container">
                     <div class="login-header">
-                        <i class="fas fa-lock fa-3x mb-3"></i>
-                        <h3 class="mb-0">Nouveau mot de passe</h3>
-                        <p class="mb-0">Choisissez un nouveau mot de passe</p>
+                        <i class="fas fa-key fa-3x mb-3"></i>
+                        <h3 class="mb-0">Réinitialisation</h3>
+                        <p class="mb-0">Mot de passe oublié</p>
                     </div>
                     
                     <div class="login-form">
@@ -31,63 +31,65 @@
                             </div>
                         <?php endif; ?>
                         
-                        <form method="POST" action="/auth/update-password">
-                            <input type="hidden" name="token" value="<?php echo htmlspecialchars($token ?? ''); ?>">
-                            
-                            <div class="mb-3">
-                                <label for="password" class="form-label">
-                                    <i class="fas fa-lock me-2"></i>Nouveau mot de passe
-                                </label>
-                                <input type="password" 
-                                       class="form-control" 
-                                       id="password" 
-                                       name="password" 
-                                       required 
-                                       minlength="6"
-                                       autocomplete="new-password"
-                                       placeholder="Au moins 6 caractères">
+                        <?php if (isset($_SESSION['success'])): ?>
+                            <div class="alert alert-success" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
                             </div>
-                            
+                        <?php endif; ?>
+                        
+                        <form method="POST" action="/auth/request-password-reset">
                             <div class="mb-4">
-                                <label for="confirm_password" class="form-label">
-                                    <i class="fas fa-lock me-2"></i>Confirmer le mot de passe
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope me-2"></i>Adresse email
                                 </label>
-                                <input type="password" 
+                                <input type="email" 
                                        class="form-control" 
-                                       id="confirm_password" 
-                                       name="confirm_password" 
+                                       id="email" 
+                                       name="email" 
                                        required 
-                                       minlength="6"
-                                       autocomplete="new-password"
-                                       placeholder="Confirmez votre mot de passe">
+                                       autocomplete="email"
+                                       placeholder="Votre adresse email">
+                                <small class="form-text text-muted">
+                                    Saisissez l'adresse email associée à votre compte
+                                </small>
                             </div>
                             
                             <div class="d-grid mb-3">
                                 <button type="submit" class="btn btn-primary btn-login">
-                                    <i class="fas fa-check me-2"></i>
-                                    Enregistrer le mot de passe
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    Envoyer la réinitialisation
                                 </button>
                             </div>
                         </form>
                         
                         <div class="text-center">
-                            <a href="/auth/forgot-password" class="btn btn-link text-info">
-                                Demander un nouveau lien
-                            </a>
-                        </div>
-                        
-                        <div class="text-center mt-2">
                             <a href="/login" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>
                                 Retour à la connexion
                             </a>
                         </div>
+                        
+                        <div class="text-center mt-4">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Contactez l'administrateur si vous ne recevez pas l'email
+                            </small>
+                        </div>
                     </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <small class="text-white">
+                        <i class="fas fa-code me-1"></i>
+                        Développé par André Moriana pour Arc Training
+                    </small>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

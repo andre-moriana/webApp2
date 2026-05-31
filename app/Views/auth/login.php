@@ -135,7 +135,7 @@ $qrAndroid = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . 
                         </form>
                          
                         <div class="text-center mt-3">
-                            <a href="/auth/reset-password" class="btn btn-link text-info">
+                            <a href="/auth/forgot-password" class="btn btn-link text-info">
                                 <i class="fas fa-key me-1"></i>
                                 Mot de passe oublié ?
                             </a>
