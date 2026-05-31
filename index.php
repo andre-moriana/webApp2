@@ -14,7 +14,16 @@ if (file_exists('.env')) {
     foreach ($lines as $line) {
         if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
             list($key, $value) = explode('=', $line, 2);
-            $_ENV[trim($key)] = trim($value);
+            $key = trim($key);
+            $value = trim($value);
+            if ((strlen($value) >= 2 && $value[0] === '"' && substr($value, -1) === '"')
+                || (strlen($value) >= 2 && $value[0] === "'" && substr($value, -1) === "'")) {
+                $value = substr($value, 1, -1);
+            }
+            $_ENV[$key] = $value;
+            if (function_exists('putenv')) {
+                putenv($key . '=' . $value);
+            }
         }
     }
 }

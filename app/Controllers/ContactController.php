@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../Services/EmailService.php';
+require_once __DIR__ . '/../Services/ApiService.php';
 
 class ContactController {
     
@@ -63,24 +63,45 @@ class ContactController {
             exit;
         }
         
-        // Envoyer l'email
-        $result = EmailService::sendContactEmail($name, $email, $subject, $message);
-        
-        if ($result['success']) {
-            $_SESSION['contact_success'] = $result['message'];
-            header('Location: /contact');
-            exit;
-        } else {
-            $_SESSION['contact_error'] = $result['message'];
+        try {
+            $apiService = new ApiService();
+            $response = $apiService->makeRequestPublic('contact/send', 'POST', [
+                'name' => $name,
+                'email' => $email,
+                'subject' => $subject,
+                'message' => $message,
+            ]);
+
+            $payload = is_array($response['data'] ?? null) ? $response['data'] : [];
+            $apiSuccess = !empty($response['success']) && !empty($payload['success']);
+
+            if ($apiSuccess) {
+                $_SESSION['contact_success'] = $payload['message']
+                    ?? 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.';
+            } else {
+                $errorMessage = $payload['message'] ?? $response['message'] ?? 'Erreur lors de l\'envoi de l\'email.';
+                error_log('Contact: échec API contact/send — ' . $errorMessage);
+                $_SESSION['contact_error'] = $errorMessage;
+                $_SESSION['contact_data'] = [
+                    'name' => $name,
+                    'email' => $email,
+                    'subject' => $subject,
+                    'message' => $message,
+                ];
+            }
+        } catch (Exception $e) {
+            error_log('Contact: exception API — ' . $e->getMessage());
+            $_SESSION['contact_error'] = 'Impossible de contacter le serveur. Veuillez réessayer plus tard.';
             $_SESSION['contact_data'] = [
                 'name' => $name,
                 'email' => $email,
                 'subject' => $subject,
-                'message' => $message
+                'message' => $message,
             ];
-            header('Location: /contact');
-            exit;
         }
+
+        header('Location: /contact');
+        exit;
     }
 }
 

@@ -12,57 +12,27 @@ class EmailService {
      * @param string $message Contenu du message
      * @return array ['success' => bool, 'message' => string]
      */
+    /**
+     * @deprecated Utiliser l'API backend contact/send (voir ContactController).
+     */
     public static function sendContactEmail($name, $email, $subject, $message) {
         try {
-            $to = EmailConfig::getContactEmail();
-            $fromEmail = EmailConfig::getFromEmail();
-            $fromName = EmailConfig::getFromName();
-            
-            // Validation des données
-            if (empty($name) || empty($email) || empty($subject) || empty($message)) {
-                return [
-                    'success' => false,
-                    'message' => 'Tous les champs sont requis.'
-                ];
-            }
-            
-            // Validation de l'email
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return [
-                    'success' => false,
-                    'message' => 'Adresse email invalide.'
-                ];
-            }
-            
-            // Construire le message HTML
-            $htmlMessage = self::buildHtmlEmail($name, $email, $subject, $message);
-            
-            // Utiliser SMTP si configuré, sinon utiliser mail()
-            if (EmailConfig::useSmtp()) {
-                $success = self::sendViaSmtp($to, $fromEmail, $fromName, $name, $email, $subject, $htmlMessage);
-            } else {
-                $success = self::sendViaMail($to, $fromEmail, $fromName, $name, $email, $subject, $htmlMessage);
-            }
-            
-            if ($success) {
+            require_once __DIR__ . '/ApiService.php';
+            $api = new ApiService();
+            $response = $api->makeRequestPublic('contact/send', 'POST', compact('name', 'email', 'subject', 'message'));
+            $payload = is_array($response['data'] ?? null) ? $response['data'] : [];
+            if (!empty($response['success']) && !empty($payload['success'])) {
                 return [
                     'success' => true,
-                    'message' => 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'message' => 'Erreur lors de l\'envoi de l\'email. Veuillez réessayer plus tard.'
+                    'message' => $payload['message'] ?? 'Votre message a été envoyé avec succès.',
                 ];
             }
-            
-        } catch (Exception $e) {
-            error_log('Erreur EmailService: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
             return [
                 'success' => false,
-                'message' => 'Une erreur est survenue lors de l\'envoi de votre message: ' . $e->getMessage()
+                'message' => $payload['message'] ?? 'Erreur lors de l\'envoi de l\'email.',
             ];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
         }
     }
     
@@ -109,6 +79,208 @@ class EmailService {
         return $domain;
     }
     
+    private static function hasSmtpCredentials(): bool {
+        return EmailConfig::getSmtpHost() !== ''
+            && EmailConfig::getSmtpHost() !== 'localhost'
+            && EmailConfig::getSmtpUsername() !== '';
+    }
+
+    private static function buildContactFailureMessage(string $detail = ''): string {
+        $base = 'Impossible d\'envoyer votre message pour le moment.';
+        if ($detail !== '' && (($_ENV['APP_DEBUG'] ?? '0') === '1' || ($_ENV['APP_DEBUG'] ?? '') === 'true')) {
+            return $base . ' Détail : ' . $detail;
+        }
+        if (!EmailConfig::useSmtp() && !self::hasSmtpCredentials()) {
+            return $base . ' Configurez SMTP dans le fichier .env du portail (voir .env.example) ou définissez BACKEND_PATH vers l\'API.';
+        }
+        return $base . ' Veuillez réessayer plus tard ou contacter l\'administrateur.';
+    }
+
+    /**
+     * Envoi via PHPMailer (vendor du backend si disponible).
+     */
+    private static function sendViaBackendMailer(
+        $to,
+        $senderName,
+        $senderEmail,
+        $subject,
+        $htmlMessage,
+        &$lastError = ''
+    ): bool {
+        if (!self::hasSmtpCredentials()) {
+            $lastError = 'SMTP non configuré (SMTP_HOST / SMTP_USERNAME).';
+            return false;
+        }
+
+        $autoload = self::resolvePhpmailerAutoload();
+        if ($autoload === null) {
+            $lastError = 'PHPMailer introuvable. Exécutez composer install dans BackendPHP ou configurez BACKEND_PATH.';
+            return false;
+        }
+
+        require_once $autoload;
+
+        if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+            $lastError = 'PHPMailer introuvable après chargement de l\'autoload.';
+            return false;
+        }
+
+        try {
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = EmailConfig::getSmtpHost();
+            $mail->SMTPAuth = true;
+            $mail->Username = EmailConfig::getSmtpUsername();
+            $mail->Password = EmailConfig::getSmtpPassword();
+            $mail->Port = EmailConfig::getSmtpPort();
+            $mail->CharSet = 'UTF-8';
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                ],
+            ];
+            $mail->Timeout = 30;
+
+            $encryption = EmailConfig::getSmtpEncryption();
+            if ($encryption === 'ssl') {
+                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+            } elseif ($encryption === 'tls' || $encryption === '') {
+                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            }
+
+            $fromEmail = EmailConfig::getFromEmail();
+            $fromName = EmailConfig::getFromName();
+            if (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+                $fromEmail = 'noreply@arctraining.fr';
+            }
+
+            $mail->setFrom($fromEmail, $fromName);
+            $mail->addAddress($to);
+            $mail->addReplyTo($senderEmail, $senderName);
+            $mail->Subject = $subject;
+            $mail->isHTML(true);
+            $mail->Body = $htmlMessage;
+            $mail->AltBody = strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $htmlMessage));
+
+            $mail->send();
+            return true;
+        } catch (PHPMailer\PHPMailer\Exception $e) {
+            $lastError = $e->getMessage();
+            if (isset($mail) && !empty($mail->ErrorInfo)) {
+                $lastError .= ' — ' . $mail->ErrorInfo;
+            }
+            error_log('Contact PHPMailer: ' . $lastError);
+
+            if (EmailConfig::getSmtpEncryption() === 'tls' && (int)EmailConfig::getSmtpPort() === 587) {
+                error_log('Contact PHPMailer: repli port 465 / SSL');
+                return self::sendViaPhpmailerSslFallback(
+                    $to,
+                    $senderName,
+                    $senderEmail,
+                    $subject,
+                    $htmlMessage,
+                    $fromEmail ?? 'noreply@arctraining.fr',
+                    $fromName ?? 'Portail Arc Training',
+                    $lastError
+                );
+            }
+            return false;
+        } catch (Exception $e) {
+            $lastError = $e->getMessage();
+            error_log('Contact PHPMailer: ' . $lastError);
+            return false;
+        }
+    }
+
+    private static function sendViaPhpmailerSslFallback(
+        $to,
+        $senderName,
+        $senderEmail,
+        $subject,
+        $htmlMessage,
+        $fromEmail,
+        $fromName,
+        &$lastError
+    ): bool {
+        try {
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = EmailConfig::getSmtpHost();
+            $mail->SMTPAuth = true;
+            $mail->Username = EmailConfig::getSmtpUsername();
+            $mail->Password = EmailConfig::getSmtpPassword();
+            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+            $mail->Port = 465;
+            $mail->CharSet = 'UTF-8';
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                ],
+            ];
+            $mail->Timeout = 30;
+            $mail->setFrom($fromEmail, $fromName);
+            $mail->addAddress($to);
+            $mail->addReplyTo($senderEmail, $senderName);
+            $mail->Subject = $subject;
+            $mail->isHTML(true);
+            $mail->Body = $htmlMessage;
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            $lastError = $e->getMessage();
+            return false;
+        }
+    }
+
+    private static function resolvePhpmailerAutoload(): ?string {
+        $backendPath = EmailConfig::resolveBackendPath();
+        if ($backendPath !== null) {
+            $autoload = $backendPath . '/vendor/autoload.php';
+            if (file_exists($autoload)) {
+                return $autoload;
+            }
+        }
+        $localAutoload = __DIR__ . '/../../vendor/autoload.php';
+        if (file_exists($localAutoload)) {
+            return $localAutoload;
+        }
+        return null;
+    }
+
+    /**
+     * SMTP socket avec repli port 465 / SSL si le port 587 échoue.
+     */
+    private static function sendViaSmtpWithFallback(
+        $to,
+        $fromEmail,
+        $fromName,
+        $replyName,
+        $replyEmail,
+        $subject,
+        $htmlMessage,
+        &$lastError = ''
+    ): bool {
+        if (self::sendViaSmtp($to, $fromEmail, $fromName, $replyName, $replyEmail, $subject, $htmlMessage)) {
+            return true;
+        }
+
+        $encryption = EmailConfig::getSmtpEncryption();
+        $port = (int)EmailConfig::getSmtpPort();
+        if ($encryption === 'tls' && $port === 587) {
+            error_log('Contact SMTP socket: échec 587/TLS, tentative 465/SSL');
+            if (self::sendViaSmtp($to, $fromEmail, $fromName, $replyName, $replyEmail, $subject, $htmlMessage, 465, 'ssl')) {
+                return true;
+            }
+        }
+
+        $lastError = 'Connexion SMTP refusée ou identifiants incorrects.';
+        return false;
+    }
+
     /**
      * Envoie un email via la fonction mail() de PHP
      */
@@ -161,12 +333,22 @@ class EmailService {
     /**
      * Envoie un email via SMTP
      */
-    private static function sendViaSmtp($to, $fromEmail, $fromName, $replyName, $replyEmail, $subject, $htmlMessage) {
+    private static function sendViaSmtp(
+        $to,
+        $fromEmail,
+        $fromName,
+        $replyName,
+        $replyEmail,
+        $subject,
+        $htmlMessage,
+        $portOverride = null,
+        $encryptionOverride = null
+    ) {
         $smtpHost = EmailConfig::getSmtpHost();
-        $smtpPort = EmailConfig::getSmtpPort();
+        $smtpPort = $portOverride ?? EmailConfig::getSmtpPort();
         $smtpUsername = EmailConfig::getSmtpUsername();
         $smtpPassword = EmailConfig::getSmtpPassword();
-        $smtpEncryption = EmailConfig::getSmtpEncryption();
+        $smtpEncryption = $encryptionOverride ?? EmailConfig::getSmtpEncryption();
         
         // Construire l'hostname avec encryption si nécessaire
         $hostname = $smtpHost;

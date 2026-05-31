@@ -70,57 +70,154 @@ class EmailConfig {
         // Configuration par défaut
         self::$config = [
             'contact_email' => 'webmaster@arctraining.fr',
-            'from_email' => 'noreply@ArcTraining.eu',
+            'from_email' => 'noreply@arctraining.fr',
             'from_name' => 'Portail Arc Training',
             'use_smtp' => false,
-            'smtp_host' => 'localhost',
-            'smtp_port' => 25,
+            'smtp_host' => '',
+            'smtp_port' => 587,
             'smtp_username' => '',
             'smtp_password' => '',
-            'smtp_encryption' => ''
+            'smtp_encryption' => 'tls',
         ];
-        
-        // Charger les variables d'environnement depuis le fichier .env de WebApp2
+
+        // Fichier de config dédié (email.config.php)
+        $configFile = __DIR__ . '/email.config.php';
+        if (file_exists($configFile)) {
+            $fileConfig = require $configFile;
+            if (is_array($fileConfig)) {
+                self::$config = array_merge(self::$config, $fileConfig);
+            }
+        }
+
+        $envVars = self::getEnvVars();
+
+        self::applyEnvVar($envVars, 'CONTACT_EMAIL', 'contact_email');
+        self::applyEnvVar($envVars, 'SMTP_HOST', 'smtp_host');
+        self::applyEnvVar($envVars, 'SMTP_PORT', 'smtp_port', true);
+        self::applyEnvVar($envVars, 'SMTP_SECURE', 'smtp_encryption');
+        self::applyEnvVar($envVars, 'SMTP_USERNAME', 'smtp_username');
+        self::applyEnvVar($envVars, 'SMTP_PASSWORD', 'smtp_password');
+        self::applyEnvVar($envVars, 'SMTP_FROM_EMAIL', 'from_email');
+        self::applyEnvVar($envVars, 'SMTP_FROM_NAME', 'from_name');
+
+        if (self::envValue($envVars, 'EMAIL_METHOD') !== null) {
+            self::$config['use_smtp'] = (self::envValue($envVars, 'EMAIL_METHOD') === 'smtp');
+        }
+
+        // Compléter depuis le .env du backend si SMTP non configuré côté WebApp
+        self::mergeBackendEnvIfNeeded($envVars);
+
+        // Activer SMTP automatiquement si un relais est configuré
+        if (
+            !empty(self::$config['smtp_host'])
+            && self::$config['smtp_host'] !== 'localhost'
+            && !empty(self::$config['smtp_username'])
+        ) {
+            self::$config['use_smtp'] = true;
+        }
+    }
+
+    private static function getEnvVars(): array {
         $envFile = __DIR__ . '/../../.env';
-        
-        $envVars = [];
-        if (file_exists($envFile)) {
-            $envVars = self::parseEnvFile($envFile);
+        $fromFile = file_exists($envFile) ? self::parseEnvFile($envFile) : [];
+        $merged = $fromFile;
+        foreach ($_ENV as $key => $value) {
+            if ($value !== '' && $value !== null) {
+                $merged[$key] = $value;
+            }
         }
-        
-        // Utiliser les variables d'environnement pour surcharger la config
-        // Priorité: getenv() > fichier .env > valeurs par défaut
-        if (getenv('CONTACT_EMAIL') || isset($envVars['CONTACT_EMAIL'])) {
-            $contactEmail = getenv('CONTACT_EMAIL') ?: $envVars['CONTACT_EMAIL'];
-            self::$config['contact_email'] = trim($contactEmail, '"');
+        return $merged;
+    }
+
+    private static function envValue(array $envVars, string $key): ?string {
+        $value = getenv($key);
+        if ($value === false || $value === '') {
+            $value = $envVars[$key] ?? null;
         }
-        if (getenv('SMTP_HOST') || isset($envVars['SMTP_HOST'])) {
-            self::$config['smtp_host'] = getenv('SMTP_HOST') ?: $envVars['SMTP_HOST'];
+        if ($value === null || $value === '') {
+            return null;
         }
-        if (getenv('SMTP_PORT') || isset($envVars['SMTP_PORT'])) {
-            self::$config['smtp_port'] = (int)(getenv('SMTP_PORT') ?: $envVars['SMTP_PORT']);
+        return self::cleanEnvValue((string)$value);
+    }
+
+    private static function applyEnvVar(array $envVars, string $envKey, string $configKey, bool $asInt = false): void {
+        $value = self::envValue($envVars, $envKey);
+        if ($value === null) {
+            return;
         }
-        if (getenv('SMTP_SECURE') || isset($envVars['SMTP_SECURE'])) {
-            self::$config['smtp_encryption'] = getenv('SMTP_SECURE') ?: $envVars['SMTP_SECURE'];
+        self::$config[$configKey] = $asInt ? (int)$value : $value;
+    }
+
+    private static function cleanEnvValue(string $value): string {
+        $value = trim($value);
+        if (
+            (strlen($value) >= 2 && $value[0] === '"' && substr($value, -1) === '"')
+            || (strlen($value) >= 2 && $value[0] === "'" && substr($value, -1) === "'")
+        ) {
+            $value = substr($value, 1, -1);
         }
-        if (getenv('SMTP_USERNAME') || isset($envVars['SMTP_USERNAME'])) {
-            self::$config['smtp_username'] = getenv('SMTP_USERNAME') ?: $envVars['SMTP_USERNAME'];
+        return trim($value);
+    }
+
+    private static function mergeBackendEnvIfNeeded(array &$envVars): void {
+        if (!empty(self::$config['smtp_host']) && self::$config['smtp_host'] !== 'localhost') {
+            return;
         }
-        if (getenv('SMTP_PASSWORD') || isset($envVars['SMTP_PASSWORD'])) {
-            self::$config['smtp_password'] = getenv('SMTP_PASSWORD') ?: $envVars['SMTP_PASSWORD'];
+
+        $backendPath = self::resolveBackendPath($envVars);
+        if ($backendPath === null) {
+            return;
         }
-        if (getenv('SMTP_FROM_EMAIL') || isset($envVars['SMTP_FROM_EMAIL'])) {
-            $fromEmail = getenv('SMTP_FROM_EMAIL') ?: $envVars['SMTP_FROM_EMAIL'];
-            self::$config['from_email'] = trim($fromEmail, '"');
+
+        $backendEnvFile = $backendPath . '/.env';
+        if (!file_exists($backendEnvFile)) {
+            return;
         }
-        if (getenv('SMTP_FROM_NAME') || isset($envVars['SMTP_FROM_NAME'])) {
-            $fromName = getenv('SMTP_FROM_NAME') ?: $envVars['SMTP_FROM_NAME'];
-            self::$config['from_name'] = trim($fromName, '"');
+
+        $backendEnv = self::parseEnvFile($backendEnvFile);
+        $envVars = array_merge($backendEnv, $envVars);
+
+        $map = [
+            'CONTACT_EMAIL' => 'contact_email',
+            'SMTP_HOST' => 'smtp_host',
+            'SMTP_PORT' => 'smtp_port',
+            'SMTP_SECURE' => 'smtp_encryption',
+            'SMTP_USERNAME' => 'smtp_username',
+            'SMTP_PASSWORD' => 'smtp_password',
+            'SMTP_FROM_EMAIL' => 'from_email',
+            'SMTP_FROM_NAME' => 'from_name',
+        ];
+
+        foreach ($map as $envKey => $configKey) {
+            if (!empty(self::$config[$configKey]) && self::$config[$configKey] !== 'localhost') {
+                continue;
+            }
+            $value = self::envValue($backendEnv, $envKey);
+            if ($value !== null) {
+                self::$config[$configKey] = ($configKey === 'smtp_port') ? (int)$value : $value;
+            }
         }
-        if (getenv('EMAIL_METHOD') || isset($envVars['EMAIL_METHOD'])) {
-            $method = getenv('EMAIL_METHOD') ?: $envVars['EMAIL_METHOD'];
-            self::$config['use_smtp'] = ($method === 'smtp');
+
+        if (self::envValue($backendEnv, 'EMAIL_METHOD') === 'smtp') {
+            self::$config['use_smtp'] = true;
         }
+    }
+
+    public static function resolveBackendPath(?array $envVars = null): ?string {
+        $envVars = $envVars ?? self::getEnvVars();
+        $candidates = [];
+        foreach (['BACKEND_PATH', 'BACKEND_ROOT'] as $key) {
+            $value = self::envValue($envVars, $key);
+            if ($value !== null) {
+                $candidates[] = $value;
+            }
+        }
+        foreach ($candidates as $path) {
+            if (is_dir($path)) {
+                return rtrim(str_replace('\\', '/', $path), '/');
+            }
+        }
+        return null;
     }
     
     /**
@@ -139,8 +236,7 @@ class EmailConfig {
                 if (strpos($line, '=') !== false) {
                     list($key, $value) = explode('=', $line, 2);
                     $key = trim($key);
-                    $value = trim($value);
-                    $vars[$key] = $value;
+                    $vars[$key] = self::cleanEnvValue(trim($value));
                 }
             }
         }
