@@ -15,6 +15,32 @@
     
     window.SessionManagerDefined = true;
 
+    /** Chemins accessibles sans session (pas de redirection vers /login) */
+    const PUBLIC_PATH_PREFIXES = [
+        '/login',
+        '/contact',
+        '/privacy',
+        '/donnees-personnelles',
+        '/auth/register',
+        '/auth/forgot-password',
+        '/auth/reset-password',
+        '/auth/delete-account',
+        '/inscription-cible/',
+    ];
+
+    function isPublicPagePath(pathname) {
+        const path = pathname || '';
+        if (PUBLIC_PATH_PREFIXES.some(function(prefix) {
+            return path === prefix || path.startsWith(prefix);
+        })) {
+            return true;
+        }
+        if (path.includes('/concours/') && (path.includes('/plan-peloton') || path.includes('/plan-cible'))) {
+            return true;
+        }
+        return false;
+    }
+
     class SessionManager {
         constructor(options = {}) {
             // Interval de vérification (par défaut 5 minutes)
@@ -42,7 +68,15 @@
             this.init();
         }
 
+        isPublicPage() {
+            return isPublicPagePath(window.location.pathname);
+        }
+
         init() {
+            if (this.isPublicPage()) {
+                return;
+            }
+
             // Écouter les événements d'activité utilisateur
             this.activityEvents.forEach(event => {
                 document.addEventListener(event, () => this.updateActivity(), { passive: true });
@@ -162,13 +196,7 @@
          * Gère l'expiration de la session
          */
         handleSessionExpired() {
-            const path = window.location.pathname || '';
-            // Ne pas rediriger automatiquement depuis les pages publiques d'inscription
-            // ou de configuration de plan de peloton / plan de cible (liens envoyés par mail)
-            if (
-                path.startsWith('/inscription-cible/') ||
-                (path.includes('/concours/') && (path.includes('/plan-peloton') || path.includes('/plan-cible')))
-            ) {
+            if (this.isPublicPage()) {
                 this.stop();
                 return;
             }

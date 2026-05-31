@@ -8,6 +8,7 @@ class PrivacyController {
         
         // Définir $pageTitle pour le header
         $pageTitle = $title;
+        $skipSessionManager = true;
         
         // Utiliser un header simplifié pour les pages publiques
         include 'app/Views/layouts/header-public.php';

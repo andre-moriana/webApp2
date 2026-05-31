@@ -11,6 +11,7 @@ class ContactController {
     public function index() {
         $title = 'Contact - Portail Arc Training';
         $pageTitle = $title;
+        $skipSessionManager = true;
         
         include 'app/Views/layouts/header-public.php';
         include 'app/Views/contact/index.php';

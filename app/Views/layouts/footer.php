@@ -33,8 +33,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <?php endif; ?>
-<!-- Gestionnaire de session (doit être chargé en premier) -->
+<?php if (empty($skipSessionManager)): ?>
+    <!-- Gestionnaire de session (pages authentifiées uniquement) -->
     <script src="/public/assets/js/session-manager.js?v=<?php echo time(); ?>"></script>
+    <?php endif; ?>
 <!-- JavaScript personnalisé -->
     <script src="/public/assets/js/app.js"></script>
 <!-- JavaScript spécifique à la page (si défini) -->
