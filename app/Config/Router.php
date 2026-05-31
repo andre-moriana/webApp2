@@ -370,6 +370,7 @@ class Router {
         // Routes du formulaire de contact (publiques)
         $this->addRoute("GET", "/contact", "ContactController@index");
         $this->addRoute("POST", "/contact/send", "ContactController@send");
+        $this->addRoute("POST", "/api/contact/send", "ApiController@proxyContactSend");
         
         // Route pour maintenir la session active (protégée)
         $this->addRoute("GET", "/keep-alive.php", "KeepAliveController@ping");

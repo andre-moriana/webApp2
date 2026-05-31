@@ -65,7 +65,7 @@ class ContactController {
         
         try {
             $apiService = new ApiService();
-            $response = $apiService->makeRequestPublic('contact/send', 'POST', [
+            $response = $apiService->submitContactForm([
                 'name' => $name,
                 'email' => $email,
                 'subject' => $subject,
@@ -80,11 +80,21 @@ class ContactController {
                 $_SESSION['contact_success'] = $payload['message']
                     ?? 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.';
             } else {
-                $errorMessage = $payload['message'] ?? $response['message'] ?? 'Erreur lors de l\'envoi de l\'email.';
+                $errorMessage = $payload['message'] ?? 'Erreur lors de l\'envoi de l\'email.';
                 if ($httpCode === 404) {
-                    $errorMessage = 'Service contact indisponible (vérifiez que API_BASE_URL se termine par /api et que la route contact est déployée sur le serveur).';
+                    $errorMessage = 'Route contact absente sur l\'API. Déployez routes/contact.php sur api.arctraining.fr.';
+                } elseif ($httpCode === 500) {
+                    $errorMessage = $payload['message']
+                        ?? 'L\'API a reçu le message mais l\'envoi email a échoué. Vérifiez CONTACT_EMAIL et SMTP dans le .env du backend.';
                 } elseif ($httpCode === 0 || $response['data'] === null) {
-                    $errorMessage = 'Impossible de joindre l\'API. Vérifiez API_BASE_URL dans le .env du portail.';
+                    $curlErr = $response['curl_error'] ?? '';
+                    $triedUrl = $response['url'] ?? ApiService::resolveApiBaseUrl() . '/contact/send';
+                    $errorMessage = 'Impossible de joindre l\'API (' . $triedUrl . ')';
+                    if ($curlErr !== '') {
+                        $errorMessage .= ' : ' . $curlErr;
+                    } else {
+                        $errorMessage .= '. Vérifiez API_BASE_URL=https://api.arctraining.fr/api dans le .env du portail (sans guillemets).';
+                    }
                 }
                 error_log('Contact: échec API contact/send (HTTP ' . $httpCode . ') — ' . $errorMessage);
                 $_SESSION['contact_error'] = $errorMessage;

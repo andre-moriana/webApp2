@@ -23,22 +23,12 @@ class ApiService {
         private $token;
 
         public function __construct() {
-            // Recherche du .env à la racine du projet (2 niveaux au-dessus de ce fichier)
-            $envPath = __DIR__ . '/../../.env';
-            if (file_exists($envPath)) {
-                $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                foreach ($lines as $line) {
-                    if (strpos($line, "=") !== false && strpos($line, "#") !== 0) {
-                        list($key, $value) = explode("=", $line, 2);
-                        $_ENV[trim($key)] = trim($value);
-                    }
-                }
-           }
-            // Exiger la présence de API_BASE_URL dans .env
-            if (!isset($_ENV["API_BASE_URL"])) {
-                throw new \Exception("API_BASE_URL doit être défini dans le fichier .env");
+            self::bootstrapEnvFromFile();
+            $baseUrl = self::resolveApiBaseUrl();
+            if ($baseUrl === '') {
+                throw new \Exception("API_BASE_URL doit être défini dans le fichier .env du portail");
             }
-            $this->baseUrl = $_ENV["API_BASE_URL"];
+            $this->baseUrl = $baseUrl;
             // Initialiser le token depuis la session
             $this->token = $_SESSION['token'] ?? null;
             // Démarrer la session si elle n'est pas déjà démarrée
@@ -442,6 +432,52 @@ class ApiService {
      * Requête API sans authentification (pour inscription ciblée publique).
      * Si $token est fourni, l'ajoute en query (GET) ou en header (POST). Si $licence est fourni, restreint aux actions sur sa propre inscription.
      */
+    /**
+     * Envoie le formulaire de contact via l'API backend (même URL que les concours).
+     */
+    public function submitContactForm(array $fields) {
+        return $this->makeRequestPublic('contact/send', 'POST', $fields);
+    }
+
+    private static function bootstrapEnvFromFile(): void {
+        $envPath = __DIR__ . '/../../.env';
+        if (!file_exists($envPath)) {
+            return;
+        }
+        $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
+                continue;
+            }
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            if (strncmp($key, "\xEF\xBB\xBF", 3) === 0) {
+                $key = substr($key, 3);
+            }
+            $_ENV[$key] = self::cleanEnvValue($value);
+            if (function_exists('putenv')) {
+                putenv($key . '=' . $_ENV[$key]);
+            }
+        }
+    }
+
+    private static function cleanEnvValue(string $value): string {
+        $value = trim($value);
+        if (
+            (strlen($value) >= 2 && $value[0] === '"' && substr($value, -1) === '"')
+            || (strlen($value) >= 2 && $value[0] === "'" && substr($value, -1) === "'")
+        ) {
+            $value = substr($value, 1, -1);
+        }
+        return trim($value);
+    }
+
+    public static function resolveApiBaseUrl(): string {
+        $url = $_ENV['API_BASE_URL'] ?? getenv('API_BASE_URL') ?: '';
+        return rtrim(self::cleanEnvValue((string)$url), '/');
+    }
+
     public function makeRequestPublic($endpoint, $method = 'GET', $data = null, $token = null, $licence = null) {
         $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
         if (!empty($token) && $method === 'GET') {
@@ -450,51 +486,104 @@ class ApiService {
                 $url .= '&licence=' . urlencode($licence);
             }
         }
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        if (strpos($url, 'https://') === 0) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+        $jsonBody = ($data !== null && in_array($method, ['POST', 'PUT', 'PATCH'], true))
+            ? json_encode($data, JSON_UNESCAPED_UNICODE)
+            : null;
+
+        $headers = ['Accept: application/json'];
+        if ($jsonBody !== null) {
+            $headers[] = 'Content-Type: application/json';
         }
-        $headers = ['Accept: */*'];
         if (!empty($token)) {
             $headers[] = 'X-Plan-Token: ' . $token;
             if (!empty($licence)) {
                 $headers[] = 'X-Plan-Licence: ' . $licence;
             }
         }
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        if ($method === 'POST') {
-            curl_setopt($ch, CURLOPT_POST, true);
-            $postData = $data;
-            if ($postData !== null) {
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
-                $headers[] = 'Content-Type: application/json';
-                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = ['success' => false, 'data' => null, 'status_code' => 0, 'curl_error' => null, 'url' => $url];
+
+        if (function_exists('curl_init')) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            if (strpos($url, 'https://') === 0) {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             }
-        } else if ($method === 'PUT') {
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-            $putData = $data;
-            if ($putData !== null) {
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($putData));
-                $headers[] = 'Content-Type: application/json';
-                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            if ($method === 'POST') {
+                curl_setopt($ch, CURLOPT_POST, true);
+                if ($jsonBody !== null) {
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonBody);
+                }
+            } elseif ($method === 'PUT') {
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+                if ($jsonBody !== null) {
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonBody);
+                }
             }
+            $response = curl_exec($ch);
+            $result['status_code'] = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if ($response === false) {
+                $result['curl_error'] = curl_error($ch) ?: 'Erreur cURL inconnue';
+                error_log('makeRequestPublic cURL: ' . $result['curl_error'] . ' — URL: ' . $url);
+            }
+            curl_close($ch);
+        } else {
+            $response = self::httpRequestFallback($url, $method, $jsonBody, $headers);
+            $result['status_code'] = $response['status_code'];
+            $result['curl_error'] = $response['error'];
+            $response = $response['body'];
         }
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-        curl_close($ch);
-        $cleanResponse = preg_replace('/^\xEF\xBB\xBF/', '', $response);
+
+        if ($response === false || $response === null || $response === '') {
+            return $result;
+        }
+
+        $cleanResponse = preg_replace('/^\xEF\xBB\xBF/', '', (string)$response);
         $decodedResponse = json_decode(trim($cleanResponse), true);
         if ($decodedResponse !== null && json_last_error() === JSON_ERROR_NONE) {
-            return ['success' => $httpCode >= 200 && $httpCode < 300, 'data' => $decodedResponse, 'status_code' => $httpCode];
+            $httpCode = $result['status_code'];
+            $result['success'] = $httpCode >= 200 && $httpCode < 300;
+            $result['data'] = $decodedResponse;
+            return $result;
         }
-        return ['success' => false, 'data' => null, 'status_code' => $httpCode];
+
+        error_log('makeRequestPublic: réponse non-JSON (HTTP ' . $result['status_code'] . ') — URL: ' . $url . ' — début: ' . substr($cleanResponse, 0, 200));
+        $result['raw_response'] = substr($cleanResponse, 0, 500);
+        return $result;
+    }
+
+    private static function httpRequestFallback(string $url, string $method, ?string $jsonBody, array $headers): array {
+        $headerLines = implode("\r\n", $headers);
+        $context = stream_context_create([
+            'http' => [
+                'method' => $method,
+                'header' => $headerLines,
+                'content' => $jsonBody ?? '',
+                'timeout' => 30,
+                'ignore_errors' => true,
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ],
+        ]);
+        $body = @file_get_contents($url, false, $context);
+        $statusCode = 0;
+        if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $m)) {
+            $statusCode = (int)$m[1];
+        }
+        return [
+            'body' => $body !== false ? $body : null,
+            'status_code' => $statusCode,
+            'error' => $body === false ? 'file_get_contents a échoué' : null,
+        ];
     }
 
     /**
