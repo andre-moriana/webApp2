@@ -91,7 +91,7 @@ class EmailService {
             return $base . ' Détail : ' . $detail;
         }
         if (!EmailConfig::useSmtp() && !self::hasSmtpCredentials()) {
-            return $base . ' Configurez SMTP dans le fichier .env du portail (voir .env.example) ou définissez BACKEND_PATH vers l\'API.';
+            return $base . ' Vérifiez SMTP et CONTACT_EMAIL dans le .env du backend (API).';
         }
         return $base . ' Veuillez réessayer plus tard ou contacter l\'administrateur.';
     }
@@ -114,7 +114,7 @@ class EmailService {
 
         $autoload = self::resolvePhpmailerAutoload();
         if ($autoload === null) {
-            $lastError = 'PHPMailer introuvable. Exécutez composer install dans BackendPHP ou configurez BACKEND_PATH.';
+            $lastError = 'PHPMailer introuvable sur le serveur du portail.';
             return false;
         }
 
