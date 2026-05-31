@@ -245,6 +245,7 @@ class AuthController {
         }
 
         $email = trim($_POST['email'] ?? '');
+        $licenceNumber = trim($_POST['licence_number'] ?? '');
 
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $_SESSION['error'] = 'Veuillez saisir une adresse email valide';
@@ -252,15 +253,22 @@ class AuthController {
             exit;
         }
 
+        if ($licenceNumber === '') {
+            $_SESSION['error'] = 'Veuillez saisir votre numéro de licence';
+            header('Location: /auth/forgot-password');
+            exit;
+        }
+
         $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
             . '://' . $_SERVER['HTTP_HOST'];
 
+        $genericSuccess = 'Si ces informations correspondent à un compte, vous recevrez un lien de réinitialisation par email.';
+
         try {
-            $result = $this->getApiService()->forgotPassword($email, $baseUrl);
-            $_SESSION['success'] = $result['message']
-                ?? 'Si cette adresse email est associée à un compte, vous recevrez un lien de réinitialisation par email.';
+            $result = $this->getApiService()->forgotPassword($email, $baseUrl, $licenceNumber);
+            $_SESSION['success'] = $result['message'] ?? $genericSuccess;
         } catch (Exception $e) {
-            $_SESSION['success'] = 'Si cette adresse email est associée à un compte, vous recevrez un lien de réinitialisation par email.';
+            $_SESSION['success'] = $genericSuccess;
         }
 
         header('Location: /auth/forgot-password');

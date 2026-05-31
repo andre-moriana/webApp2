@@ -720,8 +720,11 @@ class ApiService {
         ];
     }
     
-    public function forgotPassword($email, $baseUrl = null) {
+    public function forgotPassword($email, $baseUrl = null, $licenceNumber = null) {
         $data = ['email' => $email];
+        if ($licenceNumber !== null && trim((string)$licenceNumber) !== '') {
+            $data['licence_number'] = trim((string)$licenceNumber);
+        }
         if (!empty($baseUrl)) {
             $data['base_url'] = rtrim($baseUrl, '/');
         }
@@ -731,7 +734,7 @@ class ApiService {
 
         return [
             'success' => ($result['success'] ?? false) || ($payload['success'] ?? false),
-            'message' => $payload['message'] ?? $result['message'] ?? 'Si cette adresse email est associée à un compte, vous recevrez un lien de réinitialisation par email.',
+            'message' => $payload['message'] ?? $result['message'] ?? 'Si ces informations correspondent à un compte, vous recevrez un lien de réinitialisation par email.',
         ];
     }
 

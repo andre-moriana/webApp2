@@ -39,7 +39,7 @@
                         <?php endif; ?>
                         
                         <form method="POST" action="/auth/request-password-reset">
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <label for="email" class="form-label">
                                     <i class="fas fa-envelope me-2"></i>Adresse email
                                 </label>
@@ -50,8 +50,22 @@
                                        required 
                                        autocomplete="email"
                                        placeholder="Votre adresse email">
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="licence_number" class="form-label">
+                                    <i class="fas fa-id-card me-2"></i>Numéro de licence
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="licence_number" 
+                                       name="licence_number" 
+                                       required 
+                                       autocomplete="off"
+                                       inputmode="numeric"
+                                       placeholder="Ex. 01234567">
                                 <small class="form-text text-muted">
-                                    Saisissez l'adresse email associée à votre compte
+                                    Obligatoire si plusieurs comptes partagent la même adresse email
                                 </small>
                             </div>
                             
