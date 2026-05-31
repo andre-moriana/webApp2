@@ -581,7 +581,8 @@ class ApiService {
         }
 
         error_log('makeRequestPublic: réponse non-JSON (HTTP ' . $result['status_code'] . ') — URL: ' . $url . ' — début: ' . substr($cleanResponse, 0, 200));
-        $result['raw_response'] = substr($cleanResponse, 0, 500);
+        $result['raw_response'] = substr($cleanResponse, 0, 2000);
+        $result['success'] = false;
         return $result;
     }
 
