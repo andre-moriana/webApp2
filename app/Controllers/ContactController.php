@@ -83,16 +83,18 @@ class ContactController {
                 $apiDetail = $payload['message'] ?? $payload['error'] ?? null;
                 if ($httpCode === 0 || $response['data'] === null) {
                     $curlErr = $response['curl_error'] ?? '';
-                    $triedUrl = $response['url'] ?? ApiService::resolveApiBaseUrl() . '/contact/send';
+                    $triedUrl = $response['url'] ?? (ApiService::resolveContactSendUrl() ?: (ApiService::resolveApiBaseUrl() . '/contact/send'));
                     $errorMessage = 'Impossible de joindre l\'API (' . $triedUrl . ')';
                     if ($curlErr !== '') {
                         $errorMessage .= ' : ' . $curlErr;
                     } elseif ($httpCode === 500) {
-                        $errorMessage = 'L\'API a répondu en erreur sans détail JSON (HTTP 500). Vérifiez les logs PHP sur api.arctraining.fr.';
+                        $errorMessage = 'L\'API a répondu en erreur sans détail JSON (HTTP 500).';
                         $raw = $response['raw_response'] ?? '';
                         if ($raw !== '') {
                             error_log('Contact: réponse brute API — ' . substr((string)$raw, 0, 300));
                         }
+                        $errorMessage .= ' Ouvrez https://api.arctraining.fr/contact-send.php dans le navigateur (doit afficher du JSON).';
+                        $errorMessage .= ' Déployez public/contact-send.php et routes/contact.php sur l\'API.';
                     } else {
                         $errorMessage .= '. Vérifiez API_BASE_URL=https://api.arctraining.fr/api dans le .env du portail (sans guillemets).';
                     }
@@ -104,7 +106,7 @@ class ContactController {
                 } else {
                     $errorMessage = $apiDetail ?? 'Erreur lors de l\'envoi de l\'email.';
                 }
-                error_log('Contact: échec API contact/send (HTTP ' . $httpCode . ') — ' . $errorMessage);
+                error_log('Contact: échec envoi (HTTP ' . $httpCode . ', URL ' . ($response['url'] ?? 'n/a') . ') — ' . $errorMessage);
                 $_SESSION['contact_error'] = $errorMessage;
                 $_SESSION['contact_data'] = [
                     'name' => $name,

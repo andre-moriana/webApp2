@@ -436,7 +436,23 @@ class ApiService {
      * Envoie le formulaire de contact via l'API backend (même URL que les concours).
      */
     public function submitContactForm(array $fields) {
-        return $this->makeRequestPublic('contact/send', 'POST', $fields);
+        $url = self::resolveContactSendUrl();
+        return $this->makeRequestPublic($url !== '' ? $url : 'contact/send', 'POST', $fields);
+    }
+
+    /**
+     * URL d'envoi contact (script direct, évite le routeur index.php sur l'hébergement).
+     */
+    public static function resolveContactSendUrl(): string {
+        $explicit = $_ENV['API_CONTACT_SEND_URL'] ?? getenv('API_CONTACT_SEND_URL') ?: '';
+        if ($explicit !== '') {
+            return self::cleanEnvValue((string)$explicit);
+        }
+        $base = self::resolveApiBaseUrl();
+        if (preg_match('#^(https?://[^/]+)/api/?$#i', $base, $m)) {
+            return $m[1] . '/contact-send.php';
+        }
+        return '';
     }
 
     private static function bootstrapEnvFromFile(): void {
@@ -479,7 +495,11 @@ class ApiService {
     }
 
     public function makeRequestPublic($endpoint, $method = 'GET', $data = null, $token = null, $licence = null) {
-        $url = rtrim($this->baseUrl, '/') . '/' . trim($endpoint, '/');
+        if (preg_match('#^https?://#i', (string)$endpoint)) {
+            $url = (string)$endpoint;
+        } else {
+            $url = rtrim($this->baseUrl, '/') . '/' . trim((string)$endpoint, '/');
+        }
         if (!empty($token) && $method === 'GET') {
             $url .= (strpos($url, '?') !== false ? '&' : '?') . 'token=' . urlencode($token);
             if (!empty($licence)) {
@@ -546,8 +566,14 @@ class ApiService {
         }
 
         $cleanResponse = preg_replace('/^\xEF\xBB\xBF/', '', (string)$response);
-        $decodedResponse = json_decode(trim($cleanResponse), true);
-        if ($decodedResponse !== null && json_last_error() === JSON_ERROR_NONE) {
+        $trimmed = trim($cleanResponse);
+        $decodedResponse = json_decode($trimmed, true);
+        if (($decodedResponse === null || !is_array($decodedResponse)) && json_last_error() !== JSON_ERROR_NONE) {
+            if (preg_match('/\{"success"\s*:/', $trimmed, $m, PREG_OFFSET_CAPTURE)) {
+                $decodedResponse = json_decode(substr($trimmed, $m[0][1]), true);
+            }
+        }
+        if (is_array($decodedResponse) && json_last_error() === JSON_ERROR_NONE) {
             $httpCode = $result['status_code'];
             $result['success'] = $httpCode >= 200 && $httpCode < 300;
             $result['data'] = $decodedResponse;
