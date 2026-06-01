@@ -19,6 +19,7 @@
             window.concoursNombreDepart = c.concoursNombreDepart;
             window.disciplineAbv = c.disciplineAbv;
             window.isNature3DOrCampagne = !!c.isNature3DOrCampagne;
+            window.isCibleDiscipline = !!c.isCibleDiscipline;
             window.isDirigeant = !!c.isDirigeant;
             window.currentUserLicence = (c.currentUserLicence || '').toString().trim();
             window.currentUserId = c.currentUserId != null ? String(c.currentUserId) : '';
@@ -2078,7 +2079,11 @@ function renderInscriptions(inscriptions) {
             cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.distance ?? 'N/A')) + '</td>');
             cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.blason ?? 'N/A')) + '</td>');
         }
-        cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.peloton ?? 'N/A')) + '</td>');
+        var isCible = typeof isCibleDiscipline !== 'undefined' && isCibleDiscipline;
+        var planNum = isCible
+            ? (inscription.numero_cible ?? null)
+            : (inscription.peloton ?? inscription.numero_peloton ?? null);
+        cells.push('<td' + rowStyle + '>' + escapeHtml(planNum != null && planNum !== '' ? String(planNum) : 'N/A') + '</td>');
         cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
         cells.push('<td class="text-center"' + rowStyle + '>' + formatGreffeIcon(inscription.present_greffe) + '</td>');
         cells.push('<td class="text-center"' + rowStyle + '>' + formatGreffeIcon(inscription.paye_greffe) + '</td>');

@@ -22,6 +22,7 @@ $inscriptionConfig = [
     'concoursNombreDepart' => is_object($concours) ? ($concours->nombre_depart ?? null) : ($concours['nombre_depart'] ?? null),
     'disciplineAbv' => $disciplineAbv ?? null,
     'isNature3DOrCampagne' => isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true),
+    'isCibleDiscipline' => isset($disciplineAbv) && in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true),
     'isDirigeant' => $isDirigeant,
     'currentUserLicence' => $currentUserLicence,
     'currentUserId' => $currentUserId
@@ -146,8 +147,8 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
     <?php
     // Déterminer si c'est une discipline 3D, Nature ou Campagne (abv_discipline = "3", "N" ou "C")
     $isNature3DOrCampagne = isset($disciplineAbv) && in_array($disciplineAbv, ['3', 'N', 'C'], true);
+    $isCibleDiscipline = isset($disciplineAbv) && in_array($disciplineAbv, ['S', 'T', 'I', 'H'], true);
     ?>
-    <?php echo '<script>console.log("inscriptions", ' . json_encode($inscriptions) . ');</script>'; ?>
     <div class="inscriptions-section">
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
@@ -193,7 +194,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <th>Distance</th>
                                 <th>Blason</th>
                             <?php endif; ?>
-                            <th>Peloton</th>
+                            <th><?= $isCibleDiscipline ? 'Cible' : 'Peloton' ?></th>
                             <th>Date d'inscription</th>
                             <th>Présent</th>
                             <th>Payé</th>
@@ -315,7 +316,12 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
                             <?php endif; ?>
-                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['peloton'] ?? 'N/A') ?></td>
+                            <td<?= $rowStyle ?>><?php
+                                $planCol = $isCibleDiscipline
+                                    ? ($inscription['numero_cible'] ?? null)
+                                    : ($inscription['peloton'] ?? $inscription['numero_peloton'] ?? null);
+                                echo htmlspecialchars($planCol !== null && $planCol !== '' ? (string)$planCol : 'N/A');
+                            ?></td>
                             <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                             <td class="text-center"<?= $rowStyle ?>>
                                 <?php $present = strtolower(trim((string)($inscription['present_greffe'] ?? ''))); ?>

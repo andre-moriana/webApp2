@@ -1518,6 +1518,84 @@ public function greffes($concoursId)
         }
         unset($inscription);
 
+        // Enrichir avec numéro de cible (Salle/TAE) ou peloton (3D/Nature/Campagne) : départ + licence
+        $disciplineAbvForPlan = null;
+        try {
+            $iddisciplinePlan = is_object($concours) ? ($concours->discipline ?? $concours->iddiscipline ?? null) : ($concours['discipline'] ?? $concours['iddiscipline'] ?? null);
+            if ($iddisciplinePlan) {
+                $disciplinesResponsePlan = $this->apiService->makeRequest('concours/disciplines', 'GET');
+                $disciplinesPayloadPlan = $this->apiService->unwrapData($disciplinesResponsePlan);
+                if (is_array($disciplinesPayloadPlan) && isset($disciplinesPayloadPlan['data']) && isset($disciplinesPayloadPlan['success'])) {
+                    $disciplinesPayloadPlan = $disciplinesPayloadPlan['data'];
+                }
+                if (is_array($disciplinesPayloadPlan)) {
+                    foreach ($disciplinesPayloadPlan as $disciplineRow) {
+                        $discId = $disciplineRow['iddiscipline'] ?? $disciplineRow['id'] ?? null;
+                        if ($discId == $iddisciplinePlan || (string)$discId === (string)$iddisciplinePlan) {
+                            $disciplineAbvForPlan = $disciplineRow['abv_discipline'] ?? null;
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // Ignorer
+        }
+        $isCibleDisciplinePlan = in_array((string)($disciplineAbvForPlan ?? ''), ['S', 'T', 'I', 'H'], true);
+        $isPelotonDisciplinePlan = in_array((string)($disciplineAbvForPlan ?? ''), ['3', 'N', 'C'], true);
+        if ($isCibleDisciplinePlan || $isPelotonDisciplinePlan) {
+            try {
+                $planEndpoint = $isCibleDisciplinePlan
+                    ? "concours/{$concoursId}/plan-cible"
+                    : "concours/{$concoursId}/plan-peloton";
+                $planResp = $this->apiService->makeRequest($planEndpoint, 'GET');
+                if ($planResp['success'] ?? false) {
+                    $planPayload = $this->apiService->unwrapData($planResp);
+                    if (is_array($planPayload) && isset($planPayload['data']) && is_array($planPayload['data'])) {
+                        $planPayload = $planPayload['data'];
+                    }
+                    $planMap = [];
+                    $collectPlanPositions = function ($node) use (&$collectPlanPositions, &$planMap, $isCibleDisciplinePlan) {
+                        if (!is_array($node)) {
+                            return;
+                        }
+                        if (isset($node['numero_licence']) || isset($node['numero_depart'])) {
+                            $lic = trim((string)($node['numero_licence'] ?? ''));
+                            $dep = (int)($node['numero_depart'] ?? 0);
+                            $num = $isCibleDisciplinePlan
+                                ? (int)($node['numero_cible'] ?? 0)
+                                : (int)($node['numero_peloton'] ?? 0);
+                            if ($lic !== '' && $dep > 0 && $num > 0) {
+                                $planMap[$dep . '|' . $lic] = $num;
+                            }
+                            return;
+                        }
+                        foreach ($node as $child) {
+                            if (is_array($child)) {
+                                $collectPlanPositions($child);
+                            }
+                        }
+                    };
+                    $collectPlanPositions($planPayload);
+                    foreach ($inscriptions as &$inscription) {
+                        $lic = trim((string)($inscription['numero_licence'] ?? ''));
+                        $dep = (int)($inscription['numero_depart'] ?? 0);
+                        if ($lic !== '' && $dep > 0 && isset($planMap[$dep . '|' . $lic])) {
+                            if ($isCibleDisciplinePlan) {
+                                $inscription['numero_cible'] = $planMap[$dep . '|' . $lic];
+                            } else {
+                                $inscription['peloton'] = $planMap[$dep . '|' . $lic];
+                                $inscription['numero_peloton'] = $planMap[$dep . '|' . $lic];
+                            }
+                        }
+                    }
+                    unset($inscription);
+                }
+            } catch (Exception $e) {
+                // Plan non disponible
+            }
+        }
+
         // Récupérer les catégories de classement filtrées par discipline
         $categoriesClassement = [];
         $iddiscipline = null;
