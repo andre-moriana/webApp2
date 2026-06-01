@@ -117,3 +117,13 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
+
+/* Modale archers sans peloton : taille ~2× le modal Bootstrap par défaut (500px) */
+#pelotonAssignModal .peloton-assign-modal-dialog {
+    max-width: 1000px;
+}
+
+#pelotonAssignModal .list-group-item {
+    font-size: 1.05em;
+    padding: 0.85rem 1.25rem;
+}

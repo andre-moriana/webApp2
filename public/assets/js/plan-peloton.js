@@ -85,9 +85,11 @@
             }
             listContainer.innerHTML = '';
             archers.forEach(function(a) {
+                var clubLabel = (a.club_name || a.clubName || '').trim();
                 var div = document.createElement('div');
                 div.className = 'list-group-item d-flex justify-content-between align-items-center';
-                div.innerHTML = '<div><strong>' + (a.user_nom || a.nom || '') + '</strong> (' + (a.numero_licence || '') + ')' + (a.id_club ? ' - ' + a.id_club : '') +
+                div.innerHTML = '<div><strong>' + (a.user_nom || a.nom || '') + '</strong> (' + (a.numero_licence || '') + ')' +
+                    (clubLabel ? ' - ' + clubLabel : '') +
                     (a.piquet ? ' - Piquet ' + a.piquet : '') + '</div>' +
                     '<button type="button" class="btn btn-sm btn-primary js-assign-peloton" ' +
                     'data-user-nom="' + (a.user_nom || '') + '" data-numero-licence="' + (a.numero_licence || '') + '" ' +

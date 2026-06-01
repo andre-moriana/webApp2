@@ -348,7 +348,7 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
 
 <!-- Modale : liste des archers inscrits sans peloton -->
 <div class="modal fade" id="pelotonAssignModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable peloton-assign-modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Archers inscrits sans peloton</h5>
