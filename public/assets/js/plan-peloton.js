@@ -87,7 +87,7 @@
             archers.forEach(function(a) {
                 var div = document.createElement('div');
                 div.className = 'list-group-item d-flex justify-content-between align-items-center';
-                div.innerHTML = '<div><strong>' + (a.user_nom || a.nom || '') + '</strong> (' + (a.numero_licence || '') + ')' + (a.abv ? ' - ' + a.abv : '') +
+                div.innerHTML = '<div><strong>' + (a.user_nom || a.nom || '') + '</strong> (' + (a.numero_licence || '') + ')' + (a.club ? ' - ' + a.club : '') +
                     (a.piquet ? ' - Piquet ' + a.piquet : '') + '</div>' +
                     '<button type="button" class="btn btn-sm btn-primary js-assign-peloton" ' +
                     'data-user-nom="' + (a.user_nom || '') + '" data-numero-licence="' + (a.numero_licence || '') + '" ' +
