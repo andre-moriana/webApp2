@@ -2077,7 +2077,7 @@ function renderInscriptions(inscriptions) {
             cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.distance ?? 'N/A')) + '</td>');
             cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.blason ?? 'N/A')) + '</td>');
         }
-
+        cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.peloton ?? 'N/A')) + '</td>');
         cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
         cells.push('<td class="text-center"' + rowStyle + '>' + formatGreffeIcon(inscription.present_greffe) + '</td>');
         cells.push('<td class="text-center"' + rowStyle + '>' + formatGreffeIcon(inscription.paye_greffe) + '</td>');
