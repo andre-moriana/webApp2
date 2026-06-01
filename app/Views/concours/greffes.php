@@ -193,6 +193,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <th>Distance</th>
                                 <th>Blason</th>
                             <?php endif; ?>
+                            <th>Peloton</th>
                             <th>Date d'inscription</th>
                             <th>Présent</th>
                             <th>Payé</th>
@@ -314,6 +315,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
                                 <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
                             <?php endif; ?>
+                            <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['peloton'] ?? 'N/A') ?></td>
                             <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
                             <td class="text-center"<?= $rowStyle ?>>
                                 <?php $present = strtolower(trim((string)($inscription['present_greffe'] ?? ''))); ?>
