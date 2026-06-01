@@ -603,7 +603,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                     <div class="row">
                         <div class="col-md-6">
                             <p><strong>Nombre de départs :</strong> <span id="greffe-archer-departs">Chargement...</span></p>
-                            <p><strong><?= $isCibleDiscipline ? 'Cible' : 'Peloton' ?> :</strong> <span id="greffe-archer-peloton">Chargement...</span></p>
                         </div>
                     </div>
                 </div>
