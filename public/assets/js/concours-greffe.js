@@ -22,6 +22,7 @@
             window.isDirigeant = !!c.isDirigeant;
             window.currentUserLicence = (c.currentUserLicence || '').toString().trim();
             window.currentUserId = c.currentUserId != null ? String(c.currentUserId) : '';
+            window.pelotons = c.pelotons || [];
         } catch (e) { console.warn('Config inscription parse error', e); }
     }
 })();
