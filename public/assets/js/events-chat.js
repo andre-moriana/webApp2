@@ -199,7 +199,7 @@ function createMessageElement(message) {
                     ? `<div class="pdf-preview-container">
                         <iframe src="${attachmentUrl}"
                                 class="pdf-preview"
-                                style="width: 100%; max-width: 600px; height: 400px; border: 1px solid #dee2e6; border-radius: 8px;"
+                                style="width: 100%; max-width: 600px; height: 800px; border: 1px solid #dee2e6; border-radius: 8px;"
                                 title="${escapeHtml(originalName)}"
                                 type="application/pdf">
                         </iframe>
