@@ -108,7 +108,7 @@ $title = "Gestion des événements - Portail Arc Training";
                             </a>
                         </div>
                     </div>
-                    <div class="card-body" style="height: 500px;">
+                    <div class="card-body" style="height: 1000px;">
                         <div class="chat-container">
                             <div id="messages-container" class="messages-container mb-3">
                                 <!-- Messages chargés dynamiquement -->
