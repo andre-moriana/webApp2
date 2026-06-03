@@ -148,11 +148,20 @@ function createMessageElement(message) {
 
         const originalName = att.originalName || att.original_name || att.filename || att.storedFilename || "Pièce jointe";
 
-        // Identique à groups-chat.js : les PJ sont résolues vers https://api.arctraining.fr/uploads/messages/…
-        let originalUrl = att.url || att.path || (att.filename ? `/uploads/${att.filename}` : "") || (att.storedFilename ? `/uploads/messages/${att.storedFilename}` : "");
+        // Chemin réel (messages ou events) ; le proxy WebApp tente les deux emplacements.
+        let originalUrl = att.path || att.url || "";
+        const storedName = att.storedFilename || att.filename || "";
+        if (!originalUrl && storedName) {
+            originalUrl = "/uploads/messages/" + storedName;
+        }
+        if (originalUrl && !originalUrl.startsWith("/uploads/") && !originalUrl.startsWith("uploads/") && !/^https?:\/\//i.test(originalUrl)) {
+            originalUrl = "/uploads/messages/" + originalUrl.replace(/^\/+/, "");
+        }
+        if (originalUrl.match(/^\/uploads\/[^/]+\.[a-z0-9]+$/i)) {
+            originalUrl = "/uploads/messages/" + originalUrl.split("/").pop();
+        }
 
-        if (originalUrl.includes("api.arctraining.fr")) {
-        } else {
+        if (!originalUrl.includes("api.arctraining.fr")) {
             if (originalUrl.startsWith("/uploads/")) {
                 originalUrl = "https://api.arctraining.fr" + originalUrl;
             } else if (originalUrl.startsWith("uploads/")) {
