@@ -40,14 +40,14 @@ $title = "Gestion des événements - Portail Arc Training";
                         <div class="list-group-item list-group-item-action event-item <?php echo $index === 0 ? "active" : ""; ?>" 
                              data-event-id="<?php echo $event["_id"] ?? "null"; ?>"
                              style="cursor: pointer;">
-                            <div class="d-flex">
-                                <div class="avatar-sm bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                            <div class="d-flex align-items-start">
+                                <div class="event-item-avatar avatar-sm bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2 flex-shrink-0">
                                     <i class="fas fa-calendar"></i>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <h6 class="mb-0"><?php echo htmlspecialchars($event["name"] ?? "Nom inconnu"); ?></h6>
-                                        <div class="d-flex align-items-center gap-2">
+                                <div class="event-item-body flex-grow-1 min-w-0">
+                                    <div class="d-flex justify-content-between align-items-start gap-2">
+                                        <h6 class="event-item-title mb-0 text-break"><?php echo htmlspecialchars($event["name"] ?? "Nom inconnu"); ?></h6>
+                                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
                                             <span class="badge bg-primary members-count" data-event-id="<?php echo $event["_id"] ?? "null"; ?>">
                                                 <i class="fas fa-users me-1"></i>
                                                 <?php 

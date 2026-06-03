@@ -218,6 +218,24 @@
     border-color: #2196f3;
 }
 
+/* Icône calendrier : ne pas écraser le cercle quand le titre est long */
+.event-item-avatar {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    flex-shrink: 0;
+}
+
+.event-item-body {
+    min-width: 0;
+}
+
+.event-item-title {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
 /* Styles pour les badges de participants */
 .members-count {
     display: inline-flex;
