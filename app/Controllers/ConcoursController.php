@@ -2595,7 +2595,7 @@ public function inscription($concoursId)
         }
 
         $doc = $_GET['doc'] ?? null;
-        $validDocs = ['avis', 'feuilles-marques', 'liste-participants', 'scores', 'classement', 'commandes-buvette', 'bilan-financier'];
+        $validDocs = ['avis', 'feuilles-marques', 'plan-pelotons-cibles', 'liste-participants', 'scores', 'classement', 'commandes-buvette', 'bilan-financier'];
 
         // Commandes buvette : charger les réservations et agréger par produit
         $commandesBuvetteGroupes = [];
@@ -3069,10 +3069,10 @@ public function inscription($concoursId)
             });
         }
 
-        // Feuilles de marques : charger le plan cible (S, T, I, H) ou peloton (3, N, C) pour affecter les archers
+        // Feuilles de marques / plan pelotons-cibles : charger le plan cible (S, T, I, H) ou peloton (3, N, C)
         $plansCibleFeuilles = [];
         $plansPelotonFeuilles = [];
-        if ($doc === 'feuilles-marques') {
+        if (in_array($doc, ['feuilles-marques', 'plan-pelotons-cibles'], true)) {
             $abv = $disciplineAbv ?? '';
             if (in_array($abv, ['S', 'T', 'I', 'H'], true)) {
                 try {

@@ -66,6 +66,20 @@ $additionalJS[] = '/public/assets/js/concours-editions.js?v=' . time();
             <div class="card h-100">
                 <div class="card-body">
                     <h5 class="card-title">
+                        <i class="fas fa-bullseye text-danger me-2"></i>Plan pelotons / cibles
+                    </h5>
+                    <p class="card-text text-muted small">Récapitulatif imprimable des affectations par cible (tir salle) ou par peloton (nature, 3D, campagne).</p>
+                    <a href="<?= $baseUrl ?>?doc=plan-pelotons-cibles" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-external-link-alt me-1"></i>Ouvrir</a>
+                    <a href="<?= $baseUrl ?>?doc=plan-pelotons-cibles" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="fas fa-print me-1"></i>Imprimer</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
                         <i class="fas fa-users text-info me-2"></i>Liste des participants
                     </h5>
                     <p class="card-text text-muted small">Liste des archers inscrits et confirmés par club et départ.</p>

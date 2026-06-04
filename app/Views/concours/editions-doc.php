@@ -11,6 +11,7 @@ $departsList = array_values(is_array($departsRaw) ? $departsRaw : (array)$depart
 $docTitles = [
     'avis' => 'Avis de concours',
     'feuilles-marques' => 'Feuilles de marques',
+    'plan-pelotons-cibles' => 'Plan pelotons / cibles',
     'liste-participants' => 'Liste des participants',
     'scores' => 'Scores',
     'classement' => 'Classement',
@@ -287,6 +288,37 @@ $dateFooter = date('d/m/Y H:i');
         }
         .edition-feuilles-marques .feuille-marque-blason { margin-left: 0.35rem; font-weight: 600; font-size: 0.65rem; }
         .edition-feuilles-marques .feuille-marque-signatures { margin-top: 0.25rem; font-size: 0.6rem; }
+        /* Plan pelotons / cibles */
+        .edition-plan-pelotons-cibles .edition-plan-units-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem 1.25rem;
+            align-items: start;
+        }
+        .edition-plan-pelotons-cibles .edition-plan-unit-card {
+            page-break-inside: avoid;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.5rem 0.65rem 0.65rem;
+            background: #fff;
+        }
+        .edition-plan-pelotons-cibles .edition-plan-unit-title {
+            font-size: 1rem;
+            margin: 0 0 0.35rem;
+            text-align: center;
+        }
+        .edition-plan-pelotons-cibles .edition-plan-depart-title {
+            font-size: 1.15rem;
+            border-bottom: 2px solid #14532d;
+            padding-bottom: 0.25rem;
+        }
+        .edition-plan-pelotons-cibles .edition-plan-unit-table {
+            font-size: 0.75rem;
+        }
+        .edition-plan-pelotons-cibles .edition-plan-row-libre td {
+            color: #6c757d;
+            font-style: italic;
+        }
         .edition-feuilles-marques .feuille-marque-ligne-resume td { text-align: center; font-size: 0.65rem; }
         .edition-feuilles-marques .feuille-marque-ligne-resume-valeurs td { min-height: 7.3em; padding: 20px 1px; }
         /* Nature : 2 archers par page, grille 2 colonnes */
@@ -571,6 +603,7 @@ $dateFooter = date('d/m/Y H:i');
 $bodyClasses = [];
 if ($doc === 'liste-participants') $bodyClasses[] = 'edition-doc-liste-participants';
 if ($doc === 'feuilles-marques') $bodyClasses[] = 'edition-doc-feuilles-marques';
+if ($doc === 'plan-pelotons-cibles') $bodyClasses[] = 'edition-doc-plan-pelotons-cibles';
 if ($doc === 'feuilles-marques' && ($disciplineAbv ?? '') === 'N') $bodyClasses[] = 'edition-doc-feuilles-marques-nature';
 if ($doc === 'feuilles-marques' && ($disciplineAbv ?? '') === '3') $bodyClasses[] = 'edition-doc-feuilles-marques-3D';
 echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
@@ -707,6 +740,39 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
             <?php endforeach; ?>
         </select>
         <?php endif; ?>
+        <?php if ($doc === 'plan-pelotons-cibles'): ?>
+        <?php
+        $basePlanUrl = '/concours/' . (int)$concoursId . '/editions?doc=plan-pelotons-cibles';
+        $currentDepartPlan = $departFeuilles ?? 'tout';
+        $currentCiblePlan = $cibleFeuilles ?? 'toutes';
+        $currentPelotonPlan = $pelotonFeuilles ?? 'tout';
+        $ciblesListPlan = $ciblesListFeuilles ?? [];
+        $pelotonsListPlan = $pelotonsListFeuilles ?? [];
+        $departsListPlan = $departsListFeuilles ?? [];
+        $isPelotonPlan = in_array($disciplineAbv ?? '', ['3', 'N', 'C'], true);
+        $planFilterParam = $isPelotonPlan ? 'peloton' : 'cible';
+        $planFilterCurrent = $isPelotonPlan ? $currentPelotonPlan : $currentCiblePlan;
+        $planFilterList = $isPelotonPlan ? $pelotonsListPlan : $ciblesListPlan;
+        $planFilterLabel = $isPelotonPlan ? 'Peloton' : 'Cible';
+        ?>
+        <label class="me-2">Départ :</label>
+        <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
+            <?php $qDepPlan = 'depart=tout&' . $planFilterParam . '=' . rawurlencode($planFilterCurrent); ?>
+            <option value="<?= htmlspecialchars($basePlanUrl . '&' . $qDepPlan) ?>"<?= $currentDepartPlan === 'tout' ? ' selected' : '' ?>>Tous</option>
+            <?php foreach ($departsListPlan as $numDepart): ?>
+            <?php $qDepPlan = 'depart=' . (int)$numDepart . '&' . $planFilterParam . '=' . rawurlencode($planFilterCurrent); ?>
+            <option value="<?= htmlspecialchars($basePlanUrl . '&' . $qDepPlan) ?>"<?= $currentDepartPlan === (string)$numDepart ? ' selected' : '' ?>><?= (int)$numDepart ?></option>
+            <?php endforeach; ?>
+        </select>
+        <label class="me-2"><?= htmlspecialchars($planFilterLabel) ?> :</label>
+        <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
+            <?php $allValPlan = $isPelotonPlan ? 'tout' : 'toutes'; ?>
+            <option value="<?= htmlspecialchars($basePlanUrl . '&depart=' . rawurlencode($currentDepartPlan) . '&' . $planFilterParam . '=' . $allValPlan) ?>"<?= $planFilterCurrent === $allValPlan ? ' selected' : '' ?>><?= $isPelotonPlan ? 'TOUS' : 'TOUTES' ?></option>
+            <?php foreach ($planFilterList as $numItem): ?>
+            <option value="<?= htmlspecialchars($basePlanUrl . '&depart=' . rawurlencode($currentDepartPlan) . '&' . $planFilterParam . '=' . $numItem) ?>"<?= $planFilterCurrent === (string)$numItem ? ' selected' : '' ?>><?= (int)$numItem ?></option>
+            <?php endforeach; ?>
+        </select>
+        <?php endif; ?>
         <?php if ($doc === 'classement'): ?>
         <label class="me-2">Type de classement :</label>
         <select class="form-select form-select-sm d-inline-block w-auto me-3" onchange="location.href=this.value">
@@ -764,6 +830,9 @@ switch ($doc) {
     case 'feuilles-marques':
         include __DIR__ . '/editions/feuilles-marques.php';
         break;
+    case 'plan-pelotons-cibles':
+        include __DIR__ . '/editions/plan-pelotons-cibles.php';
+        break;
     case 'liste-participants':
         include __DIR__ . '/editions/liste-participants.php';
         break;
@@ -783,7 +852,7 @@ switch ($doc) {
         echo '<p>Document inconnu.</p>';
 }
 ?>
-                    <?php if ($doc !== 'liste-participants' && $doc !== 'feuilles-marques' && $doc !== 'commandes-buvette' && $doc !== 'bilan-financier') include __DIR__ . '/editions/_edition-doc-fin.php'; ?>
+                    <?php if ($doc !== 'liste-participants' && $doc !== 'feuilles-marques' && $doc !== 'plan-pelotons-cibles' && $doc !== 'commandes-buvette' && $doc !== 'bilan-financier') include __DIR__ . '/editions/_edition-doc-fin.php'; ?>
                 </td>
             </tr>
         </tbody>
