@@ -364,6 +364,9 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
             </div>
             <div id="greffe-bulk-actions" class="d-none align-items-center gap-2 p-3 border-top">
                 <span id="greffe-bulk-total" class="text-muted small"></span>
+                <button type="button" id="btn-greffe-bulk-print" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-print me-1"></i>Imprimer les reçus
+                </button>
                 <button type="button" id="btn-greffe-bulk-validate" class="btn btn-sm btn-success">
                     <i class="fas fa-check-double me-1"></i>Validation globale
                 </button>
@@ -639,6 +642,9 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                 </form>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="btn-print-greffe-receipt" title="Imprimer le reçu de la sélection en cours">
+                    <i class="fas fa-print me-1"></i>Imprimer le reçu
+                </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                 <button type="button" class="btn btn-primary" id="btn-confirm-greffe">Valider</button>
             </div>
