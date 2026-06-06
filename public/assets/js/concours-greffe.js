@@ -3105,6 +3105,16 @@ function getInscriptionPlanLabel(inscription) {
     return val !== '' && val != null ? String(val) : '—';
 }
 
+function isInscriptionPayeGreffe(inscription, options) {
+    const pp = getPresentPayeForInscription(inscription, options);
+    return String(pp.paye || '').toLowerCase().trim() === 'oui';
+}
+
+function computeInscriptionPaidAmount(inscription, options) {
+    if (!isInscriptionPayeGreffe(inscription, options)) return 0;
+    return computeInscriptionDueAmount(inscription);
+}
+
 function buildGreffeSelectionReceiptHtml(inscriptions, options) {
     options = options || {};
     const meta = getConcoursPrintMeta();
@@ -3116,10 +3126,10 @@ function buildGreffeSelectionReceiptHtml(inscriptions, options) {
         ? departLabels.join(', ')
         : 'Liste affichée (' + inscriptions.length + ' inscription(s))';
 
-    let totalDue = 0;
+    let totalPaid = 0;
     const detailRows = inscriptions.map(function(ins) {
-        const amount = computeInscriptionDueAmount(ins);
-        totalDue += amount;
+        const paidAmount = computeInscriptionPaidAmount(ins, options);
+        totalPaid += paidAmount;
         const pp = getPresentPayeForInscription(ins, options);
         const cells = [
             escapeHtml(ins.user_nom || ins.nom || '—'),
@@ -3136,7 +3146,7 @@ function buildGreffeSelectionReceiptHtml(inscriptions, options) {
             cells.push(escapeHtml(ins.blason != null && ins.blason !== '' ? String(ins.blason) : '—'));
         }
         cells.push(escapeHtml(getInscriptionPlanLabel(ins)));
-        cells.push(escapeHtml(formatEuroAmount(amount)));
+        cells.push(escapeHtml(formatEuroAmount(paidAmount)));
         cells.push(escapeHtml(formatOuiNon(pp.present)));
         cells.push(escapeHtml(formatOuiNon(pp.paye)));
         return '<tr>' + cells.map(function(c) { return '<td>' + c + '</td>'; }).join('') + '</tr>';
@@ -3150,7 +3160,7 @@ function buildGreffeSelectionReceiptHtml(inscriptions, options) {
     } else {
         detailHead.push('Distance', 'Blason');
     }
-    detailHead.push(planColLabel, 'Montant', 'Présent', 'Payé');
+    detailHead.push(planColLabel, 'Montant payé', 'Présent', 'Payé');
     const detailHeadHtml = detailHead.map(function(h) { return '<th>' + escapeHtml(h) + '</th>'; }).join('');
 
     return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Reçu greffe</title>' +
@@ -3169,7 +3179,7 @@ function buildGreffeSelectionReceiptHtml(inscriptions, options) {
         '<br>Imprimé le ' + escapeHtml(printedAt) + '</div>' +
         '<h2>Détail de la sélection (' + inscriptions.length + ' inscription(s))</h2>' +
         '<table><thead><tr>' + detailHeadHtml + '</tr></thead><tbody>' + detailRows +
-        '<tr class="total-row"><td colspan="' + (detailHead.length - 1) + '">TOTAL DÛ</td><td>' + escapeHtml(formatEuroAmount(totalDue)) + '</td></tr>' +
+        '<tr class="total-row"><td colspan="' + (detailHead.length - 1) + '">TOTAL PAYÉ</td><td>' + escapeHtml(formatEuroAmount(totalPaid)) + '</td></tr>' +
         '</tbody></table>' +
         '</body></html>';
 }
