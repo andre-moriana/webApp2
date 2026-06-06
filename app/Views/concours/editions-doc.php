@@ -134,9 +134,7 @@ $dateFooter = date('d/m/Y H:i');
         .edition-liste-participants table th:nth-child(2),
         .edition-liste-participants table td:nth-child(2),
         .edition-scores table th:nth-child(2),
-        .edition-scores table td:nth-child(2),
-        .edition-classement table th:nth-child(2),
-        .edition-classement table td:nth-child(2) { 
+        .edition-scores table td:nth-child(2) { 
             width: 22%;
             white-space: nowrap;
         }
@@ -159,9 +157,7 @@ $dateFooter = date('d/m/Y H:i');
         .edition-liste-participants table th:nth-child(5),
         .edition-liste-participants table td:nth-child(5),
         .edition-scores table th:nth-child(5),
-        .edition-scores table td:nth-child(5),
-        .edition-classement table th:nth-child(5),
-        .edition-classement table td:nth-child(5) { 
+        .edition-scores table td:nth-child(5) { 
             width: 22%;
             white-space: nowrap;
         }
@@ -214,6 +210,31 @@ $dateFooter = date('d/m/Y H:i');
         .edition-classement table td:nth-child(n+9) { width: 5%; }
         .edition-classement table th:nth-child(n+10),
         .edition-classement table td:nth-child(n+10) { width: 5%; }
+        /* Classement : retour à la ligne pour nom et club ; licence et catégorie sur une ligne */
+        .edition-classement .edition-classement-col-nom,
+        .edition-classement .edition-classement-col-club {
+            white-space: normal;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+        .edition-classement .edition-classement-col-nom {
+            width: 22%;
+        }
+        .edition-classement .edition-classement-col-club {
+            width: 22%;
+        }
+        .edition-classement .edition-classement-col-licence,
+        .edition-classement .edition-classement-col-categorie {
+            white-space: nowrap;
+            word-break: normal;
+            overflow-wrap: normal;
+        }
+        .edition-classement .edition-classement-col-licence {
+            width: 8%;
+        }
+        .edition-classement .edition-classement-col-categorie {
+            width: 6%;
+        }
         /* Tableau liste des départs (avis) */
         .edition-avis table.table-sm {
             table-layout: fixed;

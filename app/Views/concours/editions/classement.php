@@ -200,10 +200,10 @@ if ($top3ParCategorie) {
                     <tr>
                         <?php if ($is3D): ?>
                             <th>Clt</th>
-                            <th>Nom</th>
-                            <th>Licence</th>
-                            <th>Cat.</th>
-                            <th>Club</th>
+                            <th class="edition-classement-col-nom">Nom</th>
+                            <th class="edition-classement-col-licence">Licence</th>
+                            <th class="edition-classement-col-categorie">Cat.</th>
+                            <th class="edition-classement-col-club">Club</th>
                             <th>Total</th>
                             <th>11</th>
                             <th>10</th>
@@ -211,10 +211,10 @@ if ($top3ParCategorie) {
                             <th>5</th>
                         <?php elseif ($isNature): ?>
                             <th>Clt</th>
-                            <th>Nom</th>
-                            <th>Licence</th>
-                            <th>Cat.</th>
-                            <th>Club</th>
+                            <th class="edition-classement-col-nom">Nom</th>
+                            <th class="edition-classement-col-licence">Licence</th>
+                            <th class="edition-classement-col-categorie">Cat.</th>
+                            <th class="edition-classement-col-club">Club</th>
                             <th>P1</th>
                             <?php if ($has2x21): ?><th>P2</th><?php endif; ?>
                             <th>Total</th>
@@ -224,9 +224,9 @@ if ($top3ParCategorie) {
                             <th>15-10</th>
                         <?php else: ?>
                             <th>Rang</th>
-                            <th>Nom</th>
-                            <th>N° Licence</th>
-                            <th>Club</th>
+                            <th class="edition-classement-col-nom">Nom</th>
+                            <th class="edition-classement-col-licence">N° Licence</th>
+                            <th class="edition-classement-col-club">Club</th>
                             <th>Score</th>
                         <?php endif; ?>
                     </tr>
@@ -237,10 +237,10 @@ if ($top3ParCategorie) {
                         <tr>
                             <?php if ($is3D): ?>
                                 <td><?= $item['rang'] ?></td>
-                                <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
-                                <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
+                                <td class="edition-classement-col-nom"><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
+                                <td class="edition-classement-col-licence"><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
+                                <td class="edition-classement-col-categorie"><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
+                                <td class="edition-classement-col-club"><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                                 <td><?= $r ? (($v = $r['score'] ?? null) !== null && $v !== '' ? (int)$v : '-') : '-' ?></td>
                                 <td><?= $r ? ($r['nb_11'] ?? '-') : '-' ?></td>
                                 <td><?= $r ? ($r['nb_10'] ?? '-') : '-' ?></td>
@@ -248,10 +248,10 @@ if ($top3ParCategorie) {
                                 <td><?= $r ? ($r['nb_5'] ?? '-') : '-' ?></td>
                             <?php elseif ($isNature): ?>
                                 <td><?= $item['rang'] ?></td>
-                                <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
-                                <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
+                                <td class="edition-classement-col-nom"><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
+                                <td class="edition-classement-col-licence"><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
+                                <td class="edition-classement-col-categorie"><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
+                                <td class="edition-classement-col-club"><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                                 <td><?= $r ? (($v = $r['serie1_score'] ?? $r['score'] ?? null) !== null && $v !== '' ? (int)$v : '-') : '-' ?></td>
                                 <?php if ($has2x21): ?><td><?= $r ? ($r['serie2_score'] ?? '-') : '-' ?></td><?php endif; ?>
                                 <td><?= $r ? (($v = $r['score'] ?? null) !== null && $v !== '' ? (int)$v : '-') : '-' ?></td>
@@ -261,9 +261,9 @@ if ($top3ParCategorie) {
                                 <td><?= $r ? ($r['nb_15_10'] ?? '-') : '-' ?></td>
                             <?php else: ?>
                                 <td><?= $item['rang'] ?></td>
-                                <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
+                                <td class="edition-classement-col-nom"><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
+                                <td class="edition-classement-col-licence"><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
+                                <td class="edition-classement-col-club"><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
                                 <td><?= $r ? ($r['score'] ?? '-') : '-' ?></td>
                             <?php endif; ?>
                         </tr>
