@@ -3105,9 +3105,8 @@ function getInscriptionPlanLabel(inscription) {
     return val !== '' && val != null ? String(val) : '—';
 }
 
-function buildGreffeSelectionReceiptHtml(inscriptions, options, buvetteByInscription) {
+function buildGreffeSelectionReceiptHtml(inscriptions, options) {
     options = options || {};
-    buvetteByInscription = buvetteByInscription || {};
     const meta = getConcoursPrintMeta();
     const isNatureLocal = typeof isNature3DOrCampagne !== 'undefined' && isNature3DOrCampagne;
     const planColLabel = typeof isCibleDiscipline !== 'undefined' && isCibleDiscipline ? 'Cible' : 'Peloton';
@@ -3154,22 +3153,6 @@ function buildGreffeSelectionReceiptHtml(inscriptions, options, buvetteByInscrip
     detailHead.push(planColLabel, 'Montant', 'Présent', 'Payé');
     const detailHeadHtml = detailHead.map(function(h) { return '<th>' + escapeHtml(h) + '</th>'; }).join('');
 
-    const buvetteSections = [];
-    inscriptions.forEach(function(ins) {
-        const reservations = buvetteByInscription[String(ins.id)] || [];
-        if (!reservations.length) return;
-        const archerName = ins.user_nom || ins.nom || ins.numero_licence || 'Archer';
-        const lines = formatBuvetteReservationLines(reservations);
-        buvetteSections.push(
-            '<div class="buvette-archer"><strong>' + escapeHtml(archerName) + '</strong><ul>' +
-            lines.map(function(line) { return '<li>' + escapeHtml(line) + '</li>'; }).join('') +
-            '</ul></div>'
-        );
-    });
-    const buvetteHtml = buvetteSections.length
-        ? buvetteSections.join('')
-        : '<p class="muted">Aucune réservation buvette dans la sélection.</p>';
-
     return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Reçu greffe</title>' +
         '<style>body{font-family:Arial,sans-serif;font-size:11pt;color:#111;margin:14mm;}' +
         'h1{font-size:16pt;margin:0 0 3mm;color:#14532d;}h2{font-size:12pt;margin:8mm 0 3mm;color:#14532d;}' +
@@ -3177,7 +3160,6 @@ function buildGreffeSelectionReceiptHtml(inscriptions, options, buvetteByInscrip
         'table{width:100%;border-collapse:collapse;margin:4mm 0;}th,td{border:1px solid #ccc;padding:4px 6px;text-align:left;vertical-align:top;font-size:10pt;}' +
         'th{background:#f5f5f5;font-weight:600;}td{word-break:break-word;}' +
         '.total-row td{font-weight:700;background:#eef6ee;}' +
-        '.buvette-archer{margin-bottom:4mm;}ul{margin:2mm 0 0;padding-left:18px;}' +
         '@media print{body{margin:10mm;}}</style></head><body>' +
         '<h1>Reçu de greffe</h1>' +
         '<div class="sub">' + escapeHtml(meta.titre) +
@@ -3189,7 +3171,6 @@ function buildGreffeSelectionReceiptHtml(inscriptions, options, buvetteByInscrip
         '<table><thead><tr>' + detailHeadHtml + '</tr></thead><tbody>' + detailRows +
         '<tr class="total-row"><td colspan="' + (detailHead.length - 1) + '">TOTAL DÛ</td><td>' + escapeHtml(formatEuroAmount(totalDue)) + '</td></tr>' +
         '</tbody></table>' +
-        '<h2>Réservations buvette</h2>' + buvetteHtml +
         '</body></html>';
 }
 
@@ -3213,16 +3194,7 @@ function printGreffeSelectionReceipt(options) {
         alert('Aucune inscription dans la sélection à imprimer.');
         return;
     }
-
-    Promise.all(inscriptions.map(function(ins) {
-        return fetchBuvetteReservationsForReceipt(ins.id).then(function(reservations) {
-            return { id: String(ins.id), reservations: reservations };
-        });
-    })).then(function(results) {
-        const buvetteByInscription = {};
-        results.forEach(function(r) { buvetteByInscription[r.id] = r.reservations; });
-        openGreffeReceiptPrintWindow(buildGreffeSelectionReceiptHtml(inscriptions, options, buvetteByInscription));
-    });
+    openGreffeReceiptPrintWindow(buildGreffeSelectionReceiptHtml(inscriptions, options));
 }
 
 window.printGreffeSelectionReceipt = printGreffeSelectionReceipt;
