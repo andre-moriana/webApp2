@@ -19,7 +19,7 @@ $docTitles = [
     'bilan-financier' => 'Bilan financier'
 ];
 $docTitle = $docTitles[$doc] ?? 'Document';
-$version = defined('APP_VERSION') ? APP_VERSION : ($_ENV['APP_VERSION'] ?? '1.0');
+$version = defined('APP_VERSION') ? APP_VERSION : ($_ENV['APP_VERSION'] ?? '9.10');
 $dateFooter = date('d/m/Y H:i');
 ?>
 <!DOCTYPE html>
@@ -700,14 +700,14 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
             <?php endforeach; ?>
         </select>
         <?php
-        $fftaExportUrl = $baseScoresUrl . '&depart=tout&tri=categorie&export=ffta';
+        $fftaExportUrl = $baseScoresUrl . '&depart=tout&tri=depart&export=ffta';
         $fftaExportTousDeparts = ($currentDepartScores === 'tout');
         ?>
         <?php if ($fftaExportTousDeparts): ?>
         <a
             href="<?= htmlspecialchars($fftaExportUrl) ?>"
             class="btn btn-outline-primary btn-sm ms-2"
-            title="Export FFTA : tous les départs, tri par catégorie (tabulations)"
+            title="Export FFTA : tous les départs, classement par catégorie et départ (tabulations)"
         >
             <i class="fas fa-file-export me-1"></i>Export FFTA
         </a>

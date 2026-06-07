@@ -3022,7 +3022,7 @@ public function inscription($concoursId)
                     'inscriptions' => $inscriptions,
                     'resultats' => $resultats,
                     'resultatsByLicence' => $resultatsByLicence,
-                    'triScores' => 'categorie',
+                    'triScores' => 'depart',
                     'clubOrganisateurCode' => $clubOrganisateurCode,
                     'clubsMap' => $clubsMap,
                     'disciplineAbv' => $disciplineAbv,

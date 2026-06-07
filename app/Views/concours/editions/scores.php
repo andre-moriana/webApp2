@@ -66,11 +66,11 @@ $hasDetail = $hasNatureDetail || $has3DDetail;
         ? $departFilterScores : 'tout';
     $fftaScoresTousDeparts = ($departScoresFfta === 'tout');
     if ($concoursIdScores):
-        $fftaScoresUrl = '/concours/' . (int)$concoursIdScores . '/editions?doc=scores&depart=tout&tri=categorie&export=ffta';
+        $fftaScoresUrl = '/concours/' . (int)$concoursIdScores . '/editions?doc=scores&depart=tout&tri=depart&export=ffta';
     ?>
     <p class="text-center d-print-none mb-3">
         <?php if ($fftaScoresTousDeparts): ?>
-        <a href="<?= htmlspecialchars($fftaScoresUrl) ?>" class="btn btn-outline-primary btn-sm" title="Export FFTA : tous les départs, tri par catégorie">
+        <a href="<?= htmlspecialchars($fftaScoresUrl) ?>" class="btn btn-outline-primary btn-sm" title="Export FFTA : tous les départs, classement par catégorie et départ">
             <i class="fas fa-file-export me-1"></i>Export FFTA
         </a>
         <?php else: ?>
