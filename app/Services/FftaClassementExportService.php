@@ -787,13 +787,51 @@ class FftaClassementExportService
         return str_pad(substr($code, 0, 7), 7, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Format FFTA : 7 chiffres (complétés à gauche par des zéros) + 1 lettre de contrôle.
+     * Ex. 1234567A → 0123456A. Étrangers : 999999 (sans lettre).
+     */
     private static function formatLicence(string $licence): string
     {
-        $digits = preg_replace('/\D/', '', $licence);
+        $clean = strtoupper(preg_replace('/\s+/', '', trim($licence)));
+        if ($clean === '') {
+            return '';
+        }
+
+        if ($clean === self::FFTA_LICENCE_ETRANGER) {
+            return self::FFTA_LICENCE_ETRANGER;
+        }
+
+        $letter = '';
+        $digits = '';
+
+        if (preg_match('/^(\d{1,8})([A-Z])$/', $clean, $m)) {
+            $digits = $m[1];
+            $letter = $m[2];
+        } elseif (preg_match('/^\d+$/', $clean)) {
+            $digits = $clean;
+        } else {
+            if (preg_match('/([A-Z])$/', $clean)) {
+                $letter = substr($clean, -1);
+                $clean = substr($clean, 0, -1);
+            }
+            $digits = preg_replace('/\D/', '', $clean);
+        }
+
         if ($digits === '') {
             return '';
         }
-        return str_pad(substr($digits, -7), 7, '0', STR_PAD_LEFT);
+
+        // 8 chiffres sans lettre : format historique avec zéro de tête (ex. 01234567 → 01234567).
+        if ($letter === '' && strlen($digits) === 8 && $digits[0] === '0') {
+            $digits = substr($digits, 1);
+        } elseif (strlen($digits) > 7) {
+            $digits = substr($digits, -7);
+        }
+
+        $digits = str_pad($digits, 7, '0', STR_PAD_LEFT);
+
+        return $letter !== '' ? $digits . $letter : $digits;
     }
 
     /**
