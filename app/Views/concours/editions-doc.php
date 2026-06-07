@@ -19,7 +19,7 @@ $docTitles = [
     'bilan-financier' => 'Bilan financier'
 ];
 $docTitle = $docTitles[$doc] ?? 'Document';
-$version = defined('APP_VERSION') ? APP_VERSION : ($_ENV['APP_VERSION'] ?? '9.10');
+$version = defined('APP_VERSION') ? APP_VERSION : '9.10';
 $dateFooter = date('d/m/Y H:i');
 ?>
 <!DOCTYPE html>
