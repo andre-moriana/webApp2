@@ -25,6 +25,13 @@
     <?php unset($_SESSION['success']); ?>
 <?php endif; ?>
 
+<?php if (!empty($_SESSION['warning'])): ?>
+    <div class="alert alert-warning">
+        <strong>Attention:</strong> <?= htmlspecialchars($_SESSION['warning']) ?>
+    </div>
+    <?php unset($_SESSION['warning']); ?>
+<?php endif; ?>
+
 <?php
 // Fonction helper pour trouver un libellé par ID
 function findLabel($items, $id, $idField = 'id', $labelField = 'name') {
@@ -122,6 +129,44 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/greffes" class="btn btn-success">
                 <i class="fas fa-edit"></i> Gestion des greffes
             </a>
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#diffusionParticipantsModal"<?= ($participantsMailCount ?? 0) === 0 ? ' disabled title="Aucun participant avec email"' : '' ?>>
+                <i class="fas fa-envelope"></i> Mail aux participants
+            </button>
+        <?php endif; ?>
+
+        <?php if ($isDirigeant || $isAdmin): ?>
+        <div class="modal fade" id="diffusionParticipantsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <form method="POST" action="/concours/<?= (int)$concoursId ?>/participants/diffusion-mail">
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="fas fa-envelope me-2"></i>Diffusion mail aux participants</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-muted small mb-3">
+                                Un seul email sera envoyé par adresse (<?= (int)($participantsMailCount ?? 0) ?> destinataire<?= (int)($participantsMailCount ?? 0) !== 1 ? 's' : '' ?>).
+                                Sont concernés les inscriptions confirmées ou en attente disposant d'une adresse email valide.
+                            </p>
+                            <div class="mb-3">
+                                <label class="form-label">Sujet</label>
+                                <input type="text" class="form-control" value="<?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?>" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="participants-mail-message">Message <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="participants-mail-message" name="message" rows="6" required placeholder="Saisissez le message à envoyer aux participants"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-primary"<?= ($participantsMailCount ?? 0) === 0 ? ' disabled' : '' ?>>
+                                <i class="fas fa-paper-plane me-1"></i>Envoyer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
         <?php endif; ?>
 
     <?php endif; ?>

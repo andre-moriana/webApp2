@@ -674,10 +674,6 @@ class ConcoursController {
             exit;
         }
         
-        // Nettoyer les messages d'erreur de session
-        unset($_SESSION['error']);
-        unset($_SESSION['success']);
-        
         $concours = null;
         $inscriptions = [];
         $clubs = [];
@@ -1064,6 +1060,9 @@ class ConcoursController {
         } catch (Exception $e) {
             $categoriesAge = [];
         }
+
+        $participantsMailEmails = $this->collectUniqueParticipantEmails($inscriptions, $usersMap);
+        $participantsMailCount = count($participantsMailEmails);
         
         $title = 'Détails du concours - Portail Arc Training';
         include 'app/Views/layouts/header.php';
@@ -3479,6 +3478,149 @@ public function inscription($concoursId)
         }
 
         header('Location: /concours/' . (int)$concoursId . '/editions');
+        exit;
+    }
+
+    /**
+     * Emails uniques des participants (confirmés ou en attente), un seul par adresse.
+     */
+    private function collectUniqueParticipantEmails(array $inscriptions, array $usersMap = [])
+    {
+        $emails = [];
+        foreach ($inscriptions as $insc) {
+            if (!is_array($insc)) {
+                continue;
+            }
+            $statut = $insc['statut_inscription'] ?? 'en_attente';
+            if (!in_array($statut, ['confirmee', 'en_attente'], true)) {
+                continue;
+            }
+
+            $email = trim((string)($insc['email'] ?? $insc['user_email'] ?? ''));
+            if ($email === '' && !empty($insc['user_id'])) {
+                $userId = $insc['user_id'];
+                $user = $usersMap[$userId] ?? $usersMap[(string)$userId] ?? $usersMap[(int)$userId] ?? null;
+                if (is_array($user)) {
+                    $email = trim((string)($user['email'] ?? ''));
+                }
+            }
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+
+            $key = strtolower($email);
+            if (!isset($emails[$key])) {
+                $emails[$key] = $email;
+            }
+        }
+
+        return array_values($emails);
+    }
+
+    /**
+     * Diffusion d'un message par mail à tous les participants du concours.
+     */
+    public function sendParticipantsMail($concoursId)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+        $isAdmin = $_SESSION['user']['is_admin'] ?? false;
+        $isDirigeant = ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+        if (!$isAdmin && !$isDirigeant) {
+            $_SESSION['error'] = 'Accès réservé aux dirigeants et administrateurs.';
+            header('Location: /concours/show/' . (int)$concoursId);
+            exit;
+        }
+
+        $message = trim((string)($_POST['message'] ?? ''));
+        if ($message === '') {
+            $_SESSION['error'] = 'Le message est obligatoire.';
+            header('Location: /concours/show/' . (int)$concoursId);
+            exit;
+        }
+
+        $concoursResponse = $this->apiService->getConcoursById($concoursId);
+        if (!($concoursResponse['success'] ?? false)) {
+            $_SESSION['error'] = 'Concours introuvable.';
+            header('Location: /concours');
+            exit;
+        }
+        $concours = $this->apiService->unwrapData($concoursResponse);
+        if (is_array($concours) && isset($concours['data'])) {
+            $concours = $concours['data'];
+        }
+        if (is_array($concours)) {
+            $concours = (object)$concours;
+        }
+
+        $inscriptions = [];
+        try {
+            $inscriptionsResponse = $this->apiService->makeRequest("concours/{$concoursId}/inscriptions", 'GET');
+            $inscriptions = $this->apiService->unwrapData($inscriptionsResponse);
+            if (is_array($inscriptions) && isset($inscriptions['data']) && is_array($inscriptions['data'])) {
+                $inscriptions = $inscriptions['data'];
+            }
+            if (!is_array($inscriptions)) {
+                $inscriptions = [];
+            }
+            $inscriptions = array_values(array_filter($inscriptions, function ($i) {
+                return is_array($i);
+            }));
+        } catch (Exception $e) {
+            $inscriptions = [];
+        }
+
+        $usersMap = [];
+        foreach ($inscriptions as $insc) {
+            $userId = $insc['user_id'] ?? null;
+            if (!$userId || isset($usersMap[$userId])) {
+                continue;
+            }
+            try {
+                $userResponse = $this->apiService->makeRequest("users/{$userId}", 'GET');
+                if ($userResponse['success'] && isset($userResponse['data'])) {
+                    $usersMap[$userId] = $userResponse['data'];
+                }
+            } catch (Exception $e) {
+                // Ignorer
+            }
+        }
+
+        $emails = $this->collectUniqueParticipantEmails($inscriptions, $usersMap);
+        if (empty($emails)) {
+            $_SESSION['error'] = 'Aucun participant avec une adresse email valide.';
+            header('Location: /concours/show/' . (int)$concoursId);
+            exit;
+        }
+
+        $subject = trim((string)($concours->titre_competition ?? $concours->nom ?? 'Concours'));
+
+        $htmlBody = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>' . htmlspecialchars($subject) . '</title></head><body style="font-family:Arial,sans-serif;line-height:1.6;color:#222;">';
+        $htmlBody .= '<p>' . nl2br(htmlspecialchars($message)) . '</p>';
+        $htmlBody .= '</body></html>';
+
+        $sent = 0;
+        $failed = 0;
+        foreach ($emails as $email) {
+            $result = EmailService::sendGenericEmail($email, $subject, $htmlBody);
+            if ($result['success'] ?? false) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+
+        if ($sent > 0 && $failed === 0) {
+            $_SESSION['success'] = 'Message envoyé à ' . $sent . ' participant(s).';
+        } elseif ($sent > 0) {
+            $_SESSION['warning'] = 'Envoi partiel : ' . $sent . ' envoyé(s), ' . $failed . ' échec(s).';
+        } else {
+            $_SESSION['error'] = 'Aucun email n\'a pu être envoyé.';
+        }
+
+        header('Location: /concours/show/' . (int)$concoursId);
         exit;
     }
 
