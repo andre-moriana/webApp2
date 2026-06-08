@@ -70,7 +70,7 @@ $hasDetail = $hasNatureDetail || $has3DDetail;
     ?>
     <p class="text-center d-print-none mb-3">
         <?php if ($fftaScoresTousDeparts): ?>
-        <a href="<?= htmlspecialchars($fftaScoresUrl) ?>" class="btn btn-outline-primary btn-sm" title="Export FFTA : tous les départs, tri alphabétique par nom">
+        <a href="<?= htmlspecialchars($fftaScoresUrl) ?>" class="btn btn-outline-primary btn-sm" title="Export FFTA : tous les départs, tri alphabétique par nom et prénom">
             <i class="fas fa-file-export me-1"></i>Export FFTA
         </a>
         <?php else: ?>

@@ -122,7 +122,7 @@ class FftaClassementExportService
     }
 
     /**
-     * Export FFTA scores : tous les départs, tri alphabétique par nom d'archer.
+     * Export FFTA scores : tous les départs, tri alphabétique par nom de famille puis prénom (champs FFTA NOM / PRENOM).
      * Le rang FFTA (champ 22, place qualif.) est calculé par catégorie et n° de départ.
      *
      * @param array<string, mixed> $options
@@ -142,24 +142,23 @@ class FftaClassementExportService
         usort($rows, function ($a, $b) use ($nomPrenomByLicence) {
             $nameA = self::resolveNomPrenomFromInscription($a, $nomPrenomByLicence);
             $nameB = self::resolveNomPrenomFromInscription($b, $nomPrenomByLicence);
-            $cmp = self::compareAlpha($nameA['nom'], $nameB['nom']);
+            $cmp = self::compareAlpha(
+                self::normalizeNameForSort($nameA['nom']),
+                self::normalizeNameForSort($nameB['nom'])
+            );
             if ($cmp !== 0) {
                 return $cmp;
             }
-            $cmp = self::compareAlpha($nameA['prenom'], $nameB['prenom']);
-            if ($cmp !== 0) {
-                return $cmp;
-            }
-            $da = (int)($a['numero_depart'] ?? 0);
-            $db = (int)($b['numero_depart'] ?? 0);
-            if ($da !== $db) {
-                return $da <=> $db;
-            }
-            $ntA = ($a['numero_tir'] ?? null);
-            $ntB = ($b['numero_tir'] ?? null);
-            $tirA = ($ntA === null || $ntA === '') ? 1 : (int)$ntA;
-            $tirB = ($ntB === null || $ntB === '') ? 1 : (int)$ntB;
-            return $tirA <=> $tirB;
+            return self::compareAlpha(
+                self::normalizeNameForSort($nameA['prenom']),
+                self::normalizeNameForSort($nameB['prenom'])
+            ) ?: (
+                ((int)($a['numero_depart'] ?? 0)) <=> ((int)($b['numero_depart'] ?? 0))
+            ) ?: (
+                ((($a['numero_tir'] ?? null) === null || ($a['numero_tir'] ?? '') === '') ? 1 : (int)$a['numero_tir'])
+                <=>
+                ((($b['numero_tir'] ?? null) === null || ($b['numero_tir'] ?? '') === '') ? 1 : (int)$b['numero_tir'])
+            );
         });
 
         $flat = [];
@@ -609,6 +608,8 @@ class FftaClassementExportService
             $armeClassement = self::extractArmeAbv($abvCat, trim((string)($insc['abv_arc'] ?? '')));
         }
         $armeUtilisee = strtoupper(substr(trim((string)($insc['abv_arc'] ?? '')), 0, 2));
+        $armeClassement = self::mapArmeFftaExport($armeClassement);
+        $armeUtilisee = self::mapArmeFftaExport($armeUtilisee);
 
         $clubNom = trim((string)($insc['club_nom'] ?? ''));
         $affiliation = self::clubAffiliationCode($insc, $clubsMap);
@@ -740,27 +741,70 @@ class FftaClassementExportService
      */
     private static function loadNomPrenomByLicencesForInscriptions(array $inscriptions): array
     {
-        $licences = [];
+        $licencesToQuery = [];
         foreach ($inscriptions as $insc) {
-            $lic = trim((string)($insc['numero_licence'] ?? ''));
-            if ($lic === '') {
-                continue;
-            }
-            $licences[] = $lic;
-            $formatted = self::formatLicence($lic);
-            if ($formatted !== '' && $formatted !== $lic) {
-                $licences[] = $formatted;
+            foreach (self::licenceLookupVariants((string)($insc['numero_licence'] ?? '')) as $variant) {
+                $licencesToQuery[$variant] = true;
             }
         }
-        $licences = array_values(array_unique($licences));
-        if ($licences === []) {
+        if ($licencesToQuery === []) {
             return [];
         }
-        return ArcherSearchController::getNomPrenomByLicences($licences);
+
+        $fromXml = ArcherSearchController::getNomPrenomByLicences(array_keys($licencesToQuery));
+        $lookup = [];
+        foreach ($fromXml as $xmlLic => $data) {
+            foreach (self::licenceLookupVariants($xmlLic) as $variant) {
+                $lookup[$variant] = $data;
+            }
+        }
+
+        return $lookup;
     }
 
     /**
-     * Nom / prénom tels qu'exportés FFTA (champs 5 et 6) — utilisé pour le tri alphabétique.
+     * @return list<string>
+     */
+    private static function licenceLookupVariants(string $licence): array
+    {
+        $lic = trim($licence);
+        if ($lic === '') {
+            return [];
+        }
+
+        $variants = [$lic];
+        $clean = strtoupper(preg_replace('/\s+/', '', $lic));
+        if ($clean !== '' && $clean !== $lic) {
+            $variants[] = $clean;
+        }
+
+        $formatted = self::formatLicence($lic);
+        if ($formatted !== '') {
+            $variants[] = $formatted;
+        }
+
+        $digits = preg_replace('/\D/', '', $lic);
+        if ($digits !== '') {
+            $variants[] = str_pad(substr($digits, -7), 7, '0', STR_PAD_LEFT);
+            if (strlen($digits) === 7) {
+                $variants[] = '0' . $digits;
+            }
+            if (strlen($digits) === 8 && $digits[0] === '0') {
+                $variants[] = substr($digits, 1);
+            }
+        }
+
+        if (preg_match('/^(\d{7,8})([A-Z])$/', $clean, $m)) {
+            $variants[] = str_pad(substr($m[1], -7), 7, '0', STR_PAD_LEFT) . $m[2];
+        }
+
+        return array_values(array_unique(array_filter($variants, static function ($v) {
+            return trim((string)$v) !== '';
+        })));
+    }
+
+    /**
+     * Nom / prénom tels qu'exportés FFTA (champs NOM et PRENOM) — utilisé pour le tri alphabétique.
      *
      * @param array<string, array{nom: string, prenom: string}> $nomPrenomByLicence
      * @return array{nom: string, prenom: string}
@@ -769,33 +813,26 @@ class FftaClassementExportService
     {
         $licRaw = trim((string)($insc['numero_licence'] ?? ''));
         if ($licRaw !== '') {
-            if (isset($nomPrenomByLicence[$licRaw])) {
-                return [
-                    'nom' => trim((string)$nomPrenomByLicence[$licRaw]['nom']),
-                    'prenom' => trim((string)$nomPrenomByLicence[$licRaw]['prenom']),
-                ];
-            }
-            $formatted = self::formatLicence($licRaw);
-            if ($formatted !== '' && isset($nomPrenomByLicence[$formatted])) {
-                return [
-                    'nom' => trim((string)$nomPrenomByLicence[$formatted]['nom']),
-                    'prenom' => trim((string)$nomPrenomByLicence[$formatted]['prenom']),
-                ];
+            foreach (self::licenceLookupVariants($licRaw) as $variant) {
+                if (isset($nomPrenomByLicence[$variant])) {
+                    return [
+                        'nom' => trim((string)$nomPrenomByLicence[$variant]['nom']),
+                        'prenom' => trim((string)$nomPrenomByLicence[$variant]['prenom']),
+                    ];
+                }
             }
         }
 
-        $nomInsc = trim((string)($insc['nom'] ?? ''));
-        $prenomInsc = trim((string)($insc['prenom'] ?? ''));
-        if ($nomInsc !== '') {
-            return ['nom' => $nomInsc, 'prenom' => $prenomInsc];
+        $nom = trim((string)($insc['nom'] ?? $insc['name'] ?? $insc['last_name'] ?? $insc['NOM'] ?? ''));
+        $prenom = trim((string)($insc['prenom'] ?? $insc['first_name'] ?? $insc['firstName'] ?? $insc['user_prenom'] ?? $insc['PRENOM'] ?? ''));
+        if ($nom !== '' || $prenom !== '') {
+            return ['nom' => $nom, 'prenom' => $prenom];
         }
 
         $display = trim((string)($insc['user_nom'] ?? ''));
-        if ($display === '') {
-            $display = trim((string)($insc['nom'] ?? ''));
-        }
         $parts = preg_split('/\s+/', $display, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         if (count($parts) >= 2) {
+            // user_nom = « Prénom NOM » (format saisie concours)
             return ['nom' => array_pop($parts), 'prenom' => implode(' ', $parts)];
         }
         if (count($parts) === 1) {
@@ -803,6 +840,18 @@ class FftaClassementExportService
         }
 
         return ['nom' => '', 'prenom' => ''];
+    }
+
+    private static function normalizeNameForSort(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return '';
+        }
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($name, 'UTF-8');
+        }
+        return strtolower($name);
     }
 
     private static function compareAlpha(string $a, string $b): int
@@ -932,6 +981,13 @@ class FftaClassementExportService
             return strtoupper($m[1]);
         }
         return strtoupper(substr($abvArc, 0, 2));
+    }
+
+    /** Arc nu (BB) : le format FFTA attend CL pour l'arme de classement et l'arme utilisée. */
+    private static function mapArmeFftaExport(string $arme): string
+    {
+        $arme = strtoupper(substr(trim($arme), 0, 2));
+        return $arme === 'BB' ? 'CL' : $arme;
     }
 
     private static function mapNiveauFfta(string $abv): string
