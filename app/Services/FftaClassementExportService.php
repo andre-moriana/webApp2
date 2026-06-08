@@ -196,13 +196,87 @@ class FftaClassementExportService
         }
 
         $categoriesIdToAbv = $exportOptions['categoriesIdToAbv'] ?? [];
-        $map = self::computeRangParCategorieLicenceMap($inscriptions, $resultats, $resultatsByLicence, $disciplineAbv, $exportOptions);
+        $forceRangParDepart = !empty($exportOptions['forceRangParDepart']);
+        $map = $forceRangParDepart
+            ? self::computeRangQualifParDepartMap($inscriptions, $resultats, $resultatsByLicence, $disciplineAbv, $exportOptions)
+            : self::computeRangParCategorieLicenceMap($inscriptions, $resultats, $resultatsByLicence, $disciplineAbv, $exportOptions);
         foreach ($rows as &$row) {
             $insc = $row['inscription'];
             $row['rangClassement'] = self::resolveRangClassementParCategorie($insc, $map, $categoriesIdToAbv);
         }
         unset($row);
         return $rows;
+    }
+
+    /**
+     * Place qualif. (champ 22) : classement par catégorie et n° de départ (1er tir), pas le classement général.
+     *
+     * @param array<int, array> $inscriptions
+     * @param array<string, mixed> $exportOptions
+     * @return array<string, int>
+     */
+    private static function computeRangQualifParDepartMap(
+        array $inscriptions,
+        array $resultats,
+        array $resultatsByLicence,
+        ?string $disciplineAbv,
+        array $exportOptions
+    ): array {
+        $categoriesIdToAbv = $exportOptions['categoriesIdToAbv'] ?? [];
+        [$is3D, $isNature] = self::detectDisciplineFlags($resultats, $disciplineAbv);
+        $resolveResultat = self::makeResultatResolver($resultats, $resultatsByLicence);
+
+        $inscriptions1erTir = array_values(array_filter($inscriptions, static function ($insc) {
+            return self::isPremierTir($insc) && self::resolveNumeroDepart($insc) > 0;
+        }));
+
+        /** @var array<string, array<string, array{inscription: array, resultat: ?array, score: int}>> $parGroupe */
+        $parGroupe = [];
+        foreach ($inscriptions1erTir as $insc) {
+            $lic = self::normalizeLicenceKey((string)($insc['numero_licence'] ?? ''));
+            if ($lic === '') {
+                continue;
+            }
+            $groupe = self::groupeClassementKey($insc, $categoriesIdToAbv);
+            $r = $resolveResultat($insc);
+            $parGroupe[$groupe][$lic] = [
+                'inscription' => $insc,
+                'resultat' => $r,
+                'score' => $r ? (int)($r['score'] ?? 0) : 0,
+            ];
+        }
+
+        /** @var array<string, int> $rangParLicenceGroupe */
+        $rangParLicenceGroupe = [];
+        foreach ($parGroupe as $groupe => $parLicence) {
+            $items = array_values($parLicence);
+            usort($items, function ($a, $b) use ($isNature, $is3D) {
+                return self::compareScoreItems($a, $b, $isNature, $is3D);
+            });
+            $rang = 1;
+            foreach ($items as $item) {
+                $lic = self::normalizeLicenceKey((string)($item['inscription']['numero_licence'] ?? ''));
+                if ($lic !== '') {
+                    $rangParLicenceGroupe[$lic . '|' . $groupe] = $rang;
+                }
+                $rang++;
+            }
+        }
+
+        $map = [];
+        foreach ($inscriptions as $insc) {
+            $lic = self::normalizeLicenceKey((string)($insc['numero_licence'] ?? ''));
+            if ($lic === '' || self::resolveNumeroDepart($insc) <= 0) {
+                continue;
+            }
+            $groupe = self::groupeClassementKey($insc, $categoriesIdToAbv);
+            $lk = $lic . '|' . $groupe;
+            if (isset($rangParLicenceGroupe[$lk])) {
+                $map[self::rangParGroupeMapKey($lic, $insc, $categoriesIdToAbv)] = $rangParLicenceGroupe[$lk];
+            }
+        }
+
+        return $map;
     }
 
     /**
@@ -341,8 +415,28 @@ class FftaClassementExportService
 
     private static function numeroDepartKey(array $insc): string
     {
-        $nd = (int)($insc['numero_depart'] ?? 0);
+        $nd = self::resolveNumeroDepart($insc);
         return $nd > 0 ? (string)$nd : '0';
+    }
+
+    private static function resolveNumeroDepart(array $insc): int
+    {
+        foreach (['numero_depart', 'numeroDepart', 'depart'] as $key) {
+            if (!isset($insc[$key]) || $insc[$key] === '' || $insc[$key] === null) {
+                continue;
+            }
+            $nd = (int)$insc[$key];
+            if ($nd > 0) {
+                return $nd;
+            }
+        }
+        return 0;
+    }
+
+    private static function isPremierTir(array $insc): bool
+    {
+        $nt = $insc['numero_tir'] ?? null;
+        return $nt === null || $nt === '' || (int)$nt === 1;
     }
 
     /** Groupe de classement : catégorie + n° départ. */
