@@ -123,7 +123,7 @@ class FftaClassementExportService
 
     /**
      * Export FFTA scores : tri par nom, prénom puis n° de tir (champs FFTA).
-     * Le rang FFTA (champ 22, place qualif.) est calculé par catégorie et n° de départ.
+     * Le rang FFTA (champ 22, place qualif.) est le classement général par catégorie et n° de tir.
      *
      * @param array<string, mixed> $options
      * @return list<array{inscription: array, resultat: ?array, rang: int}>
@@ -172,6 +172,7 @@ class FftaClassementExportService
 
     /**
      * Classement par catégorie et n° de départ (chaque départ a son propre classement) — même rang pour tous les tirs d'une licence sur ce départ.
+     * Export scores : voir computeRangGeneralParNumeroTirMap (classement général par n° de tir).
      *
      * @param list<array{inscription: array, resultat: ?array}> $rows
      * @param array<int, array> $inscriptions
@@ -196,26 +197,27 @@ class FftaClassementExportService
         }
 
         $categoriesIdToAbv = $exportOptions['categoriesIdToAbv'] ?? [];
-        $forceRangParDepart = !empty($exportOptions['forceRangParDepart']);
         $map = $forceRangParDepart
-            ? self::computeRangQualifParDepartMap($inscriptions, $resultats, $resultatsByLicence, $disciplineAbv, $exportOptions)
+            ? self::computeRangGeneralParNumeroTirMap($inscriptions, $resultats, $resultatsByLicence, $disciplineAbv, $exportOptions)
             : self::computeRangParCategorieLicenceMap($inscriptions, $resultats, $resultatsByLicence, $disciplineAbv, $exportOptions);
         foreach ($rows as &$row) {
             $insc = $row['inscription'];
-            $row['rangClassement'] = self::resolveRangClassementParCategorie($insc, $map, $categoriesIdToAbv);
+            $row['rangClassement'] = $forceRangParDepart
+                ? self::resolveRangGeneralParNumeroTir($insc, $map, $categoriesIdToAbv)
+                : self::resolveRangClassementParCategorie($insc, $map, $categoriesIdToAbv);
         }
         unset($row);
         return $rows;
     }
 
     /**
-     * Place qualif. (champ 22) : classement par catégorie et n° de départ (1er tir), pas le classement général.
+     * Place qualif. (champ 22) : classement général par catégorie et n° de tir (tous départs confondus).
      *
      * @param array<int, array> $inscriptions
      * @param array<string, mixed> $exportOptions
      * @return array<string, int>
      */
-    private static function computeRangQualifParDepartMap(
+    private static function computeRangGeneralParNumeroTirMap(
         array $inscriptions,
         array $resultats,
         array $resultatsByLicence,
@@ -226,24 +228,27 @@ class FftaClassementExportService
         [$is3D, $isNature] = self::detectDisciplineFlags($resultats, $disciplineAbv);
         $resolveResultat = self::makeResultatResolver($resultats, $resultatsByLicence);
 
-        $inscriptions1erTir = array_values(array_filter($inscriptions, static function ($insc) {
-            return self::isPremierTir($insc) && self::resolveNumeroDepart($insc) > 0;
-        }));
-
         /** @var array<string, array<string, array{inscription: array, resultat: ?array, score: int}>> $parGroupe */
         $parGroupe = [];
-        foreach ($inscriptions1erTir as $insc) {
+        foreach ($inscriptions as $insc) {
             $lic = self::normalizeLicenceKey((string)($insc['numero_licence'] ?? ''));
             if ($lic === '') {
                 continue;
             }
-            $groupe = self::groupeClassementKey($insc, $categoriesIdToAbv);
+            $groupe = self::groupeClassementParTirKey($insc, $categoriesIdToAbv);
             $r = $resolveResultat($insc);
-            $parGroupe[$groupe][$lic] = [
+            $item = [
                 'inscription' => $insc,
                 'resultat' => $r,
                 'score' => $r ? (int)($r['score'] ?? 0) : 0,
             ];
+            if (!isset($parGroupe[$groupe][$lic])) {
+                $parGroupe[$groupe][$lic] = $item;
+                continue;
+            }
+            if (self::compareScoreItems($item, $parGroupe[$groupe][$lic], $isNature, $is3D) < 0) {
+                $parGroupe[$groupe][$lic] = $item;
+            }
         }
 
         /** @var array<string, int> $rangParLicenceGroupe */
@@ -266,17 +271,29 @@ class FftaClassementExportService
         $map = [];
         foreach ($inscriptions as $insc) {
             $lic = self::normalizeLicenceKey((string)($insc['numero_licence'] ?? ''));
-            if ($lic === '' || self::resolveNumeroDepart($insc) <= 0) {
+            if ($lic === '') {
                 continue;
             }
-            $groupe = self::groupeClassementKey($insc, $categoriesIdToAbv);
+            $groupe = self::groupeClassementParTirKey($insc, $categoriesIdToAbv);
             $lk = $lic . '|' . $groupe;
             if (isset($rangParLicenceGroupe[$lk])) {
-                $map[self::rangParGroupeMapKey($lic, $insc, $categoriesIdToAbv)] = $rangParLicenceGroupe[$lk];
+                $map[self::rangParTirMapKey($lic, $insc, $categoriesIdToAbv)] = $rangParLicenceGroupe[$lk];
             }
         }
 
         return $map;
+    }
+
+    /**
+     * @param array<string, int> $map
+     */
+    private static function resolveRangGeneralParNumeroTir(array $insc, array $map, array $categoriesIdToAbv = []): int
+    {
+        $lic = self::normalizeLicenceKey((string)($insc['numero_licence'] ?? ''));
+        if ($lic === '') {
+            return 0;
+        }
+        return $map[self::rangParTirMapKey($lic, $insc, $categoriesIdToAbv)] ?? 0;
     }
 
     /**
@@ -445,9 +462,20 @@ class FftaClassementExportService
         return self::categorieClassementKey($insc, $categoriesIdToAbv) . '|' . self::numeroDepartKey($insc);
     }
 
+    /** Groupe classement général export scores : catégorie + n° de tir. */
+    private static function groupeClassementParTirKey(array $insc, array $categoriesIdToAbv = []): string
+    {
+        return self::categorieClassementKey($insc, $categoriesIdToAbv) . '|' . self::numeroTirSortKey($insc);
+    }
+
     private static function rangParGroupeMapKey(string $licence, array $insc, array $categoriesIdToAbv = []): string
     {
         return self::normalizeLicenceKey($licence) . '|' . self::groupeClassementKey($insc, $categoriesIdToAbv);
+    }
+
+    private static function rangParTirMapKey(string $licence, array $insc, array $categoriesIdToAbv = []): string
+    {
+        return self::normalizeLicenceKey($licence) . '|' . self::groupeClassementParTirKey($insc, $categoriesIdToAbv);
     }
 
     /**

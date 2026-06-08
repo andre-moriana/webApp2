@@ -707,7 +707,7 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
         <a
             href="<?= htmlspecialchars($fftaExportUrl) ?>"
             class="btn btn-outline-primary btn-sm ms-2"
-            title="Export FFTA : tri par nom, prénom et n° de tir (classement par catégorie et départ)"
+            title="Export FFTA : tri par nom, prénom et n° de tir (classement général par n° de tir)"
         >
             <i class="fas fa-file-export me-1"></i>Export FFTA
         </a>
