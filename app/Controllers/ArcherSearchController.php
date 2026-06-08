@@ -267,7 +267,7 @@ class ArcherSearchController {
     /**
      * Retourne nom et prénom pour une liste de licences (XML FFTA).
      * @param string[] $licences
-     * @return array<string, array{nom: string, prenom: string}>
+     * @return array<string, array{nom: string, prenom: string, cie: string}>
      */
     public static function getNomPrenomByLicences(array $licences) {
         $wanted = [];
@@ -313,6 +313,7 @@ class ArcherSearchController {
                         $result[$entryLicence] = [
                             'nom' => trim($currentEntry['NOM'] ?? ''),
                             'prenom' => trim($currentEntry['PRENOM'] ?? ''),
+                            'cie' => trim($currentEntry['CIE'] ?? ''),
                         ];
                         unset($wanted[$entryLicence]);
                         if (empty($wanted)) {

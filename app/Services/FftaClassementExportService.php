@@ -609,7 +609,7 @@ class FftaClassementExportService
         $armeUtilisee = strtoupper(substr(trim((string)($insc['abv_arc'] ?? '')), 0, 2));
         $armeClassement = self::mapArmeClassementFftaExport($armeClassement);
 
-        $clubNom = trim((string)($insc['club_nom'] ?? ''));
+        $clubNom = self::resolveClubNomFftaFromInscription($insc, $nomPrenomByLicence);
         $affiliation = self::clubAffiliationCode($insc, $clubsMap);
 
         $score = $res ? (int)($res['score'] ?? 0) : 0;
@@ -735,7 +735,7 @@ class FftaClassementExportService
 
     /**
      * @param array<int, array> $inscriptions
-     * @return array<string, array{nom: string, prenom: string}>
+     * @return array<string, array{nom: string, prenom: string, cie: string}>
      */
     private static function loadNomPrenomByLicencesForInscriptions(array $inscriptions): array
     {
@@ -838,6 +838,29 @@ class FftaClassementExportService
         }
 
         return ['nom' => '', 'prenom' => ''];
+    }
+
+    /**
+     * Champ 12 FFTA (nom club tireur) : CIE du fichier licences XML, sinon club de l'inscription.
+     *
+     * @param array<string, array{nom: string, prenom: string, cie?: string}> $nomPrenomByLicence
+     */
+    private static function resolveClubNomFftaFromInscription(array $insc, array $nomPrenomByLicence = []): string
+    {
+        $licRaw = trim((string)($insc['numero_licence'] ?? ''));
+        if ($licRaw !== '') {
+            foreach (self::licenceLookupVariants($licRaw) as $variant) {
+                if (!isset($nomPrenomByLicence[$variant])) {
+                    continue;
+                }
+                $cie = trim((string)($nomPrenomByLicence[$variant]['cie'] ?? ''));
+                if ($cie !== '') {
+                    return $cie;
+                }
+            }
+        }
+
+        return trim((string)($insc['club_nom'] ?? $insc['club_name'] ?? ''));
     }
 
     private static function numeroTirSortKey(array $insc): int
