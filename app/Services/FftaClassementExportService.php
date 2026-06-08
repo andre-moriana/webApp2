@@ -667,18 +667,18 @@ class FftaClassementExportService
         $fields[11] = $clubNom;
         $fields[12] = $affiliation;
         $fields[13] = $score;
-        $fields[14] = $paille;
-        $fields[15] = $dix;
-        $fields[16] = $neuf;
-        $fields[17] = $champ18;
-        $fields[18] = $blason;
+        $fields[14] = self::numOrZero($paille);
+        $fields[15] = self::numOrZero($dix);
+        $fields[16] = self::numOrZero($neuf);
+        $fields[17] = self::numOrZero($champ18);
+        $fields[18] = self::numOrZero($blason);
         $fields[19] = $dateConcours;
         $fields[20] = $lieu;
         $fields[21] = $rangClassement;
-        $fields[22] = $score1Dist;
-        $fields[23] = $score2Dist;
-        $fields[24] = $score3Dist;
-        $fields[25] = $score4Dist;
+        $fields[22] = self::numOrZero($score1Dist);
+        $fields[23] = self::numOrZero($score2Dist);
+        $fields[24] = self::numOrZero($score3Dist);
+        $fields[25] = self::numOrZero($score4Dist);
         // 26-46 : phases éliminatoires (vides)
         $placeDefinitive = self::inscriptionHasDuel($insc) ? $rangClassement : 0;
         $fields[47] = $placeDefinitive;
@@ -1138,6 +1138,14 @@ class FftaClassementExportService
             return trim((string)($concours['lieu'] ?? ''));
         }
         return '';
+    }
+
+    private static function numOrZero($value): string
+    {
+        if ($value === '' || $value === null) {
+            return '0';
+        }
+        return (string)$value;
     }
 
     private static function num2($value): string
