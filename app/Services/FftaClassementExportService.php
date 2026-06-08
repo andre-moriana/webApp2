@@ -122,7 +122,7 @@ class FftaClassementExportService
     }
 
     /**
-     * Export FFTA scores : tous les départs, tri alphabétique par nom de famille puis prénom (champs FFTA NOM / PRENOM).
+     * Export FFTA scores : tri par n° de tir, puis nom et prénom (champs FFTA).
      * Le rang FFTA (champ 22, place qualif.) est calculé par catégorie et n° de départ.
      *
      * @param array<string, mixed> $options
@@ -140,6 +140,11 @@ class FftaClassementExportService
 
         $rows = $inscriptions;
         usort($rows, function ($a, $b) use ($nomPrenomByLicence) {
+            $tirA = self::numeroTirSortKey($a);
+            $tirB = self::numeroTirSortKey($b);
+            if ($tirA !== $tirB) {
+                return $tirA <=> $tirB;
+            }
             $nameA = self::resolveNomPrenomFromInscription($a, $nomPrenomByLicence);
             $nameB = self::resolveNomPrenomFromInscription($b, $nomPrenomByLicence);
             $cmp = self::compareAlpha(
@@ -152,12 +157,6 @@ class FftaClassementExportService
             return self::compareAlpha(
                 self::normalizeNameForSort($nameA['prenom']),
                 self::normalizeNameForSort($nameB['prenom'])
-            ) ?: (
-                ((int)($a['numero_depart'] ?? 0)) <=> ((int)($b['numero_depart'] ?? 0))
-            ) ?: (
-                ((($a['numero_tir'] ?? null) === null || ($a['numero_tir'] ?? '') === '') ? 1 : (int)$a['numero_tir'])
-                <=>
-                ((($b['numero_tir'] ?? null) === null || ($b['numero_tir'] ?? '') === '') ? 1 : (int)$b['numero_tir'])
             );
         });
 
@@ -608,8 +607,7 @@ class FftaClassementExportService
             $armeClassement = self::extractArmeAbv($abvCat, trim((string)($insc['abv_arc'] ?? '')));
         }
         $armeUtilisee = strtoupper(substr(trim((string)($insc['abv_arc'] ?? '')), 0, 2));
-        $armeClassement = self::mapArmeFftaExport($armeClassement);
-        $armeUtilisee = self::mapArmeFftaExport($armeUtilisee);
+        $armeClassement = self::mapArmeClassementFftaExport($armeClassement);
 
         $clubNom = trim((string)($insc['club_nom'] ?? ''));
         $affiliation = self::clubAffiliationCode($insc, $clubsMap);
@@ -842,6 +840,12 @@ class FftaClassementExportService
         return ['nom' => '', 'prenom' => ''];
     }
 
+    private static function numeroTirSortKey(array $insc): int
+    {
+        $nt = $insc['numero_tir'] ?? null;
+        return ($nt === null || $nt === '') ? 1 : (int)$nt;
+    }
+
     private static function normalizeNameForSort(string $name): string
     {
         $name = trim($name);
@@ -983,8 +987,8 @@ class FftaClassementExportService
         return strtoupper(substr($abvArc, 0, 2));
     }
 
-    /** Arc nu (BB) : le format FFTA attend CL pour l'arme de classement et l'arme utilisée. */
-    private static function mapArmeFftaExport(string $arme): string
+    /** Arc nu (BB) : champ 10 (arme de classement) → CL. Champ 50 (arme utilisée) conserve BB. */
+    private static function mapArmeClassementFftaExport(string $arme): string
     {
         $arme = strtoupper(substr(trim($arme), 0, 2));
         return $arme === 'BB' ? 'CL' : $arme;
@@ -1119,7 +1123,7 @@ class FftaClassementExportService
         if ($value === '' || $value === null) {
             return '';
         }
-        return str_pad((string)max(0, min(99, (int)$value)), 2, '0', STR_PAD_LEFT);
+        return (string)max(0, min(99, (int)$value));
     }
 
     private static function num3($value): string
@@ -1127,7 +1131,7 @@ class FftaClassementExportService
         if ($value === '' || $value === null) {
             return '';
         }
-        return str_pad((string)max(0, min(999, (int)$value)), 3, '0', STR_PAD_LEFT);
+        return (string)max(0, min(999, (int)$value));
     }
 
     private static function num4($value): string
@@ -1135,7 +1139,7 @@ class FftaClassementExportService
         if ($value === '' || $value === null) {
             return '';
         }
-        return str_pad((string)max(0, min(9999, (int)$value)), 4, '0', STR_PAD_LEFT);
+        return (string)max(0, min(9999, (int)$value));
     }
 
     private static function toWindows1252(string $content): string
