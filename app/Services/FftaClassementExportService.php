@@ -136,13 +136,17 @@ class FftaClassementExportService
         $disciplineAbv = $options['disciplineAbv'] ?? null;
 
         $resolveResultat = self::makeResultatResolver($resultats, $resultatsByLicence);
+        $nomPrenomByLicence = self::loadNomPrenomByLicencesForInscriptions($inscriptions);
 
         $rows = $inscriptions;
-        usort($rows, function ($a, $b) {
-            $cmp = strcasecmp(
-                trim((string)($a['user_nom'] ?? $a['nom'] ?? '')),
-                trim((string)($b['user_nom'] ?? $b['nom'] ?? ''))
-            );
+        usort($rows, function ($a, $b) use ($nomPrenomByLicence) {
+            $nameA = self::resolveNomPrenomFromInscription($a, $nomPrenomByLicence);
+            $nameB = self::resolveNomPrenomFromInscription($b, $nomPrenomByLicence);
+            $cmp = self::compareAlpha($nameA['nom'], $nameB['nom']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            $cmp = self::compareAlpha($nameA['prenom'], $nameB['prenom']);
             if ($cmp !== 0) {
                 return $cmp;
             }
@@ -514,15 +518,19 @@ class FftaClassementExportService
         $lines[] = 'ARBITRES' . "\t" . implode("\t", $listeArbitres);
         $lines[] = 'ENTRAINEURS' . "\t" . implode("\t", $entraineurs);
 
-        $licences = [];
+        $inscriptionsForLookup = [];
         foreach ($rows as $row) {
-            $lic = trim((string)($row['inscription']['numero_licence'] ?? ''));
+            $inscriptionsForLookup[] = $row['inscription'];
+        }
+        $nomPrenomByLicence = self::loadNomPrenomByLicencesForInscriptions($inscriptionsForLookup);
+        $licences = [];
+        foreach ($inscriptionsForLookup as $insc) {
+            $lic = trim((string)($insc['numero_licence'] ?? ''));
             if ($lic !== '') {
                 $licences[] = $lic;
             }
         }
         $licences = array_values(array_unique($licences));
-        $nomPrenomByLicence = !empty($licences) ? ArcherSearchController::getNomPrenomByLicences($licences) : [];
         $sexeByLicence = !empty($licences) ? ArcherSearchController::getSexeByLicences($licences) : [];
 
         $resultatsForDetect = [];
@@ -574,22 +582,10 @@ class FftaClassementExportService
             $licence = self::formatLicence($licence);
         }
 
-        $nom = '';
-        $prenom = '';
+        $nomPrenom = self::resolveNomPrenomFromInscription($insc, $nomPrenomByLicence);
+        $nom = $nomPrenom['nom'];
+        $prenom = $nomPrenom['prenom'];
         $licRaw = trim((string)($insc['numero_licence'] ?? ''));
-        if ($licRaw !== '' && isset($nomPrenomByLicence[$licRaw])) {
-            $nom = $nomPrenomByLicence[$licRaw]['nom'];
-            $prenom = $nomPrenomByLicence[$licRaw]['prenom'];
-        }
-        if ($nom === '' && $prenom === '') {
-            $parts = preg_split('/\s+/', trim((string)($insc['user_nom'] ?? $insc['nom'] ?? '')), -1, PREG_SPLIT_NO_EMPTY) ?: [];
-            if (count($parts) >= 2) {
-                $nom = array_pop($parts);
-                $prenom = implode(' ', $parts);
-            } elseif (count($parts) === 1) {
-                $nom = $parts[0];
-            }
-        }
 
         $catageFfta = self::resolveCatageAbv($insc, $categoriesAgeIdToAbv);
         $catClassementFfta = self::formatCategorieClassementFfta($abvCat);
@@ -736,6 +732,96 @@ class FftaClassementExportService
             ? preg_replace('/\D/', '', (string)($club['nameShort'] ?? $club['name_short'] ?? ''))
             : (is_string($idClub) && preg_match('/^\d/', $idClub) ? preg_replace('/\D/', '', $idClub) : '');
         return str_pad(substr($code, 0, 7), 7, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * @param array<int, array> $inscriptions
+     * @return array<string, array{nom: string, prenom: string}>
+     */
+    private static function loadNomPrenomByLicencesForInscriptions(array $inscriptions): array
+    {
+        $licences = [];
+        foreach ($inscriptions as $insc) {
+            $lic = trim((string)($insc['numero_licence'] ?? ''));
+            if ($lic === '') {
+                continue;
+            }
+            $licences[] = $lic;
+            $formatted = self::formatLicence($lic);
+            if ($formatted !== '' && $formatted !== $lic) {
+                $licences[] = $formatted;
+            }
+        }
+        $licences = array_values(array_unique($licences));
+        if ($licences === []) {
+            return [];
+        }
+        return ArcherSearchController::getNomPrenomByLicences($licences);
+    }
+
+    /**
+     * Nom / prénom tels qu'exportés FFTA (champs 5 et 6) — utilisé pour le tri alphabétique.
+     *
+     * @param array<string, array{nom: string, prenom: string}> $nomPrenomByLicence
+     * @return array{nom: string, prenom: string}
+     */
+    private static function resolveNomPrenomFromInscription(array $insc, array $nomPrenomByLicence = []): array
+    {
+        $licRaw = trim((string)($insc['numero_licence'] ?? ''));
+        if ($licRaw !== '') {
+            if (isset($nomPrenomByLicence[$licRaw])) {
+                return [
+                    'nom' => trim((string)$nomPrenomByLicence[$licRaw]['nom']),
+                    'prenom' => trim((string)$nomPrenomByLicence[$licRaw]['prenom']),
+                ];
+            }
+            $formatted = self::formatLicence($licRaw);
+            if ($formatted !== '' && isset($nomPrenomByLicence[$formatted])) {
+                return [
+                    'nom' => trim((string)$nomPrenomByLicence[$formatted]['nom']),
+                    'prenom' => trim((string)$nomPrenomByLicence[$formatted]['prenom']),
+                ];
+            }
+        }
+
+        $nomInsc = trim((string)($insc['nom'] ?? ''));
+        $prenomInsc = trim((string)($insc['prenom'] ?? ''));
+        if ($nomInsc !== '') {
+            return ['nom' => $nomInsc, 'prenom' => $prenomInsc];
+        }
+
+        $display = trim((string)($insc['user_nom'] ?? ''));
+        if ($display === '') {
+            $display = trim((string)($insc['nom'] ?? ''));
+        }
+        $parts = preg_split('/\s+/', $display, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (count($parts) >= 2) {
+            return ['nom' => array_pop($parts), 'prenom' => implode(' ', $parts)];
+        }
+        if (count($parts) === 1) {
+            return ['nom' => $parts[0], 'prenom' => ''];
+        }
+
+        return ['nom' => '', 'prenom' => ''];
+    }
+
+    private static function compareAlpha(string $a, string $b): int
+    {
+        static $collator = null;
+        static $collatorReady = false;
+        if (!$collatorReady) {
+            $collatorReady = true;
+            if (class_exists('Collator')) {
+                $c = new \Collator('fr_FR');
+                if ($c->getErrorCode() === 0) {
+                    $collator = $c;
+                }
+            }
+        }
+        if ($collator instanceof \Collator) {
+            return $collator->compare($a, $b);
+        }
+        return strcasecmp($a, $b);
     }
 
     /**
