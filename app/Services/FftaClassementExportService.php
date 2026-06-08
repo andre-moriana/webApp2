@@ -122,7 +122,7 @@ class FftaClassementExportService
     }
 
     /**
-     * Export FFTA scores : tri par n° de tir, puis nom et prénom (champs FFTA).
+     * Export FFTA scores : tri par nom, prénom puis n° de tir (champs FFTA).
      * Le rang FFTA (champ 22, place qualif.) est calculé par catégorie et n° de départ.
      *
      * @param array<string, mixed> $options
@@ -140,11 +140,6 @@ class FftaClassementExportService
 
         $rows = $inscriptions;
         usort($rows, function ($a, $b) use ($nomPrenomByLicence) {
-            $tirA = self::numeroTirSortKey($a);
-            $tirB = self::numeroTirSortKey($b);
-            if ($tirA !== $tirB) {
-                return $tirA <=> $tirB;
-            }
             $nameA = self::resolveNomPrenomFromInscription($a, $nomPrenomByLicence);
             $nameB = self::resolveNomPrenomFromInscription($b, $nomPrenomByLicence);
             $cmp = self::compareAlpha(
@@ -154,10 +149,14 @@ class FftaClassementExportService
             if ($cmp !== 0) {
                 return $cmp;
             }
-            return self::compareAlpha(
+            $cmp = self::compareAlpha(
                 self::normalizeNameForSort($nameA['prenom']),
                 self::normalizeNameForSort($nameB['prenom'])
             );
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            return self::numeroTirSortKey($a) <=> self::numeroTirSortKey($b);
         });
 
         $flat = [];
