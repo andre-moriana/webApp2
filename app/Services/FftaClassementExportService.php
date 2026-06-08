@@ -605,7 +605,7 @@ class FftaClassementExportService
         if ($armeClassement === '') {
             $armeClassement = self::extractArmeAbv($abvCat, trim((string)($insc['abv_arc'] ?? '')));
         }
-        $armeUtilisee = strtoupper(substr(trim((string)($insc['abv_arc'] ?? '')), 0, 2));
+        $armeUtilisee = self::resolveArmeUtiliseeFfta($insc, $abvCat);
         $armeClassement = self::mapArmeClassementFftaExport($armeClassement);
 
         $clubNom = self::resolveClubNomFftaFromInscription($insc, $nomPrenomByLicence);
@@ -1014,6 +1014,45 @@ class FftaClassementExportService
     {
         $arme = strtoupper(substr(trim($arme), 0, 2));
         return $arme === 'BB' ? 'CL' : $arme;
+    }
+
+    /**
+     * Champ 50 FFTA (arme utilisée sur le pas de tir) — indépendant de l'arme de classement (champ 10).
+     */
+    private static function resolveArmeUtiliseeFfta(array $insc, string $abvCat): string
+    {
+        $fromArc = strtoupper(substr(trim((string)($insc['abv_arc'] ?? '')), 0, 2));
+        if ($fromArc === 'BB') {
+            return 'BB';
+        }
+
+        $idarc = (int)($insc['idarc'] ?? $insc['id_arc'] ?? 0);
+        if ($idarc === 5) {
+            return 'BB';
+        }
+
+        $abvCatTrim = trim($abvCat);
+        if ($abvCatTrim !== '' && preg_match('/BB$/i', $abvCatTrim)) {
+            return 'BB';
+        }
+        if (strtoupper(self::extractArmeAbv($abvCatTrim, '')) === 'BB') {
+            return 'BB';
+        }
+
+        $arcLabel = strtoupper(trim((string)($insc['arc'] ?? $insc['arme'] ?? $insc['lb_arc'] ?? '')));
+        if ($arcLabel !== '' && (
+            str_contains($arcLabel, 'ARC NU')
+            || str_contains($arcLabel, 'BAREBOW')
+            || preg_match('/\bBB\b/', $arcLabel)
+        )) {
+            return 'BB';
+        }
+
+        if ($fromArc !== '') {
+            return $fromArc;
+        }
+
+        return '';
     }
 
     private static function mapNiveauFfta(string $abv): string
