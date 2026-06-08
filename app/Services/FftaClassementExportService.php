@@ -122,7 +122,7 @@ class FftaClassementExportService
     }
 
     /**
-     * Export FFTA scores : tous les départs, tri par n° de départ (puis catégorie et score dans chaque départ).
+     * Export FFTA scores : tous les départs, tri alphabétique par nom d'archer.
      * Le rang FFTA (champ 22, place qualif.) est calculé par catégorie et n° de départ.
      *
      * @param array<string, mixed> $options
@@ -133,86 +133,37 @@ class FftaClassementExportService
         $inscriptions = $options['inscriptions'] ?? [];
         $resultats = $options['resultats'] ?? [];
         $resultatsByLicence = $options['resultatsByLicence'] ?? [];
-        $triScores = $options['triScores'] ?? 'depart';
-        if (!in_array($triScores, ['categorie', 'depart'], true)) {
-            $triScores = 'depart';
-        }
         $disciplineAbv = $options['disciplineAbv'] ?? null;
 
-        [$is3D, $isNature] = self::detectDisciplineFlags($resultats, $disciplineAbv);
         $resolveResultat = self::makeResultatResolver($resultats, $resultatsByLicence);
 
-        $groupKey = function (array $insc) use ($triScores): string {
-            if ($triScores === 'club') {
-                $v = trim($insc['club_nom'] ?? '');
-                return $v !== '' ? $v : 'Sans club';
+        $rows = $inscriptions;
+        usort($rows, function ($a, $b) {
+            $cmp = strcasecmp(
+                trim((string)($a['user_nom'] ?? $a['nom'] ?? '')),
+                trim((string)($b['user_nom'] ?? $b['nom'] ?? ''))
+            );
+            if ($cmp !== 0) {
+                return $cmp;
             }
-            if ($triScores === 'categorie') {
-                $v = trim($insc['categorie_libelle'] ?? $insc['categorie_classement'] ?? $insc['abv_categorie_classement'] ?? '');
-                return $v !== '' ? $v : 'Sans catégorie';
+            $da = (int)($a['numero_depart'] ?? 0);
+            $db = (int)($b['numero_depart'] ?? 0);
+            if ($da !== $db) {
+                return $da <=> $db;
             }
-            if ($triScores === 'depart') {
-                $v = $insc['numero_depart'] ?? null;
-                return $v !== null && $v !== '' ? (string)$v : 'Non défini';
-            }
-            return '—';
-        };
-
-        $groups = [];
-        foreach ($inscriptions as $insc) {
-            $k = $groupKey($insc);
-            if (!isset($groups[$k])) {
-                $groups[$k] = [];
-            }
-            $groups[$k][] = $insc;
-        }
-        if ($triScores === 'depart') {
-            ksort($groups, SORT_NATURAL);
-        } else {
-            ksort($groups, SORT_FLAG_CASE | SORT_NATURAL);
-        }
+            $ntA = ($a['numero_tir'] ?? null);
+            $ntB = ($b['numero_tir'] ?? null);
+            $tirA = ($ntA === null || $ntA === '') ? 1 : (int)$ntA;
+            $tirB = ($ntB === null || $ntB === '') ? 1 : (int)$ntB;
+            return $tirA <=> $tirB;
+        });
 
         $flat = [];
-        foreach ($groups as $rows) {
-            usort($rows, function ($a, $b) use ($triScores, $isNature, $is3D, $resolveResultat) {
-                if ($triScores === 'depart') {
-                    $catA = trim((string)($a['categorie_libelle'] ?? $a['categorie_classement'] ?? $a['abv_categorie_classement'] ?? ''));
-                    $catB = trim((string)($b['categorie_libelle'] ?? $b['categorie_classement'] ?? $b['abv_categorie_classement'] ?? ''));
-                    $cmpCat = strcasecmp($catA !== '' ? $catA : 'Sans catégorie', $catB !== '' ? $catB : 'Sans catégorie');
-                    if ($cmpCat !== 0) {
-                        return $cmpCat;
-                    }
-                    $rA = $resolveResultat($a);
-                    $rB = $resolveResultat($b);
-                    $itemA = [
-                        'inscription' => $a,
-                        'resultat' => $rA,
-                        'score' => $rA ? (int)($rA['score'] ?? 0) : 0,
-                    ];
-                    $itemB = [
-                        'inscription' => $b,
-                        'resultat' => $rB,
-                        'score' => $rB ? (int)($rB['score'] ?? 0) : 0,
-                    ];
-                    $cmpScore = self::compareScoreItems($itemA, $itemB, $isNature, $is3D);
-                    if ($cmpScore !== 0) {
-                        return $cmpScore;
-                    }
-                    return strcasecmp($a['user_nom'] ?? $a['nom'] ?? '', $b['user_nom'] ?? $b['nom'] ?? '');
-                }
-                $da = (int)($a['numero_depart'] ?? 0);
-                $db = (int)($b['numero_depart'] ?? 0);
-                if ($da !== $db) {
-                    return $da <=> $db;
-                }
-                return strcasecmp($a['user_nom'] ?? $a['nom'] ?? '', $b['user_nom'] ?? $b['nom'] ?? '');
-            });
-            foreach ($rows as $insc) {
-                $flat[] = [
-                    'inscription' => $insc,
-                    'resultat' => $resolveResultat($insc),
-                ];
-            }
+        foreach ($rows as $insc) {
+            $flat[] = [
+                'inscription' => $insc,
+                'resultat' => $resolveResultat($insc),
+            ];
         }
         $options['forceRangParDepart'] = true;
         return self::attachRangClassementParCategorie($flat, $inscriptions, $resultats, $resultatsByLicence, $disciplineAbv, $options);

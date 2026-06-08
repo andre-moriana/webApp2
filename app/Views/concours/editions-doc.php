@@ -700,14 +700,14 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
             <?php endforeach; ?>
         </select>
         <?php
-        $fftaExportUrl = $baseScoresUrl . '&depart=tout&tri=depart&export=ffta';
+        $fftaExportUrl = $baseScoresUrl . '&depart=tout&export=ffta';
         $fftaExportTousDeparts = ($currentDepartScores === 'tout');
         ?>
         <?php if ($fftaExportTousDeparts): ?>
         <a
             href="<?= htmlspecialchars($fftaExportUrl) ?>"
             class="btn btn-outline-primary btn-sm ms-2"
-            title="Export FFTA : tous les départs, classement par catégorie et départ (tabulations)"
+            title="Export FFTA : tous les départs, tri alphabétique par nom (classement par catégorie et départ)"
         >
             <i class="fas fa-file-export me-1"></i>Export FFTA
         </a>
