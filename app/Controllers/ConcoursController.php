@@ -3458,26 +3458,51 @@ public function inscription($concoursId)
         $htmlBody .= '<p style="color:#666;font-size:12px;">Lien direct: ' . htmlspecialchars($docUrl) . '</p>';
         $htmlBody .= '</body></html>';
 
-        $sent = 0;
-        $failed = 0;
-        foreach ($emails as $email) {
-            $result = EmailService::sendGenericEmail($email, $subject, $htmlBody);
-            if ($result['success'] ?? false) {
-                $sent++;
-            } else {
-                $failed++;
-            }
+        $_SESSION['success'] = 'Envoi de la diffusion à ' . count($emails) . ' destinataire(s) en cours…';
+        $this->dispatchBulkEmailInBackground(
+            '/concours/' . (int)$concoursId . '/editions',
+            $emails,
+            $subject,
+            $htmlBody,
+            'Diffusion édition concours ' . (int)$concoursId
+        );
+    }
+
+    /**
+     * Répond immédiatement au navigateur puis envoie les emails en arrière-plan.
+     */
+    private function dispatchBulkEmailInBackground(
+        string $redirectUrl,
+        array $emails,
+        string $subject,
+        string $htmlBody,
+        string $logContext = ''
+    ) {
+        header('Location: ' . $redirectUrl);
+        header('Content-Type: text/html; charset=UTF-8');
+        echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url='
+            . htmlspecialchars($redirectUrl, ENT_QUOTES, 'UTF-8')
+            . '"></head><body></body></html>';
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
         }
 
-        if ($sent > 0 && $failed === 0) {
-            $_SESSION['success'] = 'Diffusion envoyée à ' . $sent . ' destinataire(s).';
-        } elseif ($sent > 0) {
-            $_SESSION['warning'] = 'Diffusion partielle: ' . $sent . ' envoyé(s), ' . $failed . ' échec(s).';
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
         } else {
-            $_SESSION['error'] = 'Aucun email n\'a pu être envoyé.';
+            while (ob_get_level() > 0) {
+                ob_end_flush();
+            }
+            flush();
         }
 
-        header('Location: /concours/' . (int)$concoursId . '/editions');
+        ignore_user_abort(true);
+        @set_time_limit(600);
+
+        $result = EmailService::sendGenericEmailBatch($emails, $subject, $htmlBody);
+        $context = $logContext !== '' ? $logContext : 'Bulk email';
+        error_log($context . ': sent=' . (int)($result['sent'] ?? 0) . ' failed=' . (int)($result['failed'] ?? 0));
         exit;
     }
 
@@ -3575,7 +3600,11 @@ public function inscription($concoursId)
         $usersMap = [];
         foreach ($inscriptions as $insc) {
             $userId = $insc['user_id'] ?? null;
-            if (!$userId || isset($usersMap[$userId])) {
+            if (!$userId) {
+                continue;
+            }
+            $existingEmail = trim((string)($insc['email'] ?? $insc['user_email'] ?? ''));
+            if ($existingEmail !== '' || isset($usersMap[$userId])) {
                 continue;
             }
             try {
@@ -3601,27 +3630,14 @@ public function inscription($concoursId)
         $htmlBody .= '<p>' . nl2br(htmlspecialchars($message)) . '</p>';
         $htmlBody .= '</body></html>';
 
-        $sent = 0;
-        $failed = 0;
-        foreach ($emails as $email) {
-            $result = EmailService::sendGenericEmail($email, $subject, $htmlBody);
-            if ($result['success'] ?? false) {
-                $sent++;
-            } else {
-                $failed++;
-            }
-        }
-
-        if ($sent > 0 && $failed === 0) {
-            $_SESSION['success'] = 'Message envoyé à ' . $sent . ' participant(s).';
-        } elseif ($sent > 0) {
-            $_SESSION['warning'] = 'Envoi partiel : ' . $sent . ' envoyé(s), ' . $failed . ' échec(s).';
-        } else {
-            $_SESSION['error'] = 'Aucun email n\'a pu être envoyé.';
-        }
-
-        header('Location: /concours/show/' . (int)$concoursId);
-        exit;
+        $_SESSION['success'] = 'Envoi du message à ' . count($emails) . ' participant(s) en cours…';
+        $this->dispatchBulkEmailInBackground(
+            '/concours/show/' . (int)$concoursId,
+            $emails,
+            $subject,
+            $htmlBody,
+            'Participants mail concours ' . (int)$concoursId
+        );
     }
 
     /**

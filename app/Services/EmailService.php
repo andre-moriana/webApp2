@@ -785,4 +785,351 @@ class EmailService {
             ];
         }
     }
+
+    /**
+     * Envoie le même message à plusieurs destinataires en réutilisant la connexion SMTP.
+     *
+     * @return array{sent: int, failed: int}
+     */
+    public static function sendGenericEmailBatch(array $recipients, $subject, $htmlMessage, $replyToEmail = null, $replyToName = null)
+    {
+        $validRecipients = [];
+        foreach ($recipients as $recipient) {
+            $to = trim((string)$recipient);
+            if ($to !== '' && filter_var($to, FILTER_VALIDATE_EMAIL)) {
+                $validRecipients[strtolower($to)] = $to;
+            }
+        }
+        $validRecipients = array_values($validRecipients);
+
+        if (empty($validRecipients)) {
+            return ['sent' => 0, 'failed' => 0];
+        }
+
+        $subject = trim((string)$subject);
+        $htmlMessage = trim((string)$htmlMessage);
+        if ($subject === '' || $htmlMessage === '') {
+            return ['sent' => 0, 'failed' => count($validRecipients)];
+        }
+
+        $fromEmail = EmailConfig::getFromEmail();
+        $fromName = EmailConfig::getFromName();
+        $replyEmail = $replyToEmail ?: $fromEmail;
+        $replyName = $replyToName ?: $fromName;
+
+        if (EmailConfig::useSmtp()) {
+            $batchResult = self::sendBatchViaPhpmailer(
+                $validRecipients,
+                $fromEmail,
+                $fromName,
+                $replyName,
+                $replyEmail,
+                $subject,
+                $htmlMessage
+            );
+            if ($batchResult !== null) {
+                return $batchResult;
+            }
+
+            $batchResult = self::sendBatchViaSmtpSocket(
+                $validRecipients,
+                $fromEmail,
+                $fromName,
+                $replyName,
+                $replyEmail,
+                $subject,
+                $htmlMessage
+            );
+            if ($batchResult !== null) {
+                return $batchResult;
+            }
+        }
+
+        $sent = 0;
+        $failed = 0;
+        foreach ($validRecipients as $to) {
+            $result = self::sendGenericEmail($to, $subject, $htmlMessage, $replyToEmail, $replyToName);
+            if ($result['success'] ?? false) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+
+        return ['sent' => $sent, 'failed' => $failed];
+    }
+
+    /**
+     * @return array{sent: int, failed: int}|null null si PHPMailer indisponible
+     */
+    private static function sendBatchViaPhpmailer(
+        array $recipients,
+        $fromEmail,
+        $fromName,
+        $replyName,
+        $replyEmail,
+        $subject,
+        $htmlMessage
+    ) {
+        if (!self::hasSmtpCredentials()) {
+            return null;
+        }
+
+        $autoload = self::resolvePhpmailerAutoload();
+        if ($autoload === null) {
+            return null;
+        }
+
+        require_once $autoload;
+        if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+            return null;
+        }
+
+        $sent = 0;
+        $failed = 0;
+        $mail = null;
+
+        try {
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = EmailConfig::getSmtpHost();
+            $mail->SMTPAuth = true;
+            $mail->Username = EmailConfig::getSmtpUsername();
+            $mail->Password = EmailConfig::getSmtpPassword();
+            $mail->Port = EmailConfig::getSmtpPort();
+            $mail->CharSet = 'UTF-8';
+            $mail->SMTPKeepAlive = true;
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                ],
+            ];
+            $mail->Timeout = 30;
+
+            $encryption = EmailConfig::getSmtpEncryption();
+            if ($encryption === 'ssl') {
+                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+            } elseif ($encryption === 'tls' || $encryption === '') {
+                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            }
+
+            if (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+                $fromEmail = 'noreply@arctraining.fr';
+            }
+
+            $mail->setFrom($fromEmail, $fromName);
+            $mail->addReplyTo($replyEmail, $replyName);
+            $mail->Subject = $subject;
+            $mail->isHTML(true);
+            $mail->Body = $htmlMessage;
+            $mail->AltBody = strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $htmlMessage));
+
+            foreach ($recipients as $to) {
+                try {
+                    $mail->clearAddresses();
+                    $mail->addAddress($to);
+                    $mail->send();
+                    $sent++;
+                } catch (Exception $e) {
+                    $failed++;
+                    error_log('Batch PHPMailer échec pour ' . $to . ': ' . $e->getMessage());
+                }
+            }
+
+            if ($mail !== null && method_exists($mail, 'smtpClose')) {
+                $mail->smtpClose();
+            }
+        } catch (Exception $e) {
+            error_log('Batch PHPMailer: ' . $e->getMessage());
+            if ($mail !== null && method_exists($mail, 'smtpClose')) {
+                try {
+                    $mail->smtpClose();
+                } catch (Exception $ignored) {
+                }
+            }
+            return null;
+        }
+
+        return ['sent' => $sent, 'failed' => $failed];
+    }
+
+    /**
+     * @return array{sent: int, failed: int}|null null si connexion SMTP impossible
+     */
+    private static function sendBatchViaSmtpSocket(
+        array $recipients,
+        $fromEmail,
+        $fromName,
+        $replyName,
+        $replyEmail,
+        $subject,
+        $htmlMessage
+    ) {
+        $socket = self::openAuthenticatedSmtpSocket();
+        if (!$socket) {
+            return null;
+        }
+
+        $sent = 0;
+        $failed = 0;
+        foreach ($recipients as $to) {
+            if (self::sendMessageOnAuthenticatedSmtpSocket(
+                $socket,
+                $to,
+                $fromEmail,
+                $fromName,
+                $replyName,
+                $replyEmail,
+                $subject,
+                $htmlMessage
+            )) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+
+        @fputs($socket, "QUIT\r\n");
+        @fclose($socket);
+
+        return ['sent' => $sent, 'failed' => $failed];
+    }
+
+    /**
+     * @return resource|false
+     */
+    private static function openAuthenticatedSmtpSocket($portOverride = null, $encryptionOverride = null)
+    {
+        $smtpHost = EmailConfig::getSmtpHost();
+        $smtpPort = $portOverride ?? EmailConfig::getSmtpPort();
+        $smtpUsername = EmailConfig::getSmtpUsername();
+        $smtpPassword = EmailConfig::getSmtpPassword();
+        $smtpEncryption = $encryptionOverride ?? EmailConfig::getSmtpEncryption();
+
+        $hostname = $smtpHost;
+        if ($smtpEncryption === 'ssl') {
+            $hostname = 'ssl://' . $smtpHost;
+        }
+
+        $socket = @fsockopen($hostname, $smtpPort, $errno, $errstr, 30);
+        if (!$socket) {
+            error_log("Batch SMTP: connexion impossible à $hostname:$smtpPort - $errstr ($errno)");
+            return false;
+        }
+
+        $response = self::readSmtpResponse($socket);
+        if ($response['code'] !== '220') {
+            error_log("Batch SMTP: réponse initiale invalide (code {$response['code']})");
+            fclose($socket);
+            return false;
+        }
+
+        $serverName = $_SERVER['SERVER_NAME'] ?? 'localhost';
+        fputs($socket, "EHLO $serverName\r\n");
+        $response = self::readSmtpResponse($socket);
+
+        if ($smtpEncryption === 'tls') {
+            fputs($socket, "STARTTLS\r\n");
+            $response = self::readSmtpResponse($socket);
+            if ($response['code'] !== '220') {
+                fclose($socket);
+                return false;
+            }
+            if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                fclose($socket);
+                return false;
+            }
+            fputs($socket, "EHLO $serverName\r\n");
+            self::readSmtpResponse($socket);
+        }
+
+        if (!empty($smtpUsername) && !empty($smtpPassword)) {
+            fputs($socket, "AUTH LOGIN\r\n");
+            $response = self::readSmtpResponse($socket);
+            if ($response['code'] !== '334') {
+                fclose($socket);
+                return false;
+            }
+
+            fputs($socket, base64_encode($smtpUsername) . "\r\n");
+            $response = self::readSmtpResponse($socket);
+            if ($response['code'] !== '334') {
+                fclose($socket);
+                return false;
+            }
+
+            fputs($socket, base64_encode($smtpPassword) . "\r\n");
+            $response = self::readSmtpResponse($socket);
+            if ($response['code'] !== '235') {
+                fclose($socket);
+                return false;
+            }
+        }
+
+        return $socket;
+    }
+
+    private static function sendMessageOnAuthenticatedSmtpSocket(
+        $socket,
+        $to,
+        $fromEmail,
+        $fromName,
+        $replyName,
+        $replyEmail,
+        $subject,
+        $htmlMessage
+    ) {
+        @fputs($socket, "RSET\r\n");
+        self::readSmtpResponse($socket);
+
+        fputs($socket, "MAIL FROM: <$fromEmail>\r\n");
+        $response = self::readSmtpResponse($socket);
+        if ($response['code'] !== '250') {
+            error_log("Batch SMTP: MAIL FROM échoué pour $to (code {$response['code']})");
+            return false;
+        }
+
+        fputs($socket, "RCPT TO: <$to>\r\n");
+        $response = self::readSmtpResponse($socket);
+        if ($response['code'] !== '250') {
+            error_log("Batch SMTP: RCPT TO échoué pour $to (code {$response['code']})");
+            return false;
+        }
+
+        fputs($socket, "DATA\r\n");
+        $response = self::readSmtpResponse($socket);
+        if ($response['code'] !== '354') {
+            error_log("Batch SMTP: DATA échoué pour $to (code {$response['code']})");
+            return false;
+        }
+
+        $domain = self::extractDomain($fromEmail);
+        $date = self::generateDate();
+        $messageId = self::generateMessageId($domain);
+
+        $emailMessage = "Date: $date\r\n";
+        $emailMessage .= "From: $fromName <$fromEmail>\r\n";
+        $emailMessage .= "To: <$to>\r\n";
+        $emailMessage .= "Reply-To: $replyName <$replyEmail>\r\n";
+        $emailMessage .= "Subject: $subject\r\n";
+        $emailMessage .= "Message-ID: $messageId\r\n";
+        $emailMessage .= "MIME-Version: 1.0\r\n";
+        $emailMessage .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $emailMessage .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+        $emailMessage .= "X-Priority: 3\r\n";
+        $emailMessage .= "\r\n";
+        $emailMessage .= $htmlMessage;
+        $emailMessage .= "\r\n.\r\n";
+
+        fputs($socket, $emailMessage);
+        $response = self::readSmtpResponse($socket);
+        if ($response['code'] !== '250') {
+            error_log("Batch SMTP: envoi échoué pour $to (code {$response['code']})");
+            return false;
+        }
+
+        return true;
+    }
 }

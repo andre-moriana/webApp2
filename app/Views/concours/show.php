@@ -147,6 +147,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
                             <p class="text-muted small mb-3">
                                 Un seul email sera envoyé par adresse (<?= (int)($participantsMailCount ?? 0) ?> destinataire<?= (int)($participantsMailCount ?? 0) !== 1 ? 's' : '' ?>).
                                 Sont concernés les inscriptions confirmées ou en attente disposant d'une adresse email valide.
+                                L'envoi se fait en arrière-plan pour éviter un délai d'attente trop long.
                             </p>
                             <div class="mb-3">
                                 <label class="form-label">Sujet</label>
