@@ -337,6 +337,10 @@ class Router {
         $this->addRoute("GET", "/auth/delete-account", "AuthController@deleteAccount");
         $this->addRoute("POST", "/auth/delete-account-request", "AuthController@deleteAccountRequest");
         $this->addRoute("GET", "/auth/validate-deletion/{token}", "AuthController@validateDeletion");
+        // Anciens endpoints obsolètes → formulaire officiel
+        $this->addRoute("GET", "/delete-data", "AuthController@redirectLegacyDeletion");
+        $this->addRoute("POST", "/delete-data", "AuthController@redirectLegacyDeletion");
+        $this->addRoute("GET", "/deletion-status", "AuthController@redirectLegacyDeletion");
         
         // Route API pour vérifier le token JWT
         $this->addRoute("GET", "/api/auth/verify", "AuthController@verify");

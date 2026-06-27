@@ -521,8 +521,26 @@ class AuthController {
         include 'app/Views/auth/delete-account.php';
     }
 
+    /**
+     * Redirection des anciens endpoints obsolètes (delete-data, deletion-status).
+     */
+    public function redirectLegacyDeletion() {
+        http_response_code(301);
+        header('Location: /auth/delete-account');
+        exit;
+    }
+
     public function deleteAccountRequest() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /auth/delete-account');
+            exit;
+        }
+
+        // Honeypot anti-bot : si ce champ caché est rempli, c'est un bot.
+        // On affiche un message de succès générique sans rien traiter.
+        if (!empty($_POST['website'])) {
+            error_log('Demande de suppression bloquée (honeypot) IP: ' . ($_SERVER['REMOTE_ADDR'] ?? '?'));
+            $_SESSION['success'] = 'Votre demande de suppression de compte a été enregistrée.';
             header('Location: /auth/delete-account');
             exit;
         }

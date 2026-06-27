@@ -48,7 +48,12 @@
                             </ul>
                         </div>
                         
-                        <form method="POST" action="/auth/delete-account-request" id="deleteAccountForm">
+                        <form method="POST" action="/auth/delete-account-request" id="deleteAccountForm" autocomplete="off">
+                            <!-- Champ honeypot anti-bot : invisible pour les humains, rempli par les bots -->
+                            <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;width:0;overflow:hidden;">
+                                <label for="website">Ne pas remplir ce champ</label>
+                                <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" value="">
+                            </div>
                             <div class="mb-3">
                                 <label for="email" class="form-label">
                                     <i class="fas fa-envelope me-2"></i>Email ou identifiant
