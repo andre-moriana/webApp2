@@ -36,7 +36,7 @@ class GroupController {
                     $filteredGroups = [];
                     
                     foreach ($allGroups as $group) {
-                        $isGroupPrivate = (bool)($group['is_private'] ?? false);
+                        $isGroupPrivate = (bool)($group['is_private'] ?? $group['isPrivate'] ?? false);
                         
                         if (!$isGroupPrivate) {
                             // Groupe public : accessible à tous

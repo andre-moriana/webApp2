@@ -1712,14 +1712,32 @@ class ApiService {
         if (!$this->token) {
             return [
                 "success" => false,
+                "canAccess" => false,
                 "message" => "Token d'authentification requis"
             ];
         }
         
-        // Utiliser l'endpoint /groups/{id}/check-access
+        // Utiliser l'endpoint /groups/{id}/check-access (réponse API : {"canAccess": true|false})
         $result = $this->makeRequest("groups/" . $groupId . "/check-access", "GET");
         
-        return $result;
+        if (!$result['success']) {
+            return [
+                "success" => false,
+                "canAccess" => false,
+                "message" => $result['message'] ?? "Erreur lors de la vérification d'accès au groupe"
+            ];
+        }
+        
+        $data = $result['data'] ?? [];
+        $canAccess = is_array($data)
+            ? (bool)($data['canAccess'] ?? $data['can_access'] ?? false)
+            : (bool)$data;
+        
+        return [
+            "success" => true,
+            "canAccess" => $canAccess,
+            "data" => $data
+        ];
     }
     // Méthodes pour les événements
     public function getEvents() {
