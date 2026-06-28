@@ -201,6 +201,7 @@ function searchUserByLicence() {
                         role: 'Archer', // Par défaut
                         club: getNodeText(userNode, 'club_unique'),
                         clubId: getNodeText(userNode, 'club_unique'),
+                        clubName: getNodeText(userNode, 'CIE'), // Nom lisible du club (affichage)
                         birthDate: birthDate,
                         gender: gender,
                         ageCategory: ageCategory,
@@ -302,19 +303,32 @@ function fillFormWithUserData(user) {
         }
     }
     
-    if (user.clubId || user.club_id || user.club) {
+    if (user.clubId || user.club_id || user.club || user.clubName) {
+        // Code du club (name_short) réellement enregistré en base
+        let clubId = user.clubId || user.club_id || '';
+        if (!clubId && user.club) {
+            if (typeof user.club === 'string') {
+                clubId = user.club;
+            } else if (user.club.nameShort || user.club.name_short) {
+                clubId = user.club.nameShort || user.club.name_short;
+            }
+        }
+
+        // Nom lisible du club (affichage uniquement)
+        let clubName = user.clubName || user.club_name || '';
+        if (!clubName && user.club && typeof user.club === 'object') {
+            clubName = user.club.name || '';
+        }
+
         const clubIdField = document.getElementById('clubId');
         if (clubIdField) {
-            // Le club peut être un nameShort ou un objet avec nameShort
-            let clubId = user.clubId || user.club_id || '';
-            if (!clubId && user.club) {
-                if (typeof user.club === 'string') {
-                    clubId = user.club;
-                } else if (user.club.nameShort || user.club.name_short) {
-                    clubId = user.club.nameShort || user.club.name_short;
-                }
-            }
             clubIdField.value = clubId;
+        }
+
+        const clubNameField = document.getElementById('clubName');
+        if (clubNameField) {
+            // À défaut de nom lisible, afficher le code
+            clubNameField.value = clubName || clubId;
         }
     }
     

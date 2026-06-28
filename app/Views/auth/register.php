@@ -250,17 +250,21 @@ $recaptchaEnabled = RecaptchaConfig::isEnabled();
                             </div>
                             
                             <div class="mb-3">
-                                <label for="clubId" class="form-label">
+                                <label for="clubName" class="form-label">
                                     <i class="fas fa-users me-2"></i>Club
                                 </label>
+                                <!-- Champ visible : nom lisible du club (non soumis au backend) -->
                                 <input type="text" 
                                        class="form-control" 
-                                       id="clubId" 
-                                       name="clubId" 
-                                       placeholder="Numéro du club">
+                                       id="clubName" 
+                                       name="clubName" 
+                                       placeholder="Nom du club"
+                                       readonly>
+                                <!-- Champ caché : code du club (name_short) réellement enregistré -->
+                                <input type="hidden" id="clubId" name="clubId" value="">
                                 <small class="form-text text-muted">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    Ce champ sera automatiquement rempli lors de la recherche par numéro de licence. Vous pouvez le modifier si nécessaire.
+                                    Ce champ est automatiquement rempli lors de la recherche par numéro de licence.
                                 </small>
                             </div>
                             
