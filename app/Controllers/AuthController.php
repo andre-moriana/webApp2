@@ -401,6 +401,15 @@ class AuthController {
             exit;
         }
 
+        // Vérification anti-bot reCAPTCHA v3 (no-op si désactivé via .env)
+        $recaptcha = RecaptchaService::verify($_POST['recaptcha_token'] ?? '', 'register');
+        if (!$recaptcha['success']) {
+            error_log('Inscription bloquée par reCAPTCHA - raison: ' . $recaptcha['reason']);
+            $_SESSION['error'] = 'Échec de la vérification anti-robot. Veuillez réessayer.';
+            header('Location: /auth/register');
+            exit;
+        }
+
         $first_name = $_POST['first_name'] ?? '';
         $name = $_POST['name'] ?? '';
         $username = $_POST['username'] ?? '';

@@ -1,3 +1,8 @@
+<?php
+require_once __DIR__ . '/../../Config/RecaptchaConfig.php';
+$recaptchaSiteKey = RecaptchaConfig::getSiteKey();
+$recaptchaEnabled = RecaptchaConfig::isEnabled();
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -11,6 +16,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="/public/assets/css/login.css" rel="stylesheet">
+    <?php if ($recaptchaEnabled): ?>
+    <!-- Google reCAPTCHA v3 -->
+    <script src="https://www.google.com/recaptcha/api.js?render=<?php echo htmlspecialchars($recaptchaSiteKey, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
 </head>
 <body>
     <div class="container">
@@ -39,6 +48,9 @@
                         <?php endif; ?>
                         
                         <form method="POST" action="/auth/create-user" id="registerForm">
+                            <?php if ($recaptchaEnabled): ?>
+                            <input type="hidden" name="recaptcha_token" id="recaptcha_token" value="">
+                            <?php endif; ?>
                             <div class="alert alert-info mb-3">
                                 <i class="fas fa-info-circle me-2"></i>
                                 <strong>Astuce :</strong> Entrez votre numéro de licence pour rechercher et remplir automatiquement vos informations si vous êtes déjà dans la base de données.
@@ -328,5 +340,37 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="/public/assets/js/register.js"></script>
+    <?php if ($recaptchaEnabled): ?>
+    <!-- Génération du token reCAPTCHA v3 à la soumission -->
+    <script>
+        (function () {
+            var siteKey = '<?php echo htmlspecialchars($recaptchaSiteKey, ENT_QUOTES); ?>';
+            var form = document.getElementById('registerForm');
+            var tokenField = document.getElementById('recaptcha_token');
+            if (!form || !tokenField || typeof grecaptcha === 'undefined') {
+                return;
+            }
+            var submitted = false;
+            form.addEventListener('submit', function (e) {
+                if (submitted) {
+                    return; // laisser passer la 2e soumission (après obtention du token)
+                }
+                e.preventDefault();
+                grecaptcha.ready(function () {
+                    grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
+                        tokenField.value = token;
+                        submitted = true;
+                        form.submit();
+                    }).catch(function () {
+                        // En cas d'échec de génération du token, soumettre quand même :
+                        // la vérification serveur décidera (fail-open contrôlé).
+                        submitted = true;
+                        form.submit();
+                    });
+                });
+            });
+        })();
+    </script>
+    <?php endif; ?>
 </body>
 </html>
