@@ -499,13 +499,28 @@ $dateFooter = date('d/m/Y H:i');
                 padding: 1px 3px;
                 line-height: 1.1;
             }
-            /* Classement : format paysage */
+            /* Classement / Scores : format paysage */
             @page edition-classement-landscape {
                 size: landscape;
                 margin: 12mm 12mm 18mm 12mm;
             }
-            body.edition-doc-classement {
+            body.edition-doc-classement,
+            body.edition-doc-scores {
                 page: edition-classement-landscape;
+            }
+            /* Scores : pas de saut de page par groupe, interlignes réduits */
+            body.edition-doc-scores .edition-scores-block {
+                page-break-after: auto;
+                page-break-inside: avoid;
+            }
+            body.edition-doc-scores .edition-scores-block-titre {
+                font-size: 0.85rem;
+                margin-bottom: 0.15rem !important;
+            }
+            body.edition-doc-scores .edition-scores table th,
+            body.edition-doc-scores .edition-scores table td {
+                padding: 1px 3px;
+                line-height: 1.1;
             }
             /* Classement : pas de saut de page par catégorie, interlignes réduits */
             body.edition-doc-classement .classement-categorie {
@@ -662,6 +677,7 @@ $dateFooter = date('d/m/Y H:i');
 $bodyClasses = [];
 if ($doc === 'liste-participants') $bodyClasses[] = 'edition-doc-liste-participants';
 if ($doc === 'classement') $bodyClasses[] = 'edition-doc-classement';
+if ($doc === 'scores') $bodyClasses[] = 'edition-doc-scores';
 if ($doc === 'feuilles-marques') $bodyClasses[] = 'edition-doc-feuilles-marques';
 if ($doc === 'plan-pelotons-cibles') $bodyClasses[] = 'edition-doc-plan-pelotons-cibles';
 if ($doc === 'feuilles-marques' && ($disciplineAbv ?? '') === 'N') $bodyClasses[] = 'edition-doc-feuilles-marques-nature';

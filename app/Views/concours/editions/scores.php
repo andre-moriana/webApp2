@@ -92,8 +92,8 @@ $hasDetail = $hasNatureDetail || $has3DDetail;
     $groupLabel = $groupLabels[$triScores] ?? 'Groupe';
     foreach ($groups as $libelle => $rows):
     ?>
-    <div class="edition-scores-block mb-4">
-        <h2 class="h5 mb-2 mt-3"><?= htmlspecialchars($groupLabel) ?> : <?= htmlspecialchars($libelle) ?></h2>
+    <div class="edition-scores-block mb-2">
+        <h2 class="h5 edition-scores-block-titre mb-1 mt-2"><?= htmlspecialchars($groupLabel) ?> : <?= htmlspecialchars($libelle) ?></h2>
         <table class="table table-bordered edition-scores-table">
             <thead>
                 <tr>
