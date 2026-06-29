@@ -251,6 +251,7 @@ $dateFooter = date('d/m/Y H:i');
         /* Lisibilité : griser 1 ligne sur 2 dans les tableaux (tr + td pour override Bootstrap) */
         .edition-doc-print-tbody table tbody tr:nth-child(even) td,
         .edition-liste-participants table tbody tr:nth-child(even) td,
+        .edition-classement table tbody tr:nth-child(even) td,
         .edition-avis table tbody tr:nth-child(even) td,
         .edition-scores table tbody tr:nth-child(even) td,
         .edition-doc-fin table tbody tr:nth-child(even) td {
@@ -614,6 +615,7 @@ $dateFooter = date('d/m/Y H:i');
             }
             .edition-doc-print-tbody table tbody tr:nth-child(even) td,
             .edition-liste-participants table tbody tr:nth-child(even) td,
+            .edition-classement table tbody tr:nth-child(even) td,
             .edition-avis table tbody tr:nth-child(even) td,
             .edition-scores table tbody tr:nth-child(even) td,
             .edition-scores .edition-scores-table tbody tr.edition-scores-row-even td {
