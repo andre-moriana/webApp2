@@ -476,6 +476,28 @@ $dateFooter = date('d/m/Y H:i');
             body.edition-doc-liste-participants {
                 page: edition-liste-participants;
             }
+            /* Classement : format paysage */
+            @page edition-classement-landscape {
+                size: landscape;
+                margin: 12mm 12mm 18mm 12mm;
+            }
+            body.edition-doc-classement {
+                page: edition-classement-landscape;
+            }
+            /* Classement : pas de saut de page par catégorie, interlignes réduits */
+            body.edition-doc-classement .classement-categorie {
+                page-break-after: auto;
+                page-break-inside: avoid;
+            }
+            body.edition-doc-classement .classement-categorie-titre {
+                font-size: 0.85rem;
+                margin-bottom: 0.15rem !important;
+            }
+            body.edition-doc-classement .edition-classement table th,
+            body.edition-doc-classement .edition-classement table td {
+                padding: 1px 3px;
+                line-height: 1.1;
+            }
             .no-print { display: none !important; }
             body { font-size: 11pt; }
             .page-break { page-break-after: always; }
@@ -623,6 +645,7 @@ $dateFooter = date('d/m/Y H:i');
 <body<?php
 $bodyClasses = [];
 if ($doc === 'liste-participants') $bodyClasses[] = 'edition-doc-liste-participants';
+if ($doc === 'classement') $bodyClasses[] = 'edition-doc-classement';
 if ($doc === 'feuilles-marques') $bodyClasses[] = 'edition-doc-feuilles-marques';
 if ($doc === 'plan-pelotons-cibles') $bodyClasses[] = 'edition-doc-plan-pelotons-cibles';
 if ($doc === 'feuilles-marques' && ($disciplineAbv ?? '') === 'N') $bodyClasses[] = 'edition-doc-feuilles-marques-nature';

@@ -193,8 +193,8 @@ if ($top3ParCategorie) {
     <?php foreach ($byCategorie as $catAbv => $items): ?>
         <?php if (empty($items)) continue; ?>
         <?php $catLabel = $categoriesMap[$catAbv] ?? $catAbv; ?>
-        <div class="classement-categorie mb-4 page-break">
-            <h3 class="mb-3"><?= htmlspecialchars($catLabel) ?> <?= $catAbv !== 'Sans catégorie' ? '(' . htmlspecialchars($catAbv) . ')' : '' ?></h3>
+        <div class="classement-categorie mb-2">
+            <h3 class="classement-categorie-titre mb-1"><?= htmlspecialchars($catLabel) ?> <?= $catAbv !== 'Sans catégorie' ? '(' . htmlspecialchars($catAbv) . ')' : '' ?></h3>
             <table class="table table-bordered">
                 <thead>
                     <tr>
