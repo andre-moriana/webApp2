@@ -3500,7 +3500,7 @@ public function inscription($concoursId)
         ignore_user_abort(true);
         @set_time_limit(600);
 
-        $result = EmailService::sendGenericEmailBatch($emails, $subject, $htmlBody);
+        $result = EmailService::sendGenericEmailBatch($emails, $subject, $htmlBody, $this->apiService);
         $context = $logContext !== '' ? $logContext : 'Bulk email';
         error_log($context . ': sent=' . (int)($result['sent'] ?? 0) . ' failed=' . (int)($result['failed'] ?? 0));
         exit;

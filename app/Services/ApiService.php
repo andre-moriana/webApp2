@@ -436,6 +436,35 @@ class ApiService {
     }
 
     /**
+     * Envoie un email unique via le service email du backend (POST /api/email/send).
+     */
+    public function sendEmail($to, $subject, $html) {
+        if (!$this->token) {
+            return ["success" => false, "message" => "Token d'authentification requis"];
+        }
+        return $this->makeRequest('email/send', 'POST', [
+            'to' => $to,
+            'subject' => $subject,
+            'html' => $html,
+        ]);
+    }
+
+    /**
+     * Envoie le même email à plusieurs destinataires via le service email du backend
+     * (POST /api/email/send-bulk). Le backend renvoie { success, sent, failed }.
+     */
+    public function sendBulkEmail(array $recipients, $subject, $html) {
+        if (!$this->token) {
+            return ["success" => false, "message" => "Token d'authentification requis"];
+        }
+        return $this->makeRequest('email/send-bulk', 'POST', [
+            'recipients' => array_values($recipients),
+            'subject' => $subject,
+            'html' => $html,
+        ]);
+    }
+
+    /**
      * Requête API sans authentification (pour inscription ciblée publique).
      * Si $token est fourni, l'ajoute en query (GET) ou en header (POST). Si $licence est fourni, restreint aux actions sur sa propre inscription.
      */
