@@ -10,16 +10,16 @@
     'isNature3DOrCampagne' => isset($isNature3DOrCampagne) && $isNature3DOrCampagne
 ], JSON_UNESCAPED_UNICODE)) ?>">
 <h1>Détails du concours</h1>
-
+<?php $concoursIsArchived = false; ?>
 <?php
 $concoursStatut = is_object($concours) ? ($concours->statut ?? 'active') : (is_array($concours) ? ($concours['statut'] ?? 'active') : 'active');
 if ($concoursStatut === 'archive'): ?>
+    <?php $concoursIsArchived = true; ?>
     <div class="alert alert-secondary d-flex align-items-center">
-        <i class="fas fa-lock me-2"></i>
-        <div>Ce concours est <strong>archivé</strong> : les inscriptions, pelotons et scores sont en lecture seule.</div>
-    </div>
+            <i class="fas fa-lock me-2"></i>
+            <div>Ce concours est <strong>archivé</strong> : les inscriptions, pelotons et scores sont en lecture seule.</div>
+        </div>
 <?php endif; ?>
-
 <?php if (isset($_SESSION['error'])): ?>
     <div class="alert alert-danger">
         <strong>Erreur:</strong> <?= htmlspecialchars($_SESSION['error']) ?>
