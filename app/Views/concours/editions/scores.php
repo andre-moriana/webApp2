@@ -37,7 +37,11 @@ if ($triScores === 'depart') {
     ksort($groups, SORT_FLAG_CASE | SORT_NATURAL);
 }
 
-$hasSeries = !empty(array_filter($resultats, function ($r) { return isset($r['serie1_score']) || isset($r['serie2_score']); }));
+// N'afficher les colonnes Série 1 / Série 2 que s'il existe réellement une 2e série (sinon une seule série)
+$hasSeries = !empty(array_filter($resultats, function ($r) {
+    $s2 = $r['serie2_score'] ?? null;
+    return $s2 !== null && $s2 !== '' && (int)$s2 > 0;
+}));
 
 $resultats = $resultats ?? [];
 $disciplineAbv = $disciplineAbv ?? null;

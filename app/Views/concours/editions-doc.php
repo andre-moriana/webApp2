@@ -242,6 +242,15 @@ $dateFooter = date('d/m/Y H:i');
         .edition-classement .edition-classement-col-categorie {
             width: 6%;
         }
+        /* Scores : retour à la ligne pour le nom de l'archer et le nom du club */
+        .edition-scores table th:nth-child(2),
+        .edition-scores table td:nth-child(2),
+        .edition-scores table th:nth-child(5),
+        .edition-scores table td:nth-child(5) {
+            white-space: normal;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
         /* Tableau liste des départs (avis) */
         .edition-avis table.table-sm {
             table-layout: fixed;
