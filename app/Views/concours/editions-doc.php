@@ -469,12 +469,27 @@ $dateFooter = date('d/m/Y H:i');
             .edition-feuilles-marques .feuille-marque-3D-landscape {
                 page: feuilles-marques-landscape;
             }
-            /* Liste des participants : pas de footer imprimé (date, page, etc.) */
+            /* Liste des participants : format paysage */
             @page edition-liste-participants {
-                margin: 15mm 15mm 20mm 15mm;
+                size: landscape;
+                margin: 12mm 12mm 18mm 12mm;
             }
             body.edition-doc-liste-participants {
                 page: edition-liste-participants;
+            }
+            /* Liste des participants : pas de saut de page par groupe, interlignes réduits */
+            body.edition-doc-liste-participants .liste-participants-groupe {
+                page-break-after: auto;
+                page-break-inside: avoid;
+            }
+            body.edition-doc-liste-participants .liste-participants-groupe-titre {
+                font-size: 0.85rem;
+                margin-bottom: 0.15rem !important;
+            }
+            body.edition-doc-liste-participants .edition-liste-participants table th,
+            body.edition-doc-liste-participants .edition-liste-participants table td {
+                padding: 1px 3px;
+                line-height: 1.1;
             }
             /* Classement : format paysage */
             @page edition-classement-landscape {

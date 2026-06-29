@@ -68,8 +68,8 @@ $getStatutRowClass = function ($insc) {
     <div class="mb-3"><strong>Total : <?= count($inscriptions) ?> participant(s)</strong></div>
 
     <?php foreach ($groupes as $cleGroupe => $liste): ?>
-    <div class="liste-participants-groupe mt-4">
-        <h5 class="mb-2">
+    <div class="liste-participants-groupe mt-2">
+        <h5 class="liste-participants-groupe-titre mb-1">
             <?php
             if ($tri === 'club') echo 'Club : ' . htmlspecialchars($cleGroupe) . ' <span class="text-muted">(' . count($liste) . ' participant(s))</span>';
             elseif ($tri === 'depart') echo 'Départ n° ' . htmlspecialchars($cleGroupe) . ' <span class="text-muted">(' . count($liste) . ' participant(s))</span>';
@@ -79,11 +79,11 @@ $getStatutRowClass = function ($insc) {
         <table class="table table-bordered table-sm">
             <thead>
                 <tr>
-                    <th>N°</th>
-                    <th>Statut</th>
+                    <th class="no-print">N°</th>
+                    <th class="no-print">Statut</th>
                     <th>Nom</th>
                     <th>N° Licence</th>
-                    <th>Catégorie de classement</th>
+                    <th>Catégorie</th>
                     <th>Club</th>
                     <th>Départ</th>
 
@@ -92,8 +92,8 @@ $getStatutRowClass = function ($insc) {
             <tbody>
                 <?php $n = 1; foreach ($liste as $insc): ?>
                 <tr class="<?= htmlspecialchars($getStatutRowClass($insc)) ?>">
-                    <td><?= $n++ ?></td>
-                    <td><?= htmlspecialchars($formatStatutInscription($insc)) ?></td>
+                    <td class="no-print"><?= $n++ ?></td>
+                    <td class="no-print"><?= htmlspecialchars($formatStatutInscription($insc)) ?></td>
                     <td><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                     <td><?= htmlspecialchars($insc['abv_categorie_classement'] ?? $insc['abv_classement'] ?? '—') ?></td>
