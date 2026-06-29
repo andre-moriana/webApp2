@@ -12,6 +12,15 @@
      data-pair-per-color="">
 <h1>Plan de peloton - <?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?></h1>
 
+<?php
+$concoursStatut = is_object($concours) ? ($concours->statut ?? 'active') : ($concours['statut'] ?? 'active');
+if ($concoursStatut === 'archive'): ?>
+    <div class="alert alert-secondary d-flex align-items-center">
+        <i class="fas fa-lock me-2"></i>
+        <div>Ce concours est <strong>archivé</strong> : le plan de peloton est en lecture seule.</div>
+    </div>
+<?php endif; ?>
+
 <?php if (isset($_SESSION['error'])): ?>
     <div class="alert alert-danger"><strong>Erreur:</strong> <?= htmlspecialchars($_SESSION['error']) ?></div>
     <?php unset($_SESSION['error']); ?>

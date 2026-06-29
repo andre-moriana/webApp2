@@ -6,6 +6,15 @@
 <div class="container-fluid concours-create-container" data-can-edit-plan="<?= !empty($canEditPlan) ? '1' : '0' ?>" data-can-release-admin-dirigeant="<?= !empty($canReleaseAsAdminOrDirigeant) ? '1' : '0' ?>" data-current-user-licence="<?= htmlspecialchars($currentUserLicence ?? '') ?>">
 <h1>Plan de cible - <?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?></h1>
 
+<?php
+$concoursStatut = is_object($concours) ? ($concours->statut ?? 'active') : ($concours['statut'] ?? 'active');
+if ($concoursStatut === 'archive'): ?>
+    <div class="alert alert-secondary d-flex align-items-center">
+        <i class="fas fa-lock me-2"></i>
+        <div>Ce concours est <strong>archivé</strong> : le plan de cible est en lecture seule.</div>
+    </div>
+<?php endif; ?>
+
 <?php if (isset($_SESSION['error'])): ?>
     <div class="alert alert-danger">
         <strong>Erreur:</strong> <?= htmlspecialchars($_SESSION['error']) ?>

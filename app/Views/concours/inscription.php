@@ -7,7 +7,10 @@
 $currentUserLicence = $currentUserLicence ?? trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));
 $currentUserId = $currentUserId ?? ($_SESSION['user']['id'] ?? $_SESSION['user']['userId'] ?? $_SESSION['user']['_id'] ?? null);
 $isDirigeant = $isDirigeant ?? (isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant');
+$concoursStatut = is_object($concours) ? ($concours->statut ?? 'active') : ($concours['statut'] ?? 'active');
+$concoursIsArchived = ($concoursStatut === 'archive');
 $inscriptionConfig = [
+    'isArchived' => $concoursIsArchived,
     'concoursId' => $concoursId ?? null,
     'formAction' => $formAction ?? '/concours/' . ($concoursId ?? '') . '/inscription',
     'apiInscriptionsUrl' => $apiInscriptionsUrl ?? '/api/concours/' . ($concoursId ?? '') . '/inscriptions',
@@ -30,6 +33,13 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
 ?>
 <div class="container-fluid concours-inscription-container" id="inscription-page" data-config="<?= $inscriptionConfigJson ?>">
     <h1>Inscription au concours</h1>
+
+    <?php if ($concoursIsArchived): ?>
+        <div class="alert alert-secondary d-flex align-items-center">
+            <i class="fas fa-lock me-2"></i>
+            <div>Ce concours est <strong>archivé</strong> : les inscriptions sont fermées (lecture seule).</div>
+        </div>
+    <?php endif; ?>
 
     <?php if (isset($_SESSION['error'])): ?>
         <div class="alert alert-danger">

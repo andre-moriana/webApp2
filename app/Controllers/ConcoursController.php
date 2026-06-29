@@ -1359,6 +1359,66 @@ class ConcoursController {
         header('Location: /concours');
         exit();
     }
+
+    /**
+     * Indique si un concours est archivé (lecture du statut via l'API).
+     */
+    private function isConcoursArchived($concoursId): bool
+    {
+        try {
+            $response = $this->apiService->getConcoursById($concoursId);
+            $data = $this->apiService->unwrapData($response);
+            if (is_array($data) && isset($data['data']) && isset($data['success'])) {
+                $data = $data['data'];
+            }
+            $statut = is_array($data) ? ($data['statut'] ?? null) : (is_object($data) ? ($data->statut ?? null) : null);
+            return $statut === 'archive';
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Archive un concours : inscriptions, pelotons et scores deviennent non modifiables.
+     */
+    public function archiver($id)
+    {
+        $this->changerStatut($id, 'archive');
+    }
+
+    /**
+     * Réactive un concours : inscriptions, pelotons et scores redeviennent modifiables.
+     */
+    public function activer($id)
+    {
+        $this->changerStatut($id, 'active');
+    }
+
+    private function changerStatut($id, $statut)
+    {
+        if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+            header('Location: /login');
+            exit;
+        }
+        $isAdmin = $_SESSION['user']['is_admin'] ?? false;
+        $isDirigeant = ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
+        if (!$isAdmin && !$isDirigeant) {
+            $_SESSION['error'] = 'Accès réservé aux dirigeants et administrateurs.';
+            header('Location: /concours');
+            exit;
+        }
+
+        $response = $this->apiService->updateConcoursStatut($id, $statut);
+        if ($response['success'] ?? false) {
+            $_SESSION['success'] = $statut === 'archive'
+                ? 'Concours archivé : les inscriptions, pelotons et scores sont désormais en lecture seule.'
+                : 'Concours réactivé : les inscriptions, pelotons et scores sont de nouveau modifiables.';
+        } else {
+            $_SESSION['error'] = $response['message'] ?? 'Impossible de modifier le statut du concours.';
+        }
+        header('Location: /concours');
+        exit();
+    }
 // Page de gestion des greffes
 public function greffes($concoursId)
 {
@@ -3829,6 +3889,18 @@ public function inscription($concoursId)
             exit;
         }
 
+        if ($this->isConcoursArchived($concoursId)) {
+            $msg = 'Concours archivé : la saisie des scores est désactivée.';
+            if ($returnJson) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => $msg]);
+                exit;
+            }
+            $_SESSION['error'] = $msg;
+            header('Location: /concours/' . $concoursId . '/saisie-scores');
+            exit;
+        }
+
         $scores = $scoresOverride !== null ? $scoresOverride : ($_POST['scores'] ?? []);
         if (!is_array($scores)) {
             $scores = [];
@@ -4250,6 +4322,12 @@ public function inscription($concoursId)
         $currentToken = $token ?: $tokenFromSession;
         $redirectSuffix = $currentToken ? '?token=' . urlencode($currentToken) : '';
 
+        if ($this->isConcoursArchived($concoursId)) {
+            $_SESSION['error'] = 'Concours archivé : les inscriptions sont fermées.';
+            header("Location: /inscription-cible/{$concoursId}{$redirectSuffix}");
+            exit;
+        }
+
         $user_nom = isset($_POST['user_nom']) ? trim($_POST['user_nom']) : null;
         if (empty($user_nom)) {
             $_SESSION['error'] = 'Nom de l\'archer requis';
@@ -4390,6 +4468,12 @@ public function inscription($concoursId)
 
         error_log("=== storeInscription appelé pour concoursId: " . $concoursId);
         error_log("Données POST reçues: " . json_encode($_POST, JSON_UNESCAPED_UNICODE));
+
+        if ($this->isConcoursArchived($concoursId)) {
+            $_SESSION['error'] = 'Concours archivé : les inscriptions ne peuvent plus être modifiées.';
+            header("Location: /concours/{$concoursId}/inscription");
+            exit;
+        }
 
         $user_nom = isset($_POST['user_nom']) ? trim($_POST['user_nom']) : null;
         
@@ -4791,6 +4875,15 @@ public function inscription($concoursId)
             exit;
         }
 
+        if ($this->isConcoursArchived($concoursId)) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Concours archivé : les inscriptions ne peuvent plus être modifiées.'
+            ]);
+            exit;
+        }
+
         try {
             // Récupérer les données JSON
             $input = file_get_contents('php://input');
@@ -5099,6 +5192,12 @@ public function inscription($concoursId)
         $isAdmin = $isLoggedIn && (bool)($_SESSION['user']['is_admin'] ?? $_SESSION['user']['isAdmin'] ?? false);
         $isDirigeant = $isLoggedIn && (($_SESSION['user']['role'] ?? '') === 'Dirigeant');
         $canReleaseAsAdminOrDirigeant = $isAdmin || $isDirigeant;
+        // Concours archivé : plan en lecture seule (aucune édition ni libération)
+        $planConcoursStatut = is_object($concours) ? ($concours->statut ?? 'active') : (is_array($concours) ? ($concours['statut'] ?? 'active') : 'active');
+        if ($planConcoursStatut === 'archive') {
+            $canEditPlan = false;
+            $canReleaseAsAdminOrDirigeant = false;
+        }
         // Pour un accès public via lien email, la licence peut être fournie par l'API (current_user_licence)
         if ($isLoggedIn) {
             $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));
@@ -5373,6 +5472,12 @@ public function inscription($concoursId)
         $isAdmin = $isLoggedIn && (bool)($_SESSION['user']['is_admin'] ?? $_SESSION['user']['isAdmin'] ?? false);
         $isDirigeant = $isLoggedIn && (($_SESSION['user']['role'] ?? '') === 'Dirigeant');
         $canReleaseAsAdminOrDirigeant = $isAdmin || $isDirigeant;
+        // Concours archivé : plan en lecture seule (aucune édition ni libération)
+        $planConcoursStatut = is_object($concours) ? ($concours->statut ?? 'active') : (is_array($concours) ? ($concours['statut'] ?? 'active') : 'active');
+        if ($planConcoursStatut === 'archive') {
+            $canEditPlan = false;
+            $canReleaseAsAdminOrDirigeant = false;
+        }
         // Pour un accès public via lien email, la licence peut être fournie par l'API (current_user_licence)
         if ($isLoggedIn) {
             $currentUserLicence = trim((string)($_SESSION['user']['licenceNumber'] ?? $_SESSION['user']['licence_number'] ?? $_SESSION['user']['numero_licence'] ?? ''));

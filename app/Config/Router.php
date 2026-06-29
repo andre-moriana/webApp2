@@ -54,6 +54,9 @@ class Router {
         $this->addRoute("GET", "/concours/edit/{id}", "ConcoursController@edit");
         $this->addRoute("POST", "/concours/update/{id}", "ConcoursController@update");
         $this->addRoute("GET", "/concours/delete/{id}", "ConcoursController@delete");
+        // Archivage / réactivation d'un concours (verrouille inscriptions, pelotons, scores)
+        $this->addRoute("GET", "/concours/archiver/{id}", "ConcoursController@archiver");
+        $this->addRoute("GET", "/concours/activer/{id}", "ConcoursController@activer");
         // Routes d'authentification
         $this->addRoute("GET", "/login", "AuthController@login");
         $this->addRoute("POST", "/auth/authenticate", "AuthController@authenticate");

@@ -76,6 +76,16 @@ class ApiService {
             return $this->makeRequest("concours/{$id}", "PUT", $data);
         }
 
+        /**
+         * Met à jour uniquement le statut d'un concours ('active' ou 'archive').
+         */
+        public function updateConcoursStatut($id, $statut) {
+            if (!$this->token) {
+                return ["success" => false, "message" => "Token d'authentification requis"];
+            }
+            return $this->makeRequest("concours/{$id}", "PUT", ['statut' => $statut]);
+        }
+
         public function updateConcoursArbitres($id, $arbitres) {
             if (!$this->token) {
                 return ["success" => false, "message" => "Token d'authentification requis"];

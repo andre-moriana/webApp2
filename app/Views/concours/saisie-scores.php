@@ -28,12 +28,20 @@ $showSerie2 = $isNature2x21 ? true : ($isSalleTae && ($serieMode === '2' || $ser
 $showTotaux = $isNature21cibles ? true : ($isSalleTae && $serieMode === 'both');
 $serieLabel1 = $isNature21cibles ? 'P1' : 'S1';
 $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
+$concoursIsArchived = (($c['statut'] ?? 'active') === 'archive');
 ?>
 <div class="container-fluid concours-saisie-scores">
     <h1 class="mb-4">
         <i class="fas fa-calculator me-2"></i>Saisie des scores
         <small class="text-muted d-block mt-1"><?= htmlspecialchars($concours->titre_competition ?? $concours->nom ?? 'Concours') ?></small>
     </h1>
+
+    <?php if ($concoursIsArchived): ?>
+        <div class="alert alert-secondary d-flex align-items-center">
+            <i class="fas fa-lock me-2"></i>
+            <div>Ce concours est <strong>archivé</strong> : la saisie des scores est désactivée (lecture seule).</div>
+        </div>
+    <?php endif; ?>
 
     <?php if (isset($_SESSION['error'])): ?>
         <div class="alert alert-danger alert-dismissible fade show">
@@ -473,7 +481,7 @@ $serieLabel2 = $isNature2x21 ? 'P2' : 'S2';
                 <?php endif; ?>
 
                 <div class="d-flex gap-2 mt-3 flex-wrap align-items-center">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary"<?= $concoursIsArchived ? ' disabled title="Concours archivé : saisie désactivée"' : '' ?>>
                         <i class="fas fa-save me-1"></i>Enregistrer les scores
                     </button>
                     <a href="/score-sheet" class="btn btn-outline-success" title="Saisir les scores sur une feuille de marque puis les exporter automatiquement vers ce concours">

@@ -133,8 +133,11 @@ foreach ($allConcours as $item) {
                                     // Colonne 5: Dates
                                     $dateDebut = $item['date_debut'] ?? '-';
                                     $dateFin = $item['date_fin'] ?? '-';
+
+                                    // Statut (active / archive)
+                                    $isArchived = (($item['statut'] ?? 'active') === 'archive');
                                     ?>
-                                    <tr>
+                                    <tr<?php echo $isArchived ? ' class="table-secondary"' : ''; ?>>
                                         <td data-column="club">
                                             <?php echo htmlspecialchars($clubDisplay ?: '-'); ?>
                                         </td>
@@ -146,6 +149,9 @@ foreach ($allConcours as $item) {
                                         </td>
                                         <td data-column="titre_lieu" style="max-width: 300px;">
                                             <strong><?php echo htmlspecialchars($titre); ?></strong>
+                                            <?php if ($isArchived): ?>
+                                                <span class="badge bg-secondary ms-1" title="Concours archivé : inscriptions, pelotons et scores en lecture seule"><i class="fas fa-lock me-1"></i>Archivé</span>
+                                            <?php endif; ?>
                                             <?php if ($lieu && $lieu !== '-'): ?>
                                                 <br><small class="text-muted" title="<?php echo htmlspecialchars($lieuFull); ?>"><?php echo htmlspecialchars($lieuTruncated); ?></small>
                                             <?php endif; ?>
@@ -171,6 +177,18 @@ foreach ($allConcours as $item) {
                                                     <i class="fas fa-trash"></i>
                                                 </a>
                                                 <?php endif; ?>
+                                                <?php if ($isAdmin || $isDirigeant): ?>
+                                                    <?php if ($isArchived): ?>
+                                                    <a href="/concours/activer/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-success" title="Réactiver le concours" onclick="return confirm('Réactiver ce concours ? Les inscriptions, pelotons et scores redeviendront modifiables.');">
+                                                        <i class="fas fa-lock-open"></i>
+                                                    </a>
+                                                    <?php else: ?>
+                                                    <a href="/concours/archiver/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-dark" title="Archiver le concours" onclick="return confirm('Archiver ce concours ? Les inscriptions, pelotons et scores passeront en lecture seule.');">
+                                                        <i class="fas fa-lock"></i>
+                                                    </a>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+                                                <?php if (!$isArchived): ?>
                                                 <a href="/concours/<?php echo $concoursId; ?>/inscription" class="btn btn-sm btn-outline-success" title="Gérer les inscriptions">
                                                     <i class="fas fa-user-plus"></i>
                                                 </a>
@@ -183,6 +201,7 @@ foreach ($allConcours as $item) {
                                                 <a href="/concours/<?php echo $concoursId; ?>/saisie-scores" class="btn btn-sm btn-outline-warning" title="Saisie des scores">
                                                     <i class="fas fa-calculator"></i>
                                                 </a>
+                                                <?php endif; ?>
                                                 <?php endif; ?>
                                                 <!--
                                                 <button type="button" class="btn btn-sm btn-outline-info" title="S'inscrire rapidement" onclick="inscrireConcours(<?php echo $concoursId; ?>)">
@@ -202,13 +221,13 @@ foreach ($allConcours as $item) {
                                                         }
                                                     }
                                                 }
-                                                if ($abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H'])): 
+                                                if (!$isArchived && $abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H'])): 
                                                 ?>
                                                 <a href="/concours/<?php echo $concoursId; ?>/plan-cible" class="btn btn-sm btn-outline-warning" title="Voir le plan de cible">
                                                     <i class="fas fa-bullseye"></i>
                                                 </a>
                                                 <?php endif; ?>
-                                                <?php if ($abv_discipline && in_array($abv_discipline, ['3', 'N', 'C', '3D'])): ?>
+                                                <?php if (!$isArchived && $abv_discipline && in_array($abv_discipline, ['3', 'N', 'C', '3D'])): ?>
                                                 <a href="/concours/<?php echo $concoursId; ?>/plan-peloton" class="btn btn-sm btn-outline-info" title="Plan de peloton (Nature/3D/Campagne)">
                                                     <i class="fas fa-users"></i>
                                                 </a>
@@ -281,8 +300,11 @@ foreach ($allConcours as $item) {
 
                                     $dateDebut = $item['date_debut'] ?? '-';
                                     $dateFin = $item['date_fin'] ?? '-';
+
+                                    // Statut (active / archive)
+                                    $isArchived = (($item['statut'] ?? 'active') === 'archive');
                                     ?>
-                                    <tr>
+                                    <tr<?php echo $isArchived ? ' class="table-secondary"' : ''; ?>>
                                         <td data-column="club">
                                             <?php echo htmlspecialchars($clubDisplay ?: '-'); ?>
                                         </td>
@@ -294,6 +316,9 @@ foreach ($allConcours as $item) {
                                         </td>
                                         <td data-column="titre_lieu" style="max-width: 300px;">
                                             <strong><?php echo htmlspecialchars($titre); ?></strong>
+                                            <?php if ($isArchived): ?>
+                                                <span class="badge bg-secondary ms-1" title="Concours archivé : inscriptions, pelotons et scores en lecture seule"><i class="fas fa-lock me-1"></i>Archivé</span>
+                                            <?php endif; ?>
                                             <?php if ($lieu && $lieu !== '-'): ?>
                                                 <br><small class="text-muted" title="<?php echo htmlspecialchars($lieuFull); ?>"><?php echo htmlspecialchars($lieuTruncated); ?></small>
                                             <?php endif; ?>
@@ -319,6 +344,18 @@ foreach ($allConcours as $item) {
                                                     <i class="fas fa-trash"></i>
                                                 </a>
                                                 <?php endif; ?>
+                                                <?php if ($isAdmin || $isDirigeant): ?>
+                                                    <?php if ($isArchived): ?>
+                                                    <a href="/concours/activer/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-success" title="Réactiver le concours" onclick="return confirm('Réactiver ce concours ? Les inscriptions, pelotons et scores redeviendront modifiables.');">
+                                                        <i class="fas fa-lock-open"></i>
+                                                    </a>
+                                                    <?php else: ?>
+                                                    <a href="/concours/archiver/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-dark" title="Archiver le concours" onclick="return confirm('Archiver ce concours ? Les inscriptions, pelotons et scores passeront en lecture seule.');">
+                                                        <i class="fas fa-lock"></i>
+                                                    </a>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+                                                <?php if (!$isArchived): ?>
                                                 <a href="/concours/<?php echo $concoursId; ?>/inscription" class="btn btn-sm btn-outline-success" title="Gérer les inscriptions">
                                                     <i class="fas fa-user-plus"></i>
                                                 </a>
@@ -326,6 +363,7 @@ foreach ($allConcours as $item) {
                                                 <a href="/concours/<?php echo $concoursId; ?>/saisie-scores" class="btn btn-sm btn-outline-warning" title="Saisie des scores">
                                                     <i class="fas fa-calculator"></i>
                                                 </a>
+                                                <?php endif; ?>
                                                 <?php endif; ?>
                                                 <?php
                                                 $disciplineId = $item['discipline'] ?? $item['iddiscipline'] ?? null;
@@ -339,13 +377,13 @@ foreach ($allConcours as $item) {
                                                         }
                                                     }
                                                 }
-                                                if ($abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H'])):
+                                                if (!$isArchived && $abv_discipline && in_array($abv_discipline, ['S', 'T', 'I', 'H'])):
                                                 ?>
                                                 <a href="/concours/<?php echo $concoursId; ?>/plan-cible" class="btn btn-sm btn-outline-warning" title="Voir le plan de cible">
                                                     <i class="fas fa-bullseye"></i>
                                                 </a>
                                                 <?php endif; ?>
-                                                <?php if ($abv_discipline && in_array($abv_discipline, ['3', 'N', 'C', '3D'])): ?>
+                                                <?php if (!$isArchived && $abv_discipline && in_array($abv_discipline, ['3', 'N', 'C', '3D'])): ?>
                                                 <a href="/concours/<?php echo $concoursId; ?>/plan-peloton" class="btn btn-sm btn-outline-info" title="Plan de peloton (Nature/3D/Campagne)">
                                                     <i class="fas fa-users"></i>
                                                 </a>
