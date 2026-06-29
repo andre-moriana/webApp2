@@ -1,88 +1,106 @@
+// Extraire le texte triable d'une cellule
+function getCellSortValue(cell, column) {
+    if (!cell) {
+        return '';
+    }
+    const badge = cell.querySelector('.badge');
+    if (badge) {
+        return badge.textContent.trim();
+    }
+    const truncated = cell.querySelector('.text-truncate');
+    if (truncated) {
+        return truncated.textContent.trim();
+    }
+    return cell.textContent.trim();
+}
+
 // Fonction de tri
 function sortTable(column) {
     const table = document.getElementById('usersTable');
+    if (!table) {
+        return;
+    }
+
     const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
+    if (!tbody) {
+        return;
+    }
+
+    const rows = Array.from(tbody.querySelectorAll('tr.user-row'));
+    if (rows.length === 0) {
+        return;
+    }
+
     const header = table.querySelector(`th[data-column="${column}"]`);
+    if (!header) {
+        return;
+    }
+
     const isAscending = header.classList.contains('sort-asc');
-    
+
     // Supprimer les classes de tri de tous les headers
-    table.querySelectorAll('th').forEach(th => {
+    table.querySelectorAll('th.sortable').forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
         const icon = th.querySelector('i');
         if (icon) {
             icon.className = 'fas fa-sort ms-1';
         }
     });
-    
+
     // Trier les lignes
     rows.sort((a, b) => {
-        let aValue = a.querySelector(`td:nth-child(${getColumnIndex(column)})`).textContent.trim();
-        let bValue = b.querySelector(`td:nth-child(${getColumnIndex(column)})`).textContent.trim();
-        
-        // Conversion spéciale pour les colonnes numériques
+        const aCell = a.querySelector(`td[data-column="${column}"]`);
+        const bCell = b.querySelector(`td[data-column="${column}"]`);
+        let aValue = getCellSortValue(aCell, column);
+        let bValue = getCellSortValue(bCell, column);
+
         if (column === 'id') {
-            aValue = parseInt(aValue) || 0;
-            bValue = parseInt(bValue) || 0;
-        }
-        
-        // Conversion spéciale pour les dates
-        if (column === 'lastLogin') {
-            if (aValue === 'Jamais') {
-                aValue = new Date('1900-01-01'); // Date très ancienne pour "Jamais"
-            } else {
-                // Convertir la date du format dd/mm/yyyy hh:mm vers un objet Date
-                const dateParts = aValue.split(' ');
-                if (dateParts.length === 2) {
-                    const [dateStr, timeStr] = dateParts;
-                    const [day, month, year] = dateStr.split('/');
-                    const [hour, minute] = timeStr.split(':');
-                    aValue = new Date(year, month - 1, day, hour, minute);
-                } else {
-                    aValue = new Date('1900-01-01');
-                }
-            }
-            
-            if (bValue === 'Jamais') {
-                bValue = new Date('1900-01-01'); // Date très ancienne pour "Jamais"
-            } else {
-                // Convertir la date du format dd/mm/yyyy hh:mm vers un objet Date
-                const dateParts = bValue.split(' ');
-                if (dateParts.length === 2) {
-                    const [dateStr, timeStr] = dateParts;
-                    const [day, month, year] = dateStr.split('/');
-                    const [hour, minute] = timeStr.split(':');
-                    bValue = new Date(year, month - 1, day, hour, minute);
-                } else {
-                    bValue = new Date('1900-01-01');
-                }
-            }
-        }
-        
-        if (isAscending) {
-            return aValue > bValue ? 1 : -1;
+            aValue = parseInt(aValue, 10) || 0;
+            bValue = parseInt(bValue, 10) || 0;
+        } else if (column === 'lastLogin') {
+            aValue = parseLastLoginDate(aValue);
+            bValue = parseLastLoginDate(bValue);
         } else {
-            return aValue < bValue ? 1 : -1;
+            aValue = aValue.toLowerCase();
+            bValue = bValue.toLowerCase();
         }
+
+        let comparison = 0;
+        if (aValue < bValue) {
+            comparison = -1;
+        } else if (aValue > bValue) {
+            comparison = 1;
+        }
+
+        return isAscending ? comparison * -1 : comparison;
     });
-    
-    // Réorganiser les lignes dans le DOM
+
+    // Réorganiser les lignes dans le DOM (uniquement les lignes utilisateur)
     rows.forEach(row => tbody.appendChild(row));
-    
+
     // Mettre à jour l'icône de tri
     header.classList.add(isAscending ? 'sort-desc' : 'sort-asc');
     const icon = header.querySelector('i');
     if (icon) {
         icon.className = isAscending ? 'fas fa-sort-down ms-1' : 'fas fa-sort-up ms-1';
     }
+
+    applyFilters();
 }
 
-// Obtenir l'index de la colonne
-function getColumnIndex(column) {
-    const columns = ['id', 'name', 'email', 'role', 'club', 'status', 'lastLogin', 'actions'];
-    return columns.indexOf(column) + 1;
+function parseLastLoginDate(value) {
+    if (!value || value === 'Jamais') {
+        return new Date('1900-01-01');
+    }
+    const dateParts = value.split(' ');
+    if (dateParts.length !== 2) {
+        return new Date('1900-01-01');
+    }
+    const [dateStr, timeStr] = dateParts;
+    const [day, month, year] = dateStr.split('/');
+    const [hour, minute] = timeStr.split(':');
+    return new Date(year, month - 1, day, hour, minute);
 }
-
 // Gérer l'affichage des avatars
 function handleAvatarDisplay() {
     const profileImages = document.querySelectorAll('.profile-img');
@@ -221,15 +239,16 @@ function updateResultsCount(visible, total) {
 
 // Fonction d'initialisation
 function initUsersTable() {
-    // Gérer le tri
-    const sortableHeaders = document.querySelectorAll('.sortable');
-    sortableHeaders.forEach(header => {
-        header.style.cursor = 'pointer';
-        header.addEventListener('click', function() {
-            const column = this.getAttribute('data-column');
-            sortTable(column);
+    // Gérer le tri (uniquement sur le tableau utilisateurs)
+    const table = document.getElementById('usersTable');
+    if (table) {
+        table.querySelectorAll('th.sortable[data-column]').forEach(header => {
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', function() {
+                sortTable(this.getAttribute('data-column'));
+            });
         });
-    });
+    }
     
     // Gérer l'affichage des avatars
     handleAvatarDisplay();

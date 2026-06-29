@@ -148,8 +148,8 @@ $clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ??
                                             }*/
                                             echo htmlspecialchars(trim($searchableText));
                                         ?>">
-                                            <td class="text-nowrap"><?php echo htmlspecialchars($user['id']); ?></td>
-                                            <td class="text-nowrap">
+                                            <td class="text-nowrap" data-column="id"><?php echo htmlspecialchars($user['id']); ?></td>
+                                            <td class="text-nowrap" data-column="name">
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-2">
                                                         <?php 
@@ -221,12 +221,12 @@ $clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ??
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="text-nowrap">
+                                            <td class="text-nowrap" data-column="email">
                                                 <div class="text-truncate" style="max-width: 200px;" title="<?php echo htmlspecialchars($user['email']); ?>">
                                                     <?php echo htmlspecialchars($user['email']); ?>
                                                 </div>
                                             </td>
-                                            <td class="text-nowrap">
+                                            <td class="text-nowrap" data-column="role">
                                                 <span class="badge bg-<?php echo ($user['role'] === 'admin' || ($user['is_admin'] ?? $user['isAdmin'] ?? false)) ? 'danger' : 'secondary'; ?>">
                                                     <?php echo ucfirst($user['role'] ?? 'user'); ?>
                                                 </span>
@@ -244,7 +244,7 @@ $clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ??
                                                 }
                                                 ?>
                                             </td>
-                                            <td class="text-nowrap">
+                                            <td class="text-nowrap" data-column="status">
                                                 <?php 
                                                 $status = $user['status'] ?? 'active';
                                                 $statusLabels = [
@@ -266,12 +266,12 @@ $clubIdForPerms = $_SESSION['user']['clubId'] ?? $_SESSION['user']['club_id'] ??
                                                     <?php echo $label; ?>
                                                 </span>
                                             </td>
-                                            <td class="text-nowrap">
+                                            <td class="text-nowrap" data-column="banned">
                                                 <span class="badge bg-<?php echo ($user['is_banned'] ?? $user['isBanned'] ?? false) ? 'danger' : 'success'; ?>">
                                                     <?php echo ($user['is_banned'] ?? $user['isBanned'] ?? false) ? 'Banni' : 'Actif'; ?>
                                                 </span>
                                             </td>
-                                            <td class="text-nowrap">
+                                            <td class="text-nowrap" data-column="lastLogin">
                                                 <?php 
                                                 if (!empty($user['lastLogin'])) {
                                                     $lastLogin = new DateTime($user['lastLogin']);
