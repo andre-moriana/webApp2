@@ -100,9 +100,11 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
         $isDirigeantShow = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
         $canSaisieScores = $isAdmin || $isDirigeantShow;
         ?>
-        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/inscription" class="btn btn-success">
-            <i class="fas fa-user-plus"></i> Gérer les inscriptions
-        </a>
+        <?php if (!$concoursIsArchived): ?>
+            <a href="/concours/<?= htmlspecialchars($concoursId) ?>/inscription" class="btn btn-success">
+                <i class="fas fa-user-plus"></i> Gérer les inscriptions
+            </a>
+        <?php endif; ?>
         <?php 
         if ($canSaisieScores && !$concoursIsArchived): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
