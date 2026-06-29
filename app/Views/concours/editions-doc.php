@@ -582,10 +582,10 @@ $dateFooter = date('d/m/Y H:i');
                 font-weight: 600;
             }
             .edition-doc-header-center .edition-doc-subtitle { text-align: center; }
-            /* Logo : taille agrandie à l'impression */
+            /* Logo : taille réduite à l'impression */
             .edition-doc-logo {
-                height: 44mm;
-                max-width: 88mm;
+                height: 22mm;
+                max-width: 44mm;
                 object-fit: contain;
             }
             /* Feuilles de marques : logo réduit de 50 % à l'impression */
