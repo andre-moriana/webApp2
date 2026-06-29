@@ -207,7 +207,6 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
             </div>
         </div>
     </div>
-    <?php endif; ?>
     <!-- Recherche d'archer dans le fichier XML -->
     <div class="card mb-4">
         <div class="card-header">
@@ -227,6 +226,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
             </div>
         </div>
     </div>
+    <?php endif; ?>
     <!-- Liste des inscrits -->
     <?php
     // Déterminer si c'est une discipline 3D, Nature ou Campagne (abv_discipline = "3", "N" ou "C")
