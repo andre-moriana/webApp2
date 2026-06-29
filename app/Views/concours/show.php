@@ -104,7 +104,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
             <i class="fas fa-user-plus"></i> Gérer les inscriptions
         </a>
         <?php 
-        if ($canSaisieScores): ?>
+        if ($canSaisieScores && !$concoursIsArchived): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
                 <i class="fas fa-calculator"></i> Saisie des scores
             </a>
@@ -112,14 +112,14 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
                 <i class="fas fa-print"></i> Éditions
             </a>
         <?php endif; ?>
-        <?php if ($canShowPlanCibleSection): ?>
+        <?php if ($canShowPlanCibleSection && !$concoursIsArchived): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/plan-cible" class="btn btn-outline-primary ms-2">
                 <i class="fas fa-list"></i> Voir le plan de cible
             </a>
         <div id="plan-cible-message" style="margin-top: 10px;"></div>
         <?php endif; ?>
     
-        <?php if ($canShowPlanPelotonSection): ?>
+        <?php if ($canShowPlanPelotonSection && !$concoursIsArchived): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/plan-peloton" class="btn btn-outline-primary <?= $canCreatePlanPeloton ? 'ms-2' : '' ?>">
                 <i class="fas fa-list"></i> Voir le plan de peloton
             </a>
@@ -495,7 +495,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
     </div>
 
    
-    <?php if (!empty($concours->lien_inscription_cible)): ?>
+    <?php if (!empty($concours->lien_inscription_cible) && !$concoursIsArchived): ?>
     <div class="form-group" style="margin-top: 20px;">
         <label><strong>Lien inscription ciblé :</strong></label>
         <div class="lien-inscription-cible-qr d-flex align-items-start gap-3 flex-wrap">
