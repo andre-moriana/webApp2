@@ -116,6 +116,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
         <a href="/concours/show/<?= htmlspecialchars($concoursId ?? '') ?>" class="btn btn-secondary">Retour au concours</a>
         <a href="/concours" class="btn btn-secondary">Retour à la liste</a>
     </div>    
+    <?php if (!$concoursIsArchived): ?>
     <div class="depart-selection-section mb-4">
         <h3>Sélectionner un ou plusieurs départs</h3>
         <div class="form-group">
@@ -206,7 +207,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
             </div>
         </div>
     </div>
-
+    <?php endif; ?>
     <!-- Recherche d'archer dans le fichier XML -->
     <div class="card mb-4">
         <div class="card-header">
