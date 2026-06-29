@@ -106,7 +106,7 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
             </a>
         <?php endif; ?>
         <?php 
-        if ($canSaisieScores && !$concoursIsArchived): ?>
+        if ($canSaisieScores): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
                 <i class="fas fa-calculator"></i> Saisie des scores
             </a>
@@ -130,13 +130,13 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
 
         <?php
         $isDirigeant = isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Dirigeant';
-        if ($isDirigeant): ?>
+        if ($isDirigeant && !$concoursIsArchived): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/buvette" class="btn btn-outline-primary">
                 <i class="fas fa-coffee"></i> Gestion de la buvette
             </a>
         <?php endif; ?>
         <?php
-        if ($isDirigeant || $isAdmin): ?>
+        if ($isDirigeant || $isAdmin && !$concoursIsArchived): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/greffes" class="btn btn-success">
                 <i class="fas fa-edit"></i> Gestion des greffes
             </a>
