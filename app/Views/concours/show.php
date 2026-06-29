@@ -106,14 +106,14 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
             </a>
         <?php endif; ?>
         <?php 
-        if ($canSaisieScores): ?>
+        if ($canSaisieScores && !$concoursIsArchived): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/saisie-scores" class="btn btn-warning">
                 <i class="fas fa-calculator"></i> Saisie des scores
             </a>
-            <a href="/concours/<?= htmlspecialchars($concoursId) ?>/editions" class="btn btn-info">
-                <i class="fas fa-print"></i> Éditions
-            </a>
         <?php endif; ?>
+        <a href="/concours/<?= htmlspecialchars($concoursId) ?>/editions" class="btn btn-info">
+            <i class="fas fa-print"></i> Éditions
+        </a>
         <?php if ($canShowPlanCibleSection && !$concoursIsArchived): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/plan-cible" class="btn btn-outline-primary ms-2">
                 <i class="fas fa-list"></i> Voir le plan de cible
@@ -136,14 +136,14 @@ $niveauChampionnatName = findLabel($niveauChampionnat, $concours->idniveau_champ
             </a>
         <?php endif; ?>
         <?php
-        if ($isDirigeant || $isAdmin && !$concoursIsArchived): ?>
+        if (($isDirigeant || $isAdmin) && !$concoursIsArchived): ?>
             <a href="/concours/<?= htmlspecialchars($concoursId) ?>/greffes" class="btn btn-success">
                 <i class="fas fa-edit"></i> Gestion des greffes
             </a>
-            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#diffusionParticipantsModal"<?= ($participantsMailCount ?? 0) === 0 ? ' disabled title="Aucun participant avec email"' : '' ?>>
-                <i class="fas fa-envelope"></i> Mail aux participants
-            </button>
         <?php endif; ?>
+        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#diffusionParticipantsModal"<?= ($participantsMailCount ?? 0) === 0 ? ' disabled title="Aucun participant avec email"' : '' ?>>
+            <i class="fas fa-envelope"></i> Mail aux participants
+        </button>
 
         <?php if ($isDirigeant || $isAdmin): ?>
         <div class="modal fade" id="diffusionParticipantsModal" tabindex="-1" aria-hidden="true">
