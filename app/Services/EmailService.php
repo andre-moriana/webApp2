@@ -15,10 +15,16 @@ class EmailService {
      *
      * @return array{success: bool, message: string}
      */
-    public static function sendContactEmail($name, $email, $subject, $message) {
+    public static function sendContactEmail($name, $email, $subject, $message, $recaptchaToken = '') {
         try {
             $api = new ApiService();
-            $response = $api->submitContactForm(compact('name', 'email', 'subject', 'message'));
+            $response = $api->submitContactForm([
+                'name' => $name,
+                'email' => $email,
+                'subject' => $subject,
+                'message' => $message,
+                'recaptcha_token' => $recaptchaToken,
+            ]);
 
             $payload = is_array($response['data'] ?? null) ? $response['data'] : [];
             $httpCode = (int)($response['status_code'] ?? 0);

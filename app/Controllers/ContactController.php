@@ -7,7 +7,6 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../Services/EmailService.php';
 
 class ContactController {
-    
     public function index() {
         $title = 'Contact - Portail Arc Training';
         $pageTitle = $title;
@@ -61,7 +60,8 @@ class ContactController {
             exit;
         }
         
-        $result = EmailService::sendContactEmail($name, $email, $subject, $message);
+        $recaptchaToken = trim($_POST['recaptcha_token'] ?? '');
+        $result = EmailService::sendContactEmail($name, $email, $subject, $message, $recaptchaToken);
         
         if ($result['success']) {
             $_SESSION['contact_success'] = $result['message'];

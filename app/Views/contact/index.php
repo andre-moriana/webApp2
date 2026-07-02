@@ -1,3 +1,8 @@
+<?php
+require_once __DIR__ . '/../../Config/RecaptchaConfig.php';
+$recaptchaSiteKey = RecaptchaConfig::getSiteKey();
+$recaptchaEnabled = RecaptchaConfig::isEnabled();
+?>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-8">
@@ -43,6 +48,9 @@
                     </p>
                     
                     <form method="POST" action="/contact/send" id="contactForm" novalidate>
+                        <?php if ($recaptchaEnabled): ?>
+                        <input type="hidden" name="recaptcha_token" id="recaptcha_token" value="">
+                        <?php endif; ?>
                         <div class="mb-3">
                             <label for="name" class="form-label">
                                 <i class="fas fa-user me-2"></i>Nom <span class="text-danger">*</span>
@@ -129,20 +137,54 @@
     </div>
 </div>
 
+<?php if ($recaptchaEnabled): ?>
+<script src="https://www.google.com/recaptcha/api.js?render=<?php echo htmlspecialchars($recaptchaSiteKey, ENT_QUOTES); ?>"></script>
+<?php endif; ?>
+
 <script>
-// Validation Bootstrap
 (function() {
     'use strict';
-    window.addEventListener('load', function() {
-        var form = document.getElementById('contactForm');
-        form.addEventListener('submit', function(event) {
-            if (form.checkValidity() === false) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
+    var form = document.getElementById('contactForm');
+    if (!form) {
+        return;
+    }
+
+    var recaptchaEnabled = <?php echo $recaptchaEnabled ? 'true' : 'false'; ?>;
+    var siteKey = <?php echo json_encode($recaptchaSiteKey, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+    var tokenField = document.getElementById('recaptcha_token');
+    var submitted = false;
+
+    form.addEventListener('submit', function(event) {
+        if (submitted) {
+            return;
+        }
+
+        if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
             form.classList.add('was-validated');
-        }, false);
+            return;
+        }
+
+        event.preventDefault();
+        form.classList.add('was-validated');
+
+        if (!recaptchaEnabled || !tokenField || typeof grecaptcha === 'undefined') {
+            submitted = true;
+            form.submit();
+            return;
+        }
+
+        grecaptcha.ready(function() {
+            grecaptcha.execute(siteKey, { action: 'contact' }).then(function(token) {
+                tokenField.value = token;
+                submitted = true;
+                form.submit();
+            }).catch(function() {
+                submitted = true;
+                form.submit();
+            });
+        });
     }, false);
 })();
 </script>
-
