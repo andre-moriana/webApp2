@@ -66,7 +66,7 @@
                                 <div class="club-list mt-3">
                                     <hr>
                                     <div class="text-xs font-weight-bold text-primary mb-2">Liste des comités:</div>
-                                    <ul class="list-unstyled mb-0" style="font-size: 0.85rem;">
+                                    <ul class="list-unstyled mb-0" style="font-size: 0.85rem; max-height: 300px; overflow-y: auto;">
                                         <?php if (!empty($stats['clubs_regional_list'])): ?>
                                             <?php foreach ($stats['clubs_regional_list'] as $committee): ?>
                                                 <li class="mb-1 committee-item" 
