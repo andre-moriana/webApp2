@@ -594,21 +594,16 @@ $debugLicence = isset($_GET['debug_licence']);
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
                             $piquetColorRaw = $inscription['piquet'] ?? null;
                             $piquetColor = null;
-                            $rowStyleParts = [];
+                            $rowClass = '';
+                            $dataPiquet = '';
 
-                            // Couleur de fond selon piquet (3D/Nature/Campagne)
                             if ($piquetColorRaw && $piquetColorRaw !== '') {
                                 $piquetColor = trim(strtolower($piquetColorRaw));
-                                $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
-                                if (isset($colors[$piquetColor])) {
-                                    $rowStyleParts[] = 'background-color: ' . $colors[$piquetColor] . ' !important';
-                                }
+                                $rowClass = 'piquet-' . $piquetColor;
+                                $dataPiquet = ' data-piquet="' . htmlspecialchars($piquetColor) . '"';
                             } elseif ($isNature3DOrCampagne) {
-                                // Ligne grise si aucun piquet choisi
-                                $rowStyleParts[] = 'background-color: #dee2e6 !important';
+                                $rowClass = 'piquet-manquant';
                             }
-
-                            $rowStyle = !empty($rowStyleParts) ? ' style="' . implode('; ', $rowStyleParts) . '"' : '';
                        ?>
                             <?php
                             $statut = $inscription['statut_inscription'] ?? 'en_attente';
@@ -624,8 +619,8 @@ $debugLicence = isset($_GET['debug_licence']);
                                 $statutTitle = 'En attente';
                             }
                             ?>
-                            <tr data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>"<?php if ($debugLicence): ?> data-debug-licence="<?= htmlspecialchars($inscriptionLicence) ?>" data-debug-own="<?= $isOwnInscription ? '1' : '0' ?>" data-debug-can-edit="<?= $canEditDeleteInscription ? '1' : '0' ?>"<?php endif; ?>>
-                            <td class="statut-cell"<?= $rowStyle ?>>
+                            <tr class="<?= htmlspecialchars($rowClass) ?>" data-inscription-id="<?= htmlspecialchars($inscription['id'] ?? '') ?>"<?= $dataPiquet ?><?php if ($debugLicence): ?> data-debug-licence="<?= htmlspecialchars($inscriptionLicence) ?>" data-debug-own="<?= $isOwnInscription ? '1' : '0' ?>" data-debug-can-edit="<?= $canEditDeleteInscription ? '1' : '0' ?>"<?php endif; ?>>
+                            <td class="statut-cell">
                                     <?php if ($canManageInscription): ?>
                                     <div class="dropdown statut-dropdown" data-inscription-id="<?= htmlspecialchars($inscId) ?>">
                                         <button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= htmlspecialchars($statutTitle) ?>">
@@ -642,20 +637,20 @@ $debugLicence = isset($_GET['debug_licence']);
                                     <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
                                     <?php endif; ?>
                                 </td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($userNom ?? '') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscriptionLicence ?: 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['abv_categorie_classement'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($userNom ?? '') ?></td>
+                                <td><?= htmlspecialchars($inscriptionLicence ?: 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['abv_categorie_classement'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['club_name'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <?php if ($isNature3DOrCampagne): ?>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($piquetColor ? ucfirst($piquetColor) : 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($piquetColor ? ucfirst($piquetColor) : 'N/A') ?></td>
                                 <?php else: ?>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?><?= (isset($inscription['trispot']) && $inscription['trispot']) ? ' T' : '' ?></td>
+                                    <td><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?><?= (isset($inscription['trispot']) && $inscription['trispot']) ? ' T' : '' ?></td>
                                 <?php endif; ?>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>>
+                                <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
+                                <td>
                                     <?php if ($canEditDeleteInscription): ?>
                                     <button type="button" class="btn btn-sm btn-primary me-1" onclick="editInscription(<?= (int)($inscription['id'] ?? 0) ?>)">
                                         <i class="fas fa-edit"></i>

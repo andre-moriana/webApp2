@@ -148,6 +148,30 @@
     justify-content: center;
 }
 
+/* Lignes colorées selon le piquet (page show) */
+#concours-show-page .inscriptions-section table tbody tr.piquet-rouge > td,
+#concours-show-page .inscriptions-section table tbody tr[data-piquet="rouge"] > td {
+    background-color: #ffe0e0 !important;
+    color: #212529 !important;
+}
+
+#concours-show-page .inscriptions-section table tbody tr.piquet-bleu > td,
+#concours-show-page .inscriptions-section table tbody tr[data-piquet="bleu"] > td {
+    background-color: #e0e8ff !important;
+    color: #212529 !important;
+}
+
+#concours-show-page .inscriptions-section table tbody tr.piquet-blanc > td,
+#concours-show-page .inscriptions-section table tbody tr[data-piquet="blanc"] > td {
+    background-color: #f5f5f5 !important;
+    color: #212529 !important;
+}
+
+#concours-show-page .inscriptions-section table tbody tr.piquet-manquant > td {
+    background-color: #dee2e6 !important;
+    color: #212529 !important;
+}
+
 .bottom-sections {
     margin-top: 15px;
 }
@@ -300,29 +324,81 @@
 [data-bs-theme="dark"] #concours-show-page small,
 [data-bs-theme="dark"] #concours-show-page strong,
 [data-bs-theme="dark"] #concours-show-page span,
-[data-bs-theme="dark"] #concours-show-page td,
-[data-bs-theme="dark"] #concours-show-page th,
 [data-bs-theme="dark"] #concours-show-page li,
 [data-bs-theme="dark"] #concours-show-page .text-muted,
 [data-bs-theme="dark"] #concours-show-page .form-label,
 [data-bs-theme="dark"] #concours-show-page .form-check-label {
-    color: #e5e7eb !important;
+    color: #e5e7eb;
 }
 
 [data-bs-theme="dark"] #concours-show-page .form-section,
 [data-bs-theme="dark"] #concours-show-page .inscriptions-section,
 [data-bs-theme="dark"] #concours-show-page .lien-inscription-cible-qr,
 [data-bs-theme="dark"] #concours-show-page .informations-concours-display,
-[data-bs-theme="dark"] #concours-show-page .list-group-item,
-[data-bs-theme="dark"] #concours-show-page .table,
-[data-bs-theme="dark"] #concours-show-page .table td,
-[data-bs-theme="dark"] #concours-show-page .table th,
-[data-bs-theme="dark"] #concours-show-page .table-bordered,
-[data-bs-theme="dark"] #concours-show-page .table-bordered td,
-[data-bs-theme="dark"] #concours-show-page .table-bordered th,
-[data-bs-theme="dark"] #concours-show-page .table-striped > tbody > tr:nth-of-type(odd) > * {
-    background-color: #1f2937 !important;
-    border-color: #374151 !important;
+[data-bs-theme="dark"] #concours-show-page .list-group-item {
+    background-color: #1e293b;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section h2 {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #e2e8f0;
+    --bs-table-border-color: #475569;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section .table th {
+    background-color: #1d4ed8 !important;
+    color: #f8fafc !important;
+    border-color: #475569 !important;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section .table td {
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section .table tbody tr:not([class*="piquet-"]):not([data-piquet]) > td {
+    background-color: transparent !important;
+    color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section .table-striped > tbody > tr:not([class*="piquet-"]):not([data-piquet]):nth-of-type(odd) > td {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section .table tbody tr:not([class*="piquet-"]):not([data-piquet]):hover > td {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section table tbody tr.piquet-rouge > td,
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section table tbody tr[data-piquet="rouge"] > td {
+    background-color: rgba(185, 28, 28, 0.32) !important;
+    color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section table tbody tr.piquet-bleu > td,
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section table tbody tr[data-piquet="bleu"] > td {
+    background-color: rgba(37, 99, 235, 0.32) !important;
+    color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section table tbody tr.piquet-blanc > td,
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section table tbody tr[data-piquet="blanc"] > td {
+    background-color: rgba(100, 116, 139, 0.35) !important;
+    color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] #concours-show-page .inscriptions-section table tbody tr.piquet-manquant > td {
+    background-color: rgba(71, 85, 105, 0.5) !important;
+    color: #f8fafc !important;
 }
 
 [data-bs-theme="dark"] #concours-show-page .form-group p,
@@ -331,11 +407,6 @@
     background-color: #111827 !important;
     color: #e5e7eb !important;
     border-color: #374151 !important;
-}
-
-[data-bs-theme="dark"] #concours-show-page .table th {
-    background-color: #1d4ed8 !important;
-    color: #f9fafb !important;
 }
 
 [data-bs-theme="dark"] #concours-show-page .badge.bg-secondary {
