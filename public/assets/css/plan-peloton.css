@@ -79,6 +79,7 @@
     justify-content: center;
     text-align: center;
     background: #e9ecef;
+    color: #1e293b;
     border-radius: 4px;
     padding: 0;
     font-size: 1em;
@@ -86,6 +87,35 @@
 
 .peloton-position-item.assigne .peloton-position-letter {
     background: #cfe2ff;
+    color: #1e3a8a;
+}
+
+/* Lettres de position — couleur de piquet */
+.peloton-position-letter.piquet-letter-rouge {
+    background-color: #ffe0e0;
+    color: #7f1d1d;
+}
+
+.peloton-position-letter.piquet-letter-bleu {
+    background-color: #e0e8ff;
+    color: #1e3a8a;
+}
+
+.peloton-position-letter.piquet-letter-blanc {
+    background-color: #f5f5f5;
+    color: #334155;
+}
+
+.peloton-position-item.piquet-frame-rouge {
+    border-color: #f87171 !important;
+}
+
+.peloton-position-item.piquet-frame-bleu {
+    border-color: #60a5fa !important;
+}
+
+.peloton-position-item.piquet-frame-blanc {
+    border-color: #cbd5e1 !important;
 }
 
 .peloton-position-content {
@@ -158,13 +188,45 @@
 }
 
 [data-bs-theme="dark"] .peloton-position-letter {
+    background: #475569;
+    color: #f8fafc;
+}
+
+[data-bs-theme="dark"] .peloton-position-item.libre .peloton-position-letter {
     background: #334155;
     color: #f8fafc;
 }
 
-[data-bs-theme="dark"] .peloton-position-item.assigne .peloton-position-letter {
-    background: rgba(59, 130, 246, 0.4);
+[data-bs-theme="dark"] .peloton-position-item.assigne .peloton-position-letter:not([class*="piquet-letter-"]) {
+    background: rgba(59, 130, 246, 0.45);
     color: #f8fafc;
+}
+
+[data-bs-theme="dark"] .peloton-position-letter.piquet-letter-rouge {
+    background-color: rgba(185, 28, 28, 0.55) !important;
+    color: #fecaca !important;
+}
+
+[data-bs-theme="dark"] .peloton-position-letter.piquet-letter-bleu {
+    background-color: rgba(37, 99, 235, 0.55) !important;
+    color: #bfdbfe !important;
+}
+
+[data-bs-theme="dark"] .peloton-position-letter.piquet-letter-blanc {
+    background-color: rgba(100, 116, 139, 0.65) !important;
+    color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .peloton-position-item.piquet-frame-rouge {
+    border-color: #f87171 !important;
+}
+
+[data-bs-theme="dark"] .peloton-position-item.piquet-frame-bleu {
+    border-color: #60a5fa !important;
+}
+
+[data-bs-theme="dark"] .peloton-position-item.piquet-frame-blanc {
+    border-color: #94a3b8 !important;
 }
 
 [data-bs-theme="dark"] .peloton-position-name {

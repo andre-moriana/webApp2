@@ -309,16 +309,16 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                                     }
                                     $nameTooltip = $tooltipParts ? implode(' • ', $tooltipParts) : '';
                                     $piquetVal = ($plan && isset($plan['piquet'])) ? $plan['piquet'] : null;
-                                    $piquetColor = $piquetVal && isset($piquetColors[strtolower($piquetVal)]) ? $piquetColors[strtolower($piquetVal)] : null;
-                                    $letterRectStyle = ($isAssigne && $piquetColor) ? 'background-color:' . $piquetColor . ';' : '';
-                                    $frameBorderStyle = ($isAssigne && $piquetColor) ? 'border-color:' . $piquetColor . ' !important;' : '';
+                                    $piquetKey = ($isAssigne && $piquetVal) ? strtolower(trim((string)$piquetVal)) : '';
+                                    $letterPiquetClass = ($piquetKey !== '' && isset($piquetColors[$piquetKey])) ? ' piquet-letter-' . $piquetKey : '';
+                                    $framePiquetClass = ($piquetKey !== '' && isset($piquetColors[$piquetKey])) ? ' piquet-frame-' . $piquetKey : '';
                                     $canReleaseThis = $isAssigne && ($canReleaseAsAdminOrDirigeant || (trim($plan['numero_licence'] ?? '') === ($currentUserLicence ?? '')));
                                     $noClickClass = ($isAssigne && !$canReleaseThis) ? ' blason-item-no-click' : '';
                                     $liTitle = !$isAssigne
                                         ? 'Cliquer pour assigner un archer'
                                         : ($isAssigne && !$canReleaseThis ? 'Position affectée (vous ne pouvez pas la libérer)' : '');
                                     ?>
-                                    <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?><?= $noClickClass ?>" <?= $frameBorderStyle ? 'style="' . $frameBorderStyle . '"' : '' ?>
+                                    <li class="list-group-item peloton-position-item blason-item <?= $isAssigne ? 'assigne' : 'libre' ?><?= $noClickClass ?><?= $framePiquetClass ?>"
                                         data-concours-id="<?= htmlspecialchars($concoursId) ?>"
                                         data-depart="<?= htmlspecialchars($numeroDepart) ?>"
                                         data-peloton="<?= htmlspecialchars($numeroPeloton) ?>"
@@ -328,7 +328,7 @@ $defaultPairRuleEnabled = ($savedPairRule !== null) ? (int)$savedPairRule : 1;
                                         data-assignable="<?= $isAssigne ? '0' : '1' ?>"
                                         data-piquet-souhaites="<?= htmlspecialchars($piquetSouhaitesStr) ?>"
                                         <?= $liTitle !== '' ? 'title="' . htmlspecialchars($liTitle) . '"' : '' ?>>
-                                        <span class="peloton-position-letter"<?= $letterRectStyle ? ' style="' . $letterRectStyle . '"' : '' ?>><?= htmlspecialchars($position) ?></span>
+                                        <span class="peloton-position-letter<?= $letterPiquetClass ?>"><?= htmlspecialchars($position) ?></span>
                                         <div class="peloton-position-content<?= $nameTooltip !== '' ? ' js-peloton-archer-tip' : '' ?>"
                                             <?php if ($nameTooltip !== ''): ?>data-bs-toggle="tooltip" data-bs-placement="top" data-bs-container="body" data-bs-title="<?= htmlspecialchars($nameTooltip, ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>>
                                             <span class="peloton-position-name"><?= htmlspecialchars($nomComplet) ?></span>
