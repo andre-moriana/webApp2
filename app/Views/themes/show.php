@@ -94,21 +94,39 @@ $title = "Détails du thème - Portail Arc Training";
                         </div>
                     </div>
                     
-                    <?php if (!empty($theme['colors'])): ?>
+                    <?php if (!empty($theme['colors'])): 
+                        $previewColors = $theme['colors'];
+                    ?>
                     <hr>
                     <h5>Aperçu du thème</h5>
-                    <div class="p-4 rounded theme-preview-box" style="background-color: <?php echo htmlspecialchars($theme['colors']['background'] ?? '#14532d'); ?>; color: <?php echo htmlspecialchars($theme['colors']['text'] ?? '#333333'); ?>;">
-                        <h6 style="color: <?php echo htmlspecialchars($theme['colors']['text'] ?? '#333333'); ?>;">Exemple de titre</h6>
-                        <p style="color: <?php echo htmlspecialchars($theme['colors']['textSecondary'] ?? '#666666'); ?>;">Exemple de texte secondaire</p>
-                        <div class="d-flex gap-2">
-                            <button class="btn" style="background-color: <?php echo htmlspecialchars($theme['colors']['button'] ?? '#007AFF'); ?>; color: white;">Bouton primaire</button>
-                            <button class="btn" style="background-color: <?php echo htmlspecialchars($theme['colors']['accent'] ?? '#BBCE00'); ?>; color: white;">Bouton accent</button>
+                    <p class="text-muted small mb-3">L'aperçu reflète le rendu du thème club selon le mode d'affichage du portail.</p>
+                    <div class="theme-preview-box p-4 rounded"
+                         style="--tp-primary: <?php echo htmlspecialchars($previewColors['primary'] ?? '#14532d'); ?>;
+                                --tp-secondary: <?php echo htmlspecialchars($previewColors['secondary'] ?? '#BBCE00'); ?>;
+                                --tp-background: <?php echo htmlspecialchars($previewColors['background'] ?? '#14532d'); ?>;
+                                --tp-surface: <?php echo htmlspecialchars($previewColors['surface'] ?? '#f8f9fa'); ?>;
+                                --tp-text: <?php echo htmlspecialchars($previewColors['text'] ?? '#333333'); ?>;
+                                --tp-text-secondary: <?php echo htmlspecialchars($previewColors['textSecondary'] ?? '#666666'); ?>;
+                                --tp-accent: <?php echo htmlspecialchars($previewColors['accent'] ?? '#BBCE00'); ?>;
+                                --tp-button: <?php echo htmlspecialchars($previewColors['button'] ?? '#007AFF'); ?>;
+                                --tp-success: <?php echo htmlspecialchars($previewColors['success'] ?? '#22c55e'); ?>;
+                                --tp-warning: <?php echo htmlspecialchars($previewColors['warning'] ?? '#f59e0b'); ?>;
+                                --tp-error: <?php echo htmlspecialchars($previewColors['error'] ?? '#dc2626'); ?>;
+                                --tp-info: <?php echo htmlspecialchars($previewColors['info'] ?? '#3b82f6'); ?>;">
+                        <h6 class="theme-preview-title">Exemple de titre</h6>
+                        <p class="theme-preview-subtitle mb-3">Exemple de texte secondaire</p>
+                        <div class="theme-preview-surface p-3 rounded mb-3">
+                            <span class="theme-preview-surface-label">Zone surface</span>
                         </div>
-                        <div class="mt-3">
-                            <span class="badge me-2" style="background-color: <?php echo htmlspecialchars($theme['colors']['success'] ?? '#22c55e'); ?>;">Succès</span>
-                            <span class="badge me-2" style="background-color: <?php echo htmlspecialchars($theme['colors']['warning'] ?? '#f59e0b'); ?>;">Avertissement</span>
-                            <span class="badge me-2" style="background-color: <?php echo htmlspecialchars($theme['colors']['error'] ?? '#dc2626'); ?>;">Erreur</span>
-                            <span class="badge me-2" style="background-color: <?php echo htmlspecialchars($theme['colors']['info'] ?? '#3b82f6'); ?>;">Information</span>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn theme-preview-btn theme-preview-btn-primary">Bouton primaire</button>
+                            <button type="button" class="btn theme-preview-btn theme-preview-btn-accent">Bouton accent</button>
+                        </div>
+                        <div class="mt-3 d-flex gap-2 flex-wrap">
+                            <span class="badge theme-preview-badge theme-preview-badge-success">Succès</span>
+                            <span class="badge theme-preview-badge theme-preview-badge-warning">Avertissement</span>
+                            <span class="badge theme-preview-badge theme-preview-badge-error">Erreur</span>
+                            <span class="badge theme-preview-badge theme-preview-badge-info">Information</span>
                         </div>
                     </div>
                     <?php endif; ?>
