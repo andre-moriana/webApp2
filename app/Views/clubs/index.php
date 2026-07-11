@@ -1,9 +1,8 @@
 <?php
 $title = "Gestion des clubs - Portail Arc Training";
 ?>
-<link href="/public/assets/css/clubs-index.css" rel="stylesheet">
 
-<div class="container-fluid">
+<div class="container-fluid clubs-page">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">

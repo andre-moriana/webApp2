@@ -23,6 +23,7 @@ class ClubImportController {
         }
         
         $title = 'Import de clubs depuis XML - Portail Arc Training';
+        $additionalCSS = ['/public/assets/css/clubs-form.css'];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/clubs/import.php';

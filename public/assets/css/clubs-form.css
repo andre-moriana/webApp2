@@ -1,0 +1,14 @@
+/* Formulaires clubs (création, édition, import) */
+
+[data-bs-theme="dark"] .clubs-page .form-label {
+    color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .clubs-page pre code {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .clubs-page .card-header.bg-primary {
+    background-color: #14532d !important;
+    border-bottom-color: #166534;
+}

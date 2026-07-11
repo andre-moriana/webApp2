@@ -1,10 +1,8 @@
 <?php
 $title = "Creer un nouveau club - Portail Arc Training";
-$additionalJS = $additionalJS ?? [];
-$additionalJS[] = '/public/assets/js/clubs-form.js';
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid clubs-page">
     <div class="row">
         <div class="col-12">
             <div class="card">

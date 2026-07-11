@@ -1,11 +1,7 @@
 <?php
-$additionalCSS = $additionalCSS ?? [];
-$additionalCSS[] = '/public/assets/css/club-permissions.css';
-$additionalJS = $additionalJS ?? [];
-$additionalJS[] = '/public/assets/js/club-permissions.js';
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid clubs-page">
     <div class="row">
         <div class="col-12">
             <nav aria-label="breadcrumb">

@@ -47,7 +47,8 @@ class ClubController {
 
         $title = 'Gestion des clubs - Portail Arc Training';
         
-        // Définir les fichiers JS spécifiques
+        // Définir les fichiers JS et CSS spécifiques
+        $additionalCSS = ['/public/assets/css/clubs-index.css'];
         $additionalJS = ['/public/assets/js/clubs-table.js'];
         
         include 'app/Views/layouts/header.php';
@@ -81,6 +82,8 @@ class ClubController {
         }
 
         $title = 'Créer un club - Portail  Arc Training';
+        $additionalCSS = ['/public/assets/css/clubs-form.css'];
+        $additionalJS = ['/public/assets/js/clubs-form.js'];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/clubs/create.php';
@@ -187,6 +190,8 @@ class ClubController {
         }
 
         $title = 'Détails du club - ' . htmlspecialchars($club['name'] ?? 'Club');
+        $additionalCSS = ['/public/assets/css/clubs-show.css'];
+        $additionalJS = ['/public/assets/js/clubs-show.js'];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/clubs/show.php';
@@ -244,6 +249,11 @@ class ClubController {
         }
 
         $title = 'Modifier le club - ' . htmlspecialchars($club['name'] ?? 'Club');
+        $additionalCSS = [
+            '/public/assets/css/clubs-show.css',
+            '/public/assets/css/clubs-form.css'
+        ];
+        $additionalJS = ['/public/assets/js/clubs-form.js'];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/clubs/edit.php';

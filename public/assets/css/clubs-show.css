@@ -1,6 +1,33 @@
 /* Styles spécifiques à la page de détails du club (clubs/show) */
 
-/* Exemple : ajuster l'espacement des tables */
 .table-sm td {
     vertical-align: middle;
+}
+
+/* Mode sombre */
+[data-bs-theme="dark"] .clubs-page .table-sm td,
+[data-bs-theme="dark"] .clubs-page .table-sm th {
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+[data-bs-theme="dark"] .clubs-page .table-sm a {
+    color: #86efac;
+}
+
+[data-bs-theme="dark"] .clubs-page .table-sm a:hover {
+    color: #bbf7d0;
+}
+
+[data-bs-theme="dark"] .clubs-page .btn-outline-info {
+    --bs-btn-color: #67e8f9;
+    --bs-btn-border-color: #22d3ee;
+    --bs-btn-hover-color: #0f172a;
+    --bs-btn-hover-bg: #67e8f9;
+    --bs-btn-hover-border-color: #67e8f9;
+}
+
+[data-bs-theme="dark"] .clubs-page .club-logo-preview {
+    border-color: #475569 !important;
+    background-color: #1e293b;
 }

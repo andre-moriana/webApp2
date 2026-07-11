@@ -1,10 +1,8 @@
 <?php
 $title = "Modifier le club - Portail Arc Training";
-$additionalJS = $additionalJS ?? [];
-$additionalJS[] = '/public/assets/js/clubs-form.js';
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid clubs-page">
     <div class="row justify-content-center">
         <div class="col-md-10">
             <div class="card">
@@ -118,6 +116,7 @@ $additionalJS[] = '/public/assets/js/clubs-form.js';
                                 <div class="mb-2">
                                     <img src="<?php echo htmlspecialchars($logoUrl); ?>" 
                                          alt="Logo actuel" 
+                                         class="club-logo-preview"
                                          style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px; padding: 5px; object-fit: contain;">
                                     <br>
                                     <small class="text-muted">Logo actuel</small>

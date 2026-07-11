@@ -2,7 +2,7 @@
 $title = "Import de clubs depuis XML - Portail Arc Training";
 ?>
 
-<div class="container mt-4">
+<div class="container mt-4 clubs-page">
     <div class="row">
         <div class="col-md-10 offset-md-1">
             <div class="card">

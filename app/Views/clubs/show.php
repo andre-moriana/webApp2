@@ -1,14 +1,8 @@
 <?php
 $title = "Details du club - " . htmlspecialchars($club['name'] ?? 'Club');
 ?>
-<?php
-$additionalCSS = $additionalCSS ?? [];
-$additionalCSS[] = '/public/assets/css/clubs-show.css';
-$additionalJS = $additionalJS ?? [];
-$additionalJS[] = '/public/assets/js/clubs-show.js';
-?>
 
-<div class="container-fluid">
+<div class="container-fluid clubs-page">
     <div class="row justify-content-center">
         <div class="col-md-10">
             <?php if (!$club || empty($club)): ?>

@@ -55,3 +55,64 @@
         margin-bottom: 1rem;
     }
 }
+
+/* Mode sombre */
+[data-bs-theme="dark"] .sortable:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-bs-theme="dark"] .clubs-page h1,
+[data-bs-theme="dark"] .clubs-page h2,
+[data-bs-theme="dark"] .clubs-page h4,
+[data-bs-theme="dark"] .clubs-page h5,
+[data-bs-theme="dark"] .clubs-page h6,
+[data-bs-theme="dark"] .clubs-page .card-title {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .clubs-page .card-header .form-check {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-bs-theme="dark"] .clubs-page .card-header .form-check:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+}
+
+[data-bs-theme="dark"] .clubs-page .card-header .form-check-label {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .clubs-page .input-group-text {
+    background-color: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .clubs-page .sort-asc,
+[data-bs-theme="dark"] .clubs-page .sort-desc {
+    color: #86efac;
+}
+
+[data-bs-theme="dark"] .clubs-page #clubsTable a {
+    color: #86efac;
+}
+
+[data-bs-theme="dark"] .clubs-page #clubsTable a:hover {
+    color: #bbf7d0;
+}
+
+[data-bs-theme="dark"] .clubs-page .btn-outline-primary {
+    --bs-btn-color: #86efac;
+    --bs-btn-border-color: #22c55e;
+    --bs-btn-hover-color: #0f172a;
+    --bs-btn-hover-bg: #86efac;
+    --bs-btn-hover-border-color: #86efac;
+}
+
+[data-bs-theme="dark"] .clubs-page .btn-outline-secondary {
+    --bs-btn-color: #cbd5e1;
+    --bs-btn-border-color: #64748b;
+    --bs-btn-hover-color: #0f172a;
+    --bs-btn-hover-bg: #cbd5e1;
+    --bs-btn-hover-border-color: #cbd5e1;
+}
