@@ -1,4 +1,4 @@
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 private-messages-page">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -225,20 +225,6 @@
         </div>
     </div>
 </div>
-
-<style>
-    /* Style pour la conversation active */
-    .conversation-item.active {
-        background-color: #d4edda;
-        border-left: 4px solid #198754;
-    
-    }
-    
-    /* Style pour le hover */
-    .conversation-item:hover {
-        background-color: #f8f9fa;
-    }
-</style>
 
 <script>
     // Passer les données PHP au JavaScript

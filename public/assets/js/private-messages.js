@@ -391,12 +391,11 @@ function createMessageElement(message) {
     
     div.innerHTML = `
         <div class="d-flex ${isOwnMessage ? 'flex-row-reverse' : ''}">
-            <div class="message-bubble ${isOwnMessage ? 'bg-success text-white' : 'bg-light'}" 
-                 style="max-width: 70%; padding: 10px; border-radius: 10px;">
+            <div class="message-bubble ${isOwnMessage ? 'message-bubble-own' : 'message-bubble-other'}">
                 ${!isOwnMessage ? `<div class="message-author fw-bold small mb-1">${message.author.name}</div>` : ''}
                 <div class="message-content">${escapeHtml(message.content)}</div>
                 ${attachmentHtml}
-                <div class="message-time text-end small mt-1" style="opacity: 0.7;">
+                <div class="message-time text-end small mt-1">
                     ${timeStr}
                 </div>
             </div>

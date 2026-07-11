@@ -30,7 +30,10 @@ class PrivateMessagesController {
         $users = $this->getAllUsers();
         
         // Définir les fichiers CSS et JS spécifiques
-        $additionalCSS = ['/public/assets/css/chat-messages.css'];
+        $additionalCSS = [
+            '/public/assets/css/chat-messages.css',
+            '/public/assets/css/private-messages.css'
+        ];
         $additionalJS = ['/public/assets/js/private-messages.js'];
         
         // Inclure le header

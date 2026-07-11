@@ -1,0 +1,188 @@
+/* Page messages privés */
+
+.conversation-item.active {
+    background-color: #d4edda;
+    border-left: 4px solid #198754;
+}
+
+.conversation-item:hover {
+    background-color: #f8f9fa;
+}
+
+#messages-container {
+    background-color: #fff;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 10px;
+    word-wrap: break-word;
+}
+
+.message-bubble-own {
+    background-color: #198754;
+    color: #fff;
+}
+
+.message-bubble-other {
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #dee2e6;
+}
+
+.message-bubble-other .message-author {
+    color: #14532d;
+}
+
+.message-bubble .message-time {
+    opacity: 0.7;
+}
+
+/* Mode sombre */
+[data-bs-theme="dark"] .private-messages-page h2 {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .private-messages-page .card {
+    background-color: #1e293b;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .private-messages-page .card-header.bg-success {
+    background-color: #166534 !important;
+    border-bottom-color: #14532d;
+}
+
+[data-bs-theme="dark"] .private-messages-page .card-footer {
+    background-color: #1e293b;
+    border-top-color: #475569;
+}
+
+[data-bs-theme="dark"] .private-messages-page .list-group-item {
+    background-color: #1e293b;
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+[data-bs-theme="dark"] .private-messages-page .list-group-item-action:hover,
+[data-bs-theme="dark"] .private-messages-page .list-group-item-action:focus {
+    background-color: #334155;
+    color: #f8fafc;
+}
+
+[data-bs-theme="dark"] .private-messages-page .conversation-item.active {
+    background-color: rgba(34, 197, 94, 0.2);
+    border-left-color: #22c55e;
+    color: #f8fafc;
+}
+
+[data-bs-theme="dark"] .private-messages-page .conversation-item:hover {
+    background-color: #334155;
+}
+
+[data-bs-theme="dark"] .private-messages-page .conversation-item .text-muted,
+[data-bs-theme="dark"] .private-messages-page .text-muted {
+    color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .private-messages-page .conversation-item h6 {
+    color: #f8fafc;
+}
+
+[data-bs-theme="dark"] #messages-container {
+    background-color: #0f172a;
+}
+
+[data-bs-theme="dark"] .private-messages-page .form-control {
+    background-color: #0f172a;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .private-messages-page .form-control:focus {
+    background-color: #0f172a;
+    border-color: #22c55e;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .message-bubble-own {
+    background-color: #15803d;
+    color: #f8fafc;
+}
+
+[data-bs-theme="dark"] .message-bubble-other {
+    background-color: #334155;
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+[data-bs-theme="dark"] .message-bubble-other .message-author {
+    color: #86efac;
+}
+
+[data-bs-theme="dark"] .message-bubble .message-time {
+    color: rgba(248, 250, 252, 0.75);
+}
+
+[data-bs-theme="dark"] .message-bubble-other .message-time {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .message-bubble .btn-outline-secondary {
+    --bs-btn-color: #cbd5e1;
+    --bs-btn-border-color: #64748b;
+    --bs-btn-hover-color: #0f172a;
+    --bs-btn-hover-bg: #cbd5e1;
+    --bs-btn-hover-border-color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] #newConversationModal .modal-content {
+    background-color: #1e293b;
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+[data-bs-theme="dark"] #newConversationModal .modal-header.bg-success {
+    background-color: #166534 !important;
+}
+
+[data-bs-theme="dark"] #newConversationModal .form-label {
+    color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .private-messages-page .card-body {
+    background-color: #1e293b;
+}
+
+[data-bs-theme="dark"] .private-messages-page .text-secondary {
+    color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .private-messages-page .btn-outline-secondary {
+    --bs-btn-color: #cbd5e1;
+    --bs-btn-border-color: #64748b;
+    --bs-btn-hover-color: #0f172a;
+    --bs-btn-hover-bg: #cbd5e1;
+    --bs-btn-hover-border-color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .message-bubble .img-thumbnail {
+    background-color: #1e293b;
+    border-color: #475569;
+}
+
+[data-bs-theme="dark"] #newConversationModal .modal-body {
+    background-color: #1e293b;
+}
+
+[data-bs-theme="dark"] #newConversationModal .list-group-item {
+    background-color: #1e293b;
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+[data-bs-theme="dark"] #newConversationModal .list-group-item-action:hover {
+    background-color: #334155;
+}
