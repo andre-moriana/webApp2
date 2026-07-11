@@ -2039,19 +2039,13 @@ function renderInscriptions(inscriptions) {
         const piquetColorRaw = inscription.piquet || null;
         let rowClass = '';
         let dataPiquet = '';
-        let rowStyle = '';
 
         if (piquetColorRaw && piquetColorRaw !== '') {
             const piquetColor = piquetColorRaw.trim().toLowerCase();
             rowClass = 'piquet-' + piquetColor;
             dataPiquet = ' data-piquet="' + piquetColor + '"';
-            const colors = { rouge: '#ffe0e0', bleu: '#e0e8ff', blanc: '#f5f5f5' };
-            if (colors[piquetColor]) {
-                rowStyle = ' style="background-color: ' + colors[piquetColor] + ' !important;"';
-            }
         } else if (isNature) {
             rowClass = 'piquet-manquant';
-            rowStyle = ' style="background-color: #dee2e6 !important;"';
         }
 
         const inscriptionLicence = (inscription.numero_licence || '').toString().trim();
@@ -2081,7 +2075,7 @@ function renderInscriptions(inscriptions) {
 
         let statutCell;
         if (canManageInscription) {
-            statutCell = '<td class="statut-cell"' + rowStyle + '>' +
+            statutCell = '<td class="statut-cell">' +
                 '<div class="dropdown statut-dropdown" data-inscription-id="' + escapeHtml(String(id)) + '">' +
                 '<button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="' + escapeHtml(statutTitle) + '">' +
                 '<i class="fas ' + statutIconClass + '"></i>' +
@@ -2093,7 +2087,7 @@ function renderInscriptions(inscriptions) {
                 '<li><a class="dropdown-item statut-dropdown-item" href="#" data-statut="annule" data-inscription-id="' + escapeHtml(String(id)) + '"><i class="fas fa-times-circle text-danger me-2"></i>Annulée</a></li>' +
                 '</ul></div></td>';
         } else {
-            statutCell = '<td class="statut-cell"' + rowStyle + '><span title="' + escapeHtml(statutTitle) + '"><i class="fas ' + statutIconClass + '"></i></span></td>';
+            statutCell = '<td class="statut-cell"><span title="' + escapeHtml(statutTitle) + '"><i class="fas ' + statutIconClass + '"></i></span></td>';
         }
 
         let actionsCellParts = [];
@@ -2111,25 +2105,25 @@ function renderInscriptions(inscriptions) {
 
         let cells = [
             statutCell,
-            '<td' + rowStyle + '>' + escapeHtml(inscription.user_nom || 'N/A') + '</td>',
-            '<td' + rowStyle + '>' + escapeHtml(inscription.numero_licence || 'N/A') + '</td>',
-            '<td' + rowStyle + '>' + escapeHtml(inscription.abv_categorie_classement || 'N/A') + '</td>',
-            '<td' + rowStyle + '>' + escapeHtml(clubDisplay) + '</td>',
-            '<td' + rowStyle + '>' + escapeHtml(String(inscription.numero_depart ?? 'N/A')) + '</td>',
-            '<td' + rowStyle + '>' + escapeHtml(String(inscription.numero_tir ?? 'N/A')) + '</td>'
+            '<td>' + escapeHtml(inscription.user_nom || 'N/A') + '</td>',
+            '<td>' + escapeHtml(inscription.numero_licence || 'N/A') + '</td>',
+            '<td>' + escapeHtml(inscription.abv_categorie_classement || 'N/A') + '</td>',
+            '<td>' + escapeHtml(clubDisplay) + '</td>',
+            '<td>' + escapeHtml(String(inscription.numero_depart ?? 'N/A')) + '</td>',
+            '<td>' + escapeHtml(String(inscription.numero_tir ?? 'N/A')) + '</td>'
         ];
 
         if (isNature) {
-            cells.push('<td class="piquet-value"' + rowStyle + '>' + escapeHtml(piquetDisplay) + '</td>');
+            cells.push('<td class="piquet-value">' + escapeHtml(piquetDisplay) + '</td>');
         } else {
-            cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.distance ?? 'N/A')) + '</td>');
-            cells.push('<td' + rowStyle + '>' + escapeHtml(String(inscription.blason ?? 'N/A')) + '</td>');
+            cells.push('<td>' + escapeHtml(String(inscription.distance ?? 'N/A')) + '</td>');
+            cells.push('<td>' + escapeHtml(String(inscription.blason ?? 'N/A')) + '</td>');
         }
 
-        cells.push('<td' + rowStyle + '>' + escapeHtml(dateDisplay) + '</td>');
-        cells.push('<td' + rowStyle + '>' + actionsCell + '</td>');
+        cells.push('<td>' + escapeHtml(dateDisplay) + '</td>');
+        cells.push('<td>' + actionsCell + '</td>');
 
-        return '<tr data-inscription-id="' + id + '" class="' + rowClass + '"' + dataPiquet + rowStyle + '>' + cells.join('') + '</tr>';
+        return '<tr data-inscription-id="' + id + '" class="' + rowClass + '"' + dataPiquet + '>' + cells.join('') + '</tr>';
     });
 
     tbody.innerHTML = rows.join('');

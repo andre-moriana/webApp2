@@ -274,25 +274,15 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                             // Récupérer la couleur du piquet pour les disciplines 3D, Nature et Campagne
                             $piquetColorRaw = $inscription['piquet'] ?? null;
                             $piquetColor = null;
-                            $rowStyle = '';
+                            $rowClass = '';
+                            $dataPiquet = '';
                             
                             if ($piquetColorRaw && $piquetColorRaw !== '') {
                                 $piquetColor = trim(strtolower($piquetColorRaw));
                                 $rowClass = 'piquet-' . $piquetColor;
                                 $dataPiquet = ' data-piquet="' . htmlspecialchars($piquetColor) . '"';
-                                
-                                // Appliquer le style inline
-                                $colors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
-                                if (isset($colors[$piquetColor])) {
-                                    $rowStyle = ' style="background-color: ' . $colors[$piquetColor] . ' !important;"';
-                                }
                             } elseif ($isNature3DOrCampagne) {
                                 $rowClass = 'piquet-manquant';
-                                $dataPiquet = '';
-                                $rowStyle = ' style="background-color: #dee2e6 !important;"';
-                            } else {
-                                $rowClass = '';
-                                $dataPiquet = '';
                             }
                         ?>
                             <?php
@@ -309,8 +299,8 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                 $statutTitle = 'En attente';
                             }
                             ?>
-                            <tr data-inscription-id="<?= htmlspecialchars($inscId) ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?><?= $rowStyle ?>>
-                                <td class="statut-cell"<?= $rowStyle ?>>
+                            <tr data-inscription-id="<?= htmlspecialchars($inscId) ?>" class="<?= htmlspecialchars($rowClass) ?>"<?= $dataPiquet ?>>
+                                <td class="statut-cell">
                                     <?php if ($canManageInscription): ?>
                                     <div class="dropdown statut-dropdown" data-inscription-id="<?= htmlspecialchars($inscId) ?>">
                                         <button class="btn btn-link p-0 border-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= htmlspecialchars($statutTitle) ?>">
@@ -327,31 +317,31 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                     <span title="<?= htmlspecialchars($statutTitle) ?>"><i class="fas <?= $statutIcon ?>"></i></span>
                                     <?php endif; ?>
                                 </td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['user_nom'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['abv_categorie_classement'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>>
+                                <td><?= htmlspecialchars($inscription['user_nom'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['numero_licence'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['abv_categorie_classement'] ?? 'N/A') ?></td>
+                                <td>
                                     <?php 
                                     // Afficher le nom du club (lié à id_club), sinon id_club en fallback
                                     $clubDisplay = $inscription['club_name'] ?? $inscription['id_club'] ?? null;
                                     echo htmlspecialchars($clubDisplay ?? 'N/A');
                                     ?>
                                 </td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['numero_depart'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($inscription['numero_tir'] ?? 'N/A') ?></td>
                                 <?php if ($isNature3DOrCampagne): ?>
                                     <?php 
                                     // Récupérer la couleur du piquet pour l'affichage
                                     $piquetDisplay = $inscription['piquet'] ?? null;
                                     $piquetDisplay = $piquetDisplay ? ucfirst(trim(strtolower($piquetDisplay))) : 'N/A';
                                     ?>
-                                    <td class="piquet-value"<?= $rowStyle ?>><?= htmlspecialchars($piquetDisplay) ?></td>
+                                    <td class="piquet-value"><?= htmlspecialchars($piquetDisplay) ?></td>
                                 <?php else: ?>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
-                                    <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($inscription['distance'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($inscription['blason'] ?? 'N/A') ?></td>
                                 <?php endif; ?>
-                                <td<?= $rowStyle ?>><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
-                                <td<?= $rowStyle ?>>
+                                <td><?= htmlspecialchars($inscription['created_at'] ?? $inscription['date_inscription'] ?? 'N/A') ?></td>
+                                <td>
                                     <?php if ($canManageInscription): ?>
                                     <button type="button" class="btn btn-sm btn-warning me-1" onclick="resendInscriptionConfirmationEmail(<?= htmlspecialchars($inscription['id'] ?? '') ?>)" title="Renvoyer l'email de confirmation">
                                         <i class="fas fa-paper-plane"></i>

@@ -193,35 +193,50 @@
     border-color: #14532d;
 }
 
-/* FORCER les couleurs de piquet - Spécificité maximale */
-#inscriptions-table tbody tr[data-piquet="rouge"],
-#inscriptions-table tbody tr.piquet-rouge,
-table.table tbody tr[data-piquet="rouge"],
-table.table tbody tr.piquet-rouge,
-table tbody tr[data-piquet="rouge"],
-table tbody tr.piquet-rouge {
+/* Couleurs de piquet sur les cellules du tableau */
+#inscriptions-table tbody tr.piquet-rouge > td,
+#inscriptions-table tbody tr[data-piquet="rouge"] > td,
+.inscriptions-section table tbody tr.piquet-rouge > td,
+.inscriptions-section table tbody tr[data-piquet="rouge"] > td {
     background-color: #ffe0e0 !important;
-    background: #ffe0e0 !important;
+    color: #212529 !important;
 }
 
-#inscriptions-table tbody tr[data-piquet="bleu"],
-#inscriptions-table tbody tr.piquet-bleu,
-table.table tbody tr[data-piquet="bleu"],
-table.table tbody tr.piquet-bleu,
-table tbody tr[data-piquet="bleu"],
-table tbody tr.piquet-bleu {
+#inscriptions-table tbody tr.piquet-bleu > td,
+#inscriptions-table tbody tr[data-piquet="bleu"] > td,
+.inscriptions-section table tbody tr.piquet-bleu > td,
+.inscriptions-section table tbody tr[data-piquet="bleu"] > td {
     background-color: #e0e8ff !important;
-    background: #e0e8ff !important;
+    color: #212529 !important;
 }
 
-#inscriptions-table tbody tr[data-piquet="blanc"],
-#inscriptions-table tbody tr.piquet-blanc,
-table.table tbody tr[data-piquet="blanc"],
-table.table tbody tr.piquet-blanc,
-table tbody tr[data-piquet="blanc"],
-table tbody tr.piquet-blanc {
+#inscriptions-table tbody tr.piquet-blanc > td,
+#inscriptions-table tbody tr[data-piquet="blanc"] > td,
+.inscriptions-section table tbody tr.piquet-blanc > td,
+.inscriptions-section table tbody tr[data-piquet="blanc"] > td {
     background-color: #f5f5f5 !important;
-    background: #f5f5f5 !important;
+    color: #212529 !important;
+}
+
+#inscriptions-table tbody tr.piquet-manquant > td,
+.inscriptions-section table tbody tr.piquet-manquant > td {
+    background-color: #dee2e6 !important;
+    color: #212529 !important;
+}
+
+#inscriptions-table tbody tr.piquet-rouge:hover > td,
+.inscriptions-section table tbody tr.piquet-rouge:hover > td {
+    background-color: #ffcccc !important;
+}
+
+#inscriptions-table tbody tr.piquet-bleu:hover > td,
+.inscriptions-section table tbody tr.piquet-bleu:hover > td {
+    background-color: #ccd9ff !important;
+}
+
+#inscriptions-table tbody tr.piquet-blanc:hover > td,
+.inscriptions-section table tbody tr.piquet-blanc:hover > td {
+    background-color: #e8e8e8 !important;
 }
 
 /* Centrer l'icône de statut et style du dropdown */
@@ -241,51 +256,6 @@ table tbody tr.piquet-blanc {
 }
 #inscriptions-table .statut-dropdown .btn-link {
     cursor: pointer;
-}
-
-/* Styles pour les lignes colorées selon la couleur du piquet (disciplines 3D, Nature et Campagne) */
-/* Styles pour toutes les tables, avec ou sans table-striped */
-#inscriptions-table tbody tr.piquet-rouge,
-#inscriptions-table tbody tr.piquet-rouge:nth-child(odd),
-#inscriptions-table tbody tr.piquet-rouge:nth-child(even),
-table.table tbody tr.piquet-rouge,
-table.table tbody tr.piquet-rouge:nth-child(odd),
-table.table tbody tr.piquet-rouge:nth-child(even) {
-    background-color: #ffe0e0 !important; /* Rouge pastel */
-}
-
-#inscriptions-table tbody tr.piquet-bleu,
-#inscriptions-table tbody tr.piquet-bleu:nth-child(odd),
-#inscriptions-table tbody tr.piquet-bleu:nth-child(even),
-table.table tbody tr.piquet-bleu,
-table.table tbody tr.piquet-bleu:nth-child(odd),
-table.table tbody tr.piquet-bleu:nth-child(even) {
-    background-color: #e0e8ff !important; /* Bleu pastel */
-}
-
-#inscriptions-table tbody tr.piquet-blanc,
-#inscriptions-table tbody tr.piquet-blanc:nth-child(odd),
-#inscriptions-table tbody tr.piquet-blanc:nth-child(even),
-table.table tbody tr.piquet-blanc,
-table.table tbody tr.piquet-blanc:nth-child(odd),
-table.table tbody tr.piquet-blanc:nth-child(even) {
-    background-color: #f5f5f5 !important; /* Blanc/Gris très clair pastel */
-}
-
-/* Assurer que les lignes colorées restent visibles au survol */
-#inscriptions-table tbody tr.piquet-rouge:hover,
-table.table tbody tr.piquet-rouge:hover {
-    background-color: #ffcccc !important;
-}
-
-#inscriptions-table tbody tr.piquet-bleu:hover,
-table.table tbody tr.piquet-bleu:hover {
-    background-color: #ccd9ff !important;
-}
-
-#inscriptions-table tbody tr.piquet-blanc:hover,
-table.table tbody tr.piquet-blanc:hover {
-    background-color: #e8e8e8 !important;
 }
 
 /* Styles pour les types de licences non valides */
@@ -483,58 +453,59 @@ select.categorie-auto-selected {
     color: #e2e8f0;
 }
 
-[data-bs-theme="dark"] .inscriptions-section .table tbody tr:not([class*="piquet-"]):not([data-piquet]) {
+[data-bs-theme="dark"] .inscriptions-section .table tbody tr:not([class*="piquet-"]):not([data-piquet]) > td {
     background-color: transparent;
+    color: #e2e8f0;
 }
 
-[data-bs-theme="dark"] .inscriptions-section .table tbody tr:not([class*="piquet-"]):not([data-piquet]):hover > * {
+[data-bs-theme="dark"] .inscriptions-section .table tbody tr:not([class*="piquet-"]):not([data-piquet]):hover > td {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Piquets : teintes adaptées au mode sombre (écrase les pastels clairs) */
-[data-bs-theme="dark"] #inscriptions-table tbody tr[data-piquet="rouge"],
-[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-rouge,
-[data-bs-theme="dark"] .inscriptions-section table tbody tr[data-piquet="rouge"],
-[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-rouge {
-    background-color: rgba(185, 28, 28, 0.28) !important;
-    background: rgba(185, 28, 28, 0.28) !important;
+/* Piquets : teintes et texte adaptés au mode sombre */
+[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-rouge > td,
+[data-bs-theme="dark"] #inscriptions-table tbody tr[data-piquet="rouge"] > td,
+[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-rouge > td,
+[data-bs-theme="dark"] .inscriptions-section table tbody tr[data-piquet="rouge"] > td {
+    background-color: rgba(185, 28, 28, 0.32) !important;
+    color: #f8fafc !important;
 }
 
-[data-bs-theme="dark"] #inscriptions-table tbody tr[data-piquet="bleu"],
-[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-bleu,
-[data-bs-theme="dark"] .inscriptions-section table tbody tr[data-piquet="bleu"],
-[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-bleu {
-    background-color: rgba(37, 99, 235, 0.28) !important;
-    background: rgba(37, 99, 235, 0.28) !important;
+[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-bleu > td,
+[data-bs-theme="dark"] #inscriptions-table tbody tr[data-piquet="bleu"] > td,
+[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-bleu > td,
+[data-bs-theme="dark"] .inscriptions-section table tbody tr[data-piquet="bleu"] > td {
+    background-color: rgba(37, 99, 235, 0.32) !important;
+    color: #f8fafc !important;
 }
 
-[data-bs-theme="dark"] #inscriptions-table tbody tr[data-piquet="blanc"],
-[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-blanc,
-[data-bs-theme="dark"] .inscriptions-section table tbody tr[data-piquet="blanc"],
-[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-blanc {
-    background-color: rgba(148, 163, 184, 0.22) !important;
-    background: rgba(148, 163, 184, 0.22) !important;
+[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-blanc > td,
+[data-bs-theme="dark"] #inscriptions-table tbody tr[data-piquet="blanc"] > td,
+[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-blanc > td,
+[data-bs-theme="dark"] .inscriptions-section table tbody tr[data-piquet="blanc"] > td {
+    background-color: rgba(100, 116, 139, 0.35) !important;
+    color: #f8fafc !important;
 }
 
-[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-manquant,
-[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-manquant {
-    background-color: rgba(71, 85, 105, 0.45) !important;
-    background: rgba(71, 85, 105, 0.45) !important;
+[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-manquant > td,
+[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-manquant > td {
+    background-color: rgba(71, 85, 105, 0.5) !important;
+    color: #f8fafc !important;
 }
 
-[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-rouge:hover,
-[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-rouge:hover {
-    background-color: rgba(185, 28, 28, 0.38) !important;
+[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-rouge:hover > td,
+[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-rouge:hover > td {
+    background-color: rgba(185, 28, 28, 0.42) !important;
 }
 
-[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-bleu:hover,
-[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-bleu:hover {
-    background-color: rgba(37, 99, 235, 0.38) !important;
+[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-bleu:hover > td,
+[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-bleu:hover > td {
+    background-color: rgba(37, 99, 235, 0.42) !important;
 }
 
-[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-blanc:hover,
-[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-blanc:hover {
-    background-color: rgba(148, 163, 184, 0.32) !important;
+[data-bs-theme="dark"] #inscriptions-table tbody tr.piquet-blanc:hover > td,
+[data-bs-theme="dark"] .inscriptions-section table tbody tr.piquet-blanc:hover > td {
+    background-color: rgba(100, 116, 139, 0.45) !important;
 }
 
 [data-bs-theme="dark"] .search-section,
