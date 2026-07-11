@@ -2,7 +2,7 @@
 $title = "Modifier le thème - Portail Arc Training";
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid themes-page">
     <div class="row justify-content-center">
         <div class="col-md-10">
             <div class="card">

@@ -38,6 +38,7 @@ class ThemeController {
         }
 
         $title = 'Gestion des thèmes - Portail Arc Training';
+        $additionalCSS = ['/public/assets/css/themes.css'];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/themes/index.php';
@@ -58,6 +59,7 @@ class ThemeController {
         }
 
         $title = 'Créer un thème - Portail Arc Training';
+        $additionalCSS = ['/public/assets/css/themes.css'];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/themes/create.php';
@@ -184,6 +186,7 @@ class ThemeController {
         }
 
         $title = 'Détails du thème - ' . htmlspecialchars($theme['name'] ?? 'Thème');
+        $additionalCSS = ['/public/assets/css/themes.css'];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/themes/show.php';
@@ -241,6 +244,7 @@ class ThemeController {
         }
 
         $title = 'Modifier le thème - ' . htmlspecialchars($theme['name'] ?? 'Thème');
+        $additionalCSS = ['/public/assets/css/themes.css'];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/themes/edit.php';

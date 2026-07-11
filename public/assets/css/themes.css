@@ -1,0 +1,123 @@
+/* Gestion des thèmes club (palettes) */
+
+.theme-color-swatch {
+    display: inline-block;
+    flex-shrink: 0;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.theme-color-swatch--sm {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.theme-color-swatch--md {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+}
+
+.theme-preview-box {
+    border: 1px solid var(--app-border-color);
+}
+
+/* Mode sombre */
+[data-bs-theme="dark"] .themes-page h1,
+[data-bs-theme="dark"] .themes-page h4,
+[data-bs-theme="dark"] .themes-page h5,
+[data-bs-theme="dark"] .themes-page h6,
+[data-bs-theme="dark"] .themes-page .card-title {
+    color: #f8fafc;
+}
+
+[data-bs-theme="dark"] .themes-page .form-label {
+    color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .themes-page hr {
+    border-color: #475569;
+    opacity: 1;
+}
+
+[data-bs-theme="dark"] .themes-page code {
+    color: #86efac;
+    background-color: rgba(15, 23, 42, 0.5);
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.25rem;
+}
+
+[data-bs-theme="dark"] .themes-page .table code {
+    color: #86efac;
+}
+
+[data-bs-theme="dark"] .themes-page .table-borderless th {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .themes-page .table-borderless td {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .themes-page .theme-color-swatch {
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+[data-bs-theme="dark"] .themes-page .theme-preview-box {
+    border-color: #475569;
+}
+
+[data-bs-theme="dark"] .themes-page .form-control-color {
+    background-color: #0f172a;
+    border-color: #475569;
+}
+
+[data-bs-theme="dark"] .themes-page .btn-outline-info {
+    color: #67e8f9;
+    border-color: #22d3ee;
+}
+
+[data-bs-theme="dark"] .themes-page .btn-outline-info:hover,
+[data-bs-theme="dark"] .themes-page .btn-outline-info:focus,
+[data-bs-theme="dark"] .themes-page .btn-outline-info:active {
+    color: #0f172a;
+    background-color: #67e8f9;
+    border-color: #67e8f9;
+}
+
+[data-bs-theme="dark"] .themes-page .btn-outline-danger {
+    color: #fca5a5;
+    border-color: #ef4444;
+}
+
+[data-bs-theme="dark"] .themes-page .btn-outline-danger:hover,
+[data-bs-theme="dark"] .themes-page .btn-outline-danger:focus,
+[data-bs-theme="dark"] .themes-page .btn-outline-danger:active {
+    color: #0f172a;
+    background-color: #fca5a5;
+    border-color: #fca5a5;
+}
+
+[data-bs-theme="dark"] .themes-page .btn-outline-secondary {
+    color: #cbd5e1;
+    border-color: #64748b;
+}
+
+[data-bs-theme="dark"] .themes-page .btn-outline-secondary:hover,
+[data-bs-theme="dark"] .themes-page .btn-outline-secondary:focus,
+[data-bs-theme="dark"] .themes-page .btn-outline-secondary:active {
+    color: #0f172a;
+    background-color: #cbd5e1;
+    border-color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .themes-page .card-header .btn-outline-primary,
+[data-bs-theme="dark"] .themes-page .card-header .btn-outline-info,
+[data-bs-theme="dark"] .themes-page .card-header .btn-outline-secondary {
+    background-color: transparent;
+}
+
+[data-bs-theme="dark"] .themes-page .card-header h4,
+[data-bs-theme="dark"] .themes-page .card-header h5 {
+    color: #f8fafc;
+}

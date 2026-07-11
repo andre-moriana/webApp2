@@ -2,7 +2,7 @@
 $title = "Détails du thème - Portail Arc Training";
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid themes-page">
     <div class="row justify-content-center">
         <div class="col-md-10">
             <div class="card">
@@ -78,7 +78,7 @@ $title = "Détails du thème - Portail Arc Training";
                                 ?>
                                     <div class="col-md-6">
                                         <div class="d-flex align-items-center mb-2">
-                                            <span class="badge me-2" style="background-color: <?php echo htmlspecialchars($color); ?>; width: 30px; height: 30px; border-radius: 4px;"></span>
+                                            <span class="badge theme-color-swatch theme-color-swatch--md me-2" style="background-color: <?php echo htmlspecialchars($color); ?>;"></span>
                                             <div>
                                                 <strong><?php echo htmlspecialchars($colorLabels[$key]); ?></strong><br>
                                                 <small class="text-muted"><code><?php echo htmlspecialchars($color); ?></code></small>
@@ -97,7 +97,7 @@ $title = "Détails du thème - Portail Arc Training";
                     <?php if (!empty($theme['colors'])): ?>
                     <hr>
                     <h5>Aperçu du thème</h5>
-                    <div class="p-4 rounded" style="background-color: <?php echo htmlspecialchars($theme['colors']['background'] ?? '#14532d'); ?>; color: <?php echo htmlspecialchars($theme['colors']['text'] ?? '#333333'); ?>;">
+                    <div class="p-4 rounded theme-preview-box" style="background-color: <?php echo htmlspecialchars($theme['colors']['background'] ?? '#14532d'); ?>; color: <?php echo htmlspecialchars($theme['colors']['text'] ?? '#333333'); ?>;">
                         <h6 style="color: <?php echo htmlspecialchars($theme['colors']['text'] ?? '#333333'); ?>;">Exemple de titre</h6>
                         <p style="color: <?php echo htmlspecialchars($theme['colors']['textSecondary'] ?? '#666666'); ?>;">Exemple de texte secondaire</p>
                         <div class="d-flex gap-2">

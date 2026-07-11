@@ -2,7 +2,7 @@
 $title = "Gestion des thèmes - Portail Arc Training";
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid themes-page">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -83,7 +83,7 @@ $title = "Gestion des thèmes - Portail Arc Training";
                                                             $color = $theme['colors'][$key] ?? null;
                                                             if ($color):
                                                         ?>
-                                                            <span class="badge" style="background-color: <?php echo htmlspecialchars($color); ?>; width: 20px; height: 20px; border-radius: 50%;" title="<?php echo htmlspecialchars($key . ': ' . $color); ?>"></span>
+                                                            <span class="badge theme-color-swatch theme-color-swatch--sm" style="background-color: <?php echo htmlspecialchars($color); ?>;" title="<?php echo htmlspecialchars($key . ': ' . $color); ?>"></span>
                                                         <?php 
                                                             endif;
                                                         endforeach; 
