@@ -251,3 +251,20 @@ body.dashboard-fullpage .app-container-fullpage {
         padding-right: 1.5rem;
     }
 }
+
+/* Bouton thème dans la topbar */
+.app-topbar-theme-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.app-topbar-user .dropdown-menu,
+.app-topbar-theme .dropdown-menu {
+    min-width: 11rem;
+}
+
+/* Mode sombre : contenu principal (la topbar reste verte) */
+[data-bs-theme="dark"] .app-main {
+    background-color: var(--app-body-bg, #0f172a);
+}

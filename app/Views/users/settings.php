@@ -36,6 +36,43 @@ include __DIR__ . '/../layouts/header.php';
     </div>
     
     <div class="row">
+        <!-- Apparence -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-palette me-2"></i>Apparence
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Choisissez l'apparence du portail. Le mode « Système » suit les préférences de votre appareil.</p>
+                    <div class="d-flex flex-column gap-2">
+                        <label class="form-check theme-mode-option p-3 border rounded">
+                            <input class="form-check-input" type="radio" name="theme-mode" id="themeModeSystem" value="system">
+                            <span class="form-check-label ms-2">
+                                <i class="fas fa-circle-half-stroke me-2"></i><strong>Système</strong>
+                                <span class="d-block small text-muted ms-4">Clair ou sombre selon l'appareil</span>
+                            </span>
+                        </label>
+                        <label class="form-check theme-mode-option p-3 border rounded">
+                            <input class="form-check-input" type="radio" name="theme-mode" id="themeModeLight" value="light">
+                            <span class="form-check-label ms-2">
+                                <i class="fas fa-sun me-2"></i><strong>Clair</strong>
+                                <span class="d-block small text-muted ms-4">Thème clair en permanence</span>
+                            </span>
+                        </label>
+                        <label class="form-check theme-mode-option p-3 border rounded">
+                            <input class="form-check-input" type="radio" name="theme-mode" id="themeModeDark" value="dark">
+                            <span class="form-check-label ms-2">
+                                <i class="fas fa-moon me-2"></i><strong>Sombre</strong>
+                                <span class="d-block small text-muted ms-4">Thème sombre en permanence</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Photo de profil -->
         <div class="col-lg-6 mb-4">
             <div class="card">
@@ -237,8 +274,8 @@ include __DIR__ . '/../layouts/header.php';
 }
 
 .card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
+    background-color: var(--app-card-header-bg, #f8f9fa);
+    border-bottom: 1px solid var(--app-border-color, #dee2e6);
 }
 
 .btn {
@@ -254,6 +291,10 @@ include __DIR__ . '/../layouts/header.php';
 <!-- JavaScript pour la gestion des formulaires -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    if (window.ThemeManager) {
+        window.ThemeManager.apply();
+    }
+
     // Gestion du formulaire de photo de profil
     const profileImageForm = document.getElementById('profileImageForm');
     const updateProfileImageBtn = document.getElementById('updateProfileImageBtn');

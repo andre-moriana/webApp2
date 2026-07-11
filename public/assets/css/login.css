@@ -225,3 +225,41 @@
         max-height: 380px;
     }
 }
+
+/* Mode sombre */
+[data-bs-theme="dark"] body {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+[data-bs-theme="dark"] .login-container {
+    background: #1e293b;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .login-form {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .login-form .form-label,
+[data-bs-theme="dark"] .login-form .form-text {
+    color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .login-form .form-control {
+    background-color: #0f172a;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .login-form .form-control:focus {
+    background-color: #0f172a;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .login-form a {
+    color: #4ade80;
+}
+
+[data-bs-theme="dark"] .login-app-qr-img {
+    background: #f8fafc;
+}

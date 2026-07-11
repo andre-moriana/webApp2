@@ -302,3 +302,24 @@ footer {
 .navbar, .sidebar, .main-content {
     z-index: auto;
 }
+
+[data-bs-theme="dark"] .message-received {
+    background-color: #334155;
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+[data-bs-theme="dark"] .message-header,
+[data-bs-theme="dark"] .message-time {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .chat-container,
+[data-bs-theme="dark"] .messages-container {
+    background-color: var(--app-body-bg, #0f172a);
+}
+
+[data-bs-theme="dark"] .chat-input-container {
+    background-color: var(--app-card-bg, #1e293b);
+    border-color: var(--app-border-color, #475569);
+}

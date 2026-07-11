@@ -208,28 +208,25 @@
 }
 
 /* Mode sombre */
-@media (prefers-color-scheme: dark) {
-    .svg-target-container {
-        background: #2d3748;
-        color: #e2e8f0;
-    }
-    
-    .target-wrapper {
-        background: #4a5568;
-    }
-    
-    .target-stats {
-        background: #1a202c;
-        color: #e2e8f0;
-    }
-    
-    .stat-label {
-        color: #a0aec0;
-    }
-    
-    .stat-value {
-        color: #e2e8f0;
-    }
+[data-bs-theme="dark"] .svg-target-container {
+    background: #2d3748;
+    color: #e2e8f0;
+}
+[data-bs-theme="dark"] .target-wrapper {
+    background: #4a5568;
+}
+
+[data-bs-theme="dark"] .target-stats {
+    background: #1a202c;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .stat-label {
+    color: #a0aec0;
+}
+
+[data-bs-theme="dark"] .stat-value {
+    color: #e2e8f0;
 }
 
 /* Styles pour l'intégration dans les modales */

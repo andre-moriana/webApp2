@@ -41,10 +41,11 @@ if (is_string($clubLogoRaw) && trim($clubLogoRaw) !== '') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-bs-theme="light" data-theme-mode="system">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php include __DIR__ . '/theme-head.php'; ?>
     <title><?php echo $pageTitle ?? $title ?? 'Portail Arc Training'; ?></title>
     
     <!-- Favicon -->
@@ -86,6 +87,7 @@ if (is_string($clubLogoRaw) && trim($clubLogoRaw) !== '') {
                 <span class="app-topbar-club-name d-none d-sm-inline"><?php echo htmlspecialchars((string)$clubName); ?></span>
             </a>
             <div class="app-topbar-actions">
+                <?php include __DIR__ . '/theme-toggle.php'; ?>
                 <a href="/dashboard" class="app-topbar-link d-md-none" title="Tableau de bord">
                     <i class="fas fa-tachometer-alt"></i>
                 </a>

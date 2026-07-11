@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-bs-theme="light" data-theme-mode="system">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php include __DIR__ . '/../layouts/theme-head.php'; ?>
     <title>Nouveau mot de passe - Portail Arc Training</title>
     
     <!-- Bootstrap CSS -->
@@ -89,5 +90,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/public/assets/js/theme.js"></script>
 </body>
 </html>

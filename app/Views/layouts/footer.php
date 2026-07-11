@@ -61,6 +61,8 @@
     <!-- Gestionnaire de session (pages authentifiées uniquement) -->
     <script src="/public/assets/js/session-manager.js?v=<?php echo time(); ?>"></script>
     <?php endif; ?>
+<!-- Gestion du thème clair / sombre -->
+    <script src="/public/assets/js/theme.js"></script>
 <!-- JavaScript personnalisé -->
     <script src="/public/assets/js/app.js"></script>
 <!-- JavaScript spécifique à la page (si défini) -->
