@@ -150,7 +150,7 @@ foreach ($allConcours as $item) {
                                         <td data-column="titre_lieu" style="max-width: 300px;">
                                             <strong><?php echo htmlspecialchars($titre); ?></strong>
                                             <?php if ($isArchived): ?>
-                                                <span class="badge bg-secondary ms-1" title="Concours archivé : inscriptions, pelotons et scores en lecture seule"><i class="fas fa-lock me-1"></i>Archivé</span>
+                                                <span class="badge text-bg-secondary badge-concours-archive ms-1" title="Concours archivé : inscriptions, pelotons et scores en lecture seule"><i class="fas fa-lock me-1"></i>Archivé</span>
                                             <?php endif; ?>
                                             <?php if ($lieu && $lieu !== '-'): ?>
                                                 <br><small class="text-muted" title="<?php echo htmlspecialchars($lieuFull); ?>"><?php echo htmlspecialchars($lieuTruncated); ?></small>
@@ -183,7 +183,7 @@ foreach ($allConcours as $item) {
                                                         <i class="fas fa-lock-open"></i>
                                                     </a>
                                                     <?php else: ?>
-                                                    <a href="/concours/archiver/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-dark" title="Archiver le concours" onclick="return confirm('Archiver ce concours ? Les inscriptions, pelotons et scores passeront en lecture seule.');">
+                                                    <a href="/concours/archiver/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-dark btn-concours-archive" title="Archiver le concours" onclick="return confirm('Archiver ce concours ? Les inscriptions, pelotons et scores passeront en lecture seule.');">
                                                         <i class="fas fa-lock"></i>
                                                     </a>
                                                     <?php endif; ?>
@@ -317,7 +317,7 @@ foreach ($allConcours as $item) {
                                         <td data-column="titre_lieu" style="max-width: 300px;">
                                             <strong><?php echo htmlspecialchars($titre); ?></strong>
                                             <?php if ($isArchived): ?>
-                                                <span class="badge bg-secondary ms-1" title="Concours archivé : inscriptions, pelotons et scores en lecture seule"><i class="fas fa-lock me-1"></i>Archivé</span>
+                                                <span class="badge text-bg-secondary badge-concours-archive ms-1" title="Concours archivé : inscriptions, pelotons et scores en lecture seule"><i class="fas fa-lock me-1"></i>Archivé</span>
                                             <?php endif; ?>
                                             <?php if ($lieu && $lieu !== '-'): ?>
                                                 <br><small class="text-muted" title="<?php echo htmlspecialchars($lieuFull); ?>"><?php echo htmlspecialchars($lieuTruncated); ?></small>
@@ -350,7 +350,7 @@ foreach ($allConcours as $item) {
                                                         <i class="fas fa-lock-open"></i>
                                                     </a>
                                                     <?php else: ?>
-                                                    <a href="/concours/archiver/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-dark" title="Archiver le concours" onclick="return confirm('Archiver ce concours ? Les inscriptions, pelotons et scores passeront en lecture seule.');">
+                                                    <a href="/concours/archiver/<?php echo $concoursId; ?>" class="btn btn-sm btn-outline-dark btn-concours-archive" title="Archiver le concours" onclick="return confirm('Archiver ce concours ? Les inscriptions, pelotons et scores passeront en lecture seule.');">
                                                         <i class="fas fa-lock"></i>
                                                     </a>
                                                     <?php endif; ?>
