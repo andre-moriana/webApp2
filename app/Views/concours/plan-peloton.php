@@ -104,7 +104,7 @@ $departsForCreate = is_object($concours) ? ($concours->departs ?? []) : ($concou
 $nombreDepart = !empty($departsForCreate) ? count($departsForCreate) : $nombreDepart;
 $nombreArchersParPeloton = (int)($concours->nombre_archers_par_peloton ?? $concours->nombre_tireurs_par_cibles ?? 0) ?: 4;
 $concoursId = $concours->id ?? $concours->_id ?? null;
-$piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
+$piquetColors = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5', 'rose' => '#e83e8c'];
 
 // Règles : valeurs enregistrées en base (par concours) ou défauts
 $savedMaxClub = isset($concours->peloton_max_archers_meme_club) ? (int)$concours->peloton_max_archers_meme_club : null;

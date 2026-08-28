@@ -887,6 +887,7 @@ $debugLicence = isset($_GET['debug_licence']);
                                 <option value="rouge">Rouge</option>
                                 <option value="bleu">Bleu</option>
                                 <option value="blanc">Blanc</option>
+                                <option value="rose">Rose</option>
                             </select>
                         </div>
                         <div class="col-md-3 mb-3 edit-distance-section <?= ($isNature3DOrCampagne ?? false) ? 'd-none' : '' ?>">

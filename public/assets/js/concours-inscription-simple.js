@@ -1203,6 +1203,7 @@ function prefillFormFields(archer) {
  * - S1, S2, S3, U21 : piquet rouge
  * - U18 : arc nu (BB) et TL : piquet bleu
  * - U15, U13 : arc nu (BB) : piquet blanc
+ * - U11 : arc nu (BB) : piquet rose
  * @param {string} abvCategorie - L'abréviation de la catégorie (ex: "S3HCL", "U18HBB")
  * @param {boolean} isEditModal - Si true, utilise le champ edit-piquet au lieu de piquet
  * @param {boolean} isRetry - Indique si c'est un retry (pour éviter la récursion infinie)
@@ -1236,7 +1237,7 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
     
     const categorieUpper = abvCategorie.trim().toUpperCase();
     
-    // Extraire la catégorie d'âge (S1, S2, S3, U21, U18, U15, U13)
+    // Extraire la catégorie d'âge (S1, S2, S3, U21, U18, U15, U13, U11)
     // Format des catégories : S3HCL, U18HBB, U15FTL, etc.
     // Structure : Catégorie d'âge (2 ou 3 chars) + Sexe (1 char) + Arme (2 chars)
     let ageCategory = '';
@@ -1254,7 +1255,8 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
         ageCategory = 'U15';
     } else if (categorieUpper.startsWith('U13')) {
         ageCategory = 'U13';
-    }
+    } else if (categorieUpper.startsWith('U11')) {
+        ageCategory = 'U11';    }
     
     // Extraire l'arme (BB = arc nu, TL = TL)
     // L'arme est à la fin de la catégorie (2 derniers caractères)
@@ -1297,7 +1299,11 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
         if (effectiveArme === 'BB') {
             piquetColor = 'blanc';
         }
-    }
+    } else if (ageCategory === 'U11') {
+        // U11 : arc nu (BB) : piquet rose
+        if (effectiveArme === 'BB') {
+            piquetColor = 'rose';
+        }   }
     
     // Sélectionner la couleur si trouvée
     if (piquetColor) {
@@ -1357,7 +1363,9 @@ function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = fal
         ageCategory = 'U15';
     } else if (categorieUpper.startsWith('U13')) {
         ageCategory = 'U13';
-    } else if (categorieUpper.startsWith('DE')) {
+    } else if (categorieUpper.startsWith('U11')) {
+        ageCategory = 'U11';    }
+      else if (categorieUpper.startsWith('DE')) {
         ageCategory = 'DE';
     }
     
@@ -1400,6 +1408,11 @@ function selectPiquetColorFor3D(abvCategorie, isEditModal = false, isRetry = fal
         // DE/U15/U13 : BB = blanc
         if (effectiveArme === 'BB') {
             piquetColor = 'blanc';
+        }
+    } else if (ageCategory === 'U11' ) {
+        // U11 : BB = rose
+        if (effectiveArme === 'BB') {
+            piquetColor = 'rose';
         }
     }
     

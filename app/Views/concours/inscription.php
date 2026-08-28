@@ -772,6 +772,7 @@ $inscriptionConfigJson = htmlspecialchars(json_encode($inscriptionConfig, JSON_U
                                     <option value="rouge">Rouge</option>
                                     <option value="bleu">Bleu</option>
                                     <option value="blanc">Blanc</option>
+                                    <option value="noir">Rose</option>
                                 </select>
                             </div>
                         <?php else: ?>

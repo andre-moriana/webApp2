@@ -1249,6 +1249,8 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
         ageCategory = 'U15';
     } else if (categorieUpper.startsWith('U13')) {
         ageCategory = 'U13';
+    } else if (categorieUpper.startsWith('U11')) {
+        ageCategory = 'U11';
     }
     
     // Extraire l'arme (BB = arc nu, TL = TL)
@@ -1280,6 +1282,11 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
         // U15, U13 : arc nu (BB) : piquet blanc
         if (arme === 'BB') {
             piquetColor = 'blanc';
+        }
+    } else if (ageCategory === 'U11') {
+        // U11 : arc nu (BB) : piquet rose
+        if (arme === 'BB') {
+            piquetColor = 'rose';
         }
     }
     

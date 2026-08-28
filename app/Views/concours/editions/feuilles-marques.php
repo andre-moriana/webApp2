@@ -440,8 +440,8 @@ if ($is3D) {
                                 <div class="d-flex justify-content-between align-items-center"><span><strong><?= htmlspecialchars($archer['user_nom'] ?: '—') ?></strong></span><span class="feuille-marque-blason text-nowrap" style="font-size: 1.15em;"><strong>N° peloton : <?= (int)($f['peloton'] ?? 0) ?></strong></span></div>
                                 <div class="d-flex justify-content-between align-items-center"><span><?= htmlspecialchars($archer['club_nom'] ?? $archer['club_name'] ?? '—') ?></span><span class="feuille-marque-categorie"><?php
                                     $piquetLibelle = isset($archer['piquet']) && $archer['piquet'] !== '' ? ucfirst(mb_strtolower(trim($archer['piquet']))) : '';
-                                    $piquetCouleurs = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5'];
-                                    $piquetBordures = ['rouge' => '#d0a0a0', 'bleu' => '#a0b0d0', 'blanc' => '#cccccc'];
+                                    $piquetCouleurs = ['rouge' => '#ffe0e0', 'bleu' => '#e0e8ff', 'blanc' => '#f5f5f5', 'rose' => '#e83e8c'];
+                                    $piquetBordures = ['rouge' => '#d0a0a0', 'bleu' => '#a0b0d0', 'blanc' => '#cccccc', 'rose' => '#f56c9c'];
                                     $piquetHex = $piquetLibelle !== '' && isset($piquetCouleurs[mb_strtolower(trim($archer['piquet']))]) ? $piquetCouleurs[mb_strtolower(trim($archer['piquet']))] : null;
                                     $piquetBordure = $piquetLibelle !== '' && isset($piquetBordures[mb_strtolower(trim($archer['piquet']))]) ? $piquetBordures[mb_strtolower(trim($archer['piquet']))] : $piquetHex;
                                     $catLibelle = htmlspecialchars($archer['abv_categorie_classement'] ?? '') ?: '—';
