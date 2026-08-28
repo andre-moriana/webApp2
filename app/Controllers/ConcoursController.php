@@ -2294,40 +2294,7 @@ public function inscription($concoursId)
             }
         }
 
-        // Capacité du plan par départ (une ligne = une place au tir) ; placesParDepart = places restantes
-        $capaciteParDepart = [];
-        $placesParDepart = [];
-        $inscritsParDepart = [];
-        foreach ($inscriptions as $insc) {
-            $num = isset($insc['numero_depart']) ? (int)$insc['numero_depart'] : null;
-            if ($num !== null && ($insc['statut_inscription'] ?? '') !== 'annule') {
-                $inscritsParDepart[$num] = ($inscritsParDepart[$num] ?? 0) + 1;
-            }
-        }
-        $abv = $disciplineAbv ?? '';
-        $isCible = in_array(strtoupper($abv), ['T', 'S', 'I', 'H'], true);
-        $isPeloton = in_array($abv, ['3', 'N', 'C', '3D'], true);
-        if ($isCible || $isPeloton) {
-            try {
-                $endpoint = $isCible ? "concours/{$concoursId}/plan-cible" : "concours/{$concoursId}/plan-peloton";
-                $planResponse = $this->apiService->makeRequest($endpoint, 'GET');
-                $planData = $this->apiService->unwrapData($planResponse);
-                if (is_array($planData) && isset($planData['data']) && isset($planData['success'])) {
-                    $planData = $planData['data'];
-                }
-                if (is_array($planData) && !isset($planData[0])) {
-                    foreach ($planData as $numDep => $slots) {
-                        $numDep = (int)$numDep;
-                        $capacity = is_array($slots) ? count($slots) : 0;
-                        $inscrits = $inscritsParDepart[$numDep] ?? 0;
-                        $capaciteParDepart[$numDep] = $capacity;
-                        $placesParDepart[$numDep] = max(0, $capacity - $inscrits);
-                    }
-                }
-            } catch (Exception $e) {
-                error_log('Erreur récupération plan pour places départ: ' . $e->getMessage());
-            }
-        }
+        [$capaciteParDepart, $placesParDepart] = $this->buildDepartPlacesFromConcours($concours, $inscriptions);
 
         // Inclure header et footer
         require_once __DIR__ . '/../Views/layouts/header.php';
@@ -4249,53 +4216,7 @@ public function inscription($concoursId)
             }
         }
 
-        // Capacité du plan et places restantes (même logique que inscription classique)
-        $capaciteParDepart = [];
-        $placesParDepart = [];
-        $inscritsParDepart = [];
-        foreach ($inscriptions as $insc) {
-            $num = isset($insc['numero_depart']) ? (int)$insc['numero_depart'] : null;
-            if ($num !== null && ($insc['statut_inscription'] ?? '') !== 'annule') {
-                $inscritsParDepart[$num] = ($inscritsParDepart[$num] ?? 0) + 1;
-            }
-        }
-        $abv = $disciplineAbv ?? '';
-        $isCible = in_array(strtoupper($abv), ['T', 'S', 'I', 'H'], true);
-        $isPeloton = in_array($abv, ['3', 'N', 'C', '3D'], true);
-        if ($isCible || $isPeloton) {
-            try {
-                // Sans JWT, l'API n'expose le plan qu'en /plan-cible/public (ou peloton) avec token_acces_inscription.
-                $planToken = $token ?: ($tokenFromSession ?? '');
-                $planResponse = ['success' => false];
-                if ($planToken !== '') {
-                    $pubEndpoint = $isCible
-                        ? "concours/{$concoursId}/plan-cible/public"
-                        : "concours/{$concoursId}/plan-peloton/public";
-                    $planResponse = $this->apiService->makeRequestPublic($pubEndpoint, 'GET', null, $planToken);
-                }
-                if (!($planResponse['success'] ?? false)
-                    && isset($_SESSION['logged_in'])
-                    && $_SESSION['logged_in'] === true) {
-                    $endpoint = $isCible ? "concours/{$concoursId}/plan-cible" : "concours/{$concoursId}/plan-peloton";
-                    $planResponse = $this->apiService->makeRequest($endpoint, 'GET');
-                }
-                $planData = $planResponse['data'] ?? $planResponse;
-                if (is_array($planData) && isset($planData['data']) && isset($planData['success'])) {
-                    $planData = $planData['data'];
-                }
-                if (is_array($planData) && !isset($planData[0])) {
-                    foreach ($planData as $numDep => $slots) {
-                        $numDep = (int)$numDep;
-                        $capacity = is_array($slots) ? count($slots) : 0;
-                        $inscrits = $inscritsParDepart[$numDep] ?? 0;
-                        $capaciteParDepart[$numDep] = $capacity;
-                        $placesParDepart[$numDep] = max(0, $capacity - $inscrits);
-                    }
-                }
-            } catch (Exception $e) {
-                error_log('inscriptionCible: erreur plan pour places: ' . $e->getMessage());
-            }
-        }
+        [$capaciteParDepart, $placesParDepart] = $this->buildDepartPlacesFromConcours($concours, $inscriptions);
 
         $inscriptionCible = true;
         $currentToken = $token ?: ($tokenFromSession ?? '');
@@ -5526,5 +5447,89 @@ public function inscription($concoursId)
             // ignore
         }
         return null;
+    }
+
+    /**
+     * Capacité et places restantes par départ (même logique que show.php : nombre_cibles × nombre_tireurs_par_cibles).
+     *
+     * @return array{0: array<int,int>, 1: array<int,int>}
+     */
+    private function buildDepartPlacesFromConcours($concours, array $inscriptions): array
+    {
+        $nombreCibles = (int)(is_object($concours) ? ($concours->nombre_cibles ?? 0) : ($concours['nombre_cibles'] ?? 0));
+        $nombreTireurs = (int)(is_object($concours) ? ($concours->nombre_tireurs_par_cibles ?? 0) : ($concours['nombre_tireurs_par_cibles'] ?? 0));
+        $capacityPerDepart = ($nombreCibles > 0 && $nombreTireurs > 0) ? $nombreCibles * $nombreTireurs : 0;
+
+        $inscritsParDepart = [];
+        foreach ($inscriptions as $insc) {
+            $statut = $insc['statut_inscription'] ?? 'en_attente';
+            if (!in_array($statut, ['confirmee', 'en_attente'], true)) {
+                continue;
+            }
+
+            $rawDepart = $insc['numero_depart'] ?? $insc['numeroDepart'] ?? $insc['depart'] ?? null;
+            $departNums = [];
+            if (is_array($rawDepart)) {
+                foreach ($rawDepart as $v) {
+                    $n = (int)$v;
+                    if ($n > 0) {
+                        $departNums[] = $n;
+                    }
+                }
+            } elseif (is_string($rawDepart) && preg_match('/[,;|]/', $rawDepart)) {
+                foreach (preg_split('/[,;|]/', $rawDepart) as $part) {
+                    $n = (int)trim((string)$part);
+                    if ($n > 0) {
+                        $departNums[] = $n;
+                    }
+                }
+            } else {
+                $n = (int)$rawDepart;
+                if ($n > 0) {
+                    $departNums[] = $n;
+                }
+            }
+
+            foreach (array_unique($departNums) as $num) {
+                $inscritsParDepart[$num] = ($inscritsParDepart[$num] ?? 0) + 1;
+            }
+        }
+
+        $capaciteParDepart = [];
+        $placesParDepart = [];
+        if ($capacityPerDepart <= 0) {
+            return [$capaciteParDepart, $placesParDepart];
+        }
+
+        $departNums = [];
+        $departsRaw = is_object($concours) ? ($concours->departs ?? []) : ($concours['departs'] ?? []);
+        if (!empty($departsRaw) && is_array($departsRaw)) {
+            foreach ($departsRaw as $d) {
+                $num = (int)(is_array($d) ? ($d['numero_depart'] ?? 0) : ($d->numero_depart ?? 0));
+                if ($num > 0) {
+                    $departNums[] = $num;
+                }
+            }
+        }
+        $nombreDepart = (int)(is_object($concours) ? ($concours->nombre_depart ?? 0) : ($concours['nombre_depart'] ?? 0));
+        if (empty($departNums) && $nombreDepart > 0) {
+            for ($i = 1; $i <= $nombreDepart; $i++) {
+                $departNums[] = $i;
+            }
+        }
+        foreach (array_keys($inscritsParDepart) as $num) {
+            if ((int)$num > 0) {
+                $departNums[] = (int)$num;
+            }
+        }
+        $departNums = array_values(array_unique(array_filter($departNums, static fn($n) => (int)$n > 0)));
+
+        foreach ($departNums as $numDep) {
+            $inscrits = $inscritsParDepart[$numDep] ?? 0;
+            $capaciteParDepart[$numDep] = $capacityPerDepart;
+            $placesParDepart[$numDep] = max(0, $capacityPerDepart - $inscrits);
+        }
+
+        return [$capaciteParDepart, $placesParDepart];
     }
 }
