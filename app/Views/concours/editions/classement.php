@@ -37,91 +37,117 @@ $inscriptions1erTir = array_filter($inscriptions, function($insc) {
     return $nt === null || $nt === '' || (int)$nt === 1;
 });
 
-// Filtre type de classement : général (tous), régional (2 premiers chiffres id_club = club organisateur), départemental (4 premiers chiffres)
-// On compare le code du club de l'inscription (id_club → name_short) avec le club organisateur
+// Filtre type de classement : général (tous), régional (2 premiers chiffres), départemental (4 premiers chiffres)
+// Modes combinés : général + colonne Clt Rég./Clt Dép.
 $typeClassement = $typeClassement ?? 'general';
 $clubOrganisateurCodeRaw = (string)($clubOrganisateurCode ?? '');
 $clubOrganisateurCode = preg_replace('/\D/', '', $clubOrganisateurCodeRaw);
 $clubsMap = $clubsMap ?? [];
+$showRangSecondaire = in_array($typeClassement, ['general_regional', 'general_departemental'], true);
+$filtreSecondaireType = $typeClassement === 'general_regional' ? 'regional'
+    : ($typeClassement === 'general_departemental' ? 'departemental' : null);
+$colRangSecondaireLabel = $filtreSecondaireType === 'regional' ? 'Clt Rég.'
+    : ($filtreSecondaireType === 'departemental' ? 'Clt Dép.' : '');
+
+$getCodeClub = function($insc) use ($clubsMap) {
+    $idClub = $insc['id_club'] ?? null;
+    if ($idClub === null || $idClub === '') {
+        return '';
+    }
+    $club = $clubsMap[$idClub] ?? $clubsMap[(string)$idClub] ?? $clubsMap[(int)$idClub] ?? null;
+    if ($club) {
+        return preg_replace('/\D/', '', (string)($club['nameShort'] ?? $club['name_short'] ?? ''));
+    }
+    if (is_string($idClub) && preg_match('/^\d/', $idClub)) {
+        return preg_replace('/\D/', '', $idClub);
+    }
+    return '';
+};
+
+$filterByPrefix = function($list, $prefixLen) use ($clubOrganisateurCode, $getCodeClub) {
+    if (strlen($clubOrganisateurCode) < $prefixLen) {
+        return [];
+    }
+    $prefixOrg = substr($clubOrganisateurCode, 0, $prefixLen);
+    return array_filter($list, function($insc) use ($prefixOrg, $prefixLen, $getCodeClub) {
+        $codeClub = $getCodeClub($insc);
+        return $codeClub !== '' && strlen($codeClub) >= $prefixLen && substr($codeClub, 0, $prefixLen) === $prefixOrg;
+    });
+};
+
 $prefixOrg = '';
 if ($typeClassement === 'regional' && strlen($clubOrganisateurCode) >= 2) {
     $prefixOrg = substr($clubOrganisateurCode, 0, 2);
     $nbAvant = count($inscriptions1erTir);
-    $idClubsSample = array_slice(array_map(function($i) use ($clubsMap) {
-        $id = $i['id_club'] ?? null;
-        $c = $id ? ($clubsMap[$id] ?? $clubsMap[(string)$id] ?? null) : null;
-        $code = $c ? preg_replace('/\D/', '', (string)($c['nameShort'] ?? $c['name_short'] ?? '')) : (is_string($id) && preg_match('/^\d/', $id) ? preg_replace('/\D/', '', $id) : '');
-        return $code ?: $id;
+    $idClubsSample = array_slice(array_map(function($i) use ($getCodeClub) {
+        return $getCodeClub($i) ?: ($i['id_club'] ?? null);
     }, $inscriptions1erTir), 0, 5);
-    $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg, $clubsMap) {
-        $idClub = $insc['id_club'] ?? null;
-        if ($idClub === null || $idClub === '') return false;
-        $club = $clubsMap[$idClub] ?? $clubsMap[(string)$idClub] ?? $clubsMap[(int)$idClub] ?? null;
-        $codeClub = $club ? preg_replace('/\D/', '', (string)($club['nameShort'] ?? $club['name_short'] ?? '')) : (is_string($idClub) && preg_match('/^\d/', $idClub) ? preg_replace('/\D/', '', $idClub) : '');
-        return $codeClub !== '' && strlen($codeClub) >= 2 && substr($codeClub, 0, 2) === $prefixOrg;
-    });
+    $inscriptions1erTir = $filterByPrefix($inscriptions1erTir, 2);
     AppLogger::log('classement', '[regional] prefixOrg=' . json_encode($prefixOrg) . ' | idClubsSample(avant filtre)=' . json_encode($idClubsSample) . ' | nbAvant=' . $nbAvant . ' | nbApres=' . count($inscriptions1erTir));
 } elseif ($typeClassement === 'departemental' && strlen($clubOrganisateurCode) >= 4) {
     $prefixOrg = substr($clubOrganisateurCode, 0, 4);
     $nbAvant = count($inscriptions1erTir);
-    $idClubsSample = array_slice(array_map(function($i) use ($clubsMap) {
-        $id = $i['id_club'] ?? null;
-        $c = $id ? ($clubsMap[$id] ?? $clubsMap[(string)$id] ?? null) : null;
-        $code = $c ? preg_replace('/\D/', '', (string)($c['nameShort'] ?? $c['name_short'] ?? '')) : (is_string($id) && preg_match('/^\d/', $id) ? preg_replace('/\D/', '', $id) : '');
-        return $code ?: $id;
+    $idClubsSample = array_slice(array_map(function($i) use ($getCodeClub) {
+        return $getCodeClub($i) ?: ($i['id_club'] ?? null);
     }, $inscriptions1erTir), 0, 5);
-    $inscriptions1erTir = array_filter($inscriptions1erTir, function($insc) use ($prefixOrg, $clubsMap) {
-        $idClub = $insc['id_club'] ?? null;
-        if ($idClub === null || $idClub === '') return false;
-        $club = $clubsMap[$idClub] ?? $clubsMap[(string)$idClub] ?? $clubsMap[(int)$idClub] ?? null;
-        $codeClub = $club ? preg_replace('/\D/', '', (string)($club['nameShort'] ?? $club['name_short'] ?? '')) : (is_string($idClub) && preg_match('/^\d/', $idClub) ? preg_replace('/\D/', '', $idClub) : '');
-        return $codeClub !== '' && strlen($codeClub) >= 4 && substr($codeClub, 0, 4) === $prefixOrg;
-    });
+    $inscriptions1erTir = $filterByPrefix($inscriptions1erTir, 4);
     AppLogger::log('classement', '[departemental] prefixOrg=' . json_encode($prefixOrg) . ' | idClubsSample(avant filtre)=' . json_encode($idClubsSample) . ' | nbAvant=' . $nbAvant . ' | nbApres=' . count($inscriptions1erTir));
 } elseif (($typeClassement === 'regional' || $typeClassement === 'departemental')) {
     AppLogger::log('classement', '[filtre NON appliqué] typeClassement=' . $typeClassement . ' | clubOrganisateurCode=' . json_encode($clubOrganisateurCode) . ' | strlen=' . strlen($clubOrganisateurCode));
 }
 
-// Grouper par catégorie de classement
-$byCategorie = [];
-foreach ($inscriptions1erTir as $insc) {
-    $cat = trim((string)($insc['categorie_classement'] ?? ''));
-    if ($cat === '') $cat = 'Sans catégorie';
-    if (!isset($byCategorie[$cat])) {
-        $byCategorie[$cat] = [];
+$buildByCategorie = function($inscriptionsList) use ($resultats, $resultatsByLicence) {
+    $byCategorie = [];
+    foreach ($inscriptionsList as $insc) {
+        $cat = trim((string)($insc['categorie_classement'] ?? ''));
+        if ($cat === '') $cat = 'Sans catégorie';
+        if (!isset($byCategorie[$cat])) {
+            $byCategorie[$cat] = [];
+        }
+        $inscId = $insc['id'] ?? $insc['_id'] ?? null;
+        $r = $inscId ? ($resultats[(int)$inscId] ?? null) : null;
+        if ($r === null) {
+            $lic = trim((string)($insc['numero_licence'] ?? ''));
+            $r = ($lic !== '' && isset($resultatsByLicence)) ? ($resultatsByLicence[$lic] ?? null) : null;
+        }
+        $byCategorie[$cat][] = [
+            'inscription' => $insc,
+            'resultat' => $r,
+            'score' => $r ? (int)($r['score'] ?? 0) : 0
+        ];
     }
-    $inscId = $insc['id'] ?? $insc['_id'] ?? null;
-    $r = $inscId ? ($resultats[(int)$inscId] ?? null) : null;
-    if ($r === null) {
-        $lic = trim((string)($insc['numero_licence'] ?? ''));
-        $r = ($lic !== '' && isset($resultatsByLicence)) ? ($resultatsByLicence[$lic] ?? null) : null;
-    }
-    $byCategorie[$cat][] = [
-        'inscription' => $insc,
-        'resultat' => $r,
-        'score' => $r ? (int)($r['score'] ?? 0) : 0
-    ];
-}
+    return $byCategorie;
+};
 
-// Trier les catégories (ordre alphabétique du libellé, "Sans catégorie" en dernier)
-uksort($byCategorie, function($a, $b) use ($categoriesMap) {
-    if ($a === 'Sans catégorie') return 1;
-    if ($b === 'Sans catégorie') return -1;
-    $lbA = $categoriesMap[$a] ?? $a;
-    $lbB = $categoriesMap[$b] ?? $b;
-    return strcasecmp($lbA, $lbB);
-});
+$sortAndRankByCategorie = function(&$byCategorie) use ($isNature, $is3D, $categoriesMap) {
+    uksort($byCategorie, function($a, $b) use ($categoriesMap) {
+        if ($a === 'Sans catégorie') return 1;
+        if ($b === 'Sans catégorie') return -1;
+        $lbA = $categoriesMap[$a] ?? $a;
+        $lbB = $categoriesMap[$b] ?? $b;
+        return strcasecmp($lbA, $lbB);
+    });
 
-// Pour chaque catégorie : trier par score décroissant, puis départage.
-foreach ($byCategorie as $cat => &$items) {
-    usort($items, function($a, $b) use ($isNature, $is3D) {
-        $diff = $b['score'] - $a['score'];
-        if ($diff !== 0) return $diff;
-        $rA = $a['resultat'] ?? [];
-        $rB = $b['resultat'] ?? [];
-        if ($is3D) {
-            $tiebreakers3D = ['nb_11', 'nb_10', 'nb_8', 'nb_5'];
-            foreach ($tiebreakers3D as $k) {
+    foreach ($byCategorie as $cat => &$items) {
+        usort($items, function($a, $b) use ($isNature, $is3D) {
+            $diff = $b['score'] - $a['score'];
+            if ($diff !== 0) return $diff;
+            $rA = $a['resultat'] ?? [];
+            $rB = $b['resultat'] ?? [];
+            if ($is3D) {
+                $tiebreakers3D = ['nb_11', 'nb_10', 'nb_8', 'nb_5'];
+                foreach ($tiebreakers3D as $k) {
+                    $vA = (int)($rA[$k] ?? 0);
+                    $vB = (int)($rB[$k] ?? 0);
+                    if ($vA !== $vB) return $vB - $vA;
+                }
+                $nb0A = (int)($rA['nb_0'] ?? 0);
+                $nb0B = (int)($rB['nb_0'] ?? 0);
+                return $nb0A - $nb0B;
+            }
+            if (!$isNature) return 0;
+            $tiebreakers = ['nb_20_15', 'nb_20_10', 'nb_15_15', 'nb_15_10', 'nb_15', 'nb_10'];
+            foreach ($tiebreakers as $k) {
                 $vA = (int)($rA[$k] ?? 0);
                 $vB = (int)($rB[$k] ?? 0);
                 if ($vA !== $vB) return $vB - $vA;
@@ -129,27 +155,49 @@ foreach ($byCategorie as $cat => &$items) {
             $nb0A = (int)($rA['nb_0'] ?? 0);
             $nb0B = (int)($rB['nb_0'] ?? 0);
             return $nb0A - $nb0B;
+        });
+        $rang = 1;
+        foreach ($items as &$item) {
+            $item['rang'] = $rang++;
         }
-        if (!$isNature) return 0;
-        $tiebreakers = ['nb_20_15', 'nb_20_10', 'nb_15_15', 'nb_15_10', 'nb_15', 'nb_10'];
-        foreach ($tiebreakers as $k) {
-            $vA = (int)($rA[$k] ?? 0);
-            $vB = (int)($rB[$k] ?? 0);
-            if ($vA !== $vB) return $vB - $vA;
-        }
-        $nb0A = (int)($rA['nb_0'] ?? 0);
-        $nb0B = (int)($rB['nb_0'] ?? 0);
-        return $nb0A - $nb0B;
-    });
-    $rang = 1;
-    foreach ($items as &$item) {
-        $item['rang'] = $rang++;
+        unset($item);
     }
-    unset($item);
-}
-unset($items);
+    unset($items);
+};
 
-// Filtre Top 3 : n'afficher que les 3 premiers de chaque catégorie
+// Grouper / classer le classement principal
+$byCategorie = $buildByCategorie($inscriptions1erTir);
+$sortAndRankByCategorie($byCategorie);
+
+// Modes combinés : calculer le rang secondaire (régional / départemental) sans filtrer la liste
+$rangSecondaireByInscId = [];
+if ($showRangSecondaire && $filtreSecondaireType !== null) {
+    $prefixLen = $filtreSecondaireType === 'regional' ? 2 : 4;
+    $inscriptionsSecondaires = $filterByPrefix($inscriptions1erTir, $prefixLen);
+    $byCategorieSecondaire = $buildByCategorie($inscriptionsSecondaires);
+    $sortAndRankByCategorie($byCategorieSecondaire);
+    foreach ($byCategorieSecondaire as $itemsSec) {
+        foreach ($itemsSec as $itemSec) {
+            $inscSec = $itemSec['inscription'] ?? [];
+            $inscIdSec = $inscSec['id'] ?? $inscSec['_id'] ?? null;
+            if ($inscIdSec !== null && $inscIdSec !== '') {
+                $rangSecondaireByInscId[(int)$inscIdSec] = $itemSec['rang'] ?? null;
+            }
+        }
+    }
+    foreach ($byCategorie as &$items) {
+        foreach ($items as &$item) {
+            $inscId = $item['inscription']['id'] ?? $item['inscription']['_id'] ?? null;
+            $item['rangSecondaire'] = ($inscId !== null && $inscId !== '' && isset($rangSecondaireByInscId[(int)$inscId]))
+                ? $rangSecondaireByInscId[(int)$inscId]
+                : null;
+        }
+        unset($item);
+    }
+    unset($items);
+}
+
+// Filtre Top 3 : n'afficher que les 3 premiers de chaque catégorie (rang général)
 $top3ParCategorie = $top3ParCategorie ?? false;
 if ($top3ParCategorie) {
     foreach ($byCategorie as $cat => &$items) {
@@ -167,6 +215,10 @@ if ($top3ParCategorie) {
     <p class="text-center text-muted small"><strong>Classement régional</strong></p>
     <?php elseif ($typeClassement === 'departemental'): ?>
     <p class="text-center text-muted small"><strong>Classement départemental</strong></p>
+    <?php elseif ($typeClassement === 'general_regional'): ?>
+    <p class="text-center text-muted small"><strong>Classement général + régional</strong></p>
+    <?php elseif ($typeClassement === 'general_departemental'): ?>
+    <p class="text-center text-muted small"><strong>Classement général + départemental</strong></p>
     <?php endif; ?>
     <?php if (!empty($top3ParCategorie)): ?>
     <p class="text-center text-muted small"><strong>Top 3</strong> — uniquement les 3 premiers de chaque catégorie</p>
@@ -200,6 +252,7 @@ if ($top3ParCategorie) {
                     <tr>
                         <?php if ($is3D): ?>
                             <th>Clt</th>
+                            <?php if ($showRangSecondaire): ?><th><?= htmlspecialchars($colRangSecondaireLabel) ?></th><?php endif; ?>
                             <th class="edition-classement-col-nom">Nom</th>
                             <th class="edition-classement-col-licence">Licence</th>
                             <th class="edition-classement-col-categorie">Cat.</th>
@@ -211,6 +264,7 @@ if ($top3ParCategorie) {
                             <th>5</th>
                         <?php elseif ($isNature): ?>
                             <th>Clt</th>
+                            <?php if ($showRangSecondaire): ?><th><?= htmlspecialchars($colRangSecondaireLabel) ?></th><?php endif; ?>
                             <th class="edition-classement-col-nom">Nom</th>
                             <th class="edition-classement-col-licence">Licence</th>
                             <th class="edition-classement-col-categorie">Cat.</th>
@@ -224,6 +278,7 @@ if ($top3ParCategorie) {
                             <th>15-10</th>
                         <?php else: ?>
                             <th>Rang</th>
+                            <?php if ($showRangSecondaire): ?><th><?= htmlspecialchars($colRangSecondaireLabel) ?></th><?php endif; ?>
                             <th class="edition-classement-col-nom">Nom</th>
                             <th class="edition-classement-col-licence">N° Licence</th>
                             <th class="edition-classement-col-club">Club</th>
@@ -233,10 +288,17 @@ if ($top3ParCategorie) {
                 </thead>
                 <tbody>
                     <?php foreach ($items as $item): ?>
-                        <?php $insc = $item['inscription']; $r = $item['resultat']; ?>
+                        <?php
+                        $insc = $item['inscription'];
+                        $r = $item['resultat'];
+                        $rangSecDisplay = isset($item['rangSecondaire']) && $item['rangSecondaire'] !== null
+                            ? (int)$item['rangSecondaire']
+                            : '—';
+                        ?>
                         <tr>
                             <?php if ($is3D): ?>
                                 <td><?= $item['rang'] ?></td>
+                                <?php if ($showRangSecondaire): ?><td><?= htmlspecialchars((string)$rangSecDisplay) ?></td><?php endif; ?>
                                 <td class="edition-classement-col-nom"><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                                 <td class="edition-classement-col-licence"><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                                 <td class="edition-classement-col-categorie"><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
@@ -248,6 +310,7 @@ if ($top3ParCategorie) {
                                 <td><?= $r ? ($r['nb_5'] ?? '-') : '-' ?></td>
                             <?php elseif ($isNature): ?>
                                 <td><?= $item['rang'] ?></td>
+                                <?php if ($showRangSecondaire): ?><td><?= htmlspecialchars((string)$rangSecDisplay) ?></td><?php endif; ?>
                                 <td class="edition-classement-col-nom"><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                                 <td class="edition-classement-col-licence"><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                                 <td class="edition-classement-col-categorie"><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
@@ -261,6 +324,7 @@ if ($top3ParCategorie) {
                                 <td><?= $r ? ($r['nb_15_10'] ?? '-') : '-' ?></td>
                             <?php else: ?>
                                 <td><?= $item['rang'] ?></td>
+                                <?php if ($showRangSecondaire): ?><td><?= htmlspecialchars((string)$rangSecDisplay) ?></td><?php endif; ?>
                                 <td class="edition-classement-col-nom"><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                                 <td class="edition-classement-col-licence"><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                                 <td class="edition-classement-col-club"><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>

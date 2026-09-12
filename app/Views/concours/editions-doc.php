@@ -866,6 +866,8 @@ echo empty($bodyClasses) ? '' : ' class="' . implode(' ', $bodyClasses) . '"';
             $top3Suffix = (!empty($top3ParCategorie)) ? '&top3=1' : '';
             $types = [
                 'general' => 'Général (tous les archers)',
+                'general_regional' => 'Général + Régional',
+                'general_departemental' => 'Général + Départemental',
                 'regional' => 'Régional (2 premiers chiffres du club de l\'archer = club organisateur)',
                 'departemental' => 'Départemental (4 premiers chiffres du club de l\'archer = club organisateur)'
             ];
