@@ -1286,14 +1286,9 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
     if (armeFromCategorie === 'TL') {
         // Règle prioritaire: catégorie TL => rouge (distinct du champ arme)
         piquetColor = 'rouge';
-    } else if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21') {
+    } else if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21' ||ageCategory === 'U18') {
         // S1, S2, S3, U21 : piquet rouge
         piquetColor = 'rouge';
-    } else if (ageCategory === 'U18') {
-        // U18 : arc nu (BB) et TL : piquet bleu
-        if (effectiveArme === 'BB' || effectiveArme === 'TL') {
-            piquetColor = 'bleu';
-        }
     } else if (ageCategory === 'U15' || ageCategory === 'U13') {
         // U15, U13 : arc nu (BB) : piquet blanc
         if (effectiveArme === 'BB') {
@@ -1303,7 +1298,8 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
         // U11 : arc nu (BB) : piquet rose
         if (effectiveArme === 'BB') {
             piquetColor = 'rose';
-        }   }
+        }   
+    }
     
     // Sélectionner la couleur si trouvée
     if (piquetColor) {
