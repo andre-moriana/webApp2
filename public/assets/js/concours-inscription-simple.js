@@ -1204,6 +1204,7 @@ function prefillFormFields(archer) {
  * - U18 : arc nu (BB) et TL : piquet bleu
  * - U15, U13 : arc nu (BB) : piquet blanc
  * - U11 : arc nu (BB) : piquet rose
+ * - DECCL (PROMOTION) : piquet blanc
  * @param {string} abvCategorie - L'abréviation de la catégorie (ex: "S3HCL", "U18HBB")
  * @param {boolean} isEditModal - Si true, utilise le champ edit-piquet au lieu de piquet
  * @param {boolean} isRetry - Indique si c'est un retry (pour éviter la récursion infinie)
@@ -1256,7 +1257,11 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
     } else if (categorieUpper.startsWith('U13')) {
         ageCategory = 'U13';
     } else if (categorieUpper.startsWith('U11')) {
-        ageCategory = 'U11';    }
+        ageCategory = 'U11';
+    } else if (categorieUpper === 'DECCL' || categorieUpper.includes('DECCL')) {
+        // Catégorie PROMOTION
+        ageCategory = 'DECCL';
+    }
     
     // Extraire l'arme (BB = arc nu, TL = TL)
     // L'arme est à la fin de la catégorie (2 derniers caractères)
@@ -1283,7 +1288,10 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
     // Appliquer les règles
     let piquetColor = '';
     
-    if (armeFromCategorie === 'TL') {
+    if (ageCategory === 'DECCL') {
+        // PROMOTION (DECCL) : piquet blanc
+        piquetColor = 'blanc';
+    } else if (armeFromCategorie === 'TL') {
         // Règle prioritaire: catégorie TL => rouge (distinct du champ arme)
         piquetColor = 'rouge';
     } else if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21' ||ageCategory === 'U18') {
