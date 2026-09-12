@@ -1291,9 +1291,6 @@ function selectPiquetColorForNature(abvCategorie, isEditModal = false, isRetry =
     if (ageCategory === 'DECCL') {
         // PROMOTION (DECCL) : piquet blanc
         piquetColor = 'blanc';
-    } else if (armeFromCategorie === 'TL') {
-        // Règle prioritaire: catégorie TL => rouge (distinct du champ arme)
-        piquetColor = 'rouge';
     } else if (ageCategory === 'S1' || ageCategory === 'S2' || ageCategory === 'S3' || ageCategory === 'U21' ||ageCategory === 'U18') {
         // S1, S2, S3, U21 : piquet rouge
         piquetColor = 'rouge';
