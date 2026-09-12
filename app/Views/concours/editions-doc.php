@@ -242,6 +242,10 @@ $dateFooter = date('d/m/Y H:i');
         .edition-classement .edition-classement-col-categorie {
             width: 6%;
         }
+        .edition-classement .edition-classement-col-rang-secondaire {
+            width: 4%;
+            min-width: 2rem;
+        }
         /* Scores : retour à la ligne pour le nom de l'archer et le nom du club */
         .edition-scores table th:nth-child(2),
         .edition-scores table td:nth-child(2),

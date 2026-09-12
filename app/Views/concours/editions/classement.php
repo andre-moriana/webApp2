@@ -252,7 +252,7 @@ if ($top3ParCategorie) {
                     <tr>
                         <?php if ($is3D): ?>
                             <th>Clt</th>
-                            <?php if ($showRangSecondaire): ?><th><?= htmlspecialchars($colRangSecondaireLabel) ?></th><?php endif; ?>
+                            <?php if ($showRangSecondaire): ?><th class="edition-classement-col-rang-secondaire"><?= htmlspecialchars($colRangSecondaireLabel) ?></th><?php endif; ?>
                             <th class="edition-classement-col-nom">Nom</th>
                             <th class="edition-classement-col-licence">Licence</th>
                             <th class="edition-classement-col-categorie">Cat.</th>
@@ -264,7 +264,7 @@ if ($top3ParCategorie) {
                             <th>5</th>
                         <?php elseif ($isNature): ?>
                             <th>Clt</th>
-                            <?php if ($showRangSecondaire): ?><th><?= htmlspecialchars($colRangSecondaireLabel) ?></th><?php endif; ?>
+                            <?php if ($showRangSecondaire): ?><th class="edition-classement-col-rang-secondaire"><?= htmlspecialchars($colRangSecondaireLabel) ?></th><?php endif; ?>
                             <th class="edition-classement-col-nom">Nom</th>
                             <th class="edition-classement-col-licence">Licence</th>
                             <th class="edition-classement-col-categorie">Cat.</th>
@@ -278,7 +278,7 @@ if ($top3ParCategorie) {
                             <th>15-10</th>
                         <?php else: ?>
                             <th>Rang</th>
-                            <?php if ($showRangSecondaire): ?><th><?= htmlspecialchars($colRangSecondaireLabel) ?></th><?php endif; ?>
+                            <?php if ($showRangSecondaire): ?><th class="edition-classement-col-rang-secondaire"><?= htmlspecialchars($colRangSecondaireLabel) ?></th><?php endif; ?>
                             <th class="edition-classement-col-nom">Nom</th>
                             <th class="edition-classement-col-licence">N° Licence</th>
                             <th class="edition-classement-col-club">Club</th>
@@ -298,7 +298,7 @@ if ($top3ParCategorie) {
                         <tr>
                             <?php if ($is3D): ?>
                                 <td><?= $item['rang'] ?></td>
-                                <?php if ($showRangSecondaire): ?><td><?= htmlspecialchars((string)$rangSecDisplay) ?></td><?php endif; ?>
+                                <?php if ($showRangSecondaire): ?><td class="edition-classement-col-rang-secondaire"><?= htmlspecialchars((string)$rangSecDisplay) ?></td><?php endif; ?>
                                 <td class="edition-classement-col-nom"><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                                 <td class="edition-classement-col-licence"><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                                 <td class="edition-classement-col-categorie"><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
@@ -310,7 +310,7 @@ if ($top3ParCategorie) {
                                 <td><?= $r ? ($r['nb_5'] ?? '-') : '-' ?></td>
                             <?php elseif ($isNature): ?>
                                 <td><?= $item['rang'] ?></td>
-                                <?php if ($showRangSecondaire): ?><td><?= htmlspecialchars((string)$rangSecDisplay) ?></td><?php endif; ?>
+                                <?php if ($showRangSecondaire): ?><td class="edition-classement-col-rang-secondaire"><?= htmlspecialchars((string)$rangSecDisplay) ?></td><?php endif; ?>
                                 <td class="edition-classement-col-nom"><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                                 <td class="edition-classement-col-licence"><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                                 <td class="edition-classement-col-categorie"><?= htmlspecialchars($catAbv !== 'Sans catégorie' ? $catAbv : '') ?></td>
@@ -324,7 +324,7 @@ if ($top3ParCategorie) {
                                 <td><?= $r ? ($r['nb_15_10'] ?? '-') : '-' ?></td>
                             <?php else: ?>
                                 <td><?= $item['rang'] ?></td>
-                                <?php if ($showRangSecondaire): ?><td><?= htmlspecialchars((string)$rangSecDisplay) ?></td><?php endif; ?>
+                                <?php if ($showRangSecondaire): ?><td class="edition-classement-col-rang-secondaire"><?= htmlspecialchars((string)$rangSecDisplay) ?></td><?php endif; ?>
                                 <td class="edition-classement-col-nom"><?= htmlspecialchars($insc['user_nom'] ?? $insc['nom'] ?? '') ?></td>
                                 <td class="edition-classement-col-licence"><?= htmlspecialchars($insc['numero_licence'] ?? '') ?></td>
                                 <td class="edition-classement-col-club"><?= htmlspecialchars($insc['club_nom'] ?? '') ?></td>
