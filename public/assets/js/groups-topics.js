@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let topicsHtml = '<div class="list-group" id="topics-list">';
             topics.forEach(function(topic) {
                 const description = topic.description ? 
-                    (topic.description.length > 100 ? topic.description.substring(0, 100) + '...' : topic.description) : 
+                    topic.description : 
                     '';
                 const unreadBadge = topic.unreadCount && topic.unreadCount > 0 ? 
                     `<span class="badge bg-danger ms-2">${topic.unreadCount}</span>` : '';

@@ -145,7 +145,7 @@ $title = "Gestion des groupes - Portail Arc Training";
                                                 </h6>
                                                 <?php if (!empty($topic['description'])): ?>
                                                     <p class="mb-1 text-muted small">
-                                                        <?php echo htmlspecialchars(substr($topic['description'], 0, 100)); ?>
+                                                        <?php echo htmlspecialchars($topic['description']); ?>
                                                         <?php echo strlen($topic['description']) > 100 ? '...' : ''; ?>
                                                     </p>
                                                 <?php endif; ?>
