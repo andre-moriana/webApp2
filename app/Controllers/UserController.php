@@ -203,6 +203,25 @@ class UserController {
             PermissionService::ACTION_CREATE,
             $clubId
         );
+
+        $categoriesAge = [];
+        try {
+            $categoriesResponse = $this->apiService->makeRequest('concours/categories-age', 'GET');
+            if (!($categoriesResponse['success'] ?? false) || empty($categoriesResponse['data'])) {
+                $categoriesResponse = $this->apiService->makeRequestPublic('concours/categories-age', 'GET');
+            }
+            if ($categoriesResponse['success'] ?? false) {
+                $categoriesPayload = $categoriesResponse['data'] ?? [];
+                if (is_array($categoriesPayload) && isset($categoriesPayload['data']) && isset($categoriesPayload['success'])) {
+                    $categoriesPayload = $categoriesPayload['data'];
+                }
+                if (is_array($categoriesPayload)) {
+                    $categoriesAge = array_values($categoriesPayload);
+                }
+            }
+        } catch (Exception $e) {
+            $categoriesAge = [];
+        }
         
         $title = 'Créer un utilisateur - Portail Arc Training';
         

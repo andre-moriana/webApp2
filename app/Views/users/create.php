@@ -96,11 +96,21 @@
 
                         <div class="form-group mb-3">
                             <label for="ageCategory">Catégorie</label>
-                            <input type="text"
-                                   class="form-control"
-                                   id="ageCategory"
-                                   name="ageCategory"
-                                   value="<?php echo htmlspecialchars($_SESSION['old_input']['ageCategory'] ?? ''); ?>">
+                            <select class="form-select" id="ageCategory" name="ageCategory">
+                                <option value="">Sélectionner...</option>
+                                <?php foreach (($categoriesAge ?? []) as $category): ?>
+                                    <?php
+                                    $categoryId = (string)($category['idcategorie'] ?? '');
+                                    $categoryLabel = (string)($category['lb_categorie'] ?? '');
+                                    if ($categoryId === '' || $categoryLabel === '') {
+                                        continue;
+                                    }
+                                    ?>
+                                    <option value="<?php echo htmlspecialchars($categoryId); ?>" <?php echo (string)($_SESSION['old_input']['ageCategory'] ?? '') === $categoryId ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($categoryLabel); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
 
                         <div class="form-group mb-3">

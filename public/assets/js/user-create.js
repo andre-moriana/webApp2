@@ -111,7 +111,7 @@ function searchUserByLicence() {
                         gender: getNodeText(userNode, 'SEXE') === '1' ? 'H' : (getNodeText(userNode, 'SEXE') === '2' ? 'F' : ''),
                         clubName: getNodeText(userNode, 'CIE'),
                         clubId: getNodeText(userNode, 'AGREMENTNR') || getNodeText(userNode, 'club_unique'),
-                        ageCategory: getNodeText(userNode, 'CATEGORIE'),
+                        ageCategory: getNodeText(userNode, 'CATAGE'),
                         last_name: lastName,
                         email: getNodeText(userNode, 'EMAIL'),
                         username: '', // Sera généré côté client si nécessaire
