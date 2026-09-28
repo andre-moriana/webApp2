@@ -72,6 +72,38 @@
                         </div>
 
                         <div class="form-group mb-3">
+                            <label for="clubName">Club</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="clubName"
+                                   name="clubName"
+                                   value="<?php echo htmlspecialchars($_SESSION['old_input']['clubName'] ?? ''); ?>"
+                                   readonly>
+                            <input type="hidden"
+                                   id="clubId"
+                                   name="clubId"
+                                   value="<?php echo htmlspecialchars($_SESSION['old_input']['clubId'] ?? ''); ?>">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="gender">Sexe</label>
+                            <select class="form-select" id="gender" name="gender">
+                                <option value="">Sélectionner...</option>
+                                <option value="H" <?php echo ($_SESSION['old_input']['gender'] ?? '') === 'H' ? 'selected' : ''; ?>>Homme</option>
+                                <option value="F" <?php echo ($_SESSION['old_input']['gender'] ?? '') === 'F' ? 'selected' : ''; ?>>Femme</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="ageCategory">Catégorie</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="ageCategory"
+                                   name="ageCategory"
+                                   value="<?php echo htmlspecialchars($_SESSION['old_input']['ageCategory'] ?? ''); ?>">
+                        </div>
+
+                        <div class="form-group mb-3">
                             <label for="username">Nom d'utilisateur *</label>
                             <input type="text" 
                                    class="form-control" 

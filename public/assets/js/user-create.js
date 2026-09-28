@@ -108,6 +108,10 @@ function searchUserByLicence() {
                         first_name: firstName,
                         lastName: lastName,
                         name: lastName,
+                        gender: getNodeText(userNode, 'SEXE') === '1' ? 'H' : (getNodeText(userNode, 'SEXE') === '2' ? 'F' : ''),
+                        clubName: getNodeText(userNode, 'CIE'),
+                        clubId: getNodeText(userNode, 'club_unique'),
+                        ageCategory: getNodeText(userNode, 'CATEGORIE'),
                         last_name: lastName,
                         email: getNodeText(userNode, 'EMAIL'),
                         username: '', // Sera généré côté client si nécessaire
@@ -153,6 +157,22 @@ function fillFormWithUserData(user) {
     
     if (user.email) {
         document.getElementById('email').value = user.email || '';
+    }
+
+    if (user.gender) {
+        document.getElementById('gender').value = user.gender;
+    }
+
+    if (user.clubName) {
+        document.getElementById('clubName').value = user.clubName;
+    }
+
+    if (user.clubId) {
+        document.getElementById('clubId').value = user.clubId;
+    }
+
+    if (user.ageCategory) {
+        document.getElementById('ageCategory').value = user.ageCategory;
     }
     
     if (user.username) {

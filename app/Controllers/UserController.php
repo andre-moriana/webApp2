@@ -265,7 +265,10 @@ class UserController {
                 'name' => $name,
                 'username' => $username,
                 'email' => $email,
-                'password' => $password
+                'password' => $password,
+                'gender' => $_POST['gender'] ?? '',
+                'clubId' => $_POST['clubId'] ?? '',
+                'ageCategory' => $_POST['ageCategory'] ?? ''
             ];
             
             // Ajouter le numéro de licence si fourni
