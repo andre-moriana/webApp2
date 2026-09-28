@@ -206,8 +206,10 @@ class UserController {
         
         $title = 'Créer un utilisateur - Portail Arc Training';
         
-        // Définir les fichiers JS spécifiques
-        $additionalJS = ['/public/assets/js/user-create.js'];
+        // Versionner le script pour éviter que le navigateur garde une ancienne version en cache.
+        $userCreateScript = dirname(__DIR__, 2) . '/public/assets/js/user-create.js';
+        $scriptVersion = is_file($userCreateScript) ? filemtime($userCreateScript) : time();
+        $additionalJS = ['/public/assets/js/user-create.js?v=' . $scriptVersion];
         
         include 'app/Views/layouts/header.php';
         include 'app/Views/users/create.php';
