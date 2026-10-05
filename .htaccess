@@ -1,6 +1,13 @@
 rewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)$ https://arctraining.fr/$1 [R=301,L]
 RewriteBase /
-# Rediriger toutes les requêtes vers index.php
+# Rediriger toutes les requ  tes vers index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]
+# HSTS
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=31536000"
+</IfModule>
+
