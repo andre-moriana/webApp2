@@ -209,7 +209,7 @@ $title = "Gestion des groupes - Portail Arc Training";
                                             <i class="fas fa-paperclip"></i>
                                             <input type="file" id="topic-message-attachment" class="position-absolute top-0 start-0 opacity-0" style="width:100%; height:100%; cursor:pointer;">
                                         </div>
-                                        <?php if ($_SESSION["user"]["is_admin"]) || strtolower((string)($_SESSION['user']['role'] ?? '')) === 'dirigeant'): ?>
+                                        <?php if ($_SESSION["user"]["is_admin"] || strtolower((string)($_SESSION['user']['role'] ?? '')) === 'dirigeant'): ?>
                                         <button type="button" class="btn btn-outline-secondary" onclick="openFormBuilder()" title="Créer un formulaire">
                                             <i class="fas fa-table"></i> 📊
                                         </button>
